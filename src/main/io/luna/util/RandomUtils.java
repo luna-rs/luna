@@ -1,5 +1,7 @@
 package io.luna.util;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -36,9 +38,7 @@ public final class RandomUtils {
      *             if {@code max - min + 1} is less than {@code 0}.
      */
     public static int inclusive(int min, int max) {
-        if (max < min) {
-            throw new IllegalArgumentException("max < min");
-        }
+        checkArgument(max >= min, "max < min");
         return ThreadLocalRandom.current().nextInt((max - min) + 1) + min;
     }
 
