@@ -7,8 +7,8 @@ import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * The {@link io.netty.channel.ChannelInitializer} implementation that will
- * initialize {@link io.netty.channel.socket.SocketChannel}s before they are
- * registered.
+ * initialize {@linkplain io.netty.channel.socket.SocketChannel socket channels}
+ * before they are registered.
  *
  * @author lare96 <http://github.com/lare96>
  */

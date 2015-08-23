@@ -4,8 +4,8 @@ import io.netty.channel.ChannelHandler;
 
 /**
  * A utility class that only contains immutable
- * {@link io.netty.channel.ChannelHandler}s that can be used simultaneously
- * across multiple pipelines.
+ * {@linkplain io.netty.channel.ChannelHandler channel handlers} that can be
+ * used simultaneously across multiple pipelines.
  * 
  * @author lare96 <http://github.org/lare96>
  */

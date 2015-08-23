@@ -326,5 +326,10 @@ public final class RandomUtils {
         }
         return array;
     }
+
+    /**
+     * A private constructor to discourage external instantiation.
+     */
+    private RandomUtils() {}
 }
 
