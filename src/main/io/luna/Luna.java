@@ -1,5 +1,6 @@
 package io.luna;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,7 +33,7 @@ public final class Luna {
             Server luna = new Server();
             luna.create();
         } catch (Exception e) {
-            LOGGER.fatal("An error occured while initializing Luna, exiting...", e);
+            LOGGER.catching(Level.FATAL, e);
             System.exit(0);
         }
     }
