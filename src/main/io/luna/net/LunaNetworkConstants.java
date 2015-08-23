@@ -42,7 +42,7 @@ public final class LunaNetworkConstants {
         "An established connection was aborted by the software in your host machine");
 
     /**
-     * A private constructor to prevent external instantiation.
+     * A private constructor to discourage external instantiation.
      */
     private LunaNetworkConstants() {}
 }

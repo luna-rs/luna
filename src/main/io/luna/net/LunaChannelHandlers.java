@@ -37,7 +37,7 @@ public final class LunaChannelHandlers {
     static final ChannelHandler POST_HANDSHAKE_DECODER = null;
 
     /**
-     * A private constructor to prevent external instantiation.
+     * A private constructor to discourage external instantiation.
      */
     private LunaChannelHandlers() {}
 }

@@ -17,7 +17,7 @@ public final class Luna {
     private static final Logger LOGGER = LogManager.getLogger(Luna.class);
 
     /**
-     * A private constructor to prevent external instantiation.
+     * A private constructor to discourage external instantiation.
      */
     private Luna() {}
 
