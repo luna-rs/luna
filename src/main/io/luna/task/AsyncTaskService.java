@@ -3,6 +3,7 @@ package io.luna.task;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import io.luna.Luna;
+import io.netty.util.internal.StringUtil;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -143,7 +144,7 @@ public final class AsyncTaskService extends AbstractExecutionThreadService {
 
     @Override
     protected String serviceName() {
-        return AsyncTaskService.class.getSimpleName() + "Thread";
+        return StringUtil.simpleClassName(this) + "Thread";
     }
 
     /**

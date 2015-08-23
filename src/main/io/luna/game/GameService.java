@@ -1,5 +1,7 @@
 package io.luna.game;
 
+import io.netty.util.internal.StringUtil;
+
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +58,7 @@ public final class GameService extends AbstractScheduledService {
      */
     @Override
     protected String serviceName() {
-        return GameService.class.getSimpleName() + "Thread";
+        return StringUtil.simpleClassName(this) + "Thread";
     }
 
     /**
