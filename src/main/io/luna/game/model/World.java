@@ -10,6 +10,8 @@ import io.luna.game.GameService;
  */
 public final class World {
 
+    // TODO: Manage global state in the Luna class?
+
     /**
      * The main game logic service.
      */
