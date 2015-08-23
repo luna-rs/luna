@@ -49,13 +49,6 @@ public final class GameService extends AbstractScheduledService {
      */
     private final AtomicLong tickCount = new AtomicLong();
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <p>
-     * Uses {@code getSimpleName()} just in case the class name is changed in
-     * the future.
-     */
     @Override
     protected String serviceName() {
         return StringUtil.simpleClassName(this) + "Thread";
