@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
-	<Appenders>
-		<Console name="Console" target="SYSTEM_ERR">
-			<PatternLayout
-				pattern="%d{dd MMM yyyy HH:mm:ss} %logger{36} [%t]%n%level: %msg%n" />
-		</Console>
-		<File name="error_log" fileName="data/error_log.txt" append="true">
-			<PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %-5level - %msg%xEx%n" />
-			<ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
-		</File>
-	</Appenders>
-	<Loggers>
-		<Root level="ALL">
-			<AppenderRef ref="Console" />
-			<AppenderRef ref="error_log" />
-		</Root>
-	</Loggers>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_ERR">
+            <PatternLayout
+                pattern="%d{dd MMM yyyy HH:mm:ss} %logger{36} [%t]%n%level: %msg%n" />
+        </Console>
+        <File name="error_log" fileName="data/error_log.txt"
+            append="true">
+            <PatternLayout
+                pattern="%d{dd MMM yyyy HH:mm:ss} %-5level - %msg%xEx%n" />
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT"
+                onMismatch="DENY" />
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="ALL">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="error_log" />
+        </Root>
+    </Loggers>
 </Configuration>
