@@ -1,4 +1,4 @@
-package io.luna.task.async;
+package io.luna.task;
 
 import static org.junit.Assert.assertEquals;
 import io.luna.task.AsyncTaskService;
