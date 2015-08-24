@@ -1,6 +1,5 @@
 package io.luna;
 
-import io.luna.game.model.World;
 import io.luna.net.LunaChannelHandlers;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.task.AsyncTaskService;
@@ -52,8 +51,8 @@ public final class Server {
         initStartupTasks();
         initGame();
         service.awaitTerminated(); // Await completion of background tasks.
-        World.getService().awaitRunning(); // Await completion of logic service.
-        initNetty();
+        Luna.getService().awaitRunning(); // Await completion of logic service.
+        bind();
 
         logger.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
     }
@@ -65,7 +64,7 @@ public final class Server {
      * @throws Exception
      *             If any errors occur while creating the Netty module.
      */
-    private void initNetty() throws Exception {
+    private void bind() throws Exception {
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
 
@@ -90,7 +89,7 @@ public final class Server {
      *             If any errors occur while creating the GameService module.
      */
     private void initGame() throws Exception {
-        World.getService().startAsync();
+        Luna.getService().startAsync();
     }
 
     /**
