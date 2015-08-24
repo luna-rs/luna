@@ -13,6 +13,8 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import plugin.PluginBootstrap;
+
 /**
  * Prepares the Netty networking implementation and the game logic service loop,
  * while simultaneously executing startup tasks in the background.
@@ -33,7 +35,7 @@ public final class Server {
     private final AsyncTaskService service = AsyncTaskService.newService();
 
     /**
-     * A default access level constructor, to prevent instantiation from classes
+     * A default access level constructor to discourage external instantiation
      * outside of the {@code io.luna} package.
      */
     Server() {}
@@ -100,7 +102,7 @@ public final class Server {
      *             If any errors occur while executing startup tasks.
      */
     private void initStartupTasks() throws Exception {
-        service.add(() -> logger.debug("Startup tasks working correctly.")); // Temporary.
+        service.add(new PluginBootstrap(LogManager.getLogger(PluginBootstrap.class)));
         service.startAsync();
     }
 }

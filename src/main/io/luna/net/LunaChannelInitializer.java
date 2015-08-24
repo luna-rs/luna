@@ -15,6 +15,12 @@ import io.netty.handler.timeout.IdleStateHandler;
 @Sharable
 public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    /**
+     * A default access level constructor to discourage external instantiation
+     * outside of the {@code io.luna.net} package.
+     */
+    LunaChannelInitializer() {}
+
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline().addLast("login-handshake", LunaChannelHandlers.HANDSHAKE_DECODER);

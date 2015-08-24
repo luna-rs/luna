@@ -2,6 +2,7 @@ package io.luna;
 
 import io.luna.game.GameService;
 import io.luna.game.model.World;
+import io.luna.game.plugin.PluginManager;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +30,11 @@ public final class Luna {
      * The world that will manage {@link io.luna.game.model.Entity} types.
      */
     private static World world = new World();
+
+    /**
+     * The plugin manager that will manage {@code Scala} plugins.
+     */
+    private static PluginManager plugins = new PluginManager();
 
     /**
      * A private constructor to discourage external instantiation.
@@ -68,5 +74,14 @@ public final class Luna {
      */
     public static World getWorld() {
         return world;
+    }
+
+    /**
+     * Gets the plugin manager for our {@code Scala} plugins.
+     * 
+     * @return The plugin manager.
+     */
+    public static PluginManager getPlugins() {
+        return plugins;
     }
 }

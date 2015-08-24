@@ -112,7 +112,7 @@ public final class GameService extends AbstractScheduledService {
      * Queues {@code t} to be executed on this game service thread.
      * 
      * @param t
-     *            the task to be queued.
+     *            The task to be queued.
      */
     public void queueTask(Runnable t) {
         syncTasks.add(t);
@@ -123,7 +123,7 @@ public final class GameService extends AbstractScheduledService {
      * this way should generally be short and low priority.
      * 
      * @param t
-     *            the task to execute.
+     *            The task to execute.
      */
     public void execute(Runnable t) {
         executorService.execute(t);
@@ -133,7 +133,7 @@ public final class GameService extends AbstractScheduledService {
      * Gets the amount of ticks that have elapsed since this application
      * started. This function is thread-safe.
      * 
-     * @return the amount of ticks that have elapsed.
+     * @return The amount of ticks that have elapsed.
      */
     public long getTicks() {
         return tickCount.get();

@@ -22,7 +22,7 @@ public abstract class YamlParser implements Runnable {
     /**
      * The logger that will print important information.
      */
-    private final Logger logger = LogManager.getLogger(YamlParser.class);
+    private static final Logger LOGGER = LogManager.getLogger(YamlParser.class);
 
     /**
      * The {@code YAML} serializer.
@@ -73,7 +73,7 @@ public abstract class YamlParser implements Runnable {
                 parse((Map<String, Object>) obj);
             }
         } catch (Exception e) {
-            logger.catching(e);
+            LOGGER.catching(e);
         }
     }
 }

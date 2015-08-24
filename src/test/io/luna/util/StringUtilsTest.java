@@ -10,8 +10,8 @@ import java.util.List;
 import org.junit.Test;
 
 /**
- * A test that ensures various functions in the {@link StringUtils} class are
- * functioning correctly.
+ * A test that ensures various functions in the {@link io.luna.util.StringUtils}
+ * class are functioning correctly.
  * 
  * @author lare96 <http://github.org/lare96>
  */

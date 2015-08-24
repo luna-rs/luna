@@ -1,7 +1,6 @@
 package io.luna.task;
 
 import static org.junit.Assert.assertEquals;
-import io.luna.task.AsyncTaskService;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,7 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 /**
- * A test that ensures the {@link AsyncTaskService} is functioning correctly.
+ * A test that ensures the {@link io.luna.task.AsyncTaskService} is functioning
+ * correctly.
  * 
  * @author lare96 <http://github.org/lare96>
  */

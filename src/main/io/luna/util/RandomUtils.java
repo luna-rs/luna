@@ -3,19 +3,18 @@ package io.luna.util;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A static-utility class that provides additional functionality for generating
  * pseudo-random numbers. All functions in this class are backed by
- * {@link ThreadLocalRandom} rather than the more commonly used {@link Random}.
- * It is generally preferred to use this over {@code Random} because although
- * {@code Random} is thread safe; the same seed is shared concurrently, which
- * leads to contention between multiple threads and overhead as a result.
- * Surprisingly because of the way that {@code ThreadLocalRandom} works, even in
- * completely single-threaded situations it runs up to three times faster than
- * {@code Random}.
+ * {@link java.util.concurrent.ThreadLocalRandom} rather than the more commonly
+ * used {@link java.util.Random}. It is generally preferred to use this over
+ * {@code Random} because although {@code Random} is thread safe; the same seed
+ * is shared concurrently, which leads to contention between multiple threads
+ * and overhead as a result. Surprisingly because of the way that
+ * {@code ThreadLocalRandom} works, even in completely single-threaded
+ * situations it runs up to three times faster than {@code Random}.
  *
  * @author lare96 <http://github.com/lare96>
  * @see <a href=
@@ -332,4 +331,3 @@ public final class RandomUtils {
      */
     private RandomUtils() {}
 }
-

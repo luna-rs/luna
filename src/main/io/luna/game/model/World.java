@@ -6,4 +6,6 @@ package io.luna.game.model;
  * 
  * @author lare96 <http://github.org/lare96>
  */
-public final class World {} // XXX: Placeholder.
+public final class World {
+
+}

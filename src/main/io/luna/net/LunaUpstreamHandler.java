@@ -25,13 +25,19 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Messa
     /**
      * The logger that will print important information.
      */
-    private static final Logger LOGGER = LogManager.getLogger(LunaUpstreamHandler.class);
+    private final Logger logger = LogManager.getLogger(LunaUpstreamHandler.class);
+
+    /**
+     * A default access level constructor to discourage external instantiation
+     * outside of the {@code io.luna.net} package.
+     */
+    LunaUpstreamHandler() {}
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Optional<String> msg = Optional.ofNullable(e.getMessage());
+        msg.filter(IGNORED_EXCEPTIONS::contains).ifPresent(it -> logger.catching(e));
 
-        msg.filter(IGNORED_EXCEPTIONS::contains).ifPresent(it -> LOGGER.catching(e));
         ctx.channel().close();
     }
 
