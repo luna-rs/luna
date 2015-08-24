@@ -29,7 +29,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * The logger that will print important information.
      */
-    private final Logger logger = LogManager.getLogger(GameService.class);
+    private static final Logger LOGGER = LogManager.getLogger(GameService.class);
 
     /**
      * A cached thread pool that manages the execution of short, low priority,
@@ -75,7 +75,7 @@ public final class GameService extends AbstractScheduledService {
             try {
                 t.run();
             } catch (Exception e) {
-                logger.catching(e);
+                LOGGER.catching(e);
             }
         }
         tickCount.incrementAndGet();
@@ -95,14 +95,14 @@ public final class GameService extends AbstractScheduledService {
     @Override
     protected void shutDown() {
         try {
-            logger.fatal("The asynchronous game service has been shutdown, exiting...");
+            LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
             // TODO: Logout players, clean up any additional resources, etc.
             tickCount.set(0);
             syncTasks.clear();
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (Exception e) {
-            logger.catching(Level.FATAL, e);
+            LOGGER.catching(Level.FATAL, e);
         } finally {
             System.exit(0);
         }

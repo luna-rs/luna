@@ -26,7 +26,7 @@ public final class Server {
     /**
      * The logger that will print important information.
      */
-    private final Logger logger = LogManager.getLogger(Server.class);
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
 
     /**
      * The asynchronous task service that will execute our startup tasks in the
@@ -48,7 +48,7 @@ public final class Server {
      *             modules.
      */
     public void create() throws Exception {
-        logger.info("Luna is being initialized...");
+        LOGGER.info("Luna is being initialized...");
 
         initStartupTasks();
         initGame();
@@ -56,7 +56,7 @@ public final class Server {
         Luna.getService().awaitRunning(); // Await completion of logic service.
         bind();
 
-        logger.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
+        LOGGER.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
     }
 
     /**
@@ -79,7 +79,7 @@ public final class Server {
 
         if (!LunaNetworkConstants.PREFERRED_PORTS.contains(LunaNetworkConstants.PORT)) {
             String prefix = "The preferred ports for Runescape servers are ";
-            logger.info(StringUtils.joinWithAnd(prefix, ".", LunaNetworkConstants.PREFERRED_PORTS));
+            LOGGER.info(StringUtils.joinWithAnd(prefix, ".", LunaNetworkConstants.PREFERRED_PORTS));
         }
     }
 
