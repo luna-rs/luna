@@ -1,12 +1,11 @@
 package io.luna.net;
 
-import static io.luna.net.LunaNetworkConstants.IGNORED_EXCEPTIONS;
+import static com.google.common.base.Preconditions.checkState;
 import io.luna.net.msg.Message;
+import io.luna.net.session.Session;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
 
 import java.util.Optional;
 
@@ -36,20 +35,9 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Messa
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         Optional<String> msg = Optional.ofNullable(e.getMessage());
-        msg.filter(IGNORED_EXCEPTIONS::contains).ifPresent(it -> LOGGER.catching(e));
+        msg.filter(LunaNetworkConstants.IGNORED_EXCEPTIONS::contains).ifPresent(it -> LOGGER.catching(e));
 
         ctx.channel().close();
-    }
-
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent) {
-            IdleStateEvent event = (IdleStateEvent) evt;
-
-            if (event.state() == IdleState.READER_IDLE) {
-                ctx.channel().close();
-            }
-        }
     }
 
     @Override
@@ -61,8 +49,8 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-
-        // TODO: Abstraction session model for upstream Netty message
-        // management, IdleSession, LoginSession, GameSession, etc.
+        Session session = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY).get();
+        checkState(session != null, "session == null");
+        session.handleUpstreamMessage(msg);
     }
 }

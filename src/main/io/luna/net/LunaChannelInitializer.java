@@ -1,9 +1,10 @@
 package io.luna.net;
 
+import io.luna.net.session.Session;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
  * The {@link io.netty.channel.ChannelInitializer} implementation that will
@@ -23,8 +24,11 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
-        ch.pipeline().addLast("login-handshake", LunaChannelHandlers.HANDSHAKE_DECODER);
+        ch.attr(LunaNetworkConstants.SESSION_KEY).setIfAbsent(new Session(ch));
+
+        ch.pipeline().addLast("channel-filter", LunaChannelHandlers.CHANNEL_FILTER);
+        ch.pipeline().addLast("login-decoder", LunaChannelHandlers.LOGIN_DECODER);
         ch.pipeline().addLast("upstream-handler", LunaChannelHandlers.UPSTREAM_HANDLER);
-        ch.pipeline().addLast("idle-state", new IdleStateHandler(LunaNetworkConstants.READ_IDLE_SECONDS, 0, 0));
+        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
     }
 }
