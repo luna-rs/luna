@@ -1,8 +1,9 @@
 package io.luna.net;
 
+import io.luna.net.codec.login.LoginResponse;
 import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.net.InetSocketAddress;
 
@@ -17,6 +18,10 @@ import com.google.common.collect.Multiset;
  * socket flooder attacks.
  * <p>
  * <p>
+ * This is required because Netty {@code 4.0.x} does not contain an
+ * {@code ipfilter} package.
+ * <p>
+ * <p>
  * <strong>One {@code LunaChannelFilter} instance must be shared across all
  * pipelines in order to ensure that every channel is using the same
  * map.</strong>.
@@ -24,7 +29,7 @@ import com.google.common.collect.Multiset;
  * @author lare96 <http://github.org/lare96>
  */
 @Sharable
-public class LunaChannelFilter extends ChannelHandlerAdapter {
+public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
 
     /**
      * A concurrent {@link com.google.common.collect.Multiset} that holds the
@@ -57,25 +62,27 @@ public class LunaChannelFilter extends ChannelHandlerAdapter {
     }
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         String hostAddress = getAddress(ctx);
         if (hostAddress.equals("127.0.0.1")) {
             return;
         }
         if (connections.count(hostAddress) >= connectionLimit) {
-            ctx.channel().close();
+            ctx.channel().writeAndFlush(LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return;
         }
         connections.add(hostAddress);
+        ctx.fireChannelRegistered();
     }
 
     @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         String hostAddress = getAddress(ctx);
         if (hostAddress.equals("127.0.0.1")) {
             return;
         }
         connections.remove(hostAddress);
+        ctx.fireChannelUnregistered();
     }
 
     /**
