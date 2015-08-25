@@ -1,12 +1,12 @@
 package io.luna.net;
 
-import static com.google.common.base.Preconditions.checkState;
-import io.luna.net.msg.Message;
 import io.luna.net.session.Session;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.ReadTimeoutException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
  * @author lare96 <http://github.com/lare96>
  */
 @Sharable
-public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Message> {
+public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
 
     /**
      * The logger that will print important information.
@@ -34,23 +34,39 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Messa
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
-        Optional<String> msg = Optional.ofNullable(e.getMessage());
-        msg.filter(LunaNetworkConstants.IGNORED_EXCEPTIONS::contains).ifPresent(it -> LOGGER.catching(e));
+        boolean channelReadTimeout = e instanceof ReadTimeoutException;
 
+        if (!channelReadTimeout) {
+            Optional<String> msg = Optional.ofNullable(e.getMessage());
+            msg.filter(LunaNetworkConstants.IGNORED_EXCEPTIONS::contains).ifPresent(it -> LOGGER.catching(e));
+        }
         ctx.channel().close();
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
+        // Session session = getSession(ctx);
         // TODO: Queue the player for logout, clean up any resources if any,
         // etc.
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        Session session = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY).get();
-        checkState(session != null, "session == null");
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+        Session session = getSession(ctx);
         session.handleUpstreamMessage(msg);
+    }
+
+    /**
+     * Gets the {@link io.luna.net.session.Session} instance from the
+     * {@link io.netty.channel.ChannelHandlerContext}, and validates it to
+     * ensure it isn't {@code null}.
+     * 
+     * @param ctx
+     *            The channel handler context.
+     * @return The session instance.
+     */
+    private Session getSession(ChannelHandlerContext ctx) {
+        Session session = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY).get();
+        return Objects.requireNonNull(session, "session == null");
     }
 }
