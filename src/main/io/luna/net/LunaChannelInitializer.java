@@ -28,6 +28,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
 
         ch.pipeline().addLast("channel-filter", LunaChannelHandlers.CHANNEL_FILTER);
         ch.pipeline().addLast("login-decoder", LunaChannelHandlers.LOGIN_DECODER);
+        ch.pipeline().addLast("login-encoder", LunaChannelHandlers.LOGIN_ENCODER);
         ch.pipeline().addLast("upstream-handler", LunaChannelHandlers.UPSTREAM_HANDLER);
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
     }
