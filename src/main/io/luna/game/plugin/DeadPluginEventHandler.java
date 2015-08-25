@@ -14,12 +14,12 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author lare96 <http://github.org/lare96>
  */
-public final class DeadEventHandler {
+public final class DeadPluginEventHandler {
 
     /**
      * The logger that will print important information.
      */
-    private static final Logger LOGGER = LogManager.getLogger(DeadEventHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger(DeadPluginEventHandler.class);
 
     @Subscribe
     public void handleDeadEvent(DeadEvent evt) {
