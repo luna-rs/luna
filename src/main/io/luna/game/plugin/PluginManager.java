@@ -16,7 +16,7 @@ public final class PluginManager extends EventBus {
      */
     public PluginManager() {
         super(new PluginExceptionHandler());
-        register(new DeadPluginEventHandler());
+        register(new PluginDeadHandler());
     }
 
     /**
