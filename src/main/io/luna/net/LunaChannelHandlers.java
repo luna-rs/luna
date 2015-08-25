@@ -2,6 +2,7 @@ package io.luna.net;
 
 import io.luna.net.codec.game.MessageEncoder;
 import io.luna.net.codec.login.LoginDecoder;
+import io.luna.net.codec.login.LoginEncoder;
 import io.netty.channel.ChannelHandler;
 
 /**
@@ -32,6 +33,11 @@ public final class LunaChannelHandlers {
      * Decodes the entire login protocol.
      */
     static final ChannelHandler LOGIN_DECODER = new LoginDecoder();
+
+    /**
+     * Encodes the login response.
+     */
+    static final ChannelHandler LOGIN_ENCODER = new LoginEncoder();
 
     /**
      * Filters channels based on the amount of active connections they have.
