@@ -1,6 +1,7 @@
 package io.luna.net;
 
 import io.luna.net.codec.login.LoginResponse;
+import io.luna.net.codec.login.LoginResponseMessage;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -68,7 +69,8 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
             return;
         }
         if (connections.count(hostAddress) >= connectionLimit) {
-            ctx.channel().writeAndFlush(LoginResponse.LOGIN_LIMIT_EXCEEDED);
+            LoginResponseMessage msg = new LoginResponseMessage(LoginResponse.LOGIN_LIMIT_EXCEEDED);
+            ctx.channel().writeAndFlush(msg);
             return;
         }
         connections.add(hostAddress);
