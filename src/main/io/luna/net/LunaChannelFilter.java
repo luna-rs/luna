@@ -2,6 +2,8 @@ package io.luna.net;
 
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
+import io.luna.net.session.Session;
+import io.luna.net.session.SessionState;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -64,6 +66,7 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        Session session = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY).get();
         String hostAddress = getAddress(ctx);
         if (hostAddress.equals("127.0.0.1")) {
             return;
@@ -74,6 +77,7 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
             return;
         }
         connections.add(hostAddress);
+        session.setState(SessionState.DECODE_HANDSHAKE);
         ctx.fireChannelRegistered();
     }
 
