@@ -11,7 +11,7 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
 
 /**
- * The {@link io.netty.channel.ChannelHandlerAdapter} implementation that
+ * The {@link io.netty.channel.ChannelInboundHandlerAdapter} implementation that
  * filters {@linkplain io.netty.channel.Channel channels} by the amount of
  * active connections they already have. A threshold is put on the amount of
  * successful connections allowed to be made in order to provide security from
@@ -24,7 +24,7 @@ import com.google.common.collect.Multiset;
  * <p>
  * <strong>One {@code LunaChannelFilter} instance must be shared across all
  * pipelines in order to ensure that every channel is using the same
- * map.</strong>.
+ * map.</strong>
  * 
  * @author lare96 <http://github.org/lare96>
  */
