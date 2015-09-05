@@ -39,14 +39,14 @@ public final class GameService extends AbstractScheduledService {
         "GameServiceWorkerThread").build());
 
     /**
-	 * A queue of synchronization tasks.
-	 */
+     * A queue of synchronization tasks.
+     */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
     /**
-	 * A counter that determines how many ticks have passed since this
-	 * {@code GameService} was started.
-	 */
+     * A counter that determines how many ticks have passed since this
+     * {@code GameService} was started.
+     */
     private final AtomicLong tickCount = new AtomicLong();
 
     @Override
@@ -55,14 +55,14 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-	 * {@inheritDoc}
-	 * <p>
-	 * <p>
-	 * This method should <b>never</b> be invoked unless by the underlying
-	 * {@link AbstractScheduledService}. Illegal invocation of this method will
-	 * lead to serious gameplay timing issues as well as other unexplainable and
-	 * unpredictable issues related to gameplay.
-	 */
+     * {@inheritDoc}
+     * <p>
+     * <p>
+     * This method should <b>never</b> be invoked unless by the underlying
+     * {@link AbstractScheduledService}. Illegal invocation of this method will
+     * lead to serious gameplay timing issues as well as other unexplainable and
+     * unpredictable issues related to gameplay.
+     */
     @Override
     protected void runOneIteration() throws Exception {
         for (;;) {

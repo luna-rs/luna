@@ -22,10 +22,11 @@ public final class Luna {
     private Luna() {}
 
     /**
-	 * Invoked when this program is started, initializes the {@link Server}.
-	 * 
-	 * @param args The runtime arguments, none of which are parsed.
-	 */
+     * Invoked when this program is started, initializes the {@link Server}.
+     * 
+     * @param args
+     *            The runtime arguments, none of which are parsed.
+     */
     public static void main(String[] args) {
         try {
             Server luna = new Server();
