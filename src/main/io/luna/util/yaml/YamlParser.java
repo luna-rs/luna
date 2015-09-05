@@ -1,9 +1,10 @@
 package io.luna.util.yaml;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
-import java.io.FileReader;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -37,8 +38,7 @@ public abstract class YamlParser implements Runnable {
     /**
      * Creates a new {@link io.luna.util.yaml.YamlParser}.
      *
-     * @param path
-     *            The absolute path to the file.
+     * @param path The absolute path to the file.
      */
     public YamlParser(Path path) {
         checkArgument(path.getFileName().endsWith(".yml"), "Invalid file extension.");
@@ -51,12 +51,10 @@ public abstract class YamlParser implements Runnable {
      * document is represented in Java as a map of {@code String}s to
      * {@code Object}s.
      * 
-     * @param document
-     *            The current document being parsed.
-     * @throws Exception
-     *             If any errors occur while parsing the document.
+     * @param yml The current document being parsed.
+     * @throws Exception If any errors occur while parsing the document.
      */
-    protected abstract void parse(Map<String, Object> document) throws Exception;
+    protected abstract void parse(YamlDocument yml) throws Exception;
 
     /**
      * Attempts to parse all of the documents in {@code path}, potentially on an
@@ -65,12 +63,10 @@ public abstract class YamlParser implements Runnable {
     @SuppressWarnings("unchecked")
     @Override
     public void run() {
-        try (Reader in = new FileReader(path.toString())) {
+        try (Reader in = Files.newBufferedReader(path)) {
             for (Object obj : yaml.loadAll(in)) {
-                if (obj == null) {
-                    throw new Exception("Malformed document.");
-                }
-                parse((Map<String, Object>) obj);
+                checkState(obj != null, "Malformed document.");
+                parse(new YamlDocument((Map<String, Object>) obj));
             }
         } catch (Exception e) {
             LOGGER.catching(e);
