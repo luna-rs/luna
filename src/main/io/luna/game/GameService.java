@@ -17,10 +17,10 @@ import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * An {@link com.google.common.util.concurrent.AbstractScheduledService}
- * implementation that performs general game logic processing, provides
- * functionality for executing small asynchronous and concurrent tasks through a
- * cached thread pool, and allows for execution of tasks from other threads.
+ * An {@link AbstractScheduledService} implementation that performs general game
+ * logic processing, provides functionality for executing small asynchronous and
+ * concurrent tasks through a cached thread pool, and allows for tasks from
+ * other threads to be executed on the game logic thread.
  * 
  * @author lare96 <http://github.org/lare96>
  */
@@ -39,14 +39,14 @@ public final class GameService extends AbstractScheduledService {
         "GameServiceWorkerThread").build());
 
     /**
-     * A queue of synchronization tasks.
-     */
+	 * A queue of synchronization tasks.
+	 */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
     /**
-     * A counter that determines how many ticks have passed since the
-     * application was started.
-     */
+	 * A counter that determines how many ticks have passed since this
+	 * {@code GameService} was started.
+	 */
     private final AtomicLong tickCount = new AtomicLong();
 
     @Override
@@ -55,15 +55,14 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * <p>
-     * This method should <b>never</b> be invoked unless by the underlying
-     * {@link com.google.common.util.concurrent.AbstractScheduledService}.
-     * Illegal invocation of this method will lead to serious gameplay timing
-     * issues as well as other unexplainable and unpredictable issues related to
-     * gameplay.
-     */
+	 * {@inheritDoc}
+	 * <p>
+	 * <p>
+	 * This method should <b>never</b> be invoked unless by the underlying
+	 * {@link AbstractScheduledService}. Illegal invocation of this method will
+	 * lead to serious gameplay timing issues as well as other unexplainable and
+	 * unpredictable issues related to gameplay.
+	 */
     @Override
     protected void runOneIteration() throws Exception {
         for (;;) {
