@@ -1,5 +1,7 @@
 package io.luna.util.yaml;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.primitives.Primitives;
 
 public final class YamlObject {
@@ -7,7 +9,7 @@ public final class YamlObject {
     private final Object value;
 
     YamlObject(Object value) {
-        this.value = value;
+        this.value = requireNonNull(value);
     }
 
     public int asInt() {
