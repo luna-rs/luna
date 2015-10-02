@@ -10,7 +10,7 @@ class GamePluginEvent {
   
   private var _context: LunaContext = null
 
-  def context_= (context: LunaContext) = _context
+  def context_= (context: LunaContext) = _context = context
  
   def context = _context
 }
