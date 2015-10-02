@@ -22,7 +22,7 @@ public final class YamlObject {
      * @param value The immutable value within this {@code YamlObject}.
      */
     YamlObject(Object value) {
-        this.value = requireNonNull(value);
+        this.value = value;
     }
 
     /**
@@ -32,6 +32,7 @@ public final class YamlObject {
      * @return The value as an {@code int}.
      */
     public int asInt() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Integer.parseInt(asString());
         }
@@ -45,6 +46,7 @@ public final class YamlObject {
      * @return The value as an {@code long}.
      */
     public long asLong() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Long.parseLong(asString());
         }
@@ -58,6 +60,7 @@ public final class YamlObject {
      * @return The value as an {@code double}.
      */
     public double asDouble() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Double.parseDouble(asString());
         }
@@ -71,6 +74,7 @@ public final class YamlObject {
      * @return The value as an {@code float}.
      */
     public float asFloat() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Float.parseFloat(asString());
         }
@@ -84,6 +88,7 @@ public final class YamlObject {
      * @return The value as an {@code short}.
      */
     public short asShort() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Short.parseShort(asString());
         }
@@ -97,6 +102,7 @@ public final class YamlObject {
      * @return The value as an {@code byte}.
      */
     public byte asByte() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Byte.parseByte(asString());
         }
@@ -110,6 +116,7 @@ public final class YamlObject {
      * @return The value as an {@code char}.
      */
     public char asChar() {
+        requireNonNull(value);
         if (value instanceof String) {
             return asString().charAt(0);
         }
@@ -123,6 +130,7 @@ public final class YamlObject {
      * @return The value as an {@code boolean}.
      */
     public boolean asBoolean() {
+        requireNonNull(value);
         if (value instanceof String) {
             return Boolean.parseBoolean(asString());
         }
@@ -136,16 +144,26 @@ public final class YamlObject {
      * @return The value as an {@code String}.
      */
     public String asString() {
+        requireNonNull(value);
         return (String) value;
     }
 
     /**
      * Retrieve the underlying value as an {@code Object}.
      * 
-     * @return The value as an {@code Object}.
+     * @return The value as an {@code Object}, never {@code null}.
      */
     public Object asObject() {
+        requireNonNull(value);
         return value;
+    }
+
+    /**
+     * @return {@code true} if the underlying value is {@code null},
+     *         {@code false} otherwise.
+     */
+    public boolean isNull() {
+        return value == null;
     }
 
     /**

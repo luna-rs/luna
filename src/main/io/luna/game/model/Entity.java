@@ -69,12 +69,27 @@ public abstract class Entity {
 
     @Override
     public int hashCode() {
-        throw new UnsupportedOperationException("No 'hashcode' for Entity, subclasses must implement.");
+        throw new UnsupportedOperationException(getExceptionMsg("hashCode"));
     }
 
     @Override
     public boolean equals(Object obj) {
-        throw new UnsupportedOperationException("No 'equals' for Entity, subclasses must implement.");
+        throw new UnsupportedOperationException(getExceptionMsg("equals"));
+    }
+
+    @Override
+    public String toString() {
+        throw new UnsupportedOperationException(getExceptionMsg("toString"));
+    }
+
+    /**
+     * Gets the message for an {@link UnsupportedOperationException} with
+     * {@code impl} as the method name.
+     * 
+     * @param impl The implementing method name.
+     */
+    private String getExceptionMsg(String impl) {
+        return String.format("No '%s' for Entity, subclasses must implement.", impl);
     }
 
     /**

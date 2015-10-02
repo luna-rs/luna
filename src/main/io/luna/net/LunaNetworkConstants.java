@@ -36,6 +36,11 @@ public final class LunaNetworkConstants {
     public static final int CONNECTION_LIMIT = 2;
 
     /**
+     * The maximum amount of incoming messages per cycle.
+     */
+    public static final int MESSAGE_LIMIT = 15;
+
+    /**
      * The preferred ports for the user to use, a warning will be printed if
      * these ports aren't used.
      */
@@ -44,14 +49,12 @@ public final class LunaNetworkConstants {
     /**
      * A list of exceptions that are ignored when received from Netty.
      */
-    public static final ImmutableList<String> IGNORED_EXCEPTIONS = ImmutableList.of(
-        "An existing connection was forcibly closed by the remote host",
+    public static final ImmutableList<String> IGNORED_EXCEPTIONS = ImmutableList.of("An existing connection was forcibly closed by the remote host",
         "An established connection was aborted by the software in your host machine");
 
     /**
-     * An {@link io.netty.util.AttributeKey} that is used to retrieve the
-     * session instance from the attribute map of a
-     * {@link io.netty.channel.Channel}.
+     * An {@link AttributeKey} that is used to retrieve the session instance
+     * from the attribute map of a {@link Channel}.
      */
     public static final AttributeKey<Session> SESSION_KEY = AttributeKey.valueOf("session.KEY");
 

@@ -1,20 +1,26 @@
 package io.luna;
 
 import io.luna.game.GameService;
-import io.luna.net.LunaChannelHandlers;
+import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
-import io.luna.task.AsyncTaskService;
 import io.luna.util.StringUtils;
+import io.luna.util.yaml.impl.NpcDefinitionDeserializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import plugin.PluginBootstrap;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Initializes the individual modules to launch {@link Luna}.
@@ -29,9 +35,10 @@ public final class Server {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
 
     /**
-     * The {@link AsyncTaskService} that will execute startup tasks.
+     * The {@link ExecutorService} that will execute startup tasks.
      */
-    private final AsyncTaskService service = AsyncTaskService.newService();
+    private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat(
+        "BackgroundServiceThread").build());
 
     /**
      * The {@link LunaContext} that this server will be managed with.
@@ -47,17 +54,16 @@ public final class Server {
     /**
      * Creates {@link Luna} by initializing all of the individual modules.
      * 
-     * @throws Exception
-     *             If any exceptions are thrown during initialization.
+     * @throws Exception If any exceptions are thrown during initialization.
      */
     public void create() throws Exception {
         LOGGER.info("Luna is being initialized...");
 
         initAsyncTasks();
         initGame();
-        service.awaitTerminated(); // Await completion of background tasks.
-        context.getService().awaitRunning(); // Await completion of logic
-                                             // service.
+        service.shutdown();
+        service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        context.getService().awaitRunning();
         bind();
 
         LOGGER.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
@@ -67,8 +73,7 @@ public final class Server {
      * Initializes the Netty implementation. Will block indefinitely until the
      * {@link ServerBootstrap} is bound.
      * 
-     * @throws Exception
-     *             If any exceptions are thrown while binding.
+     * @throws Exception If any exceptions are thrown while binding.
      */
     private void bind() throws Exception {
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -78,7 +83,7 @@ public final class Server {
 
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(LunaChannelHandlers.CHANNEL_INITIALIZER);
+        bootstrap.childHandler(new LunaChannelInitializer(context));
         bootstrap.bind(LunaNetworkConstants.PORT).syncUninterruptibly();
 
         if (!LunaNetworkConstants.PREFERRED_PORTS.contains(LunaNetworkConstants.PORT)) {
@@ -91,9 +96,8 @@ public final class Server {
      * Initializes the {@link GameService} asynchronously, does not wait for it
      * to enter a {@code RUNNING} state.
      * 
-     * @throws Exception
-     *             If any exceptions are thrown during initialization of the
-     *             {@code GameService}.
+     * @throws Exception If any exceptions are thrown during initialization of
+     *         the {@code GameService}.
      */
     private void initGame() throws Exception {
         context.getService().startAsync();
@@ -101,13 +105,13 @@ public final class Server {
 
     /**
      * Executes all startup tasks asynchronously in the background using
-     * {@link AsyncTaskService}.
+     * {@link ExecutorService}.
      * 
-     * @throws Exception
-     *             If any exceptions are thrown while executing startup tasks.
+     * @throws Exception If any exceptions are thrown while executing startup
+     *         tasks.
      */
     private void initAsyncTasks() throws Exception {
-        service.add(new PluginBootstrap(LogManager.getLogger(PluginBootstrap.class), context));
-        service.startAsync();
+        service.execute(new PluginBootstrap(LogManager.getLogger(PluginBootstrap.class), context));
+        service.execute(new NpcDefinitionDeserializer());
     }
 }

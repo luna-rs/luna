@@ -40,5 +40,4 @@ public final class StringUtilsTest {
         result = StringUtils.joinWithAnd("", "", new ArrayList<>());
         assertTrue(result.isEmpty());
     }
-
 }

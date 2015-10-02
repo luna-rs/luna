@@ -35,8 +35,7 @@ public final class GameService extends AbstractScheduledService {
      * A cached thread pool that manages the execution of short, low priority,
      * asynchronous and concurrent tasks.
      */
-    private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(
-        "GameServiceWorkerThread").build());
+    private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("GameServiceWorkerThread").build());
 
     /**
      * A queue of synchronization tasks.
@@ -82,24 +81,25 @@ public final class GameService extends AbstractScheduledService {
 
     @Override
     protected Scheduler scheduler() {
-        return Scheduler.newFixedRateSchedule(0, 600, TimeUnit.MILLISECONDS);
+        return Scheduler.newFixedRateSchedule(600, 600, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Prints a message that this service has been terminated, and attempts to
      * gracefully exit the application cleaning up resources and ensuring all
-     * players are logged out. If an exception is thrown the shutdown process is
-     * aborted completely and the application is exited.
+     * players are logged out. If an exception is thrown during shutdown, the
+     * shutdown process is aborted completely and the application is exited.
      */
     @Override
     protected void shutDown() {
         try {
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
             // TODO: Logout players, clean up any additional resources, etc.
-            tickCount.set(0);
+            syncTasks.forEach(Runnable::run);
             syncTasks.clear();
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+            tickCount.set(0);
         } catch (Exception e) {
             LOGGER.catching(Level.FATAL, e);
         } finally {
@@ -110,8 +110,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * Queues {@code t} to be executed on this game service thread.
      * 
-     * @param t
-     *            The task to be queued.
+     * @param t The task to be queued.
      */
     public void queueTask(Runnable t) {
         syncTasks.add(t);
@@ -121,8 +120,7 @@ public final class GameService extends AbstractScheduledService {
      * Executes {@code t} using the backing cached thread pool. Tasks submitted
      * this way should generally be short and low priority.
      * 
-     * @param t
-     *            The task to execute.
+     * @param t The task to execute.
      */
     public void execute(Runnable t) {
         executorService.execute(t);

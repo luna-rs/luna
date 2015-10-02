@@ -93,8 +93,7 @@ public final class IsaacCipher {
     /**
      * Creates the ISAAC cipher.
      *
-     * @param seed
-     *            The seed.
+     * @param seed The seed.
      */
     public IsaacCipher(int[] seed) {
         for (int i = 0; i < seed.length; i++) {
@@ -177,8 +176,7 @@ public final class IsaacCipher {
     /**
      * Initializes the ISAAC.
      *
-     * @param flag
-     *            Flag indicating if we should perform a second pass.
+     * @param flag Flag indicating if we should perform a second pass.
      */
     public void init(boolean flag) {
         int i;

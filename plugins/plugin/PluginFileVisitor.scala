@@ -14,16 +14,21 @@ final class PluginFileVisitor(plugins: MutableList[Class[_]]) extends SimpleFile
   override def visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult = {
     val name = path.getFileName.toString
     val reject = List[String]("$", "PluginBootstrap", "PluginFileVisitor")
-    
-    if (!name.endsWith(".class") || reject.exists { x => name.contains(x)}) {
+
+    if (!name.endsWith(".class") || reject.exists { x => name.contains(x) }) {
       return FileVisitResult.CONTINUE
     }
 
-    val c = Class.forName(format(path.toString.replace("target.classes", "")))
+    val formatted = format(path.toString.replace("target.classes", ""))
+    if (formatted.contains("plugin.events")) {
+      return FileVisitResult.CONTINUE
+    }
+
+    val c = Class.forName(formatted)
     if (c.getAnnotation(classOf[Subscribe]) != null) {
       plugins.+=(c)
     }
-    return FileVisitResult.CONTINUE
+    FileVisitResult.CONTINUE
   }
 
   private def format(path: String): String = {

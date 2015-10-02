@@ -95,6 +95,18 @@ public final class Position {
     }
 
     /**
+     * Determines if this {@link Position} is within the area defined by
+     * {@code center} and {@code VIEWING_DISTANCE}.
+     * 
+     * @param center The center point of the radius.
+     * @return {@code true} if within the viewable distance, {@code false}
+     *         otherwise.
+     */
+    public boolean isViewable(Position center) {
+        return isWithinRadius(center, EntityConstants.VIEWING_DISTANCE);
+    }
+
+    /**
      * Determines the distance from this {@link Position} to {@code to}.
      * 
      * @param to The {@code Position} to calculate the distance to.

@@ -3,7 +3,7 @@
 /.project
 /.settings/
 /.git/
-/data/
 /.cache-main
 /.cache-tests
 /.tmpBin/
+/.gitignore

@@ -21,12 +21,11 @@ import com.google.common.collect.Iterables;
 
 /**
  * An abstraction model containing functions to serialize {@code YAML} files. It
- * implements {@link Runnable} so serialization for possibly multiple
- * {@link YamlDocument}s can be done asynchronously.
+ * implements {@link Runnable} so serialization for {@link YamlDocument}s can be
+ * done asynchronously.
  * 
  * @author lare96 <http://github.org/lare96>
- * @param <T> The type that documents from a {@code YAML} file will be
- *        serialized into.
+ * @param <T> The type that will be serialized into a {@code YAML} file.
  */
 public abstract class YamlSerializer<T> implements Runnable {
 

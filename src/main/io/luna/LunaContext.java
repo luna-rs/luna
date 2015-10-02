@@ -24,7 +24,7 @@ public final class LunaContext {
     /**
      * The {@link PluginManager} that manages Scala plugins.
      */
-    private final PluginManager plugins = new PluginManager();
+    private final PluginManager plugins = new PluginManager(this);
 
     /**
      * A package-private constructor to discourage external instantiation

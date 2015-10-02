@@ -1,0 +1,224 @@
+05 Sep 2015 20:24:27 FATAL - catching java.lang.IllegalArgumentException: Invalid file extension.
+	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:122) ~[guava-18.0.jar:?]
+	at io.luna.util.yaml.YamlParser.<init>(YamlParser.java:44) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.<init>(NpcDefinitionParser.java:11) ~[classes/:?]
+	at io.luna.Server.initAsyncTasks(Server.java:108) ~[classes/:?]
+	at io.luna.Server.create(Server.java:56) ~[classes/:?]
+	at io.luna.Luna.main(Luna.java:32) [classes/:?]
+
+05 Sep 2015 20:25:13 FATAL - catching java.lang.IllegalArgumentException: Invalid file extension.
+	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:122) ~[guava-18.0.jar:?]
+	at io.luna.util.yaml.YamlParser.<init>(YamlParser.java:44) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.<init>(NpcDefinitionParser.java:11) ~[classes/:?]
+	at io.luna.Server.initAsyncTasks(Server.java:108) ~[classes/:?]
+	at io.luna.Server.create(Server.java:56) ~[classes/:?]
+	at io.luna.Luna.main(Luna.java:32) [classes/:?]
+
+05 Sep 2015 20:25:32 FATAL - catching java.lang.IllegalArgumentException: Invalid file extension.
+	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:122) ~[guava-18.0.jar:?]
+	at io.luna.util.yaml.YamlParser.<init>(YamlParser.java:45) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.<init>(NpcDefinitionParser.java:11) ~[classes/:?]
+	at io.luna.Server.initAsyncTasks(Server.java:108) ~[classes/:?]
+	at io.luna.Server.create(Server.java:56) ~[classes/:?]
+	at io.luna.Luna.main(Luna.java:32) [classes/:?]
+
+05 Sep 2015 20:26:19 ERROR - catching java.lang.ClassCastException: java.util.ArrayList cannot be cast to java.util.Map
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1216363977.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:38:40 ERROR - catching org.yaml.snakeyaml.constructor.ConstructorException: Can't construct a java object for tag:yaml.org,2002:java.util.HashMap; exception=No suitable constructor with 6102 arguments found for class java.util.HashMap
+ in 'reader', line 1, column 1:
+    - 
+    ^
+
+	at org.yaml.snakeyaml.constructor.Constructor$ConstructYamlObject.construct(Constructor.java:349) ~[snakeyaml-1.16.jar:?]
+	at org.yaml.snakeyaml.constructor.BaseConstructor.constructObject(BaseConstructor.java:182) ~[snakeyaml-1.16.jar:?]
+	at org.yaml.snakeyaml.constructor.BaseConstructor.constructDocument(BaseConstructor.java:141) ~[snakeyaml-1.16.jar:?]
+	at org.yaml.snakeyaml.constructor.BaseConstructor.getData(BaseConstructor.java:108) ~[snakeyaml-1.16.jar:?]
+	at org.yaml.snakeyaml.Yaml$1.next(Yaml.java:471) ~[snakeyaml-1.16.jar:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/2092841387.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+Caused by: org.yaml.snakeyaml.error.YAMLException: No suitable constructor with 6102 arguments found for class java.util.HashMap
+	at org.yaml.snakeyaml.constructor.Constructor$ConstructSequence.construct(Constructor.java:600) ~[snakeyaml-1.16.jar:?]
+	at org.yaml.snakeyaml.constructor.Constructor$ConstructYamlObject.construct(Constructor.java:345) ~[snakeyaml-1.16.jar:?]
+	... 10 more
+
+05 Sep 2015 20:41:15 ERROR - catching java.lang.ClassCastException: java.util.ArrayList cannot be cast to java.util.Map
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:72) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1216363977.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:41:37 ERROR - catching java.lang.ClassCastException: org.yaml.snakeyaml.Yaml$YamlIterable cannot be cast to java.util.List
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:68) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/936501439.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:42:54 ERROR - catching java.util.NoSuchElementException: id -> no YamlObject
+	at io.luna.util.yaml.YamlDocument.get(YamlDocument.java:24) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:16) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:71) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1354151709.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:43:28 ERROR - catching java.lang.ClassCastException: java.util.LinkedHashMap cannot be cast to java.util.List
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:68) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1354151709.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:43:59 ERROR - catching java.util.NoSuchElementException: id -> no YamlObject
+	at io.luna.util.yaml.YamlDocument.get(YamlDocument.java:24) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:16) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/2092841387.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:46:34 ERROR - catching java.util.NoSuchElementException: id -> no YamlObject
+	at io.luna.util.yaml.YamlDocument.get(YamlDocument.java:24) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:16) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1216363977.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:46:57 ERROR - catching java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Integer
+	at io.luna.util.yaml.YamlObject.asInt(YamlObject.java:14) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:19) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1354151709.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:48:11 ERROR - catching java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Integer
+	at io.luna.util.yaml.YamlObject.asInt(YamlObject.java:14) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:19) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/1803352877.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+05 Sep 2015 20:51:40 ERROR - catching java.lang.NumberFormatException: For input string: "---1"
+	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65) ~[?:1.8.0_25]
+	at java.lang.Integer.parseInt(Integer.java:580) ~[?:1.8.0_25]
+	at java.lang.Integer.parseInt(Integer.java:615) ~[?:1.8.0_25]
+	at io.luna.util.yaml.YamlObject.asInt(YamlObject.java:15) ~[classes/:?]
+	at io.luna.util.yaml.impl.NpcDefinitionParser.parse(NpcDefinitionParser.java:19) ~[classes/:?]
+	at io.luna.util.yaml.YamlParser.run(YamlParser.java:69) [classes/:?]
+	at io.luna.task.AsyncTaskService.lambda$0(AsyncTaskService.java:119) [classes/:?]
+	at io.luna.task.AsyncTaskService$$Lambda$2/211462178.run(Unknown Source) [classes/:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [?:1.8.0_25]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [?:1.8.0_25]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+
+01 Oct 2015 22:04:34 ERROR - catching io.netty.handler.codec.DecoderException: java.lang.NullPointerException
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:358) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:230) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:308) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:294) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.ChannelInboundHandlerAdapter.channelRead(ChannelInboundHandlerAdapter.java:86) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:308) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:294) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+Caused by: java.lang.NullPointerException
+	at io.luna.net.codec.login.LoginDecoder.decode(LoginDecoder.java:61) ~[classes/:?]
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:327) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	... 15 more
+
+01 Oct 2015 22:04:34 ERROR - catching io.netty.handler.codec.DecoderException: java.lang.NullPointerException
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:358) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:230) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:308) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:294) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.ChannelInboundHandlerAdapter.channelRead(ChannelInboundHandlerAdapter.java:86) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:308) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:294) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+Caused by: java.lang.NullPointerException
+	at io.luna.net.codec.login.LoginDecoder.decode(LoginDecoder.java:61) ~[classes/:?]
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:327) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	... 15 more
+
+01 Oct 2015 22:04:34 ERROR - catching io.netty.handler.codec.DecoderException: java.lang.NullPointerException
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:358) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelInactive(ByteToMessageDecoder.java:283) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:208) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:194) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.ChannelInboundHandlerAdapter.channelInactive(ChannelInboundHandlerAdapter.java:75) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:208) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:194) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelInactive(DefaultChannelPipeline.java:828) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannel$AbstractUnsafe$7.run(AbstractChannel.java:621) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:358) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:357) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+Caused by: java.lang.NullPointerException
+	at io.luna.net.codec.login.LoginDecoder.decode(LoginDecoder.java:61) ~[classes/:?]
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:327) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	... 13 more
+
+01 Oct 2015 22:04:34 ERROR - catching io.netty.handler.codec.DecoderException: java.lang.NullPointerException
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:358) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelInactive(ByteToMessageDecoder.java:283) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:208) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:194) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.ChannelInboundHandlerAdapter.channelInactive(ChannelInboundHandlerAdapter.java:75) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelInactive(AbstractChannelHandlerContext.java:208) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelInactive(AbstractChannelHandlerContext.java:194) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelInactive(DefaultChannelPipeline.java:828) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.AbstractChannel$AbstractUnsafe$7.run(AbstractChannel.java:621) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:358) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:357) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.31.Final.jar:4.0.31.Final]
+	at java.lang.Thread.run(Thread.java:745) [?:1.8.0_25]
+Caused by: java.lang.NullPointerException
+	at io.luna.net.codec.login.LoginDecoder.decode(LoginDecoder.java:61) ~[classes/:?]
+	at io.netty.handler.codec.ByteToMessageDecoder.callDecode(ByteToMessageDecoder.java:327) ~[netty-all-4.0.31.Final.jar:4.0.31.Final]
+	... 13 more
+

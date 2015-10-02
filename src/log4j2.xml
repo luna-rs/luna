@@ -5,7 +5,7 @@
             <PatternLayout
                 pattern="%d{dd MMM yyyy HH:mm:ss} %logger{36} [%t]%n%level: %msg%n" />
         </Console>
-        <File name="error_log" fileName="data/error_log.txt"
+        <File name="Log" fileName="data/log.log"
             append="true">
             <PatternLayout
                 pattern="%d{dd MMM yyyy HH:mm:ss} %-5level - %msg%xEx%n" />
@@ -16,7 +16,7 @@
     <Loggers>
         <Root level="ALL">
             <AppenderRef ref="Console" />
-            <AppenderRef ref="error_log" />
+            <AppenderRef ref="Log" />
         </Root>
     </Loggers>
 </Configuration>

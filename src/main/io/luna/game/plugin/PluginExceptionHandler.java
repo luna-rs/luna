@@ -9,8 +9,8 @@ import com.google.common.eventbus.SubscriberExceptionContext;
 import com.google.common.eventbus.SubscriberExceptionHandler;
 
 /**
- * A {@link com.google.common.eventbus.SubscriberExceptionHandler}
- * implementation that handles what happens an exception is thrown by plugins.
+ * A {@link SubscriberExceptionHandler} implementation that handles what happens
+ * an exception is thrown by plugins.
  * 
  * @author lare96 <http://github.org/lare96>
  */
