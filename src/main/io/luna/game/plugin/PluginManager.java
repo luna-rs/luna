@@ -40,14 +40,20 @@ public final class PluginManager extends EventBus {
     public void post(Object event) {
         if (event instanceof AsyncPluginEvent) {
             context.getService().execute(() -> super.post(event));
-        } else if (event instanceof GamePluginEvent) {
+            return;
+        }
+
+        if (event instanceof GamePluginEvent) {
             GamePluginEvent evt = (GamePluginEvent) event;
 
             if (evt.context() == null) {
                 evt.context_$eq(context);
             }
             super.post(evt);
+            return;
         }
+
+        super.post(event);
     }
 
     /**
