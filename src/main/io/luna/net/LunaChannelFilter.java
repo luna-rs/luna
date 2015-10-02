@@ -63,6 +63,7 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
             return;
         }
         if (connections.count(hostAddress) >= connectionLimit) {
+            // TODO send login response properly
             LoginResponseMessage msg = new LoginResponseMessage(LoginResponse.LOGIN_LIMIT_EXCEEDED);
             ctx.channel().writeAndFlush(msg);
             return;
