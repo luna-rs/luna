@@ -2,11 +2,8 @@ package io.luna.game.model.def;
 
 import io.luna.game.model.mobile.Npc;
 
-
 /**
- * A cached definition that describes a specific {@link Npc}. These can be
- * manipulated through their functions, but should typically
- * <strong>not</strong> be.
+ * A cached definition that describes a specific {@link Npc}.
  * 
  * @author lare96 <http://github.org/lare96>
  */
