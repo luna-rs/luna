@@ -1,7 +1,10 @@
 package io.luna.net;
 
+import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -25,7 +28,7 @@ import com.google.common.collect.Multiset;
  * @author lare96 <http://github.org/lare96>
  */
 @Sharable
-public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
+public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
 
     /**
      * A concurrent {@link Multiset} that holds the amount of connections made
@@ -63,9 +66,7 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
             return;
         }
         if (connections.count(hostAddress) >= connectionLimit) {
-            // TODO send login response properly
-            LoginResponseMessage msg = new LoginResponseMessage(LoginResponse.LOGIN_LIMIT_EXCEEDED);
-            ctx.channel().writeAndFlush(msg);
+            disconnect(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return;
         }
         connections.add(hostAddress);
@@ -80,6 +81,20 @@ public class LunaChannelFilter extends ChannelInboundHandlerAdapter {
         }
         connections.remove(hostAddress);
         ctx.fireChannelUnregistered();
+    }
+
+    /**
+     * Disconnects {@code ctx} with {@code response} as the response code.
+     * 
+     * @param ctx The channel handler context.
+     * @param response The response to disconnect with.
+     */
+    private void disconnect(ChannelHandlerContext ctx, LoginResponse response) {
+        LoginResponseMessage message = new LoginResponseMessage(LoginResponse.LOGIN_LIMIT_EXCEEDED);
+        ByteBuf initialMessage = ByteMessage.create(8).putLong(0).getBuffer();
+
+        ctx.channel().write(initialMessage);
+        ctx.channel().writeAndFlush(message).addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
