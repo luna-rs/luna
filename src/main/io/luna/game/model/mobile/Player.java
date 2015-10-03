@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkState;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 
+import java.util.Objects;
+
 /**
  * A {@link MobileEntity} implementation that is controlled by a real person.
  * 
@@ -38,6 +40,23 @@ public final class Player extends MobileEntity {
     @Override
     public EntityType type() {
         return EntityType.PLAYER;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUsernameHash());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Player) {
+            Player other = (Player) obj;
+            return other.getUsernameHash() == getUsernameHash();
+        }
+        return false;
     }
 
     /**
