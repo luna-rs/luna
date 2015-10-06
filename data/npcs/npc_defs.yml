@@ -22,7 +22,7 @@
 --- 
  id: 1
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -43,7 +43,7 @@
 --- 
  id: 2
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -64,7 +64,7 @@
 --- 
  id: 3
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -85,7 +85,7 @@
 --- 
  id: 4
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -106,7 +106,7 @@
 --- 
  id: 5
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -127,7 +127,7 @@
 --- 
  id: 6
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -505,7 +505,7 @@
 --- 
  id: 24
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -526,7 +526,7 @@
 --- 
  id: 25
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -3571,7 +3571,7 @@
 --- 
  id: 170
  name: Man
- examine: "One of Wildy's many citizens, apparently trying to be an explorer."
+ examine: "One of Runescape's many citizens, apparently trying to be an explorer."
  combat_level: 2
  size: 1
  attackable: true
@@ -7372,7 +7372,7 @@
 --- 
  id: 351
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 4
  size: 1
  attackable: true
@@ -7393,7 +7393,7 @@
 --- 
  id: 352
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 3
  size: 1
  attackable: true
@@ -7414,7 +7414,7 @@
 --- 
  id: 353
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 4
  size: 1
  attackable: true
@@ -7435,7 +7435,7 @@
 --- 
  id: 354
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 3
  size: 1
  attackable: true
@@ -7540,7 +7540,7 @@
 --- 
  id: 359
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -7561,7 +7561,7 @@
 --- 
  id: 360
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 4
  size: 1
  attackable: true
@@ -7582,7 +7582,7 @@
 --- 
  id: 361
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 12
  size: 1
  attackable: true
@@ -7603,7 +7603,7 @@
 --- 
  id: 362
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 3
  size: 1
  attackable: true
@@ -7624,7 +7624,7 @@
 --- 
  id: 363
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 14
  size: 1
  attackable: true
@@ -15247,7 +15247,7 @@
 --- 
  id: 726
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -15268,7 +15268,7 @@
 --- 
  id: 727
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -15289,7 +15289,7 @@
 --- 
  id: 728
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -15310,7 +15310,7 @@
 --- 
  id: 729
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -15331,7 +15331,7 @@
 --- 
  id: 730
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -19845,8 +19845,8 @@
  magic_defence: 0
 --- 
  id: 945
- name: "Wildy Guide"
- examine: "Your introduction to the world of Wildy."
+ name: "Runescape Guide"
+ examine: "Your introduction to the world of Runescape."
  combat_level: 0
  size: 1
  attackable: false
@@ -19888,7 +19888,7 @@
 --- 
  id: 947
  name: "Financial Advisor"
- examine: "An official representative from the First National Bank of Wildy."
+ examine: "An official representative from the First National Bank of Runescape."
  combat_level: 0
  size: 1
  attackable: false
@@ -19930,7 +19930,7 @@
 --- 
  id: 949
  name: "Quest Guide"
- examine: "Your introduction to the world of Wildy."
+ examine: "Your introduction to the world of Runescape."
  combat_level: 0
  size: 1
  attackable: false
@@ -22807,7 +22807,7 @@
 --- 
  id: 1086
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -27028,7 +27028,7 @@
 --- 
  id: 1287
  name: "Council workman"
- examine: "Supposedly fixes things around Wildy."
+ examine: "Supposedly fixes things around Runescape."
  combat_level: 0
  size: 1
  attackable: false
@@ -56176,7 +56176,7 @@
 --- 
  id: 2675
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -58276,7 +58276,7 @@
 --- 
  id: 2775
  name: 'Null'
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 1
  size: 1
  attackable: false
@@ -58297,7 +58297,7 @@
 --- 
  id: 2776
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60313,7 +60313,7 @@
 --- 
  id: 2872
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60334,7 +60334,7 @@
 --- 
  id: 2873
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60355,7 +60355,7 @@
 --- 
  id: 2874
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60376,7 +60376,7 @@
 --- 
  id: 2875
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60397,7 +60397,7 @@
 --- 
  id: 2876
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -60418,7 +60418,7 @@
 --- 
  id: 2877
  name: Child
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 0
  size: 1
  attackable: false
@@ -64576,7 +64576,7 @@
 --- 
  id: 3075
  name: "Illegal Monk"
- examine: "One of the illegal bretheren of Wildy."
+ examine: "One of the illegal bretheren of Runescape."
  combat_level: 0
  size: 1
  attackable: false
@@ -67663,7 +67663,7 @@
 --- 
  id: 3222
  name: "Drunken man"
- examine: "One of Wildy's many citizens, currently incapacitated by alcohol."
+ examine: "One of Runescape's many citizens, currently incapacitated by alcohol."
  combat_level: 3
  size: 1
  attackable: true
@@ -67684,7 +67684,7 @@
 --- 
  id: 3223
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -67705,7 +67705,7 @@
 --- 
  id: 3224
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -67726,7 +67726,7 @@
 --- 
  id: 3225
  name: Man
- examine: "One of Wildy's many citizens. He looks worried about something."
+ examine: "One of Runescape's many citizens. He looks worried about something."
  combat_level: 2
  size: 1
  attackable: true
@@ -67747,7 +67747,7 @@
 --- 
  id: 3226
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -67768,7 +67768,7 @@
 --- 
  id: 3227
  name: Woman
- examine: "One of Wildy's many citizens. She looks rich."
+ examine: "One of Runescape's many citizens. She looks rich."
  combat_level: 2
  size: 1
  attackable: true
@@ -76651,7 +76651,7 @@
 --- 
  id: 3650
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 43
  size: 2
  attackable: true
@@ -76672,7 +76672,7 @@
 --- 
  id: 3651
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 43
  size: 2
  attackable: true
@@ -76693,7 +76693,7 @@
 --- 
  id: 3652
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 43
  size: 2
  attackable: true
@@ -76714,7 +76714,7 @@
 --- 
  id: 3653
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 43
  size: 2
  attackable: true
@@ -76735,7 +76735,7 @@
 --- 
  id: 3654
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 43
  size: 2
  attackable: true
@@ -76987,7 +76987,7 @@
 --- 
  id: 3666
  name: "Confusion beast"
- examine: "What on Wildy is that?!?"
+ examine: "What on Runescape is that?!?"
  combat_level: 63
  size: 2
  attackable: true
@@ -82216,7 +82216,7 @@
 --- 
  id: 3915
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -91876,7 +91876,7 @@
 --- 
  id: 4375
  name: "Security Guard"
- examine: "A retired Wildy security guard."
+ examine: "A retired Runescape security guard."
  combat_level: 0
  size: 1
  attackable: true
@@ -105841,7 +105841,7 @@
 --- 
  id: 5040
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 0
  size: 1
  attackable: false
@@ -105925,7 +105925,7 @@
 --- 
  id: 5044
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 30
  size: 1
  attackable: true
@@ -105946,7 +105946,7 @@
 --- 
  id: 5045
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 32
  size: 1
  attackable: true
@@ -109474,7 +109474,7 @@
 --- 
  id: 5213
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 37
  size: 1
  attackable: true
@@ -109495,7 +109495,7 @@
 --- 
  id: 5214
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 42
  size: 1
  attackable: true
@@ -109516,7 +109516,7 @@
 --- 
  id: 5215
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 47
  size: 1
  attackable: true
@@ -109537,7 +109537,7 @@
 --- 
  id: 5216
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 56
  size: 1
  attackable: true
@@ -109558,7 +109558,7 @@
 --- 
  id: 5217
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 61
  size: 1
  attackable: true
@@ -109579,7 +109579,7 @@
 --- 
  id: 5218
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 68
  size: 1
  attackable: true
@@ -109600,7 +109600,7 @@
 --- 
  id: 5219
  name: "Penance Fighter"
- examine: "What on Wildy is that?"
+ examine: "What on Runescape is that?"
  combat_level: 77
  size: 1
  attackable: true
@@ -124384,7 +124384,7 @@
 --- 
  id: 5923
  name: Man
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -124405,7 +124405,7 @@
 --- 
  id: 5924
  name: Woman
- examine: "One of Wildy's many citizens."
+ examine: "One of Runescape's many citizens."
  combat_level: 2
  size: 1
  attackable: true
@@ -124552,7 +124552,7 @@
 --- 
  id: 5931
  name: "Historian Minas"
- examine: "Seth Minas --- an aged expert in Wildy history."
+ examine: "Seth Minas --- an aged expert in Runescape history."
  combat_level: 0
  size: 1
  attackable: false
