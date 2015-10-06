@@ -3,17 +3,19 @@ package io.luna.game;
 import io.netty.util.internal.StringUtil;
 
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -35,18 +37,13 @@ public final class GameService extends AbstractScheduledService {
      * A cached thread pool that manages the execution of short, low priority,
      * asynchronous and concurrent tasks.
      */
-    private final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("GameServiceWorkerThread").build());
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(
+        "GameServiceWorkerThread").build()));
 
     /**
      * A queue of synchronization tasks.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
-
-    /**
-     * A counter that determines how many ticks have passed since this
-     * {@code GameService} was started.
-     */
-    private final AtomicLong tickCount = new AtomicLong();
 
     @Override
     protected String serviceName() {
@@ -76,7 +73,6 @@ public final class GameService extends AbstractScheduledService {
                 LOGGER.catching(e);
             }
         }
-        tickCount.incrementAndGet();
     }
 
     @Override
@@ -99,7 +95,6 @@ public final class GameService extends AbstractScheduledService {
             syncTasks.clear();
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-            tickCount.set(0);
         } catch (Exception e) {
             LOGGER.catching(Level.FATAL, e);
         } finally {
@@ -127,12 +122,14 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Gets the amount of ticks that have elapsed since this application
-     * started. This function is thread-safe.
+     * Executes the result-bearing {@code t} using the backing cached thread
+     * pool. Tasks submitted this way should generally be short and low
+     * priority.
      * 
-     * @return The amount of ticks that have elapsed.
+     * @param t The task to execute.
+     * @return The {@link ListenableFuture} to track completion of the task.
      */
-    public long getTicks() {
-        return tickCount.get();
+    public <T> ListenableFuture<T> submit(Callable<T> t) {
+        return executorService.submit(t);
     }
 }
