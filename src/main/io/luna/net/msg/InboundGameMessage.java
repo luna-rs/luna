@@ -70,7 +70,7 @@ public abstract class InboundGameMessage {
      * @throws Exception If any exceptions are thrown. Will later be caught by
      *         the session logger.
      */
-    public abstract void readInboundMessage(Player player, GameMessage msg) throws Exception;
+    public abstract void readMessage(Player player, GameMessage msg) throws Exception;
 
     /**
      * Adds a handler to the static array of logic handlers.
