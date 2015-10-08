@@ -1,4 +1,4 @@
-package io.luna.util.yaml.impl;
+package io.luna.util.yaml.deserialize;
 
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.util.yaml.YamlDeserializer;
@@ -7,8 +7,8 @@ import io.luna.util.yaml.YamlDocument;
 import java.util.List;
 
 /**
- * A {@link YamlDeserializer} implementation that asynchronously deserializes
- * {@link NpcDefinition}s from the {@code ./data/npcs/npc_defs.yaml} file.
+ * A {@link YamlDeserializer} implementation that deserializes {@code YAML}
+ * files into {@link NpcDefinition}s.
  * 
  * @author lare96 <http://github.org/lare96>
  */
@@ -20,9 +20,9 @@ public final class NpcDefinitionDeserializer extends YamlDeserializer<NpcDefinit
     public NpcDefinitionDeserializer() {
         super("./data/npcs/npc_defs.yml");
     }
-    
+
     @Override
-    public NpcDefinition deserialize(YamlDocument yml) {
+    public NpcDefinition deserialize(YamlDocument yml) throws Exception {
         int id = yml.get("id").asInt();
         String name = yml.get("name").asString();
         String description = yml.get("examine").asString();
@@ -49,8 +49,6 @@ public final class NpcDefinitionDeserializer extends YamlDeserializer<NpcDefinit
 
     @Override
     public void onComplete(List<NpcDefinition> list) {
-        for (NpcDefinition it : list) {
-            NpcDefinition.DEFINITIONS[it.getId()] = it;
-        }
+        list.forEach(it -> NpcDefinition.DEFINITIONS[it.getId()] = it);
     }
 }

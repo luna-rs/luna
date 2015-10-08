@@ -6,9 +6,6 @@ import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 import org.apache.logging.log4j.Level;
@@ -69,24 +66,27 @@ public abstract class YamlSerializer<T> implements Runnable {
     /**
      * Serializes {@code obj} into {@link YamlDocument}.
      * 
+     * @param yml The {@link Yaml} instance being used to serialize.
      * @param obj The {@link Object} to serialize.
      * @return The serialized {@code obj}, represented as {@code YamlDocument}.
+     * @throws Exception If any {@link Exception}s are thrown during
+     *         serialization.
      */
-    public abstract YamlDocument serialize(T obj);
+    public abstract YamlDocument serialize(Yaml yml, T obj) throws Exception;
 
     @Override
     public final void run() {
         try {
             Yaml yaml = new Yaml();
-            List<Map<String, Object>> documents = new LinkedList<>();
+            YamlFile file = new YamlFile();
             for (;;) {
                 T next = serialize.poll();
                 if (next == null) {
                     break;
                 }
-                documents.add(serialize(next).toSerializableMap());
+                file.add(serialize(yaml, next));
             }
-            yaml.dumpAll(documents.iterator(), new FileWriter(path.toFile()));
+            yaml.dumpAll(file.toSerializableList().iterator(), new FileWriter(path.toFile()));
         } catch (Exception e) {
             LOGGER.catching(Level.WARN, e);
         }

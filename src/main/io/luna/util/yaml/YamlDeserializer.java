@@ -3,7 +3,6 @@ package io.luna.util.yaml;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,12 +49,15 @@ public abstract class YamlDeserializer<T> implements Callable<List<T>>, Runnable
     }
 
     /**
-     * Deserializes {@code yml} into {@code T}.
+     * Deserializes {@code from} into {@code T}.
      * 
-     * @param yml The document to deserialize.
+     * @param yml The {@link Yaml} instance being used to deserialize.
+     * @param from The document to deserialize.
      * @return The deserialized document, as {@code T}.
+     * @throws Exception If any {@link Exception}s are thrown during
+     *         deserialization.
      */
-    public abstract T deserialize(YamlDocument yml);
+    public abstract T deserialize(YamlDocument yml) throws Exception;
 
     /**
      * Invokes the {@code call()} function as an argument to
@@ -85,14 +87,14 @@ public abstract class YamlDeserializer<T> implements Callable<List<T>>, Runnable
         Yaml yaml = new Yaml();
         int index = 0;
 
-        try (Reader in = Files.newBufferedReader(path)) {
-            for (Object obj : yaml.loadAll(in)) {
+        for (Object obj : yaml.loadAll(Files.newBufferedReader(path))) {
+            try {
                 requireNonNull(obj, "Malformed document.");
-                list.add(deserialize(YamlDocument.immutable((Map<String, Object>) obj)));
+                list.add(deserialize(new YamlDocument((Map<String, Object>) obj)));
                 index++;
+            } catch (Exception e) {
+                LOGGER.warn("YAML document index " + index, e);
             }
-        } catch (Exception e) {
-            LOGGER.warn("YAML document index " + index, e);
         }
         return list;
     }
