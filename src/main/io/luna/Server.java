@@ -4,7 +4,8 @@ import io.luna.game.GameService;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.util.StringUtils;
-import io.luna.util.yaml.impl.NpcDefinitionDeserializer;
+import io.luna.util.yaml.deserialize.NpcDefinitionDeserializer;
+import io.luna.util.yaml.deserialize.PersistentFieldDeserializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -113,5 +114,6 @@ public final class Server {
     private void initAsyncTasks() throws Exception {
         service.execute(new PluginBootstrap(LogManager.getLogger(PluginBootstrap.class), context));
         service.execute(new NpcDefinitionDeserializer());
+        service.execute(new PersistentFieldDeserializer());
     }
 }

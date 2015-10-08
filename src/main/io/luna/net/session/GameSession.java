@@ -93,7 +93,7 @@ public final class GameSession extends Session {
             }
             InboundGameMessage inbound = InboundGameMessage.HANDLERS[msg.getOpcode()];
             try {
-                inbound.readInboundMessage(player, msg);
+                inbound.readMessage(player, msg);
             } catch (Exception e) {
                 LOGGER.catching(Level.WARN, e);
             }

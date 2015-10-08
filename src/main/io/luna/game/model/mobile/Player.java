@@ -24,6 +24,11 @@ public final class Player extends MobileEntity {
     private PlayerCredentials credentials;
 
     /**
+     * The password of this {@code Player}.
+     */
+    private final String password = credentials.getPassword();
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context to be managed in.
@@ -91,7 +96,7 @@ public final class Player extends MobileEntity {
      * @return The password of this {@code Player}.
      */
     public String getPassword() {
-        return credentials.getPassword();
+        return password;
     }
 
     /**

@@ -5,7 +5,7 @@ import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerCredentials;
-import io.luna.game.model.mobile.PlayerRights;
+import io.luna.game.model.mobile.PlayerSerializer;
 import io.luna.net.codec.game.MessageDecoder;
 import io.luna.net.codec.game.MessageEncoder;
 import io.luna.net.codec.login.LoginCredentialsMessage;
@@ -57,8 +57,9 @@ public final class LoginSession extends Session {
      * client.
      * 
      * @param msg The message containing the credentials.
+     * @throws Exception If any errors occur while handling credentials.
      */
-    private void handleCredentials(LoginCredentialsMessage msg) {
+    private void handleCredentials(LoginCredentialsMessage msg) throws Exception {
         Channel channel = getChannel();
         LoginResponse response = LoginResponse.NORMAL;
 
@@ -77,8 +78,8 @@ public final class LoginSession extends Session {
         }
 
         if (response == LoginResponse.NORMAL) {
-            // TODO deserialize player data
-            player.setRights(PlayerRights.ADMINISTRATOR);
+            PlayerSerializer deserializer = new PlayerSerializer(player);
+            response = deserializer.load(password);
         }
 
         ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response));
