@@ -74,7 +74,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             Attribute<Session> attribute = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY);
 
             attribute.set(new LoginSession(context, ctx.channel()));
-            attribute.get().setState(SessionState.DECODE_LOGIN);
+            attribute.get().setState(SessionState.LOGGING_IN);
 
             decodeHandshake(ctx, in, out);
 

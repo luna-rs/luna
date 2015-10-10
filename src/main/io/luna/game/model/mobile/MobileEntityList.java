@@ -220,7 +220,7 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
      * @param filter The filter to apply to the elements of this sequence.
      * @return An {@link ArrayList} containing the elements.
      */
-    public List<E> finzzzzzzzzzzzzzzdAll(Predicate<? super E> filter) {
+    public List<E> findAll(Predicate<? super E> filter) {
         List<E> list = new ArrayList<>();
         for (E e : this) {
             if (filter.test(e)) {

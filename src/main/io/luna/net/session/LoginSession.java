@@ -6,6 +6,7 @@ import io.luna.game.model.World;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerCredentials;
 import io.luna.game.model.mobile.PlayerSerializer;
+import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.game.MessageDecoder;
 import io.luna.net.codec.game.MessageEncoder;
 import io.luna.net.codec.login.LoginCredentialsMessage;
@@ -36,6 +37,7 @@ public final class LoginSession extends Session {
     /**
      * Creates a new {@link GameSession}.
      *
+     * @param context The context to be managed under.
      * @param channel The {@link Channel} for this session.
      */
     public LoginSession(LunaContext context, Channel channel) {
@@ -87,9 +89,15 @@ public final class LoginSession extends Session {
             future.addListener(ChannelFutureListener.CLOSE);
             return;
         }
+        future.awaitUninterruptibly();
 
         msg.getPipeline().replace("login-encoder", "game-encoder", new MessageEncoder(msg.getEncryptor()));
         msg.getPipeline().replace("login-decoder", "game-decoder", new MessageDecoder(msg.getDecryptor()));
-        // TODO queue player for login
+
+        GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor());
+        channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
+        player.setSession(session);
+
+        world.queueLogin(player);
     }
 }

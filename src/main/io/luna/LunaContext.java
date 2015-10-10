@@ -14,7 +14,7 @@ public final class LunaContext {
     /**
      * The {@link GameService} that manages game logic processing.
      */
-    private final GameService service = new GameService();
+    private final GameService service = new GameService(this);
 
     /**
      * The {@link World} that manages various entities.

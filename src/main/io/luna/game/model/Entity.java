@@ -15,27 +15,27 @@ import io.luna.game.plugin.PluginManager;
 public abstract class Entity {
 
     /**
-     * The {@link PluginManager} dedicated to this {@link Entity}.
+     * The {@link PluginManager} dedicated to this {@code Entity}.
      */
     protected final PluginManager plugins;
 
     /**
-     * The {@link GameService} dedicated to this {@link Entity}.
+     * The {@link GameService} dedicated to this {@code Entity}.
      */
     protected final GameService service;
 
     /**
-     * The {@link World} dedicated to this {@link Entity}.
+     * The {@link World} dedicated to this {@code Entity}.
      */
     protected final World world;
 
     /**
-     * The state of this {@link Entity}.
+     * The state of this {@code Entity}.
      */
     private EntityState state = EntityState.IDLE;
 
     /**
-     * The position of this {@link Entity}.
+     * The position of this {@code Entity}.
      */
     private Position position;
 
@@ -59,7 +59,7 @@ public abstract class Entity {
     }
 
     /**
-     * Creates a new {@link Entity} at the default position.
+     * Creates a new {@code Entity} at the default position.
      *
      * @param context The context to be managed in.
      */
@@ -93,32 +93,32 @@ public abstract class Entity {
     }
 
     /**
-     * @return The size of this {@link Entity}, will never be below {@code 0}.
+     * @return The size of this {@code Entity}, will never be below {@code 0}.
      */
     public abstract int size();
 
     /**
-     * @return The {@link EntityType} designated for this {@link Entity}.
+     * @return The {@code EntityType} designated for this {@code Entity}.
      */
     public abstract EntityType type();
 
     /**
-     * Fired when the state of this {@link Entity} is set to {@code IDLE}.
+     * Fired when the state of this {@code Entity} is set to {@code IDLE}.
      */
     public void onIdle() {}
 
     /**
-     * Fired when the state of this {@link Entity} is set to {@code ACTIVE}.
+     * Fired when the state of this {@code Entity} is set to {@code ACTIVE}.
      */
     public void onActive() {}
 
     /**
-     * Fired when the state of this {@link Entity} is set to {@code INACTIVE}.
+     * Fired when the state of this {@code Entity} is set to {@code INACTIVE}.
      */
     public void onInactive() {}
 
     /**
-     * @return The current state that this {@link Entity} is in.
+     * @return The current state that this {@code Entity} is in.
      */
     public final EntityState getState() {
         return state;
@@ -154,7 +154,7 @@ public abstract class Entity {
     }
 
     /**
-     * @return The position of this {@link Entity}.
+     * @return The position of this {@code Entity}.
      */
     public final Position getPosition() {
         return position;

@@ -48,12 +48,17 @@ public class Session {
     public void handleUpstreamMessage(Object msg) throws Exception {}
 
     /**
-     * Disposes of this {@code Session} by closing the {@link Channel} and
-     * modifying the {@link SessionState}.
+     * Implementations decide what happens during disposal of a session.
      */
-    public void dispose() {
+    public void onDispose() {}
+
+    /**
+     * Disposes of this {@code Session} by closing the {@link Channel} and
+     * executing the {@code onDispose()} listener.
+     */
+    public final void dispose() {
         channel.close();
-        state.set(SessionState.DISCONNECTED);
+        onDispose();
     }
 
     /**

@@ -10,7 +10,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.logging.log4j.Level;
+import io.luna.game.model.mobile.PlayerSerializer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -77,21 +78,25 @@ public final class GameService extends AbstractScheduledService {
      */
     @Override
     protected void runOneIteration() throws Exception {
-        for (;;) {
-            Runnable t = syncTasks.poll();
-            if (t == null) {
-                break;
-            }
+        try {
+            for (;;) {
+                Runnable t = syncTasks.poll();
+                if (t == null) {
+                    break;
+                }
 
-            try {
-                t.run();
-            } catch (Exception e) {
-                LOGGER.catching(e);
+                try {
+                    t.run();
+                } catch (Exception e) {
+                    LOGGER.catching(e);
+                }
             }
+            world.dequeueLogins();
+            world.runGameLoop();
+            world.dequeueLogouts();
+        } catch (Throwable t) {
+            LOGGER.catching(t);
         }
-        world.dequeueLogins();
-        world.runLogicProcessing();
-        world.dequeueLogouts();
     }
 
     @Override
@@ -109,13 +114,13 @@ public final class GameService extends AbstractScheduledService {
     protected void shutDown() {
         try {
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
-            // TODO: Logout players, clean up any additional resources, etc.
+            world.getPlayers().forEach(it -> new PlayerSerializer(it).save());
             syncTasks.forEach(Runnable::run);
             syncTasks.clear();
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (Exception e) {
-            LOGGER.catching(Level.FATAL, e);
+            LOGGER.catching(e);
         } finally {
             System.exit(0);
         }

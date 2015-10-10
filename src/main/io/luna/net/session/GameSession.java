@@ -69,6 +69,11 @@ public final class GameSession extends Session {
         }
     }
 
+    @Override
+    public void onDispose() {
+
+    }
+
     /**
      * Writes {@code msg} to the underlying channel; The channel is not flushed.
      * 

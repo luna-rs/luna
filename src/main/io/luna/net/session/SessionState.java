@@ -15,9 +15,9 @@ public enum SessionState {
     CONNECTED,
 
     /**
-     * The session is decoding the various states of the login protocol.
+     * The session is decoding the various stages of the login protocol.
      */
-    DECODE_LOGIN,
+    LOGGING_IN,
 
     /**
      * The session has just been queued for login, is idly awaiting login in the
@@ -31,7 +31,13 @@ public enum SessionState {
     LOGGED_IN,
 
     /**
-     * The session has been disconnected.
+     * The session has just been queued for logout, is idly awaiting logout in
+     * the logout queue.
      */
-    DISCONNECTED
+    LOGOUT_QUEUE,
+
+    /**
+     * The session has successfully been logged out.
+     */
+    LOGGED_OUT
 }
