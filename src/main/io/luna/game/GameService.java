@@ -1,5 +1,7 @@
 package io.luna.game;
 
+import io.luna.LunaContext;
+import io.luna.game.model.World;
 import io.netty.util.internal.StringUtil;
 
 import java.util.Queue;
@@ -45,6 +47,20 @@ public final class GameService extends AbstractScheduledService {
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
+    /**
+     * An instance of the {@link World}.
+     */
+    private final World world;
+
+    /**
+     * Creates a new {@link GameService}.
+     *
+     * @param context The context this is being managed under.
+     */
+    public GameService(LunaContext context) {
+        world = context.getWorld();
+    }
+
     @Override
     protected String serviceName() {
         return StringUtil.simpleClassName(this) + "Thread";
@@ -73,6 +89,9 @@ public final class GameService extends AbstractScheduledService {
                 LOGGER.catching(e);
             }
         }
+        world.dequeueLogins();
+        world.runLogicProcessing();
+        world.dequeueLogouts();
     }
 
     @Override
@@ -130,6 +149,17 @@ public final class GameService extends AbstractScheduledService {
      * @return The {@link ListenableFuture} to track completion of the task.
      */
     public <T> ListenableFuture<T> submit(Callable<T> t) {
+        return executorService.submit(t);
+    }
+
+    /**
+     * Executes {@code t} using the backing cached thread pool. Tasks submitted
+     * this way should generally be short and low priority.
+     * 
+     * @param t The task to execute.
+     * @return The {@link ListenableFuture} to track completion of the task.
+     */
+    public ListenableFuture<?> submit(Runnable t) {
         return executorService.submit(t);
     }
 }
