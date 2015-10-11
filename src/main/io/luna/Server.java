@@ -7,6 +7,8 @@ import io.luna.util.StringUtils;
 import io.luna.util.yaml.deserialize.NpcDefinitionDeserializer;
 import io.luna.util.yaml.deserialize.PersistentFieldDeserializer;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -82,6 +84,8 @@ public final class Server {
 
         ResourceLeakDetector.setLevel(LunaNetworkConstants.RESOURCE_LEAK_DETECTION);
 
+        bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context));

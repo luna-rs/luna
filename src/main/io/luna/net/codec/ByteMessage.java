@@ -20,7 +20,7 @@ public final class ByteMessage {
      * A buffer pool that will help reduce the overhead from allocating and
      * deallocating direct buffers.
      */
-    private static final ByteBufAllocator ALLOC = new PooledByteBufAllocator(true);
+    private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 
     /**
      * An array of bit masks used for bitwise operations.
