@@ -81,6 +81,11 @@ public final class PlayerSerializer {
      * The logger that will print important information.
      */
     private static final Logger LOGGER = LogManager.getLogger(PlayerSerializer.class);
+    
+    /**
+     * The {@link Path} to all of the serialized {@link Player} data.
+     */
+    private static final Path FILE_DIR = Paths.get("./data/player_files");
 
     /**
      * A {@link LinkedHashSet} of {@link PersistentField}s for serialization and
@@ -105,7 +110,17 @@ public final class PlayerSerializer {
      */
     public PlayerSerializer(Player player) {
         this.player = player;
-        path = Paths.get("./data/players/" + player.getUsername() + ".yml");
+        path = FILE_DIR.resolve(player.getUsername() + ".yml");
+    }
+
+    static {
+        if (Files.notExists(FILE_DIR)) {
+            try {
+                Files.createDirectory(FILE_DIR);
+            } catch (Exception e) {
+                LOGGER.catching(e);
+            }
+        }
     }
 
     /**
@@ -155,6 +170,10 @@ public final class PlayerSerializer {
     @SuppressWarnings("unchecked")
     public LoginResponse load(String expectedPassword) {
         try {
+            if (!path.toFile().exists()) {
+                return LoginResponse.NORMAL;
+            }
+
             Yaml yml = new Yaml();
             YamlDocument from = new YamlDocument((Map<String, Object>) yml.load(Files.newBufferedReader(path)));
 
