@@ -2,7 +2,9 @@ package io.luna.net;
 
 import io.luna.LunaContext;
 import io.luna.net.codec.login.LoginDecoder;
+import io.luna.net.codec.login.LoginEncoder;
 import io.luna.net.session.Session;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -16,6 +18,21 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
  */
 @Sharable
 public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+    /**
+     * Handles upstream messages from Netty.
+     */
+    private static final ChannelHandler UPSTREAM_HANDLER = new LunaUpstreamHandler();
+
+    /**
+     * Encodes the login response.
+     */
+    private static final ChannelHandler LOGIN_ENCODER = new LoginEncoder();
+
+    /**
+     * Filters channels based on the amount of active connections they have.
+     */
+    private static final ChannelHandler CHANNEL_FILTER = new LunaChannelFilter();
 
     /**
      * The underlying context to be managed under.
@@ -35,10 +52,10 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.attr(LunaNetworkConstants.SESSION_KEY).setIfAbsent(new Session(ch));
 
-        ch.pipeline().addLast("channel-filter", LunaChannelHandlers.CHANNEL_FILTER);
+        ch.pipeline().addLast("channel-filter", CHANNEL_FILTER);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context));
-        ch.pipeline().addLast("login-encoder", LunaChannelHandlers.LOGIN_ENCODER);
-        ch.pipeline().addLast("upstream-handler", LunaChannelHandlers.UPSTREAM_HANDLER);
+        ch.pipeline().addLast("login-encoder", LOGIN_ENCODER);
+        ch.pipeline().addLast("upstream-handler", UPSTREAM_HANDLER);
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
     }
 }
