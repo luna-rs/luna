@@ -41,10 +41,10 @@ public final class Server {
      * The {@link ExecutorService} that will execute startup tasks.
      */
     private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat(
-        "BackgroundServiceThread").build());
+        "LunaInitializationThread").build());
 
     /**
-     * The {@link LunaContext} that this server will be managed with.
+     * The {@link LunaContext} that this {@code Server} will be managed with.
      */
     private final LunaContext context = new LunaContext();
 
@@ -93,7 +93,7 @@ public final class Server {
 
         if (!LunaNetworkConstants.PREFERRED_PORTS.contains(LunaNetworkConstants.PORT)) {
             String prefix = "The preferred ports for Runescape servers are ";
-            LOGGER.info(StringUtils.joinWithAnd(prefix, ".", LunaNetworkConstants.PREFERRED_PORTS));
+            LOGGER.info(StringUtils.joinWithAnd(prefix, ".", LunaNetworkConstants.PREFERRED_PORTS.asList()));
         }
     }
 
