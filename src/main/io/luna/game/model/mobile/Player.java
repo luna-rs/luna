@@ -3,6 +3,7 @@ package io.luna.game.model.mobile;
 import static com.google.common.base.Preconditions.checkState;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
+import io.luna.net.msg.OutboundGameMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.luna.net.session.SessionState;
@@ -11,6 +12,9 @@ import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import plugin.LoginEvent;
+import plugin.LogoutEvent;
 
 import com.google.common.base.MoreObjects;
 
@@ -35,11 +39,6 @@ public final class Player extends MobileEntity {
      * The credentials of this {@code Player}.
      */
     private PlayerCredentials credentials;
-
-    /**
-     * The password of this {@code Player}.
-     */
-    private final String password = credentials.getPassword();
 
     /**
      * The {@link Session} assigned to this {@code Player}.
@@ -90,7 +89,7 @@ public final class Player extends MobileEntity {
     @Override
     public void onActive() {
         if (session.getState() == SessionState.LOGIN_QUEUE) {
-            // TODO Send initial login packets
+			plugins.post(new LoginEvent(this));
 
             LOGGER.info(this + " has logged in.");
         } else {
@@ -101,14 +100,24 @@ public final class Player extends MobileEntity {
     @Override
     public void onInactive() {
         if (session.getState() == SessionState.LOGOUT_QUEUE) {
+			plugins.post(new LogoutEvent(this));
+
             PlayerSerializer serializer = new PlayerSerializer(this);
             serializer.asyncSave(service);
 
             session.setState(SessionState.LOGGED_OUT);
+
             LOGGER.info(this + " has logged out.");
         } else {
             throw new IllegalStateException("use Session#dispose, SendLogoutMessage, or World#queueLogout instead");
         }
+    }
+
+    /**
+     * A shortcut function to {@link GameSession#queue(OutboundGameMessage)}.
+     */
+    public void queue(OutboundGameMessage msg) {
+        session.queue(msg);
     }
 
     /**
@@ -143,7 +152,7 @@ public final class Player extends MobileEntity {
      * @return The password of this {@code Player}.
      */
     public String getPassword() {
-        return password;
+        return credentials.getPassword();
     }
 
     /**

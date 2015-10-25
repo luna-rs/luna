@@ -49,7 +49,7 @@ public abstract class MobileEntity extends Entity {
      */
     public void setIndex(int index) {
         if (index != -1) {
-            checkArgument(index >= 1, "index < 1");
+			checkArgument(index >= 1, "index < 1");
         }
         this.index = index;
     }
