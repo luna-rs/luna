@@ -33,348 +33,314 @@ import com.google.common.primitives.Ints;
  */
 public final class MobileEntityList<E extends MobileEntity> implements Iterable<E> {
 
-    /**
-     * An {@link Iterator} implementation designed specifically
-     * {@link MobileEntityList}s.
-     * 
-     * @author lare96 <http://github.org/lare96>
-     * @param <E> The specific type of {@link MobileEntity} being managed within
-     *        this {@code Iterator}.
-     */
-    public static final class MobileEntityListIterator<E extends MobileEntity> implements Iterator<E> {
+	/**
+	 * An {@link Iterator} implementation designed specifically
+	 * {@link MobileEntityList}s.
+	 * 
+	 * @author lare96 <http://github.org/lare96>
+	 * @param <E> The specific type of {@link MobileEntity} being managed within
+	 *        this {@code Iterator}.
+	 */
+	public static final class MobileEntityListIterator<E extends MobileEntity> implements Iterator<E> {
 
-        /**
-         * The {@link MobileEntityList} this {@link Iterator} is dedicated to.
-         */
-        private final MobileEntityList<E> list;
+		/**
+		 * The {@link MobileEntityList} this {@link Iterator} is dedicated to.
+		 */
+		private final MobileEntityList<E> list;
 
-        /**
-         * If {@code null} values should be skipped.
-         */
-        private final boolean skipNull;
+		/**
+		 * The current index.
+		 */
+		private int curr;
 
-        /**
-         * The current index.
-         */
-        private int curr;
+		/**
+		 * The previous index.
+		 */
+		private int prev = -1;
 
-        /**
-         * The previous index.
-         */
-        private int prev = -1;
+		/**
+		 * Creates a new {@link MobileEntityListIterator}.
+		 *
+		 * @param list The {@link MobileEntityList} this {@link Iterator} is
+		 *        dedicated to.
+		 * @param skipNull If {@code null} values should be skipped.
+		 */
+		public MobileEntityListIterator(MobileEntityList<E> list) {
+			this.list = list;
+		}
 
-        /**
-         * A factory method that returns a {@link MobileEntityListIterator} that
-         * ignores {@code null} values completely. This is the default
-         * implementation for all {@link MobileEntityList}s.
-         * 
-         * @param list The backing list.
-         * @return The {@link Iterator} for the backing list.
-         */
-        public static <E extends MobileEntity> MobileEntityListIterator<E> excludeNull(MobileEntityList<E> list) {
-            return new MobileEntityListIterator<E>(list, true);
-        }
+		@Override
+		public boolean hasNext() {
+			if (curr < list.capacity()) {
+				return skipNullIndexes();
+			}
+			return false;
+		}
 
-        /**
-         * A factory method that returns a {@link MobileEntityListIterator} that
-         * includes {@code null} values.
-         * 
-         * @param list The backing list.
-         * @return The {@link Iterator} for the backing list.
-         */
-        public static <E extends MobileEntity> MobileEntityListIterator<E> includeNull(MobileEntityList<E> list) {
-            return new MobileEntityListIterator<E>(list, false);
-        }
+		@Override
+		public E next() {
+			skipNullIndexes();
 
-        /**
-         * Creates a new {@link MobileEntityListIterator}.
-         *
-         * @param list The {@link MobileEntityList} this {@link Iterator} is
-         *        dedicated to.
-         * @param skipNull If {@code null} values should be skipped.
-         */
-        private MobileEntityListIterator(MobileEntityList<E> list, boolean skipNull) {
-            this.list = list;
-            this.skipNull = skipNull;
-        }
+			checkPositionIndex(curr, list.capacity(), "No elements left");
 
-        @Override
-        public boolean hasNext() {
-            if (curr < list.capacity()) {
-                if (skipNull) {
-                    return skipNullIndexes();
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        }
+			E mob = list.element(curr);
+			prev = curr++;
+			return mob;
+		}
 
-        @Override
-        public E next() {
-            if (skipNull) {
-                skipNullIndexes();
-            }
-            checkPositionIndex(curr, list.capacity(), "No elements left");
+		@Override
+		public void remove() {
+			checkState(prev != -1, "remove() can only be called once after each call to next()");
 
-            E mob = skipNull ? list.element(curr) : list.get(curr);
-            prev = curr++;
-            return mob;
-        }
+			list.remove(list.get(prev));
+			prev = -1;
+		}
 
-        @Override
-        public void remove() {
-            checkState(prev != -1, "remove() can only be called once after each call to next()");
+		/**
+		 * Forwards the {@code curr} marker until a {@code non-null} element is
+		 * found.
+		 * 
+		 * @return {@code true} if a non-null element is found, {@code false}
+		 *         otherwise.
+		 */
+		private boolean skipNullIndexes() {
+			while (list.get(curr) == null) {
+				if (++curr >= list.capacity()) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
 
-            list.remove(list.get(prev));
-            prev = -1;
-        }
+	/**
+	 * The mobs contained within this list.
+	 */
+	private final E[] mobs;
 
-        /**
-         * Forwards the {@code curr} marker until a {@code non-null} element is
-         * found.
-         * 
-         * @return {@code true} if a non-null element is found, {@code false}
-         *         otherwise.
-         */
-        private boolean skipNullIndexes() {
-            while (list.get(curr) == null) {
-                if (++curr >= list.capacity()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
+	/**
+	 * A queue that acts as a cache for indexes.
+	 */
+	private final Queue<Integer> indexes;
 
-    /**
-     * The mobs contained within this list.
-     */
-    private final E[] mobs;
+	/**
+	 * The internal size of this list.
+	 */
+	private int size;
 
-    /**
-     * A queue that acts as a cache for indexes.
-     */
-    private final Queue<Integer> indexes;
+	/**
+	 * Creates a new {@link MobileEntityList}.
+	 *
+	 * @param capacity The length of the backing array plus {@code 1}.
+	 */
+	@SuppressWarnings("unchecked")
+	public MobileEntityList(int capacity) {
+		mobs = (E[]) new MobileEntity[++capacity];
+		indexes = new ArrayDeque<Integer>(Ints.asList(IntStream.rangeClosed(1, mobs.length).toArray()));
+	}
 
-    /**
-     * The internal size of this list.
-     */
-    private int size;
+	@Override
+	public Iterator<E> iterator() {
+		return new MobileEntityListIterator<E>(this);
+	}
 
-    /**
-     * Creates a new {@link MobileEntityList}.
-     *
-     * @param capacity The length of the backing array plus {@code 1}.
-     */
-    @SuppressWarnings("unchecked")
-    public MobileEntityList(int capacity) {
-        mobs = (E[]) new MobileEntity[++capacity];
-        indexes = new ArrayDeque<Integer>(Ints.asList(IntStream.rangeClosed(1, capacity).toArray()));
-    }
+	/**
+	 * Finds the first element that matches {@code filter}.
+	 * 
+	 * @param filter The filter to apply to the elements of this sequence.
+	 * @return An {@link Optional} containing the element, or an empty
+	 *         {@code Optional} if no element was found.
+	 */
+	public Optional<E> findFirst(Predicate<? super E> filter) {
+		for (E e : this) {
+			if (filter.test(e)) {
+				return Optional.of(e);
+			}
+		}
+		return Optional.empty();
+	}
 
-    @Override
-    public Iterator<E> iterator() {
-        return MobileEntityListIterator.excludeNull(this);
-    }
+	/**
+	 * Finds the last element that matches {@code filter}.
+	 * 
+	 * @param filter The filter to apply to the elements of this sequence.
+	 * @return An {@link Optional} containing the element, or an empty
+	 *         {@code Optional} if no element was found.
+	 */
+	public Optional<E> findLast(Predicate<? super E> filter) {
+		for (int index = capacity(); index > 0; index--) {
+			E mob = mobs[index];
+			if (mob == null) {
+				continue;
+			}
+			if (filter.test(mob)) {
+				return Optional.of(mob);
+			}
+		}
+		return Optional.empty();
+	}
 
-    /**
-     * Finds the first element that matches {@code filter}.
-     * 
-     * @param filter The filter to apply to the elements of this sequence.
-     * @return An {@link Optional} containing the element, or an empty
-     *         {@code Optional} if no element was found.
-     */
-    public Optional<E> findFirst(Predicate<? super E> filter) {
-        for (E e : this) {
-            if (filter.test(e)) {
-                return Optional.of(e);
-            }
-        }
-        return Optional.empty();
-    }
+	/**
+	 * Finds all elements that match {@code filter}.
+	 * 
+	 * @param filter The filter to apply to the elements of this sequence.
+	 * @return An {@link ArrayList} containing the elements.
+	 */
+	public List<E> findAll(Predicate<? super E> filter) {
+		List<E> list = new ArrayList<>();
+		for (E e : this) {
+			if (filter.test(e)) {
+				list.add(e);
+			}
+		}
+		return list;
+	}
 
-    /**
-     * Finds the last element that matches {@code filter}.
-     * 
-     * @param filter The filter to apply to the elements of this sequence.
-     * @return An {@link Optional} containing the element, or an empty
-     *         {@code Optional} if no element was found.
-     */
-    public Optional<E> findLast(Predicate<? super E> filter) {
-        for (int index = capacity(); index > 0; index--) {
-            E mob = mobs[index];
-            if (mob == null) {
-                continue;
-            }
-            if (filter.test(mob)) {
-                return Optional.of(mob);
-            }
-        }
-        return Optional.empty();
-    }
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * As a rule of thumb, {@code stream()} and {@code parallelStream()} should
+	 * always be used directly instead unless absolutely needed.
+	 */
+	@Override
+	public Spliterator<E> spliterator() {
+		return Spliterators.spliterator(mobs, Spliterator.ORDERED | Spliterator.DISTINCT);
+	}
 
-    /**
-     * Finds all elements that match {@code filter}.
-     * 
-     * @param filter The filter to apply to the elements of this sequence.
-     * @return An {@link ArrayList} containing the elements.
-     */
-    public List<E> findAll(Predicate<? super E> filter) {
-        List<E> list = new ArrayList<>();
-        for (E e : this) {
-            if (filter.test(e)) {
-                list.add(e);
-            }
-        }
-        return list;
-    }
+	/**
+	 * Adds {@code mob} to this list. Will throw an exception if this list is
+	 * full, or if the mob being added has a state of {@code ACTIVE}.
+	 * 
+	 * @param mob The mob to add to this list.
+	 */
+	public void add(E mob) {
+		checkArgument(mob.getState() != EntityState.ACTIVE, "state == ACTIVE");
+		checkState(!isFull(), "isFull() == true");
 
-    /**
-     * {@inheritDoc}
-     * 
-     * As a rule of thumb, {@code stream()} and {@code parallelStream()} should
-     * always be used directly instead unless absolutely needed.
-     */
-    @Override
-    public Spliterator<E> spliterator() {
-        return Spliterators.spliterator(mobs, Spliterator.ORDERED | Spliterator.DISTINCT);
-    }
+		int index = indexes.remove();
+		mob.setState(EntityState.ACTIVE);
+		mob.setIndex(index);
+		mobs[index] = mob;
+		size++;
+	}
 
-    /**
-     * Adds {@code mob} to this list. Will throw an exception if this list is
-     * full, or if the mob being added has a state of {@code ACTIVE}.
-     * 
-     * @param mob The mob to add to this list.
-     */
-    public void add(E mob) {
-        checkArgument(mob.getState() != EntityState.ACTIVE, "state == ACTIVE");
-        checkState(!isFull(), "isFull() == true");
+	/**
+	 * Removes {@code mob} from this list. Will throw an exception if the mob
+	 * being removed does not have a state of {@code ACTIVE}.
+	 * 
+	 * @param mob The mob to remove from this list.
+	 */
+	public void remove(E mob) {
+		checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
 
-        int index = indexes.remove();
-        mob.setState(EntityState.ACTIVE);
-        mob.setIndex(index);
-        mobs[index] = mob;
-        size++;
-    }
+		indexes.add(mob.getIndex());
+		mob.setState(EntityState.INACTIVE);
+		mobs[mob.getIndex()] = null;
+		mob.setIndex(-1);
+		size--;
+	}
 
-    /**
-     * Removes {@code mob} from this list. Will throw an exception if the mob
-     * being removed does not have a state of {@code ACTIVE}.
-     * 
-     * @param mob The mob to remove from this list.
-     */
-    public void remove(E mob) {
-        checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
+	/**
+	 * Retrieves the element on {@code index}.
+	 * 
+	 * @param index The index.
+	 * @return The retrieved element, possibly {@code null}.
+	 */
+	public E get(int index) {
+		return mobs[index];
+	}
 
-        indexes.add(mob.getIndex());
-        mob.setState(EntityState.INACTIVE);
-        mobs[mob.getIndex()] = null;
-        mob.setIndex(-1);
-        size--;
-    }
+	/**
+	 * Retrieves the element on {@code index}, the only difference between this
+	 * and {@code get(int)} is that this method throws an exception if no mob is
+	 * found on {@code index}.
+	 * 
+	 * @param index The index.
+	 * @return The retrieved element, will never be {@code null}.
+	 */
+	public E element(int index) {
+		E mob = get(index);
+		checkArgument(mob != null, "index -> null MobileEntity");
+		return mob;
+	}
 
-    /**
-     * Retrieves the element on {@code index}.
-     * 
-     * @param index The index.
-     * @return The retrieved element, possibly {@code null}.
-     */
-    public E get(int index) {
-        return mobs[index];
-    }
+	/**
+	 * Determines if this list contains {@code mob}.
+	 * 
+	 * @param mob The mob to check for.
+	 * @return {@code true} if {@code mob} is contained, {@code false}
+	 *         otherwise.
+	 */
+	public boolean contains(E mob) {
+		return get(mob.getIndex()) != null;
+	}
 
-    /**
-     * Retrieves the element on {@code index}, the only difference between this
-     * and {@code get(int)} is that this method throws an exception if no mob is
-     * found on {@code index}.
-     * 
-     * @param index The index.
-     * @return The retrieved element, will never be {@code null}.
-     */
-    public E element(int index) {
-        E mob = get(index);
-        checkArgument(mob != null, "index -> null MobileEntity");
-        return mob;
-    }
+	/**
+	 * @return {@code true} if this list is full, {@code false} otherwise.
+	 */
+	public boolean isFull() {
+		return size() == capacity();
+	}
 
-    /**
-     * Determines if this list contains {@code mob}.
-     * 
-     * @param mob The mob to check for.
-     * @return {@code true} if {@code mob} is contained, {@code false}
-     *         otherwise.
-     */
-    public boolean contains(E mob) {
-        return get(mob.getIndex()) != null;
-    }
+	/**
+	 * @return {@code true} if this list is empty, {@code false} otherwise.
+	 */
+	public boolean isEmpty() {
+		return size() == 0;
+	}
 
-    /**
-     * @return {@code true} if this list is full, {@code false} otherwise.
-     */
-    public boolean isFull() {
-        return size() == capacity();
-    }
+	/**
+	 * @return The amount of mobs in this list.
+	 */
+	public int size() {
+		return size;
+	}
 
-    /**
-     * @return {@code true} if this list is empty, {@code false} otherwise.
-     */
-    public boolean isEmpty() {
-        return size() == 0;
-    }
+	/**
+	 * @return The amount of free spaces remaining in this list.
+	 */
+	public int remaining() {
+		return capacity() - size();
+	}
 
-    /**
-     * @return The amount of mobs in this list.
-     */
-    public int size() {
-        return size;
-    }
+	/**
+	 * @return The length of the backing array.
+	 */
+	public int capacity() {
+		return mobs.length;
+	}
 
-    /**
-     * @return The amount of free spaces remaining in this list.
-     */
-    public int remaining() {
-        return capacity() - size();
-    }
+	/**
+	 * <strong>Warning: This function does not give direct access to the backing
+	 * array but instead creates a shallow copy.</strong>
+	 * 
+	 * @return The shallow copy of the backing array.
+	 */
+	public E[] toArray() {
+		return Arrays.copyOf(mobs, mobs.length);
+	}
 
-    /**
-     * @return The length of the backing array.
-     */
-    public int capacity() {
-        return mobs.length;
-    }
+	/**
+	 * Calls {@code remove()} on every single {@link MobileEntity} in this list.
+	 */
+	public void clear() {
+		forEach(this::remove);
+	}
 
-    /**
-     * <strong>Warning: This function does not give direct access to the backing
-     * array but instead creates a shallow copy.</strong>
-     * 
-     * @return The shallow copy of the backing array.
-     */
-    public E[] toArray() {
-        return Arrays.copyOf(mobs, mobs.length);
-    }
+	/**
+	 * @return The {@link Stream} that will traverse over this list.
+	 *         Automatically excludes {@code null} values.
+	 */
+	public Stream<E> stream() {
+		return StreamSupport.stream(spliterator(), false).filter(Objects::nonNull);
+	}
 
-    /**
-     * Calls {@code remove()} on every single {@link MobileEntity} in this list.
-     */
-    public void clear() {
-        forEach(this::remove);
-    }
-
-    /**
-     * @return The {@link Stream} that will traverse over this list.
-     *         Automatically excludes {@code null} values.
-     */
-    public Stream<E> stream() {
-        return StreamSupport.stream(spliterator(), false).filter(Objects::nonNull);
-    }
-
-    /**
-     * @return The {@link Stream} that will traverse over this list in parallel.
-     *         Automatically excludes {@code null} values.
-     */
-    public Stream<E> parallelStream() {
-        Spliterator<E> split = Spliterators.spliterator(mobs, spliterator().characteristics() | Spliterator.IMMUTABLE);
-        return StreamSupport.stream(split, true).filter(Objects::nonNull);
-    }
+	/**
+	 * @return The {@link Stream} that will traverse over this list in parallel.
+	 *         Automatically excludes {@code null} values.
+	 */
+	public Stream<E> parallelStream() {
+		Spliterator<E> split = Spliterators.spliterator(mobs, spliterator().characteristics() | Spliterator.IMMUTABLE);
+		return StreamSupport.stream(split, true).filter(Objects::nonNull);
+	}
 }
