@@ -1,18 +1,15 @@
 package io.luna.game.model.mobile;
 
 import io.luna.game.GameService;
+import io.luna.game.model.Position;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.yaml.YamlDocument;
 
 import java.io.FileWriter;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.apache.logging.log4j.Level;
@@ -20,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 
-import com.google.common.base.CaseFormat;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -32,52 +28,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 public final class PlayerSerializer {
 
     /**
-     * A model representing a persistent {@link Field} within the {@link Player}
-     * class.
-     * 
-     * @author lare96 <http://github.org/lare96>
-     */
-    public static final class PersistentField {
-
-        /**
-         * The name of the persistent field.
-         */
-        private final String fieldName;
-
-        /**
-         * The token of the persistent field.
-         */
-        private final String tokenName;
-
-        /**
-         * Creates a new {@link PersistentField}.
-         *
-         * @param fieldName The name of the persistent field.
-         */
-        public PersistentField(String fieldName) {
-            this.fieldName = fieldName;
-            tokenName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, fieldName);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(fieldName);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof PersistentField) {
-                PersistentField other = (PersistentField) obj;
-                return fieldName.equals(other.fieldName);
-            }
-            return false;
-        }
-    }
-
-    /**
      * The logger that will print important information.
      */
     private static final Logger LOGGER = LogManager.getLogger(PlayerSerializer.class);
@@ -86,12 +36,6 @@ public final class PlayerSerializer {
      * The {@link Path} to all of the serialized {@link Player} data.
      */
     private static final Path FILE_DIR = Paths.get("./data/player_files");
-
-    /**
-     * A {@link LinkedHashSet} of {@link PersistentField}s for serialization and
-     * deserialization.
-     */
-    public static final Set<PersistentField> PERSISTENT_FIELDS = new LinkedHashSet<>();
 
     /**
      * The {@link Player} being serialized or deserialized.
@@ -131,11 +75,10 @@ public final class PlayerSerializer {
             Yaml yml = new Yaml();
             YamlDocument to = new YamlDocument();
 
-            for (PersistentField it : PERSISTENT_FIELDS) {
-                Field field = Player.class.getField(it.fieldName);
-                field.setAccessible(true);
-                to.add(it.tokenName, field.get(player));
-            }
+            to.add("password", player.getPassword());
+			to.add("position", player.getPosition());
+			to.add("rights", player.getRights());
+
             yml.dump(to.toSerializableMap(), new FileWriter(path.toFile()));
         } catch (Exception e) {
             LOGGER.catching(Level.WARN, e);
@@ -177,17 +120,18 @@ public final class PlayerSerializer {
             Yaml yml = new Yaml();
             YamlDocument from = new YamlDocument((Map<String, Object>) yml.load(Files.newBufferedReader(path)));
 
-            if (!expectedPassword.equals(from.get("password").asString())) {
+			String password = from.get("password").asString();
+			Position position = from.get("position").asType(Position.class);
+			PlayerRights rights = PlayerRights.valueOf(from.get("rights").asString());
+
+			player.setPosition(position);
+			player.setRights(rights);
+
+			if (!expectedPassword.equals(password)) {
                 return LoginResponse.INVALID_CREDENTIALS;
             }
-
-            for (PersistentField it : PERSISTENT_FIELDS) {
-                Field field = Player.class.getField(it.fieldName);
-                field.setAccessible(true);
-                field.set(player, from.get(it.tokenName));
-            }
         } catch (Exception e) {
-            LOGGER.catching(Level.WARN, e);
+			LOGGER.catching(e);
             return LoginResponse.COULD_NOT_COMPLETE_LOGIN;
         }
         return LoginResponse.NORMAL;
