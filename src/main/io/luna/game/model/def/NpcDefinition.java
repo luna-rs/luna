@@ -10,7 +10,7 @@ import io.luna.game.model.mobile.Npc;
 public final class NpcDefinition {
 
     /**
-     * An array of the cached {@link NpcDefinition}s.
+     * An array of the cached {@code NpcDefinition}s.
      */
     public static final NpcDefinition[] DEFINITIONS = new NpcDefinition[8152];
 

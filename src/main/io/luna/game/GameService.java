@@ -2,6 +2,7 @@ package io.luna.game;
 
 import io.luna.LunaContext;
 import io.luna.game.model.World;
+import io.luna.game.model.mobile.PlayerSerializer;
 import io.netty.util.internal.StringUtil;
 
 import java.util.Queue;
@@ -9,8 +10,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import io.luna.game.model.mobile.PlayerSerializer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
