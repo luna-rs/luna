@@ -66,10 +66,9 @@ public final class Item {
 	}
 
 	/**
-	 * Decrements the amount by the <strong>absolute</strong>
-	 * {@code removeAmount}. The returned {@code Item} <strong>does not</strong>
-	 * hold any references to this one. It will also have a minimum amount of
-	 * {@code 1}.
+	 * Decrements the amount by {@code removeAmount}. The returned {@code Item}
+	 * <strong>does not</strong> hold any references to this one. It will also
+	 * have a minimum amount of {@code 1}.
 	 * 
 	 * @param removeAmount The amount to remove.
 	 * @return The newly incremented {@code Item}.
@@ -89,15 +88,15 @@ public final class Item {
 	}
 
 	/**
-	 * Sets the amount by the <strong>absolute</strong> {@code newAmount}. The
-	 * returned {@code Item} <strong>does not</strong> hold any references to
-	 * this one. It will throw an exception on overflows and negative values.
+	 * Sets the amount to {@code newAmount}. The returned {@code Item}
+	 * <strong>does not</strong> hold any references to this one. It will throw
+	 * an exception on overflows and negative values.
 	 * 
 	 * @param newAmount The new amount to set.
 	 * @return The newly amount set {@code Item}.
 	 */
 	public Item setAmount(int newAmount) {
-		return new Item(id, Math.abs(newAmount));
+		return new Item(id, newAmount);
 	}
 
 	/**
