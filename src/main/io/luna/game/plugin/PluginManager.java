@@ -1,69 +1,78 @@
 package io.luna.game.plugin;
 
 import io.luna.LunaContext;
-import plugin.events.AsyncPluginEvent;
-import plugin.events.DeadEventHandler;
-import plugin.events.GamePluginEvent;
+import io.netty.util.internal.StringUtil;
 
-import com.google.common.eventbus.EventBus;
+import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import plugin.PluginBootstrap;
 
 /**
- * An {@link EventBus} implementation that manages the publish-subscribe-style
- * communication between plugins (also known as subscribers) and events.
+ * A class that manages all of the {@link Plugin}s and their respective
+ * {@link PluginPipeline}s. Has a function to submit a new {@code Plugin} and
+ * another to post events to existing {@code Plugin}s.
  * 
  * @author lare96 <http://github.org/lare96>
  */
-public final class PluginManager extends EventBus {
+public final class PluginManager {
 
-    /**
-     * The context this {@code PluginManager} is under.
-     */
-    private final LunaContext context;
+	/**
+	 * A {@link Map} containing the event types and the designated pipelines.
+	 */
+	private final Map<Class<?>, PluginPipeline<?>> plugins = new HashMap<>();
 
-    /**
-     * Creates a new {@link PluginManager}.
-     */
-    public PluginManager(LunaContext context) {
-        super(new PluginExceptionHandler());
-        this.context = context;
-        register(new DeadEventHandler());
-    }
+	/**
+	 * The context for this {@code PluginManager}.
+	 */
+	private final LunaContext context;
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <p>
-     * {@link AsyncPluginEvent}s are posted asynchronously while all other
-     * events are posted synchronously.
-     */
-    @Override
-    public void post(Object event) {
-        if (event instanceof AsyncPluginEvent) {
-            context.getService().execute(() -> super.post(event));
+	/**
+	 * Creates a new {@link PluginManager}.
+	 *
+	 * @param context The context for this {@code PluginManager}.
+	 */
+	public PluginManager(LunaContext context) {
+		this.context = context;
+	}
 
-        } else if (event instanceof GamePluginEvent) {
-            GamePluginEvent evt = (GamePluginEvent) event;
-            evt.context_$eq(context);
-            super.post(evt);
+	/**
+	 * Submits a {@link Plugin} represented as {@code clazz} to the backing
+	 * plugin map. This should only ever be called by the
+	 * {@link PluginBootstrap}.
+	 * 
+	 * @param clazz The class to submit as a {@code Plugin}.
+	 * @throws Exception If the class cannot be instantiated.
+	 */
+	public void submit(Class<?> clazz) throws Exception {
+		ParameterizedType superType = (ParameterizedType) clazz.getGenericSuperclass();
+		Class<?> typeEvent = (Class<?>) superType.getActualTypeArguments()[0];
 
-        } else {
-            super.post(event);
+		Plugin<?> plugin = (Plugin<?>) clazz.newInstance();
 
-        }
-    }
+		plugin.plugins = this;
+		plugin.service = context.getService();
+		plugin.world = context.getWorld();
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <p>
-     * Not all plugins registered using this function will be submitted to the
-     * underlying event bus.
-     */
-    @Override
-    public void register(Object object) {
-        // XXX: Not all plugins need to be submitted to the event bus, some need
-        // to be submitted elsewhere such as combat strategies,
-        // minigames, etc. and that can be done through here.
-        super.register(object);
-    }
+		plugins.putIfAbsent(typeEvent, new PluginPipeline<>()).add(plugin);
+	}
+
+	/**
+	 * Posts an event represented as {@code evt} to all {@link Plugin}s that
+	 * listen for its underlying type. If no {@code PluginPipeline}s are found
+	 * for the event, an {@link NoSuchElementException} is thrown.
+	 * 
+	 * @param evt The event to post.
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void post(Object evt) {
+		PluginPipeline pipeline = plugins.get(evt.getClass());
+
+		if (pipeline == null) {
+			throw new NoSuchElementException("No pipeline for event: " + StringUtil.simpleClassName(evt));
+		}
+		pipeline.traverse(evt);
+	}
 }
