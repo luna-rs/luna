@@ -7,11 +7,8 @@ import io.luna.game.task.Task;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import scala.Function0;
 import scala.Function1;
 import scala.Unit;
-
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * An abstraction model that acts as the base class for every single
@@ -104,38 +101,6 @@ public abstract class Plugin<E> {
      */
     protected void schedule(int delay, Function1<Task, Unit> action) {
         schedule(false, delay, action);
-    }
-
-    /**
-     * A shortcut call to the function
-     * 
-     * <pre>
-     * <code>service.execute(new Runnable() {
-     *     {@literal @}Override
-     *     public void run() {
-     *         ...
-     *     }
-     * });</code>
-     * </pre>
-     */
-    protected void async(Function0<Unit> action) {
-        service.execute(() -> action.apply());
-    }
-
-    /**
-     * A shortcut call to the function
-     * 
-     * <pre>
-     * <code>service.submit(new Runnable() {
-     *     {@literal @}Override
-     *     public void run() {
-     *         ...
-     *     }
-     * });</code>
-     * </pre>
-     */
-    protected ListenableFuture<?> async(Function0<Unit> action) {
-        return service.submit(() -> action.apply());
     }
 
     /**
