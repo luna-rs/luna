@@ -15,7 +15,6 @@ import java.util.Comparator;
  */
 public final class RegionPriorityComparator implements Comparator<MobileEntity> {
 
-
     /**
      * The {@link Player} being updated.
      */
