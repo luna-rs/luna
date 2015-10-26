@@ -93,7 +93,7 @@ public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
         LoginResponseMessage message = new LoginResponseMessage(LoginResponse.LOGIN_LIMIT_EXCEEDED);
         ByteBuf initialMessage = ByteMessage.create(8).putLong(0).getBuffer();
 
-        ctx.channel().write(initialMessage);
+        ctx.channel().write(initialMessage, ctx.channel().voidPromise());
         ctx.channel().writeAndFlush(message).addListener(ChannelFutureListener.CLOSE);
     }
 

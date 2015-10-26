@@ -1,10 +1,9 @@
 package io.luna.net.codec;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.netty.buffer.Unpooled.buffer;
-import static io.netty.buffer.Unpooled.directBuffer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
 
 /**
@@ -14,7 +13,7 @@ import io.netty.buffer.PooledByteBufAllocator;
  * 
  * @author lare96 <http://github.org/lare96>
  */
-public final class ByteMessage {
+public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * A buffer pool that will help reduce the overhead from allocating and
@@ -53,6 +52,7 @@ public final class ByteMessage {
      * @param buf The backing buffer used to read and write data.
      */
     private ByteMessage(ByteBuf buf) {
+        super(buf);
         this.buf = buf;
     }
 
@@ -95,26 +95,6 @@ public final class ByteMessage {
      */
     public static ByteMessage create() {
         return ByteMessage.create(DEFAULT_CAP);
-    }
-
-    /**
-     * Creates a new {@link ByteMessage} backed by an unpooled direct buffer
-     * with the default capacity.
-     *
-     * @return The newly created buffer.
-     */
-    public static ByteMessage createUnpooledDirect() {
-        return ByteMessage.create(directBuffer(DEFAULT_CAP));
-    }
-
-    /**
-     * Creates a new {@link ByteMessage} backed by an unpooled heap buffer with
-     * the default capacity.
-     *
-     * @return The newly created buffer.
-     */
-    public static ByteMessage createUnpooledHeap() {
-        return ByteMessage.create(buffer(DEFAULT_CAP));
     }
 
     /**

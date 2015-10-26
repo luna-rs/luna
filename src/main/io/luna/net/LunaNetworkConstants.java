@@ -5,6 +5,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.ResourceLeakDetector.Level;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A utility class that only contains Netty constants.
@@ -41,10 +42,10 @@ public final class LunaNetworkConstants {
     public static final int MESSAGE_LIMIT = 15;
 
     /**
-     * The preferred ports for the user to use, a warning will be printed if
-     * these ports aren't used.
+     * The preferred ports for the user to use, a log message will be printed if
+     * none of these ports are used.
      */
-    public static final ImmutableList<Integer> PREFERRED_PORTS = ImmutableList.of(43594, 5555);
+    public static final ImmutableSet<Integer> PREFERRED_PORTS = ImmutableSet.of(43594, 5555);
 
     /**
      * A list of exceptions that are ignored when received from Netty.
