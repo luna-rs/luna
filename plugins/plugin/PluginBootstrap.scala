@@ -67,7 +67,7 @@ final class PluginBootstrap(pluginManager: PluginManager) extends Runnable {
       }
 
       val c = Class.forName(format(path.toString))
-      if (c.getSuperclass == Plugin.getClass) {
+      if (c.getSuperclass == classOf[Plugin[_]]) {
         plugins.+=(c)
       }
       FileVisitResult.CONTINUE
