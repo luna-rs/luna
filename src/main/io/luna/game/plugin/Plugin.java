@@ -23,93 +23,93 @@ import scala.Unit;
  */
 public abstract class Plugin<E> {
 
-	/**
-	 * The {@link World} instance.
-	 */
-	protected World world;
+    /**
+     * The {@link World} instance.
+     */
+    protected World world;
 
-	/**
-	 * The {@link PluginManager} instance.
-	 */
-	protected PluginManager plugins;
+    /**
+     * The {@link PluginManager} instance.
+     */
+    protected PluginManager plugins;
 
-	/**
-	 * The {@link GameService} instance.
-	 */
-	protected GameService service;
+    /**
+     * The {@link GameService} instance.
+     */
+    protected GameService service;
 
-	/**
-	 * A shortcut call to the function {@code PlayerRights.PLAYER}.
-	 */
-	protected PlayerRights rightsPlayer() {
-		return PlayerRights.PLAYER;
-	}
+    /**
+     * A shortcut call to the function {@code PlayerRights.PLAYER}.
+     */
+    protected PlayerRights rightsPlayer() {
+        return PlayerRights.PLAYER;
+    }
 
-	/**
-	 * A shortcut call to the function {@code PlayerRights.MODERATOR}.
-	 */
-	protected PlayerRights rightsMod() {
-		return PlayerRights.MODERATOR;
-	}
+    /**
+     * A shortcut call to the function {@code PlayerRights.MODERATOR}.
+     */
+    protected PlayerRights rightsMod() {
+        return PlayerRights.MODERATOR;
+    }
 
-	/**
-	 * A shortcut call to the function {@code PlayerRights.ADMINISTRATOR}.
-	 */
-	protected PlayerRights rightsAdmin() {
-		return PlayerRights.ADMINISTRATOR;
-	}
+    /**
+     * A shortcut call to the function {@code PlayerRights.ADMINISTRATOR}.
+     */
+    protected PlayerRights rightsAdmin() {
+        return PlayerRights.ADMINISTRATOR;
+    }
 
-	/**
-	 * A shortcut call to the function {@code ThreadLocalRandom.current()}.
-	 */
-	protected ThreadLocalRandom rand() {
-		return ThreadLocalRandom.current();
-	}
+    /**
+     * A shortcut call to the function {@code ThreadLocalRandom.current()}.
+     */
+    protected ThreadLocalRandom rand() {
+        return ThreadLocalRandom.current();
+    }
 
-	/**
-	 * A shortcut call to the function
-	 * 
-	 * <pre>
-	 * <code>world.schedule(new Task(instant, delay) {
-	 *     {@literal @}Override
-	 *     protected void execute() {
-	 *         ...
-	 *     }
-	 * }</code>
-	 * </pre>
-	 */
-	protected void schedule(boolean instant, int delay, Function1<Task, Unit> action) {
-		world.schedule(new Task(instant, delay) {
-			@Override
-			protected void execute() {
-				action.apply(this);
-			}
-		});
-	}
+    /**
+     * A shortcut call to the function
+     * 
+     * <pre>
+     * <code>world.schedule(new Task(instant, delay) {
+     *     {@literal @}Override
+     *     protected void execute() {
+     *         ...
+     *     }
+     * }</code>
+     * </pre>
+     */
+    protected void schedule(boolean instant, int delay, Function1<Task, Unit> action) {
+        world.schedule(new Task(instant, delay) {
+            @Override
+            protected void execute() {
+                action.apply(this);
+            }
+        });
+    }
 
-	/**
-	 * A shortcut call to the function
-	 * 
-	 * <pre>
-	 * <code>world.schedule(new Task(delay) {
-	 *     {@literal @}Override
-	 *     protected void execute() {
-	 *         ...
-	 *     }
-	 * }</code>
-	 * </pre>
-	 */
-	protected void schedule(int delay, Function1<Task, Unit> action) {
-		schedule(false, delay, action);
-	}
+    /**
+     * A shortcut call to the function
+     * 
+     * <pre>
+     * <code>world.schedule(new Task(delay) {
+     *     {@literal @}Override
+     *     protected void execute() {
+     *         ...
+     *     }
+     * }</code>
+     * </pre>
+     */
+    protected void schedule(int delay, Function1<Task, Unit> action) {
+        schedule(false, delay, action);
+    }
 
-	/**
-	 * A function containing the logic that will be executed by the underlying
-	 * {@link PluginPipeline} assigned to this {@code Plugin}.
-	 * 
-	 * @param evt The event that will be passed to this {@code Plugin}.
-	 * @param pipeline The pipeline executing this function. Used to stop
-	 *        traversal of subsequent {@code Plugin}s.
-	 */
-	protected abstract void handle(E evt, PluginPipeline<E> pipeline);
+    /**
+     * A function containing the logic that will be executed by the underlying
+     * {@link PluginPipeline} assigned to this {@code Plugin}.
+     * 
+     * @param evt The event that will be passed to this {@code Plugin}.
+     * @param pipeline The pipeline executing this function. Used to stop
+     *        traversal of subsequent {@code Plugin}s.
+     */
+    protected abstract void handle(E evt, PluginPipeline<E> pipeline);
 }
