@@ -12,14 +12,14 @@ import io.luna.game.plugin.PluginManager;
 public final class LunaContext {
 
     /**
-     * The {@link GameService} that manages game logic processing.
-     */
-    private final GameService service = new GameService(this);
-
-    /**
      * The {@link World} that manages various entities.
      */
     private final World world = new World();
+
+    /**
+     * The {@link GameService} that manages game logic processing.
+     */
+    private final GameService service = new GameService(this);
 
     /**
      * The {@link PluginManager} that manages Scala plugins.

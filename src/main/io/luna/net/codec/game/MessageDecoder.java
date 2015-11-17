@@ -1,20 +1,20 @@
 package io.luna.net.codec.game;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes all
@@ -92,7 +92,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
             size = InboundGameMessage.SIZES[opcode];
 
             if (size == 0) {
-                queueMessage(opcode, size, Unpooled.EMPTY_BUFFER);
+                queueMessage(opcode, size, PooledByteBufAllocator.DEFAULT.buffer(0, 0));
                 return;
             }
 

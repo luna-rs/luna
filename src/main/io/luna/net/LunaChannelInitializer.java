@@ -32,7 +32,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     /**
      * Filters channels based on the amount of active connections they have.
      */
-    private static final ChannelHandler CHANNEL_FILTER = new LunaChannelFilter();
+    public static final ChannelHandler CHANNEL_FILTER = new LunaChannelFilter();
 
     /**
      * The underlying context to be managed under.

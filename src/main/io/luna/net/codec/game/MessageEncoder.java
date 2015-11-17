@@ -35,5 +35,6 @@ public final class MessageEncoder extends MessageToByteEncoder<GameMessage> {
         toEncode.setByte(0, toEncode.getByte(0) + encryptor.getKey());
 
         out.writeBytes(toEncode);
+        toEncode.release();
     }
 }

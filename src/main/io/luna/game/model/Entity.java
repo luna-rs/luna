@@ -1,15 +1,16 @@
 package io.luna.game.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.plugin.PluginManager;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
+
 /**
  * Something that exists in the Runescape world.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class Entity {
@@ -42,7 +43,7 @@ public abstract class Entity {
     /**
      * Creates a new {@link Entity}.
      *
-     * @param context The context to be managed in.
+     * @param context  The context to be managed in.
      * @param position The position of this {@code Entity}.
      */
     public Entity(LunaContext context, Position position) {
@@ -83,9 +84,8 @@ public abstract class Entity {
     }
 
     /**
-     * Gets the message for an {@link UnsupportedOperationException} with
-     * {@code impl} as the method name.
-     * 
+     * Gets the message for an {@link UnsupportedOperationException} with {@code impl} as the method name.
+     *
      * @param impl The implementing method name.
      */
     private String getExceptionMsg(String impl) {
@@ -105,17 +105,20 @@ public abstract class Entity {
     /**
      * Fired when the state of this {@code Entity} is set to {@code IDLE}.
      */
-    public void onIdle() {}
+    public void onIdle() {
+    }
 
     /**
      * Fired when the state of this {@code Entity} is set to {@code ACTIVE}.
      */
-    public void onActive() {}
+    public void onActive() {
+    }
 
     /**
      * Fired when the state of this {@code Entity} is set to {@code INACTIVE}.
      */
-    public void onInactive() {}
+    public void onInactive() {
+    }
 
     /**
      * @return The current state that this {@code Entity} is in.
@@ -125,14 +128,11 @@ public abstract class Entity {
     }
 
     /**
-     * Sets the value for {@link #state}. When a state is set, a corresponding
-     * listener of either {@code onIdle()}, {@code onActive()}, or
-     * {@code onInactive()} will be fired. If the value being set is equal to
-     * the current value, an exception will be thrown.
-     * 
+     * Sets the value for {@link #state}. When a state is set, a corresponding listener of either {@code onIdle()}, {@code onActive()}, or
+     * {@code onInactive()} will be fired. If the value being set is equal to the current value, an exception will be thrown.
+     *
      * @param state The state to set, cannot be {@code null} or {@code IDLE}.
-     * @throws IllegalArgumentException If the value being set is equal to the
-     *         current value.
+     * @throws IllegalArgumentException If the value being set is equal to the current value.
      */
     public final void setState(EntityState state) {
         checkArgument(state != this.state, "This state has already been set!");
@@ -165,5 +165,26 @@ public abstract class Entity {
      */
     public final void setPosition(Position position) {
         this.position = requireNonNull(position);
+    }
+
+    /**
+     * @return The {@link PluginManager} dedicated to this {@code Entity}.
+     */
+    public final PluginManager getPlugins() {
+        return plugins;
+    }
+
+    /**
+     * @return The {@link GameService} dedicated to this {@code Entity}.
+     */
+    public final GameService getService() {
+        return service;
+    }
+
+    /**
+     * @return The {@link World} dedicated to this {@code Entity}.
+     */
+    public final World getWorld() {
+        return world;
     }
 }

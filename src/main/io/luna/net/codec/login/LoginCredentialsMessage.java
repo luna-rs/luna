@@ -30,7 +30,7 @@ public final class LoginCredentialsMessage {
      * The decryptor for decrypting game messages.
      */
     private final IsaacCipher decryptor;
-    
+
     /**
      * The pipeline for the underlying {@link Channel}.
      */

@@ -1,23 +1,28 @@
 package io.luna.game.model.mobile;
 
+import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import io.luna.game.GameService;
 import io.luna.game.model.Position;
+import io.luna.game.model.mobile.attr.AttributeKey;
+import io.luna.game.model.mobile.attr.AttributeValue;
 import io.luna.net.codec.login.LoginResponse;
-import io.luna.util.yaml.YamlDocument;
+import io.luna.util.GsonUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.yaml.snakeyaml.Yaml;
-
-import com.google.common.util.concurrent.ListenableFuture;
+import static io.luna.util.GsonUtils.GSON;
 
 /**
  * Functions that allow for synchronous and asynchronous serialization and
@@ -31,11 +36,11 @@ public final class PlayerSerializer {
      * The logger that will print important information.
      */
     private static final Logger LOGGER = LogManager.getLogger(PlayerSerializer.class);
-    
+
     /**
      * The {@link Path} to all of the serialized {@link Player} data.
      */
-    private static final Path FILE_DIR = Paths.get("./data/player_files");
+    private static final Path FILE_DIR = Paths.get("./data/player_data_files");
 
     /**
      * The {@link Player} being serialized or deserialized.
@@ -72,16 +77,32 @@ public final class PlayerSerializer {
      */
     public void save() {
         try {
-            Yaml yml = new Yaml();
-            YamlDocument to = new YamlDocument();
+            JsonObject object = new JsonObject();
 
-            to.add("password", player.getPassword());
-			to.add("position", player.getPosition());
-			to.add("rights", player.getRights());
+            object.addProperty("password", player.getPassword());
+            object.add("position", GSON.toJsonTree(player.getPosition()));
+            object.add("rights", GSON.toJsonTree(player.getRights()));
 
-            yml.dump(to.toSerializableMap(), new FileWriter(path.toFile()));
-        } catch (Exception e) {
-            LOGGER.catching(Level.WARN, e);
+            JsonObject attr = new JsonObject();
+            for (Entry<AttributeKey<?>, AttributeValue<?>> it : player.attr) {
+                AttributeKey<?> key = it.getKey();
+                AttributeValue<?> val = it.getValue();
+
+                if (key.isPersistant()) {
+                    TypeToken<?> type = TypeToken.of(val.getClass());
+                    JsonObject typeVal = new JsonObject();
+
+                    typeVal.addProperty("type", type.getRawType().getName());
+                    typeVal.add("value", GSON.toJsonTree(val.get()));
+
+                    attr.add(key.getName(), typeVal);
+                }
+            }
+            object.add("attributes", attr);
+
+            GSON.toJson(object, Files.newBufferedWriter(path));
+        } catch (IOException e) {
+            LOGGER.catching(e);
         }
     }
 
@@ -110,28 +131,36 @@ public final class PlayerSerializer {
      *        deserialized password.
      * @return The {@link LoginResponse} determined by the deserialization.
      */
-    @SuppressWarnings("unchecked")
     public LoginResponse load(String expectedPassword) {
-        try {
-            if (!path.toFile().exists()) {
-                return LoginResponse.NORMAL;
-            }
+        if (!Files.exists(path)) {
+            return LoginResponse.NORMAL;
+        }
 
-            Yaml yml = new Yaml();
-            YamlDocument from = new YamlDocument((Map<String, Object>) yml.load(Files.newBufferedReader(path)));
+        try (BufferedReader in = Files.newBufferedReader(path)) {
+            JsonObject from = (JsonObject) new JsonParser().parse(in);
 
-			String password = from.get("password").asString();
-			Position position = from.get("position").asType(Position.class);
-			PlayerRights rights = PlayerRights.valueOf(from.get("rights").asString());
-
-			player.setPosition(position);
-			player.setRights(rights);
-
-			if (!expectedPassword.equals(password)) {
+            String password = from.get("password").getAsString();
+            if (!expectedPassword.equals(password)) {
                 return LoginResponse.INVALID_CREDENTIALS;
             }
+
+            Position position = GsonUtils.getAsType(from.get("position"), Position.class);
+            player.setPosition(position);
+
+            PlayerRights rights = PlayerRights.valueOf(from.get("rights").getAsString());
+            player.setRights(rights);
+
+            JsonObject attr = from.get("attributes").getAsJsonObject();
+            for (Entry<String, JsonElement> it : attr.entrySet()) {
+                JsonObject obj = it.getValue().getAsJsonObject();
+
+                Class<?> type = Class.forName(obj.get("type").getAsString());
+                Object data = GsonUtils.getAsType(obj.get("value"), type);
+
+                player.attr.get(it.getKey()).set(data);
+            }
         } catch (Exception e) {
-			LOGGER.catching(e);
+            LOGGER.catching(e);
             return LoginResponse.COULD_NOT_COMPLETE_LOGIN;
         }
         return LoginResponse.NORMAL;

@@ -7,13 +7,12 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
 import io.luna.net.msg.OutboundGameMessage;
 import io.netty.channel.Channel;
-
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * A {@link Session} implementation that handles networking for a {@link Player}
@@ -69,11 +68,6 @@ public final class GameSession extends Session {
         }
     }
 
-    @Override
-    public void onDispose() {
-
-    }
-
     /**
      * Writes {@code msg} to the underlying channel; The channel is not flushed.
      * 
@@ -83,7 +77,7 @@ public final class GameSession extends Session {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.write(msg.toGameMessage(player));
+            channel.write(msg.toGameMessage(player), channel.voidPromise());
         }
     }
 
@@ -98,7 +92,7 @@ public final class GameSession extends Session {
             }
             InboundGameMessage inbound = InboundGameMessage.HANDLERS[msg.getOpcode()];
             try {
-                inbound.readMessage(player, msg);
+                player.getPlugins().post(inbound.readMessage(player, msg), player);
             } catch (Exception e) {
                 LOGGER.catching(Level.WARN, e);
             }

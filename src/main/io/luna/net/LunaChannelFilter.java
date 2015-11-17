@@ -1,18 +1,19 @@
 package io.luna.net;
 
+import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.Multiset;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
+import io.luna.util.parser.impl.IpBanParser;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.net.InetSocketAddress;
-
-import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.Multiset;
 
 /**
  * A {@link ChannelInboundHandlerAdapter} implementation that filters
@@ -42,21 +43,11 @@ public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
     private final int connectionLimit;
 
     /**
-     * Creates a new {@link LunaChannelFilter}.
-     *
-     * @param connectionLimit The maximum amount of connections that can be made
-     *        by a single host.
-     */
-    public LunaChannelFilter(int connectionLimit) {
-        this.connectionLimit = connectionLimit;
-    }
-
-    /**
      * Creates a new {@link LunaChannelFilter} with a connection limit of
      * {@code CONNECTION_LIMIT}.
      */
     public LunaChannelFilter() {
-        this(LunaNetworkConstants.CONNECTION_LIMIT);
+        connectionLimit = LunaNetworkConstants.CONNECTION_LIMIT;
     }
 
     @Override
@@ -67,6 +58,10 @@ public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
         }
         if (connections.count(hostAddress) >= connectionLimit) {
             disconnect(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
+            return;
+        }
+        if (IpBanParser.BANNED_ADDRESSES.contains(hostAddress)) {
+            disconnect(ctx, LoginResponse.ACCOUNT_DISABLED);
             return;
         }
         connections.add(hostAddress);

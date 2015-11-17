@@ -1,12 +1,13 @@
 package io.luna;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.util.StringUtils;
-import io.luna.util.yaml.deserialize.ItemDefinitionDeserializer;
-import io.luna.util.yaml.deserialize.NpcDefinitionDeserializer;
-import io.luna.util.yaml.deserialize.PersistentFieldDeserializer;
+import io.luna.util.parser.impl.IpBanParser;
+import io.luna.util.parser.impl.ItemDefinitionParser;
+import io.luna.util.parser.impl.NpcDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
@@ -14,17 +15,13 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import plugin.PluginBootstrap;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import plugin.PluginBootstrap;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Initializes the individual modules to launch {@link Luna}.
@@ -41,8 +38,8 @@ public final class Server {
     /**
      * The {@link ExecutorService} that will execute startup tasks.
      */
-    private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat(
-        "LunaInitializationThread").build());
+    private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+        new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
 
     /**
      * The {@link LunaContext} that this {@code Server} will be managed with.
@@ -117,9 +114,9 @@ public final class Server {
      *         tasks.
      */
     private void initAsyncTasks() throws Exception {
-		service.execute(new PluginBootstrap(context.getPlugins()));
-        service.execute(new NpcDefinitionDeserializer());
-		service.execute(new ItemDefinitionDeserializer());
-        service.execute(new PersistentFieldDeserializer());
+        service.execute(new PluginBootstrap(context.getPlugins()));
+        service.execute(new IpBanParser());
+        service.execute(new ItemDefinitionParser());
+        service.execute(new NpcDefinitionParser());
     }
 }

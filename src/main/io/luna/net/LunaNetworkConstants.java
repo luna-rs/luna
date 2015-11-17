@@ -1,11 +1,11 @@
 package io.luna.net;
 
-import io.luna.net.session.Session;
-import io.netty.util.AttributeKey;
-import io.netty.util.ResourceLeakDetector.Level;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.luna.net.session.Session;
+import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
+import io.netty.util.ResourceLeakDetector.Level;
 
 /**
  * A utility class that only contains Netty constants.
@@ -50,7 +50,8 @@ public final class LunaNetworkConstants {
     /**
      * A list of exceptions that are ignored when received from Netty.
      */
-    public static final ImmutableList<String> IGNORED_EXCEPTIONS = ImmutableList.of("An existing connection was forcibly closed by the remote host",
+    public static final ImmutableList<String> IGNORED_EXCEPTIONS = ImmutableList
+        .of("An existing connection was forcibly closed by the remote host",
         "An established connection was aborted by the software in your host machine");
 
     /**

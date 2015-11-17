@@ -1,24 +1,18 @@
 package io.luna.game;
 
+import com.google.common.util.concurrent.*;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mobile.PlayerSerializer;
 import io.netty.util.internal.StringUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * An {@link AbstractScheduledService} implementation that performs general game
@@ -39,8 +33,8 @@ public final class GameService extends AbstractScheduledService {
      * A cached thread pool that manages the execution of short, low priority,
      * asynchronous and concurrent tasks.
      */
-    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(
-        "GameServiceWorkerThread").build()));
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
+        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("GameServiceWorkerThread").build()));
 
     /**
      * A queue of synchronization tasks.
@@ -113,9 +107,9 @@ public final class GameService extends AbstractScheduledService {
     protected void shutDown() {
         try {
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
-            world.getPlayers().forEach(it -> new PlayerSerializer(it).save());
             syncTasks.forEach(Runnable::run);
             syncTasks.clear();
+            world.getPlayers().forEach(it -> new PlayerSerializer(it).save());
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (Exception e) {

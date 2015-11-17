@@ -1,26 +1,25 @@
 package io.luna.game.model.mobile;
 
-import static com.google.common.base.Preconditions.checkState;
+import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.out.SendAssignmentMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.luna.net.session.SessionState;
-
-import java.util.Objects;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import plugin.LoginEvent;
 import plugin.LogoutEvent;
 
-import com.google.common.base.MoreObjects;
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link MobileEntity} implementation that is controlled by a real person.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Player extends MobileEntity {
@@ -33,7 +32,7 @@ public final class Player extends MobileEntity {
     /**
      * The authority level of this {@code Player}.
      */
-    private PlayerRights rights;
+    private PlayerRights rights = PlayerRights.PLAYER;
 
     /**
      * The credentials of this {@code Player}.
@@ -89,7 +88,8 @@ public final class Player extends MobileEntity {
     @Override
     public void onActive() {
         if (session.getState() == SessionState.LOGIN_QUEUE) {
-			plugins.post(new LoginEvent(this));
+            queue(new SendAssignmentMessage(true));
+            plugins.post(new LoginEvent(), this);
 
             LOGGER.info(this + " has logged in.");
         } else {
@@ -100,14 +100,14 @@ public final class Player extends MobileEntity {
     @Override
     public void onInactive() {
         if (session.getState() == SessionState.LOGOUT_QUEUE) {
-			plugins.post(new LogoutEvent(this));
-
-            PlayerSerializer serializer = new PlayerSerializer(this);
-            serializer.asyncSave(service);
+            plugins.post(new LogoutEvent(), this);
 
             session.setState(SessionState.LOGGED_OUT);
 
             LOGGER.info(this + " has logged out.");
+
+            PlayerSerializer serializer = new PlayerSerializer(this);
+            serializer.asyncSave(service);
         } else {
             throw new IllegalStateException("use Session#dispose, SendLogoutMessage, or World#queueLogout instead");
         }

@@ -1,6 +1,5 @@
 package io.luna.net.session;
 
-
 /**
  * An enumerated type whose elements represent all of the states a
  * {@link Session} can be in.

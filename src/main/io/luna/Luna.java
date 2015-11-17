@@ -28,6 +28,8 @@ public final class Luna {
      */
     public static void main(String[] args) {
         try {
+            Thread.currentThread().setName("LunaMainThread");
+
             Server luna = new Server();
             luna.create();
         } catch (Exception e) {

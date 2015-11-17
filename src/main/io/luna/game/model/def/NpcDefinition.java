@@ -1,3 +1,4 @@
+
 package io.luna.game.model.def;
 
 import io.luna.game.model.mobile.Npc;
@@ -115,7 +116,7 @@ public final class NpcDefinition {
     private final int magicDefence;
 
     /**
-     * Creates a new {@link NpcDefintion}.
+     * Creates a new {@link NpcDefinition}.
      *
      * @param id The identification for the {@code Npc}.
      * @param name The name of the {@code Npc}.

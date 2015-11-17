@@ -2,8 +2,10 @@
 /.classpath
 /.project
 /.settings/
+/.idea/
 /.git/
 /.cache-main
 /.cache-tests
 /.tmpBin/
 /.gitignore
+/luna.iml

@@ -1,10 +1,12 @@
 package io.luna.game.plugin;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+import io.luna.game.model.mobile.Player;
+import plugin.Plugin;
+
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 /**
  * A pipeline-like model that allows for an event to be passed through the
@@ -21,56 +23,61 @@ import com.google.common.collect.UnmodifiableIterator;
  */
 public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
 
-	/**
-	 * A {@link Queue} of {@link Plugin}s contained within this pipeline.
-	 */
-	private final Queue<Plugin<E>> plugins = new ArrayDeque<>();
+    /**
+     * A {@link Queue} of {@link Plugin}s contained within this pipeline.
+     */
+    private final Queue<Plugin<E>> plugins = new ArrayDeque<>();
 
-	/**
-	 * A flag that determines if a traversal has been cancelled by a plugin.
-	 */
-	private boolean cancelled;
+    /**
+     * A flag that determines if a traversal has been cancelled by a plugin.
+     */
+    private boolean cancelled;
 
-	/**
-	 * Traverse the pipeline passing the {@code evt} instance to each
-	 * {@link Plugin}. A full traversal over all {@code Plugin}s is not always
-	 * made.
-	 * 
-	 * @param evt The event to pass to each {@code Plugin}.
-	 */
-	public void traverse(E evt) {
-		cancelled = false;
+    /**
+     * Traverse the pipeline passing the {@code evt} instance to each {@link Plugin}. A full traversal over all {@code
+     * Plugin}s is not always made.
+     *
+     * @param evt The event to pass to each {@code Plugin}.
+     * @param player The {@link Player} to pass to each {@code Plugin}.
+     */
+    public void traverse(E evt, Player player) {
+        cancelled = false;
 
-		for (Plugin<E> it : this) {
-			if (cancelled) {
-				break;
-			}
-			it.handle(evt, this);
-		}
-	}
+        for (Plugin<E> it : this) {
+            if (cancelled) {
+                break;
+            }
+            it.p_$eq(player);
+            it.evt_$eq(evt);
+            it.execute().apply();
+        }
+    }
 
-	/**
-	 * Cancels an active traversal of this pipeline, if this pipeline is not
-	 * currently being traversed then this method does nothing.
-	 */
-	public void cancel() {
-		cancelled = true;
-	}
+    /**
+     * Cancels an active traversal of this pipeline, if this pipeline is not currently being traversed then this method does
+     * nothing.
+     */
+    public void cancel() {
+        cancelled = true;
+    }
 
-	/**
-	 * Adds {@code plugin} to the underlying pipeline. Throws a
-	 * {@link ClassCastException} if the plugin event context is not the same as
-	 * the other {@code Plugin}s in this pipeline.
-	 * 
-	 * @param plugin The {@link Plugin} to add.
-	 */
-	@SuppressWarnings("unchecked")
-	protected void add(Plugin<?> plugin) {
-		plugins.add((Plugin<E>) plugin);
-	}
+    /**
+     * Adds {@code plugin} to the underlying pipeline. Throws a {@link ClassCastException} if the plugin event context is not
+     * the same as the other {@code Plugin}s in this pipeline.
+     *
+     * @param plugin The {@link Plugin} to add.
+     */
+    @SuppressWarnings("unchecked")
+    protected void add(Plugin<?> plugin) {
+        Plugin<E> addPlugin = (Plugin<E>) plugin;
 
-	@Override
-	public UnmodifiableIterator<Plugin<E>> iterator() {
-		return Iterators.unmodifiableIterator(plugins.iterator());
-	}
+        addPlugin.pipeline_$eq(this);
+
+        plugins.add(addPlugin);
+    }
+
+    @Override
+    public UnmodifiableIterator<Plugin<E>> iterator() {
+        return Iterators.unmodifiableIterator(plugins.iterator());
+    }
 }

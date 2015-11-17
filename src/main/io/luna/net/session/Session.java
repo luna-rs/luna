@@ -4,7 +4,6 @@ import io.luna.game.model.mobile.Player;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An abstraction model that determines how I/O operations are handled for a
@@ -27,7 +26,7 @@ public class Session {
     /**
      * The current state of this {@code Session}.
      */
-    private final AtomicReference<SessionState> state = new AtomicReference<>(SessionState.CONNECTED);
+    private SessionState state = SessionState.CONNECTED;
 
     /**
      * Creates a new {@link Session}.
@@ -48,17 +47,11 @@ public class Session {
     public void handleUpstreamMessage(Object msg) throws Exception {}
 
     /**
-     * Implementations decide what happens during disposal of a session.
-     */
-    public void onDispose() {}
-
-    /**
      * Disposes of this {@code Session} by closing the {@link Channel} and
      * executing the {@code onDispose()} listener.
      */
     public final void dispose() {
         channel.close();
-        onDispose();
     }
 
     /**
@@ -79,13 +72,13 @@ public class Session {
      * @return The current state of this {@code Session}.
      */
     public final SessionState getState() {
-        return state.get();
+        return state;
     }
 
     /**
      * Sets the value for {@link Session#state}.
      */
     public final void setState(SessionState state) {
-        this.state.set(state);
+        this.state = state;
     }
 }

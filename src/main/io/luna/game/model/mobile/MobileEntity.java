@@ -1,9 +1,11 @@
 package io.luna.game.model.mobile;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import io.luna.LunaContext;
 import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
+import io.luna.game.model.mobile.attr.AttributeMap;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Something that exists in the Runescape world and is able to move around.
@@ -11,6 +13,11 @@ import io.luna.game.model.Position;
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class MobileEntity extends Entity {
+
+    /**
+     * An {@link AttributeMap} instance assigned to this {@code MobileEntity}.
+     */
+    protected final AttributeMap attr = new AttributeMap();
 
     /**
      * The index of this mob in its list.
@@ -49,8 +56,15 @@ public abstract class MobileEntity extends Entity {
      */
     public void setIndex(int index) {
         if (index != -1) {
-			checkArgument(index >= 1, "index < 1");
+            checkArgument(index >= 1, "index < 1");
         }
         this.index = index;
+    }
+
+    /**
+     * @return The {@link AttributeMap} instance assigned to this {@code MobileEntity}.
+     */
+    public AttributeMap getAttr() {
+        return attr;
     }
 }

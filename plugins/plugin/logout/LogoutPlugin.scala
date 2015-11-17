@@ -1,11 +1,7 @@
-package plugin.login
+package plugin.logout
 
-import io.luna.game.plugin.Plugin
-import plugin.LogoutEvent
+import plugin.{LogoutEvent, Plugin}
 
 class LogoutPlugin extends Plugin[LogoutEvent] {
 
-  override def handle() = {
-
-  }
 }

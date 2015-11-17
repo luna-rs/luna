@@ -1,6 +1,5 @@
 package io.luna.net.codec.login;
 
-import static com.google.common.base.Preconditions.checkState;
 import io.luna.LunaContext;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.ByteMessage;
@@ -17,6 +16,8 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes the entire login
@@ -108,7 +109,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
 
             checkState(opcode == 14, "id != 14");
 
-            ByteBuf buf = ByteMessage.create(17).getBuffer();
+            ByteBuf buf = ctx.alloc().buffer(17);
             buf.writeLong(0);
             buf.writeByte(0);
             buf.writeLong(RANDOM.nextLong());
@@ -166,7 +167,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             byte[] rsaBytes = new byte[rsaBlockSize - 41];
             in.readBytes(rsaBytes);
 
-            ByteBuf rsaBuffer = ByteMessage.create().getBuffer();
+            ByteBuf rsaBuffer = ctx.alloc().buffer();
             rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXPONENT, RSA_MODULUS).toByteArray());
 
             int rsaOpcode = rsaBuffer.readUnsignedByte();
@@ -189,6 +190,8 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             ByteMessage msg = ByteMessage.create(rsaBuffer);
             String username = msg.getString();
             String password = msg.getString();
+
+            rsaBuffer.release();
 
             out.add(new LoginCredentialsMessage(username, password, encryptor, decryptor, ctx.channel().pipeline()));
         }

@@ -1,6 +1,5 @@
 package io.luna.net.session;
 
-import static com.google.common.base.Preconditions.checkState;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mobile.Player;
@@ -15,6 +14,8 @@ import io.luna.net.codec.login.LoginResponseMessage;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link Session} implementation that handles networking for a {@link Player}
@@ -95,6 +96,8 @@ public final class LoginSession extends Session {
         msg.getPipeline().replace("login-decoder", "game-decoder", new MessageDecoder(msg.getDecryptor()));
 
         GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor());
+        session.setState(SessionState.LOGGING_IN);
+
         channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
         player.setSession(session);
 

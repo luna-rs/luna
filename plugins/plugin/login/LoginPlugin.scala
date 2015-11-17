@@ -1,16 +1,19 @@
 package plugin.login
 
-import io.luna.game.plugin.Plugin
-import plugin.LoginEvent
+import plugin.{LoginEvent, Plugin}
 
 class LoginPlugin extends Plugin[LoginEvent] {
+  p.setRights(determineRights())
 
-  override def handle() = {
-    sendMessage("Welcome to Luna!")
-    sendMessage("Luna is an open source #317 Runescape emulator developed by lare96.")
+  sendMessage("Welcome to Luna!")
+  sendMessage("Luna is an open source #317 Runescape emulator developed by lare96.")
 
-    if (get("run_energy") == 100) { // XXX just a test, will remove later
-      sendMessage("You have full run energy!") 
-    }
+  if (get("first_login")) {
+    yell("A new player, " + p.getUsername + " has just logged in!")
+    set("first_login", false)
+  }
+
+  def determineRights() = {
+    if (p.getSession.getHostAddress.equals("127.0.0.1")) rightsDev else p.getRights
   }
 }

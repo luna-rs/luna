@@ -1,17 +1,17 @@
 package io.luna.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * A test that ensures various functions in the {@link io.luna.util.StringUtils}
- * class are functioning correctly.
+ * A test that ensures various functions in the {@link StringUtils} class are
+ * functioning correctly.
  * 
  * @author lare96 <http://github.org/lare96>
  */
