@@ -44,7 +44,7 @@ class Plugin[E] extends DelayedInit {
 
   def yell(message: String) = {
     for (it <- world.getPlayers) {
-      sendMessage(message)
+      it.queue(new SendInfoMessage(message))
     }
   }
 
