@@ -1,5 +1,6 @@
 package io.luna.game.model;
 
+import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.MobileEntityList;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
@@ -15,9 +16,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Manages the various types in the {@code io.luna.game.model} package and
- * subpackages.
- * 
+ * Manages the various types in the {@code io.luna.game.model} package and subpackages.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class World {
@@ -58,6 +58,11 @@ public final class World {
     private final TaskManager tasks = new TaskManager();
 
     /**
+     * The {@link WorldSynchronizer} that will perform updating for all {@link MobileEntity}s.
+     */
+    private final WorldSynchronizer synchronizer = new WorldSynchronizer(this);
+
+    /**
      * Schedules a {@link Task} using the underlying {@link TaskManager}.
      *
      * @param t The {@code Task} to schedule.
@@ -94,10 +99,14 @@ public final class World {
     }
 
     /**
-     * Runs one iteration of the main game loop.
+     * Runs one iteration of the main game loop which includes processing {@link Task}s and synchronization.
      */
     public void runGameLoop() {
         tasks.runTaskIteration();
+
+        synchronizer.preSynchronize();
+        synchronizer.synchronize();
+        synchronizer.postSynchronize();
     }
 
     /**
@@ -108,8 +117,7 @@ public final class World {
     public void queueLogout(Player player) {
         GameSession session = player.getSession();
 
-        if (session.getState() == SessionState.LOGGED_IN && !logouts.contains(player)) {
-            session.dispose();
+        if (session.getState() == SessionState.LOGGED_IN && !logouts.contains(player) && !session.getChannel().isActive()) {
             session.setState(SessionState.LOGOUT_QUEUE);
             logouts.add(player);
         }
