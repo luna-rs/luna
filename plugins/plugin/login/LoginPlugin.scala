@@ -5,11 +5,10 @@ import plugin.{LoginEvent, Plugin}
 class LoginPlugin extends Plugin[LoginEvent] {
   p.setRights(determineRights())
 
-  sendMessage("Welcome to Luna!")
-  sendMessage("Luna is an open source #317 Runescape emulator developed by lare96.")
+  sendMessage("Welcome to Luna, a #317 Runescape emulator!")
 
   if (get("first_login")) {
-    yell("A new player, " + p.getUsername + " has just logged in!")
+    yell(s"A new player, ${p.getUsername} has just logged in!")
     set("first_login", false)
   }
 
