@@ -14,8 +14,6 @@ class LoginEvent
 
 class LogoutEvent
 
-case class PickupItemEvent(x: Int, y: Int, id: Int)
-
 /** Provides the AttributeMap with all of the aliased attribute keys. This is
   * done eagerly within the PluginBootstrap rather
   * than lazily elsewhere to maintain the highest possible performance.
