@@ -2,7 +2,9 @@ package io.luna.game.model;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.model.region.Region;
 import io.luna.game.plugin.PluginManager;
+import io.netty.util.internal.ThreadLocalRandom;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -43,18 +45,18 @@ public abstract class Entity {
     /**
      * Creates a new {@link Entity}.
      *
-     * @param context  The context to be managed in.
+     * @param context The context to be managed in.
      * @param position The position of this {@code Entity}.
      */
     public Entity(LunaContext context, Position position) {
         checkState(size() > 0, "size <= 0");
         checkState(type() != null, "type == null");
 
-        this.position = requireNonNull(position);
-
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
+
+        setPosition(position);
 
         onIdle();
     }
@@ -65,7 +67,8 @@ public abstract class Entity {
      * @param context The context to be managed in.
      */
     public Entity(LunaContext context) {
-        this(context, EntityConstants.DEFAULT_POSITION);
+        this(context, EntityConstants.DEFAULT_POSITION
+            .move(ThreadLocalRandom.current().nextInt(2), ThreadLocalRandom.current().nextInt(2)));
     }
 
     @Override
@@ -128,8 +131,9 @@ public abstract class Entity {
     }
 
     /**
-     * Sets the value for {@link #state}. When a state is set, a corresponding listener of either {@code onIdle()}, {@code onActive()}, or
-     * {@code onInactive()} will be fired. If the value being set is equal to the current value, an exception will be thrown.
+     * Sets the value for {@link #state}. When a state is set, a corresponding listener of either {@code onIdle()}, {@code
+     * onActive()}, or {@code onInactive()} will be fired. If the value being set is equal to the current value, an exception
+     * will be thrown.
      *
      * @param state The state to set, cannot be {@code null} or {@code IDLE}.
      * @throws IllegalArgumentException If the value being set is equal to the current value.
@@ -164,7 +168,18 @@ public abstract class Entity {
      * Sets the value for {@link #position}, cannot be {@code null}.
      */
     public final void setPosition(Position position) {
-        this.position = requireNonNull(position);
+
+        requireNonNull(position);
+
+        if (this.position != null) {
+            Region fromRegion = world.getRegions().getRegion(this.position);
+            fromRegion.removeEntity(this);
+        }
+
+        Region toRegion = world.getRegions().getRegion(position);
+        toRegion.addEntity(this);
+
+        this.position = position;
     }
 
     /**
