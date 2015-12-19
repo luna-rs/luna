@@ -1,6 +1,5 @@
 package io.luna.game.model.mobile;
 
-import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.BufferedWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,9 +24,8 @@ import java.util.concurrent.Callable;
 import static io.luna.util.GsonUtils.GSON;
 
 /**
- * Functions that allow for synchronous and asynchronous serialization and
- * deserialization of a {@link Player}.
- * 
+ * Functions that allow for synchronous and asynchronous serialization and deserialization of a {@link Player}.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PlayerSerializer {
@@ -59,7 +57,7 @@ public final class PlayerSerializer {
      */
     public PlayerSerializer(Player player) {
         this.player = player;
-        path = FILE_DIR.resolve(player.getUsername() + ".yml");
+        path = FILE_DIR.resolve(player.getUsername() + ".json");
     }
 
     static {
@@ -76,41 +74,39 @@ public final class PlayerSerializer {
      * Attempts to serialize all persistent data for the {@link Player}.
      */
     public void save() {
-        try {
-            JsonObject object = new JsonObject();
+        JsonObject object = new JsonObject();
 
-            object.addProperty("password", player.getPassword());
-            object.add("position", GSON.toJsonTree(player.getPosition()));
-            object.add("rights", GSON.toJsonTree(player.getRights()));
+        object.addProperty("password", player.getPassword());
+        object.add("position", GSON.toJsonTree(player.getPosition()));
+        object.add("rights", GSON.toJsonTree(player.getRights()));
 
-            JsonObject attr = new JsonObject();
-            for (Entry<AttributeKey<?>, AttributeValue<?>> it : player.attr) {
-                AttributeKey<?> key = it.getKey();
-                AttributeValue<?> val = it.getValue();
+        JsonObject attr = new JsonObject();
+        for (Entry<AttributeKey<?>, AttributeValue<?>> it : player.attr) {
+            AttributeKey<?> key = it.getKey();
+            AttributeValue<?> val = it.getValue();
 
-                if (key.isPersistant()) {
-                    TypeToken<?> type = TypeToken.of(val.getClass());
-                    JsonObject typeVal = new JsonObject();
+            if (key.isPersistant()) {
+                JsonObject typeVal = new JsonObject();
 
-                    typeVal.addProperty("type", type.getRawType().getName());
-                    typeVal.add("value", GSON.toJsonTree(val.get()));
+                typeVal.addProperty("type", key.getTypeName());
+                typeVal.add("value", GSON.toJsonTree(val.get()));
 
-                    attr.add(key.getName(), typeVal);
-                }
+                attr.add(key.getName(), typeVal);
             }
-            object.add("attributes", attr);
+        }
+        object.add("attributes", attr);
 
-            GSON.toJson(object, Files.newBufferedWriter(path));
-        } catch (IOException e) {
+        try (BufferedWriter bw = Files.newBufferedWriter(path)) {
+            bw.write(GSON.toJson(object));
+        } catch (Exception e) {
             LOGGER.catching(e);
         }
     }
 
     /**
-     * Attempts to asynchronously serialize all persistent data for the
-     * {@link Player}. Returns a {@link ListenableFuture} detailing the progress
-     * and result of the asynchronous task.
-     * 
+     * Attempts to asynchronously serialize all persistent data for the {@link Player}. Returns a {@link ListenableFuture}
+     * detailing the progress and result of the asynchronous task.
+     *
      * @param service The {@link GameService} to use for asynchronous execution.
      * @return The {@link ListenableFuture} detailing progress and the result.
      */
@@ -126,9 +122,8 @@ public final class PlayerSerializer {
 
     /**
      * Attempts to deserialize all persistent data for the {@link Player}.
-     * 
-     * @param expectedPassword The expected password to be compared against the
-     *        deserialized password.
+     *
+     * @param expectedPassword The expected password to be compared against the deserialized password.
      * @return The {@link LoginResponse} determined by the deserialization.
      */
     public LoginResponse load(String expectedPassword) {
@@ -157,7 +152,7 @@ public final class PlayerSerializer {
                 Class<?> type = Class.forName(obj.get("type").getAsString());
                 Object data = GsonUtils.getAsType(obj.get("value"), type);
 
-                player.attr.get(it.getKey()).set(data);
+                player.attr.get(it.getKey().intern()).set(data);
             }
         } catch (Exception e) {
             LOGGER.catching(e);
@@ -167,12 +162,10 @@ public final class PlayerSerializer {
     }
 
     /**
-     * Attempts to asynchronously deserialize all persistent data for the
-     * {@link Player}. Returns a {@link ListenableFuture} detailing the progress
-     * and result of the asynchronous task.
-     * 
-     * @param expectedPassword The expected password to be compared against the
-     *        deserialized password.
+     * Attempts to asynchronously deserialize all persistent data for the {@link Player}. Returns a {@link ListenableFuture}
+     * detailing the progress and result of the asynchronous task.
+     *
+     * @param expectedPassword The expected password to be compared against the deserialized password.
      * @param service The {@link GameService} to use for asynchronous execution.
      * @return The {@link ListenableFuture} detailing progress and the result.
      */
