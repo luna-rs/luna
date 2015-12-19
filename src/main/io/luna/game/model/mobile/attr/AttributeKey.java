@@ -84,6 +84,11 @@ public final class AttributeKey<T> {
     private final boolean isPersistent;
 
     /**
+     * The fully-qualified class name of this attribute type.
+     */
+    private final String typeName;
+
+    /**
      * Creates a new {@link AttributeKey}.
      *
      * @param name The name of this alias.
@@ -100,6 +105,7 @@ public final class AttributeKey<T> {
         this.name = requireNonNull(name.intern());
         this.initialValue = initialValue;
         this.isPersistent = isPersistent;
+        typeName = initialValue.getClass().getName();
     }
 
     @Override
@@ -143,5 +149,12 @@ public final class AttributeKey<T> {
      */
     public boolean isPersistant() {
         return isPersistent;
+    }
+
+    /**
+     * @return The fully-qualified class name of this attribute type.
+     */
+    public String getTypeName() {
+        return typeName;
     }
 }
