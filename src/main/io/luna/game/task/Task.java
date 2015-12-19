@@ -128,8 +128,7 @@ public abstract class Task {
     }
 
     /**
-     * @return {@code true} if this {@code Task} executes upon being submitted,
-     *         {@code false} otherwise.
+     * @return {@code true} if this {@code Task} executes upon being submitted, {@code false} otherwise.
      */
     public boolean isInstant() {
         return instant;

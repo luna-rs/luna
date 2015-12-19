@@ -4,7 +4,11 @@ import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import static java.util.Objects.requireNonNull;
 
@@ -38,7 +42,12 @@ public final class TaskManager {
      */
     public void schedule(Task t) {
         if (t.isInstant()) {
-            t.execute();
+            try {
+                t.execute();
+            } catch (Exception e) {
+                t.onException(e);
+                LOGGER.catching(e);
+            }
         }
         awaitingExecution.add(t);
     }
@@ -70,6 +79,7 @@ public final class TaskManager {
             try {
                 it.execute();
             } catch (Exception e) {
+                it.onException(e);
                 LOGGER.catching(e);
             }
         }
