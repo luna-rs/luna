@@ -9,16 +9,13 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 /**
- * A pipeline-like model that allows for an event to be passed through the
- * pipeline to each individual {@code Plugin}. The traversal of the event
- * through the pipeline can be terminated at any time be invoking
- * {@code cancel()}.
+ * A pipeline-like model that allows for an event to be passed through the pipeline to each individual {@code Plugin}. The
+ * traversal of the event through the pipeline can be terminated at any time be invoking {@code cancel()}.
  * <p>
  * <p>
- * Please note that {@code Plugin}s can always be added to this pipeline
- * provided the operation isn't done during traversal, but {@code Plugin}s can
- * <strong>never</strong> be removed.
- * 
+ * Please note that {@code Plugin}s can always be added to this pipeline provided the operation isn't done during traversal,
+ * but {@code Plugin}s can <strong>never</strong> be removed.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
