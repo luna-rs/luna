@@ -1,13 +1,12 @@
 package io.luna.game.model.mobile;
 
+import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcDefinition;
 
 import java.util.Objects;
-
-import com.google.common.base.MoreObjects;
 
 /**
  * A mobile entity that is controlled by the server.
@@ -63,6 +62,11 @@ public final class Npc extends MobileEntity {
     @Override
     public EntityType type() {
         return EntityType.NPC;
+    }
+
+    @Override
+    public void resetEntity() {
+
     }
 
     /**
