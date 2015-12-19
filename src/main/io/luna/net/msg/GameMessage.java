@@ -3,9 +3,9 @@ package io.luna.net.msg;
 import io.luna.net.codec.ByteMessage;
 
 /**
- * A message that can act as an inbound or outbound packet of data. It can be
- * safely used across multiple threads due to it being immutable.
- * 
+ * A message that can act as an inbound or outbound packet of data. It can be safely used across multiple threads due to it
+ * being immutable.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameMessage {
