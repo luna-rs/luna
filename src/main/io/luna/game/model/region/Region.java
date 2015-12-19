@@ -1,5 +1,7 @@
 package io.luna.game.model.region;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 
@@ -10,9 +12,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * A location on the map that is {@code 32x32} in size. Used primarily for
@@ -28,7 +27,7 @@ public final class Region {
     private final RegionCoordinates coordinates;
 
     /**
-     * A queue of active {@link Entity}s in this {@code Region}.
+     * A {@link Set} of active {@link Entity}s in this {@code Region}.
      */
     private final Queue<Entity> entities = new ConcurrentLinkedQueue<>();
 

@@ -5,9 +5,8 @@ import io.luna.game.model.Position;
 import java.util.Objects;
 
 /**
- * An {@code x} and {@code y} coordinate equal to a {@link Position}s
- * coordinates shifted {@code 5} bits to the right.
- * 
+ * An {@code x} and {@code y} coordinate equal to a {@link Position}s coordinates divided by {@code 32}.
+ *
  * @author Graham
  * @author lare96 <http://github.org/lare96>
  */
@@ -15,12 +14,12 @@ public final class RegionCoordinates {
 
     /**
      * Creates a new {@link RegionCoordinates} from {@code pos}.
-     * 
+     *
      * @param pos The position to create from.
      * @return The newly created {@code RegionCoordinates}.
      */
     public static RegionCoordinates create(Position pos) {
-        return new RegionCoordinates(pos.getX() >> 5, pos.getY() >> 5);
+        return new RegionCoordinates(pos.getX() / 32, pos.getY() / 32);
     }
 
     /**

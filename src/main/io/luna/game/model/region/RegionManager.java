@@ -1,5 +1,6 @@
 package io.luna.game.model.region;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Npc;
@@ -13,9 +14,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Manages all of the cached {@link Region}s and the {@link Entity}s contained
- * within them.
- * 
+ * Manages all of the cached {@link Region}s and the {@link Entity}s contained within them.
+ *
  * @author lare96 <http://github.org/lare96>
  * @author Graham
  */
@@ -27,9 +27,8 @@ public final class RegionManager {
     private final Map<RegionCoordinates, Region> regions = new HashMap<>();
 
     /**
-     * Returns a {@link Region} based on the given region {@code X} and region
-     * {@code Y} coordinates.
-     * 
+     * Returns a {@link Region} based on the given region {@code X} and region {@code Y} coordinates.
+     *
      * @param x The region {@code X} coordinate.
      * @param y The region {@code Y} coordinate.
      * @return The region in accordance with these coordinates.
@@ -40,7 +39,7 @@ public final class RegionManager {
 
     /**
      * Returns a {@link Region} based on the given {@code pos}.
-     * 
+     *
      * @param pos The position.
      * @return The region in accordance with this {@code pos}.
      */
@@ -49,9 +48,9 @@ public final class RegionManager {
     }
 
     /**
-     * Returns a {@link Region} based on the given {@code coordinates}, creates
-     * and inserts a new {@code Region} if none present.
-     * 
+     * Returns a {@link Region} based on the given {@code coordinates}, creates and inserts a new {@code Region} if none
+     * present.
+     *
      * @param coordinates The {@link RegionCoordinates}.
      * @return The region in accordance with {@code coordinates}.
      */
@@ -61,7 +60,7 @@ public final class RegionManager {
 
     /**
      * Determines if a {@link Region} exists in accordance with {@code pos}.
-     * 
+     *
      * @param pos The position.
      * @return {@code true} if a {@code Region} exists, {@code false} otherwise.
      */
@@ -70,10 +69,9 @@ public final class RegionManager {
     }
 
     /**
-     * Gets all of the {@link Player}s relevant to {@code player}, prioritized
-     * in an order somewhat identical to Runescape. This is done so that
-     * staggered updating does not interfere negatively with gameplay.
-     * 
+     * Gets all of the {@link Player}s relevant to {@code player}, prioritized in an order somewhat identical to Runescape.
+     * This is done so that staggered updating does not interfere negatively with gameplay.
+     *
      * @param player The {@link Player}.
      * @return The local, prioritized, {@code Player}s.
      */
@@ -94,10 +92,9 @@ public final class RegionManager {
     }
 
     /**
-     * Gets all of the {@link Npc}s relevant to {@code player}, prioritized in
-     * an order somewhat identical to Runescape. This is done so that staggered
-     * updating does not interfere negatively with gameplay.
-     * 
+     * Gets all of the {@link Npc}s relevant to {@code player}, prioritized in an order somewhat identical to Runescape. This
+     * is done so that staggered updating does not interfere negatively with gameplay.
+     *
      * @param player The {@link Player}.
      * @return The local, prioritized, {@code Npc}s.
      */
@@ -119,7 +116,7 @@ public final class RegionManager {
 
     /**
      * Gets the {@link Region}s surrounding {@code pos}.
-     * 
+     *
      * @param pos The {@link Position}.
      * @return The surrounding regions.
      */
@@ -132,8 +129,8 @@ public final class RegionManager {
         List<Region> regions = new LinkedList<>();
         regions.add(getRegion(coordinates)); // Initial region.
 
-        int x = pos.getX() % (2 >> 5);
-        int y = pos.getY() % (2 >> 5);
+        int x = pos.getX() % 32;
+        int y = pos.getY() % 32;
 
         if (y == 15 || y == 16) {
             // Middle of region.

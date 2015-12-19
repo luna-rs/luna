@@ -7,10 +7,9 @@ import io.luna.game.model.mobile.Player;
 import java.util.Comparator;
 
 /**
- * A {@link Comparator} implementation that compares {@link MobileEntity}s being
- * added to the local lists of {@link Player}s. The purpose of this is to
- * prevent the loss of functionality when staggering updating.
- * 
+ * A {@link Comparator} implementation that compares {@link MobileEntity}s being added to the local lists of {@link Player}s.
+ * The purpose of this is to prevent the loss of functionality when staggering updating.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class RegionPriorityComparator implements Comparator<MobileEntity> {
@@ -42,6 +41,6 @@ public final class RegionPriorityComparator implements Comparator<MobileEntity> 
         }
 
         // TODO Compare combat when completed
-        return Integer.compare(twoScore, oneScore);
+        return Integer.compare(oneScore, twoScore);
     }
 }
