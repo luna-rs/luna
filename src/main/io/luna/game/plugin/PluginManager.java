@@ -2,7 +2,6 @@ package io.luna.game.plugin;
 
 import io.luna.LunaContext;
 import io.luna.game.model.mobile.Player;
-import io.netty.util.internal.StringUtil;
 import plugin.Plugin;
 import plugin.PluginBootstrap;
 
@@ -10,7 +9,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A class that manages all of the {@link Plugin}s and their respective
@@ -59,8 +57,7 @@ public final class PluginManager {
     }
 
     /**
-     * Posts an event represented as {@code evt} to all {@link Plugin}s that listen for its underlying type. If no {@code
-     * PluginPipeline}s are found for the event, an {@link NoSuchElementException} is thrown.
+     * Posts an event represented as {@code evt} to all {@link Plugin}s that listen for its underlying type.
      *
      * @param evt The event to post.
      * @param player The {@link Player} to post this event for, is allowed to be {@code null} if no {@code Player} instance
@@ -71,7 +68,7 @@ public final class PluginManager {
         PluginPipeline pipeline = plugins.get(evt.getClass());
 
         if (pipeline == null) {
-            throw new NoSuchElementException("No pipeline for event: " + StringUtil.simpleClassName(evt));
+            return; // Discard event silently.
         }
         pipeline.traverse(evt, player);
     }
