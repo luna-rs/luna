@@ -18,9 +18,8 @@ import io.netty.channel.ChannelFutureListener;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link Session} implementation that handles networking for a {@link Player}
- * during login.
- * 
+ * A {@link Session} implementation that handles networking for a {@link Player} during login.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginSession extends Session {
@@ -28,12 +27,12 @@ public final class LoginSession extends Session {
     /**
      * The {@link World} dedicated to this {@code LoginSession}.
      */
-    private final World world;
+    private final LunaContext context;
 
     /**
      * The {@link Player} dedicated to this {@code LoginSession}.
      */
-    private final Player player;
+    private Player player;
 
     /**
      * Creates a new {@link GameSession}.
@@ -43,8 +42,7 @@ public final class LoginSession extends Session {
      */
     public LoginSession(LunaContext context, Channel channel) {
         super(channel);
-        world = context.getWorld();
-        player = new Player(context);
+        this.context = context;
     }
 
     @Override
@@ -56,14 +54,14 @@ public final class LoginSession extends Session {
     }
 
     /**
-     * Loads the character file and sends the {@link LoginResponse} code to the
-     * client.
-     * 
+     * Loads the character file and sends the {@link LoginResponse} code to the client.
+     *
      * @param msg The message containing the credentials.
      * @throws Exception If any errors occur while handling credentials.
      */
     private void handleCredentials(LoginCredentialsMessage msg) throws Exception {
         Channel channel = getChannel();
+        World world = context.getWorld();
         LoginResponse response = LoginResponse.NORMAL;
 
         String username = msg.getUsername();
@@ -71,11 +69,12 @@ public final class LoginSession extends Session {
 
         checkState(username.matches("^[a-zA-Z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
 
-        player.setCredentials(new PlayerCredentials(username, password));
+        player = new Player(context, new PlayerCredentials(username, password));
 
         if (world.getPlayers().isFull()) {
             response = LoginResponse.WORLD_FULL;
         }
+
         if (world.getPlayer(player.getUsernameHash()).isPresent()) {
             response = LoginResponse.ACCOUNT_ONLINE;
         }

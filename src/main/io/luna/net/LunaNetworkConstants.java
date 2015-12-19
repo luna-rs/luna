@@ -9,14 +9,14 @@ import io.netty.util.ResourceLeakDetector.Level;
 
 /**
  * A utility class that only contains Netty constants.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LunaNetworkConstants {
 
     /**
-     * The resource leak detection level, should be {@code PARANOID} in a
-     * development environment and {@code DISABLED} in a production environment.
+     * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code DISABLED} in a
+     * production environment.
      */
     public static final Level RESOURCE_LEAK_DETECTION = Level.PARANOID;
 
@@ -26,8 +26,7 @@ public final class LunaNetworkConstants {
     public static final int PORT = 43594;
 
     /**
-     * The amount of {@code SECONDS} that must elapse for a channel to be
-     * disconnected after no read operations.
+     * The amount of {@code SECONDS} that must elapse for a channel to be disconnected after no read operations.
      */
     public static final int READ_IDLE_SECONDS = 5;
 
@@ -42,8 +41,7 @@ public final class LunaNetworkConstants {
     public static final int MESSAGE_LIMIT = 15;
 
     /**
-     * The preferred ports for the user to use, a log message will be printed if
-     * none of these ports are used.
+     * The preferred ports for the user to use, a log message will be printed if none of these ports are used.
      */
     public static final ImmutableSet<Integer> PREFERRED_PORTS = ImmutableSet.of(43594, 5555);
 
@@ -52,16 +50,16 @@ public final class LunaNetworkConstants {
      */
     public static final ImmutableList<String> IGNORED_EXCEPTIONS = ImmutableList
         .of("An existing connection was forcibly closed by the remote host",
-        "An established connection was aborted by the software in your host machine");
+            "An established connection was aborted by the software in your host machine");
 
     /**
-     * An {@link AttributeKey} that is used to retrieve the session instance
-     * from the attribute map of a {@link Channel}.
+     * An {@link AttributeKey} that is used to retrieve the session instance from the attribute map of a {@link Channel}.
      */
     public static final AttributeKey<Session> SESSION_KEY = AttributeKey.valueOf("session.KEY");
 
     /**
      * A private constructor to discourage external instantiation.
      */
-    private LunaNetworkConstants() {}
+    private LunaNetworkConstants() {
+    }
 }

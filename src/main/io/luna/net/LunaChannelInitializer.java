@@ -11,13 +11,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
- * The {@link ChannelInitializer} implementation that will initialize
- * {@link SocketChannel}s before they are registered.
+ * The {@link ChannelInitializer} implementation that will initialize {@link SocketChannel}s before they are registered.
  *
  * @author lare96 <http://github.com/lare96>
  */
-@Sharable
-public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
+@Sharable public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     /**
      * Handles upstream messages from Netty.
@@ -55,7 +53,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
         ch.pipeline().addLast("channel-filter", CHANNEL_FILTER);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context));
         ch.pipeline().addLast("login-encoder", LOGIN_ENCODER);
-        ch.pipeline().addLast("upstream-handler", UPSTREAM_HANDLER);
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
+        ch.pipeline().addLast("upstream-handler", UPSTREAM_HANDLER);
     }
 }

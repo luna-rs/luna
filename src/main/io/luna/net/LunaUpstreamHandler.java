@@ -1,25 +1,23 @@
 package io.luna.net;
 
-import static java.util.Objects.requireNonNull;
 import io.luna.net.session.Session;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutException;
-
-import java.util.Optional;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
+
 /**
- * A {@link SimpleChannelInboundHandler} implementation that handles upstream
- * messages from Netty.
+ * A {@link SimpleChannelInboundHandler} implementation that handles upstream messages from Netty.
  *
  * @author lare96 <http://github.com/lare96>
  */
-@Sharable
-public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
+@Sharable public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
 
     /**
      * The logger that will print important information.
@@ -27,10 +25,10 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Objec
     private static final Logger LOGGER = LogManager.getLogger(LunaUpstreamHandler.class);
 
     /**
-     * A default access level constructor to discourage external instantiation
-     * outside of the {@code io.luna.net} package.
+     * A default access level constructor to discourage external instantiation outside of the {@code io.luna.net} package.
      */
-    LunaUpstreamHandler() {}
+    LunaUpstreamHandler() {
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
@@ -56,9 +54,9 @@ public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Objec
     }
 
     /**
-     * Gets the {@link Session} instance from the {@link ChannelHandlerContext},
-     * and validates it to ensure it isn't {@code null}.
-     * 
+     * Gets the {@link Session} instance from the {@link ChannelHandlerContext}, and validates it to ensure it isn't {@code
+     * null}.
+     *
      * @param ctx The channel handler context.
      * @return The session instance.
      */

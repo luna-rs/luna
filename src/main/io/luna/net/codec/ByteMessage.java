@@ -1,23 +1,22 @@
 package io.luna.net.codec;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
- * The {@link ByteBuf} wrapper tailored to the specifications of the RuneScape
- * protocol. These buffers are backed by direct buffers for better performance
- * but are pooled to avoid costly allocation and deallocation of the buffers.
- * 
+ * The {@link ByteBuf} wrapper tailored to the specifications of the RuneScape protocol. These buffers are backed by direct
+ * buffers for better performance but are pooled to avoid costly allocation and deallocation of the buffers.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
-     * A buffer pool that will help reduce the overhead from allocating and
-     * deallocating direct buffers.
+     * A buffer pool that will help reduce the overhead from allocating and deallocating direct buffers.
      */
     private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 
@@ -76,8 +75,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Creates a new {@link ByteMessage} with the {@code cap} as the capacity.
-     * The returned buffer will most likely be a direct buffer.
+     * Creates a new {@link ByteMessage} with the {@code cap} as the capacity. The returned buffer will most likely be a
+     * direct buffer.
      *
      * @param cap The capacity of the buffer.
      * @return The newly created buffer.
@@ -88,8 +87,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Creates a new {@link ByteMessage} with the default capacity. The returned
-     * buffer will most likely be a direct buffer.
+     * Creates a new {@link ByteMessage} with the default capacity. The returned buffer will most likely be a direct buffer.
      *
      * @return The newly created buffer.
      */
@@ -123,9 +121,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Builds a new message header for a variable length message. Note that the
-     * corresponding {@code endVarMessage()} method must be called to finish the
-     * message.
+     * Builds a new message header for a variable length message. Note that the corresponding {@code endVarMessage()} method
+     * must be called to finish the message.
      *
      * @param opcode The opcode of the message.
      * @return An instance of this byte message.
@@ -138,10 +135,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Builds a new message header for a variable length message, where the
-     * length is written as a {@code short} instead of a {@code byte}. Note that
-     * the corresponding {@code endVarShortMessage()} method must be called to
-     * finish the message.
+     * Builds a new message header for a variable length message, where the length is written as a {@code short} instead of a
+     * {@code byte}. Note that the corresponding {@code endVarShortMessage()} method must be called to finish the message.
      *
      * @param opcode The opcode of the message.
      * @return An instance of this byte message.
@@ -154,9 +149,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Finishes a variable message header by writing the actual message length
-     * at the length {@code byte} position. Call this when the construction of
-     * the actual variable length message is complete.
+     * Finishes a variable message header by writing the actual message length at the length {@code byte} position. Call this
+     * when the construction of the actual variable length message is complete.
      *
      * @return An instance of this byte message.
      */
@@ -166,9 +160,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Finishes a variable message header by writing the actual message length
-     * at the length {@code short} position. Call this when the construction of
-     * the actual variable length message is complete.
+     * Finishes a variable message header by writing the actual message length at the length {@code short} position. Call
+     * this when the construction of the actual variable length message is complete.
      *
      * @return An instance of this byte message.
      */
@@ -178,9 +171,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Writes the bytes from the argued buffer into this buffer. This method
-     * does not modify the argued buffer, and please do not flip the buffer
-     * beforehand.
+     * Writes the bytes from the argued buffer into this buffer. This method does not modify the argued buffer.
      *
      * @param from The argued buffer that bytes will be written from.
      * @return An instance of this byte message.
@@ -189,7 +180,18 @@ public final class ByteMessage extends DefaultByteBufHolder {
         for (int i = 0; i < from.writerIndex(); i++) {
             put(from.getByte(i));
         }
+        from.release();
         return this;
+    }
+
+    /**
+     * Writes the bytes from the argued buffer into this buffer. This method does not modify the argued buffer.
+     *
+     * @param from The argued buffer that bytes will be written from.
+     * @return An instance of this byte message.
+     */
+    public ByteMessage putBytes(ByteMessage from) {
+        return putBytes(from.getBuffer());
     }
 
     /**
@@ -221,8 +223,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param amount The amount of bits to write.
      * @param value The value of the bits.
      * @return An instance of this byte message.
-     * @throws IllegalArgumentException If the number of bits is not between
-     *         {@code 1} and {@code 32} inclusive.
+     * @throws IllegalArgumentException If the number of bits is not between {@code 1} and {@code 32} inclusive.
      */
     public ByteMessage putBits(int amount, int value) {
         if (amount < 0 || amount > 32)
@@ -234,7 +235,10 @@ public final class ByteMessage extends DefaultByteBufHolder {
         requiredSpace += (amount + 7) / 8;
         if (buf.writableBytes() < requiredSpace) {
             ByteBuf old = buf;
+
             buf = ALLOC.buffer(old.capacity() + requiredSpace);
+            buf.release();
+
             buf.writeBytes(old);
         }
         for (; amount > bitOffset; bitOffset = 8) {
@@ -312,8 +316,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param type The byte transformation type
      * @param order The byte endianness type.
      * @return An instance of this byte message.
-     * @throws UnsupportedOperationException If middle or inverse-middle value
-     *         types are selected.
+     * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
     public ByteMessage putShort(int value, ByteTransform type, ByteOrder order) {
         switch (order) {
@@ -448,8 +451,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param type The byte transformation type
      * @param order The byte endianness type.
      * @return An instance of this byte message.
-     * @throws UnsupportedOperationException If middle or inverse-middle value
-     *         types are selected.
+     * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
     public ByteMessage putLong(long value, ByteTransform type, ByteOrder order) {
         switch (order) {
@@ -591,8 +593,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param type The byte transformation type
      * @param order The byte endianness type.
      * @return The value of the short.
-     * @throws UnsupportedOperationException if middle or inverse-middle value
-     *         types are selected.
+     * @throws UnsupportedOperationException if middle or inverse-middle value types are selected.
      */
     public int getShort(boolean signed, ByteTransform type, ByteOrder order) {
         int value = 0;
@@ -802,8 +803,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param type The byte transformation type
      * @param order The byte endianness type.
      * @return The value of the long.
-     * @throws UnsupportedOperationException if middle or inverse-middle value
-     *         types are selected.
+     * @throws UnsupportedOperationException if middle or inverse-middle value types are selected.
      */
     public long getLong(ByteTransform type, ByteOrder order) {
         long value = 0;
@@ -879,8 +879,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Reads the amount of bytes into the array, starting at the current
-     * position.
+     * Reads the amount of bytes into the array, starting at the current position.
      *
      * @param amount The amount to read.
      * @return A buffer filled with the data.
@@ -890,8 +889,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Reads the amount of bytes into a byte array, starting at the current
-     * position.
+     * Reads the amount of bytes into a byte array, starting at the current position.
      *
      * @param amount The amount of bytes.
      * @param type The byte transformation type of each byte.
@@ -906,9 +904,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Reads the amount of bytes from the buffer in reverse, starting at
-     * {@code current_position + amount} and reading in reverse until the
-     * current position.
+     * Reads the amount of bytes from the buffer in reverse, starting at {@code current_position + amount} and reading in
+     * reverse until the current position.
      *
      * @param amount The amount of bytes to read.
      * @param type The byte transformation type of each byte.

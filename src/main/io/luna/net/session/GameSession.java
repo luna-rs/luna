@@ -15,9 +15,8 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * A {@link Session} implementation that handles networking for a {@link Player}
- * during gameplay.
- * 
+ * A {@link Session} implementation that handles networking for a {@link Player} during gameplay.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameSession extends Session {
@@ -62,6 +61,12 @@ public final class GameSession extends Session {
     }
 
     @Override
+    public void onDispose() {
+        player.getWorld().queueLogout(player);
+        inboundQueue.clear();
+    }
+
+    @Override
     public void handleUpstreamMessage(Object msg) {
         if (msg instanceof GameMessage) {
             inboundQueue.offer((GameMessage) msg);
@@ -70,14 +75,14 @@ public final class GameSession extends Session {
 
     /**
      * Writes {@code msg} to the underlying channel; The channel is not flushed.
-     * 
+     *
      * @param msg The message to queue.
      */
     public void queue(OutboundGameMessage msg) {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.write(msg.toGameMessage(player), channel.voidPromise());
+            channel.writeAndFlush(msg.toGameMessage(player), channel.voidPromise());
         }
     }
 
@@ -85,14 +90,17 @@ public final class GameSession extends Session {
      * Dequeues the inbound queue, handling all logic accordingly.
      */
     public void dequeue() {
-        for (;;) {
+        for (; ; ) {
             GameMessage msg = inboundQueue.poll();
             if (msg == null) {
                 break;
             }
             InboundGameMessage inbound = InboundGameMessage.HANDLERS[msg.getOpcode()];
             try {
-                player.getPlugins().post(inbound.readMessage(player, msg), player);
+                Object evt = inbound.readMessage(player, msg);
+                if (evt != null) {
+                    player.getPlugins().post(evt, player);
+                }
             } catch (Exception e) {
                 LOGGER.catching(Level.WARN, e);
             }
@@ -100,8 +108,7 @@ public final class GameSession extends Session {
     }
 
     /**
-     * Flushes all of the {@link OutboundGameMessage}s in the underlying
-     * channel's queue.
+     * Flushes all of the {@link OutboundGameMessage}s in the underlying channel's queue.
      */
     public void flush() {
         Channel channel = getChannel();

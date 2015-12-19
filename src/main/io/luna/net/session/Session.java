@@ -5,6 +5,8 @@ import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * An abstraction model that determines how I/O operations are handled for a
  * {@link Player}.
@@ -39,20 +41,29 @@ public class Session {
     }
 
     /**
+     * Disposes of this {@code Session} by closing the {@link Channel} and executing the {@code onDispose()} listener.
+     */
+    public final void dispose() {
+        Channel channel = getChannel();
+        checkState(!channel.isActive(), "call getChannel().close() instead!");
+
+        onDispose();
+    }
+
+    /**
+     * Executed when this {@link Session} needs to be disposed of.
+     */
+    public void onDispose() {
+
+    }
+
+    /**
      * Implementations decide which messages are handled and how they are
      * handled. Messages are ignored completely by default.
      * 
      * @param msg The message to handle.
      */
     public void handleUpstreamMessage(Object msg) throws Exception {}
-
-    /**
-     * Disposes of this {@code Session} by closing the {@link Channel} and
-     * executing the {@code onDispose()} listener.
-     */
-    public final void dispose() {
-        channel.close();
-    }
 
     /**
      * @return The {@link Channel} to send and receive messages through.

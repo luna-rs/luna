@@ -16,6 +16,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public abstract class InboundGameMessage {
 
+    // TODO: Parse message sizes and handlers
+
     /**
      * The logger that will print important information.
      */
@@ -32,13 +34,14 @@ public abstract class InboundGameMessage {
     public static final InboundGameMessage[] HANDLERS = new InboundGameMessage[257];
 
     /**
-     * Read the {@code msg} and return the {@code Object} event that will be forwarded to the {@link PluginManager}. This is
-     * only used for the decoding and validation stages of an incoming message. All logic should be handled within {@link
-     * Plugin}s.
+     * Read the {@code msg} and return the {@code Object} event that will be forwarded to the {@link PluginManager}, if any.
+     * This is only used for the decoding, validation, basic logic stages of an incoming message. All event type logic should
+     * be handled within {@link Plugin}s.
      *
      * @param player The player.
      * @param msg The message to read.
-     * @return The {@code Object} that will be forwarded to a {@link Plugin}.
+     * @return The {@code Object} that will be forwarded to a {@link Plugin}, {@code null} if no {@code Object} should be
+     * forwarded.
      * @throws Exception If any exceptions are thrown. Will later be caught by the session logger.
      */
     public abstract Object readMessage(Player player, GameMessage msg) throws Exception;
