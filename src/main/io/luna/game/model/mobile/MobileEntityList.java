@@ -3,22 +3,31 @@ package io.luna.game.model.mobile;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.EntityState;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkPositionIndex;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Iterable} implementation acting as a repository that holds
- * instances of {@link MobileEntity}s. Indexes are cached to avoid expensive
- * lookups whenever a new mob is added.
- * 
+ * An {@link Iterable} implementation acting as a repository that holds instances of {@link MobileEntity}s. Indexes are
+ * cached to avoid expensive lookups whenever a new mob is added.
+ *
+ * @param <E> The specific type of {@code MobileEntity} being managed within this list.
  * @author lare96 <http://github.org/lare96>
- * @param <E> The specific type of {@code MobileEntity} being managed within
- *        this list.
  */
 public final class MobileEntityList<E extends MobileEntity> implements Iterable<E> {
 
@@ -219,6 +228,16 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
         mob.setIndex(-1);
         mob.setState(EntityState.INACTIVE);
         size--;
+    }
+
+    /**
+     * Removes a {@link MobileEntity} from this list at {@code index}. Will throw an exception if the mob being removed does
+     * not have a state of {@code ACTIVE}.
+     *
+     * @param index The index to remove the {@link MobileEntity} at.
+     */
+    public void remove(int index) {
+        remove(mobs[index]);
     }
 
     /**
