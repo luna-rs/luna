@@ -1,9 +1,10 @@
 package io.luna.util;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A static-utility class that provides additional functionality for generating
