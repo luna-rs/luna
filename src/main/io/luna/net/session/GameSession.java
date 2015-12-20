@@ -82,7 +82,7 @@ public final class GameSession extends Session {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.writeAndFlush(msg.toGameMessage(player), channel.voidPromise());
+            channel.write(msg.toGameMessage(player), channel.voidPromise());
         }
     }
 
