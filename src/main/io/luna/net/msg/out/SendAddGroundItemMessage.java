@@ -7,11 +7,29 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.OutboundGameMessage;
 
+/**
+ * An {@link OutboundGameMessage} implementation that displays a ground item.
+ *
+ * @author lare96 <http://github.org/lare96>
+ */
 public final class SendAddGroundItemMessage extends OutboundGameMessage {
 
+    /**
+     * The item that will be displayed.
+     */
     private final Item item;
+
+    /**
+     * The offset of the item from the player.
+     */
     private final int offset;
 
+    /**
+     * Creates a new {@link SendAddGroundItemMessage}.
+     *
+     * @param item The item that will be displayed.
+     * @param offset The offset of the item from the player.
+     */
     public SendAddGroundItemMessage(Item item, int offset) {
         this.item = item;
         this.offset = offset;

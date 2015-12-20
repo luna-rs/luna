@@ -4,6 +4,11 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundGameMessage;
 
+/**
+ * An {@link OutboundGameMessage} implementation that will close all open interfaces.
+ *
+ * @author lare96 <http://github.org/lare96>
+ */
 public final class SendCloseWindowsMessage extends OutboundGameMessage {
 
     @Override
@@ -12,5 +17,4 @@ public final class SendCloseWindowsMessage extends OutboundGameMessage {
         msg.message(219);
         return msg;
     }
-
 }
