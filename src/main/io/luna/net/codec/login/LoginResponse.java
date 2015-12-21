@@ -1,8 +1,7 @@
 package io.luna.net.codec.login;
 
 /**
- * An enumerated type whose elements represent all of the possible login
- * responses.
+ * An enumerated type whose elements represent all of the possible login responses.
  *
  * @author lare96 <http://github.com/lare96>
  */

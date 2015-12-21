@@ -8,7 +8,7 @@ class LoginPlugin extends Plugin[LoginEvent] {
   sendMessage("Welcome to Luna, a #317 Runescape emulator!")
 
   if (get("first_login")) {
-    yell(s"A new player, ${p.getUsername} has just logged in!")
+    sendMessage("This is your first login. Enjoy your stay!")
     set("first_login", false)
   }
 

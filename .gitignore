@@ -1,8 +1,10 @@
+/data/player_data_files
+/data/log.log
+/.idea/
 /target/
 /.classpath
 /.project
 /.settings/
-/.idea/
 /.git/
 /.cache-main
 /.cache-tests

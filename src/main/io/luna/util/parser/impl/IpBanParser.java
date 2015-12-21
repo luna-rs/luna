@@ -1,18 +1,16 @@
 package io.luna.util.parser.impl;
 
-import io.luna.util.parser.NewLineStringParser;
+import io.luna.util.parser.NewLineParser;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 
 /**
- * A {@link NewLineStringParser} implementation that reads banned addresses.
+ * A {@link NewLineParser} implementation that reads banned addresses.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class IpBanParser extends NewLineStringParser {
+public final class IpBanParser extends NewLineParser {
 
     /**
      * A {@link Set} containing the banned addresses.
@@ -27,16 +25,7 @@ public final class IpBanParser extends NewLineStringParser {
     }
 
     @Override
-    public String doRead(Scanner reader) throws Exception {
-        String bannedAddress = reader.nextLine();
-        if (bannedAddress.isEmpty()) {
-            throw new Exception("empty line");
-        }
-        return bannedAddress;
-    }
-
-    @Override
-    public void onReadComplete(List<String> readObjects) throws Exception {
-        BANNED_ADDRESSES.addAll(readObjects);
+    public void readNextLine(String nextLine) throws Exception {
+        BANNED_ADDRESSES.add(nextLine);
     }
 }

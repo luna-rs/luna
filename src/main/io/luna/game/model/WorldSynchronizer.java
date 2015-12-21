@@ -5,7 +5,6 @@ import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.SendPlayerUpdateMessage;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +47,7 @@ public final class WorldSynchronizer {
                 try {
                     execute();
                 } catch (Exception e) {
-                    LOGGER.catching(Level.WARN, e);
+                    LOGGER.catching(e);
                     remove();
                 } finally {
                     synchronizer.arriveAndDeregister();
@@ -111,7 +110,13 @@ public final class WorldSynchronizer {
      * This is <strong>generally</strong> not safe to do in parallel.
      */
     public void preSynchronize() {
-        // TODO: Walking queue, amongst other things
+        world.getPlayers().forEach(it -> {
+            try {
+                it.getSession().dequeue();
+            } catch (Exception e) {
+                LOGGER.catching(e);
+            }
+        });
     }
 
     /**

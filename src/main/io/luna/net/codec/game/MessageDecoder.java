@@ -3,7 +3,7 @@ package io.luna.net.codec.game;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundGameMessage;
+import io.luna.net.msg.MessageRepository;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,9 +17,8 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes all
- * {@link ByteBuf}s into {@link GameMessage}s.
- * 
+ * A {@link ByteToMessageDecoder} implementation that decodes all {@link ByteBuf}s into {@link GameMessage}s.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class MessageDecoder extends ByteToMessageDecoder {
@@ -33,6 +32,11 @@ public final class MessageDecoder extends ByteToMessageDecoder {
      * The ISAAC that will decrypt incoming messages.
      */
     private final IsaacCipher decryptor;
+
+    /**
+     * The repository containing data for incoming messages.
+     */
+    private final MessageRepository messageRepository;
 
     /**
      * The state of the message currently being decoded.
@@ -58,9 +62,11 @@ public final class MessageDecoder extends ByteToMessageDecoder {
      * Creates a new {@link MessageDecoder}.
      *
      * @param decryptor The decryptor for this decoder.
+     * @param messageRepository The repository containing data for incoming messages.
      */
-    public MessageDecoder(IsaacCipher decryptor) {
+    public MessageDecoder(IsaacCipher decryptor, MessageRepository messageRepository) {
         this.decryptor = decryptor;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -82,14 +88,14 @@ public final class MessageDecoder extends ByteToMessageDecoder {
 
     /**
      * Decodes the opcode of the {@link GameMessage}.
-     * 
+     *
      * @param in The data being decoded.
      */
     private void opcode(ByteBuf in) {
         if (in.isReadable()) {
             opcode = in.readUnsignedByte();
             opcode = (opcode - decryptor.getKey()) & 0xFF;
-            size = InboundGameMessage.SIZES[opcode];
+            size = messageRepository.getSize(opcode);
 
             if (size == 0) {
                 queueMessage(opcode, size, PooledByteBufAllocator.DEFAULT.buffer(0, 0));
@@ -102,7 +108,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
 
     /**
      * Decodes the size of the {@link GameMessage}.
-     * 
+     *
      * @param in The data being decoded.
      */
     private void size(ByteBuf in) {
@@ -121,7 +127,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
 
     /**
      * Decodes the payload of the {@link GameMessage}.
-     * 
+     *
      * @param in The data being decoded.
      */
     private void payload(ByteBuf in) {
@@ -131,9 +137,8 @@ public final class MessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Prepares a {@link GameMessage} to be queued upstream and handled on the
-     * main game thread.
-     * 
+     * Prepares a {@link GameMessage} to be queued upstream and handled on the main game thread.
+     *
      * @param opcode The opcode of the {@code GameMessage}.
      * @param size The size of the {@code GameMessage}.
      * @param payload The payload of the {@code GameMessage}.
@@ -143,7 +148,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
         checkArgument(size >= 0, "size < 0");
 
         try {
-            if (InboundGameMessage.HANDLERS[opcode] == null) {
+            if (messageRepository.getHandler(opcode) == null) {
                 LOGGER.debug("No InboundGameMessage assigned to [opcode= " + opcode + "]");
                 currentMessage = Optional.empty();
                 return;
@@ -165,8 +170,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * An enumerated type whose elements represent all of the possible states of
-     * this {@code MessageDecoder}.
+     * An enumerated type whose elements represent all of the possible states of this {@code MessageDecoder}.
      */
     private enum State {
         OPCODE,

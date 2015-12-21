@@ -5,6 +5,7 @@ import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
+import io.luna.net.msg.MessageRepository;
 import io.luna.net.msg.OutboundGameMessage;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.Level;
@@ -42,6 +43,11 @@ public final class GameSession extends Session {
     private final IsaacCipher decryptor;
 
     /**
+     * The repository containing data for incoming messages.
+     */
+    private final MessageRepository messageRepository;
+
+    /**
      * A bounded queue of inbound {@link GameMessage}s.
      */
     private final Queue<GameMessage> inboundQueue = new ArrayBlockingQueue<>(LunaNetworkConstants.MESSAGE_LIMIT);
@@ -52,12 +58,14 @@ public final class GameSession extends Session {
      * @param channel The channel for this session.
      * @param encryptor The message encryptor.
      * @param decryptor The message decryptor.
+     * @param messageRepository The repository containing data for incoming messages.
      */
-    public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor) {
+    public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor, MessageRepository messageRepository) {
         super(channel);
         this.player = player;
         this.encryptor = encryptor;
         this.decryptor = decryptor;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -95,7 +103,7 @@ public final class GameSession extends Session {
             if (msg == null) {
                 break;
             }
-            InboundGameMessage inbound = InboundGameMessage.HANDLERS[msg.getOpcode()];
+            InboundGameMessage inbound = messageRepository.getHandler(msg.getOpcode());
             try {
                 Object evt = inbound.readMessage(player, msg);
                 if (evt != null) {

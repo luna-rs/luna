@@ -1,22 +1,19 @@
 package io.luna.net.codec;
 
 /**
- * An enumerated type whose elements represent the possible endianness of game
- * messages.
- * 
+ * An enumerated type whose elements represent the possible endianness of game messages.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public enum ByteOrder {
 
     /**
-     * Least significant byte is stored first and the most significant byte is
-     * stored last.
+     * Least significant byte is stored first and the most significant byte is stored last.
      */
     LITTLE,
 
     /**
-     * Most significant byte is stored first and the least significant byte is
-     * stored last.
+     * Most significant byte is stored first and the least significant byte is stored last.
      */
     BIG,
 

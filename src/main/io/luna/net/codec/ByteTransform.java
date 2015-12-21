@@ -1,8 +1,7 @@
 package io.luna.net.codec;
 
 /**
- * The enumerated type whose elements represent the possible custom RuneScape
- * value types.
+ * The enumerated type whose elements represent the possible custom RuneScape value types.
  *
  * @author lare96 <http://github.org/lare96>
  */

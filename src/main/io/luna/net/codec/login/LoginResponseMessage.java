@@ -4,9 +4,9 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerRights;
 
 /**
- * An immutable message that is written through a channel and forwarded to the
- * {@link LoginEncoder} where it is encoded and sent to the client.
- * 
+ * An immutable message that is written through a channel and forwarded to the {@link LoginEncoder} where it is encoded and
+ * sent to the client.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginResponseMessage {
@@ -40,12 +40,10 @@ public final class LoginResponseMessage {
     }
 
     /**
-     * Creates a new {@link LoginResponseMessage} with an authority level of
-     * {@code PLAYER} and a {@code flagged} value of {@code false}.
+     * Creates a new {@link LoginResponseMessage} with an authority level of {@code PLAYER} and a {@code flagged} value of
+     * {@code false}.
      *
      * @param response The actual login response.
-     * @param rights The {@link Player}s authority level.
-     * @param flagged If the {@code Player} is flagged.
      */
     public LoginResponseMessage(LoginResponse response) {
         this(response, PlayerRights.PLAYER, false);

@@ -49,6 +49,8 @@ public final class PluginManager {
         Type typeEvent = ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
         Plugin<?> plugin = (Plugin<?>) clazz.newInstance();
 
+        plugin.ctx_$eq(context);
+
         plugin.plugins_$eq(this);
         plugin.service_$eq(context.getService());
         plugin.world_$eq(context.getWorld());

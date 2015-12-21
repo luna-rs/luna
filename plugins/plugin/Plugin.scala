@@ -2,15 +2,14 @@ package plugin
 
 import java.util.concurrent.ThreadLocalRandom
 
+import io.luna.LunaContext
 import io.luna.game.GameService
 import io.luna.game.model.World
 import io.luna.game.model.mobile.attr.AttributeValue
 import io.luna.game.model.mobile.{Player, PlayerRights}
 import io.luna.game.plugin.{PluginManager, PluginPipeline}
 import io.luna.game.task.Task
-import io.luna.net.msg.out.SendInfoMessage
-
-import scala.collection.JavaConversions._
+import io.luna.net.msg.out.{SendInfoMessage, SendWidgetTextMessage}
 
 /** A model that acts as the base class for every single Plugin. The entire
   * body of the extending class is implicitly executed by the PluginPipeline. A
@@ -26,6 +25,7 @@ import scala.collection.JavaConversions._
   */
 class Plugin[E] extends DelayedInit {
 
+  var ctx: LunaContext = null
   var world: World = null
   var plugins: PluginManager = null
   var service: GameService = null
@@ -34,17 +34,19 @@ class Plugin[E] extends DelayedInit {
   var evt: E = null.asInstanceOf[E]
   var execute: Function0[Unit] = null
 
+  def rightsPlayer = PlayerRights.PLAYER
+  def rightsMod = PlayerRights.MODERATOR
+  def rightsAdmin = PlayerRights.ADMINISTRATOR
+  def rightsDev = PlayerRights.DEVELOPER
+
+  def rand = ThreadLocalRandom.current
+
+  def sendMessage(message: String) = p.queue(new SendInfoMessage(message))
+  def sendWidgetText(text: String, widget: Int) = p.queue(new SendWidgetTextMessage(text, widget))
+
   override def delayedInit(x: => Unit): Unit = {
     execute = () => {
       x
-    }
-  }
-
-  def sendMessage(message: String) = p.queue(new SendInfoMessage(message))
-
-  def yell(message: String) = {
-    for (it <- world.getPlayers) {
-      it.queue(new SendInfoMessage(message))
     }
   }
 
@@ -57,16 +59,6 @@ class Plugin[E] extends DelayedInit {
     val attr: AttributeValue[T] = p.getAttr.get(key)
     attr.set(value)
   }
-
-  def rightsPlayer = PlayerRights.PLAYER
-
-  def rightsMod = PlayerRights.MODERATOR
-
-  def rightsAdmin = PlayerRights.ADMINISTRATOR
-
-  def rightsDev = PlayerRights.DEVELOPER
-
-  def rand = ThreadLocalRandom.current
 
   def schedule(instant: Boolean, delay: Int, action: Function1[Task, Unit]) = {
     world.schedule(new Task(instant, delay) {

@@ -7,9 +7,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
- * A {@link MessageToByteEncoder} implementation that encodes all
- * {@link GameMessage}s into {@link ByteBuf}s.
- * 
+ * A {@link MessageToByteEncoder} implementation that encodes all {@link GameMessage}s into {@link ByteBuf}s.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class MessageEncoder extends MessageToByteEncoder<GameMessage> {

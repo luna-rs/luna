@@ -1,12 +1,12 @@
 package io.luna.net.codec.login;
 
 import io.luna.net.codec.IsaacCipher;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 
 /**
- * An immutable upstream Netty message that contains the decoded data from the
- * login protocol.
- * 
+ * An immutable upstream Netty message that contains the decoded data from the login protocol.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginCredentialsMessage {

@@ -4,6 +4,7 @@ import io.luna.LunaContext;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
+import io.luna.net.msg.MessageRepository;
 import io.luna.net.session.LoginSession;
 import io.luna.net.session.Session;
 import io.luna.net.session.SessionState;
@@ -20,9 +21,8 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes the entire login
- * protocol in states.
- * 
+ * A {@link ByteToMessageDecoder} implementation that decodes the entire login protocol in states.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginDecoder extends ByteToMessageDecoder {
@@ -60,12 +60,19 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     private final LunaContext context;
 
     /**
+     * The repository containing data for incoming messages.
+     */
+    private final MessageRepository messageRepository;
+
+    /**
      * Creates a new {@link LoginDecoder}.
      *
      * @param context The underlying context to be managed under.
+     * @param messageRepository The repository containing data for incoming messages.
      */
-    public LoginDecoder(LunaContext context) {
+    public LoginDecoder(LunaContext context, MessageRepository messageRepository) {
         this.context = context;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -74,7 +81,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
         case HANDSHAKE:
             Attribute<Session> attribute = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY);
 
-            attribute.set(new LoginSession(context, ctx.channel()));
+            attribute.set(new LoginSession(context, ctx.channel(), messageRepository));
             attribute.get().setState(SessionState.LOGGING_IN);
 
             decodeHandshake(ctx, in, out);
@@ -93,19 +100,17 @@ public final class LoginDecoder extends ByteToMessageDecoder {
 
     /**
      * Decodes the handshake portion of the login protocol.
-     * 
+     *
      * @param ctx The channel handler context.
      * @param in The data that is being decoded.
      * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of
-     *         the protocol.
+     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
      */
     private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.readableBytes() >= 2) {
             int opcode = in.readUnsignedByte(); // TODO Ondemand?
 
-            @SuppressWarnings("unused")
-            int nameHash = in.readUnsignedByte();
+            @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
             checkState(opcode == 14, "id != 14");
 
@@ -118,14 +123,12 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the portion of the login protocol where the login type and RSA
-     * block size are determined.
-     * 
+     * Decodes the portion of the login protocol where the login type and RSA block size are determined.
+     *
      * @param ctx The channel handler context.
      * @param in The data that is being decoded.
      * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of
-     *         the protocol.
+     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
      */
     private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (in.readableBytes() >= 2) {
@@ -139,12 +142,11 @@ public final class LoginDecoder extends ByteToMessageDecoder {
 
     /**
      * Decodes the RSA portion of the login protocol.
-     * 
+     *
      * @param ctx The channel handler context.
      * @param in The data that is being decoded.
      * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of
-     *         the protocol.
+     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
      */
     private void decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (in.readableBytes() >= rsaBlockSize) {
@@ -154,8 +156,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             int clientVersion = in.readUnsignedShort();
             checkState(clientVersion == 317, "clientVersion != 317");
 
-            @SuppressWarnings("unused")
-            int memoryVersion = in.readUnsignedByte();
+            @SuppressWarnings("unused") int memoryVersion = in.readUnsignedByte();
 
             for (int i = 0; i < 9; i++) {
                 in.readInt();
@@ -184,8 +185,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             }
             IsaacCipher encryptor = new IsaacCipher(isaacSeed);
 
-            @SuppressWarnings("unused")
-            int uid = rsaBuffer.readInt();
+            @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
 
             ByteMessage msg = ByteMessage.create(rsaBuffer);
             String username = msg.getString();
@@ -198,8 +198,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * An enumerated type whose elements represent the various stages of the
-     * login protocol.
+     * An enumerated type whose elements represent the various stages of the login protocol.
      */
     private enum State {
         HANDSHAKE,

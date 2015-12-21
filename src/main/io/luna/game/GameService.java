@@ -1,10 +1,13 @@
 package io.luna.game;
 
-import com.google.common.util.concurrent.*;
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mobile.PlayerSerializer;
-import io.netty.util.internal.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,7 +37,7 @@ public final class GameService extends AbstractScheduledService {
      * asynchronous and concurrent tasks.
      */
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("GameServiceWorkerThread").build()));
+        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build()));
 
     /**
      * A queue of synchronization tasks.
@@ -57,7 +60,7 @@ public final class GameService extends AbstractScheduledService {
 
     @Override
     protected String serviceName() {
-        return StringUtil.simpleClassName(this) + "Thread";
+        return "LunaGameThread";
     }
 
     /**

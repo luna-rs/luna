@@ -6,14 +6,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
- * A {@link MessageToByteEncoder} implementation that encodes and writes the
- * data contained within the {@link LoginResponseMessage} to a buffer that will
- * be sent to the client.
- * 
+ * A {@link MessageToByteEncoder} implementation that encodes and writes the data contained within the {@link
+ * LoginResponseMessage} to a buffer that will be sent to the client.
+ *
  * @author lare96 <http://github.org/lare96>
  */
-@Sharable
-public final class LoginEncoder extends MessageToByteEncoder<LoginResponseMessage> {
+@Sharable public final class LoginEncoder extends MessageToByteEncoder<LoginResponseMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, LoginResponseMessage msg, ByteBuf out) throws Exception {

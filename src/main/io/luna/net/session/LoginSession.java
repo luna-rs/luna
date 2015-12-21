@@ -11,6 +11,7 @@ import io.luna.net.codec.game.MessageEncoder;
 import io.luna.net.codec.login.LoginCredentialsMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
+import io.luna.net.msg.MessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -30,19 +31,21 @@ public final class LoginSession extends Session {
     private final LunaContext context;
 
     /**
-     * The {@link Player} dedicated to this {@code LoginSession}.
+     * The repository containing data for incoming messages.
      */
-    private Player player;
+    private final MessageRepository messageRepository;
 
     /**
      * Creates a new {@link GameSession}.
      *
      * @param context The context to be managed under.
      * @param channel The {@link Channel} for this session.
+     * @param messageRepository The repository containing data for incoming messages.
      */
-    public LoginSession(LunaContext context, Channel channel) {
+    public LoginSession(LunaContext context, Channel channel, MessageRepository messageRepository) {
         super(channel);
         this.context = context;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -69,7 +72,7 @@ public final class LoginSession extends Session {
 
         checkState(username.matches("^[a-zA-Z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
 
-        player = new Player(context, new PlayerCredentials(username, password));
+        Player player = new Player(context, new PlayerCredentials(username, password));
 
         if (world.getPlayers().isFull()) {
             response = LoginResponse.WORLD_FULL;
@@ -92,9 +95,10 @@ public final class LoginSession extends Session {
         future.awaitUninterruptibly();
 
         msg.getPipeline().replace("login-encoder", "game-encoder", new MessageEncoder(msg.getEncryptor()));
-        msg.getPipeline().replace("login-decoder", "game-decoder", new MessageDecoder(msg.getDecryptor()));
+        msg.getPipeline()
+            .replace("login-decoder", "game-decoder", new MessageDecoder(msg.getDecryptor(), messageRepository));
 
-        GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor());
+        GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(), messageRepository);
         session.setState(SessionState.LOGGING_IN);
 
         channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);

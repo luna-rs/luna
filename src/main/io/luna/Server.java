@@ -4,9 +4,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
+import io.luna.net.msg.MessageRepository;
 import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.IpBanParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
+import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.luna.util.parser.impl.NpcDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -45,6 +47,11 @@ public final class Server {
      * The {@link LunaContext} that this {@code Server} will be managed with.
      */
     private final LunaContext context = new LunaContext();
+
+    /**
+     * The repository containing data for incoming messages.
+     */
+    private final MessageRepository messageRepository = new MessageRepository();
 
     /**
      * A package-private constructor to discourage external instantiation
@@ -86,7 +93,7 @@ public final class Server {
         bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new LunaChannelInitializer(context));
+        bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
         bootstrap.bind(LunaNetworkConstants.PORT).syncUninterruptibly();
 
         if (!LunaNetworkConstants.PREFERRED_PORTS.contains(LunaNetworkConstants.PORT)) {
@@ -118,5 +125,6 @@ public final class Server {
         service.execute(new IpBanParser());
         service.execute(new ItemDefinitionParser());
         service.execute(new NpcDefinitionParser());
+        service.execute(new MessageRepositoryParser(messageRepository));
     }
 }

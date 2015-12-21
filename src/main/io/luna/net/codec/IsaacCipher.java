@@ -24,17 +24,12 @@
 package io.luna.net.codec;
 
 /**
- * <p>
- * An implementation of an ISAAC cipher. See <a
- * href="http://en.wikipedia.org/wiki/ISAAC_(cipher)">
+ * An implementation of an ISAAC cipher. See <a href="http://en.wikipedia.org/wiki/ISAAC_(cipher)">
  * http://en.wikipedia.org/wiki/ISAAC_(cipher)</a> for more information.
- * </p>
  * <p>
  * <p>
- * This implementation is based on the one written by Bob Jenkins, which is
- * available at <a href="http://www.burtleburtle.net/bob/java/rand/Rand.java">
- * http://www.burtleburtle.net/bob/java/rand/Rand.java</a>.
- * </p>
+ * This implementation is based on the one written by Bob Jenkins, which is available at <a
+ * href="http://www.burtleburtle.net/bob/java/rand/Rand.java"> http://www.burtleburtle.net/bob/java/rand/Rand.java</a>.
  *
  * @author Graham Edgecombe
  */
@@ -121,7 +116,7 @@ public final class IsaacCipher {
     public void isaac() {
         int i, j, x, y;
         b += ++c;
-        for (i = 0, j = SIZE / 2; i < SIZE / 2;) {
+        for (i = 0, j = SIZE / 2; i < SIZE / 2; ) {
             x = memory[i];
             a ^= a << 13;
             a += memory[j++];
@@ -146,7 +141,7 @@ public final class IsaacCipher {
             memory[i] = y = memory[(x & MASK) >> 2] + a + b;
             results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
         }
-        for (j = 0; j < SIZE / 2;) {
+        for (j = 0; j < SIZE / 2; ) {
             x = memory[i];
             a ^= a << 13;
             a += memory[j++];
