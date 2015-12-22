@@ -41,9 +41,6 @@ class Plugin[E] extends DelayedInit {
 
   def rand = ThreadLocalRandom.current
 
-  def sendMessage(message: String) = p.queue(new SendInfoMessage(message))
-  def sendWidgetText(text: String, widget: Int) = p.queue(new SendWidgetTextMessage(text, widget))
-
   override def delayedInit(x: => Unit): Unit = {
     execute = () => {
       x
@@ -69,4 +66,7 @@ class Plugin[E] extends DelayedInit {
   }
 
   def schedule(delay: Int, action: Function1[Task, Unit]): Unit = schedule(false, delay, action)
+
+  def sendMessage(message: String) = p.queue(new SendInfoMessage(message))
+  def sendWidgetText(text: String, widget: Int) = p.queue(new SendWidgetTextMessage(text, widget))
 }
