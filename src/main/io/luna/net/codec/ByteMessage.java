@@ -6,6 +6,7 @@ import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * The {@link ByteBuf} wrapper tailored to the specifications of the RuneScape protocol. These buffers are backed by direct
@@ -18,7 +19,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * A buffer pool that will help reduce the overhead from allocating and deallocating direct buffers.
      */
-    private static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
+    public static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 
     /**
      * An array of bit masks used for bitwise operations.
@@ -180,7 +181,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
         for (int i = 0; i < from.writerIndex(); i++) {
             put(from.getByte(i));
         }
-        from.release();
         return this;
     }
 
@@ -200,8 +200,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param from The argued buffer that bytes will be written from.
      * @return An instance of this byte message.
      */
-    public ByteMessage putBytes(byte[] from, int size) {
-        buf.writeBytes(from, 0, size);
+    public ByteMessage putBytes(byte[] from) {
+        buf.writeBytes(from, 0, from.length);
         return this;
     }
 
@@ -226,20 +226,15 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @throws IllegalArgumentException If the number of bits is not between {@code 1} and {@code 32} inclusive.
      */
     public ByteMessage putBits(int amount, int value) {
-        if (amount < 0 || amount > 32)
-            throw new IllegalArgumentException("Number of bits must be between 1 and 32 inclusive.");
+        checkState(amount >= 1 || amount <= 32, "Number of bits must be between 1 and 32 inclusive.");
+
         int bytePos = bitIndex >> 3;
         int bitOffset = 8 - (bitIndex & 7);
         bitIndex = bitIndex + amount;
         int requiredSpace = bytePos - buf.writerIndex() + 1;
         requiredSpace += (amount + 7) / 8;
         if (buf.writableBytes() < requiredSpace) {
-            ByteBuf old = buf;
-
-            buf = ALLOC.buffer(old.capacity() + requiredSpace);
-            buf.release();
-
-            buf.writeBytes(old);
+            buf.capacity(buf.capacity() + requiredSpace);
         }
         for (; amount > bitOffset; bitOffset = 8) {
             byte tmp = buf.getByte(bytePos);
