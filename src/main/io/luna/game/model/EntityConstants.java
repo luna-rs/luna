@@ -4,7 +4,7 @@ import io.luna.game.model.mobile.Player;
 
 /**
  * A collection of constants related to {@link Entity}s.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class EntityConstants {
@@ -22,5 +22,6 @@ public final class EntityConstants {
     /**
      * A private constructor to discourage external instantiation.
      */
-    private EntityConstants() {}
+    private EntityConstants() {
+    }
 }

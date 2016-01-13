@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Instantiates a {@link Server} that will start this application.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Luna {
@@ -19,11 +19,12 @@ public final class Luna {
     /**
      * A private constructor to discourage external instantiation.
      */
-    private Luna() {}
+    private Luna() {
+    }
 
     /**
      * Invoked when this program is started, initializes the {@link Server}.
-     * 
+     *
      * @param args The runtime arguments, none of which are parsed.
      */
     public static void main(String[] args) {

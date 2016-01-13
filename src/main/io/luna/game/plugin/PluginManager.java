@@ -11,10 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A class that manages all of the {@link Plugin}s and their respective
- * {@link PluginPipeline}s. Has a function to submit a new {@code Plugin} and
- * another to post events to existing {@code Plugin}s.
- * 
+ * A class that manages all of the {@link Plugin}s and their respective {@link PluginPipeline}s. Has a function to submit a
+ * new {@code Plugin} and another to post events to existing {@code Plugin}s.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginManager {

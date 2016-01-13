@@ -4,6 +4,8 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.model.mobile.Player;
 import plugin.Plugin;
+import scala.Function0;
+import scala.runtime.BoxedUnit;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -46,7 +48,11 @@ public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
             }
             it.p_$eq(player);
             it.evt_$eq(evt);
-            it.execute().apply();
+
+            Function0<BoxedUnit> execute = it.execute();
+            if (execute != null) {
+                execute.apply();
+            }
         }
     }
 

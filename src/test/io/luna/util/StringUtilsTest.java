@@ -10,9 +10,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * A test that ensures various functions in the {@link StringUtils} class are
- * functioning correctly.
- * 
+ * A test that ensures various functions in the {@link StringUtils} class are functioning correctly.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class StringUtilsTest {

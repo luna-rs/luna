@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import com.google.common.base.Throwables;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
@@ -16,7 +17,6 @@ import io.luna.game.model.mobile.update.PlayerPrimaryHitUpdateBlock;
 import io.luna.game.model.mobile.update.PlayerSecondaryHitUpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundGameMessage;
@@ -52,67 +52,65 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
 
     @Override
     public ByteMessage writeMessage(Player player) {
-        if (player.getUpdateFlags().get(UpdateFlag.REGION)) {
-            player.queue(new SendRegionMessage());
-            player.getUpdateFlags().unflag(UpdateFlag.REGION);
-        }
-
         ByteMessage msg = ByteMessage.create(16384);
         ByteMessage blockMsg = ByteMessage.create(8192);
 
-        msg.varShortMessage(81);
-        msg.startBitAccess();
+        try {
+            msg.varShortMessage(81);
+            msg.startBitAccess();
 
-        handleMovement(player, msg);
+            handleMovement(player, msg);
 
-        blockSet.handleUpdateBlocks(player, player, blockMsg, false, true);
+            blockSet.handleUpdateBlocks(player, player, blockMsg, false, true);
 
-        msg.putBits(8, player.getLocalPlayers().size());
+            msg.putBits(8, player.getLocalPlayers().size());
+            Iterator<Player> $it = player.getLocalPlayers().iterator();
+            while ($it.hasNext()) {
+                Player other = $it.next();
 
-        RegionManager regions = player.getWorld().getRegions();
-        int playersAdded = 0;
+                if (other.getPosition().isViewable(player.getPosition()) && other.getState() == EntityState.ACTIVE && !other
+                    .isRegionChanged()) {
 
-        for (Player other : regions.getPriorityPlayers(player)) {
-            if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
-                break;
-            }
-            if (other.equals(player) || other.getSession().getState() != SessionState.LOGGED_IN) {
-                continue;
-            }
-            if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {
-                playersAdded++;
-                addPlayer(msg, player, other);
-                blockSet.handleUpdateBlocks(other, player, blockMsg, true, false);
-            }
-        }
-
-        Iterator<Player> $it = player.getLocalPlayers().iterator();
-        while ($it.hasNext()) {
-            Player other = $it.next();
-
-            if (other.getPosition().isViewable(player.getPosition()) && other.getState() == EntityState.ACTIVE && !other
-                .isRegionChanged()) {
-
-                handleMovement(other, msg);
-
-                if (!other.getUpdateFlags().isEmpty()) {
+                    handleMovement(other, msg);
                     blockSet.handleUpdateBlocks(other, player, blockMsg, false, false);
+                } else {
+                    msg.putBit(true);
+                    msg.putBits(2, 3);
+                    $it.remove();
                 }
-            } else {
-                msg.putBit(true);
-                msg.putBits(2, 3);
-                $it.remove();
             }
-        }
 
-        if (blockMsg.getBuffer().writerIndex() > 0) {
-            msg.putBits(11, 2047);
-            msg.endBitAccess();
-            msg.putBytes(blockMsg.getBuffer());
-        } else {
-            msg.endBitAccess();
+            RegionManager regions = player.getWorld().getRegions();
+            int playersAdded = 0;
+
+            for (Player other : regions.getPriorityPlayers(player)) {
+                if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
+                    break;
+                }
+                if (other.equals(player) || other.getSession().getState() != SessionState.LOGGED_IN) {
+                    continue;
+                }
+                if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {
+                    playersAdded++;
+                    addPlayer(msg, player, other);
+                    blockSet.handleUpdateBlocks(other, player, blockMsg, true, false);
+                }
+            }
+
+            if (blockMsg.getBuffer().writerIndex() > 0) {
+                msg.putBits(11, 2047);
+                msg.endBitAccess();
+                msg.putBytes(blockMsg.getBuffer());
+            } else {
+                msg.endBitAccess();
+            }
+            msg.endVarShortMessage();
+        } catch (Exception e) {
+            msg.release();
+            throw Throwables.propagate(e);
+        } finally {
+            blockMsg.release();
         }
-        msg.endVarShortMessage();
         return msg;
     }
 
@@ -125,11 +123,11 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
      */
     private void addPlayer(ByteMessage out, Player player, Player addPlayer) {
         out.putBits(11, addPlayer.getIndex());
-        out.putBit(!player.getUpdateFlags().isEmpty());
+        out.putBit(!addPlayer.getUpdateFlags().isEmpty());
         out.putBit(true);
 
-        int deltaX = player.getPosition().getX() - addPlayer.getPosition().getX();
-        int deltaY = player.getPosition().getY() - addPlayer.getPosition().getZ();
+        int deltaX = addPlayer.getPosition().getX() - player.getPosition().getX();
+        int deltaY = addPlayer.getPosition().getY() - player.getPosition().getY();
         out.putBits(5, deltaY);
         out.putBits(5, deltaX);
     }
@@ -151,6 +149,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
             out.putBits(2, position.getZ());
             out.putBit(!player.isRegionChanged());
             out.putBit(needsUpdate);
+
             out.putBits(7, position.getLocalY(player.getLastRegion()));
             out.putBits(7, position.getLocalX(player.getLastRegion()));
             return;

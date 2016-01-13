@@ -1,9 +1,8 @@
 package io.luna.game.model.mobile;
 
 /**
- * An enumerated type whose elements represent the possible authority levels
- * that a {@link Player} can be assigned.
- * 
+ * An enumerated type whose elements represent the possible authority levels that a {@link Player} can be assigned.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public enum PlayerRights {

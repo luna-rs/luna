@@ -6,12 +6,12 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
-import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundGameMessage;
 import io.luna.net.msg.out.SendAssignmentMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.luna.net.session.SessionState;
+import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import plugin.LoginEvent;
@@ -49,7 +49,7 @@ public final class Player extends MobileEntity {
     /**
      * The current cached block for this update cycle.
      */
-    private ByteMessage cachedBlock;
+    private ByteBuf cachedBlock;
 
     /**
      * The authority level of this {@code Player}.
@@ -254,14 +254,22 @@ public final class Player extends MobileEntity {
     /**
      * @return The current cached block for this update cycle.
      */
-    public ByteMessage getCachedBlock() {
+    public ByteBuf getCachedBlock() {
         return cachedBlock;
     }
 
     /**
      * Sets the value for {@link #cachedBlock}.
      */
-    public void setCachedBlock(ByteMessage cachedBlock) {
+    public void setCachedBlock(ByteBuf cachedBlock) {
+        ByteBuf currentBlock = this.cachedBlock;
+
+        if (currentBlock != null) {
+            currentBlock.release();
+        }
+        if (cachedBlock != null) {
+            cachedBlock.retain();
+        }
         this.cachedBlock = cachedBlock;
     }
 

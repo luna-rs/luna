@@ -10,7 +10,7 @@ import java.util.Objects;
 
 /**
  * A mobile entity that is controlled by the server.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Npc extends MobileEntity {

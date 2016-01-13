@@ -4,7 +4,7 @@ import io.luna.util.StringUtils;
 
 /**
  * An immutable class that holds the credentials for a {@link Player}.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PlayerCredentials {

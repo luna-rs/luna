@@ -6,9 +6,9 @@ import io.luna.game.model.mobile.Player;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A single item that can be contained within a {@link Player}s inventory or
- * equipment container. They are also be contained within ground items.
- * 
+ * A single item that can be contained within a {@link Player}s inventory or equipment container. They are also be contained
+ * within ground items.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Item {

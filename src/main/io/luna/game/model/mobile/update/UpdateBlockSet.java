@@ -59,7 +59,10 @@ public final class UpdateBlockSet {
             if (player.getUpdateFlags().isEmpty()) {
                 return;
             }
-            msg.putBytes(encodeBlocks(player, forceAppearance, noChat));
+            ByteMessage encodeMsg = encodeBlocks(player, forceAppearance, noChat);
+            msg.putBytes(encodeMsg);
+
+            encodeMsg.release();
         } else if (other.type() == EntityType.PLAYER) {
             // The Player update block process is a bit more complicated, but still fairly simple. If any update blocks are
             // flagged or appearance needs to be forced then either the update blocks are encoded and added to the main
@@ -83,9 +86,10 @@ public final class UpdateBlockSet {
 
                 // We've encoded the update blocks, cache them so we don't have to re-encode the exact same
                 // one again later on.
-                player.setCachedBlock(cachedBlock);
+                player.setCachedBlock(cachedBlock.getBuffer());
             }
             msg.putBytes(cachedBlock);
+            cachedBlock.release();
         }
     }
 

@@ -8,9 +8,8 @@ import java.net.InetSocketAddress;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An abstraction model that determines how I/O operations are handled for a
- * {@link Player}.
- * 
+ * An abstraction model that determines how I/O operations are handled for a {@link Player}.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public class Session {
@@ -58,12 +57,13 @@ public class Session {
     }
 
     /**
-     * Implementations decide which messages are handled and how they are
-     * handled. Messages are ignored completely by default.
-     * 
+     * Implementations decide which messages are handled and how they are handled. Messages are ignored completely by
+     * default.
+     *
      * @param msg The message to handle.
      */
-    public void handleUpstreamMessage(Object msg) throws Exception {}
+    public void handleUpstreamMessage(Object msg) throws Exception {
+    }
 
     /**
      * @return The {@link Channel} to send and receive messages through.

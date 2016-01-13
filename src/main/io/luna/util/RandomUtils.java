@@ -7,33 +7,26 @@ import java.util.concurrent.ThreadLocalRandom;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A static-utility class that provides additional functionality for generating
- * pseudo-random numbers. All functions in this class are backed by
- * {@link ThreadLocalRandom} rather than the more commonly used {@link Random}.
- * It is generally preferred to use this over {@code Random} because although
- * {@code Random} is thread safe; the same seed is shared concurrently, which
- * leads to contention between multiple threads and overhead as a result.
- * Surprisingly because of the way that {@code ThreadLocalRandom} works, even in
- * completely single-threaded situations it runs up to three times faster than
- * {@code Random}.
+ * A static-utility class that provides additional functionality for generating pseudo-random numbers. All functions in this
+ * class are backed by {@link ThreadLocalRandom} rather than the more commonly used {@link Random}. It is generally preferred
+ * to use this over {@code Random} because although {@code Random} is thread safe; the same seed is shared concurrently,
+ * which leads to contention between multiple threads and overhead as a result. Surprisingly because of the way that {@code
+ * ThreadLocalRandom} works, even in completely single-threaded situations it runs up to three times faster than {@code
+ * Random}.
  *
  * @author lare96 <http://github.com/lare96>
- * @see <a href=
- *      "http://java-performance.info/java-util-random-java-util-concurrent-threadlocalrandom-multithreaded-environments/"
- *      >java.util.Random and java.util.concurrent.ThreadLocalRandom in
- *      multithreaded environments</a>
+ * @see <a href= "http://java-performance.info/java-util-random-java-util-concurrent-threadlocalrandom-multithreaded-environments/"
+ * >java.util.Random and java.util.concurrent.ThreadLocalRandom in multithreaded environments</a>
  */
 public final class RandomUtils {
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code min}
-     * and inclusive {@code max}.
+     * Returns a pseudo-random {@code int} value between inclusive {@code min} and inclusive {@code max}.
      *
      * @param min The minimum inclusive number.
      * @param max The maximum inclusive number.
      * @return The pseudo-random {@code int}.
-     * @throws IllegalArgumentException If {@code max - min + 1} is less than
-     *         {@code 0}.
+     * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
      */
     public static int inclusive(int min, int max) {
         checkArgument(max >= min, "max < min");
@@ -41,13 +34,11 @@ public final class RandomUtils {
     }
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code 0} and
-     * inclusive {@code range}.
+     * Returns a pseudo-random {@code int} value between inclusive {@code 0} and inclusive {@code range}.
      *
      * @param range The maximum inclusive number.
      * @return The pseudo-random {@code int}.
-     * @throws IllegalArgumentException If {@code max - min + 1} is less than
-     *         {@code 0}.
+     * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
      */
     public static int inclusive(int range) {
         return inclusive(0, range);
@@ -154,9 +145,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code T} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code T} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -171,9 +161,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code int} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code int} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -188,9 +177,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code long} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code long} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -205,9 +193,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code double} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code double} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -222,9 +209,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code short} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code short} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -239,9 +225,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code byte} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code byte} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -256,9 +241,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code float} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code float} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -273,9 +257,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code boolean} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code boolean} array.
+     *
      * @param array The array that will be shuffled.
      * @return The shuffled array.
      */
@@ -290,9 +273,8 @@ public final class RandomUtils {
     }
 
     /**
-     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle
-     * the elements of an {@code char} array.
-     * 
+     * An implementation of the Fisher-Yates shuffle algorithm that will shuffle the elements of an {@code char} array.
+     *
      * @param array The array that will be shuffled.
      */
     public static char[] shuffle(char[] array) {
@@ -308,5 +290,6 @@ public final class RandomUtils {
     /**
      * A private constructor to discourage external instantiation.
      */
-    private RandomUtils() {}
+    private RandomUtils() {
+    }
 }

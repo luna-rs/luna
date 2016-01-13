@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Initializes the individual modules to launch {@link Luna}.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Server {
@@ -54,14 +54,14 @@ public final class Server {
     private final MessageRepository messageRepository = new MessageRepository();
 
     /**
-     * A package-private constructor to discourage external instantiation
-     * outside of the {@code io.luna} package.
+     * A package-private constructor to discourage external instantiation outside of the {@code io.luna} package.
      */
-    Server() {}
+    Server() {
+    }
 
     /**
      * Creates {@link Luna} by initializing all of the individual modules.
-     * 
+     *
      * @throws Exception If any exceptions are thrown during initialization.
      */
     public void create() throws Exception {
@@ -78,9 +78,8 @@ public final class Server {
     }
 
     /**
-     * Initializes the Netty implementation. Will block indefinitely until the
-     * {@link ServerBootstrap} is bound.
-     * 
+     * Initializes the Netty implementation. Will block indefinitely until the {@link ServerBootstrap} is bound.
+     *
      * @throws Exception If any exceptions are thrown while binding.
      */
     private void bind() throws Exception {
@@ -103,22 +102,18 @@ public final class Server {
     }
 
     /**
-     * Initializes the {@link GameService} asynchronously, does not wait for it
-     * to enter a {@code RUNNING} state.
-     * 
-     * @throws Exception If any exceptions are thrown during initialization of
-     *         the {@code GameService}.
+     * Initializes the {@link GameService} asynchronously, does not wait for it to enter a {@code RUNNING} state.
+     *
+     * @throws Exception If any exceptions are thrown during initialization of the {@code GameService}.
      */
     private void initGame() throws Exception {
         context.getService().startAsync();
     }
 
     /**
-     * Executes all startup tasks asynchronously in the background using
-     * {@link ExecutorService}.
-     * 
-     * @throws Exception If any exceptions are thrown while executing startup
-     *         tasks.
+     * Executes all startup tasks asynchronously in the background using {@link ExecutorService}.
+     *
+     * @throws Exception If any exceptions are thrown while executing startup tasks.
      */
     private void initAsyncTasks() throws Exception {
         service.execute(new PluginBootstrap(context.getPlugins()));

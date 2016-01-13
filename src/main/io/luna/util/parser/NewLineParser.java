@@ -8,8 +8,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A {@link Parser} implementation specifically designated for files that have a series of {@code Object}s
- * separated by a new line.
+ * A {@link Parser} implementation specifically designated for files that have a series of {@code Object}s separated by a new
+ * line.
  *
  * @author lare96 <http://github.org/lare96>
  */

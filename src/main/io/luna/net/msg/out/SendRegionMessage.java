@@ -14,9 +14,6 @@ public final class SendRegionMessage extends OutboundGameMessage {
 
     @Override
     public ByteMessage writeMessage(Player player) {
-        player.setLastRegion(player.getPosition());
-        player.setRegionChanged(true);
-
         ByteMessage msg = ByteMessage.create();
         msg.message(73);
         msg.putShort(player.getPosition().getRegionX() + 6, ByteTransform.A);

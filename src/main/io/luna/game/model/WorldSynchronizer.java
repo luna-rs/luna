@@ -4,7 +4,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.msg.out.SendPlayerUpdateMessage;
+import io.luna.net.msg.out.SendRegionMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -113,6 +115,15 @@ public final class WorldSynchronizer {
         world.getPlayers().forEach(it -> {
             try {
                 it.getSession().dequeue();
+
+                if (it.getUpdateFlags().get(UpdateFlag.REGION)) {
+                    it.setRegionChanged(true);
+                    it.setLastRegion(it.getPosition());
+
+                    it.queue(new SendRegionMessage());
+
+                    it.getUpdateFlags().unflag(UpdateFlag.REGION);
+                }
             } catch (Exception e) {
                 LOGGER.catching(e);
             }
@@ -147,7 +158,6 @@ public final class WorldSynchronizer {
                 @Override
                 public void execute() {
                     it.clearFlags();
-                    it.getSession().flush();
                     it.setCachedBlock(null);
                 }
             });

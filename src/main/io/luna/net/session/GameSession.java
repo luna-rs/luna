@@ -90,7 +90,7 @@ public final class GameSession extends Session {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.write(msg.toGameMessage(player), channel.voidPromise());
+            channel.writeAndFlush(msg.toGameMessage(player), channel.voidPromise());
         }
     }
 
@@ -112,17 +112,6 @@ public final class GameSession extends Session {
             } catch (Exception e) {
                 LOGGER.catching(Level.WARN, e);
             }
-        }
-    }
-
-    /**
-     * Flushes all of the {@link OutboundGameMessage}s in the underlying channel's queue.
-     */
-    public void flush() {
-        Channel channel = getChannel();
-
-        if (channel.isActive()) {
-            channel.flush();
         }
     }
 

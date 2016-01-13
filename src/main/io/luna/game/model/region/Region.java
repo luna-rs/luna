@@ -14,9 +14,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * A location on the map that is {@code 32x32} in size. Used primarily for
- * caching various types of {@link Entity}s.
- * 
+ * A location on the map that is {@code 32x32} in size. Used primarily for caching various types of {@link Entity}s.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Region {
@@ -34,8 +33,7 @@ public final class Region {
     /**
      * Creates a new {@link Region}.
      *
-     * @param coordinates The {@link RegionCoordinates} to construct this class
-     *        with.
+     * @param coordinates The {@link RegionCoordinates} to construct this class with.
      */
     Region(RegionCoordinates coordinates) {
         this.coordinates = coordinates;
@@ -43,7 +41,7 @@ public final class Region {
 
     /**
      * Adds an {@link Entity} to the backing queue.
-     * 
+     *
      * @param e The entity to add.
      */
     public void addEntity(Entity e) {
@@ -52,7 +50,7 @@ public final class Region {
 
     /**
      * Removes an {@link Entity} from the backing queue.
-     * 
+     *
      * @param e The entity to remove.
      */
     public void removeEntity(Entity e) {
@@ -60,11 +58,10 @@ public final class Region {
     }
 
     /**
-     * Retrieves and returns an {@link ArrayList} of {@link Entity}s that
-     * correspond to the given {@code types}. The {@link EntityType}s given must
-     * be in accordance with the type of list returned or a
-     * {@link ClassCastException} will be thrown.
-     * 
+     * Retrieves and returns an {@link ArrayList} of {@link Entity}s that correspond to the given {@code types}. The {@link
+     * EntityType}s given must be in accordance with the type of list returned or a {@link ClassCastException} will be
+     * thrown.
+     *
      * @param types The types to include in the returned list.
      * @return The list with the types.
      */

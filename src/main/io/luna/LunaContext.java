@@ -6,7 +6,7 @@ import io.luna.game.plugin.PluginManager;
 
 /**
  * The context that {@link Luna} is being managed in.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LunaContext {
@@ -27,10 +27,10 @@ public final class LunaContext {
     private final PluginManager plugins = new PluginManager(this);
 
     /**
-     * A package-private constructor to discourage external instantiation
-     * outside of the {@code io.luna} package.
+     * A package-private constructor to discourage external instantiation outside of the {@code io.luna} package.
      */
-    LunaContext() {}
+    LunaContext() {
+    }
 
     /**
      * @return The {@link GameService} in this context.

@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * A static-utility class that contains functions for manipulating strings.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class StringUtils {
@@ -18,10 +18,9 @@ public final class StringUtils {
         '?', '/', '`' };
 
     /**
-     * Joins the {@code elements} using a ',' as the delimiter, with
-     * {@code prefix} and {@code suffix}. On the last element, an "and" is
-     * added.
-     * 
+     * Joins the {@code elements} using a ',' as the delimiter, with {@code prefix} and {@code suffix}. On the last element,
+     * an "and" is added.
+     *
      * @param prefix The prefix of the String.
      * @param suffix The suffix of the String.
      * @param elements The String elements to join together.
@@ -33,7 +32,7 @@ public final class StringUtils {
         for (int idx = 0; idx < elements.size(); idx++) {
             if ((idx + 1) == elements.size()) {
                 sb.append("and " + elements.get(idx)); // On last index, add
-                                                       // "and" instead of ",".
+                // "and" instead of ",".
                 continue;
             }
             sb.append(elements.get(idx) + ", ");
@@ -45,7 +44,7 @@ public final class StringUtils {
 
     /**
      * Encodes {@code s} to a base-37 {@code long}.
-     * 
+     *
      * @param s The {@link String} to encode.
      * @return The encoded {@code String}.
      */
@@ -70,7 +69,7 @@ public final class StringUtils {
 
     /**
      * Decodes {@code l} into a {@link String}.
-     * 
+     *
      * @param l The base-37 {@code long} to decode.
      * @return The decoded {@code l}.
      */
@@ -88,5 +87,6 @@ public final class StringUtils {
     /**
      * A private constructor to discourage external instantiation.
      */
-    private StringUtils() {}
+    private StringUtils() {
+    }
 }

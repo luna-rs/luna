@@ -65,5 +65,7 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
 
         msg.put(buf.getBuffer().writerIndex(), ByteTransform.C);
         msg.putBytes(buf);
+
+        buf.release();
     }
 }

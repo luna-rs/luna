@@ -1,11 +1,10 @@
-
 package io.luna.game.model.def;
 
 import io.luna.game.model.mobile.Npc;
 
 /**
  * A cached definition that describes a specific {@link Npc}.
- * 
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcDefinition {
@@ -139,9 +138,7 @@ public final class NpcDefinition {
      * @param rangedDefence The ranged defence of the {@code Npc}.
      * @param magicDefence The magic defence of the {@code Npc}.
      */
-    public NpcDefinition(int id, String name, String description, int combatLevel, int size, boolean attackable, boolean aggressive, boolean retreats, boolean poisonous,
-        int respawnTime, int maxHit, int hitpoints, int attackSpeed, int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus, int meleeDefence,
-        int rangedDefence, int magicDefence) {
+    public NpcDefinition(int id, String name, String description, int combatLevel, int size, boolean attackable, boolean aggressive, boolean retreats, boolean poisonous, int respawnTime, int maxHit, int hitpoints, int attackSpeed, int attackAnimation, int defenceAnimation, int deathAnimation, int attackBonus, int meleeDefence, int rangedDefence, int magicDefence) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -200,32 +197,28 @@ public final class NpcDefinition {
     }
 
     /**
-     * @return {@code true} if the {@code Npc} can be attacked, {@code false}
-     *         otherwise.
+     * @return {@code true} if the {@code Npc} can be attacked, {@code false} otherwise.
      */
     public boolean isAttackable() {
         return attackable;
     }
 
     /**
-     * @return {@code true} if the {@code Npc} is aggressive, {@code false}
-     *         otherwise.
+     * @return {@code true} if the {@code Npc} is aggressive, {@code false} otherwise.
      */
     public boolean isAggressive() {
         return aggressive;
     }
 
     /**
-     * @return {@code true} if the {@code Npc} can retreat, {@code false}
-     *         otherwise.
+     * @return {@code true} if the {@code Npc} can retreat, {@code false} otherwise.
      */
     public boolean isRetreats() {
         return retreats;
     }
 
     /**
-     * @return {@code true} if the {@code Npc} is poisonous, {@code false}
-     *         otherwise.
+     * @return {@code true} if the {@code Npc} is poisonous, {@code false} otherwise.
      */
     public boolean isPoisonous() {
         return poisonous;
