@@ -111,12 +111,9 @@ public final class PlayerSerializer {
      * @return The {@link ListenableFuture} detailing progress and the result.
      */
     public ListenableFuture<Void> asyncSave(GameService service) {
-        return service.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                save();
-                return null;
-            }
+        return service.submit((Callable<Void>) () -> {
+            save();
+            return null;
         });
     }
 
@@ -170,11 +167,6 @@ public final class PlayerSerializer {
      * @return The {@link ListenableFuture} detailing progress and the result.
      */
     public ListenableFuture<LoginResponse> asyncLoad(String expectedPassword, GameService service) {
-        return service.submit(new Callable<LoginResponse>() {
-            @Override
-            public LoginResponse call() throws Exception {
-                return load(expectedPassword);
-            }
-        });
+        return service.submit(() -> load(expectedPassword));
     }
 }
