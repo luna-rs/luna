@@ -33,7 +33,11 @@ trait PluginImplicits {
   }
 
   implicit class WorldImplicits(world: World) {
-    def addNpc(id: Int, position: Position) = world.getNpcs.add(new Npc(world.getContext, id, position))
+    def addNpc(id: Int, position: Position) = {
+      val npc = new Npc(world.getContext, id, position)
+      world.getNpcs.add(npc)
+      npc
+    }
     def run(instant: Boolean = false, delay: Int, action: Task => Unit) = {
       world.schedule(new Task(instant, delay) {
         override protected def execute() = action(this)
