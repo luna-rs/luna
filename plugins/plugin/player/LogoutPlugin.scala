@@ -1,4 +1,4 @@
-package plugin.logout
+package plugin.player
 
 import plugin.{LogoutEvent, Plugin}
 

@@ -10,7 +10,7 @@ import scala.collection.JavaConversions._
 
 
 /** Bootstraps the plugin system visiting all compiled plugins and then subsequently instantiating and submitting them to
-  * the `PluginManager`, where events from the `PluginEventProvider` can be posted to them.
+  * the `PluginManager`, where events from `PluginEvents` can be posted to them.
   *
   * @param pluginManager The `PluginManager` instance that the compiled plugins will be added to.
   * @author lare96 <http://github.org/lare96>
@@ -30,6 +30,10 @@ final class PluginBootstrap(pluginManager: PluginManager) extends Runnable {
       val classFiles = for (it <- pluginDirFiles if it.getName.endsWith(".class")) yield fileToClass(it)
 
       classFiles.filter(_.getSuperclass == classOf[Plugin[_]]).foreach(pluginManager.submit)
+
+      pluginManager.post(new AddNpcsEvent)
+      pluginManager.post(new AddItemsEvent)
+      pluginManager.post(new AddObjectsEvent)
 
       logger.info("Scala plugins have been initialized.")
     } catch {
