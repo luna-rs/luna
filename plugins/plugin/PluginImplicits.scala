@@ -45,8 +45,9 @@ trait PluginImplicits {
     }
   }
 
-  def ?[T](condition: Boolean)(primary: T, secondary: T) = if (condition) primary else secondary
-  def ?:[T](primary: T)(secondary: T) = ?(primary != null)(primary, secondary)
+  implicit class BooleanImplicits(boolean: Boolean) {
+    def ?[T](primary: T, secondary: T) = if (boolean) primary else secondary
+  }
 
   def rightsPlayer = PlayerRights.PLAYER
   def rightsMod = PlayerRights.MODERATOR

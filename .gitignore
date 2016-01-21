@@ -1,13 +1,7 @@
+/data/luna_errors.log
 /data/player_data_files
-/data/log.log
 /.idea/
 /target/
-/.classpath
-/.project
 /.settings/
-/.git/
-/.cache-main
-/.cache-tests
-/.tmpBin/
 /.gitignore
 /luna.iml

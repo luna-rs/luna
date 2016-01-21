@@ -16,7 +16,7 @@ import io.luna.game.plugin.{PluginManager, PluginPipeline}
   * <br>
   * <br>
   * `DelayedInit` will be used until either the Scala development team provides a workaround to its pitfalls (yay!) or removes
-  * it (in which case reflection will just be used instead).
+  * it (in which case method handles will just be used instead).
   *
   * @author lare96 <http://github.org/lare96>
   */
