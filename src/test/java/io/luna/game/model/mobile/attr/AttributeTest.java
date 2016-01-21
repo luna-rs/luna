@@ -2,6 +2,8 @@ package io.luna.game.model.mobile.attr;
 
 import org.junit.Test;
 
+import java.util.stream.IntStream;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -13,51 +15,79 @@ import static org.junit.Assert.assertEquals;
 public final class AttributeTest {
 
     /**
-     * Test the {@link String} key aliasing functions.
+     * Test the {@code String} key aliasing functions.
      */
     @Test
     public void testStringInterning() {
-        Thread.currentThread().setName("LunaInitializationThread");
-
         AttributeMap map = new AttributeMap();
 
-        AttributeKey.forTransient("some_attribute_1", "someValue");
+        AttributeKey.forTransient("some_attribute_1", "some_value");
 
         String key = "some_attribute_2";
         AttributeKey.forTransient(key, 500);
 
-        assertEquals(map.get("some_attribute_1").get(), "someValue");
+        assertEquals(map.get("some_attribute_1").get(), "some_value");
         assertEquals(map.get("some_attribute_2").get(), 500);
+
+        AttributeKey.ALIASES.clear();
     }
 
     /**
-     * Test aliasing a {@link String} key more than once.
+     * Test the caching functions of the attribute map.
+     */
+    @Test
+    public void testInternalCaching() {
+        AttributeMap map = new AttributeMap();
+
+        AttributeKey.forTransient("some_attribute", "some_value");
+        IntStream.rangeClosed(0, 5).forEach(it -> assertEquals(map.get("some_attribute").get(), "some_value"));
+
+        AttributeKey.ALIASES.clear();
+    }
+
+    /**
+     * Test trying to use an attribute map with an non-interned string.
+     */
+    @Test
+    public void testForcedInterning() {
+        AttributeMap map = new AttributeMap();
+
+        AttributeKey.forTransient("some_attribute", "some_value");
+
+        //noinspection RedundantStringConstructorCall
+        assertEquals(map.get(new String("some_attribute")).get(), "some_value");
+
+        AttributeKey.ALIASES.clear();
+    }
+
+    /**
+     * Test trying to use a non-existent attribute.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testNonAliasedAttribute() {
+        AttributeMap map = new AttributeMap();
+
+        map.get("some_attribute");
+    }
+
+    /**
+     * Test aliasing a {@code String} key more than once.
      */
     @Test(expected = IllegalStateException.class)
     public void testMultipleAlias() {
-        Thread.currentThread().setName("LunaInitializationThread");
-
         AttributeKey.forTransient("some_attribute", 0);
         AttributeKey.forTransient("some_attribute", false);
+
+        AttributeKey.ALIASES.clear();
     }
 
     /**
-     * Test aliasing an empty {@link String} key.
+     * Test aliasing an empty {@code String} key.
      */
     @Test(expected = IllegalArgumentException.class)
     public void testEmptyAlias() {
-        Thread.currentThread().setName("LunaInitializationThread");
-
         AttributeKey.forTransient("", 0);
-    }
 
-    /**
-     * Test creation of key alias from anywhere but the initialization thread.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void testRandomThreadAlias() {
-        // Thread.currentThread().setName("LunaInitializationThread");
-
-        AttributeKey.forTransient("some_attribute", 0);
+        AttributeKey.ALIASES.clear();
     }
 }
