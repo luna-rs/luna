@@ -1,6 +1,5 @@
 package io.luna.game.model.mobile;
 
-import com.google.common.primitives.Ints;
 import io.luna.game.model.EntityState;
 
 import java.util.ArrayDeque;
@@ -14,6 +13,7 @@ import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -125,7 +125,9 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
     @SuppressWarnings("unchecked")
     public MobileEntityList(int capacity) {
         mobs = (E[]) new MobileEntity[++capacity];
-        indexes = new ArrayDeque<>(Ints.asList(IntStream.rangeClosed(1, mobs.length).toArray()));
+
+        Stream<Integer> indexStream = IntStream.rangeClosed(1, mobs.length).boxed();
+        indexes = new ArrayDeque<>(indexStream.collect(Collectors.toList()));
     }
 
     @Override
@@ -155,7 +157,7 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
      * @return An {@link Optional} containing the element, or an empty {@code Optional} if no element was found.
      */
     public Optional<E> findLast(Predicate<? super E> filter) {
-        for (int index = capacity(); index > 0; index--) {
+        for (int index = capacity(); index > 1; index--) {
             E mob = mobs[index];
             if (mob == null) {
                 continue;
