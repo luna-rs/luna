@@ -27,6 +27,6 @@ public abstract class OutboundGameMessage {
      */
     public final GameMessage toGameMessage(Player player) {
         ByteMessage msg = writeMessage(player);
-        return new GameMessage(msg.getOpcode(), msg.getBuffer().readableBytes(), msg.getType(), msg);
+        return new GameMessage(msg.getOpcode(), msg.getType(), msg);
     }
 }

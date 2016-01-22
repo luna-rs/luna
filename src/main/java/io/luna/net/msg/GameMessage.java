@@ -4,7 +4,6 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A message that can act as an inbound or outbound packet of data. It can be safely used across multiple threads due to it
@@ -38,19 +37,17 @@ public final class GameMessage {
      * Creates a new {@link GameMessage}.
      *
      * @param opcode The opcode of this message.
-     * @param size The size of this message.
      * @param type The type of this message.
      * @param payload The payload of this message.
      */
-    public GameMessage(int opcode, int size, MessageType type, ByteMessage payload) {
+    public GameMessage(int opcode, MessageType type, ByteMessage payload) {
         checkArgument(opcode >= 0, "opcode < 0");
-        checkArgument(size >= 0, "size < 0");
         checkArgument(type != MessageType.RAW, "type == MessageType.RAW");
 
         this.opcode = opcode;
-        this.size = size;
         this.type = type;
-        this.payload = requireNonNull(payload);
+        this.payload = payload;
+        size = payload.getBuffer().readableBytes();
     }
 
     /**
