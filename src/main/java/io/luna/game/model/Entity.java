@@ -6,7 +6,6 @@ import io.luna.game.model.region.Region;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -48,9 +47,6 @@ public abstract class Entity {
      * @param position The position of this {@code Entity}.
      */
     public Entity(LunaContext context, Position position) {
-        checkState(size() > 0, "size <= 0");
-        checkState(type() != null, "type == null");
-
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
