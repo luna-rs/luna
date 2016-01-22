@@ -15,6 +15,7 @@ import io.luna.game.model.mobile.update.PlayerGraphicUpdateBlock;
 import io.luna.game.model.mobile.update.PlayerInteractionUpdateBlock;
 import io.luna.game.model.mobile.update.PlayerPrimaryHitUpdateBlock;
 import io.luna.game.model.mobile.update.PlayerSecondaryHitUpdateBlock;
+import io.luna.game.model.mobile.update.PlayerUpdateBlockSet;
 import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
 import io.luna.game.model.region.RegionManager;
@@ -36,7 +37,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
     /**
      * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
      */
-    private final UpdateBlockSet blockSet = new UpdateBlockSet();
+    private final UpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
 
     {
         blockSet.add(new PlayerGraphicUpdateBlock());
@@ -61,7 +62,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
 
             handleMovement(player, msg);
 
-            blockSet.handleUpdateBlocks(player, player, blockMsg, false, true);
+            blockSet.encodeUpdateBlocks(player, player, blockMsg);
 
             msg.putBits(8, player.getLocalPlayers().size());
             Iterator<Player> $it = player.getLocalPlayers().iterator();
@@ -72,7 +73,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
                     .isRegionChanged()) {
 
                     handleMovement(other, msg);
-                    blockSet.handleUpdateBlocks(other, player, blockMsg, false, false);
+                    blockSet.encodeUpdateBlocks(other, player, blockMsg);
                 } else {
                     msg.putBit(true);
                     msg.putBits(2, 3);
@@ -87,13 +88,13 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
-                if (other.equals(player) || other.getSession().getState() != SessionState.LOGGED_IN) {
+                if (player.equals(other) || other.getSession().getState() != SessionState.LOGGED_IN) {
                     continue;
                 }
                 if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {
                     playersAdded++;
                     addPlayer(msg, player, other);
-                    blockSet.handleUpdateBlocks(other, player, blockMsg, true, false);
+                    blockSet.encodeUpdateBlocks(other, player, blockMsg);
                 }
             }
 
@@ -121,6 +122,10 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
      * @param addPlayer The {@code Player} being added.
      */
     private void addPlayer(ByteMessage out, Player player, Player addPlayer) {
+
+        System.out.println(addPlayer.getIndex());
+        System.out.println(!addPlayer.getUpdateFlags().isEmpty());
+
         out.putBits(11, addPlayer.getIndex());
         out.putBit(!addPlayer.getUpdateFlags().isEmpty());
         out.putBit(true);

@@ -1,10 +1,7 @@
 package io.luna.game.model.mobile.update;
 
-import io.luna.game.model.EntityType;
 import io.luna.game.model.mobile.MobileEntity;
-import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
@@ -18,12 +15,22 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class UpdateBlockSet {
+public abstract class UpdateBlockSet<E extends MobileEntity> {
 
     /**
      * An ordered {@link Set} that contains all of the {@link UpdateBlock}s that will be handled.
      */
-    private final Set<UpdateBlock> updateBlocks = new LinkedHashSet<>();
+    private final Set<UpdateBlock<E>> updateBlocks = new LinkedHashSet<>();
+
+    /**
+     * An ordered {@link Set} that contains all of the {@link UpdateBlock}s that will actually be written.
+     */
+    private final Set<UpdateBlock<E>> writeBlocks = new LinkedHashSet<>();
+
+    /**
+     * An integer that holds the status of the update flags. Bitwise operators are used to manipulate it.
+     */
+    private int mask;
 
     /**
      * Adds an {@link UpdateBlock} to this {@code UpdateBlockSet}. Throws an {@link IllegalStateException} if this {@code
@@ -31,113 +38,92 @@ public final class UpdateBlockSet {
      *
      * @param block The {@link UpdateBlock} to add.
      */
-    public void add(UpdateBlock block) {
-        checkState(updateBlocks.add(block), "update block " + block + " already added");
+    public void add(UpdateBlock<E> block) {
+        checkState(updateBlocks.add(block), "this UpdateBlock type already added to internal block set");
     }
 
     /**
-     * Makes a call to the function that encodes all of the required {@link UpdateBlock}s, and then caches the result if need
-     * be and writes it to the main update message buffer.
+     * Determines if {@link UpdateBlock}s as a whole need to be encoded for {@code forMob}.
      *
-     * @param other The {@link MobileEntity} being updated for {@code player}.
-     * @param player The {@link Player} these blocks are being handled for.
-     * @param msg The main update message buffer.
-     * @param forceAppearance If the {@code APPEARANCE} block should be forced, should always be {@code false} for the {@link
-     * Npc} update procedure.
-     * @param noChat If the {@code CHAT} block should be ignored, should always be {@code false} for the {@link Npc} update
-     * procedure.
+     * @param forMob The {@link MobileEntity} to encode for.
+     * @param player The {@link Player} that is being updated.
+     * @param msg The main update block, where the encoded {@code UpdateBlock}s should be added to.
+     * @return {@code true} if the encoding process should continue, {@code false} otherwise.
      */
-    public void handleUpdateBlocks(MobileEntity other, Player player, ByteMessage msg, boolean forceAppearance, boolean noChat) {
-        if (other.type() == EntityType.NPC) {
-            // Caching the NPC update blocks won't bring us much performance increases, NPCs do not have an appearance
-            // block nor a manual chat block so the process is simple: check if any update blocks are flagged and if they
-            // are then encode them and add the data to the main buffer.
+    protected abstract boolean needsEncodeBlocks(E forMob, Player player, ByteMessage msg);
 
-            checkState(!forceAppearance, "forceAppearance should be false for NPC updating");
-            checkState(!noChat, "noChat should be false for NPC updating");
+    /**
+     * Determines if {@code block} should be encoded for {@code forMob}.
+     *
+     * @param forMob The {@link MobileEntity} to encode for.
+     * @param block The {@link UpdateBlock} to encode.
+     * @return {@code true} if the {@code UpdateBlock} should be encoded, {@code false} otherwise.
+     */
+    protected boolean canEncodeBlock(E forMob, UpdateBlock<E> block) {
+        // optional implementation
+        return true;
+    }
 
-            if (player.getUpdateFlags().isEmpty()) {
-                return;
-            }
-            ByteMessage encodeMsg = encodeBlocks(other, false, false);
-            msg.putBytes(encodeMsg);
+    /**
+     * A function invoked when all of the {@link UpdateBlock}s have been encoded and added to the main block.
+     *
+     * @param forMob The {@link MobileEntity} the {@code UpdateBlock}s were encoded for.
+     * @param player The {@link Player} that {@code forMob} is being updated for.
+     * @param encodedBlock The actual block that was encoded. This value is safe to modify.
+     */
+    protected void onEncodeFinish(E forMob, Player player, ByteMessage encodedBlock) {
+        // optional implementation
+    }
 
-            encodeMsg.release();
-        } else if (other.type() == EntityType.PLAYER) {
-            // The Player update block process is a bit more complicated, but still fairly simple. If any update blocks are
-            // flagged or appearance needs to be forced then either the update blocks are encoded and added to the main
-            // buffer or if the Player has a cached update block available then that is simply written to the main buffer
-            // to avoid (potentially) expensive encoding operations (mainly for appearance).
-
-            if (player.getUpdateFlags().isEmpty() && !forceAppearance) {
-                return;
-            }
-            if (player.getCachedBlock() != null && !other.equals(player) && !forceAppearance && !noChat) {
-
-                // Why waste time re-encoding the blocks when the data will be exactly the same? Use the exact same block
-                // that we've cached here!
-                msg.putBytes(player.getCachedBlock());
-                return;
-            }
-
-            ByteMessage cachedBlock = encodeBlocks(other, forceAppearance, noChat);
-
-            if (!other.equals(player) && !forceAppearance && !noChat) {
-
-                // We've encoded the update blocks, cache them so we don't have to re-encode the exact same
-                // one again later on.
-                player.setCachedBlock(cachedBlock.getBuffer());
-            }
-            msg.putBytes(cachedBlock);
-            cachedBlock.release();
+    /**
+     * Encodes the {@link UpdateBlock}s for {@code forMob}, and adds it to the main block for {@code player}. Implementations
+     * of {@code UpdateBlockSet} ultimately determine how this code functions.
+     *
+     * @param forMob The {@link MobileEntity} to encode for.
+     * @param player The {@link Player} being updated.
+     * @param msg The main block, belonging to {@code player}.
+     */
+    public final void encodeUpdateBlocks(E forMob, Player player, ByteMessage msg) {
+        if (!needsEncodeBlocks(forMob, player, msg)) {
+            return;
         }
-    }
 
-    /**
-     * Encodes all of the required {@link UpdateBlock}s and returns the buffer with the data.
-     *
-     * @param other The {@link MobileEntity} being updated.
-     * @param forceAppearance If the {@code APPEARANCE} block should be forced, should always be {@code false} for the {@link
-     * Npc} update procedure.
-     * @param noChat If the {@code CHAT} block should be ignored, should always be {@code false} for the {@link Npc} update
-     * procedure.
-     */
-    private ByteMessage encodeBlocks(MobileEntity other, boolean forceAppearance, boolean noChat) {
-        ByteMessage blockMsg = ByteMessage.message();
-        int mask = 0;
-
-        Set<UpdateBlock> writeBlocks = new LinkedHashSet<>();
-
-        for (UpdateBlock updateBlock : updateBlocks) {
-            if (updateBlock.getFlag() == UpdateFlag.APPEARANCE && forceAppearance) {
-
-                // We need to force appearance without meddling with the update flags, so do it here!
+        ByteMessage encodedBlock = ByteMessage.message();
+        try {
+            for (UpdateBlock<E> updateBlock : updateBlocks) {
+                if (!canEncodeBlock(forMob, updateBlock)) {
+                    continue;
+                }
+                if (!forMob.getUpdateFlags().get(updateBlock.getFlag())) {
+                    continue;
+                }
                 mask |= updateBlock.getMask();
                 writeBlocks.add(updateBlock);
-                continue;
             }
-            if (!other.getUpdateFlags().get(updateBlock.getFlag())) {
-                continue;
-            }
-            if (updateBlock.getFlag() == UpdateFlag.CHAT && noChat) {
 
-                // Chat must be blocked out, so on the chat update block we ignore it like it doesn't exist. This is
-                // required so chat isn't displayed twice.
-                continue;
+            if (mask >= 0x100) {
+                mask |= 0x40;
+                encodedBlock.putShort(mask, ByteOrder.LITTLE);
+            } else {
+                encodedBlock.put(mask);
             }
-            mask |= updateBlock.getMask();
-            writeBlocks.add(updateBlock);
+
+            writeBlocks.forEach(it -> it.write(forMob, encodedBlock));
+
+            msg.putBytes(encodedBlock);
+            onEncodeFinish(forMob, player, encodedBlock);
+        } finally {
+            encodedBlock.release();
         }
+    }
 
-        if (mask >= 0x100) {
-            mask |= 0x40;
-            blockMsg.putShort(mask, ByteOrder.LITTLE);
-        } else {
-            blockMsg.put(mask);
-        }
-
-        //noinspection unchecked
-        writeBlocks.forEach(it -> it.write(other, blockMsg));
-        return blockMsg;
+    /**
+     * Adds a new {@link UpdateBlock} that will be encoded. Used to force certain blocks.
+     *
+     * @param block The {@code UpdateBlock} to add.
+     */
+    protected void addBlock(UpdateBlock<E> block) {
+        mask |= block.getMask();
+        writeBlocks.add(block);
     }
 }
