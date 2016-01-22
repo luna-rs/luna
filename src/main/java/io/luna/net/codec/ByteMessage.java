@@ -71,7 +71,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * The current bit position when writing bits.
      */
-    private int bitIndex = 0;
+    private int bitIndex = -1;
 
     /**
      * A static initialization block that calculates the bit masks.
@@ -93,6 +93,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Prepares the buffer for writing bits.
      */
     public void startBitAccess() {
+        checkState(bitIndex == -1, "this ByteMessage instance is already in bit access mode");
+
         bitIndex = buf.writerIndex() * 8;
     }
 
@@ -100,7 +102,10 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Prepares the buffer for writing bytes.
      */
     public void endBitAccess() {
+        checkState(bitIndex != -1, "this ByteMessage instance is not in bit access mode");
+
         buf.writerIndex((bitIndex + 7) / 8);
+        bitIndex = -1;
     }
 
     /**
