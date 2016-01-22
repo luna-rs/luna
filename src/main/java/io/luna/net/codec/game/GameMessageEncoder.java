@@ -14,7 +14,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageEncoder extends MessageToByteEncoder<GameMessage> {
+public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> {
 
     /**
      * The encryptor for this message.
@@ -22,11 +22,11 @@ public final class MessageEncoder extends MessageToByteEncoder<GameMessage> {
     private final IsaacCipher encryptor;
 
     /**
-     * Creates a new {@link MessageEncoder}.
+     * Creates a new {@link GameMessageEncoder}.
      *
      * @param encryptor The encryptor for this encoder.
      */
-    public MessageEncoder(IsaacCipher encryptor) {
+    public GameMessageEncoder(IsaacCipher encryptor) {
         this.encryptor = encryptor;
     }
 
@@ -38,9 +38,9 @@ public final class MessageEncoder extends MessageToByteEncoder<GameMessage> {
 
         out.writeByte(msg.getOpcode() + encryptor.nextKey());
         if (msg.getType() == MessageType.VARIABLE) {
-            out.writeByte(0);
+            out.writeByte(msg.getSize());
         } else if (msg.getType() == MessageType.VARIABLE_SHORT) {
-            out.writeShort(0);
+            out.writeShort(msg.getSize());
         }
         out.writeBytes(msg.getPayload().getBuffer());
 

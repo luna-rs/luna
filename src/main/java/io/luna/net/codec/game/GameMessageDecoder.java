@@ -22,12 +22,12 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageDecoder extends ByteToMessageDecoder {
+public final class GameMessageDecoder extends ByteToMessageDecoder {
 
     /**
      * The logger that will print important information.
      */
-    private static final Logger LOGGER = LogManager.getLogger(MessageDecoder.class);
+    private static final Logger LOGGER = LogManager.getLogger(GameMessageDecoder.class);
 
     /**
      * The ISAAC that will decrypt incoming messages.
@@ -65,12 +65,12 @@ public final class MessageDecoder extends ByteToMessageDecoder {
     private Optional<GameMessage> currentMessage = Optional.empty();
 
     /**
-     * Creates a new {@link MessageDecoder}.
+     * Creates a new {@link GameMessageDecoder}.
      *
      * @param decryptor The decryptor for this decoder.
      * @param messageRepository The repository containing data for incoming messages.
      */
-    public MessageDecoder(IsaacCipher decryptor, MessageRepository messageRepository) {
+    public GameMessageDecoder(IsaacCipher decryptor, MessageRepository messageRepository) {
         this.decryptor = decryptor;
         this.messageRepository = messageRepository;
     }
@@ -169,7 +169,7 @@ public final class MessageDecoder extends ByteToMessageDecoder {
                 return;
             }
 
-            currentMessage = Optional.of(new GameMessage(opcode, size, type, ByteMessage.wrap(payload)));
+            currentMessage = Optional.of(new GameMessage(opcode, type, ByteMessage.wrap(payload)));
         } finally {
             resetState();
         }
