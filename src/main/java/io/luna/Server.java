@@ -3,6 +3,7 @@ package io.luna;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.model.mobile.attr.AttributeKey;
+import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
@@ -20,6 +21,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import plugin.AddItemsEvent;
+import plugin.AddNpcsEvent;
+import plugin.AddObjectsEvent;
 import plugin.PluginBootstrap;
 
 import java.util.concurrent.ExecutorService;
@@ -73,6 +77,7 @@ public final class Server {
         service.shutdown();
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         context.getService().awaitRunning();
+        initEvents();
         bind();
 
         LOGGER.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
@@ -123,5 +128,18 @@ public final class Server {
         service.execute(new NpcDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
         service.execute(AttributeKey::init);
+    }
+
+    /**
+     * Posts events to various plugins synchronously.
+     *
+     * @throws Exception If any exceptions are thrown while posting events.
+     */
+    private void initEvents() throws Exception {
+        PluginManager pluginManager = context.getPlugins();
+
+        pluginManager.post(new AddNpcsEvent());
+        pluginManager.post(new AddItemsEvent());
+        pluginManager.post(new AddObjectsEvent());
     }
 }

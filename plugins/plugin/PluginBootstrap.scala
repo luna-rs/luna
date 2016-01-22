@@ -31,10 +31,6 @@ final class PluginBootstrap(pluginManager: PluginManager) extends Runnable {
 
       classFiles.filter(_.getSuperclass == classOf[Plugin[_]]).foreach(pluginManager.submit)
 
-      pluginManager.post(new AddNpcsEvent)
-      pluginManager.post(new AddItemsEvent)
-      pluginManager.post(new AddObjectsEvent)
-
       logger.info("Scala plugins have been initialized.")
     } catch {
       case e: Exception =>
