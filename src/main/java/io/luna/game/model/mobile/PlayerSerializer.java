@@ -14,7 +14,6 @@ import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,7 +58,7 @@ public final class PlayerSerializer {
      */
     public PlayerSerializer(Player player) {
         this.player = player;
-        path = FILE_DIR.resolve(player.getUsername() + ".json");
+        path = FILE_DIR.resolve(player.getUsername() + ".toml");
     }
 
     static {
@@ -87,17 +86,17 @@ public final class PlayerSerializer {
         Map<String, Object> attributes = new HashMap<>();
         for (Entry<String, AttributeValue<?>> it : player.attributes) {
             AttributeKey<?> key = AttributeKey.ALIASES.get(it.getKey());
-            AttributeValue<?> val = it.getValue();
+            AttributeValue<?> value = it.getValue();
 
             if (key.isPersistent()) {
-                Map<String, Object> attribute = new LinkedHashMap<>();
-                attribute.put("type", key.getTypeName());
-                attribute.put("value", val.get());
+                Map<String, Object> attributeEntry = new LinkedHashMap<>();
+                attributeEntry.put("type", key.getTypeName());
+                attributeEntry.put("value", value.get());
 
-                attributes.put(key.getName(), attribute);
+                attributes.put(key.getName(), attributeEntry);
             }
         }
-        data.put("attributes", data);
+        data.put("attributes", attributes);
 
         try {
             writer.write(data, path.toFile());
@@ -130,8 +129,7 @@ public final class PlayerSerializer {
         if (!Files.exists(path)) {
             return LoginResponse.NORMAL;
         }
-
-        try (BufferedReader in = Files.newBufferedReader(path)) {
+        try {
             JsonObject reader = new Toml().read(path.toFile()).to(JsonObject.class);
 
             String password = reader.get("password").getAsString();
