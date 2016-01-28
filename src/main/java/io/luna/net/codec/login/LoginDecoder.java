@@ -1,7 +1,6 @@
 package io.luna.net.codec.login;
 
 import io.luna.LunaContext;
-import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.MessageRepository;
@@ -19,6 +18,9 @@ import java.util.List;
 import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkState;
+import static io.luna.net.LunaNetworkConstants.RSA_EXPONENT;
+import static io.luna.net.LunaNetworkConstants.RSA_MODULUS;
+import static io.luna.net.LunaNetworkConstants.SESSION_KEY;
 
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes the entire login protocol in states.
@@ -26,18 +28,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginDecoder extends ByteToMessageDecoder {
-
-    /**
-     * The private RSA modulus value.
-     */
-    private static final BigInteger RSA_MODULUS = new BigInteger(
-        "94306533927366675756465748344550949689550982334568289470527341681445613288505954291473168510012417401156971344988779343797488043615702971738296505168869556915772193568338164756326915583511871429998053169912492097791139829802309908513249248934714848531624001166946082342750924060600795950241816621880914628143");
-
-    /**
-     * The private RSA exponent value.
-     */
-    private static final BigInteger RSA_EXPONENT = new BigInteger(
-        "58942123322685908809689084302625256728774551587748168286651364002223076520293763732441711633712538400732268844501356343764421742749024359146319836858905124072353297696448255112361453630421295623429362610999525258756790291981270575779800669035081348981858658116089267888135561190976376091835832053427710797233");
 
     /**
      * A cryptographically secure random number generator.
@@ -79,7 +69,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         switch (state) {
         case HANDSHAKE:
-            Attribute<Session> attribute = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY);
+            Attribute<Session> attribute = ctx.channel().attr(SESSION_KEY);
 
             attribute.set(new LoginSession(context, ctx.channel(), messageRepository));
             attribute.get().setState(SessionState.LOGGING_IN);
@@ -130,7 +120,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
      * @param out The list of decoded messages.
      * @throws Exception If any exceptions occur while decoding this portion of the protocol.
      */
-    private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+    private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.readableBytes() >= 2) {
             int loginType = in.readUnsignedByte();
             checkState(loginType == 16 || loginType == 18, "loginType != 16 or 18");
@@ -146,7 +136,6 @@ public final class LoginDecoder extends ByteToMessageDecoder {
      * @param ctx The channel handler context.
      * @param in The data that is being decoded.
      * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
      */
     private void decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (in.readableBytes() >= rsaBlockSize) {
