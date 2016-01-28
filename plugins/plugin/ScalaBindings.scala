@@ -14,8 +14,7 @@ import io.luna.net.msg.out.{SendGameInfoMessage, SendWidgetTextMessage}
   * plugins. This makes plugins significantly less verbose and therefore much easier to write. For Non-`Plugin` implementation
   * Scala classes it is highly encouraged to include `import plugin.GlobalScalaBindings._` as an import statement to achieve the
   * same previously specified effects.
-  * <br>
-  * <br>
+  * <p>
   * '''Please ensure that great caution is taken when modifying the contents of this class.''' Scala code is heavily reliant on this
   * trait and will not function if certain chunks of code are modified.
   *

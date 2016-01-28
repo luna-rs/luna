@@ -9,12 +9,10 @@ import io.luna.game.plugin.{PluginManager, PluginPipeline}
 /** A model that acts as the base class for every single `Plugin`. The entire body of the extending class is implicitly executed
   * by the `PluginPipeline`. A collection of methods and implicit classes that are defined in `ScalaBindings` are used to
   * keep all `Plugin` instances as short and as easy to write as possible.
-  * <br>
-  * <br>
+  * <p>
   * The mutable, ugly looking fields suck but they're needed because there is no other way of injecting state into plugins. Without
   * them we would need to make all `Plugin` classes override a method with the fields as parameters instead.
-  * <br>
-  * <br>
+  * <p>
   * `DelayedInit` will be used until either the Scala development team provides a workaround to its pitfalls or removes
   * it (in which case reflection will just be used instead).
   *
