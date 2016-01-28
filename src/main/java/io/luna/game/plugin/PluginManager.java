@@ -69,7 +69,7 @@ public final class PluginManager {
         PluginPipeline pipeline = plugins.get(evt.getClass());
 
         if (pipeline == null) {
-            return; // Discard event silently.
+            return;
         }
         pipeline.traverse(evt, player);
     }

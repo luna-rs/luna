@@ -12,11 +12,10 @@ import java.util.Queue;
 
 /**
  * A pipeline-like model that allows for an event to be passed through the pipeline to each individual {@code Plugin}. The
- * traversal of the event through the pipeline can be terminated at any time be invoking {@code cancel()}.
+ * traversal of the event through the pipeline can be terminated at any time by invoking {@code terminate()}.
  * <p>
- * <p>
- * Please note that {@code Plugin}s can always be added to this pipeline provided the operation isn't done during traversal,
- * but {@code Plugin}s can <strong>never</strong> be removed.
+ * Please note that {@code Plugin}s can always be added to this pipeline even during traversal, but {@code Plugin}s can
+ * <strong>never</strong> be removed.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -28,9 +27,9 @@ public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
     private final Queue<Plugin<E>> plugins = new ArrayDeque<>();
 
     /**
-     * A flag that determines if a traversal has been cancelled by a plugin.
+     * A flag that determines if a traversal has been terminated by a plugin.
      */
-    private boolean cancelled;
+    private boolean terminated;
 
     /**
      * Traverse the pipeline passing the {@code evt} instance to each {@link Plugin}. A full traversal over all {@code
@@ -40,10 +39,10 @@ public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
      * @param player The {@link Player} to pass to each {@code Plugin}.
      */
     public void traverse(E evt, Player player) {
-        cancelled = false;
+        terminated = false;
 
         for (Plugin<E> it : this) {
-            if (cancelled) {
+            if (terminated) {
                 break;
             }
             it.plr_$eq(player);
@@ -51,17 +50,28 @@ public final class PluginPipeline<E> implements Iterable<Plugin<E>> {
 
             Function0<BoxedUnit> execute = it.execute();
             if (execute != null) {
-                execute.apply();
+                try {
+                    execute.apply();
+                } catch (Exception e) {
+                    throw new PluginException(e);
+                }
             }
         }
     }
 
     /**
-     * Cancels an active traversal of this pipeline, if this pipeline is not currently being traversed then this method does
-     * nothing.
+     * Terminates an active traversal of this pipeline, if this pipeline is not currently being traversed then this method
+     * does nothing.
+     *
+     * @return {@code true} if termination was successful, {@code false} if this pipeline traversal has already been
+     * terminated.
      */
-    public void cancel() {
-        cancelled = true;
+    public boolean terminate() {
+        if (!terminated) {
+            terminated = true;
+            return true;
+        }
+        return false;
     }
 
     /**
