@@ -8,7 +8,7 @@ package io.luna.net.codec.login;
 public enum LoginResponse {
     NORMAL(2),
     INVALID_CREDENTIALS(3),
-    ACCOUNT_DISABLED(4),
+    ACCOUNT_BANNED(4),
     ACCOUNT_ONLINE(5),
     SERVER_JUST_UPDATED(6),
     WORLD_FULL(7),

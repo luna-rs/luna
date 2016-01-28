@@ -55,7 +55,7 @@ import java.net.InetSocketAddress;
             return;
         }
         if (IpBanParser.BANNED_ADDRESSES.contains(hostAddress)) {
-            disconnect(ctx, LoginResponse.ACCOUNT_DISABLED);
+            disconnect(ctx, LoginResponse.ACCOUNT_BANNED);
             return;
         }
         connections.add(hostAddress);
