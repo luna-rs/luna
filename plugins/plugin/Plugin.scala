@@ -7,7 +7,7 @@ import io.luna.game.model.mobile.Player
 import io.luna.game.plugin.{PluginManager, PluginPipeline}
 
 /** A model that acts as the base class for every single `Plugin`. The entire body of the extending class is implicitly executed
-  * by the `PluginPipeline`. A collection of methods and implicit classes that are defined in `ScalaPluginBindings` are used to
+  * by the `PluginPipeline`. A collection of methods and implicit classes that are defined in `ScalaBindings` are used to
   * keep all `Plugin` instances as short and as easy to write as possible.
   * <br>
   * <br>
