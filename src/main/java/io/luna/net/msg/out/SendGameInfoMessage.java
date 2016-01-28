@@ -10,7 +10,7 @@ import io.luna.net.msg.OutboundGameMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendInfoMessage extends OutboundGameMessage {
+public final class SendGameInfoMessage extends OutboundGameMessage {
 
     /**
      * The message to write to the chatbox.
@@ -18,11 +18,11 @@ public final class SendInfoMessage extends OutboundGameMessage {
     private final String message;
 
     /**
-     * Creates a new {@link SendInfoMessage}.
+     * Creates a new {@link SendGameInfoMessage}.
      *
      * @param message The message to write to the chatbox.
      */
-    public SendInfoMessage(String message) {
+    public SendGameInfoMessage(String message) {
         this.message = message;
     }
 
