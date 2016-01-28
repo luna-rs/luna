@@ -1,5 +1,6 @@
 package io.luna.game.model.mobile.attr;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 
 import java.util.IdentityHashMap;
@@ -12,7 +13,6 @@ import static com.google.common.base.Preconditions.checkState;
  * A {@link String} wrapper also known as an alias that defines behavior and functionality for attributes. {@code String}
  * keys are forcibly interned and aliased on startup into an {@link IdentityHashMap} to be easily accessible as well as high
  * performing.
- * <p>
  * <p>
  * The naming convention for all {@code String} keys is {@code lower_underscore}. Spaces and uppercase letters are not
  * allowed.
@@ -85,8 +85,15 @@ public final class AttributeKey<T> {
      * @param isPersistent If the value of this alias should be serialized.
      */
     private AttributeKey(String name, T initialValue, boolean isPersistent) {
-        checkArgument(!name.isEmpty(), "attribute name length <= 0");
         checkState(!ALIASES.containsKey(name.intern()), "attribute already aliased");
+
+        checkArgument(!name.isEmpty(), "attribute name length <= 0");
+
+        checkArgument(CharMatcher.WHITESPACE.matchesNoneOf(name),
+            "attribute name has whitespace characters, use underscores characters instead");
+
+        checkArgument(CharMatcher.JAVA_UPPER_CASE.matchesNoneOf(name),
+            "attribute name has uppercase characters, use lowercase characters instead");
 
         this.name = name.intern();
         this.initialValue = initialValue;
