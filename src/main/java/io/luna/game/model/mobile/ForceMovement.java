@@ -11,7 +11,7 @@ import io.luna.game.model.Position;
  */
 public final class ForceMovement {
 
-    // TODO: confirm this works and fix it if it doesn't
+    // TODO: confirm this works
 
     /**
      * The {@link Position} the {@link Player} is moving from.
