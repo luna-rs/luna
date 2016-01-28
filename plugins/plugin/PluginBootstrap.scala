@@ -8,9 +8,8 @@ import org.apache.logging.log4j.{Level, LogManager}
 
 import scala.collection.JavaConversions._
 
-
-/** Bootstraps the plugin system visiting all compiled plugins and then subsequently instantiating and submitting them to
-  * the `PluginManager`, where events from `PluginEvents` can be posted to them.
+/** Bootstraps the plugin system by visiting all compiled plugins and then subsequently instantiating and submitting them to
+  * the `PluginManager`, where events can be posted to them.
   *
   * @param pluginManager The `PluginManager` instance that the compiled plugins will be added to.
   * @author lare96 <http://github.org/lare96>
@@ -19,7 +18,7 @@ final class PluginBootstrap(pluginManager: PluginManager) extends Runnable {
 
   override def run() = {
     val logger = LogManager.getLogger(getClass)
-    val classFileDir = s"target${File.separator}classes${File.separator}"
+    val classFileDir = "target/classes/".replace('/', File.separatorChar)
 
     def fileToClass(file: File) = Class.forName(
       file.getPath.replace(classFileDir, "").replace(File.separator, ".").replace(".class", ""))
@@ -33,9 +32,10 @@ final class PluginBootstrap(pluginManager: PluginManager) extends Runnable {
 
       logger.info("Scala plugins have been initialized.")
     } catch {
-      case e: Exception =>
+      case e: Exception => {
         logger.catching(Level.FATAL, e)
         sys.exit
+      }
     }
   }
 }
