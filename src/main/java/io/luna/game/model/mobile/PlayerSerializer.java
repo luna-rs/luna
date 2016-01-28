@@ -39,7 +39,7 @@ public final class PlayerSerializer {
     /**
      * The {@link Path} to all of the serialized {@link Player} data.
      */
-    private static final Path FILE_DIR = Paths.get("./data/player_data_files");
+    private static final Path FILE_DIR = Paths.get("./data/saved_players");
 
     /**
      * The {@link Player} being serialized or deserialized.
