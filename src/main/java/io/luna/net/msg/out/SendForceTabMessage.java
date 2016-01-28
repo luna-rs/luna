@@ -9,7 +9,6 @@ import io.luna.net.msg.OutboundGameMessage;
  * An {@link OutboundGameMessage} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for
  * things like tutorial island to force the {@code Player} to view a certain tab.
  * <p>
- * <p>
  * <table BORDER CELLPADDING=3 CELLSPACING=1> <tr> <td ALIGN=CENTER><em>Tab</em></td> <td
  * ALIGN=CENTER><em>Identifier</em></td> </tr> <tr> <td>Combat</td> <td>0</td> </tr> <tr> <td>Skills</td> <td>-1</td> </tr>
  * <tr> <td>Quest</td> <td>-2</td> </tr> <tr> <td>Inventory</td> <td>-3</td> </tr> <tr> <td>Equipment</td> <td>-4</td> </tr>
