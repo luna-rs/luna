@@ -44,7 +44,8 @@ public final class LoginCredentialsMessage {
      * @param encryptor The encryptor for encrypting game messages.
      * @param decryptor The decryptor for decrypting game messages.
      */
-    public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor, ChannelPipeline pipeline) {
+    public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
+        ChannelPipeline pipeline) {
         this.username = username;
         this.password = password;
         this.encryptor = encryptor;
