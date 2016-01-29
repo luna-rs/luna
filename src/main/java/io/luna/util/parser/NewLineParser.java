@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -47,32 +46,31 @@ public abstract class NewLineParser extends Parser<Scanner, String> {
     }
 
     @Override
-    public final String doRead(Scanner reader) throws Exception {
+    public String doRead(Scanner reader) throws Exception {
         return reader.nextLine();
     }
 
     @Override
-    public final Scanner getReader(BufferedReader in) throws Exception {
+    public Scanner getReader(BufferedReader in) throws Exception {
         return new Scanner(in);
     }
 
     @Override
-    public final boolean canRead(Scanner objectReader) throws Exception {
+    public boolean canRead(Scanner objectReader) throws Exception {
         return objectReader.hasNextLine();
     }
 
     @Override
-    public final void onReadComplete(List<String> readObjects) throws Exception {
+    public void onReadComplete(List<String> readObjects) throws Exception {
         for (String nextLine : readObjects) {
-            requireNonNull(nextLine, "nextLine == null");
-
-            EmptyLinePolicy linePolicy = requireNonNull(emptyLinePolicy(), "emptyLinePolicy == null");
-            if (linePolicy == EmptyLinePolicy.SKIP) {
-                continue;
-            } else if (linePolicy == EmptyLinePolicy.EXCEPTION) {
-                checkState(!nextLine.isEmpty(), "nextLine.isEmpty()");
+            if (nextLine.isEmpty()) {
+                EmptyLinePolicy linePolicy = requireNonNull(emptyLinePolicy(), "emptyLinePolicy == null");
+                if (linePolicy == EmptyLinePolicy.SKIP) {
+                    continue;
+                } else if (linePolicy == EmptyLinePolicy.EXCEPTION) {
+                    throw new IllegalStateException("nextLine.isEmpty()");
+                }
             }
-
             readNextLine(nextLine);
         }
     }

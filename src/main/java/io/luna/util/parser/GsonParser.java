@@ -29,17 +29,17 @@ public abstract class GsonParser<T> extends Parser<JsonArray, T> {
     }
 
     @Override
-    public final T doRead(JsonArray reader) throws Exception {
+    public T doRead(JsonArray reader) throws Exception {
         return readObject((JsonObject) reader.get(currentIndex));
     }
 
     @Override
-    public final JsonArray getReader(BufferedReader in) throws Exception {
+    public JsonArray getReader(BufferedReader in) throws Exception {
         return (JsonArray) new JsonParser().parse(in);
     }
 
     @Override
-    public final boolean canRead(JsonArray objectReader) throws Exception {
+    public boolean canRead(JsonArray objectReader) throws Exception {
         if (currentIndex + 1 == objectReader.size()) {
             return false;
         }
