@@ -26,21 +26,19 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
         int id = reader.get("id").getAsInt();
         String name = reader.get("name").getAsString();
         String examine = reader.get("examine").getAsString();
-        int equipmentSlot = reader.get("equipment_slot").getAsInt();
-        boolean noteable = reader.get("noteable").getAsBoolean();
         boolean stackable = reader.get("stackable").getAsBoolean();
+        int baseValue = reader.get("base_value").getAsInt();
         int specialValue = reader.get("special_value").getAsInt();
-        int generalValue = reader.get("general_value").getAsInt();
-        int lowAlchValue = reader.get("low_alchemy_value").getAsInt();
-        int highAlchValue = reader.get("high_alchemy_value").getAsInt();
-        double weight = reader.get("weight").getAsInt();
-        int[] bonus = GsonUtils.getAsType(reader.get("bonuses"), int[].class);
-        boolean twoHanded = reader.get("two_handed").getAsBoolean();
-        boolean fullHelm = reader.get("full_helmet").getAsBoolean();
-        boolean platebody = reader.get("platebody").getAsBoolean();
-        boolean tradeable = reader.get("tradeable").getAsBoolean();
-        return new ItemDefinition(id, name, examine, equipmentSlot, noteable, stackable, specialValue, generalValue,
-            lowAlchValue, highAlchValue, weight, bonus, twoHanded, fullHelm, platebody, tradeable);
+        int notedId = reader.get("noted_id").getAsInt();
+        int unnotedId = reader.get("unnoted_id").getAsInt();
+        boolean membersOnly = reader.get("members_only").getAsBoolean();
+        double weight = reader.get("weight").getAsDouble();
+        boolean tradable = reader.get("tradable").getAsBoolean();
+        String[] inventoryActions = GsonUtils.getAsType(reader.get("inventory_actions"), String[].class);
+        String[] groundActions = GsonUtils.getAsType(reader.get("ground_actions"), String[].class);
+
+        return new ItemDefinition(id, name, examine, stackable, baseValue, specialValue, notedId, unnotedId, membersOnly,
+            weight, tradable, inventoryActions, groundActions);
     }
 
     @Override

@@ -1,9 +1,8 @@
 package io.luna.util.parser.impl;
 
+import io.luna.net.LunaChannelFilter;
+import io.luna.net.LunaChannelInitializer;
 import io.luna.util.parser.NewLineParser;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * A {@link NewLineParser} implementation that reads banned addresses.
@@ -11,11 +10,6 @@ import java.util.Set;
  * @author lare96 <http://github.org/lare96>
  */
 public final class IpBanParser extends NewLineParser {
-
-    /**
-     * A {@link Set} containing the banned addresses.
-     */
-    public static final Set<String> BANNED_ADDRESSES = new HashSet<>();
 
     /**
      * Creates a new {@link IpBanParser}.
@@ -26,6 +20,7 @@ public final class IpBanParser extends NewLineParser {
 
     @Override
     public void readNextLine(String nextLine) throws Exception {
-        BANNED_ADDRESSES.add(nextLine);
+        LunaChannelFilter channelFilter = (LunaChannelFilter) LunaChannelInitializer.CHANNEL_FILTER;
+        channelFilter.getBannedAddresses().add(nextLine);
     }
 }

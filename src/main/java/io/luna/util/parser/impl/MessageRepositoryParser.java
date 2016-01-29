@@ -1,16 +1,18 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.Range;
+import com.google.gson.JsonObject;
 import io.luna.net.msg.MessageRepository;
-import io.luna.util.parser.NewLineSplitParser;
+import io.luna.util.parser.TomlParser;
+import io.luna.util.parser.impl.MessageRepositoryParser.MessageRepositoryElement;
+
+import java.util.List;
 
 /**
- * A {@link NewLineSplitParser} implementation that parses data that will later be contained within a {@link
- * MessageRepository}.
+ * A {@link TomlParser} implementation that parses data that will later be contained within a {@link MessageRepository}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageRepositoryParser extends NewLineSplitParser {
+public final class MessageRepositoryParser extends TomlParser<MessageRepositoryElement> {
 
     /**
      * The {@link MessageRepository} that the data will be added to.
@@ -23,32 +25,32 @@ public final class MessageRepositoryParser extends NewLineSplitParser {
      * @param messageRepository The {@link MessageRepository} that the data will be added to.
      */
     public MessageRepositoryParser(MessageRepository messageRepository) {
-        super("./data/io/message_repository.txt");
+        super("./data/io/message_repository.toml", "message");
         this.messageRepository = messageRepository;
     }
 
     @Override
-    public void readTokens(String[] tokens) throws Exception {
-        tokens[0] = tokens[0].replace("message ", "");
+    public MessageRepositoryElement readObject(JsonObject reader) throws Exception {
+        return new MessageRepositoryElement(reader.get("opcode").getAsInt(), reader.get("size").getAsInt(),
+            reader.get("payload").getAsString());
+    }
 
-        int opcode = Integer.parseInt(tokens[0]);
-        int size = Integer.parseInt(tokens[1]);
-        String inboundMessageName = "ReceiveGenericMessage";
-
-        if (tokens.length == 3) {
-            inboundMessageName = tokens[2];
+    @Override
+    public void onReadComplete(List<MessageRepositoryElement> readObjects) throws Exception {
+        for (MessageRepositoryElement it : readObjects) {
+            messageRepository.addHandler(it.opcode, it.size, it.payload);
         }
-
-        messageRepository.addHandler(opcode, size, inboundMessageName);
     }
 
-    @Override
-    public Range<Integer> tokenLength() {
-        return Range.closed(2, 3);
-    }
+    final class MessageRepositoryElement {
+        private final int opcode;
+        private final int size;
+        private final String payload;
 
-    @Override
-    public String regex() {
-        return ":";
+        private MessageRepositoryElement(int opcode, int size, String payload) {
+            this.opcode = opcode;
+            this.size = size;
+            this.payload = payload;
+        }
     }
 }
