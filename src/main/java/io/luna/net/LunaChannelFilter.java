@@ -2,9 +2,9 @@ package io.luna.net;
 
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
-import io.luna.util.parser.impl.IpBanParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -13,6 +13,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 
 /**
  * A {@link ChannelInboundHandlerAdapter} implementation that filters {@link Channel}s by the amount of active connections
@@ -31,6 +32,11 @@ import java.net.InetSocketAddress;
      * A concurrent {@link Multiset} that holds the amount of connections made by all active hosts.
      */
     private final Multiset<String> connections = ConcurrentHashMultiset.create();
+
+    /**
+     * A concurrent {@link Set} that holds the banned addresses.
+     */
+    private final Set<String> bannedAddresses = Sets.newConcurrentHashSet();
 
     /**
      * The maximum amount of connections that can be made by a single host.
@@ -54,7 +60,7 @@ import java.net.InetSocketAddress;
             disconnect(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return;
         }
-        if (IpBanParser.BANNED_ADDRESSES.contains(hostAddress)) {
+        if (bannedAddresses.contains(hostAddress)) {
             disconnect(ctx, LoginResponse.ACCOUNT_BANNED);
             return;
         }
@@ -94,5 +100,12 @@ import java.net.InetSocketAddress;
      */
     private String getAddress(ChannelHandlerContext ctx) {
         return ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
+    }
+
+    /**
+     * @return The concurrent {@link Set} that holds the banned addresses.
+     */
+    public Set<String> getBannedAddresses() {
+        return bannedAddresses;
     }
 }
