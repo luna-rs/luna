@@ -1,7 +1,6 @@
-/data/luna_errors.log
-/data/player_data_files
+/data/logs
+/data/saved_players
 /.idea/
 /target/
 /.settings/
-/.gitignore
 /luna.iml
