@@ -67,6 +67,23 @@ trait ScalaBindings {
   implicit class BooleanImplicits(boolean: Boolean) {
     def ?[T](primary: T, secondary: T) = if (boolean) primary else secondary
   }
+
+  implicit class ArrayImplicits[T](array: Array[T]) {
+    def shuffle = {
+      for (i <- 1 until array.length by -1) {
+        val index = rand.nextInt(i + 1)
+        array(index) = array(i)
+        array(i) = array(index)
+      }
+      array
+    }
+    def randElement = array((rand.nextDouble * array.length).toInt)
+  }
+
+  implicit class SeqImplicits[T](seq: Seq[T]) {
+    def shuffle = util.Random.shuffle(seq)
+    def randElement = seq((rand.nextDouble * seq.length).toInt)
+  }
 }
 
 /** An object whose contents can be imported to a plugin that doesn't extend `ScalaBindings`. */
