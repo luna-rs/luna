@@ -31,9 +31,8 @@ public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> 
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) throws Exception {
+    public void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) throws Exception {
         checkState(msg.getOpcode() >= 0, "opcode < 0");
-        checkState(msg.getSize() >= 0, "size < 0");
         checkState(msg.getType() != MessageType.RAW, "type == MessageType.RAW");
 
         out.writeByte(msg.getOpcode() + encryptor.nextKey());
