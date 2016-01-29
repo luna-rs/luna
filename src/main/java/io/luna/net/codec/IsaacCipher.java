@@ -1,182 +1,154 @@
-/* Copyright (c) 2009 Graham Edgecombe, Blake Beaupain and Brett Russell
- *
- * More information about Hyperion may be found on this website:
- *    http://hyperion.grahamedgecombe.com/
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package io.luna.net.codec;
 
 /**
- * An implementation of an ISAAC cipher. See <a href="http://en.wikipedia.org/wiki/ISAAC_(cipher)">
- * http://en.wikipedia.org/wiki/ISAAC_(cipher)</a> for more information.
- * <p>
- * <p>
- * This implementation is based on the one written by Bob Jenkins, which is available at <a
- * href="http://www.burtleburtle.net/bob/java/rand/Rand.java"> http://www.burtleburtle.net/bob/java/rand/Rand.java</a>.
+ * <p> An implementation of the <a href="http://www.burtleburtle.net/bob/rand/isaacafa.html">ISAAC</a> psuedorandom number
+ * generator. </p> <p>
+ * <pre>
+ * ------------------------------------------------------------------------------
+ * Rand.java: By Bob Jenkins.  My random number generator, ISAAC.
+ *   rand.init() -- initialize
+ *   rand.val()  -- get a random value
+ * MODIFIED:
+ *   960327: Creation (addition of randinit, really)
+ *   970719: use context, not global variables, for internal state
+ *   980224: Translate to Java
+ * ------------------------------------------------------------------------------
+ * </pre>
+ * <p> This class has been changed to be more conformant to Java and javadoc conventions. </p>
  *
- * @author Graham Edgecombe
+ * @author Bob Jenkins
  */
 public final class IsaacCipher {
 
     /**
      * The golden ratio.
      */
-    private static final int RATIO = 0x9e3779b9;
+    private static final int GOLDEN_RATIO = 0x9e3779b9;
 
     /**
-     * The log of the size of the results and memory arrays.
+     * The log of the size of the result and state arrays.
      */
-    private static final int SIZE_LOG = 8;
+    private static final int LOG_SIZE = Long.BYTES;
 
     /**
-     * The size of the results and memory arrays.
+     * The size of the result and states arrays.
      */
-    private static final int SIZE = 1 << SIZE_LOG;
+    private static final int SIZE = 1 << LOG_SIZE;
 
     /**
-     * For pseudorandom lookup.
+     * A mask for pseudo-random lookup.
      */
-    private static final int MASK = (SIZE - 1) << 2;
+    private static int MASK = SIZE - 1 << 2;
 
     /**
-     * The count through the results.
+     * The results given to the user.
      */
-    private int count = 0;
+    private final int[] results = new int[SIZE];
 
     /**
-     * The results.
+     * The internal state.
      */
-    private int results[] = new int[SIZE];
+    private final int[] state = new int[SIZE];
 
     /**
-     * The internal memory state.
+     * The count through the results in the results array.
      */
-    private int memory[] = new int[SIZE];
+    private int count = SIZE;
 
     /**
      * The accumulator.
      */
-    private int a;
+    private int accumulator;
 
     /**
      * The last result.
      */
-    private int b;
+    private int last;
 
     /**
      * The counter.
      */
-    private int c;
+    private int counter;
 
     /**
-     * Creates the ISAAC cipher.
+     * Creates the random number generator with the specified seed.
      *
      * @param seed The seed.
      */
     public IsaacCipher(int[] seed) {
-        for (int i = 0; i < seed.length; i++) {
-            results[i] = seed[i];
-        }
-        init(true);
-    }
-
-    /**
-     * Gets the next value.
-     *
-     * @return The next value.
-     */
-    public int nextKey() {
-        if (count-- == 0) {
-            isaac();
-            count = SIZE - 1;
-        }
-        return results[count];
+        int length = Math.min(seed.length, results.length);
+        System.arraycopy(seed, 0, results, 0, length);
+        init();
     }
 
     /**
      * Generates 256 results.
      */
-    public void isaac() {
+    private void isaac() {
         int i, j, x, y;
-        b += ++c;
+
+        last += ++counter;
         for (i = 0, j = SIZE / 2; i < SIZE / 2; ) {
-            x = memory[i];
-            a ^= a << 13;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator << 13;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a >>> 6;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator >>> 6;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a << 2;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator << 2;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a >>> 16;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator >>> 16;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
         }
+
         for (j = 0; j < SIZE / 2; ) {
-            x = memory[i];
-            a ^= a << 13;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator << 13;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a >>> 6;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator >>> 6;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a << 2;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator << 2;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
 
-            x = memory[i];
-            a ^= a >>> 16;
-            a += memory[j++];
-            memory[i] = y = memory[(x & MASK) >> 2] + a + b;
-            results[i++] = b = memory[((y >> SIZE_LOG) & MASK) >> 2] + x;
+            x = state[i];
+            accumulator ^= accumulator >>> 16;
+            accumulator += state[j++];
+            state[i] = y = state[(x & MASK) >> 2] + accumulator + last;
+            results[i++] = last = state[(y >> LOG_SIZE & MASK) >> 2] + x;
         }
     }
 
     /**
-     * Initializes the ISAAC.
-     *
-     * @param flag Flag indicating if we should perform a second pass.
+     * Initializes this random number generator.
      */
-    public void init(boolean flag) {
+    private void init() {
         int i;
         int a, b, c, d, e, f, g, h;
-        a = b = c = d = e = f = g = h = RATIO;
+        a = b = c = d = e = f = g = h = GOLDEN_RATIO;
+
         for (i = 0; i < 4; ++i) {
             a ^= b << 11;
             d += a;
@@ -203,17 +175,17 @@ public final class IsaacCipher {
             c += h;
             a += b;
         }
-        for (i = 0; i < SIZE; i += 8) {
-            if (flag) {
-                a += results[i];
-                b += results[i + 1];
-                c += results[i + 2];
-                d += results[i + 3];
-                e += results[i + 4];
-                f += results[i + 5];
-                g += results[i + 6];
-                h += results[i + 7];
-            }
+
+        for (i = 0; i < SIZE; i += 8) { /* fill in mem[] with messy stuff */
+            a += results[i];
+            b += results[i + 1];
+            c += results[i + 2];
+            d += results[i + 3];
+            e += results[i + 4];
+            f += results[i + 5];
+            g += results[i + 6];
+            h += results[i + 7];
+
             a ^= b << 11;
             d += a;
             b += c;
@@ -238,60 +210,73 @@ public final class IsaacCipher {
             h ^= a >>> 9;
             c += h;
             a += b;
-            memory[i] = a;
-            memory[i + 1] = b;
-            memory[i + 2] = c;
-            memory[i + 3] = d;
-            memory[i + 4] = e;
-            memory[i + 5] = f;
-            memory[i + 6] = g;
-            memory[i + 7] = h;
+            state[i] = a;
+            state[i + 1] = b;
+            state[i + 2] = c;
+            state[i + 3] = d;
+            state[i + 4] = e;
+            state[i + 5] = f;
+            state[i + 6] = g;
+            state[i + 7] = h;
         }
-        if (flag) {
-            for (i = 0; i < SIZE; i += 8) {
-                a += memory[i];
-                b += memory[i + 1];
-                c += memory[i + 2];
-                d += memory[i + 3];
-                e += memory[i + 4];
-                f += memory[i + 5];
-                g += memory[i + 6];
-                h += memory[i + 7];
-                a ^= b << 11;
-                d += a;
-                b += c;
-                b ^= c >>> 2;
-                e += b;
-                c += d;
-                c ^= d << 8;
-                f += c;
-                d += e;
-                d ^= e >>> 16;
-                g += d;
-                e += f;
-                e ^= f << 10;
-                h += e;
-                f += g;
-                f ^= g >>> 4;
-                a += f;
-                g += h;
-                g ^= h << 8;
-                b += g;
-                h += a;
-                h ^= a >>> 9;
-                c += h;
-                a += b;
-                memory[i] = a;
-                memory[i + 1] = b;
-                memory[i + 2] = c;
-                memory[i + 3] = d;
-                memory[i + 4] = e;
-                memory[i + 5] = f;
-                memory[i + 6] = g;
-                memory[i + 7] = h;
-            }
+
+        for (i = 0; i < SIZE; i += 8) {
+            a += state[i];
+            b += state[i + 1];
+            c += state[i + 2];
+            d += state[i + 3];
+            e += state[i + 4];
+            f += state[i + 5];
+            g += state[i + 6];
+            h += state[i + 7];
+            a ^= b << 11;
+            d += a;
+            b += c;
+            b ^= c >>> 2;
+            e += b;
+            c += d;
+            c ^= d << 8;
+            f += c;
+            d += e;
+            d ^= e >>> 16;
+            g += d;
+            e += f;
+            e ^= f << 10;
+            h += e;
+            f += g;
+            f ^= g >>> 4;
+            a += f;
+            g += h;
+            g ^= h << 8;
+            b += g;
+            h += a;
+            h ^= a >>> 9;
+            c += h;
+            a += b;
+            state[i] = a;
+            state[i + 1] = b;
+            state[i + 2] = c;
+            state[i + 3] = d;
+            state[i + 4] = e;
+            state[i + 5] = f;
+            state[i + 6] = g;
+            state[i + 7] = h;
         }
+
         isaac();
-        count = SIZE;
     }
+
+    /**
+     * Gets the next random value.
+     *
+     * @return The next random value.
+     */
+    public int nextInt() {
+        if (0 == count--) {
+            isaac();
+            count = SIZE - 1;
+        }
+        return results[count];
+    }
+
 }

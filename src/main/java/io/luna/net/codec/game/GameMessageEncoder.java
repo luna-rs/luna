@@ -7,8 +7,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-import static com.google.common.base.Preconditions.checkState;
-
 /**
  * A {@link MessageToByteEncoder} implementation that encodes all {@link GameMessage}s into {@link ByteBuf}s.
  *
@@ -32,10 +30,7 @@ public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> 
 
     @Override
     public void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) throws Exception {
-        checkState(msg.getOpcode() >= 0, "opcode < 0");
-        checkState(msg.getType() != MessageType.RAW, "type == MessageType.RAW");
-
-        out.writeByte(msg.getOpcode() + encryptor.nextKey());
+        out.writeByte(msg.getOpcode() + encryptor.nextInt());
         if (msg.getType() == MessageType.VARIABLE) {
             out.writeByte(msg.getSize());
         } else if (msg.getType() == MessageType.VARIABLE_SHORT) {

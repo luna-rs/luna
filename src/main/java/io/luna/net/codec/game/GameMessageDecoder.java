@@ -102,7 +102,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     private void opcode(ByteBuf in) {
         if (in.isReadable()) {
             opcode = in.readUnsignedByte();
-            opcode = (opcode - decryptor.nextKey()) & 0xFF;
+            opcode = (opcode - decryptor.nextInt()) & 0xFF;
             size = messageRepository.getSize(opcode);
 
             if (size == -1) {
