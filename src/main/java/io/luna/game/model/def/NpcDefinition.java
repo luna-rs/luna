@@ -1,7 +1,6 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableSet;
-import com.sun.org.apache.xpath.internal.operations.String;
 import io.luna.game.model.mobile.Npc;
 
 /**
