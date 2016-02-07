@@ -5,6 +5,7 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
+import io.luna.util.parser.NewLineParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -29,6 +30,26 @@ import java.util.Set;
 @Sharable public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
 
     /**
+     * A {@link NewLineParser} implementation that reads banned addresses.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    private final class IpBanParser extends NewLineParser {
+
+        /**
+         * Creates a new {@link IpBanParser}.
+         */
+        public IpBanParser() {
+            super("./data/players/ip_banned.txt");
+        }
+
+        @Override
+        public void readNextLine(String nextLine) throws Exception {
+            bannedAddresses.add(nextLine);
+        }
+    }
+
+    /**
      * A concurrent {@link Multiset} that holds the amount of connections made by all active hosts.
      */
     private final Multiset<String> connections = ConcurrentHashMultiset.create();
@@ -42,6 +63,13 @@ import java.util.Set;
      * The maximum amount of connections that can be made by a single host.
      */
     private final int connectionLimit;
+
+    // Parse all of the banned addresses when this class is constructed. This class should only be constructed once, so
+    // the parser should only run once.
+    {
+        NewLineParser parser = new IpBanParser();
+        parser.run();
+    }
 
     /**
      * Creates a new {@link LunaChannelFilter} with a connection limit of {@code CONNECTION_LIMIT}.
@@ -100,12 +128,5 @@ import java.util.Set;
      */
     private String getAddress(ChannelHandlerContext ctx) {
         return ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
-    }
-
-    /**
-     * @return The concurrent {@link Set} that holds the banned addresses.
-     */
-    public Set<String> getBannedAddresses() {
-        return bannedAddresses;
     }
 }

@@ -9,7 +9,7 @@ import io.luna.net.msg.OutboundGameMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendInterfaceMessage extends OutboundGameMessage {
+public final class SendWidgetMessage extends OutboundGameMessage {
 
     /**
      * The interface to open.
@@ -17,11 +17,11 @@ public final class SendInterfaceMessage extends OutboundGameMessage {
     private final int id;
 
     /**
-     * Creates a new {@link SendInterfaceMessage}.
+     * Creates a new {@link SendWidgetMessage}.
      *
      * @param id The interface to open.
      */
-    public SendInterfaceMessage(int id) {
+    public SendWidgetMessage(int id) {
         this.id = id;
     }
 

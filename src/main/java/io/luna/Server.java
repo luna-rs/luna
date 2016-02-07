@@ -3,12 +3,11 @@ package io.luna;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.model.mobile.attr.AttributeKey;
-import io.luna.game.plugin.PluginManager;
+import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
 import io.luna.util.StringUtils;
-import io.luna.util.parser.impl.IpBanParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.luna.util.parser.impl.NpcDefinitionParser;
@@ -21,10 +20,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import plugin.AddItemsEvent;
-import plugin.AddNpcsEvent;
-import plugin.AddObjectsEvent;
-import plugin.PluginBootstrap;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,11 +68,11 @@ public final class Server {
         LOGGER.info("Luna is being initialized...");
 
         initAsyncTasks();
+        initPlugins();
         initGame();
         service.shutdown();
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         context.getService().awaitRunning();
-        initEvents();
         bind();
 
         LOGGER.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
@@ -122,8 +117,6 @@ public final class Server {
      * @throws Exception If any exceptions are thrown while executing startup tasks.
      */
     private void initAsyncTasks() throws Exception {
-        service.execute(new PluginBootstrap(context.getPlugins()));
-        service.execute(new IpBanParser());
         service.execute(new ItemDefinitionParser());
         service.execute(new NpcDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
@@ -135,11 +128,8 @@ public final class Server {
      *
      * @throws Exception If any exceptions are thrown while posting events.
      */
-    private void initEvents() throws Exception {
-        PluginManager pluginManager = context.getPlugins();
-
-        pluginManager.post(new AddNpcsEvent());
-        pluginManager.post(new AddItemsEvent());
-        pluginManager.post(new AddObjectsEvent());
+    private void initPlugins() throws Exception {
+        PluginBootstrap bootstrap = new PluginBootstrap(context);
+        bootstrap.bindings().evaluate();
     }
 }

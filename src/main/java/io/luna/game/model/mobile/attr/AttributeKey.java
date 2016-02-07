@@ -90,7 +90,7 @@ public final class AttributeKey<T> {
         checkArgument(!name.isEmpty(), "attribute name length <= 0");
 
         checkArgument(CharMatcher.WHITESPACE.matchesNoneOf(name),
-            "attribute name has whitespace characters, use underscores characters instead");
+            "attribute name has whitespace characters, use underscore characters instead");
 
         checkArgument(CharMatcher.JAVA_UPPER_CASE.matchesNoneOf(name),
             "attribute name has uppercase characters, use lowercase characters instead");

@@ -10,7 +10,7 @@ import io.luna.net.msg.OutboundGameMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendChatboxInterfaceMessage extends OutboundGameMessage {
+public final class SendChatboxWidgetMessage extends OutboundGameMessage {
 
     /**
      * The interface to display on the chatbox.
@@ -18,11 +18,11 @@ public final class SendChatboxInterfaceMessage extends OutboundGameMessage {
     private final int id;
 
     /**
-     * Creates a new {@link SendChatboxInterfaceMessage}.
+     * Creates a new {@link SendChatboxWidgetMessage}.
      *
      * @param id The interface to display on the chatbox.
      */
-    public SendChatboxInterfaceMessage(int id) {
+    public SendChatboxWidgetMessage(int id) {
         this.id = id;
     }
 

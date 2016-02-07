@@ -71,7 +71,7 @@ public final class World {
     /**
      * Creates a new {@link World}.
      *
-     * @param context The context this is being managed under.
+     * @param context An instance of the {@link LunaContext}.
      */
     public World(LunaContext context) {
         this.context = context;

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -37,6 +38,23 @@ public final class Region {
      */
     Region(RegionCoordinates coordinates) {
         this.coordinates = coordinates;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Region) {
+            Region region = (Region) obj;
+            return Objects.equals(coordinates, region.coordinates);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(coordinates);
     }
 
     /**

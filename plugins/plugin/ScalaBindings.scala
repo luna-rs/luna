@@ -1,43 +1,86 @@
 package plugin
 
-import java.util.Objects
+import java.util.Optional
 import java.util.concurrent.ThreadLocalRandom
 
-import com.google.common.base.Preconditions
+import io.luna.LunaContext
+import io.luna.game.GameService
 import io.luna.game.model.mobile.attr.AttributeValue
 import io.luna.game.model.mobile.{MobileEntity, Npc, Player, PlayerRights}
 import io.luna.game.model.{Position, World}
+import io.luna.game.plugin.{PluginFailureException, PluginFunction, PluginManager}
 import io.luna.game.task.Task
-import io.luna.net.msg.out.{SendGameInfoMessage, SendWidgetTextMessage}
+import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendWidgetTextMessage}
 
-/** A trait containing Scala code that interacts directly with Java code in order to allow a more idiomatic approach to writing
-  * plugins. This makes plugins significantly less verbose and therefore much easier to write. For Non-`Plugin` implementation
-  * Scala classes it is highly encouraged to include `import plugin.GlobalScalaBindings._` as an import statement to achieve the
-  * same previously specified effects.
+import scala.reflect.ClassTag
+
+/** An object containing Scala code that interacts directly with Java code in order to allow a far more idiomatic approach to writing
+  * plugins. All of the complex, high level, 'dirty work' is all done in this file in order to ensure high usability of plugins.
   * <p>
   * '''Please ensure that great caution is taken when modifying the contents of this class.''' Scala code is heavily reliant on this
   * trait and will not function if certain chunks of code are modified.
   *
   * @author lare96 <http://github.org/lare96>
   */
-trait ScalaBindings {
+object ScalaBindings {
 
-  def rightsPlayer = PlayerRights.PLAYER
-  def rightsMod = PlayerRights.MODERATOR
-  def rightsAdmin = PlayerRights.ADMINISTRATOR
-  def rightsDev = PlayerRights.DEVELOPER
+  // context instances, injected with the PluginBootstrap
+  val ctx: LunaContext = null
+  val plugins: PluginManager = null
+  val world: World = null
+  val service: GameService = null
 
-  def nonNull[T](obj: T, msg: Any = "obj (is) null") = Objects.requireNonNull(obj, String.valueOf(msg))
-  def checkState(cond: Boolean, msg: Any = "cond (is) false") = Preconditions.checkState(cond, msg)
-  def checkArg(cond: Boolean, msg: Any = "cond (is) false") = Preconditions.checkArgument(cond, msg)
 
+  // type aliases
+  type Mob = io.luna.game.model.mobile.MobileEntity
+  type MobList[E <: Mob] = io.luna.game.model.mobile.MobileEntityList[E]
+
+  type ItemDef = io.luna.game.model.`def`.ItemDefinition
+  type NpcDef = io.luna.game.model.`def`.NpcDefinition
+
+
+  // common constants, use `final val` to inline them
+  final val RightsPlayer = PlayerRights.PLAYER
+  final val RightsMod = PlayerRights.MODERATOR
+  final val RightsAdmin = PlayerRights.ADMINISTRATOR
+  final val RightsDev = PlayerRights.DEVELOPER
+
+
+  // preconditions and plugin failure
+  def fail(msg: => Any = "execution failure") = throw new PluginFailureException(msg)
+  def failIf(cond: Boolean, msg: => Any = "cond == false") = if (cond) {fail(msg)}
+
+
+  // aliases for utilities
   def rand = ThreadLocalRandom.current
 
 
+  // message handling
+  def on[T <: PluginEvent](func: (T, Player) => Unit)(implicit tag: ClassTag[T]) = plugins
+    .submit(tag.runtimeClass, new PluginFunction(func))
+
+
+  // implicit conversions
+  implicit def asScalaOption[T](optional: Optional[T]): Option[T] = {
+    if (optional.isPresent) {
+      Some(optional.get)
+    }
+    else None
+  }
+  implicit def asJavaOptional[T](option: Option[T]): Optional[T] = {
+    option match {
+      case Some(it) => Optional.of(it)
+      case None => Optional.empty()
+    }
+  }
+
+
+  // enriched classes
   implicit class PlayerImplicits(player: Player) {
     def address = player.getSession.getHostAddress
     def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
     def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
+    def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
   }
 
   implicit class MobileEntityImplicits(mob: MobileEntity) {
@@ -57,23 +100,24 @@ trait ScalaBindings {
       world.getNpcs.add(npc)
       npc
     }
-    def run(instant: Boolean = false, delay: Int, action: Task => Unit) = {
+    def schedule(instant: Boolean, delay: Int)(action: Task => Unit): Unit = {
       world.schedule(new Task(instant, delay) {
         override protected def execute() = action(this)
       })
     }
-  }
-
-  implicit class BooleanImplicits(boolean: Boolean) {
-    def ?[T](primary: T, secondary: T) = if (boolean) primary else secondary
+    def schedule(delay: Int)(action: Task => Unit): Unit = schedule(false, delay)(action)
   }
 
   implicit class ArrayImplicits[T](array: Array[T]) {
     def shuffle = {
-      for (i <- 1 until array.length by -1) {
+      var i = array.length - 1
+      while (i > 0) {
         val index = rand.nextInt(i + 1)
+        val a = array(index)
         array(index) = array(i)
-        array(i) = array(index)
+        array(i) = a
+        i -= 1
+        i + 1
       }
       array
     }
@@ -85,6 +129,3 @@ trait ScalaBindings {
     def randElement = seq((rand.nextDouble * seq.length).toInt)
   }
 }
-
-/** An object whose contents can be imported to a plugin that doesn't extend `ScalaBindings`. */
-object GlobalScalaBindings extends ScalaBindings

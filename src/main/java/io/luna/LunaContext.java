@@ -22,7 +22,7 @@ public final class LunaContext {
     private final GameService service = new GameService(this);
 
     /**
-     * The {@link PluginManager} that manages Scala plugins.
+     * The {@link PluginManager} that manages all Scala plugins.
      */
     private final PluginManager plugins = new PluginManager(this);
 
@@ -47,7 +47,7 @@ public final class LunaContext {
     }
 
     /**
-     * @return The {@link PluginManager} in this context.
+     * @return The {@link PluginManager} that manages all Scala plugins.
      */
     public PluginManager getPlugins() {
         return plugins;

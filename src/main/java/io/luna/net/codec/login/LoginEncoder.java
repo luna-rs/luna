@@ -19,7 +19,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
         if (msg.getResponse() == LoginResponse.NORMAL) {
             out.writeByte(msg.getRights().getOpcode());
-            out.writeByte(msg.isFlagged() ? 1 : 0);
+            out.writeBoolean(msg.isFlagged());
         }
     }
 }

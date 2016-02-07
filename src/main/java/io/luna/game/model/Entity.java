@@ -3,6 +3,7 @@ package io.luna.game.model;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.model.region.Region;
+import io.luna.game.model.region.RegionCoordinates;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -162,12 +163,18 @@ public abstract class Entity {
 
         requireNonNull(position);
 
+        RegionCoordinates next = RegionCoordinates.create(position);
         if (this.position != null) {
-            Region fromRegion = world.getRegions().getRegion(this.position);
+            RegionCoordinates prev = RegionCoordinates.create(this.position);
+            if (prev.equals(next)) {
+                this.position = position;
+                return;
+            }
+
+            Region fromRegion = world.getRegions().getRegion(prev);
             fromRegion.removeEntity(this);
         }
-
-        Region toRegion = world.getRegions().getRegion(position);
+        Region toRegion = world.getRegions().getRegion(next);
         toRegion.addEntity(this);
 
         this.position = position;
@@ -176,6 +183,7 @@ public abstract class Entity {
     /**
      * @return The {@link PluginManager} dedicated to this {@code Entity}.
      */
+
     public final PluginManager getPlugins() {
         return plugins;
     }

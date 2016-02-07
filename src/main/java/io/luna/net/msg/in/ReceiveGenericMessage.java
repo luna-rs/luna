@@ -3,6 +3,7 @@ package io.luna.net.msg.in;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
+import plugin.PluginEvent;
 
 /**
  * An {@link InboundGameMessage} implementation that serves as the default message handler. It does nothing when executed.
@@ -12,7 +13,7 @@ import io.luna.net.msg.InboundGameMessage;
 public final class ReceiveGenericMessage extends InboundGameMessage {
 
     @Override
-    public Object readMessage(Player player, GameMessage msg) throws Exception {
+    public PluginEvent readMessage(Player player, GameMessage msg) throws Exception {
         return null;
     }
 }

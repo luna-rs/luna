@@ -126,7 +126,7 @@ public final class GameService extends AbstractScheduledService {
      *
      * @param t The task to be queued.
      */
-    public void queueTask(Runnable t) {
+    public void sync(Runnable t) {
         syncTasks.add(t);
     }
 
@@ -160,5 +160,12 @@ public final class GameService extends AbstractScheduledService {
      */
     public ListenableFuture<?> submit(Runnable t) {
         return executorService.submit(t);
+    }
+
+    /**
+     * @return An instance of the {@link LunaContext}.
+     */
+    public LunaContext getContext() {
+        return context;
     }
 }

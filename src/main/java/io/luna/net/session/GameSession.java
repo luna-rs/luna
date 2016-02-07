@@ -8,9 +8,9 @@ import io.luna.net.msg.InboundGameMessage;
 import io.luna.net.msg.MessageRepository;
 import io.luna.net.msg.OutboundGameMessage;
 import io.netty.channel.Channel;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import plugin.PluginEvent;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -60,7 +60,8 @@ public final class GameSession extends Session {
      * @param decryptor The message decryptor.
      * @param messageRepository The repository containing data for incoming messages.
      */
-    public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor, MessageRepository messageRepository) {
+    public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor,
+        MessageRepository messageRepository) {
         super(channel);
         this.player = player;
         this.encryptor = encryptor;
@@ -105,12 +106,12 @@ public final class GameSession extends Session {
             }
             InboundGameMessage inbound = messageRepository.getHandler(msg.getOpcode());
             try {
-                Object evt = inbound.readMessage(player, msg);
+                PluginEvent evt = inbound.readMessage(player, msg);
                 if (evt != null) {
                     player.getPlugins().post(evt, player);
                 }
             } catch (Exception e) {
-                LOGGER.catching(Level.WARN, e);
+                LOGGER.catching(e);
             }
         }
     }

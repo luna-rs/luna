@@ -5,6 +5,8 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
+import plugin.ChatEvent;
+import plugin.PluginEvent;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -17,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ReceiveChatMessage extends InboundGameMessage {
 
     @Override
-    public Object readMessage(Player player, GameMessage msg) throws Exception {
+    public PluginEvent readMessage(Player player, GameMessage msg) throws Exception {
         int effects = msg.getPayload().get(false, ByteTransform.S);
         int color = msg.getPayload().get(false, ByteTransform.S);
         int size = (msg.getSize() - 2);
@@ -25,9 +27,9 @@ public final class ReceiveChatMessage extends InboundGameMessage {
 
         checkState(effects >= 0, "invalid effects value");
         checkState(color >= 0, "invalid color value");
-        checkState(size >= 0, "invalid size, not large enough");
+        checkState(size > 0, "invalid size, not large enough");
 
         player.chat(new Chat(message, color, effects));
-        return null;
+        return new ChatEvent(effects, color, size, message);
     }
 }

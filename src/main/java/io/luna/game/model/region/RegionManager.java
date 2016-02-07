@@ -54,7 +54,7 @@ public final class RegionManager {
      * @param coordinates The {@link RegionCoordinates}.
      * @return The region in accordance with {@code coordinates}.
      */
-    private Region getRegion(RegionCoordinates coordinates) {
+    public Region getRegion(RegionCoordinates coordinates) {
         return regions.computeIfAbsent(coordinates, Region::new);
     }
 

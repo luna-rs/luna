@@ -5,6 +5,8 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
+import plugin.PickupItemEvent;
+import plugin.PluginEvent;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -17,12 +19,12 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ReceivePickupItemMessage extends InboundGameMessage {
 
     @Override
-    public Object readMessage(Player player, GameMessage msg) throws Exception {
+    public PluginEvent readMessage(Player player, GameMessage msg) throws Exception {
         int y = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
         checkState(id < 0 || id >= ItemDefinition.DEFINITIONS.length, "invalid item id");
-        return null;
+        return new PickupItemEvent(x, y, id);
     }
 }

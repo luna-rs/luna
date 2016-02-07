@@ -21,17 +21,17 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
     /**
      * Handles upstream messages from Netty.
      */
-    private static final ChannelHandler UPSTREAM_HANDLER = new LunaUpstreamHandler();
+    private final ChannelHandler upstreamHandler = new LunaUpstreamHandler();
 
     /**
      * Encodes the login response.
      */
-    private static final ChannelHandler LOGIN_ENCODER = new LoginEncoder();
+    private final ChannelHandler loginEncoder = new LoginEncoder();
 
     /**
      * Filters channels based on the amount of active connections they have.
      */
-    public static final ChannelHandler CHANNEL_FILTER = new LunaChannelFilter();
+    public final ChannelHandler channelFilter = new LunaChannelFilter();
 
     /**
      * The underlying context to be managed under.
@@ -58,10 +58,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.attr(LunaNetworkConstants.SESSION_KEY).setIfAbsent(new Session(ch));
 
-        ch.pipeline().addLast("channel-filter", CHANNEL_FILTER);
+        ch.pipeline().addLast("channel-filter", channelFilter);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context, messageRepository));
-        ch.pipeline().addLast("login-encoder", LOGIN_ENCODER);
+        ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
-        ch.pipeline().addLast("upstream-handler", UPSTREAM_HANDLER);
+        ch.pipeline().addLast("upstream-handler", upstreamHandler);
     }
 }

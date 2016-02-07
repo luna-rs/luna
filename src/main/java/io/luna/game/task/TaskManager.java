@@ -8,9 +8,8 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Handles the processing and execution of {@link Task}s. Functions contained within this class should only be invoked on the
@@ -90,7 +89,7 @@ public final class TaskManager {
      * Iterates through all active {@link Task}s and cancels all that have {@code attachment} as their attachment.
      */
     public void cancel(Object attachment) {
-        requireNonNull(attachment);
-        awaitingExecution.stream().filter(it -> attachment.equals(it.getAttachment().orElse(null))).forEach(Task::cancel);
+        awaitingExecution.stream().filter(it -> Objects.equals(attachment, it.getAttachment().orElse(null)))
+            .forEach(Task::cancel);
     }
 }
