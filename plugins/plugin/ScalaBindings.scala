@@ -40,10 +40,10 @@ object ScalaBindings {
 
 
   // common constants, use `final val` to inline them
-  final val RightsPlayer = PlayerRights.PLAYER
-  final val RightsMod = PlayerRights.MODERATOR
-  final val RightsAdmin = PlayerRights.ADMINISTRATOR
-  final val RightsDev = PlayerRights.DEVELOPER
+  final val rightsPlayer = PlayerRights.PLAYER
+  final val rightsMod = PlayerRights.MODERATOR
+  final val rightsAdmin = PlayerRights.ADMINISTRATOR
+  final val rightsDev = PlayerRights.DEVELOPER
 
 
   // preconditions and plugin failure
