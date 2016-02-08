@@ -15,10 +15,10 @@ import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendWidget
 import scala.reflect.ClassTag
 
 /** An object containing Scala code that interacts directly with Java code in order to allow a far more idiomatic approach to writing
-  * plugins. All of the complex, high level, 'dirty work' is all done in this file in order to ensure high usability of plugins.
+  * plugins. All of the complex, high level, 'dirty work' is done in this file in order to ensure high usability of plugins.
   * <p>
   * '''Please ensure that great caution is taken when modifying the contents of this class.''' Scala code is heavily reliant on this
-  * trait and will not function if certain chunks of code are modified.
+  * object and will not function if certain chunks of code are modified.
   *
   * @author lare96 <http://github.org/lare96>
   */
