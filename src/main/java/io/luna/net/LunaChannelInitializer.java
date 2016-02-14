@@ -58,10 +58,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.attr(LunaNetworkConstants.SESSION_KEY).setIfAbsent(new Session(ch));
 
+        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
         ch.pipeline().addLast("channel-filter", channelFilter);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context, messageRepository));
         ch.pipeline().addLast("login-encoder", loginEncoder);
-        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(LunaNetworkConstants.READ_IDLE_SECONDS));
         ch.pipeline().addLast("upstream-handler", upstreamHandler);
     }
 }

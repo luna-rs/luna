@@ -1,12 +1,12 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.event.Event;
+import io.luna.game.event.impl.ChatEvent;
 import io.luna.game.model.mobile.Chat;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
-import plugin.ChatEvent;
-import plugin.PluginEvent;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ReceiveChatMessage extends InboundGameMessage {
 
     @Override
-    public PluginEvent readMessage(Player player, GameMessage msg) throws Exception {
+    public Event readMessage(Player player, GameMessage msg) throws Exception {
         int effects = msg.getPayload().get(false, ByteTransform.S);
         int color = msg.getPayload().get(false, ByteTransform.S);
         int size = (msg.getSize() - 2);

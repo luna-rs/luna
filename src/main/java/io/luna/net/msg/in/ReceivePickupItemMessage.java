@@ -1,12 +1,12 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.event.Event;
+import io.luna.game.event.impl.PickupItemEvent;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.InboundGameMessage;
-import plugin.PickupItemEvent;
-import plugin.PluginEvent;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ReceivePickupItemMessage extends InboundGameMessage {
 
     @Override
-    public PluginEvent readMessage(Player player, GameMessage msg) throws Exception {
+    public Event readMessage(Player player, GameMessage msg) throws Exception {
         int y = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);

@@ -1,5 +1,6 @@
 package io.luna.net.session;
 
+import io.luna.game.event.Event;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.IsaacCipher;
@@ -10,7 +11,6 @@ import io.luna.net.msg.OutboundGameMessage;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import plugin.PluginEvent;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -106,7 +106,7 @@ public final class GameSession extends Session {
             }
             InboundGameMessage inbound = messageRepository.getHandler(msg.getOpcode());
             try {
-                PluginEvent evt = inbound.readMessage(player, msg);
+                Event evt = inbound.readMessage(player, msg);
                 if (evt != null) {
                     player.getPlugins().post(evt, player);
                 }

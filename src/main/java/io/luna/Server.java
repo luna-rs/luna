@@ -1,5 +1,6 @@
 package io.luna;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.model.mobile.attr.AttributeKey;
@@ -21,6 +22,7 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.PrintStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -129,7 +131,15 @@ public final class Server {
      * @throws Exception If any exceptions are thrown while posting events.
      */
     private void initPlugins() throws Exception {
-        PluginBootstrap bootstrap = new PluginBootstrap(context);
-        bootstrap.bindings().evaluate();
+        PrintStream oldStream = System.out;
+        PrintStream newStream = new PrintStream(ByteStreams.nullOutputStream());
+
+        System.setOut(newStream);
+        try {
+            PluginBootstrap bootstrap = new PluginBootstrap(context);
+            bootstrap.configure().bindings().evaluate();
+        } finally {
+            System.setOut(oldStream);
+        }
     }
 }

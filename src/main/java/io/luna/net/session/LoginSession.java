@@ -15,6 +15,7 @@ import io.luna.net.msg.MessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelPipeline;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -66,6 +67,7 @@ public final class LoginSession extends Session {
         Channel channel = getChannel();
         World world = context.getWorld();
         LoginResponse response = LoginResponse.NORMAL;
+        ChannelPipeline pipeline = msg.getPipeline();
 
         String username = msg.getUsername();
         String password = msg.getPassword();
@@ -90,20 +92,21 @@ public final class LoginSession extends Session {
         ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response));
         if (response != LoginResponse.NORMAL) {
             future.addListener(ChannelFutureListener.CLOSE);
-            return;
+        } else {
+            future.addListener(it -> {
+                pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(msg.getEncryptor()));
+                pipeline
+                    .replace("login-decoder", "game-decoder", new GameMessageDecoder(msg.getDecryptor(), messageRepository));
+
+                GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(),
+                    messageRepository);
+                session.setState(SessionState.LOGGING_IN);
+
+                channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
+                player.setSession(session);
+
+                world.queueLogin(player);
+            });
         }
-        future.awaitUninterruptibly();
-
-        msg.getPipeline().replace("login-encoder", "game-encoder", new GameMessageEncoder(msg.getEncryptor()));
-        msg.getPipeline()
-            .replace("login-decoder", "game-decoder", new GameMessageDecoder(msg.getDecryptor(), messageRepository));
-
-        GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(), messageRepository);
-        session.setState(SessionState.LOGGING_IN);
-
-        channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
-        player.setSession(session);
-
-        world.queueLogin(player);
     }
 }

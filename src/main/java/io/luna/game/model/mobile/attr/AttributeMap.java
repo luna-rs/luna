@@ -36,13 +36,14 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
 
     /**
      * Retrieves an {@link AttributeValue} by its {@code key}. Unfortunately this function is not type safe, so it may throw
-     * a {@link ClassCastException} if used with the wrong underlying type.
+     * a {@link AttributeTypeException} if used with the wrong underlying type.
      *
      * @param key The key to retrieve the {@code AttributeValue} with.
      * @return The retrieved {@code AttributeValue}.
      */
     @SuppressWarnings("unchecked")
     public <T> AttributeValue<T> get(String key) {
+
         //noinspection StringEquality
         if (lastKey == requireNonNull(key)) {
             return lastValue;
@@ -53,10 +54,14 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
 
         checkState(alias != null, "attributes need to be aliased in the AttributeKey class");
 
-        lastKey = alias.getName();
-        lastValue = attributes.computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
+        try {
+            lastKey = alias.getName();
+            lastValue = attributes.computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
 
-        return lastValue;
+            return lastValue;
+        } catch (ClassCastException e) {
+            throw new AttributeTypeException(alias);
+        }
     }
 
     @Override
