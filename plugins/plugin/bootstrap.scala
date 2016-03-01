@@ -11,15 +11,15 @@ import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendLogout
 import scala.reflect.ClassTag
 import scala.util.Random
 
-/** A bootstrapper acting as the "master dependency" for all other scripts. All of the complex, high level, 'dirty work' is
-  * done in this script in order to ensure that other scripts can be written as idiomatically as possible.
+/** A bootstrapper acting as the "master dependency" for all other plugins. All of the complex, high level, 'dirty work' is
+  * done in this script in order to ensure that other plugins can be written as idiomatically as possible.
   *
   * The interception of posted events can be handled through the '>>' (intercept) and '>>@' (intercept at/on) methods. '>>' for
   * generic events and '>>@' for events that override the 'matches' method in the Event class. The only difference is that
   * '>>@' takes a set of arguments that will matched against the events arguments.
   *
-  * Also, because this script acts as a master dependency great caution needs to be taken when modifying its contents. Changing
-  * and/or removing the wrong thing could result in breaking every single script.
+  * Also, because this plugin acts as a master dependency great caution needs to be taken when modifying its contents. Changing
+  * and/or removing the wrong thing could result in breaking every single plugin.
   */
 
 // context instances
