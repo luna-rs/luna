@@ -1,22 +1,31 @@
-import java.util.Optional
 import java.util.concurrent.ThreadLocalRandom
 
-import io.luna.game.GameService
-import io.luna.game.event.{Event, EventFunction}
+import io.luna.game.event.{Event, EventListener}
 import io.luna.game.model.mobile.attr.AttributeValue
 import io.luna.game.model.mobile.{MobileEntity, Npc, Player, PlayerRights}
 import io.luna.game.model.{Position, World}
-import io.luna.game.plugin.{PluginFailureException, PluginManager}
+import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
-import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendWidgetTextMessage}
+import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendLogoutMessage, SendWidgetTextMessage}
 
 import scala.reflect.ClassTag
+import scala.util.Random
 
+/** A bootstrapper acting as the "master dependency" for all other scripts. All of the complex, high level, 'dirty work' is
+  * done in this script in order to ensure that other scripts can be written as idiomatically as possible.
+  *
+  * The interception of posted events can be handled through the '>>' (intercept) and '>>@' (intercept at/on) methods. '>>' for
+  * generic events and '>>@' for events that override the 'matches' method in the Event class. The only difference is that
+  * '>>@' takes a set of arguments that will matched against the events arguments.
+  *
+  * Also, because this script acts as a master dependency great caution needs to be taken when modifying its contents. Changing
+  * and/or removing the wrong thing could result in breaking every single script.
+  */
 
 // context instances
-@inline val plugins: PluginManager = ctx.getPlugins
-@inline val world: World = ctx.getWorld
-@inline val service: GameService = ctx.getService
+@inline val plugins = ctx.getPlugins
+@inline val world = ctx.getWorld
+@inline val service = ctx.getService
 
 
 // common constants
@@ -26,8 +35,12 @@ import scala.reflect.ClassTag
 @inline val rightsDev = PlayerRights.DEVELOPER
 
 
-// preconditions and plugin failure, prefer lazy evaluation of 'msg' parameters
-// where applicable
+// logging, prefer lazy 'msg' evaluation
+def log(msg: Any) = logger.info(String.valueOf(msg))
+def logIf(cond: Boolean, msg: => Any) = if (cond) {log(msg)}
+
+
+// preconditions and plugin failure, prefer lazy 'msg' evaluation
 def fail(msg: Any = "execution failure") = throw new PluginFailureException(msg)
 def failIf(cond: Boolean, msg: => Any = "cond == false") = if (cond) {fail(msg)}
 
@@ -37,23 +50,26 @@ def rand = ThreadLocalRandom.current
 
 
 // message handling
-def on[T <: Event](func: (T, Player) => Unit)(implicit tag: ClassTag[T]) = plugins
-  .submit(tag.runtimeClass, new EventFunction(func))
+def >>@[T <: Event](args: Any*)
+                   (func: (T, Player) => Unit)
+                   (implicit tag: ClassTag[T]) =
+  plugins.submit(tag.runtimeClass, new EventListener((msg: T, plr) => if (msg.matches(args)) {func(msg, plr)}))
+
+def >>[T <: Event](func: (T, Player) => Unit)
+                  (implicit tag: ClassTag[T]) =
+  plugins.submit(tag.runtimeClass, new EventListener(func))
 
 
-// implicit conversions
-implicit def asScalaOption[T](optional: Optional[T]): Option[T] = {
-  if (optional.isPresent) {
-    Some(optional.get)
+// misc. global methods
+def async(func: () => Unit) = service.submit(new Runnable {
+  override def run() = {
+    try {
+      func()
+    } catch {
+      case e: Exception => e.printStackTrace()
+    }
   }
-  else None
-}
-implicit def asJavaOptional[T](option: Option[T]): Optional[T] = {
-  option match {
-    case Some(it) => Optional.of(it)
-    case None => Optional.empty()
-  }
-}
+})
 
 
 // enriched classes
@@ -62,6 +78,7 @@ implicit class PlayerImplicits(player: Player) {
   def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
   def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
+  def sendLogout = player.queue(new SendLogoutMessage)
 }
 
 implicit class MobileEntityImplicits(mob: MobileEntity) {
@@ -81,12 +98,11 @@ implicit class WorldImplicits(world: World) {
     world.getNpcs.add(npc)
     npc
   }
-  def schedule(instant: Boolean, delay: Int)(action: Task => Unit): Unit = {
+  def schedule(instant: Boolean = false, delay: Int)(action: Task => Unit) = {
     world.schedule(new Task(instant, delay) {
       override protected def execute() = action(this)
     })
   }
-  def schedule(delay: Int)(action: Task => Unit): Unit = schedule(false, delay)(action)
 }
 
 implicit class ArrayImplicits[T](array: Array[T]) {
@@ -102,10 +118,11 @@ implicit class ArrayImplicits[T](array: Array[T]) {
     }
     array
   }
+
   def randElement = array((rand.nextDouble * array.length).toInt)
 }
 
 implicit class SeqImplicits[T](seq: Seq[T]) {
-  def shuffle = util.Random.shuffle(seq)
+  def shuffle = Random.shuffle(seq)
   def randElement = seq((rand.nextDouble * seq.length).toInt)
 }

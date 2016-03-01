@@ -1,0 +1,13 @@
+# Please take great caution when modifying the contents of this TOML file, especially the "parent_dependency"
+# key, which contains the name of the plugin that acts as the master dependency for all other plugins.
+
+# Also please note that order for child dependencies is crucial— if the child dependency order is modified, a child
+# dependency that depends on another child dependency may fail to be evaluated correctly, resulting in a
+# PluginEvaluationException.
+
+# Last but not least, circular child dependencies are very unpredictable (meaning in one scenario they may fail, in another
+# they may not) so their usage is highly discouraged.
+
+[dependencies]
+parent_dependency = "bootstrap.scala"
+child_dependencies = []

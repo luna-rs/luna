@@ -1,6 +1,3 @@
-import io.luna.game.event.impl.LogoutEvent
-import io.luna.game.model.mobile.Player
+import io.luna.game.event.impl.ButtonClickEvent
 
-on[LogoutEvent] { (msg: LogoutEvent, plr: Player) =>
-
-}
+>>@[ButtonClickEvent](2458) { (msg, plr) => plr.sendLogout }
