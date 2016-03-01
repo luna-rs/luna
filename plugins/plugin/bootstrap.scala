@@ -12,7 +12,7 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 /** A bootstrapper acting as the "master dependency" for all other plugins. All of the complex, high level, 'dirty work' is
-  * done in this script in order to ensure that other plugins can be written as idiomatically as possible.
+  * done in this plugin in order to ensure that other plugins can be written as idiomatically as possible.
   *
   * The interception of posted events can be handled through the '>>' (intercept) and '>>@' (intercept at/on) methods. '>>' for
   * generic events and '>>@' for events that override the 'matches' method in the Event class. The only difference is that
