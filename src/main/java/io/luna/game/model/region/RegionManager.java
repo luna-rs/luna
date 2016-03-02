@@ -6,12 +6,12 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages all of the cached {@link Region}s and the {@link Entity}s contained within them.
@@ -24,7 +24,7 @@ public final class RegionManager {
     /**
      * The map of cached {@link Region}s.
      */
-    private final Map<RegionCoordinates, Region> regions = new HashMap<>();
+    private final Map<RegionCoordinates, Region> regions = new ConcurrentHashMap<>();
 
     /**
      * Returns a {@link Region} based on the given region {@code X} and region {@code Y} coordinates.
@@ -138,7 +138,7 @@ public final class RegionManager {
                 regions.add(getRegion(regionX - 1, regionY));
             }
         } else if (y > 16) {
-            // Top-part of region.
+            // Top part of region.
 
             if (x > 16) {
 
@@ -168,7 +168,7 @@ public final class RegionManager {
                 regions.add(getRegion(regionX + 1, regionY - 1));
             } else if (x < 15) {
 
-                // Bottom left part of region.
+                // Bottom-left part of region.
                 regions.add(getRegion(regionX, regionY - 1));
                 regions.add(getRegion(regionX - 1, regionY));
                 regions.add(getRegion(regionX - 1, regionY - 1));
