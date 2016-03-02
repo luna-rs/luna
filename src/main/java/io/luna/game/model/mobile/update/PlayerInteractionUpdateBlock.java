@@ -10,7 +10,7 @@ import io.luna.net.codec.ByteOrder;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class PlayerInteractionUpdateBlock extends PlayerUpdateBlock {
+public final class PlayerInteractionUpdateBlock extends PlayerUpdateBlock {
 
     /**
      * Creates a new {@link PlayerInteractionUpdateBlock}.

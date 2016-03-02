@@ -5,8 +5,7 @@ import io.luna.game.model.mobile.MobileEntity;
 import java.util.EnumSet;
 
 /**
- * A container backed by an {@link EnumSet} that manages all of the {@link UpdateFlag}s for {@link MobileEntity}s. Functions
- * within this class all perform in O(1) time.
+ * A container backed by an {@link EnumSet} that manages all of the {@link UpdateFlag}s for {@link MobileEntity}s.
  *
  * @author lare96 <http://github.org/lare96>
  */

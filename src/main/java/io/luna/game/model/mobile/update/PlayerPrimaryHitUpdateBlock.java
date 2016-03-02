@@ -10,7 +10,7 @@ import io.luna.net.codec.ByteMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class PlayerPrimaryHitUpdateBlock extends PlayerUpdateBlock {
+public final class PlayerPrimaryHitUpdateBlock extends PlayerUpdateBlock {
 
     /**
      * Creates a new {@link PlayerPrimaryHitUpdateBlock}.

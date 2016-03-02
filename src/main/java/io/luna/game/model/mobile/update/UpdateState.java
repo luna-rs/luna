@@ -4,6 +4,8 @@ import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Player;
 
 /**
+ * An enumerated type whose elements represent the updating states.
+ *
  * @author lare96 <http://github.org/lare96>
  */
 public enum UpdateState {

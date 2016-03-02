@@ -11,7 +11,7 @@ import io.luna.net.codec.ByteOrder;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class PlayerGraphicUpdateBlock extends PlayerUpdateBlock {
+public final class PlayerGraphicUpdateBlock extends PlayerUpdateBlock {
 
     /**
      * Creates a new {@link PlayerGraphicUpdateBlock}.
