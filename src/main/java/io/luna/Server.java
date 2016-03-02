@@ -1,6 +1,6 @@
 package io.luna;
 
-import com.google.common.io.ByteStreams;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.model.mobile.attr.AttributeKey;
@@ -22,7 +22,6 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.PrintStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,18 +65,17 @@ public final class Server {
      *
      * @throws Exception If any exceptions are thrown during initialization.
      */
-    public void create() throws Exception {
+    public void init() throws Exception {
         LOGGER.info("Luna is being initialized...");
 
         initAsyncTasks();
-        initPlugins();
         initGame();
         service.shutdown();
         service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         context.getService().awaitRunning();
         bind();
 
-        LOGGER.info("Luna is now online on port " + LunaNetworkConstants.PORT + ".");
+        LOGGER.info("Luna is now online on port {}", LunaNetworkConstants.PORT);
     }
 
     /**
@@ -98,9 +96,9 @@ public final class Server {
         bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
         bootstrap.bind(LunaNetworkConstants.PORT).syncUninterruptibly();
 
-        if (!LunaNetworkConstants.PREFERRED_PORTS.contains(LunaNetworkConstants.PORT)) {
-            String prefix = "The preferred ports for Runescape servers are ";
-            LOGGER.info(StringUtils.joinWithAnd(prefix, ".", LunaNetworkConstants.PREFERRED_PORTS.asList()));
+        ImmutableSet<Integer> preferred = LunaNetworkConstants.PREFERRED_PORTS;
+        if (!preferred.contains(LunaNetworkConstants.PORT)) {
+            LOGGER.warn("The preferred ports for Runescape servers are {}.", StringUtils.COMMA_JOINER.join(preferred));
         }
     }
 
@@ -119,27 +117,10 @@ public final class Server {
      * @throws Exception If any exceptions are thrown while executing startup tasks.
      */
     private void initAsyncTasks() throws Exception {
+        service.execute(new PluginBootstrap(context));
         service.execute(new ItemDefinitionParser());
         service.execute(new NpcDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
         service.execute(AttributeKey::init);
-    }
-
-    /**
-     * Posts events to various plugins synchronously.
-     *
-     * @throws Exception If any exceptions are thrown while posting events.
-     */
-    private void initPlugins() throws Exception {
-        PrintStream oldStream = System.out;
-        PrintStream newStream = new PrintStream(ByteStreams.nullOutputStream());
-
-        System.setOut(newStream);
-        try {
-            PluginBootstrap bootstrap = new PluginBootstrap(context);
-            bootstrap.configure().bindings().evaluate();
-        } finally {
-            System.setOut(oldStream);
-        }
     }
 }

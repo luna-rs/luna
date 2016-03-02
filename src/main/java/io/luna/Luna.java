@@ -32,7 +32,7 @@ public final class Luna {
             Thread.currentThread().setName("LunaMainThread");
 
             Server luna = new Server();
-            luna.create();
+            luna.init();
         } catch (Exception e) {
             LOGGER.catching(Level.FATAL, e);
             System.exit(0);
