@@ -2,6 +2,7 @@ package io.luna.game.model.region;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 
@@ -10,12 +11,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * A location on the map that is {@code 32x32} in size. Used primarily for caching various types of {@link Entity}s.
+ * A location in the world that is {@code 32x32} in size. Used primarily for caching various types of {@link Entity}s.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -29,7 +28,7 @@ public final class Region {
     /**
      * A {@link Set} of active {@link Entity}s in this {@code Region}.
      */
-    private final Queue<Entity> entities = new ConcurrentLinkedQueue<>();
+    private final Set<Entity> entities = Sets.newConcurrentHashSet();
 
     /**
      * Creates a new {@link Region}.
