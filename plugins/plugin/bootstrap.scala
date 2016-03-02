@@ -65,11 +65,18 @@ def async(func: () => Unit) = service.submit(new Runnable {
   override def run() = {
     try {
       func()
-    } catch {
-      case e: Exception => e.printStackTrace()
-    }
+    } catch {case e: Exception => e.printStackTrace()}
   }
 })
+
+def using(resource: AutoCloseable)
+         (func: AutoCloseable => Unit) = {
+  try {
+    func(resource)
+  } finally {
+    resource.close()
+  }
+}
 
 
 // enriched classes
@@ -94,7 +101,7 @@ implicit class MobileEntityImplicits(mob: MobileEntity) {
 
 implicit class WorldImplicits(world: World) {
   def addNpc(id: Int, position: Position) = {
-    val npc = new Npc(world.getContext, id, position)
+    val npc = new Npc(ctx, id, position)
     world.getNpcs.add(npc)
     npc
   }
