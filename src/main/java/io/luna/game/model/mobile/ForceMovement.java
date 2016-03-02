@@ -11,7 +11,7 @@ import io.luna.game.model.Position;
  */
 public final class ForceMovement {
 
-    // TODO: confirm this works
+    // TODO: Ensure that this works correctly
 
     /**
      * The {@link Position} the {@link Player} is moving from.
@@ -43,13 +43,13 @@ public final class ForceMovement {
      * X} axis.
      *
      * @param player The {@link Player} whose {@link Position} will be used as the starting {@code Position}.
-     * @param movePosition The amount to move the {@code X} position of the {@code player} by.
+     * @param amount The amount to move the {@code X} position of the {@code player} by.
      * @param duration The amount of time in ticks that it will take for the move to complete.
      * @return A {@code ForcedMovement} instance with these properties.
      */
-    public static ForceMovement forceMoveX(Player player, int movePosition, int duration) {
-        Position destination = player.getPosition().move(movePosition, 0);
-        Direction direction = movePosition < 0 ? Direction.WEST : Direction.EAST;
+    public static ForceMovement forceMoveX(Player player, int amount, int duration) {
+        Position destination = player.getPosition().move(amount, 0);
+        Direction direction = amount < 0 ? Direction.WEST : Direction.EAST;
 
         return new ForceMovement(player.getPosition(), destination, duration, 0, direction);
     }
@@ -59,13 +59,13 @@ public final class ForceMovement {
      * Y} axis.
      *
      * @param player The {@link Player} whose {@link Position} will be used as the starting {@code Position}.
-     * @param movePosition The amount to move the {@code Y} position of the {@code player} by.
+     * @param amount The amount to move the {@code Y} position of the {@code player} by.
      * @param duration The amount of time in ticks that it will take for the move to complete.
      * @return A {@code ForcedMovement} instance with these properties.
      */
-    public static ForceMovement forceMoveY(Player player, int movePosition, int duration) {
-        Position destination = player.getPosition().move(0, movePosition);
-        Direction direction = movePosition < 0 ? Direction.SOUTH : Direction.NORTH;
+    public static ForceMovement forceMoveY(Player player, int amount, int duration) {
+        Position destination = player.getPosition().move(0, amount);
+        Direction direction = amount < 0 ? Direction.SOUTH : Direction.NORTH;
 
         return new ForceMovement(player.getPosition(), destination, 0, duration, direction);
     }
