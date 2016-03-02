@@ -3,6 +3,10 @@ package io.luna.game.event.impl;
 import io.luna.game.event.Event;
 import io.luna.game.model.mobile.Player;
 
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * An {@link Event} implementation sent whenever a {@link Player} picks up an item.
  *
@@ -36,6 +40,12 @@ public final class PickupItemEvent extends Event {
         this.x = x;
         this.y = y;
         this.id = id;
+    }
+
+    @Override
+    public boolean matches(Object... args) {
+        checkState(args.length == 1, "args.length != 1");
+        return Objects.equals(args[0], id);
     }
 
     /**
