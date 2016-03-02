@@ -55,11 +55,6 @@ public final class Hit {
      * @param type The {@code HitType} of this {@code Hit}.
      */
     public Hit(int damage, HitType type) {
-        if (damage < 0 || type == HitType.BLOCKED) {
-            damage = 0;
-        } else if (damage == 0 && type == HitType.NORMAL) {
-            type = HitType.BLOCKED;
-        }
         this.damage = damage;
         this.type = type;
     }
