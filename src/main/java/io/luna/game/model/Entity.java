@@ -2,6 +2,7 @@ package io.luna.game.model;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.event.impl.PositionChangeEvent;
 import io.luna.game.model.region.Region;
 import io.luna.game.model.region.RegionCoordinates;
 import io.luna.game.plugin.PluginManager;
@@ -10,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Something that exists in the Runescape world.
+ * An abstraction model representing anything that can be interacted with in the Runescape world.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -45,25 +46,13 @@ public abstract class Entity {
      * Creates a new {@link Entity}.
      *
      * @param context The context to be managed in.
-     * @param position The position of this {@code Entity}.
      */
-    public Entity(LunaContext context, Position position) {
+    public Entity(LunaContext context) {
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
 
-        setPosition(position);
-
         onIdle();
-    }
-
-    /**
-     * Creates a new {@code Entity} at the default position.
-     *
-     * @param context The context to be managed in.
-     */
-    public Entity(LunaContext context) {
-        this(context, EntityConstants.DEFAULT_POSITION);
     }
 
     @Override
@@ -87,7 +76,7 @@ public abstract class Entity {
      * @param impl The implementing method name.
      */
     private String getExceptionMsg(String impl) {
-        return String.format("No '%s' for Entity, subclasses must implement.", impl);
+        return "No '" + impl + "' for Entity, subclasses must implement.";
     }
 
     /**
@@ -160,8 +149,11 @@ public abstract class Entity {
      * Sets the value for {@link #position}, cannot be {@code null}.
      */
     public final void setPosition(Position position) {
-
         requireNonNull(position);
+
+        if (position.equals(this.position)) {
+            return;
+        }
 
         RegionCoordinates next = RegionCoordinates.create(position);
         if (this.position != null) {
@@ -177,13 +169,14 @@ public abstract class Entity {
         Region toRegion = world.getRegions().getRegion(next);
         toRegion.addEntity(this);
 
+        plugins.post(new PositionChangeEvent(this.position, position, this));
+
         this.position = position;
     }
 
     /**
      * @return The {@link PluginManager} dedicated to this {@code Entity}.
      */
-
     public final PluginManager getPlugins() {
         return plugins;
     }
