@@ -57,8 +57,7 @@ public final class Hit {
     public Hit(int damage, HitType type) {
         if (damage < 0 || type == HitType.BLOCKED) {
             damage = 0;
-        }
-        if (damage == 0 && type == HitType.NORMAL) {
+        } else if (damage == 0 && type == HitType.NORMAL) {
             type = HitType.BLOCKED;
         }
         this.damage = damage;
