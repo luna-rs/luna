@@ -28,10 +28,7 @@ public final class AttributeKey<T> {
      */
     public static final Map<String, AttributeKey> ALIASES = new IdentityHashMap<>();
 
-    /**
-     * Aliases all attributes that will be used while Luna is online. This is called eagerly on startup.
-     */
-    public static void init() {
+    static {
         AttributeKey.forPersistent("run_energy", 100);
         AttributeKey.forPersistent("first_login", true);
     }

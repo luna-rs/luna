@@ -3,7 +3,6 @@ package io.luna;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
-import io.luna.game.model.mobile.attr.AttributeKey;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
@@ -121,6 +120,5 @@ public final class Server {
         service.execute(new ItemDefinitionParser());
         service.execute(new NpcDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
-        service.execute(AttributeKey::init);
     }
 }
