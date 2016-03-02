@@ -38,7 +38,7 @@ public final class Position {
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
         checkArgument(y >= 0, "y < 0");
-        checkArgument(z >= 0, "z < 0");
+        checkArgument(z >= 0 && z <= 3, "z < 0 || z > 3");
 
         this.x = x;
         this.y = y;
@@ -128,7 +128,7 @@ public final class Position {
     }
 
     /**
-     * Returns a new {@link Position} moved by the specified coordinates.
+     * Returns a new {@link Position} moved by the specified coordinates. The {@code Z} value remains unmodified.
      *
      * @param amountX The {@code X} amount to move.
      * @param amountY The {@code Y} amount to move.
