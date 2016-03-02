@@ -121,7 +121,6 @@ implicit class ArrayImplicits[T](array: Array[T]) {
       array(index) = array(i)
       array(i) = a
       i -= 1
-      i + 1
     }
     array
   }
