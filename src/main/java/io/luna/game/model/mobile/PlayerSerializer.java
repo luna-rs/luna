@@ -79,9 +79,9 @@ public final class PlayerSerializer {
         Map<String, Object> data = new LinkedHashMap<>();
 
         data.put("password", player.getPassword());
-        data.put("rights", player.getRights().name());
-
         data.put("position", player.getPosition());
+        data.put("rights", player.getRights().name());
+        data.put("running", player.getWalkingQueue().isRunning());
 
         Map<String, Object> attributes = new HashMap<>();
         for (Entry<String, AttributeValue<?>> it : player.attributes) {
@@ -142,6 +142,9 @@ public final class PlayerSerializer {
 
             PlayerRights rights = PlayerRights.valueOf(reader.get("rights").getAsString());
             player.setRights(rights);
+
+            boolean running = reader.get("running").getAsBoolean();
+            player.getWalkingQueue().setRunning(running);
 
             JsonObject attr = reader.get("attributes").getAsJsonObject();
             for (Entry<String, JsonElement> it : attr.entrySet()) {
