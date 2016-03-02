@@ -30,6 +30,11 @@ public abstract class MobileEntity extends Entity {
     protected final UpdateFlagHolder updateFlags = new UpdateFlagHolder();
 
     /**
+     * The {@link WalkingQueue} assigned to this {@code MobileEntity}.
+     */
+    private final WalkingQueue walkingQueue = new WalkingQueue(this);
+
+    /**
      * The index of this mob in its list.
      */
     private int index = -1;
@@ -38,6 +43,11 @@ public abstract class MobileEntity extends Entity {
      * The walking direction of this {@code MobileEntity}.
      */
     private Direction walkingDirection = Direction.NONE;
+
+    /**
+     * The running direction of this {@code MobileEntity}.
+     */
+    private Direction runningDirection = Direction.NONE;
 
     /**
      * If this {@code MobileEntity} is teleporting.
@@ -83,16 +93,6 @@ public abstract class MobileEntity extends Entity {
      * Creates a new {@link MobileEntity}.
      *
      * @param context The context to be managed in.
-     * @param position The position of this {@code MobileEntity}.
-     */
-    public MobileEntity(LunaContext context, Position position) {
-        super(context, position);
-    }
-
-    /**
-     * Creates a new {@link MobileEntity} at the default position.
-     *
-     * @param context The context to be managed in.
      */
     public MobileEntity(LunaContext context) {
         super(context);
@@ -111,7 +111,7 @@ public abstract class MobileEntity extends Entity {
     public final void teleport(Position position) {
         setPosition(position);
         teleporting = true;
-        // TODO: Clear walking queue
+        walkingQueue.clear();
     }
 
     /**
@@ -248,6 +248,20 @@ public abstract class MobileEntity extends Entity {
     }
 
     /**
+     * @return The running direction of this {@code MobileEntity}.
+     */
+    public Direction getRunningDirection() {
+        return runningDirection;
+    }
+
+    /**
+     * Sets the value for {@link #runningDirection}.
+     */
+    public void setRunningDirection(Direction runningDirection) {
+        this.runningDirection = runningDirection;
+    }
+
+    /**
      * @return {@code true} if this {@code MobileEntity} is teleporting, {@code false} otherwise.
      */
     public final boolean isTeleporting() {
@@ -301,5 +315,12 @@ public abstract class MobileEntity extends Entity {
      */
     public final Hit getSecondaryHit() {
         return secondaryHit;
+    }
+
+    /**
+     * @return The {@link WalkingQueue} assigned to this {@code MobileEntity}.
+     */
+    public WalkingQueue getWalkingQueue() {
+        return walkingQueue;
     }
 }
