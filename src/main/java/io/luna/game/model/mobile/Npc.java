@@ -33,9 +33,10 @@ public final class Npc extends MobileEntity {
      * @param position The position of this {@code Npc}.
      */
     public Npc(LunaContext context, int id, Position position) {
-        super(context, position);
+        super(context);
         this.id = id;
         definition = NpcDefinition.DEFINITIONS[id];
+        setPosition(position);
     }
 
     @Override
