@@ -6,28 +6,29 @@ import scala.Unit;
 
 /**
  * A POJO that serves as a wrapper for Scala's {@link Function2} to prevent repetition of the confusing and verbose type
- * declaration. We need this because type aliases are only recognized by scala.
+ * declaration. In the {@link EventListenerPipeline} this class acts as a listener for {@link Event}s.
  *
+ * @param <E> The type of {@link Event} that this listener is listening for.
  * @author lare96 <http://github.org/lare96>
  */
-public final class EventFunction<E extends Event> {
+public final class EventListener<E extends Event> {
 
     /**
-     * The wrapped event function.
+     * The wrapped listener function.
      */
     private final Function2<E, Player, Unit> function;
 
     /**
-     * Creates a new {@link EventFunction}.
+     * Creates a new {@link EventListener}.
      *
-     * @param function The wrapped event function.
+     * @param function The wrapped listener function.
      */
-    public EventFunction(Function2<E, Player, Unit> function) {
+    public EventListener(Function2<E, Player, Unit> function) {
         this.function = function;
     }
 
     /**
-     * @return The wrapped event function.
+     * @return The wrapped listener function.
      */
     public Function2<E, Player, Unit> getFunction() {
         return function;
