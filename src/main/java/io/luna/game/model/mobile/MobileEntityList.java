@@ -188,8 +188,8 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
     /**
      * {@inheritDoc}
      * <p>
-     * As a rule of thumb, {@code stream()} and {@code parallelStream()} should always be used directly instead unless
-     * absolutely needed.
+     * As a rule of thumb, {@code stream()} and {@code parallelStream()} should always be used instead unless absolutely
+     * needed.
      */
     @Override
     public Spliterator<E> spliterator() {
@@ -308,7 +308,7 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
     }
 
     /**
-     * <strong>Warning: This function does not give direct access to the backing array but instead creates a shallow
+     * <strong>Please note that this function does not give direct access to the backing array but instead creates a shallow
      * copy.</strong>
      *
      * @return The shallow copy of the backing array.
