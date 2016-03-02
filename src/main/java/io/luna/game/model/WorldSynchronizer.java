@@ -114,6 +114,7 @@ public final class WorldSynchronizer {
     public void preSynchronize() {
         world.getPlayers().forEach(it -> {
             try {
+                it.getWalkingQueue().process();
                 it.getSession().dequeue();
 
                 if (it.getUpdateFlags().get(UpdateFlag.REGION)) {
@@ -146,8 +147,7 @@ public final class WorldSynchronizer {
     }
 
     /**
-     * Post-synchronization, flush any pending data to the client and clear various flags. This can be done safely in
-     * parallel.
+     * Post-synchronization, clear various flags. This can be done safely in parallel.
      */
     public void postSynchronize() {
         synchronizer.bulkRegister(world.getPlayers().size());
