@@ -18,6 +18,11 @@ import static java.util.Objects.requireNonNull;
 public abstract class Entity {
 
     /**
+     * The {@link LunaContext} dedicated to this {@code Entity}.
+     */
+    protected final LunaContext context;
+
+    /**
      * The {@link PluginManager} dedicated to this {@code Entity}.
      */
     protected final PluginManager plugins;
@@ -48,6 +53,8 @@ public abstract class Entity {
      * @param context The context to be managed in.
      */
     public Entity(LunaContext context) {
+        this.context = context;
+
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
@@ -172,6 +179,13 @@ public abstract class Entity {
         plugins.post(new PositionChangeEvent(this.position, position, this));
 
         this.position = position;
+    }
+
+    /**
+     * @return The {@link LunaContext} dedicated to this {@code Entity}.
+     */
+    public LunaContext getContext() {
+        return context;
     }
 
     /**
