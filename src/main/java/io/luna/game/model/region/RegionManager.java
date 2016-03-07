@@ -69,13 +69,13 @@ public final class RegionManager {
     }
 
     /**
-     * Gets all of the {@link Player}s relevant to {@code player}, prioritized in an order somewhat identical to Runescape.
+     * Gets all of the {@link Player}s surrounding {@code player}, prioritized in an order somewhat identical to Runescape.
      * This is done so that staggered updating does not interfere negatively with gameplay.
      *
      * @param player The {@link Player}.
      * @return The local, prioritized, {@code Player}s.
      */
-    public Set<Player> getPriorityPlayers(Player player) {
+    public Set<Player> getSurroundingPlayers(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
         Set<Player> localPlayers = new TreeSet<>(new RegionPriorityComparator(player));
 
@@ -89,19 +89,18 @@ public final class RegionManager {
     }
 
     /**
-     * Gets all of the {@link Npc}s relevant to {@code player}, prioritized in an order somewhat identical to Runescape. This
+     * Gets all of the {@link Npc}s surrounding {@code player}, prioritized in an order somewhat identical to Runescape. This
      * is done so that staggered updating does not interfere negatively with gameplay.
      *
      * @param player The {@link Player}.
      * @return The local, prioritized, {@code Npc}s.
      */
-    public Set<Npc> getPriorityNpcs(Player player) {
+    public Set<Npc> getSurroundingNpcs(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
         Set<Npc> localNpcs = new TreeSet<>(new RegionPriorityComparator(player));
 
         for (Region region : allRegions) {
             List<Npc> regionNpcs = region.getEntities(EntityType.NPC);
-
             regionNpcs.stream().filter(it -> it.getPosition().isViewable(player.getPosition())).forEach(localNpcs::add);
         }
         return localNpcs;

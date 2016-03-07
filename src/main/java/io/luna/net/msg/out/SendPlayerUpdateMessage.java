@@ -82,7 +82,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
             RegionManager regions = player.getWorld().getRegions();
             int playersAdded = 0;
 
-            for (Player other : regions.getPriorityPlayers(player)) {
+            for (Player other : regions.getSurroundingPlayers(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
