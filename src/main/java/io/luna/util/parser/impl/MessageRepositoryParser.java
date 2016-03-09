@@ -25,7 +25,7 @@ public final class MessageRepositoryParser extends TomlParser<MessageRepositoryE
      * @param messageRepository The {@link MessageRepository} that the data will be added to.
      */
     public MessageRepositoryParser(MessageRepository messageRepository) {
-        super("./data/io/message_repository.toml", "message");
+        super("./data/io/message_repository.toml");
         this.messageRepository = messageRepository;
     }
 
@@ -42,11 +42,38 @@ public final class MessageRepositoryParser extends TomlParser<MessageRepositoryE
         }
     }
 
-    final class MessageRepositoryElement {
+    @Override
+    public String table() {
+        return "message";
+    }
+
+    /**
+     * A POJO representing a single read object.
+     */
+    protected final class MessageRepositoryElement {
+
+        /**
+         * The opcode.
+         */
         private final int opcode;
+
+        /**
+         * The size.
+         */
         private final int size;
+
+        /**
+         * The payload.
+         */
         private final String payload;
 
+        /**
+         * Creates a new {@link MessageRepositoryElement}.
+         *
+         * @param opcode The opcode.
+         * @param size The size.
+         * @param payload The payload.
+         */
         private MessageRepositoryElement(int opcode, int size, String payload) {
             this.opcode = opcode;
             this.size = size;

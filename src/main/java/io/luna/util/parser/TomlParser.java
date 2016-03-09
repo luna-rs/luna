@@ -16,27 +16,25 @@ import java.util.List;
 public abstract class TomlParser<T> extends GsonParser<T> {
 
     /**
-     * The name of the table array to retrieve.
-     */
-    private final String tableArrayName;
-
-    /**
      * Creates a new {@link TomlParser}.
      *
      * @param path The path to the file being parsed.
      */
-    public TomlParser(String path, String tableArrayName) {
+    public TomlParser(String path) {
         super(path);
-        this.tableArrayName = tableArrayName;
     }
 
     @Override
     public JsonArray getReader(BufferedReader in) throws Exception {
-        List<Toml> tables = new Toml().read(in).getTables(tableArrayName);
+        List<Toml> tables = new Toml().read(in).getTables(table());
         JsonArray array = new JsonArray();
 
         tables.stream().map(it -> it.to(JsonObject.class)).forEach(array::add);
-
         return array;
     }
+
+    /**
+     * Returns the name of the table array to retrieve.
+     */
+    public abstract String table();
 }
