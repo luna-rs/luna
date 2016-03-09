@@ -1,10 +1,10 @@
 package io.luna.game.plugin;
 
-import io.luna.game.event.EventPipeline;
+import io.luna.game.event.EventListenerPipeline;
 
 /**
  * A {@link RuntimeException} implementation thrown when an unhandled {@link Exception} is thrown up to the {@link
- * EventPipeline} from within a plugin.
+ * EventListenerPipeline} from within a plugin.
  *
  * @author lare96 <http://github.org/lare96>
  */
