@@ -19,6 +19,9 @@ import static org.junit.Assert.assertEquals;
  */
 public final class GameMessageEncoderTest {
 
+    /**
+     * Test encoding game packets.
+     */
     @Test
     public void testEncode() throws Exception {
         IsaacCipher isaac = new IsaacCipher(new int[] { 0, 0, 0, 0 });
