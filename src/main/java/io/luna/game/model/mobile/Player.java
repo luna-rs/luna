@@ -13,7 +13,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundGameMessage;
 import io.luna.net.msg.out.SendAssignmentMessage;
 import io.luna.net.msg.out.SendLogoutMessage;
-import io.luna.net.msg.out.SendTabWidgetMessage;
+import io.luna.net.msg.out.SendTabInterfaceMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.luna.net.session.SessionState;
@@ -140,19 +140,19 @@ public final class Player extends MobileEntity {
 
             queue(new SendAssignmentMessage(true));
 
-            queue(new SendTabWidgetMessage(0, 2423));
-            queue(new SendTabWidgetMessage(1, 3917));
-            queue(new SendTabWidgetMessage(2, 638));
-            queue(new SendTabWidgetMessage(3, 3213));
-            queue(new SendTabWidgetMessage(4, 1644));
-            queue(new SendTabWidgetMessage(5, 5608));
-            queue(new SendTabWidgetMessage(6, 1151));
-            queue(new SendTabWidgetMessage(8, 5065));
-            queue(new SendTabWidgetMessage(9, 5715));
-            queue(new SendTabWidgetMessage(10, 2449));
-            queue(new SendTabWidgetMessage(11, 904));
-            queue(new SendTabWidgetMessage(12, 147));
-            queue(new SendTabWidgetMessage(13, 962));
+            queue(new SendTabInterfaceMessage(0, 2423));
+            queue(new SendTabInterfaceMessage(1, 3917));
+            queue(new SendTabInterfaceMessage(2, 638));
+            queue(new SendTabInterfaceMessage(3, 3213));
+            queue(new SendTabInterfaceMessage(4, 1644));
+            queue(new SendTabInterfaceMessage(5, 5608));
+            queue(new SendTabInterfaceMessage(6, 1151));
+            queue(new SendTabInterfaceMessage(8, 5065));
+            queue(new SendTabInterfaceMessage(9, 5715));
+            queue(new SendTabInterfaceMessage(10, 2449));
+            queue(new SendTabInterfaceMessage(11, 904));
+            queue(new SendTabInterfaceMessage(12, 147));
+            queue(new SendTabInterfaceMessage(13, 962));
 
             plugins.post(new LoginEvent(), this);
 

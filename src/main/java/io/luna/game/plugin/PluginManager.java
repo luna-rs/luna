@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A manager for Scala plugins. It uses {@link EventListener}s and {@link EventListenerPipeline}s to act as a bridge
- * between interpreted Scala code and compiled Java code.
+ * A manager for Scala plugins. It uses {@link EventListener}s and {@link EventListenerPipeline}s to act as a bridge between
+ * interpreted Scala code and compiled Java code.
  *
  * @author lare96 <http://github.org/lare96>
  */
