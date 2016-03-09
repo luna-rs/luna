@@ -11,8 +11,7 @@ import io.luna.net.msg.InboundGameMessage;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link InboundGameMessage} implementation that decodes data that allows a {@link Player} to send publicly send a line
- * of text to other {@code Player}s.
+ * An {@link InboundGameMessage} implementation that decodes data sent when a {@link Player} manually talks.
  *
  * @author lare96 <http://github.org/lare96>
  */
