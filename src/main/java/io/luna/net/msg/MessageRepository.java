@@ -1,6 +1,6 @@
 package io.luna.net.msg;
 
-import static com.google.common.base.Preconditions.checkState;
+import io.luna.util.ThreadUtils;
 
 /**
  * A repository that contains data related to incoming {@link GameMessage}s.
@@ -23,8 +23,7 @@ public final class MessageRepository {
      * Creates a new {@link MessageRepository}.
      */
     public MessageRepository() {
-        String threadName = Thread.currentThread().getName();
-        checkState(threadName.equals("LunaMainThread"), "can only be done during initialization");
+        ThreadUtils.ensureInitThread();
     }
 
     /**
@@ -37,11 +36,9 @@ public final class MessageRepository {
      * @throws ReflectiveOperationException If any errors occur while instantiating the {@link InboundGameMessage}.
      */
     public void addHandler(int opcode, int size, String inboundMessageName) throws ReflectiveOperationException {
-        String threadName = Thread.currentThread().getName();
-        checkState(threadName.equals("LunaInitializationThread"), "can only be done during initialization");
+        ThreadUtils.ensureInitThread();
 
         Class<?> inboundMessageClass = Class.forName("io.luna.net.msg.in." + inboundMessageName);
-
         sizes[opcode] = size;
         inboundHandlers[opcode] = (InboundGameMessage) inboundMessageClass.newInstance();
     }
