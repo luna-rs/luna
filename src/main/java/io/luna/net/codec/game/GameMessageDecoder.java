@@ -164,7 +164,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
 
         try {
             if (messageRepository.getHandler(opcode) == null) {
-                LOGGER.debug("No InboundGameMessage assigned to [opcode= " + opcode + "]");
+                LOGGER.debug("No InboundGameMessage assigned to [opcode={}]", opcode);
                 currentMessage = Optional.empty();
                 return;
             }
