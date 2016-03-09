@@ -2,7 +2,12 @@ package io.luna.game.plugin;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.io.Files;
+import com.google.gson.JsonObject;
+import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
+import io.luna.util.GsonUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.interpreter.IMain;
 import scala.tools.nsc.settings.MutableSettings.BooleanSetting;
@@ -10,93 +15,152 @@ import scala.tools.nsc.settings.MutableSettings.BooleanSetting;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileReader;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
- * A bootstrapper that initializes the Scala bindings and evaluates all of the compiled plugins.
+ * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PluginBootstrap {
+public final class PluginBootstrap implements Runnable {
 
     /**
-     * The path to the bootstrap.
+     * A {@link ByteArrayOutputStream} implementation that intercepts output from the {@code Scala} interpreter and forwards
+     * the output to {@code System.err} when there is an evaluation error.
      */
-    private static final String BOOTSTRAP_DIR = "./plugins/plugin/bootstrap.scala";
+    private static final class ScalaOutputStream extends ByteArrayOutputStream {
+
+        @Override
+        public synchronized void flush() {
+            String pattern = "^<console>:([0-9]+)^: error:";
+            String output = toString();
+            reset();
+
+            if (output.matches(pattern)) {
+                LOGGER.error(output);
+            }
+        }
+    }
 
     /**
-     * The directory that the plugins will be evaluated from.
+     * The logger that will print important information.
      */
-    private static final String PLUGIN_DIR = "./plugins/plugin/";
+    private static final Logger LOGGER = LogManager.getLogger(PluginBootstrap.class);
 
     /**
-     * The {@link LunaContext} that will be used to inject state into
+     * The directory that contains all files related to plugins.
+     */
+    private static final String DIR = "./plugins/plugin/";
+
+    /**
+     * The {@link LunaContext} that will be used to inject state into plugins.
      */
     private final LunaContext context;
 
     /**
      * The {@link ScriptEngine} that will evaluate the {@code Scala} scripts.
      */
-    private final ScriptEngine scala;
+    private final ScriptEngine engine;
+
+    /**
+     * A {@link Map} of the file names in {@code DIR} to their contents.
+     */
+    private final Map<String, String> files = new HashMap<>();
 
     /**
      * Creates a new {@link PluginBootstrap}.
      *
-     * @param context The {@link LunaContext} that will be used to inject state into
+     * @param context The {@link LunaContext} that will be used to inject state into plugins.
      */
     public PluginBootstrap(LunaContext context) {
         this.context = context;
-        scala = new ScriptEngineManager().getEngineByName("scala");
+        engine = new ScriptEngineManager().getEngineByName("scala");
+    }
+
+    @Override
+    public void run() {
+        try {
+            init();
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing Scala plugins...", e);
+        }
+    }
+
+    /**
+     * Initializes this bootstrapper, loading all of the plugins.
+     */
+    public void init() throws Exception {
+        PrintStream output = System.out;
+        ScalaOutputStream console = new ScalaOutputStream();
+
+        System.setOut(new PrintStream(console));
+        try {
+            initClasspath();
+            initFiles();
+            initDependencies();
+            initPlugins();
+        } finally {
+            System.setOut(output);
+        }
     }
 
     /**
      * Configures the {@code Scala} interpreter to use the {@code Java} classpath.
-     *
-     * @return This class instance, for chaining.
-     * @throws Exception If any problems arise configuring the interpreter.
      */
-    public PluginBootstrap configure() throws Exception {
-        IMain interpreter = (IMain) scala;
+    private void initClasspath() throws Exception {
+        IMain interpreter = (IMain) engine;
         Settings settings = interpreter.settings();
         BooleanSetting booleanSetting = (BooleanSetting) settings.usejavacp();
 
         booleanSetting.value_$eq(true);
-        return this;
     }
 
     /**
-     * Injects the {@code context} instance into global scope, and evaluates {@code bootstrap.scala}.
-     *
-     * @return This class instance, for chaining.
-     * @throws Exception If any problems arise preparing bindings.
+     * Parses all of the files in {@code DIR} and caches their contents into {@code files}.
      */
-    public PluginBootstrap bindings() throws Exception {
-        scala.put("ctx: io.luna.LunaContext", context);
+    private void initFiles() throws Exception {
+        FluentIterable<File> dirFiles = Files.fileTreeTraverser().preOrderTraversal(new File(DIR)).filter(File::isFile);
 
-        scala.eval(new FileReader(BOOTSTRAP_DIR));
-        return this;
+        for (File file : dirFiles) {
+            files.put(file.getName(), Files.toString(file, StandardCharsets.UTF_8));
+        }
     }
 
     /**
-     * Evaluates all of the compiled plugins from within {@code PLUGIN_DIR}.
-     *
-     * @return This class instance, for chaining.
-     * @throws Exception If any problems arise while evaluating plugins.
+     * Injects state into the {@code engine} and evaluates dependencies from {@code DIR}.
      */
-    public PluginBootstrap evaluate() throws Exception {
-        File traverseDir = new File(PLUGIN_DIR);
+    private void initDependencies() throws Exception {
+        engine.put("ctx: io.luna.LunaContext", context);
+        engine.put("logger: org.apache.logging.log4j.Logger", LOGGER);
 
-        FluentIterable<File> traverseFiles = Files.fileTreeTraverser().preOrderTraversal(traverseDir)
-            .filter(it -> !it.getName().equals("bootstrap.scala") && it.isFile());
+        Toml toml = new Toml().read(files.remove("dependencies.toml"));
 
-        for (File file : traverseFiles) {
+        JsonObject reader = toml.getTable("dependencies").to(JsonObject.class);
+        String parentDependency = reader.get("parent_dependency").getAsString();
+        String[] childDependencies = GsonUtils.getAsType(reader.get("child_dependencies"), String[].class);
+
+        engine.eval(files.remove(parentDependency));
+        for (String dependency : childDependencies) {
+            engine.eval(files.remove(dependency));
+        }
+    }
+
+    /**
+     * Evaluates all of the dependant plugins from within {@code DIR}.
+     */
+    private void initPlugins() throws Exception {
+        for (Entry<String, String> fileEntry : files.entrySet()) {
             try {
-                scala.eval(new FileReader(file));
+                engine.eval(fileEntry.getValue());
             } catch (ScriptException e) {
-                throw new PluginFailureException(e);
+                throw new RuntimeException(e);
             }
         }
-        return this;
     }
 }
