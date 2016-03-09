@@ -11,8 +11,7 @@ import io.luna.net.msg.InboundGameMessage;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link InboundGameMessage} implementation that decodes data that allows a {@link Player} to pickup an item off the
- * ground.
+ * An {@link InboundGameMessage} implementation that decodes data sent when a {@link Player} tries to pick up an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
