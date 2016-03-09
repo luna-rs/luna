@@ -2,15 +2,16 @@ package io.luna.game.plugin;
 
 import io.luna.LunaContext;
 import io.luna.game.event.Event;
-import io.luna.game.event.EventFunction;
-import io.luna.game.event.EventPipeline;
+import io.luna.game.event.EventListener;
+import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.model.mobile.Player;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A manager for Scala plugins and their internal functions.
+ * A manager for Scala plugins. It uses {@link EventListener}s and {@link EventListenerPipeline}s to act as a bridge
+ * between interpreted Scala code and compiled Java code.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -19,7 +20,7 @@ public final class PluginManager {
     /**
      * A {@link Map} containing the event types and designated pipelines.
      */
-    private final Map<Class<?>, EventPipeline<?>> plugins = new HashMap<>();
+    private final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
      * An instance of the {@link LunaContext}.
@@ -36,17 +37,17 @@ public final class PluginManager {
     }
 
     /**
-     * Submits a {@link EventFunction} to this manager.
+     * Submits a {@link EventListener} to this manager.
      *
      * @param eventClass The event class type.
-     * @param function The {@code EventFunction} to add to the {@link EventPipeline}.
+     * @param function The {@code EventFunction} to add to the {@link EventListenerPipeline}.
      */
-    public void submit(Class<?> eventClass, EventFunction<?> function) {
-        plugins.computeIfAbsent(eventClass, it -> new EventPipeline<>()).add(function);
+    public void submit(Class<?> eventClass, EventListener<?> function) {
+        pipelines.computeIfAbsent(eventClass, it -> new EventListenerPipeline<>()).add(function);
     }
 
     /**
-     * Attempts to traverse {@code evt} across its designated {@link EventPipeline}.
+     * Attempts to traverse {@code evt} across its designated {@link EventListenerPipeline}.
      *
      * @param evt The event to post.
      * @param player The {@link Player} to post this event for, if intended to be {@code null} use {@code post(Event)}
@@ -54,12 +55,19 @@ public final class PluginManager {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void post(Event evt, Player player) {
-        EventPipeline pipeline = plugins.get(evt.getClass());
+        EventListenerPipeline pipeline = pipelines.get(evt.getClass());
 
         if (pipeline == null) {
             return;
         }
         pipeline.traverse(evt, player);
+    }
+
+    /**
+     * Clears the backing cache of {@link EventListenerPipeline}s.
+     */
+    public void clear() {
+        pipelines.clear();
     }
 
     /**
