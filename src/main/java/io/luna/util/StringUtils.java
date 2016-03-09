@@ -1,6 +1,6 @@
 package io.luna.util;
 
-import java.util.List;
+import com.google.common.base.Joiner;
 
 /**
  * A static-utility class that contains functions for manipulating strings.
@@ -18,28 +18,9 @@ public final class StringUtils {
         '?', '/', '`' };
 
     /**
-     * Joins the {@code elements} using a ',' as the delimiter, with {@code prefix} and {@code suffix}. On the last element,
-     * an "and" is added.
-     *
-     * @param prefix The prefix of the String.
-     * @param suffix The suffix of the String.
-     * @param elements The String elements to join together.
-     * @return The newly joined String.
+     * A {@link Joiner} that joins strings together with a ",".
      */
-    public static String joinWithAnd(String prefix, String suffix, List<?> elements) {
-        StringBuilder sb = new StringBuilder(prefix);
-
-        for (int idx = 0; idx < elements.size(); idx++) {
-            if ((idx + 1) == elements.size()) {
-                sb.append("and ").append(elements.get(idx)); // On last index, add "and" instead of ","
-                continue;
-            }
-            sb.append(elements.get(idx)).append(", ");
-        }
-
-        sb.append(suffix);
-        return sb.toString();
-    }
+    public static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
     /**
      * Encodes {@code s} to a base-37 {@code long}.
