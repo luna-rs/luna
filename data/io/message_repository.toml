@@ -491,7 +491,7 @@ payload = "ReceiveGenericMessage"
 [[message]]
 opcode = 98
 size = -1
-payload = "ReceiveGenericMessage"
+payload = "ReceiveWalkingMessage"
 
 [[message]]
 opcode = 99
@@ -516,7 +516,7 @@ payload = "ReceiveGenericMessage"
 [[message]]
 opcode = 103
 size = -1
-payload = "ReceiveGenericMessage"
+payload = "ReceiveCommandMessage"
 
 [[message]]
 opcode = 104
@@ -821,7 +821,7 @@ payload = "ReceiveGenericMessage"
 [[message]]
 opcode = 164
 size = -1
-payload = "ReceiveGenericMessage"
+payload = "ReceiveWalkingMessage"
 
 [[message]]
 opcode = 165
@@ -926,7 +926,7 @@ payload = "ReceiveGenericMessage"
 [[message]]
 opcode = 185
 size = 2
-payload = "ReceiveGenericMessage"
+payload = "ReceiveButtonClickMessage"
 
 [[message]]
 opcode = 186
@@ -1241,7 +1241,7 @@ payload = "ReceiveGenericMessage"
 [[message]]
 opcode = 248
 size = -1
-payload = "ReceiveGenericMessage"
+payload = "ReceiveWalkingMessage"
 
 [[message]]
 opcode = 249
