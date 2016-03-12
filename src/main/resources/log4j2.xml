@@ -4,10 +4,10 @@
         <Console name="console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %logger{36} [%t]%n%level: %msg%n"/>
         </Console>
-        <FileAppender name="errors_log" fileName="./data/logs/errors.log" bufferedIO="true" append="true">
+        <File name="errors_log" fileName="./data/logs/errors.log" bufferedIO="true" append="true">
             <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %-5level - %msg%xEx%n"/>
             <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
-        </FileAppender>
+        </File>
         <Async name="async">
             <AppenderRef ref="console"/>
             <AppenderRef ref="errors_log"/>
