@@ -29,7 +29,7 @@ public final class Luna {
      */
     public static void main(String[] args) {
         try {
-            Thread.currentThread().setName("LunaMainThread");
+            Thread.currentThread().setName("LunaInitializationThread");
 
             Server luna = new Server();
             luna.init();
