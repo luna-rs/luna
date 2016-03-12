@@ -8,6 +8,7 @@ import io.luna.LunaContext;
 import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import scala.Console;
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.interpreter.IMain;
 import scala.tools.nsc.settings.MutableSettings.BooleanSetting;
@@ -22,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
@@ -34,15 +37,18 @@ public final class PluginBootstrap implements Runnable {
      * A {@link ByteArrayOutputStream} implementation that intercepts output from the {@code Scala} interpreter and forwards
      * the output to {@code System.err} when there is an evaluation error.
      */
-    private static final class ScalaOutputStream extends ByteArrayOutputStream {
+    private static final class ScalaConsole extends ByteArrayOutputStream {
 
         @Override
         public synchronized void flush() {
-            String pattern = "^<console>:([0-9]+)^: error:";
+            Pattern pattern = Pattern.compile("<console>:([0-9]+): error:");
+
             String output = toString();
+            Matcher matcher = pattern.matcher(output);
+
             reset();
 
-            if (output.matches(pattern)) {
+            if (matcher.find()) {
                 LOGGER.error(output);
             }
         }
@@ -96,17 +102,17 @@ public final class PluginBootstrap implements Runnable {
      * Initializes this bootstrapper, loading all of the plugins.
      */
     public void init() throws Exception {
-        PrintStream output = System.out;
-        ScalaOutputStream console = new ScalaOutputStream();
+        PrintStream oldConsole = Console.out();
+        ScalaConsole newConsole = new ScalaConsole();
 
-        System.setOut(new PrintStream(console));
+        Console.setOut(new PrintStream(newConsole));
         try {
             initClasspath();
             initFiles();
             initDependencies();
             initPlugins();
         } finally {
-            System.setOut(output);
+            Console.setOut(oldConsole);
         }
     }
 
