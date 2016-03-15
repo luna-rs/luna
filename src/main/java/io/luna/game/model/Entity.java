@@ -97,6 +97,13 @@ public abstract class Entity {
     public abstract EntityType type();
 
     /**
+     * @return If {@code other} is viewable from the position of this {@code Entity}.
+     */
+    public boolean isViewable(Entity other) {
+        return position.isViewable(other.getPosition());
+    }
+
+    /**
      * Fired when the state of this {@code Entity} is set to {@code IDLE}.
      */
     public void onIdle() {
@@ -155,18 +162,14 @@ public abstract class Entity {
     /**
      * Sets the value for {@link #position}, cannot be {@code null}.
      */
-    public final void setPosition(Position position) {
-        requireNonNull(position);
+    public final void setPosition(Position newPosition) {
+        requireNonNull(newPosition, "newPosition == null");
 
-        if (position.equals(this.position)) {
-            return;
-        }
-
-        RegionCoordinates next = RegionCoordinates.create(position);
-        if (this.position != null) {
-            RegionCoordinates prev = RegionCoordinates.create(this.position);
+        RegionCoordinates next = RegionCoordinates.create(newPosition);
+        if (position != null) {
+            RegionCoordinates prev = RegionCoordinates.create(position);
             if (prev.equals(next)) {
-                this.position = position;
+                position = newPosition;
                 return;
             }
 
@@ -176,9 +179,8 @@ public abstract class Entity {
         Region toRegion = world.getRegions().getRegion(next);
         toRegion.addEntity(this);
 
-        plugins.post(new PositionChangeEvent(this.position, position, this));
-
-        this.position = position;
+        plugins.post(new PositionChangeEvent(position, newPosition, this));
+        position = newPosition;
     }
 
     /**
