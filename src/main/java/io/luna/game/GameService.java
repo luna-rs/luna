@@ -109,6 +109,8 @@ public final class GameService extends AbstractScheduledService {
         try {
             World world = context.getWorld();
 
+            // TODO: Properly logout all players out of minigames, transactions, etc.
+
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
             syncTasks.forEach(Runnable::run);
             syncTasks.clear();
