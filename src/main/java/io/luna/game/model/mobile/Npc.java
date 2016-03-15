@@ -5,6 +5,7 @@ import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcDefinition;
+import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 
 import java.util.Objects;
 
@@ -24,6 +25,11 @@ public final class Npc extends MobileEntity {
      * The definition instance for this {@code Npc}.
      */
     private final NpcDefinition definition;
+
+    /**
+     * The identifier for the transformation {@code Npc}.
+     */
+    private int transformId = -1;
 
     /**
      * Creates a new {@link Npc}.
@@ -73,7 +79,17 @@ public final class Npc extends MobileEntity {
 
     @Override
     public void resetEntity() {
+        transformId = -1;
+    }
 
+    /**
+     * Transforms this {@code Npc} into another {@code Npc}.
+     *
+     * @param id The identifier of the {@code Npc} to transform into.
+     */
+    public void transform(int id) {
+        transformId = id;
+        updateFlags.flag(UpdateFlag.TRANSFORM);
     }
 
     /**
@@ -88,5 +104,12 @@ public final class Npc extends MobileEntity {
      */
     public int getId() {
         return id;
+    }
+
+    /**
+     * @return The identifier for the transformation {@code Npc}.
+     */
+    public int getTransformId() {
+        return transformId;
     }
 }
