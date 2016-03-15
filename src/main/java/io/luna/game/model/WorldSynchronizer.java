@@ -5,6 +5,7 @@ import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.net.msg.out.SendNpcUpdateMessage;
 import io.luna.net.msg.out.SendPlayerUpdateMessage;
 import io.luna.net.msg.out.SendRegionMessage;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,8 @@ import java.util.concurrent.Phaser;
  * @author lare96 <http://github.org/lare96>
  */
 public final class WorldSynchronizer {
+
+    // TODO: Maybe rename this to something more fitting?
 
     /**
      * A {@code Runnable} implementation that executes some sort of logic while handling thread-safety for a {@link
@@ -126,6 +129,7 @@ public final class WorldSynchronizer {
                     it.getUpdateFlags().unflag(UpdateFlag.REGION);
                 }
             } catch (Exception e) {
+                world.queueLogout(it);
                 LOGGER.catching(e);
             }
         });
@@ -140,6 +144,7 @@ public final class WorldSynchronizer {
         world.getPlayers().forEach(it -> updateExecutor.execute(new SynchronizationTask(it) {
             @Override
             public void execute() {
+                it.queue(new SendNpcUpdateMessage());
                 it.queue(new SendPlayerUpdateMessage());
             }
         }));
