@@ -74,7 +74,7 @@ public final class Server {
         context.getService().awaitRunning();
         bind();
 
-        LOGGER.info("Luna is now online on port {}", LunaNetworkConstants.PORT);
+        LOGGER.info("Luna is now online on port {}!", LunaNetworkConstants.PORT);
     }
 
     /**
