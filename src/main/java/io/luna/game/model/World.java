@@ -24,9 +24,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class World {
 
     /**
-     * The total amount of {@link Player}s that can be either logged in or out per game loop.
+     * The total amount of {@link Player}s that can be either logged in per game loop.
      */
-    public static final int DEQUEUE_THRESHOLD = 50;
+    public static final int LOGIN_THRESHOLD = 50;
 
     /**
      * An instance of the {@link LunaContext}.
@@ -104,7 +104,7 @@ public final class World {
      * Dequeues the {@link Queue} of {@link Player}s awaiting login.
      */
     public void dequeueLogins() {
-        for (int amount = 0; amount < DEQUEUE_THRESHOLD; amount++) {
+        for (int amount = 0; amount < LOGIN_THRESHOLD; amount++) {
             Player player = logins.poll();
             if (player == null) {
                 break;
@@ -132,7 +132,7 @@ public final class World {
     public void queueLogout(Player player) {
         GameSession session = player.getSession();
 
-        if (session.getState() == SessionState.LOGGED_IN && !logouts.contains(player) && !session.getChannel().isActive()) {
+        if (session.getState() == SessionState.LOGGED_IN && !logouts.contains(player)) {
             session.setState(SessionState.LOGOUT_QUEUE);
             logouts.add(player);
         }
@@ -142,7 +142,7 @@ public final class World {
      * Dequeues the {@link Queue} of {@link Player}s awaiting logout.
      */
     public void dequeueLogouts() {
-        for (int amount = 0; amount < DEQUEUE_THRESHOLD; amount++) {
+        for (int amount = 0; amount < LOGIN_THRESHOLD; amount++) {
             Player player = logouts.poll();
             if (player == null) {
                 break;
