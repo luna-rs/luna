@@ -5,7 +5,8 @@ import io.luna.game.model.World;
 import io.luna.game.plugin.PluginManager;
 
 /**
- * The context that {@link Luna} is being managed in.
+ * An object assigned to every {@link Server} instance. It represents a single instance of the Runescape in it's entirety,
+ * that being a {@link World}, {@link PluginManager}, and the {@link GameService} that runs the aforementioned things.
  *
  * @author lare96 <http://github.org/lare96>
  */
