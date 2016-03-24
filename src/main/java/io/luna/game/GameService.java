@@ -110,6 +110,8 @@ public final class GameService extends AbstractScheduledService {
             World world = context.getWorld();
 
             // TODO: Properly logout all players out of minigames, transactions, etc.
+            // This must be done by ensuring that the logout queue is emptied before this method finishes.
+            // With that, the user can simply call 'service.stop();' to gracefully exit the application
 
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
             syncTasks.forEach(Runnable::run);
