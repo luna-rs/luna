@@ -9,6 +9,7 @@ import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.util.StringUtils;
+import io.netty.channel.Channel;
 
 import java.util.Optional;
 import java.util.Queue;
@@ -126,6 +127,10 @@ public final class World {
      */
     public void queueLogout(Player player) {
         if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
+
+            Channel channel = player.getSession().getChannel();
+            channel.disconnect(channel.voidPromise());
+
             logouts.add(player);
         }
     }
@@ -139,6 +144,7 @@ public final class World {
             if (player == null) {
                 break;
             }
+            // TODO: Do not remove if still in combat
             players.remove(player);
         }
     }
