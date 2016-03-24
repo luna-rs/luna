@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
-import io.luna.game.model.mobile.PlayerSerializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -109,14 +108,10 @@ public final class GameService extends AbstractScheduledService {
         try {
             World world = context.getWorld();
 
-            // TODO: Properly logout all players out of minigames, transactions, etc.
-            // This must be done by ensuring that the logout queue is emptied before this method finishes.
-            // With that, the user can simply call 'service.stop();' to gracefully exit the application
-
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
             syncTasks.forEach(Runnable::run);
             syncTasks.clear();
-            world.getPlayers().forEach(it -> new PlayerSerializer(it).save());
+            world.getPlayers().clear();
             executorService.shutdown();
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (Exception e) {
