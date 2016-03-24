@@ -8,8 +8,6 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
-import io.luna.net.session.GameSession;
-import io.luna.net.session.SessionState;
 import io.luna.util.StringUtils;
 
 import java.util.Optional;
@@ -92,10 +90,7 @@ public final class World {
      * @param player The {@link Player} to be logged in.
      */
     public void queueLogin(Player player) {
-        GameSession session = player.getSession();
-
-        if (session.getState() == SessionState.LOGGING_IN && !logins.contains(player)) {
-            session.setState(SessionState.LOGIN_QUEUE);
+        if (player.getState() == EntityState.IDLE && !logins.contains(player)) {
             logins.add(player);
         }
     }
@@ -130,10 +125,7 @@ public final class World {
      * @param player The {@link Player} to be logged out.
      */
     public void queueLogout(Player player) {
-        GameSession session = player.getSession();
-
-        if (session.getState() == SessionState.LOGGED_IN && !logouts.contains(player)) {
-            session.setState(SessionState.LOGOUT_QUEUE);
+        if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
             logouts.add(player);
         }
     }
