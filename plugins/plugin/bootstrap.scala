@@ -82,6 +82,9 @@ def using(resource: AutoCloseable)
 // enriched classes
 implicit class PlayerImplicits(player: Player) {
   def address = player.getSession.getHostAddress
+  def x = player.getPosition.getX
+  def y = player.getPosition.getY
+  def z = player.getPosition.getZ
   def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
   def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
