@@ -16,7 +16,7 @@ import io.luna.net.msg.out.SendLogoutMessage;
 import io.luna.net.msg.out.SendTabInterfaceMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
-import io.luna.net.session.SessionState;
+import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,6 +43,11 @@ public final class Player extends MobileEntity {
      * The {@link Set} of local {@code Player}s.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>();
+
+    /**
+     * The {@link Set} of local {@code Npc}s.
+     */
+    private final Set<Npc> localNpcs = new LinkedHashSet<>();
 
     /**
      * The credentials of this {@code Player}.
@@ -134,54 +139,45 @@ public final class Player extends MobileEntity {
 
     @Override
     public void onActive() {
-        if (session.getState() == SessionState.LOGIN_QUEUE) {
-            updateFlags.flag(UpdateFlag.REGION);
-            updateFlags.flag(UpdateFlag.APPEARANCE);
+        updateFlags.flag(UpdateFlag.REGION);
+        updateFlags.flag(UpdateFlag.APPEARANCE);
 
-            queue(new SendAssignmentMessage(true));
+        queue(new SendAssignmentMessage(true));
 
-            queue(new SendTabInterfaceMessage(0, 2423));
-            queue(new SendTabInterfaceMessage(1, 3917));
-            queue(new SendTabInterfaceMessage(2, 638));
-            queue(new SendTabInterfaceMessage(3, 3213));
-            queue(new SendTabInterfaceMessage(4, 1644));
-            queue(new SendTabInterfaceMessage(5, 5608));
-            queue(new SendTabInterfaceMessage(6, 1151));
-            queue(new SendTabInterfaceMessage(8, 5065));
-            queue(new SendTabInterfaceMessage(9, 5715));
-            queue(new SendTabInterfaceMessage(10, 2449));
-            queue(new SendTabInterfaceMessage(11, 904));
-            queue(new SendTabInterfaceMessage(12, 147));
-            queue(new SendTabInterfaceMessage(13, 962));
-
-            plugins.post(new LoginEvent(), this);
-
-            session.setState(SessionState.LOGGED_IN);
-            LOGGER.info("{} has logged in.", this);
-        } else {
-            throw new IllegalStateException("invalid session state");
+        int[] interfaces = { 2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962 };
+        for (int index = 0; index < interfaces.length; index++) {
+            queue(new SendTabInterfaceMessage(index, interfaces[index]));
         }
+
+        plugins.post(new LoginEvent(), this);
+
+        LOGGER.info("{} has logged in.", this);
     }
 
     @Override
     public void onInactive() {
-        if (session.getState() == SessionState.LOGOUT_QUEUE) {
-            plugins.post(new LogoutEvent());
+        plugins.post(new LogoutEvent());
 
-            session.setState(SessionState.LOGGED_OUT);
-            LOGGER.info("{} has logged out.", this);
+        LOGGER.info("{} has logged out.", this);
 
-            PlayerSerializer serializer = new PlayerSerializer(this);
-            serializer.asyncSave(service);
-        } else {
-            queue(new SendLogoutMessage());
-        }
+        PlayerSerializer serializer = new PlayerSerializer(this);
+        serializer.asyncSave(service);
     }
 
     @Override
-    public void resetEntity() {
+    public void reset() {
         chat = null;
         regionChanged = false;
+    }
+
+    /**
+     * Gracefully logs this {@code Player} instance out of the server.
+     */
+    public void logout() {
+        Channel channel = session.getChannel();
+        if (channel.isActive()) {
+            queue(new SendLogoutMessage());
+        }
     }
 
     /**
@@ -262,10 +258,17 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * @return The {@link Set} of local {@code Players}.
+     * @return The {@link Set} of local {@code Player}s.
      */
     public Set<Player> getLocalPlayers() {
         return localPlayers;
+    }
+
+    /**
+     * @return The {@link Set} of local {@code Npc}s.
+     */
+    public Set<Npc> getLocalNpcs() {
+        return localNpcs;
     }
 
     /**
