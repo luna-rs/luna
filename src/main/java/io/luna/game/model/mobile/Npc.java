@@ -24,7 +24,7 @@ public final class Npc extends MobileEntity {
     /**
      * The definition instance for this {@code Npc}.
      */
-    private final NpcDefinition definition;
+    private NpcDefinition definition;
 
     /**
      * The identifier for the transformation {@code Npc}.
@@ -78,7 +78,7 @@ public final class Npc extends MobileEntity {
     }
 
     @Override
-    public void resetEntity() {
+    public void reset() {
         transformId = -1;
     }
 
@@ -89,6 +89,7 @@ public final class Npc extends MobileEntity {
      */
     public void transform(int id) {
         transformId = id;
+        definition = NpcDefinition.DEFINITIONS[id];
         updateFlags.flag(UpdateFlag.TRANSFORM);
     }
 
