@@ -8,6 +8,6 @@ import io.luna.game.model.Position
   val y = args(1).toInt
   val z = if (args.length == 3) args(2).toInt else plr.z
 
-  plr.teleport(new Position(x, y, z));
+  plr.teleport(new Position(x, y, z))
 }
 
