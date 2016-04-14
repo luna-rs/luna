@@ -6,7 +6,7 @@ import io.luna.game.model.mobile.{MobileEntity, Npc, Player, PlayerRights}
 import io.luna.game.model.{Position, World}
 import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
-import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendLogoutMessage, SendWidgetTextMessage}
+import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendWidgetTextMessage}
 
 import scala.reflect.ClassTag
 import scala.util.Random
@@ -88,7 +88,6 @@ implicit class PlayerImplicits(player: Player) {
   def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
   def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
-  def sendLogout = player.queue(new SendLogoutMessage)
 }
 
 implicit class MobileEntityImplicits(mob: MobileEntity) {
