@@ -30,6 +30,11 @@ public abstract class MobileEntity extends Entity {
     protected final UpdateFlagHolder updateFlags = new UpdateFlagHolder();
 
     /**
+     * The {@link SkillSet} for this {@code MobileEntity}.
+     */
+    protected final SkillSet skills = new SkillSet(this);
+
+    /**
      * The {@link WalkingQueue} assigned to this {@code MobileEntity}.
      */
     private final WalkingQueue walkingQueue = new WalkingQueue(this);
@@ -101,7 +106,7 @@ public abstract class MobileEntity extends Entity {
     /**
      * Clears flags specific to certain types of {@code MobileEntity}s.
      */
-    public abstract void resetEntity();
+    public abstract void reset();
 
     /**
      * Teleports this {@code MobileEntity} to {@code position}.
@@ -117,11 +122,11 @@ public abstract class MobileEntity extends Entity {
     /**
      * Perform {@code animation} on this cycle.
      *
-     * @param animation The {@link Animation} to perform this cycle.
+     * @param newAnimation The {@link Animation} to perform this cycle.
      */
-    public final void animation(Animation animation) {
-        if (this.animation == null || this.animation.getPriority().getValue() <= animation.getPriority().getValue()) {
-            this.animation = requireNonNull(animation);
+    public final void animation(Animation newAnimation) {
+        if (animation == null || animation.getPriority().getValue() <= newAnimation.getPriority().getValue()) {
+            animation = requireNonNull(newAnimation);
             updateFlags.flag(UpdateFlag.ANIMATION);
         }
     }
@@ -208,7 +213,7 @@ public abstract class MobileEntity extends Entity {
      * Clears all of the various flags for this cycle.
      */
     public final void clearFlags() {
-        resetEntity();
+        reset();
         teleporting = false;
         animation = null;
         forceChat = null;
@@ -217,6 +222,13 @@ public abstract class MobileEntity extends Entity {
         primaryHit = null;
         secondaryHit = null;
         updateFlags.clear();
+    }
+
+    /**
+     * Retrieves a skill from the backing {@link SkillSet}.
+     */
+    public Skill skill(int id) {
+        return skills.getSkill(id);
     }
 
     /**
@@ -322,5 +334,19 @@ public abstract class MobileEntity extends Entity {
      */
     public WalkingQueue getWalkingQueue() {
         return walkingQueue;
+    }
+
+    /**
+     * @return The {@link SkillSet} for this {@code MobileEntity}.
+     */
+    public SkillSet getSkills() {
+        return skills;
+    }
+
+    /**
+     * @return The combat level of this {@code MobileEntity}.
+     */
+    public int getCombatLevel() {
+        return skills.getCombatLevel();
     }
 }
