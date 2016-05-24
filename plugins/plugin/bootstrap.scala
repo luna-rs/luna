@@ -1,12 +1,13 @@
 import java.util.concurrent.ThreadLocalRandom
 
 import io.luna.game.event.{Event, EventListener}
+import io.luna.game.model.mobile._
 import io.luna.game.model.mobile.attr.AttributeValue
-import io.luna.game.model.mobile.{MobileEntity, Npc, Player, PlayerRights}
-import io.luna.game.model.{Position, World}
+import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
+import io.luna.game.model.{EntityType, Position, World}
 import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
-import io.luna.net.msg.out.{SendForceTabMessage, SendGameInfoMessage, SendWidgetTextMessage}
+import io.luna.net.msg.out._
 
 import scala.reflect.ClassTag
 import scala.util.Random
@@ -33,6 +34,11 @@ import scala.util.Random
 @inline val rightsMod = PlayerRights.MODERATOR
 @inline val rightsAdmin = PlayerRights.ADMINISTRATOR
 @inline val rightsDev = PlayerRights.DEVELOPER
+
+@inline val playerInstance = EntityType.PLAYER
+@inline val npcInstance = EntityType.NPC
+@inline val objectInstance = EntityType.OBJECT
+@inline val itemInstance = EntityType.ITEM
 
 
 // logging, prefer lazy 'msg' evaluation
@@ -88,6 +94,8 @@ implicit class PlayerImplicits(player: Player) {
   def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
   def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
+  def sendChatboxInterface(id: Int) = player.queue(new SendChatboxInterfaceMessage(id))
+  def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 
 implicit class MobileEntityImplicits(mob: MobileEntity) {
