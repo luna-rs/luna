@@ -70,7 +70,8 @@ public final class WorldSynchronizer {
          */
         private void remove() {
             if (entity.type() == EntityType.PLAYER) {
-                world.queueLogout((Player) entity);
+                Player player = (Player) entity;
+                player.logout();
             } else if (entity.type() == EntityType.NPC) {
                 world.getNpcs().remove(entity.getIndex());
             } else {
@@ -129,7 +130,7 @@ public final class WorldSynchronizer {
                     it.getUpdateFlags().unflag(UpdateFlag.REGION);
                 }
             } catch (Exception e) {
-                world.queueLogout(it);
+                it.logout();
                 LOGGER.catching(e);
             }
         });
