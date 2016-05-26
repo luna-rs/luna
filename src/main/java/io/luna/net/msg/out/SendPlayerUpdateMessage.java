@@ -112,41 +112,41 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
     /**
      * Adds {@code addPlayer} in the view of {@code player}.
      *
-     * @param out The main update message.
+     * @param msg The main update message.
      * @param player The {@link Player} this update message is being sent for.
      * @param addPlayer The {@code Player} being added.
      */
-    private void addPlayer(ByteMessage out, Player player, Player addPlayer) {
-        out.putBits(11, addPlayer.getIndex());
-        out.putBit(true); // TODO: make use of client appearance caching
-        out.putBit(true);
+    private void addPlayer(ByteMessage msg, Player player, Player addPlayer) {
+        msg.putBits(11, addPlayer.getIndex());
+        msg.putBit(true); // TODO: make use of client appearance caching
+        msg.putBit(true);
 
         int deltaX = addPlayer.getPosition().getX() - player.getPosition().getX();
         int deltaY = addPlayer.getPosition().getY() - player.getPosition().getY();
-        out.putBits(5, deltaY);
-        out.putBits(5, deltaX);
+        msg.putBits(5, deltaY);
+        msg.putBits(5, deltaX);
     }
 
     /**
      * Handles running, walking, and teleportation movement for {@code player}.
      *
      * @param player The {@link Player} to handle running and walking for.
-     * @param out The main update message.
+     * @param msg The main update message.
      */
-    private void handleMovement(Player player, ByteMessage out) {
+    private void handleMovement(Player player, ByteMessage msg) {
         boolean needsUpdate = !player.getUpdateFlags().isEmpty();
 
         if (player.isTeleporting()) {
             Position position = player.getPosition();
 
-            out.putBit(true);
-            out.putBits(2, 3);
-            out.putBits(2, position.getZ());
-            out.putBit(!player.isRegionChanged());
-            out.putBit(needsUpdate);
+            msg.putBit(true);
+            msg.putBits(2, 3);
+            msg.putBits(2, position.getZ());
+            msg.putBit(!player.isRegionChanged());
+            msg.putBit(needsUpdate);
 
-            out.putBits(7, position.getLocalY(player.getLastRegion()));
-            out.putBits(7, position.getLocalX(player.getLastRegion()));
+            msg.putBits(7, position.getLocalY(player.getLastRegion()));
+            msg.putBits(7, position.getLocalX(player.getLastRegion()));
             return;
         }
 
@@ -154,23 +154,23 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
         Direction runningDirection = player.getRunningDirection();
 
         if (walkingDirection != Direction.NONE) {
-            out.putBit(true);
+            msg.putBit(true);
             if (runningDirection != Direction.NONE) {
-                out.putBits(2, 2);
-                out.putBits(3, walkingDirection.getId());
-                out.putBits(3, runningDirection.getId());
-                out.putBit(needsUpdate);
+                msg.putBits(2, 2);
+                msg.putBits(3, walkingDirection.getId());
+                msg.putBits(3, runningDirection.getId());
+                msg.putBit(needsUpdate);
             } else {
-                out.putBits(2, 1);
-                out.putBits(3, walkingDirection.getId());
-                out.putBit(needsUpdate);
+                msg.putBits(2, 1);
+                msg.putBits(3, walkingDirection.getId());
+                msg.putBit(needsUpdate);
             }
         } else {
             if (needsUpdate) {
-                out.putBit(true);
-                out.putBits(2, 0);
+                msg.putBit(true);
+                msg.putBits(2, 0);
             } else {
-                out.putBit(false);
+                msg.putBit(false);
             }
         }
     }
