@@ -1,9 +1,11 @@
 package io.luna.game.model.mobile;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 
@@ -27,9 +29,19 @@ public final class Npc extends MobileEntity {
     private NpcDefinition definition;
 
     /**
+     * The combat definition instance for this {@code Npc}.
+     */
+    private NpcCombatDefinition combatDefinition;
+
+    /**
      * The identifier for the transformation {@code Npc}.
      */
     private int transformId = -1;
+
+    /**
+     * The current health value of this {@code Npc}.
+     */
+    private int currentHp;
 
     /**
      * Creates a new {@link Npc}.
@@ -41,7 +53,24 @@ public final class Npc extends MobileEntity {
     public Npc(LunaContext context, int id, Position position) {
         super(context);
         this.id = id;
+
         definition = NpcDefinition.DEFINITIONS[id];
+        combatDefinition = NpcCombatDefinition.getDefinition(id);
+        currentHp = combatDefinition.getHitpoints();
+
+        ImmutableList<Integer> skills = combatDefinition.getSkills();
+        Skill attack = skill(Skill.ATTACK);
+        Skill strength = skill(Skill.STRENGTH);
+        Skill defence = skill(Skill.DEFENCE);
+        Skill ranged = skill(Skill.RANGED);
+        Skill magic = skill(Skill.MAGIC);
+
+        attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
+        strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
+        defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
+        ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
+        magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+
         setPosition(position);
     }
 
@@ -101,6 +130,13 @@ public final class Npc extends MobileEntity {
     }
 
     /**
+     * @return The definition instance for this {@code Npc}.
+     */
+    public NpcCombatDefinition getCombatDefinition() {
+        return combatDefinition;
+    }
+
+    /**
      * @return The identifier for this {@link Npc}.
      */
     public int getId() {
@@ -112,5 +148,19 @@ public final class Npc extends MobileEntity {
      */
     public int getTransformId() {
         return transformId;
+    }
+
+    /**
+     * @return The current health value of this {@code Npc}.
+     */
+    public int getCurrentHp() {
+        return currentHp;
+    }
+
+    /**
+     * Sets the current health value of this {@code Npc}.
+     */
+    public void setCurrentHp(int currentHp) {
+        this.currentHp = currentHp;
     }
 }
