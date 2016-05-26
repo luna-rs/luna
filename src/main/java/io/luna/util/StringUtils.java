@@ -23,6 +23,18 @@ public final class StringUtils {
     public static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
     /**
+     * Computes the indefinite article of {@code thing}.
+     *
+     * @param thing The thing to compute for.
+     * @return The indefinite article.
+     */
+    public static String computeIndefiniteArticle(String thing) {
+        char first = thing.toLowerCase().charAt(0);
+        boolean vowel = "aeiouAEIOU".indexOf(first) != -1;
+        return vowel ? "an" : "a";
+    }
+
+    /**
      * Encodes {@code s} to a base-37 {@code long}.
      *
      * @param s The {@link String} to encode.
