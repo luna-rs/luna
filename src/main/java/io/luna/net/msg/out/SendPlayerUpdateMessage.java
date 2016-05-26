@@ -21,7 +21,6 @@ import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.OutboundGameMessage;
-import io.luna.net.session.SessionState;
 
 import java.util.Iterator;
 
@@ -67,9 +66,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
             while ($it.hasNext()) {
                 Player other = $it.next();
 
-                if (other.getPosition().isViewable(player.getPosition()) && other.getState() == EntityState.ACTIVE && !other
-                    .isRegionChanged()) {
-
+                if (other.isViewable(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
                     handleMovement(other, msg);
                     blockSet.encodeUpdateBlocks(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
@@ -86,7 +83,7 @@ public final class SendPlayerUpdateMessage extends OutboundGameMessage {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
-                if (player.equals(other) || other.getSession().getState() != SessionState.LOGGED_IN) {
+                if (player.equals(other) || other.getState() != EntityState.ACTIVE) {
                     continue;
                 }
                 if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {

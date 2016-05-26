@@ -100,7 +100,6 @@ public final class LoginSession extends Session {
 
                 GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(),
                     messageRepository);
-                session.setState(SessionState.LOGGING_IN);
 
                 channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
                 player.setSession(session);

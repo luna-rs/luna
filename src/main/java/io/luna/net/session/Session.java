@@ -25,11 +25,6 @@ public class Session {
     private final String hostAddress;
 
     /**
-     * The current state of this {@code Session}.
-     */
-    private SessionState state = SessionState.CONNECTED;
-
-    /**
      * Creates a new {@link Session}.
      *
      * @param channel The {@link Channel} to send and receive messages through.
@@ -77,19 +72,5 @@ public class Session {
      */
     public final String getHostAddress() {
         return hostAddress;
-    }
-
-    /**
-     * @return The current state of this {@code Session}.
-     */
-    public final SessionState getState() {
-        return state;
-    }
-
-    /**
-     * Sets the value for {@link Session#state}.
-     */
-    public final void setState(SessionState state) {
-        this.state = state;
     }
 }

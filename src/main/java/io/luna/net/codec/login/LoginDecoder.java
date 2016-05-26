@@ -6,7 +6,6 @@ import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.MessageRepository;
 import io.luna.net.session.LoginSession;
 import io.luna.net.session.Session;
-import io.luna.net.session.SessionState;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -72,7 +71,6 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             Attribute<Session> attribute = ctx.channel().attr(SESSION_KEY);
 
             attribute.set(new LoginSession(context, ctx.channel(), messageRepository));
-            attribute.get().setState(SessionState.LOGGING_IN);
 
             decodeHandshake(ctx, in, out);
 
