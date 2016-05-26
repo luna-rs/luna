@@ -31,7 +31,7 @@ val LEVEL_UP_TABLE = Array(
 )
 
 >>@[SkillChangeEvent](playerInstance) { (msg, plr) =>
-  player.queue(new SendSkillUpdateMessage(msg.getId, msg.getSkill))
+  plr.queue(new SendSkillUpdateMessage(msg.getId))
 
   if (msg.getOldStaticLevel < 99) {
     checkForLevel(msg.getId, msg.getOldStaticLevel, plr)
@@ -46,19 +46,18 @@ private def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
   if (oldLevel < newLevel) {
     skill.setLevel(if (id != Skill.HITPOINTS) newLevel else skill.getLevel + 1)
 
-    val data = LEVEL_UP_TABLE(msg.getId)
-    val name = Skill.getName(msg.getId)
+    val data = LEVEL_UP_TABLE(id)
+    val name = Skill.getName(id)
     val message = s"Congratulations, you just advanced ${StringUtils.computeIndefiniteArticle(name)} $name level!"
 
     plr.sendMessage(message)
-    plr.sendString(message, data(0))
-    plr.sendString(s"Your $name level is now $newLevel.", data(1))
+    plr.sendWidgetText(message, data(0))
+    plr.sendWidgetText(s"Your $name level is now $newLevel.", data(1))
     plr.sendChatboxInterface(data(2))
 
     plr.graphic(new Graphic(LEVEL_UP_GRAPHIC))
 
     if (Skill.isCombatSkill(id)) {
-      set.calculateCombatLevel
       plr.flag(UpdateFlag.APPEARANCE)
     }
   }
