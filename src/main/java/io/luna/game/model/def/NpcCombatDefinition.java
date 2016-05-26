@@ -98,6 +98,17 @@ public final class NpcCombatDefinition {
         -1, new int[5], new int[10]);
 
     /**
+     * Retrieves a cached {@link NpcCombatDefinition} by its {@code id}.
+     *
+     * @param id The identifier to retrieve the {@code NpcCombatDefinition}.
+     * @return The {@code NpcCombatDefinition} instance.
+     */
+    public static NpcCombatDefinition getDefinition(int id) {
+        NpcCombatDefinition def = DEFINITIONS[id];
+        return def == null ? DEFAULT : def;
+    }
+
+    /**
      * The id of the {@code Npc} this definition is for.
      */
     private final int id;
