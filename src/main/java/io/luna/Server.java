@@ -10,6 +10,7 @@ import io.luna.net.msg.MessageRepository;
 import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
+import io.luna.util.parser.impl.NpcCombatDefinitionParser;
 import io.luna.util.parser.impl.NpcDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -119,6 +120,7 @@ public final class Server {
         service.execute(new PluginBootstrap(context));
         service.execute(new ItemDefinitionParser());
         service.execute(new NpcDefinitionParser());
+        service.execute(new NpcCombatDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
     }
 }
