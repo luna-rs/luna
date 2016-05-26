@@ -111,14 +111,13 @@ public final class UpdateBlockSet<E extends MobileEntity> {
         Set<UpdateBlock<E>> writeBlocks = new LinkedHashSet<>();
 
         for (UpdateBlock<E> updateBlock : updateBlocks) {
-            if (forMob.type() == EntityType.PLAYER) {
-                if (state == UpdateState.ADD_LOCAL && updateBlock.getFlag() == UpdateFlag.APPEARANCE) {
-                    mask |= updateBlock.getMask();
-                    writeBlocks.add(updateBlock);
-                    continue;
-                } else if (state == UpdateState.UPDATE_SELF && updateBlock.getFlag() == UpdateFlag.CHAT) {
-                    continue;
-                }
+            if (state == UpdateState.ADD_LOCAL && updateBlock.getFlag() == UpdateFlag.APPEARANCE) {
+                mask |= updateBlock.getMask();
+                writeBlocks.add(updateBlock);
+                continue;
+            }
+            if (state == UpdateState.UPDATE_SELF && updateBlock.getFlag() == UpdateFlag.CHAT) {
+                continue;
             }
             if (!forMob.getUpdateFlags().get(updateBlock.getFlag())) {
                 continue;
