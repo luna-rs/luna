@@ -6,28 +6,28 @@ import io.luna.util.StringUtils
 
 val LEVEL_UP_GRAPHIC = 199
 
-val LEVEL_UP_TABLE = Array(
-  Array(6248, 6249, 6247),
-  Array(6254, 6255, 6253),
-  Array(6207, 6208, 6206),
-  Array(6217, 6218, 6216),
-  Array(5453, 6114, 4443),
-  Array(6243, 6244, 6242),
-  Array(6212, 6213, 6211),
-  Array(6227, 6228, 6226),
-  Array(4273, 4274, 4272),
-  Array(6232, 6233, 6231),
-  Array(6259, 6260, 6258),
-  Array(4283, 4284, 4282),
-  Array(6264, 6265, 6263),
-  Array(6222, 6223, 6221),
-  Array(4417, 4438, 4416),
-  Array(6238, 6239, 6237),
-  Array(4278, 4279, 4277),
-  Array(4263, 4264, 4261),
-  Array(12123, 12124, 12122),
-  Array(4889, 4890, 4887),
-  Array(4268, 4269, 4267)
+val LEVEL_UP_TABLE = Vector(
+  Vector(6248, 6249, 6247),
+  Vector(6254, 6255, 6253),
+  Vector(6207, 6208, 6206),
+  Vector(6217, 6218, 6216),
+  Vector(5453, 6114, 4443),
+  Vector(6243, 6244, 6242),
+  Vector(6212, 6213, 6211),
+  Vector(6227, 6228, 6226),
+  Vector(4273, 4274, 4272),
+  Vector(6232, 6233, 6231),
+  Vector(6259, 6260, 6258),
+  Vector(4283, 4284, 4282),
+  Vector(6264, 6265, 6263),
+  Vector(6222, 6223, 6221),
+  Vector(4417, 4438, 4416),
+  Vector(6238, 6239, 6237),
+  Vector(4278, 4279, 4277),
+  Vector(4263, 4264, 4261),
+  Vector(12123, 12124, 12122),
+  Vector(4889, 4890, 4887),
+  Vector(4268, 4269, 4267)
 )
 
 >>@[SkillChangeEvent](playerInstance) { (msg, plr) =>
@@ -58,6 +58,7 @@ private def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
     plr.graphic(new Graphic(LEVEL_UP_GRAPHIC))
 
     if (Skill.isCombatSkill(id)) {
+      set.resetCombatLevel
       plr.flag(UpdateFlag.APPEARANCE)
     }
   }
