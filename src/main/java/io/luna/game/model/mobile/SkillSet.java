@@ -1,10 +1,17 @@
 package io.luna.game.model.mobile;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 import com.google.common.primitives.Ints;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -13,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SkillSet {
+public final class SkillSet implements Iterable<Skill> {
 
     /**
      * An {@link ImmutableList} containing the experience needed for each level.
@@ -47,6 +54,13 @@ public final class SkillSet {
     }
 
     /**
+     * Returns the size of all {@code SkillSet}s.
+     */
+    public static int size() {
+        return SKILL_IDENTIFIERS.upperEndpoint();
+    }
+
+    /**
      * Retrieves the level for {@code experience}. Runs in O(n) time, but should still return blazingly fast assuming the
      * {@code experience} value is high.
      *
@@ -57,7 +71,11 @@ public final class SkillSet {
         checkArgument(experience >= 0 && experience <= MAXIMUM_EXPERIENCE,
             "experience < 0 || experience > MAXIMUM_EXPERIENCE");
 
-        for (int index = 99; index > 1; index--) {
+        if (experience == 0) {
+            return 1;
+        }
+
+        for (int index = 99; index > 0; index--) {
             if (EXPERIENCE_TABLE.get(index) > experience) {
                 continue;
             }
@@ -94,7 +112,7 @@ public final class SkillSet {
     /**
      * The cached combat level of the {@code mob} in this skill set.
      */
-    private int combatLevel;
+    private int combatLevel = -1;
 
     /**
      * Creates a new {@link SkillSet}.
@@ -103,6 +121,17 @@ public final class SkillSet {
      */
     public SkillSet(MobileEntity mob) {
         this.mob = mob;
+    }
+
+    @Override
+    public Iterator<Skill> iterator() {
+        Iterator<Skill> mutableIterator = Arrays.asList(skills).iterator();
+        return Iterators.unmodifiableIterator(mutableIterator);
+    }
+
+    @Override
+    public Spliterator<Skill> spliterator() {
+        return Spliterators.spliterator(skills, Spliterator.NONNULL);
     }
 
     /**
@@ -157,5 +186,12 @@ public final class SkillSet {
             combatLevel = (int) combatLvl;
         }
         return combatLevel;
+    }
+
+    /**
+     * @return The {@link Stream} that will traverse over this iterable.
+     */
+    public Stream<Skill> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 }
