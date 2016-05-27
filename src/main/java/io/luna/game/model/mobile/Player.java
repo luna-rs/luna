@@ -50,6 +50,11 @@ public final class Player extends MobileEntity {
     private final Set<Npc> localNpcs = new LinkedHashSet<>();
 
     /**
+     * The {@link PlayerAppearance} container assigned to this player.
+     */
+    private final PlayerAppearance appearance = new PlayerAppearance();
+
+    /**
      * The credentials of this {@code Player}.
      */
     private final PlayerCredentials credentials;
@@ -93,6 +98,11 @@ public final class Player extends MobileEntity {
      * The {@link ForceMovement} that dictates where this {@code Player} will be forced to move.
      */
     private ForceMovement forceMovement;
+
+    /**
+     * The identifier of the {@link Npc} to transform into.
+     */
+    private int transformId;
 
     /**
      * Creates a new {@link Player}.
@@ -198,6 +208,17 @@ public final class Player extends MobileEntity {
     public void forceMovement(ForceMovement forceMovement) {
         this.forceMovement = requireNonNull(forceMovement);
         updateFlags.flag(UpdateFlag.FORCE_MOVEMENT);
+    }
+
+    /**
+     * Transforms this {@code Player} into the {@link Npc} represented by {@code npcId}. An identifier of {@code -1} disables
+     * the transformation.
+     *
+     * @param npcId The {@code Npc} to transform this {@code Player} into.
+     */
+    public void transform(int npcId) {
+        transformId = npcId;
+        updateFlags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
@@ -351,5 +372,19 @@ public final class Player extends MobileEntity {
      */
     public ForceMovement getForceMovement() {
         return forceMovement;
+    }
+
+    /**
+     * @return The {@link PlayerAppearance} container assigned to this player.
+     */
+    public PlayerAppearance getAppearance() {
+        return appearance;
+    }
+
+    /**
+     * @return The identifier of the {@link Npc} to transform into.
+     */
+    public int getTransformId() {
+        return transformId;
     }
 }

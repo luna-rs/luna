@@ -82,6 +82,7 @@ public final class PlayerSerializer {
         data.put("position", player.getPosition());
         data.put("rights", player.getRights().name());
         data.put("running", player.getWalkingQueue().isRunning());
+        data.put("appearance", player.getAppearance().toArray());
 
         Map<String, Object> attributes = new HashMap<>();
         for (Entry<String, AttributeValue<?>> it : player.attributes) {
@@ -145,6 +146,9 @@ public final class PlayerSerializer {
 
             boolean running = reader.get("running").getAsBoolean();
             player.getWalkingQueue().setRunning(running);
+
+            int[] appearance = GsonUtils.getAsType(reader.get("appearance"), int[].class);
+            player.getAppearance().setValues(appearance);
 
             JsonObject attr = reader.get("attributes").getAsJsonObject();
             for (Entry<String, JsonElement> it : attr.entrySet()) {
