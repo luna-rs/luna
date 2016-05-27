@@ -58,8 +58,15 @@ def rand = ThreadLocalRandom.current
 // message handling
 def >>@[T <: Event](args: Any*)
                    (func: (T, Player) => Unit)
-                   (implicit tag: ClassTag[T]) =
-  plugins.submit(tag.runtimeClass, new EventListener((msg: T, plr) => if (msg.matches(args)) {func(msg, plr)}))
+                   (implicit tag: ClassTag[T]) = {
+
+  def submit(newArgs: Seq[AnyRef]) =
+    plugins.submit(tag.runtimeClass, new EventListener((msg: T, plr) => if (msg.matches(newArgs: _*)) {func(msg, plr)}))
+
+  submit(args.collect {
+    case any: Any => any.asInstanceOf[AnyRef]
+  })
+}
 
 def >>[T <: Event](func: (T, Player) => Unit)
                   (implicit tag: ClassTag[T]) =
