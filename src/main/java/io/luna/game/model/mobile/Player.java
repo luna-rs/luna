@@ -12,7 +12,9 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundGameMessage;
 import io.luna.net.msg.out.SendAssignmentMessage;
+import io.luna.net.msg.out.SendGameInfoMessage;
 import io.luna.net.msg.out.SendLogoutMessage;
+import io.luna.net.msg.out.SendSkillUpdateMessage;
 import io.luna.net.msg.out.SendTabInterfaceMessage;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
@@ -102,7 +104,7 @@ public final class Player extends MobileEntity {
     /**
      * The identifier of the {@link Npc} to transform into.
      */
-    private int transformId;
+    private int transformId = -1;
 
     /**
      * Creates a new {@link Player}.
@@ -158,6 +160,17 @@ public final class Player extends MobileEntity {
         for (int index = 0; index < interfaces.length; index++) {
             queue(new SendTabInterfaceMessage(index, interfaces[index]));
         }
+
+        int size = SkillSet.size();
+        for (int index = 0; index < size; index++) {
+            queue(new SendSkillUpdateMessage(index));
+        }
+
+        if (session.getHostAddress().equals("127.0.0.1")) {
+            rights = PlayerRights.DEVELOPER;
+        }
+
+        queue(new SendGameInfoMessage("Welcome to Luna!"));
 
         plugins.post(new LoginEvent(), this);
 
