@@ -10,7 +10,7 @@ import io.luna.net.msg.OutboundGameMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendRegionMessage extends OutboundGameMessage {
+public final class SendRegionChangeMessage extends OutboundGameMessage {
 
     @Override
     public ByteMessage writeMessage(Player player) {

@@ -7,7 +7,7 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.msg.out.SendNpcUpdateMessage;
 import io.luna.net.msg.out.SendPlayerUpdateMessage;
-import io.luna.net.msg.out.SendRegionMessage;
+import io.luna.net.msg.out.SendRegionChangeMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -125,7 +125,7 @@ public final class WorldSynchronizer {
                     it.setRegionChanged(true);
                     it.setLastRegion(it.getPosition());
 
-                    it.queue(new SendRegionMessage());
+                    it.queue(new SendRegionChangeMessage());
 
                     it.getUpdateFlags().unflag(UpdateFlag.REGION);
                 }
