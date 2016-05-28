@@ -43,6 +43,10 @@ public final class UpdateBlockSet<E extends MobileEntity> {
      * @param state The {@link UpdateState} that the underlying {@link Player} is in.
      */
     public void encodeUpdateBlocks(E forMob, ByteMessage msg, UpdateState state) {
+        if (forMob.getUpdateFlags().isEmpty() && state != UpdateState.ADD_LOCAL) {
+            return;
+        }
+
         if (forMob.type() == EntityType.PLAYER) {
             encodePlayerBlocks(forMob, msg, state);
         } else if (forMob.type() == EntityType.NPC) {
@@ -63,9 +67,6 @@ public final class UpdateBlockSet<E extends MobileEntity> {
         Player player = (Player) forMob;
         boolean cacheBlocks = (state != UpdateState.ADD_LOCAL && state != UpdateState.UPDATE_SELF);
 
-        if (player.getUpdateFlags().isEmpty() && state != UpdateState.ADD_LOCAL) {
-            return;
-        }
         if (player.getCachedBlock() != null && cacheBlocks) {
             msg.putBytes(player.getCachedBlock());
             return;
@@ -88,9 +89,6 @@ public final class UpdateBlockSet<E extends MobileEntity> {
      * @param state The {@link UpdateState} that the underlying {@code Npc} is in.
      */
     private void encodeNpcBlocks(E forMob, ByteMessage msg, UpdateState state) {
-        if (forMob.getUpdateFlags().isEmpty()) {
-            return;
-        }
         ByteMessage encodedBlocks = encodeBlocks(forMob, state);
         msg.putBytes(encodedBlocks);
 
