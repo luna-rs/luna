@@ -25,8 +25,7 @@ public final class UpdateFlagHolder {
         PRIMARY_HIT,
         SECONDARY_HIT,
         TRANSFORM,
-        FORCE_MOVEMENT,
-        REGION
+        FORCE_MOVEMENT
     }
 
     /**

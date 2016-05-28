@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.msg.out.SendNpcUpdateMessage;
 import io.luna.net.msg.out.SendPlayerUpdateMessage;
 import io.luna.net.msg.out.SendRegionChangeMessage;
@@ -121,13 +120,11 @@ public final class WorldSynchronizer {
                 it.getWalkingQueue().process();
                 it.getSession().dequeue();
 
-                if (it.getUpdateFlags().get(UpdateFlag.REGION)) {
+                if (it.getLastRegion() == null || it.needsRegionUpdate()) {
                     it.setRegionChanged(true);
                     it.setLastRegion(it.getPosition());
 
                     it.queue(new SendRegionChangeMessage());
-
-                    it.getUpdateFlags().unflag(UpdateFlag.REGION);
                 }
             } catch (Exception e) {
                 it.logout();
@@ -162,6 +159,7 @@ public final class WorldSynchronizer {
             public void execute() {
                 it.clearFlags();
                 it.setCachedBlock(null);
+                it.setRegionChanged(false);
             }
         }));
         synchronizer.arriveAndAwaitAdvance();

@@ -14,6 +14,7 @@ import io.luna.net.msg.OutboundGameMessage;
 import io.luna.net.msg.out.SendAssignmentMessage;
 import io.luna.net.msg.out.SendGameInfoMessage;
 import io.luna.net.msg.out.SendLogoutMessage;
+import io.luna.net.msg.out.SendRegionChangeMessage;
 import io.luna.net.msg.out.SendSkillUpdateMessage;
 import io.luna.net.msg.out.SendTabInterfaceMessage;
 import io.luna.net.session.GameSession;
@@ -151,7 +152,6 @@ public final class Player extends MobileEntity {
 
     @Override
     public void onActive() {
-        updateFlags.flag(UpdateFlag.REGION);
         updateFlags.flag(UpdateFlag.APPEARANCE);
 
         queue(new SendAssignmentMessage(true));
@@ -239,6 +239,17 @@ public final class Player extends MobileEntity {
      */
     public void queue(OutboundGameMessage msg) {
         session.queue(msg);
+    }
+
+    /**
+     * @return {@code true} if the position and last known region of the {@code Player} means a {@link
+     * SendRegionChangeMessage} message needs to be queued, {@code false} otherwise.
+     */
+    public boolean needsRegionUpdate() {
+        int deltaX = position.getLocalX(lastRegion);
+        int deltaY = position.getLocalY(lastRegion);
+
+        return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88;
     }
 
     /**

@@ -40,12 +40,12 @@ public abstract class Entity {
     /**
      * The state of this {@code Entity}.
      */
-    private EntityState state = EntityState.IDLE;
+    protected EntityState state = EntityState.IDLE;
 
     /**
      * The position of this {@code Entity}.
      */
-    private Position position;
+    protected Position position;
 
     /**
      * Creates a new {@link Entity}.
