@@ -1,9 +1,7 @@
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
 
-// TODO: Give starter items once item container system is done
-
-val STARTER_ITEMS = List(
+val STARTER_ITEMS = Vector(
   new Item(995, 10000),
   new Item(1323),
   new Item(556, 500),
@@ -16,8 +14,11 @@ val STARTER_ITEMS = List(
 )
 
 >>[LoginEvent] { (msg, plr) =>
+  val inventory = plr.getInventory
+
   if (plr.attr("first_login")) {
     plr.sendMessage("This is your first login. Enjoy your starter package!")
+    inventory.addAll(STARTER_ITEMS)
     plr.attr("first_login", false)
   }
 }
