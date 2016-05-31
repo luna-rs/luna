@@ -130,6 +130,13 @@ public final class ItemDefinition {
     }
 
     /**
+     * @return {@code true} if this item can be noted, {@code false} otherwise.
+     */
+    public boolean canBeNoted() {
+        return notedId != -1;
+    }
+
+    /**
      * @return The identifier for the {@code Item}.
      */
     public int getId() {
