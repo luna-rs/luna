@@ -1,13 +1,11 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.mobile.Player;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A single item that can be contained within a {@link Player}s inventory or equipment container. They are also be contained
- * within ground items.
+ * A single item that can be contained within item containers and ground items.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -116,6 +114,17 @@ public final class Item {
      */
     public int getId() {
         return id;
+    }
+
+    /**
+     * Sets the id to {@code newId}. The returned {@code Item} <strong>does not</strong> hold any references to this one. It
+     * will throw an exception on an invalid id.
+     *
+     * @param newId The new id to set.
+     * @return The newly id set {@code Item}.
+     */
+    public Item setId(int newId) {
+        return new Item(newId, amount);
     }
 
     /**
