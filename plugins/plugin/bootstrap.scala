@@ -107,11 +107,11 @@ implicit class PlayerImplicits(player: Player) {
 
 implicit class MobileEntityImplicits(mob: MobileEntity) {
   def attr[T](key: String): T = {
-    val attr: AttributeValue[T] = mob.getAttributes.get(key)
+    val attr: AttributeValue[T] = mob.attr.get(key)
     attr.get
   }
   def attr[T](key: String, value: T) = {
-    val attr: AttributeValue[T] = mob.getAttributes.get(key)
+    val attr: AttributeValue[T] = mob.attr.get(key)
     attr.set(value)
   }
 }
