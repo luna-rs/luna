@@ -12,27 +12,27 @@ import io.luna.game.model.mobile.Npc;
 public final class NpcCombatDefinition {
 
     /**
-     * The attack skill slot in the {@code skills} list.
+     * The attack skill index in the {@code skills} list.
      */
     public static final int ATTACK = 0;
 
     /**
-     * The strength skill slot in the {@code skills} list.
+     * The strength skill index in the {@code skills} list.
      */
     public static final int STRENGTH = 1;
 
     /**
-     * The defence skill slot in the {@code skills} list.
+     * The defence skill index in the {@code skills} list.
      */
     public static final int DEFENCE = 2;
 
     /**
-     * The ranged skill slot in the {@code skills} list.
+     * The ranged skill index in the {@code skills} list.
      */
     public static final int RANGED = 3;
 
     /**
-     * The magic skill slot in the {@code skills} list.
+     * The magic skill index in the {@code skills} list.
      */
     public static final int MAGIC = 4;
 
