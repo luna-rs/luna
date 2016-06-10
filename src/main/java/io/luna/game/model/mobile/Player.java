@@ -8,15 +8,19 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityConstants;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.item.Bank;
+import io.luna.game.model.item.Equipment;
+import io.luna.game.model.item.Inventory;
+import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundGameMessage;
-import io.luna.net.msg.out.SendAssignmentMessage;
-import io.luna.net.msg.out.SendGameInfoMessage;
-import io.luna.net.msg.out.SendLogoutMessage;
-import io.luna.net.msg.out.SendRegionChangeMessage;
-import io.luna.net.msg.out.SendSkillUpdateMessage;
-import io.luna.net.msg.out.SendTabInterfaceMessage;
+import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.out.AssignmentMessageWriter;
+import io.luna.net.msg.out.InfoMessageWriter;
+import io.luna.net.msg.out.LogoutMessageWriter;
+import io.luna.net.msg.out.RegionChangeMessageWriter;
+import io.luna.net.msg.out.SkillUpdateMessageWriter;
+import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.netty.channel.Channel;
@@ -38,9 +42,9 @@ import static java.util.Objects.requireNonNull;
 public final class Player extends MobileEntity {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(Player.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The {@link Set} of local {@code Player}s.
@@ -61,6 +65,21 @@ public final class Player extends MobileEntity {
      * The credentials of this {@code Player}.
      */
     private final PlayerCredentials credentials;
+
+    /**
+     * The inventory {@link ItemContainer} implementation.
+     */
+    private final Inventory inventory = new Inventory(this);
+
+    /**
+     * The equipment {@link ItemContainer} implementation.
+     */
+    private final Equipment equipment = new Equipment(this);
+
+    /**
+     * The bank {@link ItemContainer} implementation.
+     */
+    private final Bank bank = new Bank(this);
 
     /**
      * The current cached block for this update cycle.
@@ -98,9 +117,9 @@ public final class Player extends MobileEntity {
     private Chat chat;
 
     /**
-     * The {@link ForceMovement} that dictates where this {@code Player} will be forced to move.
+     * The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
      */
-    private ForceMovement forceMovement;
+    private ForcedMovement forceMovement;
 
     /**
      * The identifier of the {@link Npc} to transform into.
@@ -154,23 +173,23 @@ public final class Player extends MobileEntity {
     public void onActive() {
         updateFlags.flag(UpdateFlag.APPEARANCE);
 
-        queue(new SendAssignmentMessage(true));
+        queue(new AssignmentMessageWriter(true));
 
         int[] interfaces = { 2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962 };
         for (int index = 0; index < interfaces.length; index++) {
-            queue(new SendTabInterfaceMessage(index, interfaces[index]));
+            queue(new TabInterfaceMessageWriter(index, interfaces[index]));
         }
 
         int size = SkillSet.size();
         for (int index = 0; index < size; index++) {
-            queue(new SendSkillUpdateMessage(index));
+            queue(new SkillUpdateMessageWriter(index));
         }
 
         if (session.getHostAddress().equals("127.0.0.1")) {
             rights = PlayerRights.DEVELOPER;
         }
 
-        queue(new SendGameInfoMessage("Welcome to Luna!"));
+        queue(new InfoMessageWriter("Welcome to Luna!"));
 
         plugins.post(new LoginEvent(), this);
 
@@ -199,7 +218,7 @@ public final class Player extends MobileEntity {
     public void logout() {
         Channel channel = session.getChannel();
         if (channel.isActive()) {
-            queue(new SendLogoutMessage());
+            queue(new LogoutMessageWriter());
         }
     }
 
@@ -216,9 +235,9 @@ public final class Player extends MobileEntity {
     /**
      * Send {@code forceMovement} message for this cycle.
      *
-     * @param forceMovement The {@link ForceMovement} that dictates where this {@code Player} will be forced to move.
+     * @param forceMovement The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
      */
-    public void forceMovement(ForceMovement forceMovement) {
+    public void forceMovement(ForcedMovement forceMovement) {
         this.forceMovement = requireNonNull(forceMovement);
         updateFlags.flag(UpdateFlag.FORCE_MOVEMENT);
     }
@@ -235,15 +254,15 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * A shortcut function to {@link GameSession#queue(OutboundGameMessage)}.
+     * A shortcut function to {@link GameSession#queue(OutboundMessageWriter)}.
      */
-    public void queue(OutboundGameMessage msg) {
+    public void queue(OutboundMessageWriter msg) {
         session.queue(msg);
     }
 
     /**
      * @return {@code true} if the position and last known region of the {@code Player} means a {@link
-     * SendRegionChangeMessage} message needs to be queued, {@code false} otherwise.
+     * RegionChangeMessageWriter} message needs to be queued, {@code false} otherwise.
      */
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
@@ -392,9 +411,9 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * @return The {@link ForceMovement} that dictates where this {@code Player} will be forced to move.
+     * @return The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
      */
-    public ForceMovement getForceMovement() {
+    public ForcedMovement getForceMovement() {
         return forceMovement;
     }
 
@@ -410,5 +429,26 @@ public final class Player extends MobileEntity {
      */
     public int getTransformId() {
         return transformId;
+    }
+
+    /**
+     * @return The inventory {@link ItemContainer} implementation.
+     */
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    /**
+     * @return The equipment {@link ItemContainer} implementation.
+     */
+    public Equipment getEquipment() {
+        return equipment;
+    }
+
+    /**
+     * @return The bank {@link ItemContainer} implementation.
+     */
+    public Bank getBank() {
+        return bank;
     }
 }
