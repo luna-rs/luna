@@ -29,57 +29,57 @@ public final class PlayerAppearance {
     public static final int GENDER_FEMALE = 1;
 
     /**
-     * The gender appearance slot.
+     * The gender appearance index.
      */
     public static final int GENDER = 0;
 
     /**
-     * The chest appearance slot.
+     * The chest appearance index.
      */
     public static final int CHEST = 1;
 
     /**
-     * The arms appearance slot.
+     * The arms appearance index.
      */
     public static final int ARMS = 2;
     /**
-     * The legs appearance slot.
+     * The legs appearance index.
      */
     public static final int LEGS = 3;
     /**
-     * The head appearance slot.
+     * The head appearance index.
      */
     public static final int HEAD = 4;
     /**
-     * The hands appearance slot.
+     * The hands appearance index.
      */
     public static final int HANDS = 5;
     /**
-     * The feet appearance slot.
+     * The feet appearance index.
      */
     public static final int FEET = 6;
     /**
-     * The beard appearance slot.
+     * The beard appearance index.
      */
     public static final int BEARD = 7;
     /**
-     * The hair color appearance slot.
+     * The hair color appearance index.
      */
     public static final int HAIR_COLOR = 8;
     /**
-     * The torso color appearance slot.
+     * The torso color appearance index.
      */
     public static final int TORSO_COLOR = 9;
     /**
-     * The leg color appearance slot.
+     * The leg color appearance index.
      */
     public static final int LEG_COLOR = 10;
     /**
-     * The feet color appearance slot.
+     * The feet color appearance index.
      */
     public static final int FEET_COLOR = 11;
     /**
-     * The skin color appearance slot.
+     * The skin color appearance index.
      */
     public static final int SKIN_COLOR = 12;
 
@@ -134,10 +134,10 @@ public final class PlayerAppearance {
     /**
      * Determines the validity of color values.
      *
-     * @return {@code true} if {@code value} is a valid color value in the {@code id} slot, {@code false} otherwise.
+     * @return {@code true} if {@code value} is a valid color value in the {@code id} index, {@code false} otherwise.
      */
     public static boolean isColorValid(int id, int value) {
-        checkArgument(id >= 8 && id <= 12, "invalid slot identifier value");
+        checkArgument(id >= 8 && id <= 12, "invalid index identifier value");
 
         List<Range<Integer>> validRanges = VALID_VALUES.get(id);
         return validRanges.get(0).contains(value);
@@ -146,12 +146,12 @@ public final class PlayerAppearance {
     /**
      * Determines the validity of model values on men and women.
      *
-     * @return {@code true} if {@code value} is a valid model value for {@code gender} in the {@code id} slot, {@code false}
+     * @return {@code true} if {@code value} is a valid model value for {@code gender} in the {@code id} index, {@code false}
      * otherwise.
      */
     public static boolean isModelValid(int id, int gender, int value) {
         checkArgument(isGenderValid(gender), "invalid gender value");
-        checkArgument(id >= 1 && id <= 7, "invalid slot identifier value");
+        checkArgument(id >= 1 && id <= 7, "invalid index identifier value");
 
         List<Range<Integer>> validRanges = VALID_VALUES.get(id);
         return validRanges.get(gender).contains(value);
@@ -162,7 +162,7 @@ public final class PlayerAppearance {
      * {@code isModelValid}, or {@code isColorValid} methods. The method chosen is determined by the value of the {@code
      * id}.
      *
-     * @param id The slot to validate these values for.
+     * @param id The index to validate these values for.
      * @param gender The gender value that may be validated.
      * @param value The actual value that may be validated.
      * @return {@code true} if valid, {@code false} otherwise.
