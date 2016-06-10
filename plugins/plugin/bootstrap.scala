@@ -4,11 +4,12 @@ import io.luna.game.event.{Event, EventListener}
 import io.luna.game.model.mobile._
 import io.luna.game.model.mobile.attr.AttributeValue
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
-import io.luna.game.model.{EntityType, Position, World}
+import io.luna.game.model.{Entity, EntityType, Position, World}
 import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 
+import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
 import scala.util.Random
 
@@ -74,7 +75,7 @@ def >>[T <: Event](func: (T, Player) => Unit)
 
 
 // misc. global methods
-def async(func: () => Unit) = service.submit(new Runnable {
+def async(func: => Unit) = service.submit(new Runnable {
   override def run() = {
     try {
       func()
@@ -92,16 +93,48 @@ def using(resource: AutoCloseable)
 }
 
 
-// enriched classes
+/** All implicit (monkey patching) classes below are basically 'extending' Java classes by creating new functions for them. We
+  * do this to ensure that all code coming from Java is as concise and idiomatic (Scala-like) as possible.
+  *
+  *
+  * For example, instead of:
+  *
+  * val array = Array(1, 2, 3, 4, 5, 6, 7, 8)
+  *
+  * world.schedule(new Task(false, 20) {
+  *   override protected def execute() = {
+  *     val randomNumber = array((rand.nextDouble * array.length).toInt)
+  *     plr.queue(new InfoMessageWriter(s"Your random number from the array is $randomNumber!"))
+  *     cancel()
+  *   }
+  * })
+  *
+  *
+  * ... Which is ugly and hard to read, the monkey patching code below
+   * instead allows us to instead do:
+  *
+  * val array = Array(1, 2, 3, 4, 5, 6, 7, 8)
+  *
+  * world.scheduleOnce(20) {
+  *   plr.sendMessage(s"Your random number from the array is ${array.randomElement}!")
+  * }
+  *
+  *
+  * Both snippets of code are perfectly legal and valid from a syntactical standpoint, although the latter is
+  * obviously far more pretty.
+  *
+  * Feel free to add on to the existing code, but beware:
+  * - Removing code will (most likely) break existing plugins
+  * - Functions that are too ambiguous may end up doing more harm
+  *   than good (their purpose should be relatively obvious)
+  */
+
 implicit class PlayerImplicits(player: Player) {
   def address = player.getSession.getHostAddress
-  def x = player.getPosition.getX
-  def y = player.getPosition.getY
-  def z = player.getPosition.getZ
-  def sendMessage(message: String) = player.queue(new SendGameInfoMessage(message))
-  def sendWidgetText(text: String, widget: Int) = player.queue(new SendWidgetTextMessage(text, widget))
-  def sendForceTab(id: Int) = player.queue(new SendForceTabMessage(id))
-  def sendChatboxInterface(id: Int) = player.queue(new SendChatboxInterfaceMessage(id))
+  def sendMessage(message: String) = player.queue(new InfoMessageWriter(message))
+  def sendWidgetText(text: String, widget: Int) = player.queue(new WidgetTextMessageWriter(text, widget))
+  def sendForceTab(id: Int) = player.queue(new ForceTabMessageWriter(id))
+  def sendChatboxInterface(id: Int) = player.queue(new ChatboxInterfaceMessageWriter(id))
   def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 
@@ -116,16 +149,33 @@ implicit class MobileEntityImplicits(mob: MobileEntity) {
   }
 }
 
+implicit class EntityImplicits(entity: Entity) {
+  def x = entity.getPosition.getX
+  def y = entity.getPosition.getY
+  def z = entity.getPosition.getZ
+}
+
 implicit class WorldImplicits(world: World) {
   def addNpc(id: Int, position: Position) = {
     val npc = new Npc(ctx, id, position)
     world.getNpcs.add(npc)
     npc
   }
-  def schedule(instant: Boolean = false, delay: Int)(action: Task => Unit) = {
+
+  def schedule(delay: Int, instant: Boolean = false)
+              (action: Task => Unit) = {
     world.schedule(new Task(instant, delay) {
-      override protected def execute() = action(this)
+      override protected def execute() = {
+        action(this)
+      }
     })
+  }
+
+  def scheduleOnce(delay: Int)(action: => Unit) = {
+    schedule(delay) { it =>
+      action
+      it.cancel()
+    }
   }
 }
 
@@ -142,10 +192,10 @@ implicit class ArrayImplicits[T](array: Array[T]) {
     array
   }
 
-  def randElement = array((rand.nextDouble * array.length).toInt)
+  def randomElement = array((rand.nextDouble * array.length).toInt)
 }
 
-implicit class SeqImplicits[T](seq: Seq[T]) {
+implicit class IndexedSeqImplicits[T](seq: IndexedSeq[T]) {
   def shuffle = Random.shuffle(seq)
-  def randElement = seq((rand.nextDouble * seq.length).toInt)
+  def randomElement = seq((rand.nextDouble * seq.length).toInt)
 }
