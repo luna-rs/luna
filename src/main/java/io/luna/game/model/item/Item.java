@@ -1,5 +1,6 @@
 package io.luna.game.model.item;
 
+import com.google.common.base.MoreObjects;
 import io.luna.game.model.def.ItemDefinition;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,6 +40,11 @@ public final class Item {
         this.id = id;
         this.amount = amount;
         definition = ItemDefinition.DEFINITIONS[id];
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("id", id).add("amount", amount).toString();
     }
 
     /**
@@ -93,12 +99,15 @@ public final class Item {
 
     /**
      * Sets the amount to {@code newAmount}. The returned {@code Item} <strong>does not</strong> hold any references to this
-     * one. It will throw an exception on overflows and negative values.
+     * one unless {@code amount == newAmount}. It will throw an exception on overflows and negative values.
      *
      * @param newAmount The new amount to set.
      * @return The newly amount set {@code Item}.
      */
     public Item setAmount(int newAmount) {
+        if (amount == newAmount) {
+            return this;
+        }
         return new Item(id, newAmount);
     }
 
@@ -117,13 +126,16 @@ public final class Item {
     }
 
     /**
-     * Sets the id to {@code newId}. The returned {@code Item} <strong>does not</strong> hold any references to this one. It
-     * will throw an exception on an invalid id.
+     * Sets the id to {@code newId}. The returned {@code Item} <strong>does not</strong> hold any references to this one
+     * unless {@code id == newId}. It will throw an exception on an invalid id.
      *
      * @param newId The new id to set.
      * @return The newly id set {@code Item}.
      */
     public Item setId(int newId) {
+        if (id == newId) {
+            return this;
+        }
         return new Item(newId, amount);
     }
 
