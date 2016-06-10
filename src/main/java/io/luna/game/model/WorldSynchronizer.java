@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.net.msg.out.SendNpcUpdateMessage;
-import io.luna.net.msg.out.SendPlayerUpdateMessage;
-import io.luna.net.msg.out.SendRegionChangeMessage;
+import io.luna.net.msg.out.NpcUpdateMessageWriter;
+import io.luna.net.msg.out.PlayerUpdateMessageWriter;
+import io.luna.net.msg.out.RegionChangeMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,8 +22,6 @@ import java.util.concurrent.Phaser;
  * @author lare96 <http://github.org/lare96>
  */
 public final class WorldSynchronizer {
-
-    // TODO: Maybe rename this to something more fitting?
 
     /**
      * A {@code Runnable} implementation that executes some sort of logic while handling thread-safety for a {@link
@@ -80,9 +78,9 @@ public final class WorldSynchronizer {
     }
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(WorldSynchronizer.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The {@link World} instance.
@@ -124,7 +122,7 @@ public final class WorldSynchronizer {
                     it.setRegionChanged(true);
                     it.setLastRegion(it.getPosition());
 
-                    it.queue(new SendRegionChangeMessage());
+                    it.queue(new RegionChangeMessageWriter());
                 }
             } catch (Exception e) {
                 it.logout();
@@ -142,8 +140,8 @@ public final class WorldSynchronizer {
         world.getPlayers().forEach(it -> updateExecutor.execute(new SynchronizationTask(it) {
             @Override
             public void execute() {
-                it.queue(new SendNpcUpdateMessage());
-                it.queue(new SendPlayerUpdateMessage());
+                it.queue(new NpcUpdateMessageWriter());
+                it.queue(new PlayerUpdateMessageWriter());
             }
         }));
         synchronizer.arriveAndAwaitAdvance();

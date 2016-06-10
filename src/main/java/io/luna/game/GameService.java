@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit;
 public final class GameService extends AbstractScheduledService {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(GameService.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * A cached thread pool that manages the execution of short, low priority, asynchronous and concurrent tasks.

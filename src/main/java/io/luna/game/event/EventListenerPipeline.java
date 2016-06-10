@@ -22,9 +22,9 @@ import java.util.List;
 public final class EventListenerPipeline<E extends Event> implements Iterable<EventListener<E>> {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(EventListenerPipeline.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * A {@link List} of {@link EventListener} contained within this pipeline.
