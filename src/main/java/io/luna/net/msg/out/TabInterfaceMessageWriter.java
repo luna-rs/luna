@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 /**
- * An {@link OutboundGameMessage} implementation that displays an interface on a sidebar tab.
+ * An {@link OutboundMessageWriter} implementation that displays an interface on a sidebar tab.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendTabInterfaceMessage extends OutboundGameMessage {
+public final class TabInterfaceMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier for the tab to send the interface on.
@@ -30,18 +30,18 @@ public final class SendTabInterfaceMessage extends OutboundGameMessage {
     private final int interfaceId;
 
     /**
-     * Creates a new {@link SendTabInterfaceMessage}.
+     * Creates a new {@link TabInterfaceMessageWriter}.
      *
      * @param tabId The identifier for the tab to send the interface on.
      * @param interfaceId The identifier for the interface to send on the tab.
      */
-    public SendTabInterfaceMessage(int tabId, int interfaceId) {
+    public TabInterfaceMessageWriter(int tabId, int interfaceId) {
         this.tabId = tabId;
         this.interfaceId = interfaceId;
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(71);
         msg.putShort(interfaceId);
         msg.put(tabId, ByteTransform.A);

@@ -6,14 +6,17 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
- * An {@link OutboundGameMessage} implementation that displays a group of {@link Item}s on a widget.
+ * An {@link OutboundMessageWriter} implementation that displays a group of {@link Item}s on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendWidgetItemGroupMessage extends OutboundGameMessage {
+public final class WidgetItemGroupMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier of the widget that the items will de displayed on.
@@ -23,24 +26,34 @@ public final class SendWidgetItemGroupMessage extends OutboundGameMessage {
     /**
      * The {@link Item}s that will be displayed on the widget.
      */
-    private final Item[] items;
+    private final Collection<? extends Item> items;
 
     /**
-     * Creates a new {@link SendWidgetItemGroupMessage}.
+     * Creates a new {@link WidgetItemGroupMessageWriter}.
      *
      * @param id The identifier of the widget that the items will de displayed on.
      * @param items The {@link Item}s that will be displayed on the widget.
      */
-    public SendWidgetItemGroupMessage(int id, Item[] items) {
+    public WidgetItemGroupMessageWriter(int id, Collection<? extends Item> items) {
         this.id = id;
         this.items = items;
     }
 
+    /**
+     * Creates a new {@link WidgetItemGroupMessageWriter}.
+     *
+     * @param id The identifier of the widget that the items will de displayed on.
+     * @param items The {@link Item}s that will be displayed on the widget.
+     */
+    public WidgetItemGroupMessageWriter(int id, Item[] items) {
+        this(id, Arrays.asList(items));
+    }
+
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VARIABLE_SHORT);
         msg.putShort(id);
-        msg.putShort(items.length);
+        msg.putShort(items.size());
 
         for (Item item : items) {
             if (item == null) {

@@ -9,7 +9,7 @@ import io.luna.game.model.Position;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ForceMovement {
+public final class ForcedMovement {
 
     // TODO: Ensure that this works correctly
 
@@ -47,11 +47,11 @@ public final class ForceMovement {
      * @param duration The amount of time in ticks that it will take for the move to complete.
      * @return A {@code ForcedMovement} instance with these properties.
      */
-    public static ForceMovement forceMoveX(Player player, int amount, int duration) {
+    public static ForcedMovement forceMoveX(Player player, int amount, int duration) {
         Position destination = player.getPosition().move(amount, 0);
         Direction direction = amount < 0 ? Direction.WEST : Direction.EAST;
 
-        return new ForceMovement(player.getPosition(), destination, duration, 0, direction);
+        return new ForcedMovement(player.getPosition(), destination, duration, 0, direction);
     }
 
     /**
@@ -63,15 +63,15 @@ public final class ForceMovement {
      * @param duration The amount of time in ticks that it will take for the move to complete.
      * @return A {@code ForcedMovement} instance with these properties.
      */
-    public static ForceMovement forceMoveY(Player player, int amount, int duration) {
+    public static ForcedMovement forceMoveY(Player player, int amount, int duration) {
         Position destination = player.getPosition().move(0, amount);
         Direction direction = amount < 0 ? Direction.SOUTH : Direction.NORTH;
 
-        return new ForceMovement(player.getPosition(), destination, 0, duration, direction);
+        return new ForcedMovement(player.getPosition(), destination, 0, duration, direction);
     }
 
     /**
-     * Creates a new {@link ForceMovement}.
+     * Creates a new {@link ForcedMovement}.
      *
      * @param startPosition The {@link Position} the {@link Player} is moving from.
      * @param endPosition The {@link Position} the {@link Player} is moving to.
@@ -79,7 +79,7 @@ public final class ForceMovement {
      * @param durationY The time in ticks that it will take to move across the {@code Y} axis.
      * @param direction The {@link Direction} that the {@link Player} is moving in.
      */
-    public ForceMovement(Position startPosition, Position endPosition, int durationX, int durationY, Direction direction) {
+    public ForcedMovement(Position startPosition, Position endPosition, int durationX, int durationY, Direction direction) {
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.durationX = durationX;

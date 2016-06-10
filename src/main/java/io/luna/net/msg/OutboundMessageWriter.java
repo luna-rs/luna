@@ -9,7 +9,7 @@ import io.luna.net.codec.ByteMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class OutboundGameMessage {
+public abstract class OutboundMessageWriter {
 
     /**
      * Builds a {@link ByteMessage} containing the data for this message.
@@ -17,16 +17,16 @@ public abstract class OutboundGameMessage {
      * @param player The player.
      * @return The buffer containing the data.
      */
-    public abstract ByteMessage writeMessage(Player player);
+    public abstract ByteMessage encode(Player player);
 
     /**
-     * Converts the {@link ByteMessage} returned by {@code writeMessage(Player)} to a {@link GameMessage}.
+     * Converts the {@link ByteMessage} returned by {@code encode(Player)} to a {@link GameMessage}.
      *
      * @param player The player.
      * @return The successfully converted message.
      */
     public final GameMessage toGameMessage(Player player) {
-        ByteMessage msg = writeMessage(player);
+        ByteMessage msg = encode(player);
         return new GameMessage(msg.getOpcode(), msg.getType(), msg);
     }
 }

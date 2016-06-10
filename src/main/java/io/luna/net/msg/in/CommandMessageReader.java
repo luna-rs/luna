@@ -8,17 +8,17 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundGameMessage;
+import io.luna.net.msg.InboundMessageReader;
 
 /**
- * An {@link InboundGameMessage} implementation that decodes data sent when a {@link Player} tries to activate a command.
+ * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ReceiveCommandMessage extends InboundGameMessage {
+public final class CommandMessageReader extends InboundMessageReader {
 
     @Override
-    public Event readMessage(Player player, GameMessage msg) throws Exception {
+    public Event decode(Player player, GameMessage msg) throws Exception {
         String string = msg.getPayload().getString();
         string = string.toLowerCase();
         int index = string.indexOf(' ');

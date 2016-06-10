@@ -17,17 +17,17 @@ import io.luna.game.model.mobile.update.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 import java.util.Iterator;
 
 /**
- * An {@link OutboundGameMessage} implementation that sends an update message containing the underlying {@link Player} and
+ * An {@link OutboundMessageWriter} implementation that sends an update message containing the underlying {@link Player} and
  * {@link Npc}s surrounding them.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendNpcUpdateMessage extends OutboundGameMessage {
+public final class NpcUpdateMessageWriter extends OutboundMessageWriter {
 
     /**
      * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
@@ -46,7 +46,7 @@ public final class SendNpcUpdateMessage extends OutboundGameMessage {
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(65, MessageType.VARIABLE_SHORT);
         ByteMessage blockMsg = ByteMessage.message();
 

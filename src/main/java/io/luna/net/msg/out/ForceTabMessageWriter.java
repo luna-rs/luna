@@ -3,15 +3,15 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 /**
- * An {@link OutboundGameMessage} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for
+ * An {@link OutboundMessageWriter} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for
  * things like tutorial island to force the {@code Player} to view a certain tab.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendForceTabMessage extends OutboundGameMessage {
+public final class ForceTabMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier of the game tab to open.
@@ -26,16 +26,16 @@ public final class SendForceTabMessage extends OutboundGameMessage {
     private final int id;
 
     /**
-     * Creates a new {@link SendForceTabMessage}.
+     * Creates a new {@link ForceTabMessageWriter}.
      *
      * @param id The identifier of the game tab to open.
      */
-    public SendForceTabMessage(int id) {
+    public ForceTabMessageWriter(int id) {
         this.id = id;
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(106);
         msg.put(id, ByteTransform.C);
         return msg;

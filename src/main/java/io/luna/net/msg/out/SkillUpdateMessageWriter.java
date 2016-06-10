@@ -4,14 +4,14 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.Skill;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 /**
- * An {@link OutboundGameMessage} implementation that synchronizes a {@link Skill} with the client.
+ * An {@link OutboundMessageWriter} implementation that synchronizes a {@link Skill} with the client.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendSkillUpdateMessage extends OutboundGameMessage {
+public final class SkillUpdateMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier for the skill being updated.
@@ -19,16 +19,16 @@ public final class SendSkillUpdateMessage extends OutboundGameMessage {
     private final int id;
 
     /**
-     * Creates a new {@link SendSkillUpdateMessage}.
+     * Creates a new {@link SkillUpdateMessageWriter}.
      *
      * @param id The identifier for the skill being updated.
      */
-    public SendSkillUpdateMessage(int id) {
+    public SkillUpdateMessageWriter(int id) {
         this.id = id;
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         Skill skill = player.skill(id);
         ByteMessage msg = ByteMessage.message(134);
         msg.put(id);

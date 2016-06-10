@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 /**
- * An {@link OutboundGameMessage} implementation that sets a widget to be hidden until hovered over.
+ * An {@link OutboundMessageWriter} implementation that sets a widget to be hidden until hovered over.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendWidgetVisibilityMessage extends OutboundGameMessage {
+public final class WidgetVisibilityMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier of the widget to make hidden or unhidden.
@@ -22,18 +22,18 @@ public final class SendWidgetVisibilityMessage extends OutboundGameMessage {
     private final boolean hide;
 
     /**
-     * Creates a new {@link SendWidgetVisibilityMessage}.
+     * Creates a new {@link WidgetVisibilityMessageWriter}.
      *
      * @param id The identifier of the widget to make hidden or unhidden.
      * @param hide If the widget should be hidden or unhidden.
      */
-    public SendWidgetVisibilityMessage(int id, boolean hide) {
+    public WidgetVisibilityMessageWriter(int id, boolean hide) {
         this.id = id;
         this.hide = hide;
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(171);
         msg.put(hide ? 1 : 0);
         msg.putShort(id);

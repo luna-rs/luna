@@ -4,14 +4,14 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 
 /**
- * An {@link OutboundGameMessage} implementation that displays a single {@link Item} on a widget.
+ * An {@link OutboundMessageWriter} implementation that displays a single {@link Item} on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SendWidgetItemMessage extends OutboundGameMessage {
+public final class WidgetItemMessageWriter extends OutboundMessageWriter {
 
     /**
      * The identifier for the widget that the {@link Item} will be displayed on.
@@ -29,20 +29,20 @@ public final class SendWidgetItemMessage extends OutboundGameMessage {
     private final Item item;
 
     /**
-     * Creates a new {@link SendWidgetItemMessage}.
+     * Creates a new {@link WidgetItemMessageWriter}.
      *
      * @param id The identifier for the widget that the {@link Item} will be displayed on.
      * @param index The index on the widget that the {@link Item} will be displayed on.
      * @param item The {@link Item} that will be displayed on the widget.
      */
-    public SendWidgetItemMessage(int id, int index, Item item) {
+    public WidgetItemMessageWriter(int id, int index, Item item) {
         this.id = id;
         this.index = index;
         this.item = item;
     }
 
     @Override
-    public ByteMessage writeMessage(Player player) {
+    public ByteMessage encode(Player player) {
         ByteMessage msg = ByteMessage.message(34, MessageType.VARIABLE_SHORT);
         msg.putShort(id);
         msg.put(index);

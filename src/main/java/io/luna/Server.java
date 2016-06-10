@@ -13,8 +13,6 @@ import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionParser;
 import io.luna.util.parser.impl.NpcDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -26,6 +24,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.logging.log4j.util.Unbox.box;
+
 /**
  * Initializes the individual modules to launch {@link Luna}.
  *
@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit;
 public final class Server {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(Server.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The {@link ExecutorService} that will execute startup tasks.
@@ -75,7 +75,7 @@ public final class Server {
         context.getService().awaitRunning();
         bind();
 
-        LOGGER.info("Luna is now online on port {}!", LunaNetworkConstants.PORT);
+        LOGGER.info("Luna is now online on port {}!", box(LunaNetworkConstants.PORT));
     }
 
     /**
@@ -89,8 +89,6 @@ public final class Server {
 
         ResourceLeakDetector.setLevel(LunaNetworkConstants.RESOURCE_LEAK_DETECTION);
 
-        bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-        bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));

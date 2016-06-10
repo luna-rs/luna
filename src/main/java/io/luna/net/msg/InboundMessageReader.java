@@ -9,7 +9,7 @@ import io.luna.game.plugin.PluginManager;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class InboundGameMessage {
+public abstract class InboundMessageReader {
 
     /**
      * Read the {@code msg} and return the {@link Event} that will be forwarded to the {@link PluginManager}, if any. This is
@@ -21,5 +21,5 @@ public abstract class InboundGameMessage {
      * @return The {@code Event} that will be forwarded to a plugin, {@code null} if no {@code Event} should be forwarded.
      * @throws Exception If any exceptions are thrown. Will later be caught by the session logger.
      */
-    public abstract Event readMessage(Player player, GameMessage msg) throws Exception;
+    public abstract Event decode(Player player, GameMessage msg) throws Exception;
 }
