@@ -12,14 +12,26 @@ import org.apache.logging.log4j.Logger;
 public final class Luna {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(Luna.class);
+    private static final Logger LOGGER;
 
     /**
      * A private constructor to discourage external instantiation.
      */
     private Luna() {
+    }
+
+    static {
+        try {
+            Thread.currentThread().setName("LunaInitializationThread");
+
+            System.setProperty("Log4jContextSelector", // Enables asynchronous, garbage-free logging.
+                "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+            LOGGER = LogManager.getLogger();
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
+        }
     }
 
     /**
@@ -29,8 +41,6 @@ public final class Luna {
      */
     public static void main(String[] args) {
         try {
-            Thread.currentThread().setName("LunaInitializationThread");
-
             Server luna = new Server();
             luna.init();
         } catch (Exception e) {
