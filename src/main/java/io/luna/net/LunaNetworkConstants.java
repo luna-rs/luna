@@ -84,7 +84,7 @@ public final class LunaNetworkConstants {
     /**
      * An {@link AttributeKey} that is used to retrieve the session instance from the attribute map of a {@link Channel}.
      */
-    public static final AttributeKey<Session> SESSION_KEY = AttributeKey.valueOf("session.KEY");
+    public static final AttributeKey<Session> SESSION_KEY = AttributeKey.valueOf("channel.SESSION_KEY");
 
     /**
      * A private constructor to discourage external instantiation.
