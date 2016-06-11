@@ -13,7 +13,8 @@ public final class ThreadUtils {
      * Throws an {@link IllegalStateException} if the current thread is not an initialization thread.
      */
     public static void ensureInitThread() {
-        String threadName = Thread.currentThread().getName();
-        checkState(threadName.equals("LunaInitializationThread"), "can only be done during initialization");
+        Thread currentThread = Thread.currentThread();
+        boolean isInitThread = currentThread.getName().equals("LunaInitializationThread");
+        checkState(isInitThread, String.format("thread[%s] not an initialization thread", currentThread));
     }
 }
