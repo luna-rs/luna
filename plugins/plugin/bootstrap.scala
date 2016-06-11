@@ -110,8 +110,8 @@ def using(resource: AutoCloseable)
   * })
   *
   *
-  * ... Which is ugly and hard to read, the monkey patching code below
-   * instead allows us to instead do:
+  * ... Which is ugly and hard to read, the monkey patching code below allows
+   * us to instead do:
   *
   * val array = Array(1, 2, 3, 4, 5, 6, 7, 8)
   *
