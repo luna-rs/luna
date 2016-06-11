@@ -17,16 +17,13 @@ public abstract class OutboundMessageWriter {
      * @param player The player.
      * @return The buffer containing the data.
      */
-    public abstract ByteMessage encode(Player player);
+    public abstract ByteMessage write(Player player);
 
     /**
-     * Converts the {@link ByteMessage} returned by {@code encode(Player)} to a {@link GameMessage}.
-     *
-     * @param player The player.
-     * @return The successfully converted message.
+     * Converts the {@link ByteMessage} returned by {@code write(Player)} to a {@link GameMessage}.
      */
-    public final GameMessage toGameMessage(Player player) {
-        ByteMessage msg = encode(player);
+    public GameMessage handleOutboundMessage(Player player) {
+        ByteMessage msg = write(player);
         return new GameMessage(msg.getOpcode(), msg.getType(), msg);
     }
 }
