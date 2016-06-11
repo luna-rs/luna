@@ -78,7 +78,7 @@ def >>[T <: Event](func: (T, Player) => Unit)
 def async(func: => Unit) = service.submit(new Runnable {
   override def run() = {
     try {
-      func()
+      func
     } catch {case e: Exception => e.printStackTrace()}
   }
 })
