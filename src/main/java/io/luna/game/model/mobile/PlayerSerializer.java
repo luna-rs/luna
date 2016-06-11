@@ -62,7 +62,7 @@ public final class PlayerSerializer {
      */
     public PlayerSerializer(Player player) {
         this.player = player;
-        path = FILE_DIR.resolve(player.getUsername() + ".toml");
+        path = FILE_DIR.resolve(player.getUsername() + ".json");
     }
 
     static {

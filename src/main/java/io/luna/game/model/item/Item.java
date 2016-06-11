@@ -25,7 +25,7 @@ public final class Item {
     /**
      * The definition instance for this {@code Item}.
      */
-    private final ItemDefinition definition;
+    private transient final ItemDefinition definition;
 
     /**
      * Creates a new {@link Item}.
