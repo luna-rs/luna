@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" target="SYSTEM_ERR">
     <Appenders>
         <Console name="console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %logger{36} [%t]%n%level: %msg%n"/>
         </Console>
-        <File name="errors_log" fileName="./data/logs/errors.log" bufferedIO="true" append="true">
-            <PatternLayout pattern="%d{dd MMM yyyy HH:mm:ss} %-5level - %msg%xEx%n"/>
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
-        </File>
-        <Async name="async">
-            <AppenderRef ref="console"/>
-            <AppenderRef ref="errors_log"/>
-        </Async>
     </Appenders>
     <Loggers>
         <Root level="ALL">
-            <AppenderRef ref="async"/>
+            <AppenderRef ref="console"/>
         </Root>
     </Loggers>
 </Configuration>
