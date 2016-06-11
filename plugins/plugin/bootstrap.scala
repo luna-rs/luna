@@ -135,6 +135,7 @@ implicit class PlayerImplicits(player: Player) {
   def sendWidgetText(text: String, widget: Int) = player.queue(new WidgetTextMessageWriter(text, widget))
   def sendForceTab(id: Int) = player.queue(new ForceTabMessageWriter(id))
   def sendChatboxInterface(id: Int) = player.queue(new ChatboxInterfaceMessageWriter(id))
+  def sendSkillUpdate(id: Int) = player.queue(new SkillUpdateMessageWriter(id))
   def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 

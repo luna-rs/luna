@@ -1,10 +1,9 @@
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 import io.luna.game.model.mobile.{Graphic, Player, Skill}
-import io.luna.net.msg.out.SendSkillUpdateMessage
 import io.luna.util.StringUtils
 
-val LEVEL_UP_GRAPHIC = 199
+val LEVEL_UP_GRAPHIC = new Graphic(199)
 
 val LEVEL_UP_TABLE = Vector(
   Vector(6248, 6249, 6247),
@@ -31,7 +30,7 @@ val LEVEL_UP_TABLE = Vector(
 )
 
 >>@[SkillChangeEvent](playerInstance) { (msg, plr) =>
-  plr.queue(new SendSkillUpdateMessage(msg.getId))
+  plr.sendSkillUpdate(msg.getId)
 
   if (msg.getOldStaticLevel < 99) {
     checkForLevel(msg.getId, msg.getOldStaticLevel, plr)
@@ -55,7 +54,7 @@ private def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
     plr.sendWidgetText(s"Your $name level is now $newLevel.", data(1))
     plr.sendChatboxInterface(data(2))
 
-    plr.graphic(new Graphic(LEVEL_UP_GRAPHIC))
+    plr.graphic(LEVEL_UP_GRAPHIC)
 
     if (Skill.isCombatSkill(id)) {
       set.resetCombatLevel
