@@ -2,11 +2,11 @@ package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
-import io.luna.net.msg.out.SendPlayerUpdateMessage;
+import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 
 /**
  * An {@link UpdateBlock} implementation specific to {@link Player}s contained within an {@link UpdateBlockSet} and sent
- * within a {@link SendPlayerUpdateMessage}.
+ * within a {@link PlayerUpdateMessageWriter}.
  *
  * @author lare96 <http://github.org/lare96>
  */

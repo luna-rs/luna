@@ -1,13 +1,13 @@
 package io.luna.game.model.mobile.update;
 
-import io.luna.game.model.mobile.ForceMovement;
+import io.luna.game.model.mobile.ForcedMovement;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 
 /**
- * An {@link PlayerUpdateBlock} implementation that handles the {@link ForceMovement} update block.
+ * An {@link PlayerUpdateBlock} implementation that handles the {@link ForcedMovement} update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -22,7 +22,7 @@ public final class PlayerForceMovementUpdateBlock extends PlayerUpdateBlock {
 
     @Override
     public void write(Player mob, ByteMessage msg) {
-        ForceMovement movement = mob.getForceMovement();
+        ForcedMovement movement = mob.getForceMovement();
 
         msg.put(movement.getStartPosition().getX(), ByteTransform.A);
         msg.put(movement.getStartPosition().getY(), ByteTransform.C);
