@@ -1,5 +1,6 @@
 package io.luna.game.model.item;
 
+import com.google.common.collect.Iterables;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.net.msg.out.WidgetItemGroupMessageWriter;
 
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -666,13 +668,13 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Returns a list of {@link IndexedItem}s describing the contents of the backing array. Changes made to the returned list
-     * will, of course, not be reflected on the backing array.
+     * Returns an array of {@link IndexedItem}s describing the contents of the backing array. Changes made to the returned
+     * array will, of course, not be reflected on the backing array.
      *
-     * @return A list of {@code IndexedItem}s describing the contents of the backing array.
+     * @return An array of {@code IndexedItem}s describing the contents of the backing array.
      */
-    public final List<IndexedItem> toList() {
-        List<IndexedItem> indexedItems = new ArrayList<>();
+    public final IndexedItem[] toIndexedArray() {
+        List<IndexedItem> indexedItems = new LinkedList<>();
         for (int index = 0; index < capacity; index++) {
             Item item = items[index];
             if (item == null) {
@@ -680,7 +682,7 @@ public class ItemContainer implements Iterable<Item> {
             }
             indexedItems.add(new IndexedItem(item, index));
         }
-        return indexedItems;
+        return Iterables.toArray(indexedItems, IndexedItem.class);
     }
 
     /**
