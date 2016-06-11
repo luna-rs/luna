@@ -35,7 +35,7 @@ public final class WidgetTextMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(126, MessageType.VARIABLE_SHORT);
         msg.putString(text);
         msg.putShort(id, ByteTransform.A);

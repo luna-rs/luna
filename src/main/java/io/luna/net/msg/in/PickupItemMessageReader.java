@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class PickupItemMessageReader extends InboundMessageReader {
 
     @Override
-    public Event decode(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) throws Exception {
         int y = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);

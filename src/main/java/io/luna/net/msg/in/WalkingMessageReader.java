@@ -19,7 +19,7 @@ import io.luna.net.msg.InboundMessageReader;
 public final class WalkingMessageReader extends InboundMessageReader {
 
     @Override
-    public Event decode(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         int size = msg.getSize();
         ByteMessage payload = msg.getPayload();

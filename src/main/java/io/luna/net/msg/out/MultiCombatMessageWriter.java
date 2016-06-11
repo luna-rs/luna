@@ -26,7 +26,7 @@ public final class MultiCombatMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(61);
         msg.put(display ? 1 : 0);
         return msg;

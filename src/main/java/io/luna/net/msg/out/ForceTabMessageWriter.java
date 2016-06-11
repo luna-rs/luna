@@ -35,7 +35,7 @@ public final class ForceTabMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(106);
         msg.put(id, ByteTransform.C);
         return msg;

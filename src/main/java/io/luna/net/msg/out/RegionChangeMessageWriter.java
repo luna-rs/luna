@@ -13,7 +13,7 @@ import io.luna.net.msg.OutboundMessageWriter;
 public final class RegionChangeMessageWriter extends OutboundMessageWriter {
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(73);
         msg.putShort(player.getPosition().getRegionX() + 6, ByteTransform.A);
         msg.putShort(player.getPosition().getRegionY() + 6);

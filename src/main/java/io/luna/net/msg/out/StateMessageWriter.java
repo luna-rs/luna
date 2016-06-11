@@ -19,7 +19,7 @@ public final class StateMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg;
         boolean overflow = state > Byte.MAX_VALUE;
 

@@ -36,7 +36,7 @@ public final class AddGroundItemMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(44);
         msg.putShort(item.getId(), ByteTransform.A, ByteOrder.LITTLE);
         msg.putShort(item.getAmount());

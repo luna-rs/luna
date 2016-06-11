@@ -1,13 +1,12 @@
 package io.luna.net.session;
 
-import io.luna.game.event.Event;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundGameMessage;
+import io.luna.net.msg.InboundMessageReader;
 import io.luna.net.msg.MessageRepository;
-import io.luna.net.msg.OutboundGameMessage;
+import io.luna.net.msg.OutboundMessageWriter;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,9 +22,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 public final class GameSession extends Session {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(GameSession.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The player assigned to this {@code GameSession}.
@@ -87,11 +86,11 @@ public final class GameSession extends Session {
      *
      * @param msg The message to queue.
      */
-    public void queue(OutboundGameMessage msg) {
+    public void queue(OutboundMessageWriter msg) {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.writeAndFlush(msg.toGameMessage(player), channel.voidPromise());
+            channel.writeAndFlush(msg.handleOutboundMessage(player), channel.voidPromise());
         }
     }
 
@@ -104,15 +103,8 @@ public final class GameSession extends Session {
             if (msg == null) {
                 break;
             }
-            InboundGameMessage inbound = messageRepository.getHandler(msg.getOpcode());
-            try {
-                Event evt = inbound.readMessage(player, msg);
-                if (evt != null) {
-                    player.getPlugins().post(evt, player);
-                }
-            } catch (Exception e) {
-                LOGGER.catching(e);
-            }
+            InboundMessageReader inbound = messageRepository.getHandler(msg.getOpcode());
+            inbound.handleInboundMessage(player, msg);
         }
     }
 

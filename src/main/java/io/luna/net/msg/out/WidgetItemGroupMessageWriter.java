@@ -50,7 +50,7 @@ public final class WidgetItemGroupMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VARIABLE_SHORT);
         msg.putShort(id);
         msg.putShort(items.size());

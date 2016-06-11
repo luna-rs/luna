@@ -27,7 +27,7 @@ public final class ChatboxInterfaceMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(164);
         msg.putShort(id, ByteOrder.LITTLE);
         return msg;

@@ -31,7 +31,7 @@ public class InventoryOverlayMessageWriter extends OutboundMessageWriter {
      * @return The buffer containing the data.
      */
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         return null;
     }
 }

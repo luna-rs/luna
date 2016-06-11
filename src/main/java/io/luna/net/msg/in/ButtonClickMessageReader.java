@@ -15,7 +15,7 @@ import io.luna.net.msg.InboundMessageReader;
 public final class ButtonClickMessageReader extends InboundMessageReader {
 
     @Override
-    public Event decode(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) throws Exception {
         int widget = msg.getPayload().getShort(false);
 
         // TODO: Ensure that 'widget' is a valid widget on the interface currently open (if one is open)

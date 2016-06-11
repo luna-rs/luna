@@ -28,7 +28,7 @@ public final class SkillUpdateMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         Skill skill = player.skill(id);
         ByteMessage msg = ByteMessage.message(134);
         msg.put(id);

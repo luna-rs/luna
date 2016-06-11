@@ -27,7 +27,7 @@ public final class InfoMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(253, MessageType.VARIABLE);
         msg.putString(message);
         return msg;

@@ -12,7 +12,7 @@ import io.luna.net.msg.OutboundMessageWriter;
 public final class LogoutMessageWriter extends OutboundMessageWriter {
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         return ByteMessage.message(109);
     }
 }

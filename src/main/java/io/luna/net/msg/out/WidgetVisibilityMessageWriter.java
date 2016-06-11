@@ -33,7 +33,7 @@ public final class WidgetVisibilityMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(171);
         msg.put(hide ? 1 : 0);
         msg.putShort(id);

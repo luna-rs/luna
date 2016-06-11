@@ -46,7 +46,7 @@ public final class NpcUpdateMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(65, MessageType.VARIABLE_SHORT);
         ByteMessage blockMsg = ByteMessage.message();
 

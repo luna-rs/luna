@@ -18,7 +18,7 @@ import io.luna.net.msg.InboundMessageReader;
 public final class CommandMessageReader extends InboundMessageReader {
 
     @Override
-    public Event decode(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) throws Exception {
         String string = msg.getPayload().getString();
         string = string.toLowerCase();
         int index = string.indexOf(' ');

@@ -15,9 +15,9 @@ public final class MessageRepository {
     private final int[] sizes = new int[257];
 
     /**
-     * An array of {@link InboundGameMessage}s that act as listeners for incoming messages.
+     * An array of {@link InboundMessageReader}s that act as listeners for incoming messages.
      */
-    private final InboundGameMessage[] inboundHandlers = new InboundGameMessage[257];
+    private final InboundMessageReader[] inboundHandlers = new InboundMessageReader[257];
 
     /**
      * Creates a new {@link MessageRepository}.
@@ -27,20 +27,20 @@ public final class MessageRepository {
     }
 
     /**
-     * Adds a new {@link InboundGameMessage} handler along with its size.
+     * Adds a new {@link InboundMessageReader} handler along with its size.
      *
      * @param opcode The opcode of the message handler.
      * @param size The size of the message.
-     * @param inboundMessageName The class name of the {@link InboundGameMessage}, implicitly prefixed with the {@code
+     * @param inboundMessageName The class name of the {@link InboundMessageReader}, implicitly prefixed with the {@code
      * io.luna.net.msg.in} package.
-     * @throws ReflectiveOperationException If any errors occur while instantiating the {@link InboundGameMessage}.
+     * @throws ReflectiveOperationException If any errors occur while instantiating the {@link InboundMessageReader}.
      */
     public void addHandler(int opcode, int size, String inboundMessageName) throws ReflectiveOperationException {
         ThreadUtils.ensureInitThread();
 
         Class<?> inboundMessageClass = Class.forName("io.luna.net.msg.in." + inboundMessageName);
         sizes[opcode] = size;
-        inboundHandlers[opcode] = (InboundGameMessage) inboundMessageClass.newInstance();
+        inboundHandlers[opcode] = (InboundMessageReader) inboundMessageClass.newInstance();
     }
 
     /**
@@ -59,7 +59,7 @@ public final class MessageRepository {
      * @param opcode The opcode to retrieve the message handler for.
      * @return The message handler for {@code opcode}, never {@code null}.
      */
-    public InboundGameMessage getHandler(int opcode) {
+    public InboundMessageReader getHandler(int opcode) {
         return inboundHandlers[opcode];
     }
 }

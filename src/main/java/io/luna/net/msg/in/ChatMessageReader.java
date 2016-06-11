@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ChatMessageReader extends InboundMessageReader {
 
     @Override
-    public Event decode(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) throws Exception {
         int effects = msg.getPayload().get(false, ByteTransform.S);
         int color = msg.getPayload().get(false, ByteTransform.S);
         int size = (msg.getSize() - 2);

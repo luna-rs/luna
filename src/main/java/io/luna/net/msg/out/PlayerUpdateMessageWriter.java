@@ -51,7 +51,7 @@ public final class PlayerUpdateMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(81, MessageType.VARIABLE_SHORT);
         ByteMessage blockMsg = ByteMessage.message();
 

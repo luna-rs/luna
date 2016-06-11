@@ -29,7 +29,7 @@ public final class AssignmentMessageWriter extends OutboundMessageWriter {
     }
 
     @Override
-    public ByteMessage encode(Player player) {
+    public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(249);
         msg.put(members ? 1 : 0, ByteTransform.A);
         msg.putShort(player.getIndex(), ByteTransform.A, ByteOrder.LITTLE);
