@@ -1,6 +1,7 @@
 package io.luna.net;
 
 import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.net.codec.login.LoginResponse;
@@ -8,18 +9,21 @@ import io.luna.net.codec.login.LoginResponseMessage;
 import io.luna.util.parser.NewLineParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.ipfilter.AbstractRemoteAddressFilter;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
 /**
- * A {@link ChannelInboundHandlerAdapter} implementation that filters {@link Channel}s by the amount of active connections
- * they already have. A threshold is put on the amount of successful connections allowed to be made in order to provide
- * security from socket flooder attacks.
+ * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active connections
+ * they already have and whether or not they are blacklisted. A threshold is put on the amount of successful connections
+ * allowed to be made in order to provide security from socket flooder attacks.
  * <p>
  * <p>
  * <strong>One {@code LunaChannelFilter} instance must be shared across all pipelines in order to ensure that every channel
@@ -27,106 +31,105 @@ import java.util.Set;
  *
  * @author lare96 <http://github.org/lare96>
  */
-@Sharable public final class LunaChannelFilter extends ChannelInboundHandlerAdapter {
+@Sharable public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSocketAddress> {
 
     /**
-     * A {@link NewLineParser} implementation that reads banned addresses.
+     * A {@link NewLineParser} implementation that parses blacklisted addresses.
      *
      * @author lare96 <http://github.org/lare96>
      */
-    private final class IpBanParser extends NewLineParser {
+    private final class BlacklistParser extends NewLineParser {
 
         /**
-         * Creates a new {@link IpBanParser}.
+         * Creates a new {@link BlacklistParser}.
          */
-        public IpBanParser() {
-            super("./data/players/ip_banned.txt");
+        public BlacklistParser() {
+            super("./data/players/blacklist.txt");
         }
 
         @Override
         public void readNextLine(String nextLine) throws Exception {
-            bannedAddresses.add(nextLine);
+            blacklist.add(nextLine);
         }
     }
 
     /**
-     * A concurrent {@link Multiset} that holds the amount of connections made by all active hosts.
+     * An {@link ImmutableSet} containing whitelisted addresses. Addresses within this {@code ImmutableSet} bypass channel
+     * filtering completely.
+     */
+    public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
+
+    /**
+     * An {@link AttributeKey} used to access an {@link Attribute} describing which {@link LoginResponse} should be sent for
+     * rejected channels.
+     */
+    private static final AttributeKey<LoginResponse> RESPONSE_KEY = AttributeKey.valueOf("channel.RESPONSE_KEY");
+
+    /**
+     * A concurrent {@link Multiset} containing active connections.
      */
     private final Multiset<String> connections = ConcurrentHashMultiset.create();
 
     /**
-     * A concurrent {@link Set} that holds the banned addresses.
+     * A concurrent {@link Set} containing blacklisted addresses.
      */
-    private final Set<String> bannedAddresses = Sets.newConcurrentHashSet();
+    private final Set<String> blacklist = Sets.newConcurrentHashSet();
 
-    /**
-     * The maximum amount of connections that can be made by a single host.
-     */
-    private final int connectionLimit;
-
-    // Parse all of the banned addresses when this class is constructed. This class should only be constructed once, so
-    // the parser should only run once.
     {
-        NewLineParser parser = new IpBanParser();
+        NewLineParser parser = new BlacklistParser();
         parser.run();
     }
 
-    /**
-     * Creates a new {@link LunaChannelFilter} with a connection limit of {@code CONNECTION_LIMIT}.
-     */
-    public LunaChannelFilter() {
-        connectionLimit = LunaNetworkConstants.CONNECTION_LIMIT;
+    @Override
+    protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
+        String address = address(remoteAddress);
+
+        if (WHITELIST.contains(address)) { // Bypass filter for whitelisted addresses.
+            return true;
+        }
+
+        int limit = LunaNetworkConstants.CONNECTION_LIMIT;
+        if (connections.count(address) >= limit) { // Reject if more than CONNECTION_LIMIT active connections.
+            response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
+            return false;
+        }
+        if (blacklist.contains(address)) { // Reject if blacklisted.
+            response(ctx, LoginResponse.ACCOUNT_BANNED);
+            return false;
+        }
+
+        ChannelFuture future = ctx.channel().closeFuture(); // Remove address once disconnected.
+        future.addListener(it -> connections.remove(address));
+
+        connections.add(address);
+        return true;
     }
 
     @Override
-    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        String hostAddress = getAddress(ctx);
-        if (hostAddress.equals("127.0.0.1")) {
-            return;
-        }
-        if (connections.count(hostAddress) >= connectionLimit) {
-            disconnect(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
-            return;
-        }
-        if (bannedAddresses.contains(hostAddress)) {
-            disconnect(ctx, LoginResponse.ACCOUNT_BANNED);
-            return;
-        }
-        connections.add(hostAddress);
-        ctx.fireChannelRegistered();
-    }
+    protected ChannelFuture channelRejected(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
+        Channel channel = ctx.channel();
 
-    @Override
-    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        String hostAddress = getAddress(ctx);
-        if (hostAddress.equals("127.0.0.1")) {
-            return;
-        }
-        connections.remove(hostAddress);
-        ctx.fireChannelUnregistered();
-    }
-
-    /**
-     * Disconnects {@code ctx} with {@code response} as the response code.
-     *
-     * @param ctx The channel handler context.
-     * @param response The response to disconnect with.
-     */
-    private void disconnect(ChannelHandlerContext ctx, LoginResponse response) {
+        LoginResponse response = channel.attr(RESPONSE_KEY).get(); // Retrieve the response message.
         LoginResponseMessage message = new LoginResponseMessage(response);
-        ByteBuf initialMessage = ctx.alloc().buffer(8).writeLong(0);
 
-        ctx.channel().write(initialMessage, ctx.channel().voidPromise());
-        ctx.channel().writeAndFlush(message).addListener(ChannelFutureListener.CLOSE);
+        ByteBuf initialMessage = ctx.alloc().buffer(8).writeLong(0); // Write initial message.
+        channel.write(initialMessage, channel.voidPromise());
+        return channel.writeAndFlush(message); // Write response message.
     }
 
     /**
-     * Converts {@code ctx} to a {@code String} representation of the host address.
-     *
-     * @param ctx The channel handler context.
-     * @return The {@code String} address representation.
+     * Retrieves the host address name from the {@link InetSocketAddress}.
      */
-    private String getAddress(ChannelHandlerContext ctx) {
-        return ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
+    private String address(InetSocketAddress remoteAddress) {
+        InetAddress inet = remoteAddress.getAddress();
+        return inet.getHostAddress();
+    }
+
+    /**
+     * Sets the {@code RESPONSE_KEY} attribute to {@code response}.
+     */
+    private void response(ChannelHandlerContext ctx, LoginResponse response) {
+        Channel channel = ctx.channel();
+        channel.attr(RESPONSE_KEY).set(response);
     }
 }
