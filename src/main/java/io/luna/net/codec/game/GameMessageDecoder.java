@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes all {@link ByteBuf}s into {@link GameMessage}s.
@@ -25,9 +26,9 @@ import static com.google.common.base.Preconditions.checkState;
 public final class GameMessageDecoder extends ByteToMessageDecoder {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(GameMessageDecoder.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The ISAAC that will decrypt incoming messages.
@@ -164,7 +165,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
 
         try {
             if (messageRepository.getHandler(opcode) == null) {
-                LOGGER.debug("No InboundGameMessage assigned to [opcode={}]", opcode);
+                LOGGER.debug("No InboundGameMessage assigned to [opcode={}]", box(opcode));
                 currentMessage = Optional.empty();
                 return;
             }

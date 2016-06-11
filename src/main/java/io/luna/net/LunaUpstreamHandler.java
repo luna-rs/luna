@@ -20,9 +20,9 @@ import static java.util.Objects.requireNonNull;
 @Sharable public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(LunaUpstreamHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * A default access level constructor to discourage external instantiation outside of the {@code io.luna.net} package.

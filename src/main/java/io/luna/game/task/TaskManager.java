@@ -20,9 +20,9 @@ import java.util.Queue;
 public final class TaskManager {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(TaskManager.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * A {@link List} of tasks that have been submitted and are awaiting execution.
@@ -76,6 +76,7 @@ public final class TaskManager {
             if (it == null) {
                 break;
             }
+
             try {
                 it.execute();
             } catch (Exception e) {
