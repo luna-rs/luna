@@ -24,7 +24,7 @@ public abstract class Task {
     /**
      * If this {@code Task} is currently running.
      */
-    private boolean running;
+    private boolean running = true;
 
     /**
      * A counter that determines when this {@code Task} is ready to execute.
