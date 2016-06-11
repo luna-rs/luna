@@ -22,9 +22,9 @@ import java.util.List;
 public abstract class Parser<T1, T2> implements Runnable {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(Parser.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The path to the file being parsed.
