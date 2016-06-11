@@ -33,22 +33,9 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
             buf.putShort(-1);
             buf.putShort(mob.getTransformId());
         } else {
-            encodeEquipmentValues(buf, mob); // TODO: encode equipment values
-
-            buf.put(appearance.get(PlayerAppearance.HAIR_COLOR));
-            buf.put(appearance.get(PlayerAppearance.TORSO_COLOR));
-            buf.put(appearance.get(PlayerAppearance.LEG_COLOR));
-            buf.put(appearance.get(PlayerAppearance.FEET_COLOR));
-            buf.put(appearance.get(PlayerAppearance.SKIN_COLOR));
-
-            // TODO: Walking, standing, running, turning animations
-            buf.putShort(0x328);
-            buf.putShort(0x337);
-            buf.putShort(0x333);
-            buf.putShort(0x334);
-            buf.putShort(0x335);
-            buf.putShort(0x336);
-            buf.putShort(0x338);
+            encodeModelValues(buf, mob);
+            encodeModelColorValues(buf, mob);
+            encodeAnimationValues(buf, mob);
 
             buf.putLong(mob.getUsernameHash());
             buf.put(mob.getCombatLevel());
@@ -62,9 +49,10 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
     }
 
     /**
-     * Encodes values related to the equipment of the {@link Player}.
+     * Encodes values related to the model of the {@link Player}.
      */
-    private void encodeEquipmentValues(ByteMessage buf, Player mob) {
+    private void encodeModelValues(ByteMessage buf, Player mob) {
+        // TODO: encode equipment values
         PlayerAppearance appearance = mob.getAppearance();
 
         buf.put(0);
@@ -85,5 +73,32 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
         } else {
             buf.putShort(0);
         }
+    }
+
+    /**
+     * Encodes values related to the model colors of the {@link Player}.
+     */
+    private void encodeModelColorValues(ByteMessage buf, Player mob) {
+        PlayerAppearance appearance = mob.getAppearance();
+
+        buf.put(appearance.get(PlayerAppearance.HAIR_COLOR));
+        buf.put(appearance.get(PlayerAppearance.TORSO_COLOR));
+        buf.put(appearance.get(PlayerAppearance.LEG_COLOR));
+        buf.put(appearance.get(PlayerAppearance.FEET_COLOR));
+        buf.put(appearance.get(PlayerAppearance.SKIN_COLOR));
+    }
+
+    /**
+     * Encodes values related to the animations of the {@link Player}.
+     */
+    private void encodeAnimationValues(ByteMessage buf, Player mob) {
+        // TODO: Walking, standing, running, turning animations
+        buf.putShort(0x328);
+        buf.putShort(0x337);
+        buf.putShort(0x333);
+        buf.putShort(0x334);
+        buf.putShort(0x335);
+        buf.putShort(0x336);
+        buf.putShort(0x338);
     }
 }
