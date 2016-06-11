@@ -3,10 +3,10 @@ package io.luna.game.model.mobile;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.moandjiezana.toml.Toml;
-import com.moandjiezana.toml.TomlWriter;
+import com.google.gson.JsonParser;
 import io.luna.game.GameService;
 import io.luna.game.model.Position;
+import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mobile.attr.AttributeKey;
 import io.luna.game.model.mobile.attr.AttributeValue;
 import io.luna.net.codec.login.LoginResponse;
@@ -14,7 +14,11 @@ import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,9 +36,9 @@ import java.util.concurrent.Callable;
 public final class PlayerSerializer {
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(PlayerSerializer.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The {@link Path} to all of the serialized {@link Player} data.
@@ -75,32 +79,35 @@ public final class PlayerSerializer {
      * Attempts to serialize all persistent data for the {@link Player}.
      */
     public void save() {
-        TomlWriter writer = new TomlWriter();
-        Map<String, Object> data = new LinkedHashMap<>();
+        Map<String, Object> mainTable = new LinkedHashMap<>();
 
-        data.put("password", player.getPassword());
-        data.put("position", player.getPosition());
-        data.put("rights", player.getRights().name());
-        data.put("running", player.getWalkingQueue().isRunning());
-        data.put("appearance", player.getAppearance().toArray());
+        mainTable.put("password", player.getPassword());
+        mainTable.put("position", player.getPosition());
+        mainTable.put("rights", player.getRights().name());
+        mainTable.put("running", player.getWalkingQueue().isRunning());
+        mainTable.put("appearance", player.getAppearance().toArray());
+        mainTable.put("inventory", player.getInventory().toIndexedArray());
+        mainTable.put("bank", player.getBank().toIndexedArray());
+        mainTable.put("equipment", player.getEquipment().toIndexedArray());
+        mainTable.put("skills", player.getSkills().toArray());
 
-        Map<String, Object> attributes = new HashMap<>();
+        Map<String, Object> attrTable = new HashMap<>();
         for (Entry<String, AttributeValue<?>> it : player.attributes) {
             AttributeKey<?> key = AttributeKey.ALIASES.get(it.getKey());
             AttributeValue<?> value = it.getValue();
 
             if (key.isPersistent()) {
-                Map<String, Object> attributeEntry = new LinkedHashMap<>();
-                attributeEntry.put("type", key.getTypeName());
-                attributeEntry.put("value", value.get());
+                Map<String, Object> attrSubTable = new LinkedHashMap<>();
+                attrSubTable.put("type", key.getTypeName());
+                attrSubTable.put("value", value.get());
 
-                attributes.put(key.getName(), attributeEntry);
+                attrTable.put(key.getName(), attrSubTable);
             }
         }
-        data.put("attributes", attributes);
+        mainTable.put("attributes", attrTable);
 
-        try {
-            writer.write(data, path.toFile());
+        try (Writer writer = new FileWriter(path.toFile())) {
+            writer.write(GsonUtils.GSON.toJson(mainTable));
         } catch (IOException e) {
             LOGGER.catching(e);
         }
@@ -130,34 +137,46 @@ public final class PlayerSerializer {
         if (!Files.exists(path)) {
             return LoginResponse.NORMAL;
         }
-        try {
-            JsonObject reader = new Toml().read(path.toFile()).to(JsonObject.class);
+        try (Reader reader = new FileReader(path.toFile())) {
+            JsonObject jsonReader = (JsonObject) new JsonParser().parse(reader);
 
-            String password = reader.get("password").getAsString();
+            String password = jsonReader.get("password").getAsString();
             if (!expectedPassword.equals(password)) {
                 return LoginResponse.INVALID_CREDENTIALS;
             }
 
-            Position position = GsonUtils.getAsType(reader.get("position"), Position.class);
+            Position position = GsonUtils.getAsType(jsonReader.get("position"), Position.class);
             player.setPosition(position);
 
-            PlayerRights rights = PlayerRights.valueOf(reader.get("rights").getAsString());
+            PlayerRights rights = PlayerRights.valueOf(jsonReader.get("rights").getAsString());
             player.setRights(rights);
 
-            boolean running = reader.get("running").getAsBoolean();
+            boolean running = jsonReader.get("running").getAsBoolean();
             player.getWalkingQueue().setRunning(running);
 
-            int[] appearance = GsonUtils.getAsType(reader.get("appearance"), int[].class);
+            int[] appearance = GsonUtils.getAsType(jsonReader.get("appearance"), int[].class);
             player.getAppearance().setValues(appearance);
 
-            JsonObject attr = reader.get("attributes").getAsJsonObject();
+            IndexedItem[] inventory = GsonUtils.getAsType(jsonReader.get("inventory"), IndexedItem[].class);
+            player.getInventory().setIndexedItems(inventory);
+
+            IndexedItem[] bank = GsonUtils.getAsType(jsonReader.get("bank"), IndexedItem[].class);
+            player.getBank().setIndexedItems(bank);
+
+            IndexedItem[] equipment = GsonUtils.getAsType(jsonReader.get("equipment"), IndexedItem[].class);
+            player.getEquipment().setIndexedItems(equipment);
+
+            Skill[] skills = GsonUtils.getAsType(jsonReader.get("skills"), Skill[].class);
+            player.getSkills().setSkills(skills);
+
+            JsonObject attr = jsonReader.get("attributes").getAsJsonObject();
             for (Entry<String, JsonElement> it : attr.entrySet()) {
-                JsonObject obj = it.getValue().getAsJsonObject();
+                JsonObject attrReader = it.getValue().getAsJsonObject();
 
-                Class<?> type = Class.forName(obj.get("type").getAsString());
-                Object data = GsonUtils.getAsType(obj.get("value"), type);
+                Class<?> type = Class.forName(attrReader.get("type").getAsString());
+                Object data = GsonUtils.getAsType(attrReader.get("value"), type);
 
-                player.attributes.get(it.getKey()).set(data);
+                player.attr().get(it.getKey()).set(data);
             }
         } catch (Exception e) {
             LOGGER.catching(e);
