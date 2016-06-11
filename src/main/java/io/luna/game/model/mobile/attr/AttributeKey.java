@@ -29,8 +29,10 @@ public final class AttributeKey<T> {
     public static final Map<String, AttributeKey> ALIASES = new IdentityHashMap<>();
 
     static {
-        AttributeKey.forPersistent("run_energy", 100);
-        AttributeKey.forPersistent("first_login", true);
+        forPersistent("run_energy", 100);
+        forPersistent("first_login", true);
+
+        forTransient("bank_withdraw_note", false);
     }
 
     /**
