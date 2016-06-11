@@ -55,9 +55,9 @@ public final class PluginBootstrap implements Runnable {
     }
 
     /**
-     * The logger that will print important information.
+     * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger(PluginBootstrap.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The directory that contains all files related to plugins.

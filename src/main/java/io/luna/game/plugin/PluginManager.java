@@ -17,6 +17,8 @@ import java.util.Map;
  */
 public final class PluginManager {
 
+    // TODO: Reloading plugins
+
     /**
      * A {@link Map} containing the event types and designated pipelines.
      */
