@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A collection of {@link Skill}s for a {@link MobileEntity}.
@@ -131,7 +132,8 @@ public final class SkillSet implements Iterable<Skill> {
 
     @Override
     public Spliterator<Skill> spliterator() {
-        return Spliterators.spliterator(skills, Spliterator.NONNULL);
+        return Spliterators
+            .spliterator(skills, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.DISTINCT);
     }
 
     /**
@@ -149,6 +151,26 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public Skill getSkill(int id) {
         return skills[id];
+    }
+
+    /**
+     * <strong>Please note that this function does not give direct access to the backing array but instead creates a shallow
+     * copy.</strong>
+     *
+     * @return The shallow copy of the backing skill array.
+     */
+    public Skill[] toArray() {
+        return Arrays.copyOf(skills, skills.length);
+    }
+
+    /**
+     * Sets the backing array of skills to {@code newSkills}. The backing array will not hold any references to the argued
+     * array. The argued array must have a capacity equal to that of the backing array.
+     */
+    public void setSkills(Skill[] newSkills) {
+        checkState(newSkills.length == skills.length, "incompatible skill array");
+
+        System.arraycopy(newSkills, 0, skills, 0, skills.length);
     }
 
     /**
