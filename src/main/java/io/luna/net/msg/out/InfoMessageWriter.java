@@ -26,6 +26,16 @@ public final class InfoMessageWriter extends OutboundMessageWriter {
         this.message = message;
     }
 
+    /**
+     * Creates a new {@link InfoMessageWriter} with a formatted {@code message}.
+     *
+     * @param message The message to format, then write to the chatbox.
+     * @param params The parameters to include in this formatted message.
+     */
+    public InfoMessageWriter(String message, Object... params) {
+        this(String.format(message, params));
+    }
+
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(253, MessageType.VARIABLE);
