@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.mobile.Npc;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A cached definition that describes specific combat properties for {@link Npc}s.
  *
@@ -87,9 +90,9 @@ public final class NpcCombatDefinition {
     public static final int RANGED_DEFENCE = 9;
 
     /**
-     * An array of the cached {@code NpcCombatDefinition}s.
+     * A {@link Map} of the cached {@code NpcCombatDefinition}s.
      */
-    public static final NpcCombatDefinition[] DEFINITIONS = new NpcCombatDefinition[8152];
+    public static final Map<Integer, NpcCombatDefinition> DEFINITIONS = new HashMap<>();
 
     /**
      * The default {@link NpcCombatDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Npc}.
@@ -104,8 +107,7 @@ public final class NpcCombatDefinition {
      * @return The {@code NpcCombatDefinition} instance.
      */
     public static NpcCombatDefinition getDefinition(int id) {
-        NpcCombatDefinition def = DEFINITIONS[id];
-        return def == null ? DEFAULT : def;
+        return DEFINITIONS.getOrDefault(id, DEFAULT);
     }
 
     /**
