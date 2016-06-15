@@ -16,7 +16,7 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundMessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
-import io.luna.net.msg.out.InfoMessageWriter;
+import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
@@ -189,7 +189,7 @@ public final class Player extends MobileEntity {
             rights = PlayerRights.DEVELOPER;
         }
 
-        queue(new InfoMessageWriter("Welcome to Luna!"));
+        queue(new GameChatboxMessageWriter("Welcome to Luna!"));
 
         plugins.post(new LoginEvent(), this);
 

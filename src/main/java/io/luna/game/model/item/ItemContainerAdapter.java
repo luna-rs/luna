@@ -1,7 +1,7 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.mobile.Player;
-import io.luna.net.msg.out.InfoMessageWriter;
+import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
  * An adapter for {@link ItemContainerListener} that updates {@link Item}s on a widget whenever items change, and sends the
@@ -37,7 +37,7 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
 
     @Override
     public void capacityExceeded(ItemContainer container) {
-        player.queue(new InfoMessageWriter(getCapacityExceededMsg()));
+        player.queue(new GameChatboxMessageWriter(getCapacityExceededMsg()));
     }
 
     /**

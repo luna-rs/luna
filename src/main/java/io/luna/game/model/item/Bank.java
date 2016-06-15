@@ -3,7 +3,7 @@ package io.luna.game.model.item;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.attr.AttributeValue;
-import io.luna.net.msg.out.InfoMessageWriter;
+import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 import io.luna.net.msg.out.StateMessageWriter;
 
@@ -182,7 +182,7 @@ public final class Bank extends ItemContainer {
             newId = def.getNotedId() != -1 ? def.getNotedId() : withdrawItem.getId();
 
             if (newId == withdrawItem.getId()) {
-                player.queue(new InfoMessageWriter("This item cannot be withdrawn as a note."));
+                player.queue(new GameChatboxMessageWriter("This item cannot be withdrawn as a note."));
             }
         }
 

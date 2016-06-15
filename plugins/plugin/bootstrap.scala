@@ -131,7 +131,7 @@ def using(resource: AutoCloseable)
 
 implicit class PlayerImplicits(player: Player) {
   def address = player.getSession.getHostAddress
-  def sendMessage(message: String) = player.queue(new InfoMessageWriter(message))
+  def sendMessage(message: String) = player.queue(new GameChatboxMessageWriter(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new WidgetTextMessageWriter(text, widget))
   def sendForceTab(id: Int) = player.queue(new ForceTabMessageWriter(id))
   def sendChatboxInterface(id: Int) = player.queue(new ChatboxInterfaceMessageWriter(id))

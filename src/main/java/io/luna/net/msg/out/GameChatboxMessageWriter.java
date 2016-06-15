@@ -10,7 +10,7 @@ import io.luna.net.msg.OutboundMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class InfoMessageWriter extends OutboundMessageWriter {
+public final class GameChatboxMessageWriter extends OutboundMessageWriter {
 
     /**
      * The message to write to the chatbox.
@@ -18,21 +18,21 @@ public final class InfoMessageWriter extends OutboundMessageWriter {
     private final String message;
 
     /**
-     * Creates a new {@link InfoMessageWriter}.
+     * Creates a new {@link GameChatboxMessageWriter}.
      *
      * @param message The message to write to the chatbox.
      */
-    public InfoMessageWriter(String message) {
+    public GameChatboxMessageWriter(String message) {
         this.message = message;
     }
 
     /**
-     * Creates a new {@link InfoMessageWriter} with a formatted {@code message}.
+     * Creates a new {@link GameChatboxMessageWriter} with a formatted {@code message}.
      *
      * @param message The message to format, then write to the chatbox.
      * @param params The parameters to include in this formatted message.
      */
-    public InfoMessageWriter(String message, Object... params) {
+    public GameChatboxMessageWriter(String message, Object... params) {
         this(String.format(message, params));
     }
 
