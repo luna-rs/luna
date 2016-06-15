@@ -193,7 +193,7 @@ public class ItemContainer implements Iterable<Item> {
     public boolean add(Item item, int preferredIndex) {
         checkArgument(preferredIndex >= -1, "invalid index identifier");
 
-        ItemDefinition def = item.getDefinition();
+        ItemDefinition def = item.getItemDef();
         boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
 
         if (stackable) {
@@ -293,7 +293,7 @@ public class ItemContainer implements Iterable<Item> {
     public boolean remove(Item item, int preferredIndex) {
         checkArgument(preferredIndex >= -1, "invalid index identifier");
 
-        ItemDefinition def = item.getDefinition();
+        ItemDefinition def = item.getItemDef();
         boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
 
         if (stackable) {
@@ -487,7 +487,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code item} can be added, {@code false} otherwise.
      */
     public final boolean hasCapacityFor(Item item) {
-        ItemDefinition def = item.getDefinition();
+        ItemDefinition def = item.getItemDef();
         boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
 
         if (stackable) {

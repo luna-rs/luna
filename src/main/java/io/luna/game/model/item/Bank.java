@@ -133,7 +133,7 @@ public final class Bank extends ItemContainer {
 
         depositItem = depositItem.setAmount(amount);
 
-        ItemDefinition def = depositItem.getDefinition();
+        ItemDefinition def = depositItem.getItemDef();
         int newId = (def.getUnnotedId() != -1) ? def.getUnnotedId() : depositItem.getId();
 
         if (add(depositItem.setId(newId))) {
@@ -178,7 +178,7 @@ public final class Bank extends ItemContainer {
         AttributeValue<Boolean> value = player.attr().get("bank_withdraw_note");
         int newId = -1;
         if (value.get()) {
-            ItemDefinition def = withdrawItem.getDefinition();
+            ItemDefinition def = withdrawItem.getItemDef();
             newId = def.getNotedId() != -1 ? def.getNotedId() : withdrawItem.getId();
 
             if (newId == withdrawItem.getId()) {

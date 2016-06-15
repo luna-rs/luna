@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
+import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -23,11 +24,6 @@ public final class Item {
     private final int amount;
 
     /**
-     * The definition instance for this {@code Item}.
-     */
-    private transient final ItemDefinition definition;
-
-    /**
      * Creates a new {@link Item}.
      *
      * @param id The identifier for this {@code Item}.
@@ -39,7 +35,6 @@ public final class Item {
 
         this.id = id;
         this.amount = amount;
-        definition = ItemDefinition.DEFINITIONS[id];
     }
 
     @Override
@@ -112,10 +107,17 @@ public final class Item {
     }
 
     /**
-     * The definition instance for this {@code Item}.
+     * @return The definition instance for this {@code Item}.
      */
-    public ItemDefinition getDefinition() {
-        return definition;
+    public ItemDefinition getItemDef() {
+        return ItemDefinition.DEFINITIONS[id];
+    }
+
+    /**
+     * @return The equipment definition for this {@code Item}.
+     */
+    public EquipmentDefinition getEquipmentDef() {
+        return EquipmentDefinition.getDefinition(id);
     }
 
     /**
