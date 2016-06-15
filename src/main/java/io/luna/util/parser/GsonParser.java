@@ -1,6 +1,7 @@
 package io.luna.util.parser;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -30,12 +31,14 @@ public abstract class GsonParser<T> extends Parser<JsonArray, T> {
 
     @Override
     public T doRead(JsonArray reader) throws Exception {
-        return readObject((JsonObject) reader.get(currentIndex));
+        JsonElement current = reader.get(currentIndex);
+        return readObject(current.getAsJsonObject());
     }
 
     @Override
     public JsonArray getReader(BufferedReader in) throws Exception {
-        return (JsonArray) new JsonParser().parse(in);
+        JsonElement jsonRead = new JsonParser().parse(in);
+        return jsonRead.getAsJsonArray();
     }
 
     @Override
