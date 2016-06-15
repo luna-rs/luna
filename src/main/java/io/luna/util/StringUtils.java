@@ -10,6 +10,11 @@ import com.google.common.base.Joiner;
 public final class StringUtils {
 
     /**
+     * An empty array of {@code String}s.
+     */
+    public static final String[] EMPTY_ARRAY = {};
+
+    /**
      * An array containing valid {@code char}s.
      */
     public static final char VALID_CHARACTERS[] = { '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
