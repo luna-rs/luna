@@ -2,6 +2,8 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mobile.PlayerRights;
+import io.luna.util.StringUtils;
 
 import java.util.Objects;
 
@@ -25,29 +27,42 @@ public final class CommandEvent extends Event {
     private final String[] args;
 
     /**
+     * The rights of the player using the command.
+     */
+    private final PlayerRights rights;
+
+    /**
      * Creates a new {@link CommandEvent}.
      *
      * @param name The name of the command.
      * @param args The arguments of the command.
+     * @param rights The rights of the player using the command.
      */
-    public CommandEvent(String name, String[] args) {
+    public CommandEvent(String name, String[] args, PlayerRights rights) {
         this.name = name;
         this.args = args;
+        this.rights = rights;
     }
 
     /**
      * Creates a new {@link CommandEvent}.
      *
      * @param name The name of the command.
+     * @param rights The rights of the player using the command.
      */
-    public CommandEvent(String name) {
-        this(name, new String[] {});
+    public CommandEvent(String name, PlayerRights rights) {
+        this(name, StringUtils.EMPTY_ARRAY, rights);
     }
 
     @Override
     public boolean matches(Object... args) {
-        checkState(args.length == 1, "args.length != 1");
-        return Objects.equals(args[0], name);
+        checkState(args.length == 1 || args.length == 2, "args.length != 1 or 2");
+
+        boolean nameEquals = Objects.equals(args[0], name);
+        if (args.length == 1) {
+            return nameEquals;
+        }
+        return nameEquals && Objects.equals(args[1], rights);
     }
 
     /**
