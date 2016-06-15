@@ -1,7 +1,7 @@
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.Position
 
->>@[CommandEvent]("move") { (msg, plr) =>
+>>@[CommandEvent]("move", RIGHTS_DEV) { (msg, plr) =>
   val args = msg.getArgs
 
   val x = args(0).toInt

@@ -29,7 +29,7 @@ val LEVEL_UP_TABLE = Vector(
   Vector(4268, 4269, 4267)
 )
 
->>@[SkillChangeEvent](playerInstance) { (msg, plr) =>
+>>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
   plr.sendSkillUpdate(msg.getId)
 
   if (msg.getOldStaticLevel < 99) {

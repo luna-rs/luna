@@ -31,15 +31,15 @@ import scala.util.Random
 
 
 // common constants
-@inline val rightsPlayer = PlayerRights.PLAYER
-@inline val rightsMod = PlayerRights.MODERATOR
-@inline val rightsAdmin = PlayerRights.ADMINISTRATOR
-@inline val rightsDev = PlayerRights.DEVELOPER
+@inline val RIGHTS_PLAYER = PlayerRights.PLAYER
+@inline val RIGHTS_MOD = PlayerRights.MODERATOR
+@inline val RIGHTS_ADMIN = PlayerRights.ADMINISTRATOR
+@inline val RIGHTS_DEV = PlayerRights.DEVELOPER
 
-@inline val playerInstance = EntityType.PLAYER
-@inline val npcInstance = EntityType.NPC
-@inline val objectInstance = EntityType.OBJECT
-@inline val itemInstance = EntityType.ITEM
+@inline val TYPE_PLAYER = EntityType.PLAYER
+@inline val TYPE_NPC = EntityType.NPC
+@inline val TYPE_OBJECT = EntityType.OBJECT
+@inline val TYPE_ITEM = EntityType.ITEM
 
 
 // logging, prefer lazy 'msg' evaluation
