@@ -8,6 +8,7 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
 import io.luna.util.StringUtils;
+import io.luna.util.parser.impl.EquipmentDefinitionParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionParser;
@@ -120,5 +121,6 @@ public final class Server {
         service.execute(new NpcDefinitionParser());
         service.execute(new NpcCombatDefinitionParser());
         service.execute(new MessageRepositoryParser(messageRepository));
+        service.execute(new EquipmentDefinitionParser());
     }
 }
