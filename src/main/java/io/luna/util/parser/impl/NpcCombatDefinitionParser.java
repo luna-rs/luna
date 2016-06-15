@@ -43,6 +43,6 @@ public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     @Override
     public void onReadComplete(List<NpcCombatDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> NpcCombatDefinition.DEFINITIONS[it.getId()] = it);
+        readObjects.forEach(it -> NpcCombatDefinition.DEFINITIONS.put(it.getId(), it));
     }
 }
