@@ -13,7 +13,7 @@ val STARTER_ITEMS = Vector(
   new Item(882, 750)
 )
 
->>[LoginEvent] { (msg, plr) =>
+>>[LoginEvent] { (msg, plr) => // Give "starter package" if new player.
   val inventory = plr.getInventory
 
   if (plr.attr("first_login")) {
@@ -23,8 +23,12 @@ val STARTER_ITEMS = Vector(
   }
 }
 
->>[LoginEvent] { (msg, plr) =>
+>>[LoginEvent] { (msg, plr) => // Send mute notifcation if muted.
   if (plr.attr("unmute_date") != "n/a") {
     plr.sendMessage("You are currently muted. Other players will not see the text you write.")
   }
+}
+
+>>[LoginEvent] { (msg, plr) => // Configure states.
+  plr.sendState(173, if (plr.getWalkingQueue.isRunning) 1 else 0)
 }
