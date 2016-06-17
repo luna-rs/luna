@@ -6,29 +6,29 @@ import io.luna.game.plugin.PluginManager;
 
 /**
  * An object assigned to every {@link Server} instance. It represents a single instance of the Runescape in it's entirety,
- * that being a {@link World}, {@link PluginManager}, and the {@link GameService} that runs the aforementioned things.
+ * that being a {@link World}, {@link PluginManager}, and {@link GameService}.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LunaContext {
 
     /**
-     * The {@link World} that manages various entities.
+     * The {@link World} in this context.
      */
     private final World world = new World(this);
 
     /**
-     * The {@link GameService} that manages game logic processing.
+     * The {@link GameService} in this context.
      */
     private final GameService service = new GameService(this);
 
     /**
-     * The {@link PluginManager} that manages all Scala plugins.
+     * The {@link PluginManager} in this context.
      */
     private final PluginManager plugins = new PluginManager(this);
 
     /**
-     * A package-private constructor to discourage external instantiation outside of the {@code io.luna} package.
+     * A package-private constructor to discourage external instantiation.
      */
     LunaContext() {
     }
@@ -48,7 +48,7 @@ public final class LunaContext {
     }
 
     /**
-     * @return The {@link PluginManager} that manages all Scala plugins.
+     * @return The {@link PluginManager} in this context.
      */
     public PluginManager getPlugins() {
         return plugins;
