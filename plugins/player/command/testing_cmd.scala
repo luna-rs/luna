@@ -13,10 +13,6 @@ import io.luna.game.model.mobile.{Animation, Graphic}
   plr.sendSound(msg.getArgs()(0).toInt, 0, 0)
 }
 
->>@[CommandEvent]("object", RIGHTS_DEV) { (msg, plr) =>
-  // TODO: Once object placement system is done
-}
-
 >>@[CommandEvent]("graphic", RIGHTS_DEV) { (msg, plr) =>
   plr.graphic(new Graphic(msg.getArgs()(0).toInt))
 }

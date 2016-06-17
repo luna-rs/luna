@@ -5,7 +5,6 @@ import io.luna.game.event.impl.CommandEvent
   world.addNpc(args(0).toInt, plr.position)
 }
 
->>@[CommandEvent]("player_npc", RIGHTS_DEV) { (msg, plr) =>
-  val id = msg.getArgs()(0).toInt
-  plr.transform(id)
+>>@[CommandEvent]("object", RIGHTS_DEV) { (msg, plr) =>
+  // TODO: Once object placement system is done
 }
