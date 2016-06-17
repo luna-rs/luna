@@ -62,7 +62,10 @@ public final class CommandEvent extends Event {
         if (args.length == 1) {
             return nameEquals;
         }
-        return nameEquals && Objects.equals(args[1], rights);
+
+        PlayerRights matchRights = (PlayerRights) args[1];
+        boolean rightsEquals = rights.equalOrGreater(matchRights);
+        return nameEquals && rightsEquals;
     }
 
     /**
