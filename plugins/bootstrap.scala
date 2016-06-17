@@ -153,6 +153,7 @@ implicit class PlayerImplicits(player: Player) {
   def sendMusic(id: Int) = player.queue(new MusicMessageWriter(id))
   def sendSound(id: Int, soundType: Int, delay: Int) = player.queue(new SoundMessageWriter(id, soundType, delay))
   def sendInterface(id: Int) = player.queue(new InterfaceMessageWriter(id))
+  def sendState(id: Int, value: Int) = player.queue(new StateMessageWriter(id, value))
   def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 
