@@ -20,6 +20,8 @@ import scala.util.Random
   * generic events and '>>@' for events that override the 'matches' method in the Event class. The only difference is that
   * '>>@' takes a set of arguments that will matched against the events arguments.
   *
+  * Please note that normal methods and fields must come before event interception.
+  *
   * Also, because this plugin acts as a master dependency great caution needs to be taken when modifying its contents. Changing
   * and/or removing the wrong thing could result in breaking every single plugin.
   */
@@ -62,7 +64,8 @@ def >>@[T <: Event](args: Any*)
                    (implicit tag: ClassTag[T]) = {
 
   def submit(newArgs: Seq[AnyRef]) =
-    plugins.submit(tag.runtimeClass, new EventListener((msg: T, plr) => if (msg.matches(newArgs: _*)) {func(msg, plr)}))
+    pipelines.addEventListener(tag.runtimeClass,
+      new EventListener((msg: T, plr) => if (msg.matches(newArgs: _*)) {func(msg, plr)}))
 
   submit(args.collect {
     case any: Any => any.asInstanceOf[AnyRef]
@@ -71,8 +74,7 @@ def >>@[T <: Event](args: Any*)
 
 def >>[T <: Event](func: (T, Player) => Unit)
                   (implicit tag: ClassTag[T]) =
-  plugins.submit(tag.runtimeClass, new EventListener(func))
-
+  pipelines.addEventListener(tag.runtimeClass, new EventListener(func))
 
 // misc. global methods
 def async(func: => Unit) = service.submit(new Runnable {
@@ -82,7 +84,6 @@ def async(func: => Unit) = service.submit(new Runnable {
     } catch {case e: Exception => e.printStackTrace()}
   }
 })
-
 def using(resource: AutoCloseable)
          (func: AutoCloseable => Unit) = {
   try {
@@ -105,9 +106,13 @@ def using(resource: AutoCloseable)
   *   override protected def execute() = {
   *     val randomNumber = array((rand.nextDouble * array.length).toInt)
   *     plr.queue(new InfoMessageWriter(s"Your random number from the array is $randomNumber!"))
+  *
+  *     if(plr.getRights.equalOrGreater(RIGHTS_MOD)) {
+  *       plr.queue(new InfoMessageWriter("You are a moderator."))
+  *     }
   *     cancel()
-  *   }
   * })
+  *   }
   *
   *
   * ... Which is ugly and hard to read, the monkey patching code below allows
@@ -117,6 +122,10 @@ def using(resource: AutoCloseable)
   *
   * world.scheduleOnce(20) {
   *   plr.sendMessage(s"Your random number from the array is ${array.randomElement}!")
+  *
+  *   if(plr.rights >=@ RIGHTS_MOD) {
+  *     plr.sendMessage("You are a moderator")
+  *   }
   * }
   *
   *
@@ -131,11 +140,19 @@ def using(resource: AutoCloseable)
 
 implicit class PlayerImplicits(player: Player) {
   def address = player.getSession.getHostAddress
+  def name = player.getUsername.capitalize
+  def rights = player.getRights
+  def bank = player.getBank
+  def inventory = player.getInventory
+  def equipment = player.getEquipment
   def sendMessage(message: String) = player.queue(new GameChatboxMessageWriter(message))
   def sendWidgetText(text: String, widget: Int) = player.queue(new WidgetTextMessageWriter(text, widget))
   def sendForceTab(id: Int) = player.queue(new ForceTabMessageWriter(id))
   def sendChatboxInterface(id: Int) = player.queue(new ChatboxInterfaceMessageWriter(id))
   def sendSkillUpdate(id: Int) = player.queue(new SkillUpdateMessageWriter(id))
+  def sendMusic(id: Int) = player.queue(new MusicMessageWriter(id))
+  def sendSound(id: Int, soundType: Int, delay: Int) = player.queue(new SoundMessageWriter(id, soundType, delay))
+  def sendInterface(id: Int) = player.queue(new InterfaceMessageWriter(id))
   def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 
@@ -150,7 +167,17 @@ implicit class MobileEntityImplicits(mob: MobileEntity) {
   }
 }
 
+implicit class PlayerRightsImplicits(rights: PlayerRights) {
+  // We use '@' to distinguish from the 'normal' operators, but they mean the same thing.
+  def <=@(other: PlayerRights) = rights.equalOrLess(other)
+  def >=@(other: PlayerRights) = rights.equalOrGreater(other)
+  def >@(other: PlayerRights) = rights.greater(other)
+  def <@(other: PlayerRights) = rights.less(other)
+  def ==@(other: PlayerRights) = rights.equal(other)
+}
+
 implicit class EntityImplicits(entity: Entity) {
+  def position = entity.getPosition
   def x = entity.getPosition.getX
   def y = entity.getPosition.getY
   def z = entity.getPosition.getZ
@@ -178,6 +205,17 @@ implicit class WorldImplicits(world: World) {
       it.cancel()
     }
   }
+
+  // NOTE: Be careful using this, these types of tasks will >never< stop running as long
+  // as the server is online!
+  def scheduleForever(delay: Int, instant: Boolean = false)
+                     (action: => Unit) = {
+    schedule(delay, instant) { it =>
+      action
+    }
+  }
+
+  def messageToAll(str: String) = world.getPlayers.foreach(_.sendMessage(str))
 }
 
 implicit class ArrayImplicits[T](array: Array[T]) {
