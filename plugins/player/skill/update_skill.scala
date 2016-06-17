@@ -29,15 +29,7 @@ val LEVEL_UP_TABLE = Vector(
   Vector(4268, 4269, 4267)
 )
 
->>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
-  plr.sendSkillUpdate(msg.getId)
-
-  if (msg.getOldStaticLevel < 99) {
-    checkForLevel(msg.getId, msg.getOldStaticLevel, plr)
-  }
-}
-
-private def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
+def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
   val set = plr.getSkills
   val skill = plr.skill(id)
   val newLevel = skill.getStaticLevel
@@ -57,8 +49,16 @@ private def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
     plr.graphic(LEVEL_UP_GRAPHIC)
 
     if (Skill.isCombatSkill(id)) {
-      set.resetCombatLevel
+      set.resetCombatLevel()
       plr.flag(UpdateFlag.APPEARANCE)
     }
+  }
+}
+
+>>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
+  plr.sendSkillUpdate(msg.getId)
+
+  if (msg.getOldStaticLevel < 99) {
+    checkForLevel(msg.getId, msg.getOldStaticLevel, plr)
   }
 }
