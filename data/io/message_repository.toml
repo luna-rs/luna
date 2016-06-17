@@ -206,7 +206,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 41
 size = 6
-payload = "GenericMessageReader"
+payload = "EquipItemMessageReader"
 
 [[message]]
 opcode = 42
