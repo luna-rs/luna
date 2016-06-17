@@ -1,6 +1,8 @@
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 
+// TODO: Turn this into one command using an interface, once option dialogues are done.
+
 >>@[CommandEvent]("empty", RIGHTS_DEV) { (msg, plr) =>
   plr.inventory.clear
   plr.bank.clear
