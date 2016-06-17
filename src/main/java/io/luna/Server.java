@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
+import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
@@ -86,6 +87,9 @@ public final class Server {
 
         bind();
         LOGGER.info("Luna is now online on port {}!", box(LunaNetworkConstants.PORT));
+
+        PluginManager plugins = context.getPlugins();
+        plugins.post(new ServerLaunchEvent());
     }
 
     /**
