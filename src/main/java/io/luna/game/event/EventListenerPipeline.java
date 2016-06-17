@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A pipeline-like model that allows for an {@link Event} to be passed through it to be intercepted by each individual {@link
- * EventListener}. The traversal of the {@code Event} can be terminated at any time by invoking {@code terminate()}.
+ * A pipeline-like model that allows for an {@link Event} of a specific type to be passed through it to be intercepted by
+ * each individual {@link EventListener}. The traversal of the {@code Event} can be terminated at any time by invoking {@code
+ * terminate()}.
  * <p>
- * Please note that {@code EventListener}s can always be added to this pipeline, but they can <strong>never</strong> be
- * removed.
+ * Every active pipeline is contained within an {@link EventListenerPipelineSet}.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -35,6 +35,11 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      * A flag that determines if a traversal has been terminated by a {@link EventListener}.
      */
     private boolean terminated;
+
+    @Override
+    public UnmodifiableIterator<EventListener<E>> iterator() {
+        return Iterators.unmodifiableIterator(listeners.iterator());
+    }
 
     /**
      * Traverse the pipeline passing the {@code evt} instance to each {@link EventListener}. A full traversal over all {@code
@@ -91,8 +96,10 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
         listeners.add((EventListener<E>) listener);
     }
 
-    @Override
-    public UnmodifiableIterator<EventListener<E>> iterator() {
-        return Iterators.unmodifiableIterator(listeners.iterator());
+    /**
+     * @return The amount of listeners within this pipeline.
+     */
+    public int listenerCount() {
+        return listeners.size();
     }
 }
