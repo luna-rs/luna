@@ -5,8 +5,8 @@ import scala.Function2;
 import scala.Unit;
 
 /**
- * A POJO that serves as a wrapper for Scala's {@link Function2} to prevent repetition of the confusing and verbose type
- * declaration. In the {@link EventListenerPipeline} this class acts as a listener for {@link Event}s.
+ * A wrapper for Scala's {@link Function2} to prevent repetition of the confusing and verbose type declaration. In the {@link
+ * EventListenerPipeline} this class acts as a listener for {@link Event}s.
  *
  * @param <E> The type of {@link Event} that this listener is listening for.
  * @author lare96 <http://github.org/lare96>
