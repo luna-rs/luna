@@ -1,12 +1,16 @@
 package io.luna;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.plugin.PluginBootstrap;
+import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
+import io.luna.util.FutureUtils;
 import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
@@ -42,8 +46,7 @@ public final class Server {
     /**
      * The {@link ExecutorService} that will execute startup tasks.
      */
-    private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-        new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
+    private final ListeningExecutorService launchService;
 
     /**
      * The {@link LunaContext} that this {@code Server} will be managed with.
@@ -56,9 +59,14 @@ public final class Server {
     private final MessageRepository messageRepository = new MessageRepository();
 
     /**
-     * A package-private constructor to discourage external instantiation outside of the {@code io.luna} package.
+     * A package-private constructor to discourage external instantiation. The {@code launchService} instance is also
+     * initialized here.
      */
     Server() {
+        ExecutorService delegateService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+            new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
+
+        launchService = MoreExecutors.listeningDecorator(delegateService);
     }
 
     /**
@@ -70,12 +78,13 @@ public final class Server {
         LOGGER.info("Luna is being initialized...");
 
         initAsyncTasks();
+        initPlugins();
         initGame();
-        service.shutdown();
-        service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-        context.getService().awaitRunning();
-        bind();
 
+        launchService.shutdown();
+        launchService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
+        bind();
         LOGGER.info("Luna is now online on port {}!", box(LunaNetworkConstants.PORT));
     }
 
@@ -102,25 +111,37 @@ public final class Server {
     }
 
     /**
-     * Initializes the {@link GameService} asynchronously, does not wait for it to enter a {@code RUNNING} state.
+     * Initializes the {@link GameService} asynchronously.
      *
      * @throws Exception If any exceptions are thrown during initialization of the {@code GameService}.
      */
     private void initGame() throws Exception {
-        context.getService().startAsync();
+        GameService service = context.getService();
+        service.startAsync().awaitRunning();
     }
 
     /**
-     * Executes all startup tasks asynchronously in the background using {@link ExecutorService}.
+     * Initializes the {@link PluginManager} asynchronously.
      *
-     * @throws Exception If any exceptions are thrown while executing startup tasks.
+     * @throws Exception If any exceptions are thrown while initializing the {@code PluginManager}.
+     */
+    private void initPlugins() throws Exception {
+        PluginManager plugins = context.getPlugins();
+
+        FutureUtils.addCallback(launchService.submit(new PluginBootstrap(context)),
+            it -> plugins.getPipelines().replacePipelines(it));
+    }
+
+    /**
+     * Initializes all miscellaneous startup tasks asynchronously.
+     *
+     * @throws Exception If any exceptions are thrown while initializing startup tasks.
      */
     private void initAsyncTasks() throws Exception {
-        service.execute(new PluginBootstrap(context));
-        service.execute(new ItemDefinitionParser());
-        service.execute(new NpcDefinitionParser());
-        service.execute(new NpcCombatDefinitionParser());
-        service.execute(new MessageRepositoryParser(messageRepository));
-        service.execute(new EquipmentDefinitionParser());
+        launchService.execute(new ItemDefinitionParser());
+        launchService.execute(new NpcDefinitionParser());
+        launchService.execute(new NpcCombatDefinitionParser());
+        launchService.execute(new MessageRepositoryParser(messageRepository));
+        launchService.execute(new EquipmentDefinitionParser());
     }
 }
