@@ -2,10 +2,10 @@ package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.attr.AttributeValue;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.InventoryOverlayMessageWriter;
-import io.luna.net.msg.out.StateMessageWriter;
+
+import java.util.OptionalInt;
 
 /**
  * An {@link ItemContainer} implementation that manages the bank for a {@link Player}.
@@ -17,14 +17,12 @@ public final class Bank extends ItemContainer {
     /**
      * An {@link ItemContainerAdapter} implementation that listens for changes to the bank.
      */
-    private static final class BankListener extends ItemContainerAdapter {
+    private final class BankListener extends ItemContainerAdapter {
 
         /**
          * Creates a new {@link BankListener}.
-         *
-         * @param player The {@link Player} this instance is dedicated to.
          */
-        public BankListener(Player player) {
+        public BankListener() {
             super(player);
         }
 
@@ -57,7 +55,7 @@ public final class Bank extends ItemContainer {
     /**
      * The bank item display widget identifier.
      */
-    private static final int BANK_DISPLAY_ID = 5382;
+    public static final int BANK_DISPLAY_ID = 5382;
 
     /**
      * The inventory item display widget identifier.
@@ -67,7 +65,7 @@ public final class Bank extends ItemContainer {
     /**
      * The withdraw mode state identifier.
      */
-    private static final int WITHDRAW_MODE_STATE_ID = 115;
+    public static final int WITHDRAW_MODE_STATE_ID = 115;
 
     /**
      * The {@link Player} this instance is dedicated to.
@@ -83,7 +81,7 @@ public final class Bank extends ItemContainer {
         super(SIZE, StackPolicy.ALWAYS);
         this.player = player;
 
-        addListener(new BankListener(player));
+        addListener(new BankListener());
     }
 
     /**
@@ -92,11 +90,8 @@ public final class Bank extends ItemContainer {
     public void open() {
         shift();
 
-        AttributeValue<Boolean> value = player.attr().get("bank_withdraw_note");
-        value.set(false);
-
         player.queue(new InventoryOverlayMessageWriter(INTERFACE_ID, INVENTORY_OVERLAY_ID));
-        player.queue(new StateMessageWriter(WITHDRAW_MODE_STATE_ID, 0));
+        player.setWithdrawAsNote(false);
 
         forceRefresh();
     }
@@ -112,32 +107,27 @@ public final class Bank extends ItemContainer {
         Inventory inventory = player.getInventory();
         Item depositItem = inventory.get(inventoryIndex);
 
-        if (depositItem == null) { // Item doesn't exist in inventory.
+        if (depositItem == null || amount < 1) { // Item doesn't exist in inventory.
             return false;
         }
 
         int existingAmount = inventory.computeAmountForId(depositItem.getId());
-        if (amount > existingAmount) {
+        if (amount > existingAmount) { // Deposit amount is more than we actually have, size it down.
             amount = existingAmount;
         }
+        depositItem = depositItem.createWithAmount(amount);
 
-        int remaining = computeRemainingSize();
-        if (remaining < 1) {
+        ItemDefinition def = depositItem.getItemDef();
+        Item newDepositItem = depositItem.createWithId(def.isNoted() ? def.getUnnotedId() : depositItem.getId());
+
+        int remaining = computeRemainingSize(); // Do we have enough space in the bank?
+        if (remaining < 1 && computeIndexForId(newDepositItem.getId()) == -1) {
             fireCapacityExceededEvent();
             return false;
         }
 
-        if (amount > remaining) {
-            amount = remaining;
-        }
-
-        depositItem = depositItem.setAmount(amount);
-
-        ItemDefinition def = depositItem.getItemDef();
-        int newId = (def.getUnnotedId() != -1) ? def.getUnnotedId() : depositItem.getId();
-
-        if (add(depositItem.setId(newId))) {
-            inventory.remove(depositItem);
+        if (inventory.remove(depositItem)) {
+            add(newDepositItem);
             forceRefresh();
             return true;
         }
@@ -155,39 +145,42 @@ public final class Bank extends ItemContainer {
         Inventory inventory = player.getInventory();
         Item withdrawItem = get(bankIndex);
 
-        if (withdrawItem == null) { // Item doesn't exist in bank.
+        if (withdrawItem == null || amount < 1) { // Item doesn't exist in bank.
             return false;
         }
 
-        int existingAmount = computeAmountForId(withdrawItem.getId());
-        if (withdrawItem.getAmount() > existingAmount) {
+        int existingAmount = withdrawItem.getAmount();
+        if (amount > existingAmount) { // Withdraw amount is more than we actually have, size it down.
             amount = existingAmount;
         }
 
-        int remaining = inventory.computeRemainingSize();
-        if (remaining < 1) {
-            inventory.fireCapacityExceededEvent();
-            return false;
-        }
-
-        if (amount > remaining) {
-            amount = remaining;
-        }
-        withdrawItem = withdrawItem.setAmount(amount);
-
-        AttributeValue<Boolean> value = player.attr().get("bank_withdraw_note");
-        int newId = -1;
-        if (value.get()) {
+        OptionalInt newId = OptionalInt.empty();
+        if (player.isWithdrawAsNote()) { // Configure the noted id of the item we're withdrawing, if applicable.
             ItemDefinition def = withdrawItem.getItemDef();
-            newId = def.getNotedId() != -1 ? def.getNotedId() : withdrawItem.getId();
-
-            if (newId == withdrawItem.getId()) {
+            if (def.canBeNoted()) {
+                newId = OptionalInt.of(def.getNotedId());
+            } else {
                 player.queue(new GameChatboxMessageWriter("This item cannot be withdrawn as a note."));
             }
         }
 
+        Item newWithdrawItem = withdrawItem.createWithId(newId.orElse(withdrawItem.getId()));
+        ItemDefinition newDef = newWithdrawItem.getItemDef();
+
+        int remaining = inventory.computeRemainingSize();
+        if (remaining < 1) { // Do we have enough space in the inventory?
+            inventory.fireCapacityExceededEvent();
+            return false;
+        }
+
+        if (amount > remaining && !newDef.isStackable()) { // Size down withdraw amount to inventory space.
+            amount = remaining;
+        }
+        withdrawItem = withdrawItem.createWithAmount(amount);
+        newWithdrawItem = newWithdrawItem.createWithAmount(amount);
+
         if (remove(withdrawItem)) {
-            inventory.add(withdrawItem.setId(newId));
+            inventory.add(newWithdrawItem);
             forceRefresh();
             return true;
         }
