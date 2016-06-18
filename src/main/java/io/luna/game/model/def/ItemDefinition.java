@@ -66,9 +66,9 @@ public final class ItemDefinition {
     private final double weight;
 
     /**
-     * If the {@code Item} is tradable.
+     * If the {@code Item} is tradeable.
      */
-    private final boolean tradable;
+    private final boolean tradeable;
 
     /**
      * The inventory actions of the {@code Item}.
@@ -93,12 +93,12 @@ public final class ItemDefinition {
      * @param unnotedId The unnoted id of the {@code Item}, -1 if this definition is unnoted.
      * @param membersOnly If the {@code Item} is for members only.
      * @param weight The weight value of the {@code Item}.
-     * @param tradable If the {@code Item} is tradable.
+     * @param tradeable If the {@code Item} is tradeable.
      * @param inventoryActions The inventory actions of the {@code Item}.
      * @param groundActions The ground actions of the {@code Item}.
      */
     public ItemDefinition(int id, String name, String examine, boolean stackable, int baseValue, int specialValue,
-        int notedId, int unnotedId, boolean membersOnly, double weight, boolean tradable, String[] inventoryActions,
+        int notedId, int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
         String[] groundActions) {
         this.id = id;
         this.name = name;
@@ -110,7 +110,7 @@ public final class ItemDefinition {
         this.unnotedId = unnotedId;
         this.membersOnly = membersOnly;
         this.weight = weight;
-        this.tradable = tradable;
+        this.tradeable = tradeable;
         this.inventoryActions = ImmutableSet.copyOf(inventoryActions);
         this.groundActions = ImmutableSet.copyOf(groundActions);
     }
@@ -134,6 +134,13 @@ public final class ItemDefinition {
      */
     public boolean canBeNoted() {
         return notedId != -1;
+    }
+
+    /**
+     * @return {@code true} if this item is noted, {@code false} otherwise.
+     */
+    public boolean isNoted() {
+        return examine.equals("Swap this note at any bank for the equivalent item.");
     }
 
     /**
@@ -207,10 +214,10 @@ public final class ItemDefinition {
     }
 
     /**
-     * @return If the {@code Item} is tradable.
+     * @return If the {@code Item} is tradeable.
      */
-    public boolean isTradable() {
-        return tradable;
+    public boolean isTradeable() {
+        return tradeable;
     }
 
     /**
