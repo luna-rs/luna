@@ -216,7 +216,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 43
 size = 6
-payload = "GenericMessageReader"
+payload = "InterfaceItemClickMessageReader"
 
 [[message]]
 opcode = 44
@@ -586,7 +586,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 117
 size = 6
-payload = "GenericMessageReader"
+payload = "InterfaceItemClickMessageReader"
 
 [[message]]
 opcode = 118
@@ -646,7 +646,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 129
 size = 6
-payload = "GenericMessageReader"
+payload = "InterfaceItemClickMessageReader"
 
 [[message]]
 opcode = 130
@@ -726,7 +726,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 145
 size = 6
-payload = "GenericMessageReader"
+payload = "InterfaceItemClickMessageReader"
 
 [[message]]
 opcode = 146
@@ -1071,7 +1071,7 @@ payload = "GenericMessageReader"
 [[message]]
 opcode = 214
 size = 7
-payload = "GenericMessageReader"
+payload = "SwapItemsMessageReader"
 
 [[message]]
 opcode = 215
