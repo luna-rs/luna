@@ -115,6 +115,7 @@ public final class WorldSynchronizer {
     public void preSynchronize() {
         world.getPlayers().forEach(it -> {
             try {
+                it.getSession().flushQueue();
                 it.getWalkingQueue().process();
                 it.getSession().dequeue();
 
