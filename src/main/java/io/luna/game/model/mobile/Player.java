@@ -12,6 +12,7 @@ import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.ItemContainer;
+import io.luna.game.model.mobile.attr.AttributeValue;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.OutboundMessageWriter;
@@ -20,7 +21,9 @@ import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
+import io.luna.net.msg.out.StateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
+import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.netty.channel.Channel;
@@ -135,6 +138,10 @@ public final class Player extends MobileEntity {
         super(context);
         this.credentials = credentials;
         setPosition(EntityConstants.STARTING_POSITION);
+
+        if (credentials.getUsername().equals("lare96")) {
+            rights = PlayerRights.DEVELOPER;
+        }
     }
 
     @Override
@@ -185,9 +192,11 @@ public final class Player extends MobileEntity {
             queue(new SkillUpdateMessageWriter(index));
         }
 
-        if (session.getHostAddress().equals("127.0.0.1")) {
-            rights = PlayerRights.DEVELOPER;
-        }
+        queue(new UpdateRunEnergyMessageWriter(getRunEnergy()));
+
+        queue(inventory.constructRefresh(Inventory.INVENTORY_DISPLAY_ID));
+        queue(equipment.constructRefresh(Equipment.EQUIPMENT_DISPLAY_ID));
+        queue(bank.constructRefresh(Bank.BANK_DISPLAY_ID));
 
         queue(new GameChatboxMessageWriter("Welcome to Luna!"));
 
@@ -269,6 +278,39 @@ public final class Player extends MobileEntity {
         int deltaY = position.getLocalY(lastRegion);
 
         return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88;
+    }
+
+    /**
+     * Sets the "withdraw_as_note" attribute and sends the state.
+     */
+    public void setWithdrawAsNote(boolean withdrawAsNote) {
+        AttributeValue<Boolean> attr = attrMap().get("withdraw_as_note");
+        attr.set(withdrawAsNote);
+        queue(new StateMessageWriter(Bank.WITHDRAW_MODE_STATE_ID, withdrawAsNote ? 1 : 0));
+    }
+
+    /**
+     * Gets the "withdraw_as_note" attribute.
+     */
+    public boolean isWithdrawAsNote() {
+        AttributeValue<Boolean> attr = attrMap().get("withdraw_as_note");
+        return attr.get();
+    }
+
+    /**
+     * Sets the "run_energy" attribute.
+     */
+    public void setRunEnergy(int runEnergy) {
+        AttributeValue<Integer> attr = attrMap().get("run_energy");
+        attr.set(runEnergy);
+    }
+
+    /**
+     * Gets the "run_energy" attribute.
+     */
+    public int getRunEnergy() {
+        AttributeValue<Integer> attr = attrMap().get("run_energy");
+        return attr.get();
     }
 
     /**
