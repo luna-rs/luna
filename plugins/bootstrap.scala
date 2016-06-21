@@ -1,3 +1,5 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ThreadLocalRandom
 
 import io.luna.game.event.{Event, EventListener}
@@ -42,6 +44,8 @@ import scala.util.Random
 @inline val TYPE_NPC = EntityType.NPC
 @inline val TYPE_OBJECT = EntityType.OBJECT
 @inline val TYPE_ITEM = EntityType.ITEM
+
+@inline val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, uuuu")
 
 
 // logging, prefer lazy 'msg' evaluation
@@ -159,11 +163,11 @@ implicit class PlayerImplicits(player: Player) {
 
 implicit class MobileEntityImplicits(mob: MobileEntity) {
   def attr[T](key: String): T = {
-    val attr: AttributeValue[T] = mob.attr.get(key)
+    val attr: AttributeValue[T] = mob.getAttributes.get(key)
     attr.get
   }
   def attr[T](key: String, value: T) = {
-    val attr: AttributeValue[T] = mob.attr.get(key)
+    val attr: AttributeValue[T] = mob.getAttributes.get(key)
     attr.set(value)
   }
 }
@@ -233,6 +237,10 @@ implicit class ArrayImplicits[T](array: Array[T]) {
   }
 
   def randomElement = array((rand.nextDouble * array.length).toInt)
+}
+
+implicit class DateTimeFormatterImplicits(formatter: DateTimeFormatter) {
+  def formatDate(string: String) = formatter.format(LocalDate.parse(string))
 }
 
 implicit class IndexedSeqImplicits[T](seq: IndexedSeq[T]) {

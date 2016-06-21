@@ -23,9 +23,13 @@ val STARTER_ITEMS = Vector(
   }
 }
 
->>[LoginEvent] { (msg, plr) => // Send mute notifcation if muted.
-  if (plr.attr("unmute_date") != "n/a") {
-    plr.sendMessage("You are currently muted. Other players will not see the text you write.")
+>>[LoginEvent] { (msg, plr) => // Send mute notification if muted.
+  val date: String = plr.attr("unmute_date")
+
+  date match {
+    case "n/a" => // Do nothing, we aren't muted.
+    case "never" => plr.sendMessage("You are permanently muted. It can only be overturned by an administrator.")
+    case _ => plr.sendMessage(s"You are muted. You will be unmuted on ${DATE_FORMATTER.formatDate(date)}.")
   }
 }
 
