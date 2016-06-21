@@ -77,10 +77,12 @@ public class ItemContainer implements Iterable<Item> {
         public void remove() {
             checkState(lastIndex != -1, "can only be called once after 'next'");
 
+            Item oldItem = container.items[lastIndex];
+
             container.items[lastIndex] = null;
             container.size--;
 
-            container.fireItemUpdatedEvent(lastIndex);
+            container.fireItemUpdatedEvent(oldItem, null, lastIndex);
 
             index = lastIndex;
             lastIndex = -1;
@@ -198,8 +200,10 @@ public class ItemContainer implements Iterable<Item> {
 
         if (stackable) {
             preferredIndex = computeIndexForId(item.getId());
+        } else if (preferredIndex != -1) {
+            preferredIndex = items[preferredIndex] != null ? -1 : preferredIndex;
         }
-        preferredIndex = (preferredIndex == -1 || items[preferredIndex] != null) ? computeFreeIndex() : preferredIndex;
+        preferredIndex = preferredIndex == -1 ? computeFreeIndex() : preferredIndex;
 
         if (preferredIndex == -1) { // Not enough space in container.
             fireCapacityExceededEvent();
@@ -208,20 +212,22 @@ public class ItemContainer implements Iterable<Item> {
 
         if (stackable) {
             Item current = items[preferredIndex];
-            items[preferredIndex] = (current == null) ? item : current.increment(item.getAmount());
+            items[preferredIndex] = (current == null) ? item : current.createAndIncrement(item.getAmount());
             size++;
 
-            fireItemUpdatedEvent(preferredIndex);
+            fireItemUpdatedEvent(current, items[preferredIndex], preferredIndex);
         } else {
             int remaining = computeRemainingSize();
             int until = (remaining > item.getAmount()) ? item.getAmount() : remaining;
 
             for (int index = 0; index < until; index++) {
                 preferredIndex = (items[preferredIndex] == null) ? preferredIndex : computeFreeIndex();
-                items[preferredIndex] = new Item(item.getId());
+
+                Item newItem = new Item(item.getId());
+                items[preferredIndex] = newItem;
                 size++;
 
-                fireItemUpdatedEvent(preferredIndex++);
+                fireItemUpdatedEvent(null, newItem, preferredIndex++);
             }
         }
         return true;
@@ -299,10 +305,11 @@ public class ItemContainer implements Iterable<Item> {
         if (stackable) {
             preferredIndex = computeIndexForId(item.getId());
         } else {
-            boolean noMatch = Optional.ofNullable(items[preferredIndex]).
-                filter(it -> it.getId() != item.getId()).
-                isPresent();
-            preferredIndex = (preferredIndex == -1 || noMatch) ? computeIndexForId(item.getId()) : preferredIndex;
+            preferredIndex = preferredIndex == -1 ? computeIndexForId(item.getId()) : preferredIndex;
+
+            if (preferredIndex != -1 && items[preferredIndex] == null) {
+                preferredIndex = -1;
+            }
         }
 
         if (preferredIndex == -1) { // Item isn't present within this container.
@@ -312,12 +319,13 @@ public class ItemContainer implements Iterable<Item> {
         if (stackable) {
             Item current = items[preferredIndex];
             if (current.getAmount() > item.getAmount()) {
-                items[preferredIndex] = current.decrement(item.getAmount());
+                items[preferredIndex] = current.createAndDecrement(item.getAmount());
             } else {
                 items[preferredIndex] = null;
                 size--;
             }
-            fireItemUpdatedEvent(preferredIndex);
+
+            fireItemUpdatedEvent(current, items[preferredIndex], preferredIndex);
         } else {
             int until = computeAmountForId(item.getId());
             until = (item.getAmount() > until) ? until : item.getAmount();
@@ -326,10 +334,12 @@ public class ItemContainer implements Iterable<Item> {
                 preferredIndex =
                     (items[preferredIndex] != null && items[preferredIndex].getId() == item.getId()) ? preferredIndex :
                         computeIndexForId(item.getId());
+
+                Item oldItem = items[preferredIndex];
                 items[preferredIndex] = null;
                 size--;
 
-                fireItemUpdatedEvent(preferredIndex++);
+                fireItemUpdatedEvent(oldItem, null, preferredIndex++);
             }
         }
         return true;
@@ -440,6 +450,16 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Computes the identifier of the {@link Item} on {@code index}.
+     *
+     * @param index The index to compute the identifier for.
+     * @return The identifier wrapped in an optional.
+     */
+    public final Optional<Integer> computeIdForIndex(int index) {
+        return retrieve(index).map(Item::getId);
+    }
+
+    /**
      * Replaces the first occurrence of the {@link Item} having the identifier {@code oldId} with {@code newId}.
      *
      * @param oldId The old identifier to replace.
@@ -453,7 +473,7 @@ public class ItemContainer implements Iterable<Item> {
         }
 
         Item oldItem = items[index];
-        Item newItem = oldItem.setId(newId);
+        Item newItem = oldItem.createWithId(newId);
 
         return remove(oldItem, index) && add(newItem, index);
     }
@@ -596,12 +616,14 @@ public class ItemContainer implements Iterable<Item> {
                 }
             }
         } else {
-            Item item = items[oldIndex];
-            items[oldIndex] = items[newIndex];
-            items[newIndex] = item;
+            Item itemOld = items[oldIndex];
+            Item itemNew = items[newIndex];
 
-            fireItemUpdatedEvent(oldIndex);
-            fireItemUpdatedEvent(newIndex);
+            items[oldIndex] = itemNew;
+            items[newIndex] = itemOld;
+
+            fireItemUpdatedEvent(itemOld, items[oldIndex], oldIndex);
+            fireItemUpdatedEvent(itemNew, items[newIndex], newIndex);
         }
     }
 
@@ -700,8 +722,11 @@ public class ItemContainer implements Iterable<Item> {
         } else if (!indexFree && removingItem) {
             size--;
         }
+
+        Item oldItem = items[index];
         items[index] = item;
-        fireItemUpdatedEvent(index);
+
+        fireItemUpdatedEvent(oldItem, items[index], index);
     }
 
     /**
@@ -724,6 +749,44 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final Item get(int index) {
         return retrieve(index).orElse(null);
+    }
+
+    /**
+     * Returns {@code true} if {@code index} is occupied (non-{@code null}).
+     */
+    public final boolean indexOccupied(int index) {
+        return retrieve(index).isPresent();
+    }
+
+    /**
+     * Returns {@code true} if all {@code indexes} are occupied (non-{@code null}).
+     */
+    public final boolean allIndexesOccupied(int... indexes) {
+        for (int index : indexes) {
+            if (!indexOccupied(index)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns {@code true} if {@code index} is not occupied ({@code null}).
+     */
+    public final boolean indexFree(int index) {
+        return !indexOccupied(index);
+    }
+
+    /**
+     * Returns {@code true} if all {@code indexes} are free ({@code null}).
+     */
+    public final boolean allIndexesFree(int... indexes) {
+        for (int index : indexes) {
+            if (!indexFree(index)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -759,9 +822,10 @@ public class ItemContainer implements Iterable<Item> {
     /**
      * Fires the {@code ItemContainerListener.itemUpdated(ItemContainer, int)} event.
      */
-    public final void fireItemUpdatedEvent(int index) {
+    public final void fireItemUpdatedEvent(Item oldItem, Item newItem, int index) {
         if (firingEvents) {
-            listeners.forEach(evt -> evt.itemUpdated(this, index));
+            listeners
+                .forEach(evt -> evt.itemUpdated(this, Optional.ofNullable(oldItem), Optional.ofNullable(newItem), index));
         }
     }
 
