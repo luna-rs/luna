@@ -31,8 +31,11 @@ public final class AttributeKey<T> {
     static {
         forPersistent("run_energy", 100);
         forPersistent("first_login", true);
+        forPersistent("unban_date", "n/a");
+        forPersistent("unmute_date", "n/a");
 
-        forTransient("bank_withdraw_note", false);
+        forTransient("withdraw_as_note", false);
+        forTransient("weight", 0.0);
     }
 
     /**
