@@ -52,15 +52,15 @@ public final class Item {
     }
 
     /**
-     * Increments the amount by {@code addAmount}. The returned {@code Item} <strong>does not</strong> hold any references to
-     * this one. It will also have a maximum amount of {@code Integer.MAX_VALUE}.
+     * Creates a new item with {@code amount + addAmount} and the same identifier. The returned {@code Item} <strong>does
+     * not</strong> hold any references to this one. It will also have a maximum amount of {@code Integer.MAX_VALUE}.
      *
      * @param addAmount The amount to add.
      * @return The newly incremented {@code Item}.
      */
-    public Item increment(int addAmount) {
+    public Item createAndIncrement(int addAmount) {
         if (addAmount < 0) { // Same effect as decrementing.
-            return decrement(Math.abs(addAmount));
+            return createAndDecrement(Math.abs(addAmount));
         }
 
         int newAmount = amount + addAmount;
@@ -72,15 +72,15 @@ public final class Item {
     }
 
     /**
-     * Decrements the amount by {@code removeAmount}. The returned {@code Item} <strong>does not</strong> hold any references
-     * to this one. It will also have a minimum amount of {@code 1}.
+     * Creates a new item with {@code amount - removeAmount} and the same identifier. The returned {@code Item} <strong>does
+     * not</strong> hold any references to this one. It will also have a minimum amount of {@code 1}.
      *
      * @param removeAmount The amount to remove.
      * @return The newly incremented {@code Item}.
      */
-    public Item decrement(int removeAmount) {
+    public Item createAndDecrement(int removeAmount) {
         if (removeAmount < 0) { // Same effect as incrementing.
-            return increment(Math.abs(removeAmount));
+            return createAndIncrement(Math.abs(removeAmount));
         }
 
         int newAmount = amount - removeAmount;
@@ -93,13 +93,14 @@ public final class Item {
     }
 
     /**
-     * Sets the amount to {@code newAmount}. The returned {@code Item} <strong>does not</strong> hold any references to this
-     * one unless {@code amount == newAmount}. It will throw an exception on overflows and negative values.
+     * Creates a new item with {@code newAmount} and the same identifier as this instance.  The returned {@code Item}
+     * <strong>does not</strong> hold any references to this one unless {@code amount == newAmount}. It will throw an
+     * exception on overflows and negative values.
      *
      * @param newAmount The new amount to set.
      * @return The newly amount set {@code Item}.
      */
-    public Item setAmount(int newAmount) {
+    public Item createWithAmount(int newAmount) {
         if (amount == newAmount) {
             return this;
         }
@@ -128,13 +129,13 @@ public final class Item {
     }
 
     /**
-     * Sets the id to {@code newId}. The returned {@code Item} <strong>does not</strong> hold any references to this one
-     * unless {@code id == newId}. It will throw an exception on an invalid id.
+     * Creates a new item with {@code newId} and the same amount as this instance. The returned {@code Item} <strong>does
+     * not</strong> hold any references to this one unless {@code id == newId}. It will throw an exception on an invalid id.
      *
      * @param newId The new id to set.
      * @return The newly id set {@code Item}.
      */
-    public Item setId(int newId) {
+    public Item createWithId(int newId) {
         if (id == newId) {
             return this;
         }
