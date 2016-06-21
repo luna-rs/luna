@@ -234,7 +234,7 @@ public abstract class MobileEntity extends Entity {
     /**
      * @return The {@link AttributeMap} instance assigned to this {@code MobileEntity}.
      */
-    public final AttributeMap attr() {
+    public final AttributeMap attrMap() {
         return attributes;
     }
 
