@@ -3,6 +3,8 @@ package io.luna.game.model.item;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
+import java.util.Optional;
+
 /**
  * An adapter for {@link ItemContainerListener} that updates {@link Item}s on a widget whenever items change, and sends the
  * underlying {@link Player} a message when the container is full.
@@ -26,7 +28,7 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
     }
 
     @Override
-    public void itemUpdated(ItemContainer container, int index) {
+    public void itemUpdated(ItemContainer container, Optional<Item> oldItem, Optional<Item> newItem, int index) {
         sendItemsToWidget(container);
     }
 
@@ -43,7 +45,7 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
     /**
      * Queues a message that displays items from an {@link ItemContainer} on a widget.
      */
-    private void sendItemsToWidget(ItemContainer container) {
+    protected void sendItemsToWidget(ItemContainer container) {
         player.queue(container.constructRefresh(getWidgetId()));
     }
 

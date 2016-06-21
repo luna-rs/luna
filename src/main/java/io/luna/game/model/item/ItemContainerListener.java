@@ -1,5 +1,7 @@
 package io.luna.game.model.item;
 
+import java.util.Optional;
+
 /**
  * A listener that is fired by {@link ItemContainer}. One should aim to extend {@link ItemContainerAdapter} for generic use
  * cases rather than implement this directly.
@@ -14,7 +16,7 @@ public interface ItemContainerListener {
      * @param container The {@link ItemContainer} firing the event.
      * @param index The index the update is occurring on.
      */
-    default void itemUpdated(ItemContainer container, int index) {
+    default void itemUpdated(ItemContainer container, Optional<Item> oldItem, Optional<Item> newItem, int index) {
     }
 
     /**
