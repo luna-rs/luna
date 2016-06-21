@@ -221,11 +221,12 @@ public final class MobileEntityList<E extends MobileEntity> implements Iterable<
      */
     public void remove(E mob) {
         checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
+        checkArgument(mob.getIndex() != -1, "index == -1");
 
         indexes.add(mob.getIndex());
+        mob.setState(EntityState.INACTIVE);
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
-        mob.setState(EntityState.INACTIVE);
         size--;
     }
 
