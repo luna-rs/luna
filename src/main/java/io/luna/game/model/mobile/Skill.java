@@ -1,9 +1,13 @@
 package io.luna.game.model.mobile;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.luna.game.event.impl.SkillChangeEvent;
 import io.luna.game.model.EntityType;
 import io.luna.game.plugin.PluginManager;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -15,12 +19,17 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Skill {
 
     /**
-     * The ordered names of all available skills.
+     * The ordered names of all available skills (id -> name).
      */
-    public static final ImmutableList<String> SKILL_NAMES = ImmutableList
+    public static final ImmutableList<String> ID_TO_NAME = ImmutableList
         .of("Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting", "Fletching",
             "Fishing", "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer",
             "Farming", "Runecrafting");
+
+    /**
+     * The ordered names of all available skills (name -> id).
+     */
+    public static final ImmutableMap<String, Integer> NAME_TO_ID;
 
     /**
      * The attack skill identifier in the skill set.
@@ -134,7 +143,17 @@ public final class Skill {
      * @return The name of the skill.
      */
     public static String getName(int id) {
-        return SKILL_NAMES.get(id);
+        return ID_TO_NAME.get(id);
+    }
+
+    /**
+     * Retrieve the id of a skill by {@code name}.
+     *
+     * @param name The name to retrieve the id of.
+     * @return The id of the skill.
+     */
+    public static int getId(String name) {
+        return NAME_TO_ID.get(name);
     }
 
     /**
@@ -145,6 +164,17 @@ public final class Skill {
      */
     public static boolean isCombatSkill(int id) {
         return id >= ATTACK && id <= MAGIC;
+    }
+
+    static {
+        Map<String, Integer> skills = new HashMap<>();
+
+        int index = 0;
+        for (String name : ID_TO_NAME) {
+            skills.put(name, index++);
+        }
+
+        NAME_TO_ID = ImmutableMap.copyOf(skills);
     }
 
     /**
@@ -209,6 +239,10 @@ public final class Skill {
      * @param oldLevel The old dynamic level value.
      */
     private void notifyListeners(double oldExperience, int oldStaticLevel, int oldLevel) {
+        if (!skills.isFiringEvents()) {
+            return;
+        }
+
         MobileEntity mob = skills.getMob();
         PluginManager plugins = mob.getPlugins();
 
@@ -218,6 +252,13 @@ public final class Skill {
         } else {
             plugins.post(evt);
         }
+    }
+
+    /**
+     * @return The identifier that determines which skill this instance represents.
+     */
+    public int getId() {
+        return id;
     }
 
     /**
