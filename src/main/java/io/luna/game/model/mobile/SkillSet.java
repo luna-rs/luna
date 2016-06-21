@@ -116,6 +116,11 @@ public final class SkillSet implements Iterable<Skill> {
     private int combatLevel = -1;
 
     /**
+     * If this skill set is firing events.
+     */
+    private boolean firingEvents = true;
+
+    /**
      * Creates a new {@link SkillSet}.
      *
      * @param mob The {@link MobileEntity} instance.
@@ -170,7 +175,19 @@ public final class SkillSet implements Iterable<Skill> {
     public void setSkills(Skill[] newSkills) {
         checkState(newSkills.length == skills.length, "incompatible skill array");
 
-        System.arraycopy(newSkills, 0, skills, 0, skills.length);
+        firingEvents = false;
+        try {
+            int index = 0;
+            for (Skill newSkill : newSkills) {
+                Skill skill = new Skill(index, this);
+                skill.setExperience(newSkill.getExperience());
+                skill.setLevel(newSkill.getLevel());
+
+                skills[index++] = skill;
+            }
+        } finally {
+            firingEvents = true;
+        }
     }
 
     /**
@@ -215,5 +232,19 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public Stream<Skill> stream() {
         return StreamSupport.stream(spliterator(), false);
+    }
+
+    /**
+     * @return {@code true} if this skill set is firing events, {@code false} otherwise.
+     */
+    public boolean isFiringEvents() {
+        return firingEvents;
+    }
+
+    /**
+     * Sets if this skill set is firing events or not.
+     */
+    public void setFiringEvents(boolean firingEvents) {
+        this.firingEvents = firingEvents;
     }
 }
