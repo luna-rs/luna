@@ -43,6 +43,16 @@ public enum PlayerRights {
     }
 
     /**
+     * If the underlying comparison value is equal to or greater than {@code other}.
+     *
+     * @param other The {@code PlayerRights} value to compare to this.
+     * @return {@code true} if this value is equal to or greater than, {@code false} otherwise.
+     */
+    public boolean equalOrGreater(PlayerRights other) {
+        return value >= other.value;
+    }
+
+    /**
      * If the underlying comparison value is less than {@code other}.
      *
      * @param other The {@code PlayerRights} value to compare to this.
@@ -50,6 +60,16 @@ public enum PlayerRights {
      */
     public boolean less(PlayerRights other) {
         return value < other.value;
+    }
+
+    /**
+     * If the underlying comparison value is equal to or less than {@code other}.
+     *
+     * @param other The {@code PlayerRights} value to compare to this.
+     * @return {@code true} if this value is equal to or less than, {@code false} otherwise.
+     */
+    public boolean equalOrLess(PlayerRights other) {
+        return value <= other.value;
     }
 
     /**
