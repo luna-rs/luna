@@ -28,6 +28,10 @@ public final class ChatMessageReader extends InboundMessageReader {
         checkState(color >= 0, "invalid color value");
         checkState(size > 0, "invalid size, not large enough");
 
+        if (player.isMuted()) { // The player trying to speak is muted.
+            return null;
+        }
+
         player.chat(new Chat(message, color, effects));
         return new ChatEvent(effects, color, size, message);
     }
