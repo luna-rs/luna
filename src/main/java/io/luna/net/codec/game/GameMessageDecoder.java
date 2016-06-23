@@ -148,7 +148,12 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
      */
     private void payload(ByteBuf in) {
         if (in.isReadable(size)) {
-            queueMessage(in.readBytes(size));
+            ByteBuf newBuffer = in.readBytes(size);
+            try {
+                queueMessage(newBuffer);
+            } finally {
+                newBuffer.release();
+            }
         }
     }
 
@@ -170,6 +175,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
                 return;
             }
 
+            payload.retain();
             currentMessage = Optional.of(new GameMessage(opcode, type, ByteMessage.wrap(payload)));
         } finally {
             resetState();
