@@ -97,12 +97,17 @@ import java.util.Set;
             response(ctx, LoginResponse.ACCOUNT_BANNED);
             return false;
         }
+        return true;
+    }
+
+    @Override
+    protected void channelAccepted(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
+        String address = address(remoteAddress);
 
         ChannelFuture future = ctx.channel().closeFuture(); // Remove address once disconnected.
         future.addListener(it -> connections.remove(address));
 
         connections.add(address);
-        return true;
     }
 
     @Override
