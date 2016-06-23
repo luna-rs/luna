@@ -175,8 +175,8 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
 
             ByteMessage msg = ByteMessage.wrap(rsaBuffer);
-            String username = msg.getString();
-            String password = msg.getString();
+            String username = msg.getString().toLowerCase();
+            String password = msg.getString().toLowerCase();
 
             rsaBuffer.release();
 
