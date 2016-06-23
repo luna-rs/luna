@@ -4,6 +4,7 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.OutboundMessageWriter;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 /**
  * An {@link OutboundMessageWriter} that sends the {@link Player} a game message located in the chatbox.
@@ -27,13 +28,16 @@ public final class GameChatboxMessageWriter extends OutboundMessageWriter {
     }
 
     /**
-     * Creates a new {@link GameChatboxMessageWriter} with a formatted {@code message}.
+     * Creates a new {@link GameChatboxMessageWriter} with {@code message} formatted using {@link ParameterizedMessage}. It
+     * works like so
+     * <p>
+     * {@code player.queue(new GameChatboxMessageWriter("Hi! My name is {}.", username));}
      *
      * @param message The message to format, then write to the chatbox.
      * @param params The parameters to include in this formatted message.
      */
     public GameChatboxMessageWriter(String message, Object... params) {
-        this(String.format(message, params));
+        this(ParameterizedMessage.format(message, params));
     }
 
     @Override
