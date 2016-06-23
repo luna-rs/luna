@@ -4,10 +4,8 @@ import io.luna.LunaContext;
 import io.luna.game.event.Event;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipeline;
+import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.model.mobile.Player;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A manager for Scala plugins. It uses {@link EventListener}s and {@link EventListenerPipeline}s to act as a bridge between
@@ -17,12 +15,10 @@ import java.util.Map;
  */
 public final class PluginManager {
 
-    // TODO: Reloading plugins
-
     /**
-     * A {@link Map} containing the event types and designated pipelines.
+     * An {@link EventListenerPipelineSet} containing the event types and designated pipelines.
      */
-    private final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
+    private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
     /**
      * An instance of the {@link LunaContext}.
@@ -39,16 +35,6 @@ public final class PluginManager {
     }
 
     /**
-     * Submits a {@link EventListener} to this manager.
-     *
-     * @param eventClass The event class type.
-     * @param function The {@code EventFunction} to add to the {@link EventListenerPipeline}.
-     */
-    public void submit(Class<?> eventClass, EventListener<?> function) {
-        pipelines.computeIfAbsent(eventClass, it -> new EventListenerPipeline<>()).add(function);
-    }
-
-    /**
      * Attempts to traverse {@code evt} across its designated {@link EventListenerPipeline}.
      *
      * @param evt The event to post.
@@ -57,19 +43,12 @@ public final class PluginManager {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void post(Event evt, Player player) {
-        EventListenerPipeline pipeline = pipelines.get(evt.getClass());
+        EventListenerPipeline pipeline = pipelines.retrievePipeline(evt.getClass());
 
         if (pipeline == null) {
             return;
         }
         pipeline.traverse(evt, player);
-    }
-
-    /**
-     * Clears the backing cache of {@link EventListenerPipeline}s.
-     */
-    public void clear() {
-        pipelines.clear();
     }
 
     /**
@@ -86,5 +65,12 @@ public final class PluginManager {
      */
     public LunaContext getContext() {
         return context;
+    }
+
+    /**
+     * @return An {@link EventListenerPipelineSet} containing the event types and designated pipelines.
+     */
+    public EventListenerPipelineSet getPipelines() {
+        return pipelines;
     }
 }
