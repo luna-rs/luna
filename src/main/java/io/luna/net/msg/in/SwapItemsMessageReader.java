@@ -5,16 +5,16 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} attempts to rearrange items.
+ * An {@link MessageReader} implementation that decodes data sent when a {@link Player} attempts to rearrange items.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class SwapItemsMessageReader extends InboundMessageReader {
+public final class SwapItemsMessageReader extends MessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

@@ -3,15 +3,15 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
 /**
- * An {@link OutboundMessageWriter} that sends the {@link Player} a game message located in the chatbox.
+ * An {@link MessageWriter} that sends the {@link Player} a game message located in the chatbox.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class GameChatboxMessageWriter extends OutboundMessageWriter {
+public final class GameChatboxMessageWriter extends MessageWriter {
 
     /**
      * The message to write to the chatbox.

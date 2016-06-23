@@ -2,26 +2,26 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that opens an interface.
+ * An {@link MessageWriter} that opens an interface for a {@link Player}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetMessageWriter extends OutboundMessageWriter {
+public final class InterfaceMessageWriter extends MessageWriter {
 
     /**
-     * The interface to open.
+     * The identifier for the interface.
      */
     private final int id;
 
     /**
-     * Creates a new {@link WidgetMessageWriter}.
+     * Creates a new {@link InterfaceMessageWriter}.
      *
-     * @param id The interface to open.
+     * @param id The identifier for the interface.
      */
-    public WidgetMessageWriter(int id) {
+    public InterfaceMessageWriter(int id) {
         this.id = id;
     }
 

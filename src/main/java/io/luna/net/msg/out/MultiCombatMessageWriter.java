@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that either displays or removes the multi-combat sign.
+ * An {@link MessageWriter} implementation that either displays or removes the multi-combat sign.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MultiCombatMessageWriter extends OutboundMessageWriter {
+public final class MultiCombatMessageWriter extends MessageWriter {
 
     /**
      * If the multi-combat sign should be displayed or removed.

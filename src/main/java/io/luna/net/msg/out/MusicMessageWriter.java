@@ -6,29 +6,29 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that displays an interface on the chatbox area of the gameframe.
+ * An {@link MessageWriter} implementation that plays a song.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ChatboxInterfaceMessageWriter extends MessageWriter {
+public final class MusicMessageWriter extends MessageWriter {
 
     /**
-     * The interface to display on the chatbox.
+     * The identifier of the song.
      */
     private final int id;
 
     /**
-     * Creates a new {@link ChatboxInterfaceMessageWriter}.
+     * Creates a new {@link MusicMessageWriter}.
      *
-     * @param id The interface to display on the chatbox.
+     * @param id The identifier of the song.
      */
-    public ChatboxInterfaceMessageWriter(int id) {
+    public MusicMessageWriter(int id) {
         this.id = id;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(164);
+        ByteMessage msg = ByteMessage.message(74);
         msg.putShort(id, ByteOrder.LITTLE);
         return msg;
     }

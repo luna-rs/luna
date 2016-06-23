@@ -15,9 +15,9 @@ public final class MessageRepository {
     private final int[] sizes = new int[257];
 
     /**
-     * An array of {@link InboundMessageReader}s that act as listeners for incoming messages.
+     * An array of {@link MessageReader}s that act as listeners for incoming messages.
      */
-    private final InboundMessageReader[] inboundHandlers = new InboundMessageReader[257];
+    private final MessageReader[] messageReaders = new MessageReader[257];
 
     /**
      * Creates a new {@link MessageRepository}.
@@ -27,20 +27,20 @@ public final class MessageRepository {
     }
 
     /**
-     * Adds a new {@link InboundMessageReader} handler along with its size.
+     * Adds a new {@link MessageReader} handler along with its size.
      *
      * @param opcode The opcode of the message handler.
      * @param size The size of the message.
-     * @param inboundMessageName The class name of the {@link InboundMessageReader}, implicitly prefixed with the {@code
+     * @param messageReaderName The class name of the {@link MessageReader}, implicitly prefixed with the {@code
      * io.luna.net.msg.in} package.
-     * @throws ReflectiveOperationException If any errors occur while instantiating the {@link InboundMessageReader}.
+     * @throws ReflectiveOperationException If any errors occur while instantiating the {@link MessageReader}.
      */
-    public void addHandler(int opcode, int size, String inboundMessageName) throws ReflectiveOperationException {
+    public void addHandler(int opcode, int size, String messageReaderName) throws ReflectiveOperationException {
         ThreadUtils.ensureInitThread();
 
-        Class<?> inboundMessageClass = Class.forName("io.luna.net.msg.in." + inboundMessageName);
+        Class<?> messageReaderClass = Class.forName("io.luna.net.msg.in." + messageReaderName);
         sizes[opcode] = size;
-        inboundHandlers[opcode] = (InboundMessageReader) inboundMessageClass.newInstance();
+        messageReaders[opcode] = (MessageReader) messageReaderClass.newInstance();
     }
 
     /**
@@ -59,7 +59,7 @@ public final class MessageRepository {
      * @param opcode The opcode to retrieve the message handler for.
      * @return The message handler for {@code opcode}, never {@code null}.
      */
-    public InboundMessageReader getHandler(int opcode) {
-        return inboundHandlers[opcode];
+    public MessageReader getHandler(int opcode) {
+        return messageReaders[opcode];
     }
 }

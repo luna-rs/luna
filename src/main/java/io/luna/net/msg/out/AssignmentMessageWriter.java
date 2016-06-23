@@ -4,15 +4,15 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that assigns a {@link Player} a client-sided index and members status for
- * the duration of their login session.
+ * An {@link MessageWriter} implementation that assigns a {@link Player} a client-sided index and members status for the
+ * duration of their login session.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AssignmentMessageWriter extends OutboundMessageWriter {
+public final class AssignmentMessageWriter extends MessageWriter {
 
     /**
      * If the {@link Player} should have a member or free-to-play status.

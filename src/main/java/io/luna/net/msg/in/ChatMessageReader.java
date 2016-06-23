@@ -6,16 +6,16 @@ import io.luna.game.model.mobile.Chat;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} manually talks.
+ * An {@link MessageReader} implementation that decodes data sent when a {@link Player} manually talks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ChatMessageReader extends InboundMessageReader {
+public final class ChatMessageReader extends MessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

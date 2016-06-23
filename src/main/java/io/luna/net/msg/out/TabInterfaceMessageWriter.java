@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that displays an interface on a sidebar tab.
+ * An {@link MessageWriter} implementation that displays an interface on a sidebar tab.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class TabInterfaceMessageWriter extends OutboundMessageWriter {
+public final class TabInterfaceMessageWriter extends MessageWriter {
 
     /**
      * The identifier for the tab to send the interface on.

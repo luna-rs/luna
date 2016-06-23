@@ -6,15 +6,15 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerRights;
 import io.luna.game.plugin.Hotfixer;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
- * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
+ * An {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class CommandMessageReader extends InboundMessageReader {
+public final class CommandMessageReader extends MessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

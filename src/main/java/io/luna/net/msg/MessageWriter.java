@@ -9,7 +9,7 @@ import io.luna.net.codec.ByteMessage;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class OutboundMessageWriter {
+public abstract class MessageWriter {
 
     /**
      * Builds a {@link ByteMessage} containing the data for this message.

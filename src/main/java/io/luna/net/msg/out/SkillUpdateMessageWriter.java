@@ -4,14 +4,14 @@ import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.Skill;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that synchronizes a {@link Skill} with the client.
+ * An {@link MessageWriter} implementation that synchronizes a {@link Skill} with the client.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SkillUpdateMessageWriter extends OutboundMessageWriter {
+public final class SkillUpdateMessageWriter extends MessageWriter {
 
     /**
      * The identifier for the skill being updated.

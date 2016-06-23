@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class InboundMessageReader {
+public abstract class MessageReader {
 
     /**
      * The asynchronous logger.

@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that sets a widget to be hidden until hovered over.
+ * An {@link MessageWriter} implementation that sets a widget to be hidden until hovered over.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetVisibilityMessageWriter extends OutboundMessageWriter {
+public final class WidgetVisibilityMessageWriter extends MessageWriter {
 
     /**
      * The identifier of the widget to make hidden or unhidden.

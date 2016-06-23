@@ -4,14 +4,14 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that displays text on a widget.
+ * An {@link MessageWriter} implementation that displays text on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetTextMessageWriter extends OutboundMessageWriter {
+public final class WidgetTextMessageWriter extends MessageWriter {
 
     /**
      * The text to display on the widget.

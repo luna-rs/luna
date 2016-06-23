@@ -6,17 +6,17 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * An {@link OutboundMessageWriter} implementation that displays a group of {@link Item}s on a widget.
+ * An {@link MessageWriter} implementation that displays a group of {@link Item}s on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetItemGroupMessageWriter extends OutboundMessageWriter {
+public final class WidgetItemGroupMessageWriter extends MessageWriter {
 
     /**
      * The identifier of the widget that the items will de displayed on.

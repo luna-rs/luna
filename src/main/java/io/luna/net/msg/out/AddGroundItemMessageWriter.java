@@ -5,14 +5,14 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} implementation that displays a ground item.
+ * An {@link MessageWriter} implementation that displays a ground item.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AddGroundItemMessageWriter extends OutboundMessageWriter {
+public final class AddGroundItemMessageWriter extends MessageWriter {
 
     /**
      * The item that will be displayed.

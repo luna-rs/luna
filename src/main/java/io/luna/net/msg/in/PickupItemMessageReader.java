@@ -6,16 +6,16 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} tries to pick up an item.
+ * An {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to pick up an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PickupItemMessageReader extends InboundMessageReader {
+public final class PickupItemMessageReader extends MessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

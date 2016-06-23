@@ -3,15 +3,15 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link OutboundMessageWriter} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for
- * things like tutorial island to force the {@code Player} to view a certain tab.
+ * An {@link MessageWriter} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for things
+ * like tutorial island to force the {@code Player} to view a certain tab.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ForceTabMessageWriter extends OutboundMessageWriter {
+public final class ForceTabMessageWriter extends MessageWriter {
 
     /**
      * The identifier of the game tab to open.
