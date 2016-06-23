@@ -314,6 +314,52 @@ public final class Player extends MobileEntity {
     }
 
     /**
+     * Sets the "unmute_date" attribute.
+     */
+    public void setUnmuteDate(String unmuteDate) {
+        AttributeValue<String> attr = attrMap().get("unmute_date");
+        attr.set(unmuteDate);
+    }
+
+    /**
+     * Gets the "unmute_date" attribute.
+     */
+    public String getUnmuteDate() {
+        AttributeValue<String> attr = attrMap().get("unmute_date");
+        return attr.get();
+    }
+
+    /**
+     * Sets the "unban_date" attribute.
+     */
+    public void setUnbanDate(String unbanDate) {
+        AttributeValue<String> attr = attrMap().get("unban_date");
+        attr.set(unbanDate);
+    }
+
+    /**
+     * Gets the "unban_date" attribute.
+     */
+    public String getUnbanDate() {
+        AttributeValue<String> attr = attrMap().get("unban_date");
+        return attr.get();
+    }
+
+    /**
+     * Returns {@code true} if the "unmute_date" attribute is not equal to "n/a".
+     */
+    public boolean isMuted() {
+        return !getUnmuteDate().equals("n/a");
+    }
+
+    /**
+     * Returns {@code true} if the "unban_date" attribute is not equal to "n/a".
+     */
+    public boolean isBanned() {
+        return !getUnbanDate().equals("n/a");
+    }
+
+    /**
      * @return The authority level of this {@code Player}.
      */
     public PlayerRights getRights() {
