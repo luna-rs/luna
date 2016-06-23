@@ -42,7 +42,7 @@ public final class CommandMessageReader extends InboundMessageReader {
      * 'hotfixing'.
      */
     private void initHotfix(Player player) {
-        player.queue(new GameChatboxMessageWriter("Hotfix request received, initializing Hotfixer..."));
+        player.queue(new GameChatboxMessageWriter("Hotfix request received, initializing hotfixer..."));
 
         Hotfixer.newHotfixer(player.getContext()).
             addListener(it -> player.queue(new GameChatboxMessageWriter("Hotfix successfully completed!"))).init();
