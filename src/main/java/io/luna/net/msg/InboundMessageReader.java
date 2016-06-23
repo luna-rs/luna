@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * An inbound message handler that decodes all incoming {@link GameMessage}s.
+ * An inbound message handler that decodes all inbound {@link GameMessage}s.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -17,7 +17,7 @@ public abstract class InboundMessageReader {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * Read the {@code msg} and return the {@link Event} that will be forwarded to the {@link PluginManager}, if any. This is
