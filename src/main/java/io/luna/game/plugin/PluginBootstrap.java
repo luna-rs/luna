@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import com.google.gson.JsonObject;
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
+import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +16,6 @@ import scala.tools.nsc.settings.MutableSettings.BooleanSetting;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -23,21 +23,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PluginBootstrap implements Runnable {
+public final class PluginBootstrap implements Callable<EventListenerPipelineSet> {
 
     /**
      * A {@link ByteArrayOutputStream} implementation that intercepts output from the {@code Scala} interpreter and forwards
      * the output to {@code System.err} when there is an evaluation error.
      */
-    private static final class ScalaConsole extends ByteArrayOutputStream {
+    private final class ScalaConsole extends ByteArrayOutputStream {
 
         @Override
         public synchronized void flush() {
@@ -49,7 +53,9 @@ public final class PluginBootstrap implements Runnable {
             reset();
 
             if (matcher.find()) {
-                LOGGER.error(output);
+                String fileName = currentFile.get();
+                String message = output.substring(output.indexOf(':', 10) + 8);
+                LOGGER.fatal("Error while interpreting plugin file \"{}\" {}{}", fileName, System.lineSeparator(), message);
             }
         }
     }
@@ -62,7 +68,22 @@ public final class PluginBootstrap implements Runnable {
     /**
      * The directory that contains all files related to plugins.
      */
-    private static final String DIR = "./plugins/plugin/";
+    private static final String DIR = "./plugins/";
+
+    /**
+     * The {@link EventListenerPipelineSet} that listeners from plugins will be added to.
+     */
+    private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
+
+    /**
+     * A {@link Map} of the file names in {@code DIR} to their contents.
+     */
+    private final Map<String, String> files = new HashMap<>();
+
+    /**
+     * The current file that is being evaluated.
+     */
+    private final AtomicReference<String> currentFile = new AtomicReference<>();
 
     /**
      * The {@link LunaContext} that will be used to inject state into plugins.
@@ -75,11 +96,6 @@ public final class PluginBootstrap implements Runnable {
     private final ScriptEngine engine;
 
     /**
-     * A {@link Map} of the file names in {@code DIR} to their contents.
-     */
-    private final Map<String, String> files = new HashMap<>();
-
-    /**
      * Creates a new {@link PluginBootstrap}.
      *
      * @param context The {@link LunaContext} that will be used to inject state into plugins.
@@ -90,12 +106,10 @@ public final class PluginBootstrap implements Runnable {
     }
 
     @Override
-    public void run() {
-        try {
-            init();
-        } catch (Exception e) {
-            throw new RuntimeException("Error initializing Scala plugins...", e);
-        }
+    public EventListenerPipelineSet call() throws Exception {
+        init();
+        LOGGER.info("A total of {} Scala plugins were successfully interpreted.", box(pipelines.listenerCount()));
+        return pipelines;
     }
 
     /**
@@ -144,15 +158,17 @@ public final class PluginBootstrap implements Runnable {
     private void initDependencies() throws Exception {
         engine.put("ctx: io.luna.LunaContext", context);
         engine.put("logger: org.apache.logging.log4j.Logger", LOGGER);
+        engine.put("pipelines: io.luna.game.event.EventListenerPipelineSet", pipelines);
 
         Toml toml = new Toml().read(files.remove("dependencies.toml"));
-
         JsonObject reader = toml.getTable("dependencies").to(JsonObject.class);
         String parentDependency = reader.get("parent_dependency").getAsString();
         String[] childDependencies = GsonUtils.getAsType(reader.get("child_dependencies"), String[].class);
 
+        currentFile.set(parentDependency);
         engine.eval(files.remove(parentDependency));
         for (String dependency : childDependencies) {
+            currentFile.set(dependency);
             engine.eval(files.remove(dependency));
         }
     }
@@ -162,11 +178,8 @@ public final class PluginBootstrap implements Runnable {
      */
     private void initPlugins() throws Exception {
         for (Entry<String, String> fileEntry : files.entrySet()) {
-            try {
-                engine.eval(fileEntry.getValue());
-            } catch (ScriptException e) {
-                throw new RuntimeException(e);
-            }
+            currentFile.set(fileEntry.getKey());
+            engine.eval(fileEntry.getValue());
         }
     }
 }
