@@ -4,12 +4,10 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
 import io.luna.net.msg.MessageRepository;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 import io.netty.channel.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -20,11 +18,6 @@ import java.util.concurrent.ArrayBlockingQueue;
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameSession extends Session {
-
-    /**
-     * The asynchronous logger.
-     */
-    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The player assigned to this {@code GameSession}.
@@ -71,7 +64,6 @@ public final class GameSession extends Session {
     @Override
     public void onDispose() {
         player.getWorld().queueLogout(player);
-        inboundQueue.clear();
     }
 
     @Override
@@ -86,11 +78,24 @@ public final class GameSession extends Session {
      *
      * @param msg The message to queue.
      */
-    public void queue(OutboundMessageWriter msg) {
+    public void queue(MessageWriter msg) {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.writeAndFlush(msg.handleOutboundMessage(player), channel.voidPromise());
+            channel.write(msg.handleOutboundMessage(player), channel.voidPromise());
+        }
+    }
+
+    /**
+     * Flushes all pending {@link GameMessage}s within the channel's queue. Repeated calls to this method are relatively
+     * expensive, which is why messages should be queued up with {@code queue(MessageWriter)} and flushed once at the end of
+     * the cycle.
+     */
+    public void flushQueue() {
+        Channel channel = getChannel();
+
+        if (channel.isActive()) {
+            channel.flush();
         }
     }
 
@@ -103,7 +108,7 @@ public final class GameSession extends Session {
             if (msg == null) {
                 break;
             }
-            InboundMessageReader inbound = messageRepository.getHandler(msg.getOpcode());
+            MessageReader inbound = messageRepository.getHandler(msg.getOpcode());
             inbound.handleInboundMessage(player, msg);
         }
     }

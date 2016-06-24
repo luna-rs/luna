@@ -17,6 +17,10 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPipeline;
 
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.function.Function;
+
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -72,7 +76,7 @@ public final class LoginSession extends Session {
         String username = msg.getUsername();
         String password = msg.getPassword();
 
-        checkState(username.matches("^[a-zA-Z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
+        checkState(username.matches("^[a-z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
 
         Player player = new Player(context, new PlayerCredentials(username, password));
 
@@ -86,10 +90,12 @@ public final class LoginSession extends Session {
 
         if (response == LoginResponse.NORMAL) {
             PlayerSerializer deserializer = new PlayerSerializer(player);
+
             response = deserializer.load(password);
+            response = handlePunishments(player).orElse(response);
         }
 
-        ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response));
+        ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response, player.getRights(), false));
         if (response != LoginResponse.NORMAL) {
             future.addListener(ChannelFutureListener.CLOSE);
         } else {
@@ -107,5 +113,31 @@ public final class LoginSession extends Session {
                 world.queueLogin(player);
             });
         }
+    }
+
+    /**
+     * Returns an optional describing the result of managing punishments for {@code player}.
+     */
+    private Optional<LoginResponse> handlePunishments(Player player) {
+        // TODO: Pretty ugly, find a nicer way of doing this?
+        LocalDate now = LocalDate.now();
+        Function<String, LocalDate> computeDate = it -> it.equals("never") ? now.plusYears(1) : LocalDate.parse(it);
+
+        if (player.isBanned()) {
+            LocalDate then = computeDate.apply(player.getUnbanDate());
+            if (now.isBefore(then)) {
+                return Optional.of(LoginResponse.ACCOUNT_BANNED);
+            } else {
+                player.setUnbanDate("n/a");
+            }
+        }
+
+        if (player.isMuted()) {
+            LocalDate then = computeDate.apply(player.getUnmuteDate());
+            if (then.isBefore(now)) {
+                player.setUnbanDate("n/a");
+            }
+        }
+        return Optional.empty();
     }
 }
