@@ -33,7 +33,7 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
         int unnotedId = reader.get("unnoted_id").getAsInt();
         boolean membersOnly = reader.get("members_only").getAsBoolean();
         double weight = reader.get("weight").getAsDouble();
-        boolean tradable = reader.get("tradable").getAsBoolean();
+        boolean tradable = reader.get("tradeable").getAsBoolean();
         String[] inventoryActions = GsonUtils.getAsType(reader.get("inventory_actions"), String[].class);
         String[] groundActions = GsonUtils.getAsType(reader.get("ground_actions"), String[].class);
 
