@@ -40,6 +40,16 @@ public final class StringUtils {
     }
 
     /**
+     * Appends the indefinite article of {@code thing} to {@code thing}.
+     *
+     * @param thing The thing to compute for.
+     * @return The indefinite article appended after {@code thing}.
+     */
+    public static String appendIndefiniteArticle(String thing) {
+        return computeIndefiniteArticle(thing) + " " + thing;
+    }
+
+    /**
      * Encodes {@code s} to a base-37 {@code long}.
      *
      * @param s The {@link String} to encode.
