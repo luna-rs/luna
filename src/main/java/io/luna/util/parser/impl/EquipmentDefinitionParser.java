@@ -32,7 +32,7 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
         boolean twoHanded = reader.get("two_handed").getAsBoolean();
         boolean fullBody = reader.get("full_body").getAsBoolean();
         boolean fullHelmet = reader.get("full_helmet").getAsBoolean();
-        EquipmentRequirement[] requirements = decodeReqs(reader.get("decodeReqs"));
+        EquipmentRequirement[] requirements = decodeReqs(reader.get("requirements"));
         int[] bonuses = GsonUtils.getAsType(reader.get("bonuses"), int[].class);
 
         return new EquipmentDefinition(id, index, twoHanded, fullBody, fullHelmet, requirements, bonuses);
