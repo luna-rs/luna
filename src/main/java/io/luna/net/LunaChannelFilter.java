@@ -44,7 +44,7 @@ import java.util.Set;
          * Creates a new {@link BlacklistParser}.
          */
         public BlacklistParser() {
-            super("./data/players/blacklist.txt");
+            super("./data/punishment/blacklist.txt");
         }
 
         @Override
