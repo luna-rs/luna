@@ -89,7 +89,7 @@ public final class Server {
         LOGGER.info("Luna is now online on port {}!", box(LunaNetworkConstants.PORT));
 
         PluginManager plugins = context.getPlugins();
-        plugins.post(new ServerLaunchEvent());
+        plugins.post(ServerLaunchEvent.INSTANCE);
     }
 
     /**
@@ -133,7 +133,7 @@ public final class Server {
         PluginManager plugins = context.getPlugins();
 
         FutureUtils.addCallback(launchService.submit(new PluginBootstrap(context)),
-            it -> plugins.getPipelines().replacePipelines(it));
+            plugins.getPipelines()::replacePipelines);
     }
 
     /**
