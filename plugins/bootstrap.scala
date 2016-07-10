@@ -221,6 +221,28 @@ implicit class WorldImplicits(world: World) {
     }
   }
 
+  def scheduleUntil(delay: Int, predicate: Boolean)(action: => Unit) = {
+    schedule(delay) { it =>
+      if (!predicate) {
+        action
+      } else {
+        it.cancel()
+      }
+    }
+  }
+
+  def scheduleTimes(delay: Int, times: Int)(action: => Unit) = {
+    var loops = 0
+    schedule(delay) { it =>
+      if (loops == times) {
+        it.cancel()
+      } else {
+        action
+        loops += 1
+      }
+    }
+  }
+
   // NOTE: Be careful using this, these types of tasks will >never< stop running as long
   // as the server is online!
   def scheduleForever(delay: Int, instant: Boolean = false)
