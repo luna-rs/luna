@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>luna</groupId>
     <artifactId>luna</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.5.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -20,17 +20,17 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.6.2</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.6</version>
+            <version>2.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.6</version>
+            <version>2.6.1</version>
         </dependency>
         <dependency>
             <groupId>com.lmax</groupId>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.0.Final</version>
+            <version>4.1.2.Final</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.moandjiezana.toml</groupId>
             <artifactId>toml4j</artifactId>
-            <version>0.5.1</version>
+            <version>0.6.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
