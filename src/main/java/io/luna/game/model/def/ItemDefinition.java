@@ -1,7 +1,12 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.item.Item;
+import io.luna.util.StringUtils;
+import io.luna.util.parser.impl.ItemDefinitionParser;
+
+import java.util.Arrays;
 
 /**
  * A cached definition that describes a specific {@link Item}.
@@ -11,9 +16,25 @@ import io.luna.game.model.item.Item;
 public final class ItemDefinition {
 
     /**
-     * An array of the cached {@code ItemDefinition}s.
+     * An {@link ImmutableList} of the cached {@code ItemDefinition}s.
      */
-    public static final ItemDefinition[] DEFINITIONS = new ItemDefinition[7956];
+    public static final ImmutableList<ItemDefinition> DEFINITIONS;
+
+    /**
+     * The default {@link ItemDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Item}.
+     */
+    public static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, -1, false, 0.0, false,
+        StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+
+    static {
+        ItemDefinition[] definitions = new ItemDefinition[7956];
+        Arrays.fill(definitions, DEFAULT);
+
+        ItemDefinitionParser parser = new ItemDefinitionParser(definitions);
+        parser.run();
+
+        DEFINITIONS = ImmutableList.copyOf(definitions);
+    }
 
     /**
      * The identifier for the {@code Item}.

@@ -1,7 +1,12 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.mobile.Npc;
+import io.luna.util.StringUtils;
+import io.luna.util.parser.impl.NpcDefinitionParser;
+
+import java.util.Arrays;
 
 /**
  * A cached definition that describes a specific {@link Npc}.
@@ -11,9 +16,25 @@ import io.luna.game.model.mobile.Npc;
 public final class NpcDefinition {
 
     /**
-     * An array of the cached {@code NpcDefinition}s.
+     * An {@link ImmutableList} of the cached {@code NpcDefinition}s.
      */
-    public static final NpcDefinition[] DEFINITIONS = new NpcDefinition[8152];
+    public static final ImmutableList<NpcDefinition> DEFINITIONS;
+
+    /**
+     * The default {@link NpcDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Npc}.
+     */
+    public static final NpcDefinition DEFAULT = new NpcDefinition(-1, null, null, -1, -1, -1, -1, -1,
+        StringUtils.EMPTY_ARRAY);
+
+    static {
+        NpcDefinition[] definitions = new NpcDefinition[8152];
+        Arrays.fill(definitions, DEFAULT);
+
+        NpcDefinitionParser parser = new NpcDefinitionParser(definitions);
+        parser.run();
+
+        DEFINITIONS = ImmutableList.copyOf(definitions);
+    }
 
     /**
      * The identification for the {@code Npc}.

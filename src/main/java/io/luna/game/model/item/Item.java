@@ -30,7 +30,7 @@ public final class Item {
      * @param amount The amount of this {@code Item}.
      */
     public Item(int id, int amount) {
-        checkArgument(id > 0 && id < ItemDefinition.DEFINITIONS.length, "invalid item id");
+        checkArgument(id > 0 && id < ItemDefinition.DEFINITIONS.length(), "invalid item id");
         checkArgument(amount > 0, "amount <= 0");
 
         this.id = id;
@@ -111,7 +111,7 @@ public final class Item {
      * @return The definition instance for this {@code Item}.
      */
     public ItemDefinition getItemDef() {
-        return ItemDefinition.DEFINITIONS[id];
+        return ItemDefinition.DEFINITIONS.get(id);
     }
 
     /**

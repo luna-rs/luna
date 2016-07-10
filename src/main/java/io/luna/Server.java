@@ -6,6 +6,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
+import io.luna.game.model.def.EquipmentDefinition;
+import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.def.NpcCombatDefinition;
+import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
@@ -13,11 +17,7 @@ import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
 import io.luna.util.FutureUtils;
 import io.luna.util.StringUtils;
-import io.luna.util.parser.impl.EquipmentDefinitionParser;
-import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
-import io.luna.util.parser.impl.NpcCombatDefinitionParser;
-import io.luna.util.parser.impl.NpcDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static io.luna.util.ClassUtils.loadClass;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -142,10 +143,10 @@ public final class Server {
      * @throws Exception If any exceptions are thrown while initializing startup tasks.
      */
     private void initAsyncTasks() throws Exception {
-        launchService.execute(new ItemDefinitionParser());
-        launchService.execute(new NpcDefinitionParser());
-        launchService.execute(new NpcCombatDefinitionParser());
         launchService.execute(new MessageRepositoryParser(messageRepository));
-        launchService.execute(new EquipmentDefinitionParser());
+        launchService.execute(() -> loadClass(ItemDefinition.class));
+        launchService.execute(() -> loadClass(EquipmentDefinition.class));
+        launchService.execute(() -> loadClass(NpcCombatDefinition.class));
+        launchService.execute(() -> loadClass(NpcDefinition.class));
     }
 }

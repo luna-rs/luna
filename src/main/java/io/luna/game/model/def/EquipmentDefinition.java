@@ -1,12 +1,14 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Skill;
 import io.luna.game.model.mobile.SkillSet;
+import io.luna.util.parser.impl.EquipmentDefinitionParser;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -66,9 +68,9 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * A {@link Map} of the cached {@code EquipmentDefinition}s.
+     * An {@link ImmutableMap} of the cached {@code EquipmentDefinition}s.
      */
-    public static final Map<Integer, EquipmentDefinition> DEFINITIONS = new HashMap<>();
+    public static final ImmutableMap<Integer, EquipmentDefinition> DEFINITIONS;
 
     /**
      * The default {@link EquipmentDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Item}.
@@ -76,8 +78,23 @@ public final class EquipmentDefinition {
     public static final EquipmentDefinition DEFAULT = new EquipmentDefinition(-1, -1, false, false, false,
         new EquipmentRequirement[] {}, new int[] {});
 
+    /**
+     * Retrieves an {@link EquipmentDefinition} by {@code id}.
+     *
+     * @param id The identifier to retrieve the definition of.
+     * @return The definition.
+     */
     public static EquipmentDefinition getDefinition(int id) {
         return DEFINITIONS.getOrDefault(id, DEFAULT);
+    }
+
+    static {
+        Map<Integer, EquipmentDefinition> definitions = new LinkedHashMap<>();
+
+        EquipmentDefinitionParser parser = new EquipmentDefinitionParser(definitions);
+        parser.run();
+
+        DEFINITIONS = ImmutableMap.copyOf(definitions);
     }
 
     /**

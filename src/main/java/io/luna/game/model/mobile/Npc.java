@@ -54,7 +54,7 @@ public final class Npc extends MobileEntity {
         super(context);
         this.id = id;
 
-        definition = NpcDefinition.DEFINITIONS[id];
+        definition = NpcDefinition.DEFINITIONS.get(id);
         combatDefinition = NpcCombatDefinition.getDefinition(id);
         currentHp = combatDefinition.getHitpoints();
 
@@ -118,7 +118,7 @@ public final class Npc extends MobileEntity {
      */
     public void transform(int id) {
         transformId = id;
-        definition = NpcDefinition.DEFINITIONS[id];
+        definition = NpcDefinition.DEFINITIONS.get(id);
         updateFlags.flag(UpdateFlag.TRANSFORM);
     }
 
