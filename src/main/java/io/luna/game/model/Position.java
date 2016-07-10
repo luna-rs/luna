@@ -159,7 +159,7 @@ public final class Position {
      * @return The local {@code X} coordinate.
      */
     public int getLocalX(Position base) {
-        return x - (base.getRegionX() << 2);
+        return x - (base.getRegionX() << 3);
     }
 
     /**
@@ -169,7 +169,7 @@ public final class Position {
      * @return The local {@code Y} coordinate.
      */
     public int getLocalY(Position base) {
-        return y - (base.getRegionY() << 2);
+        return y - (base.getRegionY() << 3);
     }
 
     /**
