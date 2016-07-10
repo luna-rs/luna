@@ -22,7 +22,7 @@ public final class PlayerFacePositionUpdateBlock extends PlayerUpdateBlock {
 
     @Override
     public void write(Player mob, ByteMessage msg) {
-        msg.putShort(2 * mob.getFacePosition().getX() + 1, ByteTransform.A, ByteOrder.LITTLE);
-        msg.putShort(2 * mob.getFacePosition().getY() + 1, ByteOrder.LITTLE);
+        msg.putShort((mob.getFacePosition().getX() + 1) << 1, ByteTransform.A, ByteOrder.LITTLE);
+        msg.putShort((mob.getFacePosition().getY() + 1) << 1, ByteOrder.LITTLE);
     }
 }
