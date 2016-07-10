@@ -35,8 +35,12 @@ val STARTER_EQUIPMENT = Vector(
 
   if (plr.attr("first_login")) {
     plr.sendMessage("This is your first login. Enjoy your starter package!")
+
     inventory.addAll(STARTER_ITEMS)
-    equipment.bulkOperation { () => STARTER_EQUIPMENT.foreach(it => equipment.set(it(0), it(1))) }
+    equipment.bulkOperation {
+      STARTER_EQUIPMENT.foreach(it => equipment.set(it._1, it._2))
+    }
+
     plr.attr("first_login", false)
   }
 }
