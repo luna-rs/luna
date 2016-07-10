@@ -115,7 +115,6 @@ public final class WorldSynchronizer {
     public void preSynchronize() {
         world.getPlayers().forEach(it -> {
             try {
-                it.getSession().flushQueue();
                 it.getWalkingQueue().process();
                 it.getSession().dequeue();
 
@@ -156,9 +155,9 @@ public final class WorldSynchronizer {
         world.getPlayers().forEach(it -> updateExecutor.execute(new SynchronizationTask(it) {
             @Override
             public void execute() {
+                it.getSession().flushQueue();
                 it.clearFlags();
                 it.setCachedBlock(null);
-                it.setRegionChanged(false);
             }
         }));
         synchronizer.arriveAndAwaitAdvance();
