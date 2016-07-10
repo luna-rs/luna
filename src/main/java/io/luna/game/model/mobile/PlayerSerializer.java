@@ -3,7 +3,8 @@ package io.luna.game.model.mobile;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.moandjiezana.toml.Toml;
+import com.moandjiezana.toml.TomlWriter;
 import io.luna.game.GameService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
@@ -15,10 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.Reader;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,16 +60,16 @@ public final class PlayerSerializer {
      */
     public PlayerSerializer(Player player) {
         this.player = player;
-        path = FILE_DIR.resolve(player.getUsername() + ".json");
+        path = FILE_DIR.resolve(player.getUsername() + ".toml");
     }
 
     static {
-        if (Files.notExists(FILE_DIR)) {
-            try {
+        try {
+            if (Files.notExists(FILE_DIR)) {
                 Files.createDirectory(FILE_DIR);
-            } catch (Exception e) {
-                LOGGER.catching(e);
             }
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -79,36 +77,38 @@ public final class PlayerSerializer {
      * Attempts to serialize all persistent data for the {@link Player}.
      */
     public void save() {
-        Map<String, Object> mainTable = new LinkedHashMap<>();
+        Map<String, Object> tokens = new LinkedHashMap<>();
+        tokens.put("password", player.getPassword());
+        tokens.put("position", player.getPosition());
+        tokens.put("rights", player.getRights().name());
+        tokens.put("running", player.getWalkingQueue().isRunning());
+        tokens.put("appearance", player.getAppearance().toArray());
+        tokens.put("inventory", player.getInventory().toIndexedArray());
+        tokens.put("bank", player.getBank().toIndexedArray());
+        tokens.put("equipment", player.getEquipment().toIndexedArray());
+        tokens.put("skills", player.getSkills().toArray());
 
-        mainTable.put("password", player.getPassword());
-        mainTable.put("position", player.getPosition());
-        mainTable.put("rights", player.getRights().name());
-        mainTable.put("running", player.getWalkingQueue().isRunning());
-        mainTable.put("appearance", player.getAppearance().toArray());
-        mainTable.put("inventory", player.getInventory().toIndexedArray());
-        mainTable.put("bank", player.getBank().toIndexedArray());
-        mainTable.put("equipment", player.getEquipment().toIndexedArray());
-        mainTable.put("skills", player.getSkills().toArray());
-
-        Map<String, Object> attrTable = new HashMap<>();
-        for (Entry<String, AttributeValue<?>> it : player.attributes) {
+        Map<String, Object> attributeTokens = new HashMap<>();
+        for (Entry<String, AttributeValue<?>> it : player.getAttributes()) {
             AttributeKey<?> key = AttributeKey.ALIASES.get(it.getKey());
             AttributeValue<?> value = it.getValue();
 
             if (key.isPersistent()) {
-                Map<String, Object> attrSubTable = new LinkedHashMap<>();
-                attrSubTable.put("type", key.getTypeName());
-                attrSubTable.put("value", value.get());
+                Map<String, Object> attributeElementTokens = new LinkedHashMap<>();
+                attributeElementTokens.put("type", key.getTypeName());
+                attributeElementTokens.put("value", value.get());
 
-                attrTable.put(key.getName(), attrSubTable);
+                attributeTokens.put(key.getName(), attributeElementTokens);
             }
         }
-        mainTable.put("attributes", attrTable);
+        tokens.put("attributes", attributeTokens);
 
-        try (Writer writer = new FileWriter(path.toFile())) {
-            writer.write(GsonUtils.GSON.toJson(mainTable));
-        } catch (IOException e) {
+        try {
+            TomlWriter writer = new TomlWriter.Builder().
+                indentValuesBy(2).
+                build();
+            writer.write(tokens, path.toFile());
+        } catch (Exception e) {
             LOGGER.catching(e);
         }
     }
@@ -138,7 +138,7 @@ public final class PlayerSerializer {
             return LoginResponse.NORMAL;
         }
         try (Reader reader = new FileReader(path.toFile())) {
-            JsonObject jsonReader = (JsonObject) new JsonParser().parse(reader);
+            JsonObject jsonReader = new Toml().read(reader).to(JsonObject.class);
 
             String password = jsonReader.get("password").getAsString();
             if (!expectedPassword.equals(password)) {
@@ -175,8 +175,7 @@ public final class PlayerSerializer {
 
                 Class<?> type = Class.forName(attrReader.get("type").getAsString());
                 Object data = GsonUtils.getAsType(attrReader.get("value"), type);
-
-                player.attr().get(it.getKey()).set(data);
+                player.getAttributes().get(it.getKey()).set(data);
             }
         } catch (Exception e) {
             LOGGER.catching(e);
