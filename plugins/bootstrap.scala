@@ -45,8 +45,6 @@ import scala.util.Random
 @inline val TYPE_OBJECT = EntityType.OBJECT
 @inline val TYPE_ITEM = EntityType.ITEM
 
-@inline val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, uuuu")
-
 
 // logging, prefer lazy 'msg' evaluation
 def log(msg: Any) = logger.info(String.valueOf(msg))
@@ -155,9 +153,10 @@ implicit class PlayerImplicits(player: Player) {
   def sendChatboxInterface(id: Int) = player.queue(new ChatboxInterfaceMessageWriter(id))
   def sendSkillUpdate(id: Int) = player.queue(new SkillUpdateMessageWriter(id))
   def sendMusic(id: Int) = player.queue(new MusicMessageWriter(id))
-  def sendSound(id: Int, soundType: Int, delay: Int) = player.queue(new SoundMessageWriter(id, soundType, delay))
+  def sendSound(id: Int, loops: Int = 0, delay: Int = 0) = player.queue(new SoundMessageWriter(id, loops, delay))
   def sendInterface(id: Int) = player.queue(new InterfaceMessageWriter(id))
   def sendState(id: Int, value: Int) = player.queue(new StateMessageWriter(id, value))
+  def sendColor(id: Int, color: Int) = player.queue(new ColorChangeMessageWriter(id, color))
   def flag(updateFlag: UpdateFlag) = player.getUpdateFlags.flag(updateFlag)
 }
 
@@ -170,6 +169,7 @@ implicit class MobileEntityImplicits(mob: MobileEntity) {
     val attr: AttributeValue[T] = mob.getAttributes.get(key)
     attr.set(value)
   }
+  def attrEquals(key: String, equals: Any) = equals == attr(key)
 }
 
 implicit class PlayerRightsImplicits(rights: PlayerRights) {
