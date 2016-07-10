@@ -1,22 +1,18 @@
 [[message]]
 opcode = 0
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 1
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 2
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 3
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 4
@@ -26,182 +22,146 @@ payload = "ChatMessageReader"
 [[message]]
 opcode = 5
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 6
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 7
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 8
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 9
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 10
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 11
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 12
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 13
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 14
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 15
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 16
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 17
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 18
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 19
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 20
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 21
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 22
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 23
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 24
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 25
 size = 12
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 26
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 27
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 28
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 29
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 30
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 31
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 32
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 33
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 34
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 35
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 36
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 37
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 38
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 39
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 40
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 41
@@ -211,7 +171,6 @@ payload = "EquipItemMessageReader"
 [[message]]
 opcode = 42
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 43
@@ -221,272 +180,218 @@ payload = "InterfaceItemClickMessageReader"
 [[message]]
 opcode = 44
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 45
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 46
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 47
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 48
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 49
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 50
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 51
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 52
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 53
 size = 12
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 54
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 55
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 56
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 57
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 58
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 59
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 60
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 61
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 62
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 63
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 64
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 65
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 66
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 67
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 68
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 69
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 70
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 71
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 72
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 73
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 74
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 75
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 76
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 77
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 78
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 79
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 80
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 81
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 82
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 83
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 84
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 85
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 86
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 87
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 88
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 89
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 90
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 91
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 92
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 93
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 94
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 95
 size = 3
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 96
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 97
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 98
@@ -496,22 +401,18 @@ payload = "WalkingMessageReader"
 [[message]]
 opcode = 99
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 100
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 101
 size = 13
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 102
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 103
@@ -521,67 +422,54 @@ payload = "CommandMessageReader"
 [[message]]
 opcode = 104
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 105
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 106
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 107
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 108
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 109
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 110
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 111
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 112
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 113
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 114
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 115
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 116
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 117
@@ -591,57 +479,47 @@ payload = "InterfaceItemClickMessageReader"
 [[message]]
 opcode = 118
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 119
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 120
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 121
 size = 0
-payload = "GenericMessageReader"
+payload = "RegionChangedMessageReader"
 
 [[message]]
 opcode = 122
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 123
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 124
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 125
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 126
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 127
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 128
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 129
@@ -651,77 +529,62 @@ payload = "InterfaceItemClickMessageReader"
 [[message]]
 opcode = 130
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 131
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 132
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 133
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 134
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 135
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 136
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 137
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 138
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 139
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 140
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 141
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 142
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 143
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 144
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 145
@@ -731,92 +594,74 @@ payload = "InterfaceItemClickMessageReader"
 [[message]]
 opcode = 146
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 147
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 148
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 149
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 150
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 151
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 152
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 153
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 154
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 155
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 156
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 157
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 158
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 159
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 160
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 161
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 162
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 163
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 164
@@ -826,102 +671,82 @@ payload = "WalkingMessageReader"
 [[message]]
 opcode = 165
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 166
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 167
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 168
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 169
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 170
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 171
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 172
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 173
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 174
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 175
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 176
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 177
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 178
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 179
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 180
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 181
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 182
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 183
 size = 3
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 184
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 185
@@ -931,142 +756,114 @@ payload = "ButtonClickMessageReader"
 [[message]]
 opcode = 186
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 187
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 188
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 189
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 190
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 191
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 192
 size = 12
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 193
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 194
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 195
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 196
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 197
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 198
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 199
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 200
 size = 2
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 201
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 202
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 203
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 204
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 205
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 206
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 207
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 208
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 209
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 210
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 211
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 212
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 213
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 214
@@ -1076,107 +873,86 @@ payload = "SwapItemsMessageReader"
 [[message]]
 opcode = 215
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 216
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 217
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 218
 size = 10
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 219
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 220
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 221
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 222
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 223
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 224
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 225
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 226
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 227
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 228
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 229
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 230
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 231
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 232
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 233
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 234
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 235
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 236
@@ -1186,57 +962,46 @@ payload = "PickupItemMessageReader"
 [[message]]
 opcode = 237
 size = 8
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 238
 size = 1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 239
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 240
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 241
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 242
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 243
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 244
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 245
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 246
 size = -1
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 247
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 248
@@ -1246,39 +1011,31 @@ payload = "WalkingMessageReader"
 [[message]]
 opcode = 249
 size = 4
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 250
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 251
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 252
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 253
 size = 6
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 254
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 255
 size = 0
-payload = "GenericMessageReader"
 
 [[message]]
 opcode = 256
 size = 0
-payload = "GenericMessageReader"

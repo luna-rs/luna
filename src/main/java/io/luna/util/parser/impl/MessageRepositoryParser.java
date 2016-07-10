@@ -31,8 +31,11 @@ public final class MessageRepositoryParser extends TomlParser<MessageRepositoryE
 
     @Override
     public MessageRepositoryElement readObject(JsonObject reader) throws Exception {
-        return new MessageRepositoryElement(reader.get("opcode").getAsInt(), reader.get("size").getAsInt(),
-            reader.get("payload").getAsString());
+        int opcode = reader.get("opcode").getAsInt();
+        int size = reader.get("size").getAsInt();
+        String payload = reader.has("payload") ? reader.get("payload").getAsString() : "GenericMessageReader";
+
+        return new MessageRepositoryElement(opcode, size, payload);
     }
 
     @Override
@@ -48,7 +51,7 @@ public final class MessageRepositoryParser extends TomlParser<MessageRepositoryE
     }
 
     /**
-     * A POJO representing a single read object.
+     * A POJO representing a single read object. We need this because Java doesn't support tuples.
      */
     protected final class MessageRepositoryElement {
 
