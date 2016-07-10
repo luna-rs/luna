@@ -9,4 +9,15 @@ import io.luna.game.model.mobile.Player;
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginEvent extends Event {
+
+    /**
+     * Singleton instance.
+     */
+    public static final Event INSTANCE = new LoginEvent();
+
+    /**
+     * Private constructor to discourage external instantiation.
+     */
+    private LoginEvent() {
+    }
 }

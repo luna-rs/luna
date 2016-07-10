@@ -9,4 +9,15 @@ import io.luna.game.event.Event;
  * @author lare96 <http://github.org/lare96>
  */
 public final class ServerLaunchEvent extends Event {
+
+    /**
+     * Singleton instance.
+     */
+    public static final Event INSTANCE = new ServerLaunchEvent();
+
+    /**
+     * Private constructor to discourage external instantiation.
+     */
+    private ServerLaunchEvent() {
+    }
 }
