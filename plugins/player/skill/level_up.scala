@@ -3,6 +3,7 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 import io.luna.game.model.mobile.{Graphic, Player, Skill}
 import io.luna.util.StringUtils
 
+
 val LEVEL_UP_GRAPHIC = new Graphic(199)
 
 val LEVEL_UP_TABLE = Vector(
@@ -29,6 +30,7 @@ val LEVEL_UP_TABLE = Vector(
   Vector(4268, 4269, 4267)
 )
 
+
 def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
   val set = plr.getSkills
   val skill = plr.skill(id)
@@ -54,6 +56,7 @@ def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
     }
   }
 }
+
 
 >>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
   plr.sendSkillUpdate(msg.getId)
