@@ -15,7 +15,7 @@ import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mobile.attr.AttributeValue;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.OutboundMessageWriter;
+import io.luna.net.msg.MessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
@@ -200,14 +200,14 @@ public final class Player extends MobileEntity {
 
         queue(new GameChatboxMessageWriter("Welcome to Luna!"));
 
-        plugins.post(new LoginEvent(), this);
+        plugins.post(LoginEvent.INSTANCE, this);
 
         LOGGER.info("{} has logged in.", this);
     }
 
     @Override
     public void onInactive() {
-        plugins.post(new LogoutEvent());
+        plugins.post(LogoutEvent.INSTANCE);
 
         LOGGER.info("{} has logged out.", this);
 
@@ -263,9 +263,9 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * A shortcut function to {@link GameSession#queue(OutboundMessageWriter)}.
+     * A shortcut function to {@link GameSession#queue(MessageWriter)}.
      */
-    public void queue(OutboundMessageWriter msg) {
+    public void queue(MessageWriter msg) {
         session.queue(msg);
     }
 
@@ -284,8 +284,9 @@ public final class Player extends MobileEntity {
      * Sets the "withdraw_as_note" attribute and sends the state.
      */
     public void setWithdrawAsNote(boolean withdrawAsNote) {
-        AttributeValue<Boolean> attr = attrMap().get("withdraw_as_note");
+        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         attr.set(withdrawAsNote);
+
         queue(new StateMessageWriter(Bank.WITHDRAW_MODE_STATE_ID, withdrawAsNote ? 1 : 0));
     }
 
@@ -293,7 +294,7 @@ public final class Player extends MobileEntity {
      * Gets the "withdraw_as_note" attribute.
      */
     public boolean isWithdrawAsNote() {
-        AttributeValue<Boolean> attr = attrMap().get("withdraw_as_note");
+        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         return attr.get();
     }
 
@@ -301,7 +302,7 @@ public final class Player extends MobileEntity {
      * Sets the "run_energy" attribute.
      */
     public void setRunEnergy(int runEnergy) {
-        AttributeValue<Integer> attr = attrMap().get("run_energy");
+        AttributeValue<Integer> attr = attributes.get("run_energy");
         attr.set(runEnergy);
     }
 
@@ -309,7 +310,7 @@ public final class Player extends MobileEntity {
      * Gets the "run_energy" attribute.
      */
     public int getRunEnergy() {
-        AttributeValue<Integer> attr = attrMap().get("run_energy");
+        AttributeValue<Integer> attr = attributes.get("run_energy");
         return attr.get();
     }
 
@@ -317,7 +318,7 @@ public final class Player extends MobileEntity {
      * Sets the "unmute_date" attribute.
      */
     public void setUnmuteDate(String unmuteDate) {
-        AttributeValue<String> attr = attrMap().get("unmute_date");
+        AttributeValue<String> attr = attributes.get("unmute_date");
         attr.set(unmuteDate);
     }
 
@@ -325,7 +326,7 @@ public final class Player extends MobileEntity {
      * Gets the "unmute_date" attribute.
      */
     public String getUnmuteDate() {
-        AttributeValue<String> attr = attrMap().get("unmute_date");
+        AttributeValue<String> attr = attributes.get("unmute_date");
         return attr.get();
     }
 
@@ -333,7 +334,7 @@ public final class Player extends MobileEntity {
      * Sets the "unban_date" attribute.
      */
     public void setUnbanDate(String unbanDate) {
-        AttributeValue<String> attr = attrMap().get("unban_date");
+        AttributeValue<String> attr = attributes.get("unban_date");
         attr.set(unbanDate);
     }
 
@@ -341,7 +342,7 @@ public final class Player extends MobileEntity {
      * Gets the "unban_date" attribute.
      */
     public String getUnbanDate() {
-        AttributeValue<String> attr = attrMap().get("unban_date");
+        AttributeValue<String> attr = attributes.get("unban_date");
         return attr.get();
     }
 
