@@ -1,8 +1,10 @@
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ThreadLocalRandom
+import java.util.function.BiConsumer
 
 import io.luna.game.event.{Event, EventListener}
+import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mobile._
 import io.luna.game.model.mobile.attr.AttributeValue
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
@@ -61,13 +63,20 @@ def rand = ThreadLocalRandom.current
 
 
 // message handling
+def scalaToJavaFunc[E <: Event](func: (E, Player) => Unit): BiConsumer[E, Player] =
+  new BiConsumer[E, Player] {
+    override def accept(evt: E, plr: Player) = func.apply(evt, plr)
+  }
+
 def >>@[T <: Event](args: Any*)
                    (func: (T, Player) => Unit)
                    (implicit tag: ClassTag[T]) = {
 
   def submit(newArgs: Seq[AnyRef]) =
     pipelines.addEventListener(tag.runtimeClass,
-      new EventListener((msg: T, plr) => if (msg.matches(newArgs: _*)) {func(msg, plr)}))
+      new EventListener(scalaToJavaFunc(
+        (msg: T, plr) => if (msg.matches(newArgs: _*)) {func(msg, plr)}
+      )))
 
   submit(args.collect {
     case any: Any => any.asInstanceOf[AnyRef]
@@ -76,7 +85,8 @@ def >>@[T <: Event](args: Any*)
 
 def >>[T <: Event](func: (T, Player) => Unit)
                   (implicit tag: ClassTag[T]) =
-  pipelines.addEventListener(tag.runtimeClass, new EventListener(func))
+  pipelines.addEventListener(tag.runtimeClass, new EventListener(scalaToJavaFunc(func)))
+
 
 // misc. global methods
 def async(func: => Unit) = service.submit(new Runnable {
@@ -241,6 +251,18 @@ implicit class ArrayImplicits[T](array: Array[T]) {
 
 implicit class DateTimeFormatterImplicits(formatter: DateTimeFormatter) {
   def formatDate(string: String) = formatter.format(LocalDate.parse(string))
+}
+
+implicit class ItemContainerImplicits(items: ItemContainer) {
+  def bulkOperation(func: => Unit) {
+    items.setFiringEvents(false)
+    try {
+      func
+    } finally {
+      items.setFiringEvents(true)
+    }
+    items.fireBulkItemsUpdatedEvent()
+  }
 }
 
 implicit class IndexedSeqImplicits[T](seq: IndexedSeq[T]) {

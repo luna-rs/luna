@@ -58,7 +58,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
                     break;
                 }
                 try {
-                    listener.getFunction().apply(evt, player);
+                    listener.getFunction().accept(evt, player);
                 } catch (PluginFailureException failure) { // fail, recoverable
                     LOGGER.catching(failure);
                 } catch (Exception other) { // unknown, unrecoverable
