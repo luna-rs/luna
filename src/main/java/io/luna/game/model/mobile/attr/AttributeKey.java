@@ -35,7 +35,6 @@ public final class AttributeKey<T> {
         forPersistent("unmute_date", "n/a");
 
         forTransient("withdraw_as_note", false);
-        forTransient("weight", 0.0);
     }
 
     /**
@@ -105,8 +104,10 @@ public final class AttributeKey<T> {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("name", name).add("persistent", isPersistent).add("type", typeName)
-            .toString();
+        return MoreObjects.toStringHelper(this).
+            add("name", name).
+            add("persistent", isPersistent).
+            add("type", typeName).toString();
     }
 
     /**
