@@ -1,6 +1,7 @@
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.mobile.Player
 
+
 val ANNOUNCEMENT_TICK_INTERVAL = 1500 // 15 mins
 
 val ANNOUNCEMENT_MESSAGES = Vector(
@@ -13,6 +14,7 @@ val ANNOUNCEMENT_MESSAGES = Vector(
 )
 
 val FILTER_ANNOUNCEMENT = (plr: Player) => plr.rights <=@ RIGHTS_DEV // Send announcement to everyone.
+
 
 >>[ServerLaunchEvent] { (msg, plr) =>
   world.scheduleForever(ANNOUNCEMENT_TICK_INTERVAL) {
