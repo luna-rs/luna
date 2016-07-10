@@ -4,6 +4,8 @@ import io.luna.game.event.impl.CommandEvent
 
 import scala.reflect.io.File
 
+
+// Return the person we are trying to punish.
 def findPunish(msg: CommandEvent) = {
   val name = msg.getArgs()(0).replaceAll("_", "")
   world.
@@ -12,6 +14,7 @@ def findPunish(msg: CommandEvent) = {
     find(_.getUsername.equalsIgnoreCase(name))
 }
 
+// Return a String describing the punishment duration.
 def punishDuration(msg: CommandEvent) = {
   val args = msg.getArgs
 
@@ -24,6 +27,7 @@ def punishDuration(msg: CommandEvent) = {
     plusMonths(months).
     plusDays(days).toString
 }
+
 
 >>@[CommandEvent]("ip_ban", RIGHTS_ADMIN) { (msg, plr) =>
   val file = File("./data/players/blacklist.txt")
