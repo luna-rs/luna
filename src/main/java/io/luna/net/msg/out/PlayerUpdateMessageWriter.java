@@ -118,7 +118,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
      */
     private void addPlayer(ByteMessage msg, Player player, Player addPlayer) {
         msg.putBits(11, addPlayer.getIndex());
-        msg.putBit(true); // TODO: make use of client appearance caching
+        msg.putBit(true);
         msg.putBit(true);
 
         int deltaX = addPlayer.getPosition().getX() - player.getPosition().getX();
