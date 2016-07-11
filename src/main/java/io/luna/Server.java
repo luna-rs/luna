@@ -87,7 +87,7 @@ public final class Server {
         launchService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         bind();
-        LOGGER.info("Luna is now online on port {}!", box(LunaNetworkConstants.PORT));
+        LOGGER.info("Luna is now online on port {}!", box(LunaConstants.PORT));
 
         PluginManager plugins = context.getPlugins();
         plugins.post(ServerLaunchEvent.INSTANCE);
@@ -102,15 +102,15 @@ public final class Server {
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
 
-        ResourceLeakDetector.setLevel(LunaNetworkConstants.RESOURCE_LEAK_DETECTION);
+        ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
 
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
-        bootstrap.bind(LunaNetworkConstants.PORT).syncUninterruptibly();
+        bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
 
         ImmutableSet<Integer> preferred = LunaNetworkConstants.PREFERRED_PORTS;
-        if (!preferred.contains(LunaNetworkConstants.PORT)) {
+        if (!preferred.contains(LunaConstants.PORT)) {
             LOGGER.warn("The preferred ports for Runescape servers are {}.", StringUtils.COMMA_JOINER.join(preferred));
         }
     }
