@@ -22,6 +22,8 @@ val STARTER_EQUIPMENT = Vector(
   (Equipment.LEGS, new Item(1067)), // Iron platelegs
   (Equipment.WEAPON, new Item(1323)), // Iron scimitar
   (Equipment.SHIELD, new Item(1191)), // Iron kiteshield
+  (Equipment.AMULET, new Item(1731)), // Amulet of power
+  (Equipment.FEET, new Item(4121)), // Iron boots
   (Equipment.HANDS, new Item(1063)), // Leather vambraces
   (Equipment.RING, new Item(2570)), // Ring of life
   (Equipment.CAPE, new Item(1019)), // Black cape
