@@ -15,10 +15,18 @@ import java.util.List;
 public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
 
     /**
-     * Creates a new {@link ItemDefinitionParser}.
+     * An array that will contain parsed {@link ItemDefinition}s.
      */
-    public ItemDefinitionParser() {
+    private final ItemDefinition[] definitions;
+
+    /**
+     * Creates a new {@link ItemDefinitionParser}.
+     *
+     * @param definitions An array that will contain parsed {@link ItemDefinition}s.
+     */
+    public ItemDefinitionParser(ItemDefinition[] definitions) {
         super("./data/items/item_defs.json");
+        this.definitions = definitions;
     }
 
     @Override
@@ -43,6 +51,6 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
 
     @Override
     public void onReadComplete(List<ItemDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> ItemDefinition.DEFINITIONS[it.getId()] = it);
+        readObjects.forEach(it -> definitions[it.getId()] = it);
     }
 }

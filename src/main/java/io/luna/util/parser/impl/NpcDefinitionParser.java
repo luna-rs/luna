@@ -15,10 +15,18 @@ import java.util.List;
 public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
 
     /**
-     * Creates a new {@link NpcDefinitionParser}.
+     * The array that will contain parsed {@link NpcDefinition}s.
      */
-    public NpcDefinitionParser() {
+    private final NpcDefinition[] definitions;
+
+    /**
+     * Creates a new {@link NpcDefinitionParser}.
+     *
+     * @param definitions The array that will contain parsed {@link NpcDefinition}s.
+     */
+    public NpcDefinitionParser(NpcDefinition[] definitions) {
         super("./data/npcs/npc_defs.json");
+        this.definitions = definitions;
     }
 
     @Override
@@ -39,6 +47,6 @@ public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
 
     @Override
     public void onReadComplete(List<NpcDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> NpcDefinition.DEFINITIONS[it.getId()] = it);
+        readObjects.forEach(it -> definitions[it.getId()] = it);
     }
 }

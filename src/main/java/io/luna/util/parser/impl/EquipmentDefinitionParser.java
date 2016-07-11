@@ -10,6 +10,7 @@ import io.luna.util.parser.GsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@link GsonParser} implementation that reads {@link EquipmentDefinition}s.
@@ -19,10 +20,18 @@ import java.util.List;
 public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinition> {
 
     /**
-     * Creates a new {@link EquipmentDefinitionParser}.
+     * A {@link Map} that will contain parsed {@link EquipmentDefinition}s.
      */
-    public EquipmentDefinitionParser() {
+    private final Map<Integer, EquipmentDefinition> definitions;
+
+    /**
+     * Creates a new {@link EquipmentDefinitionParser}.
+     *
+     * @param definitions A {@link Map} that will contain parsed {@link EquipmentDefinition}s.
+     */
+    public EquipmentDefinitionParser(Map<Integer, EquipmentDefinition> definitions) {
         super("./data/items/equipment_defs.json");
+        this.definitions = definitions;
     }
 
     @Override
@@ -40,7 +49,7 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
 
     @Override
     public void onReadComplete(List<EquipmentDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> EquipmentDefinition.DEFINITIONS.put(it.getId(), it));
+        readObjects.forEach(it -> definitions.put(it.getId(), it));
     }
 
     /**

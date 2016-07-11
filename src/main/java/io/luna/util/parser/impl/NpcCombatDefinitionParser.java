@@ -6,6 +6,7 @@ import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@link GsonParser} implementation that reads {@link NpcCombatDefinition}s.
@@ -15,10 +16,18 @@ import java.util.List;
 public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     /**
-     * Creates a new {@link NpcCombatDefinitionParser}.
+     * The {@link Map} that will contain parsed {@link NpcCombatDefinition}s.
      */
-    public NpcCombatDefinitionParser() {
+    private final Map<Integer, NpcCombatDefinition> definitions;
+
+    /**
+     * Creates a new {@link NpcCombatDefinitionParser}.
+     *
+     * @param definitions The {@link Map} that will contain parsed {@link NpcCombatDefinition}s.
+     */
+    public NpcCombatDefinitionParser(Map<Integer, NpcCombatDefinition> definitions) {
         super("./data/npcs/npc_combat_defs.json");
+        this.definitions = definitions;
     }
 
     @Override
@@ -43,6 +52,6 @@ public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     @Override
     public void onReadComplete(List<NpcCombatDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> NpcCombatDefinition.DEFINITIONS.put(it.getId(), it));
+        readObjects.forEach(it -> definitions.put(it.getId(), it));
     }
 }
