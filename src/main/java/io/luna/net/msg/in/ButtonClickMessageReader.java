@@ -4,21 +4,28 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.InboundMessageReader;
+import io.luna.net.msg.MessageReader;
+
+import static com.google.common.base.Preconditions.checkState;
+import static io.netty.util.internal.StringUtil.simpleClassName;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * An {@link InboundMessageReader} implementation that decodes data sent when a {@link Player} clicks widgets on an
- * interface.
+ * An {@link MessageReader} implementation that decodes data sent when a {@link Player} clicks widgets on an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ButtonClickMessageReader extends InboundMessageReader {
+public final class ButtonClickMessageReader extends MessageReader {
+
+    // TODO: Ensure that 'buttonId' is a valid widget on the interface currently open (if one is open)
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
-        int widget = msg.getPayload().getShort(false);
+        int buttonId = msg.getPayload().getShort(false);
 
-        // TODO: Ensure that 'widget' is a valid widget on the interface currently open (if one is open)
-        return new ButtonClickEvent(widget);
+        checkState(buttonId >= 0, "buttonId < 0");
+
+        LOGGER.debug("[{}]: {}", simpleClassName(this), box(buttonId));
+        return new ButtonClickEvent(buttonId);
     }
 }
