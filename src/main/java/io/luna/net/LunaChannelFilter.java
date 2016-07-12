@@ -4,6 +4,7 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import io.luna.LunaConstants;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
 import io.luna.util.parser.NewLineParser;
@@ -88,7 +89,7 @@ import java.util.Set;
             return true;
         }
 
-        int limit = LunaNetworkConstants.CONNECTION_LIMIT;
+        int limit = LunaConstants.CONNECTION_LIMIT;
         if (connections.count(address) >= limit) { // Reject if more than CONNECTION_LIMIT active connections.
             response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return false;
