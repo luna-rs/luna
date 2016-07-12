@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that sends a message containing the current region.
+ * A {@link MessageWriter} implementation that sends a message containing the current region.
  *
  * @author lare96 <http://github.org/lare96>
  */

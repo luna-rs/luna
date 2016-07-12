@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * An {@link MessageWriter} implementation that displays a group of {@link Item}s on a widget.
+ * A {@link MessageWriter} implementation that displays a group of {@link Item}s on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */

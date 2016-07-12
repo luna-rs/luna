@@ -7,7 +7,7 @@ import io.luna.net.msg.MessageWriter;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
 /**
- * An {@link MessageWriter} that sends the {@link Player} a game message located in the chatbox.
+ * A {@link MessageWriter} that sends the {@link Player} a game message located in the chatbox.
  *
  * @author lare96 <http://github.org/lare96>
  */

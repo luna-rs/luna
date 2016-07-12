@@ -7,7 +7,7 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that displays a single {@link Item} on a widget.
+ * A {@link MessageWriter} implementation that displays a single {@link Item} on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */

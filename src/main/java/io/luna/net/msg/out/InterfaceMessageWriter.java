@@ -5,7 +5,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} that opens an interface for a {@link Player}.
+ * A {@link MessageWriter} that opens an interface for a {@link Player}.
  *
  * @author lare96 <http://github.org/lare96>
  */

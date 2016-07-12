@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that handles both {@code byte} and {@code short} state messages.
+ * A {@link MessageWriter} implementation that handles both {@code byte} and {@code short} state messages.
  *
  * @author lare96 <http://github.org/lare96>
  */

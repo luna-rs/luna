@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that displays an interface on a sidebar tab.
+ * A {@link MessageWriter} implementation that displays an interface on a sidebar tab.
  *
  * @author lare96 <http://github.org/lare96>
  */

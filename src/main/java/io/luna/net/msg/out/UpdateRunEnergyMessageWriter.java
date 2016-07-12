@@ -5,7 +5,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that sends the run energy value to the client.
+ * A {@link MessageWriter} implementation that sends the run energy value to the client.
  *
  * @author lare96 <http://github.org/lare96>
  */

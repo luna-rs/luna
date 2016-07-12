@@ -8,7 +8,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that displays a ground item.
+ * A {@link MessageWriter} implementation that displays a ground item.
  *
  * @author lare96 <http://github.org/lare96>
  */

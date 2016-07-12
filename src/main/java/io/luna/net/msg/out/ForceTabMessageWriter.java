@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for things
+ * A {@link MessageWriter} that forces a certain tab on the gameframe open for a specific {@link Player}. Used for things
  * like tutorial island to force the {@code Player} to view a certain tab.
  *
  * @author lare96 <http://github.org/lare96>

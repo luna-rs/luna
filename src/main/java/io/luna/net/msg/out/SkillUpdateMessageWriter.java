@@ -7,7 +7,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that synchronizes a {@link Skill} with the client.
+ * A {@link MessageWriter} implementation that synchronizes a {@link Skill} with the client.
  *
  * @author lare96 <http://github.org/lare96>
  */

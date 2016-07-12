@@ -5,7 +5,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that sets a widget to be hidden until hovered over.
+ * A {@link MessageWriter} implementation that sets a widget to be hidden until hovered over.
  *
  * @author lare96 <http://github.org/lare96>
  */

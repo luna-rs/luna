@@ -25,7 +25,7 @@ import io.luna.net.msg.MessageWriter;
 import java.util.Iterator;
 
 /**
- * An {@link MessageWriter} implementation that sends an update message containing the underlying {@link Player} and other
+ * A {@link MessageWriter} implementation that sends an update message containing the underlying {@link Player} and other
  * {@code Player}s surrounding them.
  *
  * @author lare96 <http://github.org/lare96>

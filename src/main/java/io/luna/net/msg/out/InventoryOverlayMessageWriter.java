@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that opens an interface and overlays the inventory with an interface.
+ * A {@link MessageWriter} implementation that opens an interface and overlays the inventory with an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */

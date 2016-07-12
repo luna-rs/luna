@@ -7,7 +7,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that assigns a {@link Player} a client-sided index and members status for the
+ * A {@link MessageWriter} implementation that assigns a {@link Player} a client-sided index and members status for the
  * duration of their login session.
  *
  * @author lare96 <http://github.org/lare96>

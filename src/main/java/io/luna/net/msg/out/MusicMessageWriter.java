@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * An {@link MessageWriter} implementation that plays a song.
+ * A {@link MessageWriter} implementation that plays a song.
  *
  * @author lare96 <http://github.org/lare96>
  */
