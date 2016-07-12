@@ -29,16 +29,9 @@ public final class RegionPriorityComparator implements Comparator<MobileEntity> 
 
     @Override
     public int compare(MobileEntity left, MobileEntity right) {
-        /* TODO:
-         -> A functional 'Either' could work really well here, could use functionaljava? Or wait for Scala 2.12?
-         -> Is this even really necessary for RSPS? Will talk it over with some people
-         -> Prioritize people you're fighting with, people on your friends list, and staff members
-         -> This probably needs two completely separate implementations, one for npcs (could compare distance, npc combat
-         level... if the npc is a boss for example it should definitely appear first regardless of distance) and another
-         for players */
-
         int leftMob = 0;
         int rightMob = 0;
         return Integer.compare(leftMob, rightMob);
     }
+
 }
