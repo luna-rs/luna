@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkState;
-import static io.luna.net.LunaNetworkConstants.RSA_EXPONENT;
-import static io.luna.net.LunaNetworkConstants.RSA_MODULUS;
+import static io.luna.LunaConstants.RSA_EXPONENT;
+import static io.luna.LunaConstants.RSA_MODULUS;
 import static io.luna.net.LunaNetworkConstants.SESSION_KEY;
 
 /**
