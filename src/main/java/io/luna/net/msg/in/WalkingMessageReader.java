@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to walk.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to walk.
  *
  * @author lare96 <http://github.org/lare96>
  */

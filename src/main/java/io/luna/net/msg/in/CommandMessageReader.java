@@ -10,7 +10,7 @@ import io.luna.net.msg.MessageReader;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
  *
  * @author lare96 <http://github.org/lare96>
  */

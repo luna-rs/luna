@@ -10,7 +10,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} equips an item.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} equips an item.
  *
  * @author lare96 <http://github.org/lare96>
  */

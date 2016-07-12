@@ -6,7 +6,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
 /**
- * An {@link MessageReader} implementation that serves as the default message handler. It does nothing when executed.
+ * A {@link MessageReader} implementation that serves as the default message handler. It does nothing when executed.
  *
  * @author lare96 <http://github.org/lare96>
  */

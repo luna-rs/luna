@@ -11,7 +11,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to pick up an item.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to pick up an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -23,7 +23,7 @@ public final class PickupItemMessageReader extends MessageReader {
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
-        checkState(id < 0 || id >= ItemDefinition.DEFINITIONS.length, "invalid item id");
+        checkState(id < 0 || id >= ItemDefinition.DEFINITIONS.size(), "invalid item id");
         return new PickupItemEvent(x, y, id);
     }
 }

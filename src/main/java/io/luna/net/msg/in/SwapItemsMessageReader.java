@@ -10,7 +10,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} attempts to rearrange items.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} attempts to rearrange items.
  *
  * @author lare96 <http://github.org/lare96>
  */

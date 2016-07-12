@@ -11,7 +11,7 @@ import static io.netty.util.internal.StringUtil.simpleClassName;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * An {@link MessageReader} implementation that decodes data sent when a {@link Player} clicks widgets on an interface.
+ * A {@link MessageReader} implementation that decodes data sent when a {@link Player} clicks widgets on an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
