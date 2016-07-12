@@ -95,7 +95,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     public void startBitAccess() {
         checkState(bitIndex == -1, "this ByteMessage instance is already in bit access mode");
 
-        bitIndex = (buf.writerIndex() << 3);
+        bitIndex = buf.writerIndex() << 3;
     }
 
     /**
@@ -104,7 +104,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     public void endBitAccess() {
         checkState(bitIndex != -1, "this ByteMessage instance is not in bit access mode");
 
-        buf.writerIndex((bitIndex + 7) / 8);
+        buf.writerIndex((bitIndex + 7) >> 3);
         bitIndex = -1;
     }
 
