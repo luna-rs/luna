@@ -1,6 +1,7 @@
 package io.luna.game.model.mobile;
 
 import io.luna.game.model.Direction;
+import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.WorldSynchronizer;
 
@@ -141,6 +142,7 @@ public final class WalkingQueue {
                     runningDirection = Direction.between(current, next);
                     current = next;
                 }
+                decrementRunEnergy();
             }
         }
         mob.setWalkingDirection(walkingDirection);
@@ -219,6 +221,22 @@ public final class WalkingQueue {
         previousSteps.clear();
     }
 
+    // Document this once issue #22 is resolved
+    private void decrementRunEnergy() {
+        Player player = (Player) mob;
+        double totalWeight = 0; // 0 until we have the actual code for it.
+        double energyPerTile = 0.318;
+        int energyReduction = (int) (energyPerTile * 3 * Math
+            .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight));
+
+        int newValue = player.getRunEnergy() - energyReduction;
+        player.setRunEnergy(newValue < 0 ? 0 : newValue);
+
+        if (newValue <= 0) {
+            running = false;
+        }
+    }
+
     /**
      * @return The amount of {@link Step}s remaining in this walking queue.
      */
@@ -234,9 +252,7 @@ public final class WalkingQueue {
     }
 
     /**
-     * Returns whether or not this WalkingQueue has running enabled.
-     *
-     * @return {@code true} iff this WalkingQueue has running enabled.
+     * @return {@code true} if this WalkingQueue has running enabled.
      */
     public boolean isRunning() {
         return running;
@@ -244,10 +260,9 @@ public final class WalkingQueue {
 
     /**
      * Sets the running flag status of this WalkingQueue.
-     *
-     * @param running The running flag.
      */
     public void setRunning(boolean running) {
+        checkState(mob.type() == EntityType.PLAYER, "cannot change running value for NPCs");
         this.running = running;
     }
 }
