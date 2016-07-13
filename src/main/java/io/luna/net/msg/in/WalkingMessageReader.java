@@ -39,7 +39,7 @@ public final class WalkingMessageReader extends MessageReader {
         boolean running = payload.get(false, ByteTransform.S) == 1;
 
         WalkingQueue walkingQueue = player.getWalkingQueue();
-        walkingQueue.setRunning(running);
+        walkingQueue.setRunningPath(running);
         walkingQueue.clear();
         Step[] steps = new Step[pathSize + 1];
         walkingQueue.addFirst(steps[0] = new Step(x, y));

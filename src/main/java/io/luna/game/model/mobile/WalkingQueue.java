@@ -4,6 +4,7 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.WorldSynchronizer;
+import io.luna.net.msg.out.StateMessageWriter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -91,6 +92,12 @@ public final class WalkingQueue {
     }
 
     /**
+     * The amount of run energy it takes to move across a single tile. Increasing this number will make run energy deplete
+     * faster, decreasing it will make it deplete slower.
+     */
+    private static final double ENERGY_PER_TILE = 0.117;
+
+    /**
      * A {@link Deque} of the current {@link Step}s.
      */
     private final Deque<Step> steps = new ArrayDeque<>();
@@ -111,6 +118,11 @@ public final class WalkingQueue {
     private boolean running;
 
     /**
+     * If the current path is a running path.
+     */
+    private boolean runningPath;
+
+    /**
      * Create a new {@link WalkingQueue}.
      *
      * @param mob The {@link MobileEntity} assigned to this walking queue.
@@ -129,20 +141,26 @@ public final class WalkingQueue {
         Direction walkingDirection = Direction.NONE;
         Direction runningDirection = Direction.NONE;
 
+        if (running) {
+            runningPath = true;
+        }
+
         Step next = steps.poll();
         if (next != null) {
             previousSteps.add(next);
             walkingDirection = Direction.between(current, next);
             current = next;
 
-            if (running) {
-                next = steps.poll();
+            if (runningPath) {
+                next = decrementRunEnergy() ? steps.poll() : null;
+
                 if (next != null) {
                     previousSteps.add(next);
                     runningDirection = Direction.between(current, next);
                     current = next;
+                } else {
+                    runningPath = false;
                 }
-                decrementRunEnergy();
             }
         }
         mob.setWalkingDirection(walkingDirection);
@@ -159,10 +177,9 @@ public final class WalkingQueue {
      */
     public void addFirst(Step step) {
         steps.clear();
-        running = false;
+        runningPath = false;
 
         Queue<Step> backtrack = new ArrayDeque<>();
-
         while (!previousSteps.isEmpty()) {
             Step prev = previousSteps.pollLast();
             backtrack.add(prev);
@@ -173,8 +190,8 @@ public final class WalkingQueue {
                 return;
             }
         }
-
         previousSteps.clear();
+
         add(step);
     }
 
@@ -221,20 +238,28 @@ public final class WalkingQueue {
         previousSteps.clear();
     }
 
-    // Document this once issue #22 is resolved
-    private void decrementRunEnergy() {
+    /**
+     * Implements an algorithm that will deplete run energy. Will return {@code false} if no run energy is available to
+     * deplete, and {@code true} otherwise.
+     */
+    private boolean decrementRunEnergy() {
         Player player = (Player) mob;
-        double totalWeight = 0; // 0 until we have the actual code for it.
-        double energyPerTile = 0.318;
-        int energyReduction = (int) (energyPerTile * 3 * Math
-            .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight));
 
-        int newValue = player.getRunEnergy() - energyReduction;
-        player.setRunEnergy(newValue < 0 ? 0 : newValue);
-
-        if (newValue <= 0) {
+        double runEnergy = player.getRunEnergy();
+        if (runEnergy <= 0) {
             running = false;
+            runningPath = false;
+            player.queue(new StateMessageWriter(173, 0));
+            return false;
         }
+
+        double totalWeight = 0; // 0 until we have the actual code for it.
+        double energyReduction = ENERGY_PER_TILE * 2 * Math
+            .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
+
+        double newValue = runEnergy - energyReduction;
+        player.setRunEnergy(newValue < 0 ? 0 : newValue);
+        return true;
     }
 
     /**
@@ -265,4 +290,20 @@ public final class WalkingQueue {
         checkState(mob.type() == EntityType.PLAYER, "cannot change running value for NPCs");
         this.running = running;
     }
+
+    /**
+     * @return {@code true} if the current path is a running path, {@code false} otherwise.
+     */
+    public boolean isRunningPath() {
+        return runningPath;
+    }
+
+    /**
+     * Sets if the current path is a running path.
+     */
+    public void setRunningPath(boolean runningPath) {
+        checkState(mob.type() == EntityType.PLAYER, "cannot change running value for NPCs");
+        this.runningPath = runningPath;
+    }
+
 }

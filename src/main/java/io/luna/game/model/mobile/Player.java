@@ -192,7 +192,7 @@ public final class Player extends MobileEntity {
             queue(new SkillUpdateMessageWriter(index));
         }
 
-        queue(new UpdateRunEnergyMessageWriter(getRunEnergy()));
+        queue(new UpdateRunEnergyMessageWriter((int) getRunEnergy()));
 
         queue(inventory.constructRefresh(Inventory.INVENTORY_DISPLAY_ID));
         queue(equipment.constructRefresh(Equipment.EQUIPMENT_DISPLAY_ID));
@@ -301,16 +301,18 @@ public final class Player extends MobileEntity {
     /**
      * Sets the "run_energy" attribute.
      */
-    public void setRunEnergy(int runEnergy) {
-        AttributeValue<Integer> attr = attributes.get("run_energy");
+    public void setRunEnergy(double runEnergy) {
+        AttributeValue<Double> attr = attributes.get("run_energy");
         attr.set(runEnergy);
+
+        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
     /**
      * Gets the "run_energy" attribute.
      */
-    public int getRunEnergy() {
-        AttributeValue<Integer> attr = attributes.get("run_energy");
+    public double getRunEnergy() {
+        AttributeValue<Double> attr = attributes.get("run_energy");
         return attr.get();
     }
 
