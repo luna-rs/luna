@@ -7,6 +7,7 @@ import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * A cached definition that describes a specific {@link Item}.
@@ -25,6 +26,16 @@ public final class ItemDefinition {
      */
     public static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, -1, false, 0.0, false,
         StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+
+    /**
+     * Returns an {@link ImmutableList} with all definitions that have a name value of {@code name}. If no definitions are
+     * found, an empty list will be returned.
+     */
+    public static ImmutableList<ItemDefinition> getDefinitions(String name) {
+        return DEFINITIONS.stream().
+            filter(it -> it.getName().equals(name)).
+            collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
+    }
 
     static {
         ItemDefinition[] definitions = new ItemDefinition[7956];
