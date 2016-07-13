@@ -7,27 +7,27 @@ import io.luna.util.StringUtils
 val LEVEL_UP_GRAPHIC = new Graphic(199)
 
 val LEVEL_UP_TABLE = Vector(
-  Vector(6248, 6249, 6247),
-  Vector(6254, 6255, 6253),
-  Vector(6207, 6208, 6206),
-  Vector(6217, 6218, 6216),
-  Vector(5453, 6114, 4443),
-  Vector(6243, 6244, 6242),
-  Vector(6212, 6213, 6211),
-  Vector(6227, 6228, 6226),
-  Vector(4273, 4274, 4272),
-  Vector(6232, 6233, 6231),
-  Vector(6259, 6260, 6258),
-  Vector(4283, 4284, 4282),
-  Vector(6264, 6265, 6263),
-  Vector(6222, 6223, 6221),
-  Vector(4417, 4438, 4416),
-  Vector(6238, 6239, 6237),
-  Vector(4278, 4279, 4277),
-  Vector(4263, 4264, 4261),
-  Vector(12123, 12124, 12122),
-  Vector(4889, 4890, 4887),
-  Vector(4268, 4269, 4267)
+  (6248, 6249, 6247),
+  (6254, 6255, 6253),
+  (6207, 6208, 6206),
+  (6217, 6218, 6216),
+  (5453, 6114, 4443),
+  (6243, 6244, 6242),
+  (6212, 6213, 6211),
+  (6227, 6228, 6226),
+  (4273, 4274, 4272),
+  (6232, 6233, 6231),
+  (6259, 6260, 6258),
+  (4283, 4284, 4282),
+  (6264, 6265, 6263),
+  (6222, 6223, 6221),
+  (4417, 4438, 4416),
+  (6238, 6239, 6237),
+  (4278, 4279, 4277),
+  (4263, 4264, 4261),
+  (12123, 12124, 12122),
+  (4889, 4890, 4887),
+  (4268, 4269, 4267)
 )
 
 
@@ -44,9 +44,9 @@ def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
     val message = s"Congratulations, you just advanced ${StringUtils.computeIndefiniteArticle(name)} $name level!"
 
     plr.sendMessage(message)
-    plr.sendWidgetText(message, data(0))
-    plr.sendWidgetText(s"Your $name level is now $newLevel.", data(1))
-    plr.sendChatboxInterface(data(2))
+    plr.sendWidgetText(message, data._1)
+    plr.sendWidgetText(s"Your $name level is now $newLevel.", data._2)
+    plr.sendChatboxInterface(data._3)
 
     plr.graphic(LEVEL_UP_GRAPHIC)
 
