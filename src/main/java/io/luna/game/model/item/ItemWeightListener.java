@@ -36,7 +36,7 @@ public final class ItemWeightListener implements ItemContainerListener {
 
     @Override
     public void bulkItemsUpdated(ItemContainer container) {
-        updateAllWeight(container);
+        updateAllWeight();
         queueWeight();
     }
 
@@ -57,8 +57,13 @@ public final class ItemWeightListener implements ItemContainerListener {
     /**
      * Updates the weight value for all items in {@code container}.
      */
-    private void updateAllWeight(ItemContainer container) {
-        container.stream().
+    private void updateAllWeight() {
+        player.setWeight(0.0, false);
+
+        player.getInventory().stream().
+            filter(Objects::nonNull).
+            forEach(it -> updateWeight(Optional.empty(), Optional.of(it)));
+        player.getEquipment().stream().
             filter(Objects::nonNull).
             forEach(it -> updateWeight(Optional.empty(), Optional.of(it)));
     }
