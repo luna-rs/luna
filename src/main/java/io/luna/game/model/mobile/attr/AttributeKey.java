@@ -33,6 +33,7 @@ public final class AttributeKey<T> {
         forPersistent("first_login", true);
         forPersistent("unban_date", "n/a");
         forPersistent("unmute_date", "n/a");
+        forPersistent("weight", 0.0);
 
         forTransient("withdraw_as_note", false);
     }

@@ -223,6 +223,7 @@ public final class Equipment extends ItemContainer {
         this.player = player;
 
         addListener(new EquipmentListener());
+        addListener(new ItemWeightListener(player));
     }
 
     @Override

@@ -14,21 +14,21 @@ public final class UpdateWeightMessageWriter extends MessageWriter {
     /**
      * The weight value to send.
      */
-    private final double weight;
+    private final int weight;
 
     /**
      * Creates new {@link UpdateWeightMessageWriter}.
      *
      * @param weight The weight value to send.
      */
-    public UpdateWeightMessageWriter(double weight) {
+    public UpdateWeightMessageWriter(int weight) {
         this.weight = weight;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(174);
-        msg.putShort((int) weight);
+        msg.putShort(weight);
         return msg;
     }
 }

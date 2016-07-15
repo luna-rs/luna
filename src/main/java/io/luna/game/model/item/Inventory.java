@@ -52,5 +52,6 @@ public final class Inventory extends ItemContainer {
         this.player = player;
 
         addListener(new InventoryListener());
+        addListener(new ItemWeightListener(player));
     }
 }

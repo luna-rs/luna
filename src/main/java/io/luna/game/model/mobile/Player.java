@@ -24,6 +24,7 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.StateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
+import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.session.GameSession;
 import io.luna.net.session.Session;
 import io.netty.channel.Channel;
@@ -299,7 +300,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "run_energy" attribute.
+     * Sets the "run_energy" attribute and sends the value.
      */
     public void setRunEnergy(double runEnergy) {
         AttributeValue<Double> attr = attributes.get("run_energy");
@@ -345,6 +346,33 @@ public final class Player extends MobileEntity {
      */
     public String getUnbanDate() {
         AttributeValue<String> attr = attributes.get("unban_date");
+        return attr.get();
+    }
+
+    /**
+     * Sets the "weight" attribute.
+     */
+    public void setWeight(double weight, boolean queue) {
+        AttributeValue<Double> attr = attributes.get("weight");
+        attr.set(weight);
+
+        if (queue) {
+            queue(new UpdateWeightMessageWriter((int) weight));
+        }
+    }
+
+    /**
+     * Sets the "weight" attribute, queues a {@link UpdateWeightMessageWriter} message.
+     */
+    public void setWeight(double weight) {
+        setWeight(weight, true);
+    }
+
+    /**
+     * Gets the "weight" attribute.
+     */
+    public double getWeight() {
+        AttributeValue<Double> attr = attributes.get("weight");
         return attr.get();
     }
 

@@ -253,12 +253,13 @@ public final class WalkingQueue {
             return false;
         }
 
-        double totalWeight = 0; // 0 until we have the actual code for it.
+        double totalWeight = player.getWeight();
         double energyReduction = ENERGY_PER_TILE * 2 * Math
             .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
-
         double newValue = runEnergy - energyReduction;
-        player.setRunEnergy(newValue < 0 ? 0 : newValue);
+        newValue = newValue < 0.0 ? 0.0 : newValue;
+
+        player.setRunEnergy(newValue);
         return true;
     }
 
