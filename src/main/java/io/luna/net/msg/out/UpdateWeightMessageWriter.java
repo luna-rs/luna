@@ -27,7 +27,7 @@ public final class UpdateWeightMessageWriter extends MessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(174);
+        ByteMessage msg = ByteMessage.message(240);
         msg.putShort(weight);
         return msg;
     }

@@ -195,9 +195,9 @@ public final class Player extends MobileEntity {
 
         queue(new UpdateRunEnergyMessageWriter((int) getRunEnergy()));
 
-        queue(inventory.constructRefresh(Inventory.INVENTORY_DISPLAY_ID));
-        queue(equipment.constructRefresh(Equipment.EQUIPMENT_DISPLAY_ID));
-        queue(bank.constructRefresh(Bank.BANK_DISPLAY_ID));
+        inventory.fireBulkItemsUpdatedEvent();
+        equipment.fireBulkItemsUpdatedEvent();
+        bank.fireBulkItemsUpdatedEvent();
 
         queue(new GameChatboxMessageWriter("Welcome to Luna!"));
 
