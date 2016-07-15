@@ -2,6 +2,7 @@ package io.luna.game.model.mobile.attr;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
+import com.google.common.primitives.Primitives;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -15,7 +16,7 @@ import static com.google.common.base.Preconditions.checkState;
  * performing.
  * <p>
  * The naming convention for all {@code String} keys is {@code lower_underscore}. Spaces and uppercase letters are not
- * allowed.
+ * allowed. For simplicity, attributes can only be represented as primitives or the String type.
  *
  * @param <T> The {@link Object} type represented by this key.
  * @author lare96 <http://github.org/lare96>
@@ -87,15 +88,18 @@ public final class AttributeKey<T> {
      * @param isPersistent If the value of this alias should be serialized.
      */
     private AttributeKey(String name, T initialValue, boolean isPersistent) {
-        checkState(!ALIASES.containsKey(name.intern()), "attribute already aliased");
+        checkState(!ALIASES.containsKey(name.intern()), "attribute {" + name + "} already exists");
 
         checkArgument(!name.isEmpty(), "attribute name length <= 0");
 
         checkArgument(CharMatcher.WHITESPACE.matchesNoneOf(name),
-            "attribute name has whitespace characters, use underscore characters instead");
+            "attribute {" + name + "} has whitespace characters, use underscore characters instead");
 
         checkArgument(CharMatcher.JAVA_UPPER_CASE.matchesNoneOf(name),
-            "attribute name has uppercase characters, use lowercase characters instead");
+            "attribute {" + name + "} has uppercase characters, use lowercase characters instead");
+
+        checkArgument(Primitives.isWrapperType(initialValue.getClass()) || initialValue.getClass() == String.class,
+            "attribute {" + name + "}  can only be a primitive or String");
 
         this.name = name.intern();
         this.initialValue = initialValue;
