@@ -27,9 +27,9 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
       plr.attr(name, newValue.toDouble)
     } else if (Ints.tryParse(newValue) != null) {
       plr.attr(name, newValue.toInt)
-    } else if(newValue == "true" || newValue == "false") {
+    } else if (newValue == "true" || newValue == "false") {
       plr.attr(name, newValue.toBoolean)
-    } else{
+    } else {
       plr.attr(name, newValue)
     }
     plr.sendMessage(s"Attribute{name=$name, oldValue=$oldValue, newValue=$newValue}")
