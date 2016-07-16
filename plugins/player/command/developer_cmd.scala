@@ -59,7 +59,7 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 >>@[CommandEvent]("set_skill", RIGHTS_DEV) { (msg, plr) =>
   val name = msg.getArgs()(0).capitalize
   val level = msg.getArgs()(1).toInt
-  val range = if (name.equals("ALL")) {
+  val range = if (name.equals("All")) {
     0 until 21
   } else {
     val id = Skill.getId(name)
