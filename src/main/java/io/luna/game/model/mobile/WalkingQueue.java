@@ -92,10 +92,16 @@ public final class WalkingQueue {
     }
 
     /**
-     * The amount of run energy it takes to move across a single tile. Increasing this number will make run energy deplete
-     * faster, decreasing it will make it deplete slower.
+     * The base value of run energy it takes to move across a single tile. Increasing this number will make run energy
+     * deplete faster, decreasing it will make it deplete slower.
      */
-    private static final double ENERGY_PER_TILE = 0.117;
+    private static final double DRAIN_PER_TILE = 0.117;
+
+    /**
+     * The base value of run energy restored per tick. Increasing this number will make run energy restore faster, decreasing
+     * it will make it restore slower.
+     */
+    private static final double RESTORE_PER_TICK = 0.096;
 
     /**
      * A {@link Deque} of the current {@link Step}s.
@@ -141,6 +147,8 @@ public final class WalkingQueue {
         Direction walkingDirection = Direction.NONE;
         Direction runningDirection = Direction.NONE;
 
+        boolean restoreEnergy = true;
+
         if (running) {
             runningPath = true;
         }
@@ -155,6 +163,7 @@ public final class WalkingQueue {
                 next = decrementRunEnergy() ? steps.poll() : null;
 
                 if (next != null) {
+                    restoreEnergy = false;
                     previousSteps.add(next);
                     runningDirection = Direction.between(current, next);
                     current = next;
@@ -163,6 +172,11 @@ public final class WalkingQueue {
                 }
             }
         }
+
+        if (restoreEnergy) {
+            incrementRunEnergy();
+        }
+
         mob.setWalkingDirection(walkingDirection);
         mob.setRunningDirection(runningDirection);
 
@@ -254,13 +268,34 @@ public final class WalkingQueue {
         }
 
         double totalWeight = player.getWeight();
-        double energyReduction = ENERGY_PER_TILE * 2 * Math
+        double energyReduction = DRAIN_PER_TILE * 2 * Math
             .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
         double newValue = runEnergy - energyReduction;
         newValue = newValue < 0.0 ? 0.0 : newValue;
 
         player.setRunEnergy(newValue);
         return true;
+    }
+
+    /**
+     * Implements an algorithm that will restore run energy. Will return {@code false} if no run energy is available to
+     * deplete, and {@code true} otherwise.
+     */
+    private void incrementRunEnergy() {
+        Player player = (Player) mob;
+
+        double runEnergy = player.getRunEnergy();
+        if (runEnergy >= 100.0) {
+            return;
+        }
+
+        double agilityLevel = player.skill(Skill.AGILITY).getLevel();
+        double energyRestoration = RESTORE_PER_TICK * Math
+            .pow(Math.E, 0.0162569486104454583293005993255170468638949631744294 * agilityLevel);
+        double newValue = runEnergy + energyRestoration;
+        newValue = newValue > 100.0 ? 100.0 : newValue;
+
+        player.setRunEnergy(newValue);
     }
 
     /**
