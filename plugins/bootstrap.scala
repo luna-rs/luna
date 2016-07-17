@@ -109,41 +109,6 @@ def using(resource: AutoCloseable)
 /** All implicit (monkey patching) classes below are basically 'extending' Java classes by creating new functions for them. We
   * do this to ensure that all code coming from Java is as concise and idiomatic (Scala-like) as possible.
   *
-  *
-  * For example, instead of:
-  *
-  * val array = Array(1, 2, 3, 4, 5, 6, 7, 8)
-  *
-  * world.schedule(new Task(false, 20) {
-  *   override protected def execute() = {
-  *     val randomNumber = array((rand.nextDouble * array.length).toInt)
-  *     plr.queue(new InfoMessageWriter(s"Your random number from the array is $randomNumber!"))
-  *
-  *     if(plr.getRights.equalOrGreater(RIGHTS_MOD)) {
-  *       plr.queue(new InfoMessageWriter("You are a moderator."))
-  *     }
-  *     cancel()
-  * })
-  *   }
-  *
-  *
-  * ... Which is ugly and hard to read, the monkey patching code below allows
-   * us to instead do:
-  *
-  * val array = Array(1, 2, 3, 4, 5, 6, 7, 8)
-  *
-  * world.scheduleOnce(20) {
-  *   plr.sendMessage(s"Your random number from the array is ${array.randomElement}!")
-  *
-  *   if(plr.rights >=@ RIGHTS_MOD) {
-  *     plr.sendMessage("You are a moderator")
-  *   }
-  * }
-  *
-  *
-  * Both snippets of code are perfectly legal and valid from a syntactical standpoint, although the latter is
-  * obviously far more pretty.
-  *
   * Feel free to add on to the existing code, but beware:
   * - Removing code will (most likely) break existing plugins
   * - Functions that are too ambiguous may end up doing more harm
