@@ -10,11 +10,6 @@ import io.luna.game.model.mobile.Player;
 public final class EntityConstants {
 
     /**
-     * The default starting {@link Position} of {@link Player}s.
-     */
-    public static final Position STARTING_POSITION = new Position(3222, 3222);
-
-    /**
      * The maximum distance that a {@link Player} can view.
      */
     public static final int VIEWING_DISTANCE = 15;
