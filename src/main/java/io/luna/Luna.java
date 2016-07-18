@@ -26,8 +26,10 @@ public final class Luna {
         try {
             Thread.currentThread().setName("LunaInitializationThread");
 
-            System.setProperty("Log4jContextSelector", // Enables asynchronous, garbage-free logging.
-                "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+            if (LunaConstants.ASYNCHRONOUS_LOGGING) {
+                System.setProperty("Log4jContextSelector", // Enables asynchronous, garbage-free logging.
+                    "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+            }
             LOGGER = LogManager.getLogger();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
