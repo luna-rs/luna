@@ -4,16 +4,16 @@ import com.google.gson.JsonObject;
 import fj.P;
 import fj.P3;
 import io.luna.net.msg.MessageRepository;
-import io.luna.util.parser.TomlParser;
+import io.luna.util.parser.GsonParser;
 
 import java.util.List;
 
 /**
- * A {@link TomlParser} implementation that parses data that will later be contained within a {@link MessageRepository}.
+ * A {@link GsonParser} implementation that parses data that will later be contained within a {@link MessageRepository}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageRepositoryParser extends TomlParser<P3<Integer, Integer, String>> {
+public final class MessageRepositoryParser extends GsonParser<P3<Integer, Integer, String>> {
 
     /**
      * The {@link MessageRepository} that the data will be added to.
@@ -26,7 +26,7 @@ public final class MessageRepositoryParser extends TomlParser<P3<Integer, Intege
      * @param messageRepository The {@link MessageRepository} that the data will be added to.
      */
     public MessageRepositoryParser(MessageRepository messageRepository) {
-        super("./data/io/message_repository.toml");
+        super("./data/io/message_repository.json");
         this.messageRepository = messageRepository;
     }
 
@@ -43,10 +43,5 @@ public final class MessageRepositoryParser extends TomlParser<P3<Integer, Intege
         for (P3<Integer, Integer, String> it : readObjects) {
             messageRepository.addHandler(it._1(), it._2(), it._3());
         }
-    }
-
-    @Override
-    public String table() {
-        return "message";
     }
 }
