@@ -35,43 +35,43 @@ private val GRAPHIC = new Graphic(186, 100)
 /*
  A map of all the rune types that can be crafted.
 
- rune_name -> (level, id, experience, rune_multiplier, pure_essence?)
+ rune_symbol -> (level, id, experience, rune_multiplier, pure_essence?)
 */
 private val RUNES = Map(
-  "Air rune" ->(1, 556, 5.0, 11, false),
-  "Mind rune" ->(2, 558, 5.5, 14, false),
-  "Water rune" ->(5, 555, 6.0, 19, false),
-  "Earth rune" ->(9, 557, 6.5, 26, false),
-  "Fire rune" ->(14, 554, 7.0, 35, false),
-  "Body rune" ->(20, 559, 7.5, 46, false),
-  "Cosmic rune" ->(27, 564, 8.0, 59, true),
-  "Chaos rune" ->(35, 562, 8.5, 74, true),
-  "Nature rune" ->(44, 561, 9.0, 91, true),
-  "Law rune" ->(54, 563, 9.5, -1, true),
-  "Death rune" ->(65, 560, 10.0, -1, true),
-  "Blood rune" ->(80, 565, 10.5, -1, true),
-  "Soul rune" ->(95, 566, 11.0, -1, true)
+  'air ->(1, 556, 5.0, 11, false),
+  'mind ->(2, 558, 5.5, 14, false),
+  'water ->(5, 555, 6.0, 19, false),
+  'earth ->(9, 557, 6.5, 26, false),
+  'fire ->(14, 554, 7.0, 35, false),
+  'body ->(20, 559, 7.5, 46, false),
+  'cosmic ->(27, 564, 8.0, 59, true),
+  'chaos ->(35, 562, 8.5, 74, true),
+  'nature ->(44, 561, 9.0, 91, true),
+  'law ->(54, 563, 9.5, -1, true),
+  'death ->(65, 560, 10.0, -1, true),
+  'blood ->(80, 565, 10.5, -1, true),
+  'soul ->(95, 566, 11.0, -1, true)
 )
 
 /*
  A map of all the altars that can be used to craft runes.
 
- id -> rune_name
+ id -> rune_symbol
 */
 private val ALTARS = Map(
-  2478 -> "Air rune",
-  2479 -> "Mind rune",
-  2480 -> "Water rune",
-  2481 -> "Earth rune",
-  2482 -> "Fire rune",
-  2483 -> "Body rune",
-  2484 -> "Cosmic rune",
-  2487 -> "Chaos rune",
-  2486 -> "Nature rune",
-  2485 -> "Law rune",
-  2488 -> "Death rune",
-  7141 -> "Blood rune",
-  7138 -> "Soul rune"
+  2478 -> 'air,
+  2479 -> 'mind,
+  2480 -> 'water,
+  2481 -> 'earth,
+  2482 -> 'fire,
+  2483 -> 'body,
+  2484 -> 'cosmic,
+  2487 -> 'chaos,
+  2486 -> 'nature,
+  2485 -> 'law,
+  2488 -> 'death,
+  7141 -> 'blood,
+  7138 -> 'soul
 )
 
 /* Attempt to craft the argued rune. */
@@ -125,7 +125,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 >>[ObjectFirstClickEvent] { (msg, plr) =>
   val altar = ALTARS.get(msg.getId)
   if (altar.isDefined) {
-    craftRunes(plr, RUNES(altar.get._1))
+    craftRunes(plr, RUNES(altar.get))
     msg.terminate
   }
 }
