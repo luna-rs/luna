@@ -24,7 +24,7 @@ private type Rune = (Int, Int, Double, Int, Int, Boolean)
 private val RUNE_ESSENCE = 1436
 
 /* Pure essence identifier. */
-val PURE_ESSENCE = 7936
+private val PURE_ESSENCE = 7936
 
 /* Runecrafting animation. */
 private val ANIMATION = new Animation(791)
@@ -35,7 +35,7 @@ private val GRAPHIC = new Graphic(186, 100)
 /*
  A table of all the runes that can be crafted.
 
- rune_symbol -> (level, id, experience, rune_multiplier, altar_object_id, pure_essence?)
+ rune_symbol -> (level, rune_id, experience, rune_multiplier, altar_object_id, pure_essence?)
 */
 private val RUNES = Map(
   'air_rune -> (1, 556, 5.0, 11, 2478, false),
@@ -56,9 +56,12 @@ private val RUNES = Map(
 /*
  A map of all the altars to the rune type that can be crafted by them.
 
- altar_object_id -> rune_symbol
+ altar_object_id -> (level, rune_id, experience, rune_multiplier, altar_object_id, pure_essence?)
 */
-private val ALTAR_TO_RUNE = RUNES.map(it => (it._2._5, it._2))
+private val ALTAR_TO_RUNE = RUNES.values.map {
+  case (level, runeId, experience, runeMultiplier, altarId, pureEssence) =>
+    altarId -> (level, runeId, experience, runeMultiplier, altarId, pureEssence)
+}.toMap
 
 
 /* Attempt to craft the argued rune. */

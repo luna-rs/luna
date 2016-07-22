@@ -39,7 +39,7 @@ private val BONE_TABLE = Map(
 
  id -> (id, experience)
 */
-private val ID_TO_BONE = BONE_TABLE.map(it => (it._2._1, it._2))
+private val ID_TO_BONE = BONE_TABLE.values.map { case (id, experience) => id -> (id, experience) }.toMap
 
 
 /* Attempt to bury a bone, if we haven't recently just buried one. */
@@ -60,8 +60,6 @@ private def buryBone(plr: Player, bone: Bone) = {
 >>[ItemFirstClickEvent] { (msg, plr) =>
   val bone = ID_TO_BONE.get(msg.getItemId)
   if (bone.isDefined) {
-    buryBone(plr, bone.get)
+    buryBone(plr)(bone.get)
   }
 }
-
-
