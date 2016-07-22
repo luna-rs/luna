@@ -12,8 +12,8 @@ import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.mobile.{Animation, Player, Skill}
 
 
-/* Type alias for bones in 'BONE_TABLE'. */
-private type Bone = (Int, Double)
+/* Class representing bones in the 'BONE_TABLE'. */
+private case class Bone(id: Int, experience: Double)
 
 
 /* Bone bury animation. */
@@ -25,13 +25,13 @@ private val BURY_ANIMATION = new Animation(827)
  bone_symbol -> (id, experience)
 */
 private val BONE_TABLE = Map(
-  'bones -> (526, 4.5),
-  'bat_bones -> (530, 5.2),
-  'monkey_bones -> (3179, 5.0),
-  'wolf_bones -> (2859, 4.5),
-  'big_bones -> (532, 15.0),
-  'babydragon_bones -> (534, 30.0),
-  'dragon_bones -> (536, 72.0)
+  'bones -> Bone(526, 4.5),
+  'bat_bones -> Bone(530, 5.2),
+  'monkey_bones -> Bone(3179, 5.0),
+  'wolf_bones -> Bone(2859, 4.5),
+  'big_bones -> Bone(532, 15.0),
+  'babydragon_bones -> Bone(534, 30.0),
+  'dragon_bones -> Bone(536, 72.0)
 )
 
 /*
@@ -39,7 +39,7 @@ private val BONE_TABLE = Map(
 
  id -> (id, experience)
 */
-private val ID_TO_BONE = BONE_TABLE.values.map { case (id, experience) => id -> (id, experience) }.toMap
+private val ID_TO_BONE = BONE_TABLE.values.map { it => it.id -> it }.toMap
 
 
 /* Attempt to bury a bone, if we haven't recently just buried one. */
@@ -48,9 +48,9 @@ private def buryBone(plr: Player, bone: Bone) = {
     plr.animation(BURY_ANIMATION)
 
     plr.sendMessage("You dig a hole in the ground.")
-    plr.sendMessage(s"You bury the ${ItemDefinition.computeNameForId(bone._1)}.")
+    plr.sendMessage(s"You bury the ${ItemDefinition.computeNameForId(bone.id)}.")
 
-    plr.skill(Skill.PRAYER).addExperience(bone._2)
+    plr.skill(Skill.PRAYER).addExperience(bone.experience)
     plr.resetTime("last_bone_bury")
   }
 }
@@ -58,8 +58,8 @@ private def buryBone(plr: Player, bone: Bone) = {
 
 /* If the item being clicked is a bone, attempt to bury it. */
 >>[ItemFirstClickEvent] { (msg, plr) =>
-  val bone = ID_TO_BONE.get(msg.getItemId)
-  if (bone.isDefined) {
-    buryBone(plr)(bone.get)
+  ID_TO_BONE.get(msg.getItemId).foreach { it =>
+    buryBone(plr, it)
+    msg.terminate
   }
 }
