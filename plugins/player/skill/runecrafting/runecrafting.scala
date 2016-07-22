@@ -5,10 +5,10 @@
   -> Level multipliers (double cosmics, double nats, etc)
 
  TODO:
-  -> Rune pouches
-  -> Combination runes (maybe?)
-  -> Tiaras (maybe?)
-  -> Talismans (maybe?)
+  -> Rune essence pouches
+  -> Combination runes
+  -> Tiaras
+  -> Talismans
 */
 
 import io.luna.game.event.impl.ObjectFirstClickEvent
@@ -17,14 +17,14 @@ import io.luna.game.model.mobile.{Animation, Graphic, Player, Skill}
 
 
 /* Type alias for rune tuple. */
-private type Rune = (Int, Int, Double, Int, Boolean)
+private type Rune = (Int, Int, Double, Int, Int, Boolean)
 
 
 /* Rune essence identifier. */
 private val RUNE_ESSENCE = 1436
 
 /* Pure essence identifier. */
-private val PURE_ESSENCE = 7936
+val PURE_ESSENCE = 7936
 
 /* Runecrafting animation. */
 private val ANIMATION = new Animation(791)
@@ -33,46 +33,33 @@ private val ANIMATION = new Animation(791)
 private val GRAPHIC = new Graphic(186, 100)
 
 /*
- A map of all the rune types that can be crafted.
+ A table of all the runes that can be crafted.
 
- rune_symbol -> (level, id, experience, rune_multiplier, pure_essence?)
+ rune_symbol -> (level, id, experience, rune_multiplier, altar_object_id, pure_essence?)
 */
 private val RUNES = Map(
-  'air ->(1, 556, 5.0, 11, false),
-  'mind ->(2, 558, 5.5, 14, false),
-  'water ->(5, 555, 6.0, 19, false),
-  'earth ->(9, 557, 6.5, 26, false),
-  'fire ->(14, 554, 7.0, 35, false),
-  'body ->(20, 559, 7.5, 46, false),
-  'cosmic ->(27, 564, 8.0, 59, true),
-  'chaos ->(35, 562, 8.5, 74, true),
-  'nature ->(44, 561, 9.0, 91, true),
-  'law ->(54, 563, 9.5, -1, true),
-  'death ->(65, 560, 10.0, -1, true),
-  'blood ->(80, 565, 10.5, -1, true),
-  'soul ->(95, 566, 11.0, -1, true)
+  'air_rune -> (1, 556, 5.0, 11, 2478, false),
+  'mind_rune -> (2, 558, 5.5, 14, 2479, false),
+  'water_rune -> (5, 555, 6.0, 19, 2480, false),
+  'earth_rune -> (9, 557, 6.5, 26, 2481, false),
+  'fire_rune -> (14, 554, 7.0, 35, 2482, false),
+  'body_rune -> (20, 559, 7.5, 46, 2483, false),
+  'cosmic_rune -> (27, 564, 8.0, 59, 2484, true),
+  'chaos_rune -> (35, 562, 8.5, 74, 2487, true),
+  'nature_rune -> (44, 561, 9.0, 91, 2486, true),
+  'law_rune -> (54, 563, 9.5, 99, 2485, true),
+  'death_rune -> (65, 560, 10.0, 99, 2488, true),
+  'blood_rune -> (80, 565, 10.5, 99, 7141, true),
+  'soul_rune -> (95, 566, 11.0, 99, 7138, true)
 )
 
 /*
- A map of all the altars that can be used to craft runes.
+ A map of all the altars to the rune type that can be crafted by them.
 
- id -> rune_symbol
+ altar_object_id -> rune_symbol
 */
-private val ALTARS = Map(
-  2478 -> 'air,
-  2479 -> 'mind,
-  2480 -> 'water,
-  2481 -> 'earth,
-  2482 -> 'fire,
-  2483 -> 'body,
-  2484 -> 'cosmic,
-  2487 -> 'chaos,
-  2486 -> 'nature,
-  2485 -> 'law,
-  2488 -> 'death,
-  7141 -> 'blood,
-  7138 -> 'soul
-)
+private val ALTAR_TO_RUNE = RUNES.map(it => (it._2._5, it._2))
+
 
 /* Attempt to craft the argued rune. */
 private def craftRunes(plr: Player, rune: Rune): Unit = {
@@ -109,6 +96,8 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   /* Compute rune count and craft runes. */
   val runeCount = (essenceCount * (skill.getLevel / rune._4)) + essenceCount
 
+  plr.interruptAction()
+
   plr.inventory.remove(new Item(essenceId, essenceCount))
   plr.inventory.add(new Item(rune._2, runeCount))
 
@@ -118,14 +107,12 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   skill.addExperience(rune._3 * essenceCount)
 }
 
-/*
- If object being clicked is an altar, attempt to craft runes of that altar. Regardless if successful
- or not, terminate the event.
-*/
+
+/* If the object being clicked is an altar, attempt to craft runes of that altar. */
 >>[ObjectFirstClickEvent] { (msg, plr) =>
-  val altar = ALTARS.get(msg.getId)
+  val altar = ALTAR_TO_RUNE.get(msg.getId)
   if (altar.isDefined) {
-    craftRunes(plr, RUNES(altar.get))
+    craftRunes(plr, altar.get)
     msg.terminate
   }
 }

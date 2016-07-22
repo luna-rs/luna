@@ -57,7 +57,7 @@ private def buryBone(plr: Player, bone: Bone) = {
 
 
 /* If the item being clicked is a bone, attempt to bury it. */
->>@[ItemFirstClickEvent] { (msg, plr) =>
+>>[ItemFirstClickEvent] { (msg, plr) =>
   val bone = ID_TO_BONE.get(msg.getItemId)
   if (bone.isDefined) {
     buryBone(plr, bone.get)
