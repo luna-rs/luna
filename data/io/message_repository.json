@@ -216,7 +216,8 @@
   },
   {
     "opcode": 53,
-    "size": 12
+    "size": 12,
+    "payload": "ItemOnItemMessageReader"
   },
   {
     "opcode": 54,
@@ -496,7 +497,8 @@
   },
   {
     "opcode": 122,
-    "size": 6
+    "size": 6,
+    "payload": "ItemClickMessageReader"
   },
   {
     "opcode": 123,
