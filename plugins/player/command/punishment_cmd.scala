@@ -5,8 +5,8 @@ import io.luna.game.event.impl.CommandEvent
 import scala.reflect.io.File
 
 
-// Return the person we are trying to punish.
-def findPunish(msg: CommandEvent) = {
+/* Perform a lookup for the person we're punishing. */
+private def findPunish(msg: CommandEvent) = {
   val name = msg.getArgs()(0).replaceAll("_", "")
   world.
     getPlayers.
@@ -14,8 +14,8 @@ def findPunish(msg: CommandEvent) = {
     find(_.getUsername.equalsIgnoreCase(name))
 }
 
-// Return a String describing the punishment duration.
-def punishDuration(msg: CommandEvent) = {
+/* Construct a string with punishment lift date ~ [yyyy-mm-dd]. */
+private def punishDuration(msg: CommandEvent) = {
   val args = msg.getArgs
 
   val years = if (args.length == 4) args(3).toInt else 0
@@ -29,6 +29,7 @@ def punishDuration(msg: CommandEvent) = {
 }
 
 
+/* Perform an IP ban on a player. */
 >>@[CommandEvent]("ip_ban", RIGHTS_ADMIN) { (msg, plr) =>
   val file = File("./data/players/blacklist.txt")
 
@@ -41,6 +42,7 @@ def punishDuration(msg: CommandEvent) = {
   })
 }
 
+/* Perform a permanent ban on a player. */
 >>@[CommandEvent]("perm_ban", RIGHTS_ADMIN) { (msg, plr) =>
   findPunish(msg).foreach(it => {
     it.attr("unban_date", "never")
@@ -50,6 +52,7 @@ def punishDuration(msg: CommandEvent) = {
   })
 }
 
+/* Perform a permanent mute on a player. */
 >>@[CommandEvent]("perm_mute", RIGHTS_MOD) { (msg, plr) =>
   findPunish(msg).foreach(it => {
     it.attr("unmute_date", "never")
@@ -58,6 +61,7 @@ def punishDuration(msg: CommandEvent) = {
   })
 }
 
+/* Perform a temporary ban on a player. */
 >>@[CommandEvent]("ban", RIGHTS_MOD) { (msg, plr) =>
   val duration = punishDuration(msg)
 
@@ -69,6 +73,7 @@ def punishDuration(msg: CommandEvent) = {
   })
 }
 
+/* Perform a temporary mute on a player. */
 >>@[CommandEvent]("mute", RIGHTS_MOD) { (msg, plr) =>
   val duration = punishDuration(msg)
 
@@ -79,4 +84,5 @@ def punishDuration(msg: CommandEvent) = {
   })
 }
 
+/* Perform a forced disconnect on a player. */
 >>@[CommandEvent]("kick", RIGHTS_MOD) { (msg, plr) => findPunish(msg).foreach(_.logout) }
