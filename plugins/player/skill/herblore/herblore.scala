@@ -94,7 +94,7 @@ private val POTION_TABLE = Map(
 /*
  A different mapping of the 'POTION_TABLE' that maps ingredients to potions.
 
- ( secondary_id, unf_potion_id) -> Potion
+ (secondary_id, unf_potion_id) -> Potion
 */
 private val INGREDIENTS_TO_POTION = POTION_TABLE.values.map { it => (it.secondaryId, it.unfId) -> it }.toMap
 
@@ -115,6 +115,7 @@ private abstract class MakePotionAction(plr: Player, level: Int) extends Produci
 /* Determine if the required level is met by the player. */
 private def isLevel(plr: Player, level: Int) = {
   val levelRequired = herb.level
+
   if (plr.skill(Skill.HERBLORE).getLevel < levelRequired) {
     plr.sendMessage(s"You need a Herblore level of $levelRequired to do this.")
     false
@@ -140,7 +141,7 @@ private def cleanHerb(plr: Player, level: Int) {
 /* Submits an action that will make the player produce unfinished potions. */
 private def makeUnfPotion(plr: Player, herb: Herb) {
 
-  plr.submitAction(new MakePotionAction(plr, it) {
+  plr.submitAction(new MakePotionAction(plr, herb.unfLevel) {
     override def newItems = Array(new Item(herb.unfId))
     override def oldItems = Array(new Item(herb.cleanId), new Item(VIAL_OF_WATER))
     override def onProduceMessage = s"You put the ${computeNameForId(herb.cleanId)} into the vial of water."
@@ -150,7 +151,7 @@ private def makeUnfPotion(plr: Player, herb: Herb) {
 /* Submits an action that will make the player produce finished potions. */
 private def makeFinishedPotion(plr: Player, potion: Potion) = {
 
-  plr.submitAction(new MakePotionAction(plr, it) {
+  plr.submitAction(new MakePotionAction(plr, potion.level) {
     override def newItems = Array(new Item(potion.id))
     override def oldItems = Array(new Item(potion.unfId), new Item(potion.secondaryId))
     override def onProduceMessage = s"You mix the ${computeNameForId(potion.secondaryId)} into your potion."

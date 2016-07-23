@@ -143,10 +143,10 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
   val name = msg.getArgs()(0).toLowerCase.replaceAll("_", " ")
   val amount = msg.getArgs()(1).toInt
 
-  val filtered = ItemDefinition.DEFINITIONS.
-    filter(Objects.nonNull _).
-    filterNot(_.isNoted).
-    filter(_.getName.toLowerCase.contains(name))
+  val filtered = ItemDefinition.DEFINITIONS
+  lazyFilter(Objects.nonNull _).
+    lazyFilterNot(_.isNoted).
+    lazyFilter(_.getName.toLowerCase.contains(name))
 
   filtered.foreach { it =>
     val add = new Item(it.getId, amount)

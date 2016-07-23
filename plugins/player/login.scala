@@ -1,12 +1,21 @@
+/*
+ Plugin for logging in, supports:
+   -> Giving 'starter packages' on first login
+   -> Indicating if the player is muted (and for how long)
+   -> Configuring interface states
+*/
+
 import java.time.format.DateTimeFormatter
 
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.{Equipment, Item}
 
 
-val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, uuuu")
+/* Formats dates into the pattern specified. */
+private val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, uuuu")
 
-val STARTER_ITEMS = Vector(
+/* A table of items that will be added to the inventory on the first login. */
+private val STARTER_ITEMS = Vector(
   new Item(995, 10000), // Coins
   new Item(556, 250), // Air runes
   new Item(555, 250), // Water runes
@@ -16,7 +25,8 @@ val STARTER_ITEMS = Vector(
   new Item(841) // Shortbow
 )
 
-val STARTER_EQUIPMENT = Vector(
+/* A table of equipment that will be equipped dynamically on the first login. */
+private val STARTER_EQUIPMENT = Vector(
   (Equipment.HEAD, new Item(1153)), // Iron full helm
   (Equipment.CHEST, new Item(1115)), // Iron platebody
   (Equipment.LEGS, new Item(1067)), // Iron platelegs
@@ -31,7 +41,8 @@ val STARTER_EQUIPMENT = Vector(
 )
 
 
->>[LoginEvent] { (msg, plr) => // Give "starter package" if new player.
+/* Give 'starter package' if the player is new. */
+>>[LoginEvent] { (msg, plr) =>
   val inventory = plr.inventory
   val equipment = plr.equipment
 
@@ -47,7 +58,8 @@ val STARTER_EQUIPMENT = Vector(
   }
 }
 
->>[LoginEvent] { (msg, plr) => // Send mute notification if muted.
+/* If the player is muted, indicate that they are and when it will be lifted. */
+>>[LoginEvent] { (msg, plr) =>
   val date: String = plr.attr("unmute_date")
 
   date match {
@@ -57,6 +69,7 @@ val STARTER_EQUIPMENT = Vector(
   }
 }
 
->>[LoginEvent] { (msg, plr) => // Configure states.
+/* Configure interface states. */
+>>[LoginEvent] { (msg, plr) =>
   plr.sendState(173, if (plr.getWalkingQueue.isRunning) 1 else 0)
 }

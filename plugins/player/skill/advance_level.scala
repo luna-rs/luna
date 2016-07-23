@@ -1,11 +1,20 @@
+/*
+ Plugin for players advancing skill levels, supports:
+   -> Fireworks, congratulations interface, etc.
+   -> Recalculation of combat level when combat skills change
+   -> Queuing messages for level and experience changes
+*/
+
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 import io.luna.game.model.mobile.{Graphic, Player, Skill}
 import io.luna.util.StringUtils
 
 
+/* Graphic played when a player advances a level. */
 val LEVEL_UP_GRAPHIC = new Graphic(199)
 
+/* A table that contains data for displaying the level up chat box interface. */
 val LEVEL_UP_TABLE = Vector(
   (6248, 6249, 6247),
   (6254, 6255, 6253),
@@ -31,7 +40,14 @@ val LEVEL_UP_TABLE = Vector(
 )
 
 
-def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
+/*
+ Determine if a player has advanced a level, and if they have:
+   -> Send the chat box interface congratulating them
+   -> Send a chat box message congratulating them
+   -> Play the 'LEVEL_UP_GRAPHIC' graphic
+   -> Recalculate the combat level, if a combat skill was advanced
+ */
+def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
   val set = plr.getSkills
   val skill = plr.skill(id)
   val newLevel = skill.getStaticLevel
@@ -39,14 +55,14 @@ def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
   if (oldLevel < newLevel) {
     skill.setLevel(if (id != Skill.HITPOINTS) newLevel else skill.getLevel + 1)
 
-    val data = LEVEL_UP_TABLE(id)
+    val (firstLineId, secondLineId, interfaceId) = LEVEL_UP_TABLE(id)
     val name = Skill.getName(id)
     val message = s"Congratulations, you just advanced ${StringUtils.computeIndefiniteArticle(name)} $name level!"
 
     plr.sendMessage(message)
-    plr.sendWidgetText(message, data._1)
-    plr.sendWidgetText(s"Your $name level is now $newLevel.", data._2)
-    plr.sendChatboxInterface(data._3)
+    plr.sendWidgetText(message, firstLineId)
+    plr.sendWidgetText(s"Your $name level is now $newLevel.", secondLineId)
+    plr.sendChatboxInterface(interfaceId)
 
     plr.graphic(LEVEL_UP_GRAPHIC)
 
@@ -58,10 +74,11 @@ def checkForLevel(id: Int, oldLevel: Int, plr: Player) = {
 }
 
 
+/* When a player's skills change, send the update to the client and check if they've advanced a level. */
 >>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
   plr.sendSkillUpdate(msg.getId)
 
   if (msg.getOldStaticLevel < 99) {
-    checkForLevel(msg.getId, msg.getOldStaticLevel, plr)
+    advanceLevel(plr, msg.getId, msg.getOldStaticLevel)
   }
 }

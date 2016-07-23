@@ -1,3 +1,12 @@
+/*
+ Punishment plugin, supports:
+   -> Internet protocol address ban
+   -> Permanent ban/mute
+   -> Temporary ban/mute
+     -> Specific punishment lift dates using 'LocalDate'
+   -> Kicking (forced disconnect)
+*/
+
 import java.time.LocalDate
 
 import io.luna.game.event.impl.CommandEvent
@@ -8,10 +17,10 @@ import scala.reflect.io.File
 /* Perform a lookup for the person we're punishing. */
 private def findPunish(msg: CommandEvent) = {
   val name = msg.getArgs()(0).replaceAll("_", "")
-  world.
-    getPlayers.
-    filterNot(_.rights >=@ RIGHTS_ADMIN).
-    find(_.getUsername.equalsIgnoreCase(name))
+
+  world.getPlayers.
+    lazyFilterNot(_.rights >=@ RIGHTS_ADMIN).
+    lazyFilter(_.getUsername.equalsIgnoreCase(name))
 }
 
 /* Construct a string with punishment lift date ~ [yyyy-mm-dd]. */

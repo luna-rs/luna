@@ -13,7 +13,7 @@ import io.luna.game.model.mobile.{Animation, Player, Skill}
 
 
 /* Class representing bones in the 'BONE_TABLE'. */
-private case class Bone(id: Int, experience: Double)
+private case class Bone(id: Int, exp: Double)
 
 
 /* Bone bury animation. */
@@ -22,7 +22,7 @@ private val BURY_ANIMATION = new Animation(827)
 /*
  A table of all the bones that can be used for prayer.
 
- bone_symbol -> (id, experience)
+ bone_symbol -> Bone
 */
 private val BONE_TABLE = Map(
   'bones -> Bone(526, 4.5),
@@ -37,7 +37,7 @@ private val BONE_TABLE = Map(
 /*
  A different mapping of the 'BONE_TABLE' that maps bone identifiers to their data.
 
- id -> (id, experience)
+ id -> Bone
 */
 private val ID_TO_BONE = BONE_TABLE.values.map { it => it.id -> it }.toMap
 

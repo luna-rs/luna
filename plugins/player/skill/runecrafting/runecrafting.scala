@@ -16,8 +16,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.{Animation, Graphic, Player, Skill}
 
 
-/* Type alias for rune tuple. */
-private type Rune = (Int, Int, Double, Int, Int, Boolean)
+/* Class representing runes in the 'RUNE_TABLE'. */
+private case class Rune(runeId: Int, level: Int, exp: Double, multiplier: Int, altarId: Int, pureEssence: Boolean)
 
 
 /* Rune essence identifier. */
@@ -35,40 +35,37 @@ private val GRAPHIC = new Graphic(186, 100)
 /*
  A table of all the runes that can be crafted.
 
- rune_symbol -> (level, rune_id, experience, rune_multiplier, altar_object_id, pure_essence?)
+ rune_symbol -> Rune
 */
-private val RUNES = Map(
-  'air_rune -> (1, 556, 5.0, 11, 2478, false),
-  'mind_rune -> (2, 558, 5.5, 14, 2479, false),
-  'water_rune -> (5, 555, 6.0, 19, 2480, false),
-  'earth_rune -> (9, 557, 6.5, 26, 2481, false),
-  'fire_rune -> (14, 554, 7.0, 35, 2482, false),
-  'body_rune -> (20, 559, 7.5, 46, 2483, false),
-  'cosmic_rune -> (27, 564, 8.0, 59, 2484, true),
-  'chaos_rune -> (35, 562, 8.5, 74, 2487, true),
-  'nature_rune -> (44, 561, 9.0, 91, 2486, true),
-  'law_rune -> (54, 563, 9.5, 99, 2485, true),
-  'death_rune -> (65, 560, 10.0, 99, 2488, true),
-  'blood_rune -> (80, 565, 10.5, 99, 7141, true),
-  'soul_rune -> (95, 566, 11.0, 99, 7138, true)
+private val RUNE_TABLE = Map(
+  'air_rune -> Rune(556, 1, 5.0, 11, 2478, false),
+  'mind_rune -> Rune(558, 2, 5.5, 14, 2479, false),
+  'water_rune -> Rune(555, 5, 6.0, 19, 2480, false),
+  'earth_rune -> Rune(557, 9, 6.5, 26, 2481, false),
+  'fire_rune -> Rune(554, 14, 7.0, 35, 2482, false),
+  'body_rune -> Rune(559, 20, 7.5, 46, 2483, false),
+  'cosmic_rune -> Rune(564, 27, 8.0, 59, 2484, true),
+  'chaos_rune -> Rune(562, 35, 8.5, 74, 2487, true),
+  'nature_rune -> Rune(561, 44, 9.0, 91, 2486, true),
+  'law_rune -> Rune(563, 54, 9.5, 99, 2485, true),
+  'death_rune -> Rune(560, 65, 10.0, 99, 2488, true),
+  'blood_rune -> Rune(565, 80, 10.5, 99, 7141, true),
+  'soul_rune -> Rune(566, 95, 11.0, 99, 7138, true)
 )
 
 /*
- A map of all the altars to the rune type that can be crafted by them.
+ A different mapping of the 'RUNE_TABLE' that maps altar object identifiers to 'Rune' data.
 
- altar_object_id -> (level, rune_id, experience, rune_multiplier, altar_object_id, pure_essence?)
+ altar_id -> Rune
 */
-private val ALTAR_TO_RUNE = RUNES.values.map {
-  case (level, runeId, experience, runeMultiplier, altarId, pureEssence) =>
-    altarId -> (level, runeId, experience, runeMultiplier, altarId, pureEssence)
-}.toMap
+private val ALTAR_TO_RUNE = RUNE_TABLE.values.map { it => it.altarId -> it }.toMap
 
 
 /* Attempt to craft the argued rune. */
 private def craftRunes(plr: Player, rune: Rune): Unit = {
   val skill = plr.skill(Skill.RUNECRAFTING)
 
-  val levelRequired = rune._1 /* Are we a high enough level? */
+  val levelRequired = rune.level /* Are we a high enough level? */
   if (skill.getLevel < levelRequired) {
     plr.sendMessage(s"You need a Runecrafting level of $levelRequired to craft these runes.")
     return
@@ -83,7 +80,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   val (essenceId, essenceCount) = {
     def lookup(id: Int) = plr.inventory.computeAmountForId(id)
 
-    if (rune._5) {
+    if (rune.pureEssence) {
       (PURE_ESSENCE, lookup(PURE_ESSENCE))
     } else {
       val count = lookup(RUNE_ESSENCE)
@@ -97,25 +94,24 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   }
 
   /* Compute rune count and craft runes. */
-  val runeCount = (essenceCount * (skill.getLevel / rune._4)) + essenceCount
+  val runeCount = (essenceCount * (skill.getLevel / rune.multiplier)) + essenceCount
 
   plr.interruptAction()
 
   plr.inventory.remove(new Item(essenceId, essenceCount))
-  plr.inventory.add(new Item(rune._2, runeCount))
+  plr.inventory.add(new Item(rune.runeId, runeCount))
 
   plr.animation(ANIMATION)
   plr.graphic(GRAPHIC)
 
-  skill.addExperience(rune._3 * essenceCount)
+  skill.addExperience(rune.exp * essenceCount)
 }
 
 
 /* If the object being clicked is an altar, attempt to craft runes of that altar. */
 >>[ObjectFirstClickEvent] { (msg, plr) =>
-  val altar = ALTAR_TO_RUNE.get(msg.getId)
-  if (altar.isDefined) {
-    craftRunes(plr, altar.get)
+  ALTAR_TO_RUNE.get(msg.getId).foreach { it =>
+    craftRunes(plr, it)
     msg.terminate
   }
 }
