@@ -75,11 +75,11 @@ private def scalaToJavaFunc[E <: Event](func: (E, Player) => Unit) = new BiConsu
 
 
 /* Intercept at (>>@) method. Allows event interception to happen with matching on parameters. */
-def >>@[T <: Event](args: Any*)(func: (T, Player) => Unit)(implicit tag: ClassTag[T]) = {
+def >>@[E <: Event](args: Any*)(func: (E, Player) => Unit)(implicit tag: ClassTag[E]) = {
 
   /* The Scala event listener converted to a BiConsumer. This will be executed from Java. */
   def eventListener(newArgs: Seq[AnyRef]) = scalaToJavaFunc(
-    (msg: T, plr: Player) => {
+    (msg: E, plr: Player) => {
       if (msg.matches(newArgs: _*)) {
         func(msg, plr)
         msg.terminate()
@@ -96,7 +96,7 @@ def >>@[T <: Event](args: Any*)(func: (T, Player) => Unit)(implicit tag: ClassTa
 }
 
 /* Intercept (>>) method. Allows for events to be intercepted, with no matching. */
-def >>[T <: Event](func: (T, Player) => Unit)(implicit tag: ClassTag[T]) =
+def >>[E <: Event](func: (E, Player) => Unit)(implicit tag: ClassTag[E]) =
   pipelines.addEventListener(tag.runtimeClass, new EventListener(scalaToJavaFunc(func)))
 
 
