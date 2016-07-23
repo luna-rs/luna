@@ -14,7 +14,6 @@ import io.luna.game.model.Position
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile._
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
 
 
 /* A command that allows for attributes to be dynamically set. */
@@ -143,14 +142,19 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
   val name = msg.getArgs()(0).toLowerCase.replaceAll("_", " ")
   val amount = msg.getArgs()(1).toInt
 
-  val filtered = ItemDefinition.DEFINITIONS
-  lazyFilter(Objects.nonNull _).
-    lazyFilterNot(_.isNoted).
-    lazyFilter(_.getName.toLowerCase.contains(name))
+  val filtered = ItemDefinition.DEFINITIONS.
+    filter(Objects.nonNull _).
+    filterNot(_.isNoted).
+    filter(_.getName.toLowerCase.contains(name))
 
   filtered.foreach { it =>
     val add = new Item(it.getId, amount)
-    if (plr.inventory.hasCapacityFor(add)) {plr.inventory.add(add)} else {plr.bank.add(add)}
+
+    if (plr.inventory.hasCapacityFor(add)) {
+      plr.inventory.add(add)
+    } else {
+      plr.bank.add(add)
+    }
   }
 
   plr.sendMessage(s"Found ${filtered.length} items during lookup, with search term [$name].")
@@ -162,8 +166,6 @@ import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
   plr.inventory.clear
   plr.bank.clear
   plr.equipment.clear
-
-  plr.flag(UpdateFlag.APPEARANCE)
 
   plr.sendMessage("You have successfully emptied your inventory, bank, and equipment.")
 }

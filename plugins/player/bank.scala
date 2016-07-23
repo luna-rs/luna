@@ -11,7 +11,7 @@ import io.luna.game.event.impl.{ButtonClickEvent, ObjectFirstClickEvent}
 
 
 /* A set of identifiers for bank objects. */
-private val BANKS = Set(3193, 2213)
+private val BANKS = Set(3193, 2213, 3095)
 
 
 /* If the object clicked is a bank, open the banking interface. */

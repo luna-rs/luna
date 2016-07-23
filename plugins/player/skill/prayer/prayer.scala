@@ -9,7 +9,9 @@
 
 import io.luna.game.event.impl.ItemFirstClickEvent
 import io.luna.game.model.`def`.ItemDefinition
-import io.luna.game.model.mobile.{Animation, Player, Skill}
+import io.luna.game.model.item.Item
+import io.luna.game.model.mobile.Skill.PRAYER
+import io.luna.game.model.mobile.{Animation, Player}
 
 
 /* Class representing bones in the 'BONE_TABLE'. */
@@ -45,12 +47,14 @@ private val ID_TO_BONE = BONE_TABLE.values.map { it => it.id -> it }.toMap
 /* Attempt to bury a bone, if we haven't recently just buried one. */
 private def buryBone(plr: Player, bone: Bone) = {
   if (plr.elapsedTime("last_bone_bury", 1200)) {
+
     plr.animation(BURY_ANIMATION)
+    plr.skill(PRAYER).addExperience(bone.exp)
+    plr.inventory.remove(new Item(bone.id))
 
     plr.sendMessage("You dig a hole in the ground.")
     plr.sendMessage(s"You bury the ${ItemDefinition.computeNameForId(bone.id)}.")
 
-    plr.skill(Skill.PRAYER).addExperience(bone.experience)
     plr.resetTime("last_bone_bury")
   }
 }
@@ -58,7 +62,7 @@ private def buryBone(plr: Player, bone: Bone) = {
 
 /* If the item being clicked is a bone, attempt to bury it. */
 >>[ItemFirstClickEvent] { (msg, plr) =>
-  ID_TO_BONE.get(msg.getItemId).foreach { it =>
+  ID_TO_BONE.get(msg.getId).foreach { it =>
     buryBone(plr, it)
     msg.terminate
   }

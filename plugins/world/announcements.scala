@@ -36,7 +36,7 @@ private val FILTER = (plr: Player) => plr.rights <=@ RIGHTS_ADMIN // Only player
 >>[ServerLaunchEvent] { (msg, plr) =>
   world.scheduleForever(TICK_INTERVAL) {
     world.getPlayers.
-      lazyFilter(FILTER).
+      filter(FILTER).
       foreach(_.sendMessage(MESSAGES.randomElement))
   }
 }

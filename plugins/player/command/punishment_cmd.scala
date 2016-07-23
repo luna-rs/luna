@@ -19,8 +19,8 @@ private def findPunish(msg: CommandEvent) = {
   val name = msg.getArgs()(0).replaceAll("_", "")
 
   world.getPlayers.
-    lazyFilterNot(_.rights >=@ RIGHTS_ADMIN).
-    lazyFilter(_.getUsername.equalsIgnoreCase(name))
+    filterNot(_.rights >=@ RIGHTS_ADMIN).
+    filter(_.getUsername.equalsIgnoreCase(name))
 }
 
 /* Construct a string with punishment lift date ~ [yyyy-mm-dd]. */

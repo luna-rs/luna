@@ -27,6 +27,7 @@ import io.luna.net.msg.out._
 
 import scala.collection.JavaConversions._
 import scala.reflect.ClassTag
+import scala.util.Random
 
 
 /* Inlined 'LunaContext' instances injected into this bootstrap. */
@@ -53,8 +54,8 @@ import scala.reflect.ClassTag
 @inline def rand = ThreadLocalRandom.current
 
 
-/* Retrieves the system time using 'System.nanoTime()'. */
-def systemTime(inUnit: TimeUnit = TimeUnit.MILLISECONDS) = inUnit.convert(System.nanoTime, TimeUnit.NANOSECONDS)
+/* Retrieves the system time in 'MILLISECONDS' using 'System.nanoTime()'. */
+def currentTimeMillis = TimeUnit.MILLISECONDS.convert(System.nanoTime, TimeUnit.NANOSECONDS)
 
 
 /* Logging functions, logger instance is injected into this bootstrap. */
@@ -170,10 +171,14 @@ implicit class RichMobileEntity(mob: MobileEntity) {
   def attrEquals(key: String, equals: Any) = equals == attr(key)
 
   /* Returns the elapsed time of a timer attribute. */
-  def elapsedTime(key: String, ms: Long) = (systemTime - attr(key)) >= ms
+  def elapsedTime(key: String, ms: Long) = {
+    val value: Long = attr(key)
+    (currentTimeMillis - value) >= ms
+  }
+
 
   /* Resets the elapsed time of a timer attribute. */
-  def resetTime(key: String) = attr(key, systemTime)
+  def resetTime(key: String) = attr(key, currentTimeMillis)
 }
 
 
@@ -271,7 +276,7 @@ implicit class RichWorld(world: World) {
   }
 
   /* Sends a message to every single player online. */
-  def sendMessage(str: String) = world.getPlayers.foreach(_.sendMessage(str))
+  def messageToAll(str: String) = world.getPlayers.foreach(_.sendMessage(str))
 }
 
 
@@ -319,17 +324,7 @@ implicit class RichItemContainer(items: ItemContainer) {
 implicit class RichIndexedSeq[T](indexed: IndexedSeq[T]) {
 
   /* Shuffle the elements of an 'IndexedSeq' (Fisher-Yates algorithm). */
-  def shuffle = {
-    var i = indexed.length - 1
-    while (i > 0) {
-      val index = rand.nextInt(i + 1)
-      val a = indexed(index)
-      indexed(index) = indexed(i)
-      indexed(i) = a
-      i -= 1
-    }
-    indexed
-  }
+  def shuffle = Random.shuffle(indexed)
 
   /* Selects a random element from the 'IndexedSeq'. */
   def randomElement = indexed((rand.nextDouble * indexed.length).toInt)
@@ -342,4 +337,8 @@ implicit class RichTraversable[T](traversable: Traversable[T]) {
   /* Lazy filter function, to distinguish from the normal filter functions. */
   def lazyFilter(pred: T => Boolean) = traversable.withFilter(pred)
   def lazyFilterNot(pred: T => Boolean) = traversable.withFilter(it => !pred(it))
+}
+
+/* Implicit class for 'java.lang.Iterable' instances. */
+implicit class RichJavaIterable[T](iterable: java.lang.Iterable[T]) {
 }

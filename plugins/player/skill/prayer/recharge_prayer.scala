@@ -1,9 +1,10 @@
 import io.luna.game.event.impl.ObjectFirstClickEvent
-import io.luna.game.model.mobile.{Animation, Player, Skill}
+import io.luna.game.model.mobile.Skill.PRAYER
+import io.luna.game.model.mobile.{Animation, Player}
 
 
 /* A set of identifiers for altar objects. */
-private val ALTARS = Set(409)
+private val ALTARS = Set(409, 3243)
 
 /* Recharge prayer animation. */
 private val RECHARGE_ANIMATION = new Animation(645)
@@ -11,7 +12,7 @@ private val RECHARGE_ANIMATION = new Animation(645)
 
 /* A method that attempts to recharge the player's prayer. */
 private def rechargePrayer(plr: Player) = {
-  val skill = plr.skill(Skill.PRAYER)
+  val skill = plr.skill(PRAYER)
 
   if (skill.getLevel < skill.getStaticLevel) {
     skill.setLevel(skill.getStaticLevel)

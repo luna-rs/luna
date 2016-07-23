@@ -43,7 +43,7 @@ private val STARTER_EQUIPMENT = Vector(
 
 
 /* Formats the given date, using 'DATE_FORMATTER'. */
-private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(string))
+private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(date))
 
 
 /* Give 'starter package' if the player is new. */
