@@ -338,7 +338,3 @@ implicit class RichTraversable[T](traversable: Traversable[T]) {
   def lazyFilter(pred: T => Boolean) = traversable.withFilter(pred)
   def lazyFilterNot(pred: T => Boolean) = traversable.withFilter(it => !pred(it))
 }
-
-/* Implicit class for 'java.lang.Iterable' instances. */
-implicit class RichJavaIterable[T](iterable: java.lang.Iterable[T]) {
-}
