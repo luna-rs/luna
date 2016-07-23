@@ -34,9 +34,9 @@ private val FILTER = (plr: Player) => plr.rights <=@ RIGHTS_ADMIN // Only player
  remaining players the message.
 */
 >>[ServerLaunchEvent] { (msg, plr) =>
-  world.scheduleForever(ANNOUNCEMENT_TICK_INTERVAL) {
+  world.scheduleForever(TICK_INTERVAL) {
     world.getPlayers.
-      lazyFilter(FILTER_ANNOUNCEMENT).
-      foreach(_.sendMessage(ANNOUNCEMENT_MESSAGES.randomElement))
+      lazyFilter(FILTER).
+      foreach(_.sendMessage(MESSAGES.randomElement))
   }
 }

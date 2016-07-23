@@ -5,6 +5,7 @@
    -> Configuring interface states
 */
 
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import io.luna.game.event.impl.LoginEvent
@@ -41,6 +42,10 @@ private val STARTER_EQUIPMENT = Vector(
 )
 
 
+/* Formats the given date, using 'DATE_FORMATTER'. */
+private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(string))
+
+
 /* Give 'starter package' if the player is new. */
 >>[LoginEvent] { (msg, plr) =>
   val inventory = plr.inventory
@@ -65,7 +70,7 @@ private val STARTER_EQUIPMENT = Vector(
   date match {
     case "n/a" => // Do nothing, we aren't muted.
     case "never" => plr.sendMessage("You are permanently muted. It can only be overturned by an administrator.")
-    case _ => plr.sendMessage(s"You are muted. You will be unmuted on ${DATE_FORMATTER.formatDate(date)}.")
+    case _ => plr.sendMessage(s"You are muted. You will be unmuted on ${formatDate(date)}.")
   }
 }
 
