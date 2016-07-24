@@ -149,8 +149,8 @@ private def cleanHerb(plr: Player, herb: Herb) {
 private def makeUnfPotion(plr: Player, herb: Herb) {
 
   plr.submitAction(new MakePotionAction(plr, herb.unfLevel, 0.0) {
-    override def newItems = Array(new Item(herb.unfId))
-    override def oldItems = Array(new Item(herb.cleanId), new Item(VIAL_OF_WATER))
+    override def add = Array(new Item(herb.unfId))
+    override def remove = Array(new Item(herb.cleanId), new Item(VIAL_OF_WATER))
     override def onProduceMessage = s"You put the ${computeNameForId(herb.cleanId)} into the vial of water."
   })
 }
@@ -159,8 +159,8 @@ private def makeUnfPotion(plr: Player, herb: Herb) {
 private def makeFinishedPotion(plr: Player, potion: Potion) = {
 
   plr.submitAction(new MakePotionAction(plr, potion.level, potion.exp) {
-    override def newItems = Array(new Item(potion.id))
-    override def oldItems = Array(new Item(potion.unfId), new Item(potion.secondaryId))
+    override def add = Array(new Item(potion.id))
+    override def remove = Array(new Item(potion.unfId), new Item(potion.secondaryId))
     override def onProduceMessage = s"You mix the ${computeNameForId(potion.secondaryId)} into your potion."
   })
 }

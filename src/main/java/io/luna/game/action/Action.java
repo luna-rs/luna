@@ -8,18 +8,12 @@ import io.luna.game.task.Task;
  * An abstraction model representing an Action that can be executed by a {@link MobileEntity}. Actions have their own set of
  * unique traits that make them different from {@link Task}s:
  * <ul>
- *      <li> There can only be <strong>one</strong> Action processing at a time per mob
- *      <li> Pending Actions will replace the currently processing Action unless they're identical, in which case the
- *      pending Action is discarded
- *      <li>An Action must be submitted to an ActionSet, <strong>not</strong> TaskManager
+ *     <li> There can only be <strong>one</strong> Action processing at a time per mob
+ *     <li> Pending Actions will replace the currently processing Action
+ *     <li>An Action must be submitted to an ActionSet, <strong>not</strong> TaskManager
  * </ul>
- * An acceptable analogy for Actions is that they are higher-level Tasks. This is reinforced by the fact that they use
- * Task under-the-hood.
- * <p>
- * All Actions must implement {@link Action#equals(Object)} or an {@link IllegalStateException} will be thrown when trying to
- * submit a pending Action. This is needed so that pending Actions which are equal to processing Actions can be discarded.
- * Actions should never be stored in hash-based collections (HashMap, HashSet, etc) and attempting to do so will result in an
- * {@link UnsupportedOperationException}.
+ * An acceptable analogy for Actions is that they are higher-level Tasks. This is reinforced by the fact that they use Task
+ * under-the-hood.
  *
  * @param <T> The mob that this Action is dedicated to.
  * @author lare96 <http://github.org/lare96>
@@ -27,7 +21,7 @@ import io.luna.game.task.Task;
 public abstract class Action<T extends MobileEntity> {
 
     /**
-     * A {@link Task} implementation that processes an {@link Action}.
+     * A {@link Task} implementation that processes an Action.
      */
     private final class ActionRunner extends Task {
 
@@ -55,7 +49,7 @@ public abstract class Action<T extends MobileEntity> {
     }
 
     /**
-     * The {@link MobileEntity} assigned to this action.
+     * The mob assigned to this action.
      */
     protected final T mob;
 
@@ -72,7 +66,7 @@ public abstract class Action<T extends MobileEntity> {
     /**
      * The {@link ActionRunner} that runs this action.
      */
-    private final ActionRunner runner = new ActionRunner();
+    private final ActionRunner runner;
 
     /**
      * Creates a new {@link Action}.
@@ -85,14 +79,15 @@ public abstract class Action<T extends MobileEntity> {
         this.mob = mob;
         this.instant = instant;
         this.delay = delay;
+        runner = new ActionRunner();
     }
 
     /**
-     * The default implementation will always throw an {@link IllegalStateException}.
+     * Will always throw an {@link UnsupportedOperationException}.
      */
     @Override
     public boolean equals(Object obj) {
-        throw new IllegalStateException("Action type requires equals(Object) implementation");
+        throw new UnsupportedOperationException("equals(Object) is not supported for type Action");
     }
 
     /**
@@ -100,10 +95,6 @@ public abstract class Action<T extends MobileEntity> {
      */
     @Override
     public final int hashCode() {
-        /*
-         Although this breaks the equals/hashCode contract, this shouldn't be an issue because
-         an Action will never be inside of a hash-based collection.
-         */
         throw new UnsupportedOperationException("hashCode() is not supported for type Action");
     }
 
@@ -140,4 +131,11 @@ public abstract class Action<T extends MobileEntity> {
      * Function called every {@code delay} by the {@link ActionRunner}.
      */
     protected abstract void call();
+
+    /**
+     * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
+     */
+    public final boolean isInterrupted() {
+        return runner.isRunning();
+    }
 }

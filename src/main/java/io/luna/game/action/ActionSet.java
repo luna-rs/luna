@@ -22,10 +22,15 @@ public final class ActionSet {
     public void submit(Action pending) {
         if (currentAction.isPresent()) {
             Action current = currentAction.get();
-            if (current.equals(pending)) {
-                return;
+
+            if (!current.isInterrupted()) {
+                current.interrupt();
+
+                if (current.getClass() == pending.getClass()) {
+                    currentAction = Optional.empty();
+                    return;
+                }
             }
-            current.interrupt();
         }
         currentAction = Optional.of(pending);
         pending.init();
