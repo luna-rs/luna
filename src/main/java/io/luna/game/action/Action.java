@@ -86,7 +86,7 @@ public abstract class Action<T extends MobileEntity> {
      * Will always throw an {@link UnsupportedOperationException}.
      */
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         throw new UnsupportedOperationException("equals(Object) is not supported for type Action");
     }
 
