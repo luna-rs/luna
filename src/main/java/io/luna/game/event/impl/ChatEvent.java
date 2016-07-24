@@ -1,10 +1,9 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-import io.luna.game.model.mobile.Player;
 
 /**
- * An {@link Event} implementation sent whenever an {@link Player} talks.
+ * An event implementation sent whenever an player talks.
  *
  * @author lare96 <http://github.org/lare96>
  */

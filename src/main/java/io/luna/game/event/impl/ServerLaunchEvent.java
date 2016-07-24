@@ -4,7 +4,7 @@ import io.luna.Server;
 import io.luna.game.event.Event;
 
 /**
- * An {@link Event} implementation sent when the {@link Server} launches.
+ * An event implementation sent when the {@link Server} launches.
  *
  * @author lare96 <http://github.org/lare96>
  */

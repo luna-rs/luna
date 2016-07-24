@@ -8,7 +8,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Event} implementation sent whenever the skills of a {@link MobileEntity} change.
+ * An event implementation sent whenever the skills of a {@link MobileEntity} change.
  *
  * @author lare96 <http://github.org/lare96>
  */

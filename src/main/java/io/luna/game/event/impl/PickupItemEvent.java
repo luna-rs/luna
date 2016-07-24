@@ -1,14 +1,13 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-import io.luna.game.model.mobile.Player;
 
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Event} implementation sent whenever a {@link Player} picks up an item.
+ * An event implementation sent whenever a player picks up an item.
  *
  * @author lare96 <http://github.org/lare96>
  */

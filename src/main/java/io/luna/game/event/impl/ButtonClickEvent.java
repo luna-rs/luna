@@ -1,14 +1,13 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-import io.luna.game.model.mobile.Player;
 
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Event} implementation sent whenever a {@link Player} clicks a button on an interface.
+ * An event implementation sent whenever a player clicks a button on an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */

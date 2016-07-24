@@ -5,9 +5,9 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
 
 /**
- * An {@link Event} implementation sent whenever an {@link Entity} changes its {@link Position}. <strong>Please note that the
- * new {@code Position} of the {@code Entity} will not have been set yet when this method is posted, use the values within
- * this class instead of {@code getPosition} from {@code Entity}.</strong>
+ * An event implementation sent whenever an {@link Entity} changes its {@link Position}. <strong>Please note that the new
+ * {@code Position} of the {@code Entity} will not have been set yet when this method is posted, use the values within this
+ * class instead of {@code getPosition} from {@code Entity}.</strong>
  *
  * @author lare96 <http://github.org/lare96>
  */

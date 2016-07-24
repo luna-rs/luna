@@ -1,7 +1,6 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerRights;
 import io.luna.util.StringUtils;
 
@@ -10,7 +9,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Event} implementation sent whenever a {@link Player} types a command.
+ * An event implementation sent whenever a player types a command.
  *
  * @author lare96 <http://github.org/lare96>
  */
