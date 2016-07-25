@@ -14,6 +14,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Item {
 
     /**
+     * An empty array of items.
+     */
+    public static final Item[] EMPTY_ARRAY = {};
+
+    /**
+     * Determines if {@code id} is a valid item identifier.
+     *
+     * @param id The identifier to determine if valid.
+     * @return {@code true} if the identifier is valid, {@code false} otherwise.
+     */
+    public static boolean isIdentifier(int id) {
+        return id > 0 && id < ItemDefinition.DEFINITIONS.size();
+    }
+
+    /**
      * The identifier for this {@code Item}.
      */
     private final int id;
@@ -30,7 +45,7 @@ public final class Item {
      * @param amount The amount of this {@code Item}.
      */
     public Item(int id, int amount) {
-        checkArgument(id > 0 && id < ItemDefinition.DEFINITIONS.size(), "invalid item id");
+        checkArgument(isIdentifier(id), "invalid item id");
         checkArgument(amount > 0, "amount <= 0");
 
         this.id = id;
@@ -148,4 +163,5 @@ public final class Item {
     public int getAmount() {
         return amount;
     }
+
 }
