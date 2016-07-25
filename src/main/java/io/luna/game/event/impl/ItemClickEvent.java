@@ -50,21 +50,21 @@ class ItemClickEvent extends Event {
     /**
      * @return The identifier of the item clicked.
      */
-    public int getId() {
+    public final int getId() {
         return id;
     }
 
     /**
      * @return The index of the item clicked.
      */
-    public int getIndex() {
+    public final int getIndex() {
         return index;
     }
 
     /**
      * @return The identifier of the interface the item was clicked on.
      */
-    public int getInterfaceId() {
+    public final int getInterfaceId() {
         return interfaceId;
     }
 }

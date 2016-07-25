@@ -31,6 +31,7 @@ public final class EquipItemMessageReader extends MessageReader {
             return null;
         }
 
+        player.interruptAction();
         player.getEquipment().equip(index);
         return null;
     }

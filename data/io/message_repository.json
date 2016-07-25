@@ -70,11 +70,13 @@
   },
   {
     "opcode": 17,
-    "size": 2
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 18,
-    "size": 2
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 19,
@@ -86,7 +88,8 @@
   },
   {
     "opcode": 21,
-    "size": 2
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 22,
@@ -293,7 +296,8 @@
   },
   {
     "opcode": 72,
-    "size": 2
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 73,
@@ -633,7 +637,8 @@
   },
   {
     "opcode": 155,
-    "size": 2
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 156,

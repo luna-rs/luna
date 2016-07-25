@@ -1,9 +1,12 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.action.DistancedAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.PickupItemEvent;
+import io.luna.game.model.Position;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
+import io.luna.game.plugin.PluginManager;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
@@ -24,6 +27,16 @@ public final class PickupItemMessageReader extends MessageReader {
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
         checkState(id < 0 || id >= ItemDefinition.DEFINITIONS.size(), "invalid item id");
-        return new PickupItemEvent(x, y, id);
+
+        PluginManager plugins = player.getPlugins();
+        Position position = new Position(x, y, player.getPosition().getZ());
+
+        player.submitAction(new DistancedAction<Player>(player, position, 0, true) {
+            @Override
+            protected void execute() {
+                plugins.post(new PickupItemEvent(x, y, id), player);
+            }
+        });
+        return null;
     }
 }
