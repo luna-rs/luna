@@ -18,6 +18,11 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>com.beachape</groupId>
+            <artifactId>enumeratum_2.11</artifactId>
+            <version>1.4.6</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.7</version>
@@ -50,7 +55,7 @@
         <dependency>
             <groupId>com.moandjiezana.toml</groupId>
             <artifactId>toml4j</artifactId>
-            <version>0.6.0</version>
+            <version>0.7.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
