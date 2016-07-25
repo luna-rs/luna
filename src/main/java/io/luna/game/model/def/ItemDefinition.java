@@ -7,6 +7,9 @@ import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -28,13 +31,27 @@ public final class ItemDefinition {
         StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
 
     /**
-     * Returns an {@link ImmutableList} with all definitions that have a name value of {@code name}. If no definitions are
-     * found, an empty list will be returned.
+     * Returns a {@link List} with all definitions that have a name value of {@code name}. If no definitions are found, an
+     * empty list will be returned.
      */
-    public static ImmutableList<ItemDefinition> getDefinitions(String name) {
+    public static List<ItemDefinition> getDefinitions(String name) {
         return DEFINITIONS.stream().
-            filter(it -> it.getName().equals(name)).
-            collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
+            filter(it -> it.name.equals(name)).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the item name of the argued identifier, wrapped in an option.
+     */
+    public static Optional<String> computeNameForId(int id) {
+        return Optional.ofNullable(DEFINITIONS.get(id)).map(ItemDefinition::getName);
+    }
+
+    /**
+     * Returns the item name of the argued identifier. If a definition does not exist for it, a {@link
+     * NoSuchElementException} will be thrown.
+     */
+    public static String getNameForId(int id) {
+        return computeNameForId(id).get();
     }
 
     static {

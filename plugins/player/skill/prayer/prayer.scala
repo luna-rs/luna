@@ -53,7 +53,7 @@ private def buryBone(plr: Player, bone: Bone) = {
     plr.inventory.remove(new Item(bone.id))
 
     plr.sendMessage("You dig a hole in the ground.")
-    plr.sendMessage(s"You bury the ${ItemDefinition.computeNameForId(bone.id)}.")
+    plr.sendMessage(s"You bury the ${ItemDefinition.getNameForId(bone.id)}.")
 
     plr.resetTime("last_bone_bury")
   }
