@@ -1,11 +1,11 @@
 package io.luna.game.model.mobile;
 
 import com.google.common.base.MoreObjects;
+import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
-import io.luna.game.model.EntityConstants;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.Bank;
@@ -138,7 +138,7 @@ public final class Player extends MobileEntity {
     public Player(LunaContext context, PlayerCredentials credentials) {
         super(context);
         this.credentials = credentials;
-        setPosition(EntityConstants.STARTING_POSITION);
+        setPosition(LunaConstants.STARTING_POSITION);
 
         if (credentials.getUsername().equals("lare96")) {
             rights = PlayerRights.DEVELOPER;
