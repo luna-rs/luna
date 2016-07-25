@@ -1,6 +1,8 @@
 package io.luna.game.model.mobile;
 
 import io.luna.LunaContext;
+import io.luna.game.action.Action;
+import io.luna.game.action.ActionSet;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -8,6 +10,8 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mobile.attr.AttributeMap;
 import io.luna.game.model.mobile.update.UpdateFlagHolder;
 import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -33,6 +37,11 @@ public abstract class MobileEntity extends Entity {
      * The {@link SkillSet} for this {@code MobileEntity}.
      */
     protected final SkillSet skills = new SkillSet(this);
+
+    /**
+     * The {@link ActionSet} for this {@code MobileEntity}.
+     */
+    protected final ActionSet actions = new ActionSet();
 
     /**
      * The {@link WalkingQueue} assigned to this {@code MobileEntity}.
@@ -95,6 +104,11 @@ public abstract class MobileEntity extends Entity {
     private Hit secondaryHit;
 
     /**
+     * The {@link Entity} currently being interacted with.
+     */
+    private Optional<Entity> interactingWith = Optional.empty();
+
+    /**
      * Creates a new {@link MobileEntity}.
      *
      * @param context The context to be managed in.
@@ -107,6 +121,20 @@ public abstract class MobileEntity extends Entity {
      * Clears flags specific to certain types of {@code MobileEntity}s.
      */
     public abstract void reset();
+
+    /**
+     * Shortcut to function {@link ActionSet#submit(Action)}.
+     */
+    public final void submitAction(Action<? extends MobileEntity> pending) {
+        actions.submit(pending);
+    }
+
+    /**
+     * Shortcut to function {@link ActionSet#interrupt()}.
+     */
+    public final void interruptAction() {
+        actions.interrupt();
+    }
 
     /**
      * Teleports this {@code MobileEntity} to {@code position}.
@@ -164,11 +192,29 @@ public abstract class MobileEntity extends Entity {
     /**
      * Interact with {@code entity} on this cycle.
      *
-     * @param entity The {@code MobileEntity} to interact with this cycle.
+     * @param entity The {@code Entity} to interact with this cycle.
      */
-    public final void interact(MobileEntity entity) {
-        this.interactionIndex =
-            entity == null ? 65535 : entity.type() == EntityType.PLAYER ? entity.index + 32768 : entity.index;
+    public final void interact(Entity entity) {
+        if (entity == null) {
+            interactWithMob(65535);
+            interactingWith = Optional.empty();
+            return;
+        }
+
+        if (entity instanceof MobileEntity) {
+            MobileEntity mob = (MobileEntity) entity;
+            interactWithMob(mob.type() == EntityType.PLAYER ? mob.index + 32768 : mob.index);
+        } else {
+            face(entity.getPosition());
+        }
+        interactingWith = Optional.of(entity);
+    }
+
+    /**
+     * Sets the mob interaction index.
+     */
+    private void interactWithMob(int index) {
+        interactionIndex = index;
         updateFlags.flag(UpdateFlag.INTERACTION);
     }
 
@@ -348,5 +394,12 @@ public abstract class MobileEntity extends Entity {
      */
     public int getCombatLevel() {
         return skills.getCombatLevel();
+    }
+
+    /**
+     * @return The {@link Entity} currently being interacted with.
+     */
+    public Optional<Entity> getInteractingWith() {
+        return interactingWith;
     }
 }
