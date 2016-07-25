@@ -2,7 +2,6 @@ package io.luna.game.model.mobile.attr;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
-import com.google.common.primitives.Primitives;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -35,6 +34,7 @@ public final class AttributeKey<T> {
         forPersistent("unban_date", "n/a");
         forPersistent("unmute_date", "n/a");
 
+        forTransient("last_bone_bury", 0L);
         forTransient("withdraw_as_note", false);
         forTransient("weight", 0.0);
     }
@@ -97,9 +97,6 @@ public final class AttributeKey<T> {
 
         checkArgument(CharMatcher.JAVA_UPPER_CASE.matchesNoneOf(name),
             "attribute {" + name + "} has uppercase characters, use lowercase characters instead");
-
-        checkArgument(Primitives.isWrapperType(initialValue.getClass()) || initialValue.getClass() == String.class,
-            "attribute {" + name + "}  can only be a primitive or String");
 
         this.name = name.intern();
         this.initialValue = initialValue;
