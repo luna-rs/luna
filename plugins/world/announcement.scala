@@ -1,5 +1,5 @@
 /*
- Announcements plugin, supports:
+ Announcement plugin, supports:
    -> Selecting a random announcement from 'MESSAGES' to be sent every 'TICK_INTERVAL'
    -> Filtering which players will see the announcement messages
 */
