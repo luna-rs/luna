@@ -31,8 +31,8 @@ public abstract class ProducingSkillAction extends SkillAction {
             return;
         }
 
-        int newSlots = inventory.computeSlotsNeeded(add);
-        int oldSlots = inventory.computeSlotsNeeded(remove);
+        int newSlots = inventory.computeIndexCount(add);
+        int oldSlots = inventory.computeIndexCount(remove);
         if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
             mob.queue(new GameChatboxMessageWriter("You do not have enough space in your inventory."));
             interrupt();
