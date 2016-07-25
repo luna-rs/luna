@@ -30,6 +30,8 @@ import static io.luna.game.model.item.ItemContainer.StackPolicy.STANDARD;
  */
 public class ItemContainer implements Iterable<Item> {
 
+    // TODO: Unit tests for various functions
+
     /**
      * An {@link Iterator} implementation for this container.
      */
@@ -250,6 +252,13 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least {@code 1} of the {@code Item}s were added, {@code false} if none could be added.
      */
     public boolean addAll(Collection<? extends Item> items) {
+        if (items.size() == 1) { // Bulk operation on singleton list? No thanks..
+            Optional<? extends Item> item = items.stream().
+                filter(Objects::nonNull).
+                findFirst();
+            return item.isPresent() && add(item.get());
+        }
+
         firingEvents = false;
 
         boolean added = false;
@@ -362,8 +371,14 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least {@code 1} of the {@code Item}s were remove, {@code false} if none could be removed.
      */
     public boolean removeAll(Collection<? extends Item> items) {
-        firingEvents = false;
+        if (items.size() == 1) { // Bulk operation on singleton list? No thanks..
+            Optional<? extends Item> item = items.stream().
+                filter(Objects::nonNull).
+                findFirst();
+            return item.isPresent() && remove(item.get());
+        }
 
+        firingEvents = false;
         boolean removed = false;
         try {
             for (Item item : items) {
@@ -501,25 +516,44 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Computes the amount of indexes required to hold {@code items} in this container.
+     *
+     * @param items The items to compute the index count for.
+     * @return The index count.
+     */
+    public final int computeIndexCount(Item... items) {
+        int indexCount = 0;
+        for (Item item : items) {
+            ItemDefinition def = item.getItemDef();
+            boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
+
+            if (stackable) {
+                int index = computeIndexForId(item.getId());
+                if (index == -1) {
+                    indexCount++;
+                    continue;
+                }
+
+                Item existing = items[index];
+                if ((existing.getAmount() + item.getAmount()) <= 0) {
+                    indexCount++;
+                    continue;
+                }
+            }
+            indexCount += item.getAmount();
+        }
+        return indexCount;
+    }
+
+    /**
      * Determines if this container has the capacity for {@code item}.
      *
      * @param item The {@link Item} to determine this for.
      * @return {@code true} if {@code item} can be added, {@code false} otherwise.
      */
     public final boolean hasCapacityFor(Item item) {
-        ItemDefinition def = item.getItemDef();
-        boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
-
-        if (stackable) {
-            int index = computeIndexForId(item.getId());
-            if (index == -1) {
-                return computeRemainingSize() >= 1;
-            }
-
-            Item existing = items[index];
-            return (existing.getAmount() + item.getAmount()) >= 1;
-        }
-        return computeRemainingSize() >= item.getAmount();
+        int indexCount = computeIndexCount(item);
+        return computeRemainingSize() >= indexCount;
     }
 
     /**
@@ -570,7 +604,17 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if this container has all {@code items}, {@code false} otherwise.
      */
     public final boolean containsAll(Item... items) {
-        return Arrays.stream(items).filter(Objects::nonNull).allMatch(this::contains);
+        return containsAll(Arrays.asList(items));
+    }
+
+    /**
+     * Determines if this container contains all {@code items}.
+     *
+     * @param items The {@link Item}s to check this container for.
+     * @return {@code true} if this container has all {@code items}, {@code false} otherwise.
+     */
+    public final boolean containsAll(Collection<Item> items) {
+        return items.stream().filter(Objects::nonNull).allMatch(this::contains);
     }
 
     /**
@@ -580,7 +624,17 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if this container has all {@code items}, {@code false} otherwise.
      */
     public final boolean containsAny(Item... items) {
-        return Arrays.stream(items).filter(Objects::nonNull).anyMatch(this::contains);
+        return containsAny(Arrays.asList(items));
+    }
+
+    /**
+     * Determines if this container contains any {@code items}.
+     *
+     * @param items The {@link Item}s to check this container for.
+     * @return {@code true} if this container has all {@code items}, {@code false} otherwise.
+     */
+    public final boolean containsAny(Collection<Item> items) {
+        return items.stream().filter(Objects::nonNull).anyMatch(this::contains);
     }
 
     /**
