@@ -89,21 +89,21 @@ public abstract class Task {
     /**
      * A function executed when this {@code Task} is iterated over by the {@link TaskManager}.
      */
-    void onLoop() {
+    protected void onLoop() {
 
     }
 
     /**
      * A function executed when this {@code Task} is submitted to the {@link TaskManager}.
      */
-    void onSchedule() {
+    protected void onSchedule() {
 
     }
 
     /**
      * A function executed when this {@code Task} is cancelled.
      */
-    void onCancel() {
+    protected void onCancel() {
 
     }
 
@@ -112,7 +112,7 @@ public abstract class Task {
      *
      * @param e The {@code Exception} thrown by this {@code Task}.
      */
-    void onException(Exception e) {
+    protected void onException(Exception e) {
 
     }
 
