@@ -17,7 +17,7 @@ private val MESSAGES = Vector(
   "Lare96's favorite bands are Tame Impala, Black Sabbath, and Bad Brains.",
   "Lare96 enjoys collecting records from various places around the world.",
   "Lare96 wants to travel to Japan, Iran, Turkey, Brazil, and Germany.",
-  "Change these messages in /plugins/player/announcements.scala",
+  "Change these messages in /plugins/player/announcement.scala",
   "Any bugs found using Luna should be reported to the github page."
 )
 
