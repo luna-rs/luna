@@ -12,7 +12,7 @@ Some of the sweetness within Luna
 # Goals
 Currently, the Runescape private server scene is plagued with somewhat of a dilemma. One half of servers are lightweight, easy to understand, but perform poorly; while the other half perform very well, but contain a lot of bloat and overcomplicated code.
 
-The goal of Luna (and its predecessor, Asteria) is to rectify this by being the 'middle ground'. being fast and scalable, while still being <b>relatively</b> lightweight and easy to understand.
+The goal of Luna (and its predecessor, Asteria) is to rectify this by being fast and scalable, while still being <b>relatively</b> lightweight and easy to understand.
 
 
 # Acknowledgements
