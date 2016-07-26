@@ -11,7 +11,7 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.event.impl.ObjectFirstClickEvent
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 
 
 /* A set of identifiers for bank objects. */

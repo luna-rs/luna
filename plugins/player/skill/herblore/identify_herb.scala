@@ -7,7 +7,7 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.event.impl.ItemFirstClickEvent
+import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Player

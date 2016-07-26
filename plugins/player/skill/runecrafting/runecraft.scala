@@ -9,7 +9,7 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.event.impl.ObjectFirstClickEvent
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.{Animation, Graphic, Player, Skill}
 

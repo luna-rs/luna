@@ -10,7 +10,7 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.event.impl.ObjectFirstClickEvent
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.mobile.Skill.PRAYER
 import io.luna.game.model.mobile.{Animation, Player}
 

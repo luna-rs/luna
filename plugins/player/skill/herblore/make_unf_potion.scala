@@ -48,7 +48,7 @@ private val UNF_POTION_TABLE = Map(
   'unf_cadantine -> UnfPotion(265, 107, 66),
   'unf_lantadyme -> UnfPotion(2481, 2483, 69),
   'unf_dwarf_weed -> UnfPotion(267, 109, 72),
-  'unf_torstol -> UnfPotion(269, 75, 78)
+  'unf_torstol -> UnfPotion(269, 111, 78)
 )
 
 /*
