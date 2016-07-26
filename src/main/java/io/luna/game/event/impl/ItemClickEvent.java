@@ -14,6 +14,81 @@ import static com.google.common.base.Preconditions.checkState;
 class ItemClickEvent extends Event {
 
     /**
+     * An event implementation sent whenever a player clicks an item's first index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ItemFirstClickEvent extends ItemClickEvent {
+
+        /**
+         * Creates a new {@link ItemFirstClickEvent}.
+         */
+        public ItemFirstClickEvent(int itemId, int slot, int interfaceId) {
+            super(itemId, slot, interfaceId);
+        }
+    }
+
+    /**
+     * An event implementation sent whenever a player clicks an item's second index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ItemSecondClickEvent extends ItemClickEvent {
+
+        /**
+         * Creates a new {@link ItemSecondClickEvent}.
+         */
+        public ItemSecondClickEvent(int itemId, int slot, int interfaceId) {
+            super(itemId, slot, interfaceId);
+        }
+    }
+
+    /**
+     * An event implementation sent whenever a player clicks an item's third index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ItemThirdClickEvent extends ItemClickEvent {
+
+        /**
+         * Creates a new {@link ItemThirdClickEvent}.
+         */
+        public ItemThirdClickEvent(int itemId, int slot, int interfaceId) {
+            super(itemId, slot, interfaceId);
+        }
+    }
+
+    /**
+     * An event implementation sent whenever a player clicks an item's fourth index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ItemFourthClickEvent extends ItemClickEvent {
+
+        /**
+         * Creates a new {@link ItemFourthClickEvent}.
+         */
+        public ItemFourthClickEvent(int id, int index, int interfaceId) {
+            super(id, index, interfaceId);
+        }
+    }
+
+    /**
+     * An event implementation sent whenever a player clicks an item's fifth index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ItemFifthClickEvent extends ItemClickEvent {
+
+        /**
+         * Creates a new {@link ItemFifthClickEvent}.
+         */
+        public ItemFifthClickEvent(int id, int index, int interfaceId) {
+            super(id, index, interfaceId);
+        }
+    }
+
+    /**
      * The identifier of the item clicked.
      */
     private final int id;

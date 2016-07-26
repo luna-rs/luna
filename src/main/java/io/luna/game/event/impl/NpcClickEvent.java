@@ -15,6 +15,81 @@ import static com.google.common.base.Preconditions.checkState;
 class NpcClickEvent extends Event {
 
     /**
+     * An event implementation sent when a player clicks an npc's first index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class NpcFirstClickEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link NpcClickEvent}.
+         */
+        public NpcFirstClickEvent(Npc npc) {
+            super(npc);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an npc's second index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class NpcSecondClickEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link NpcSecondClickEvent}.
+         */
+        public NpcSecondClickEvent(Npc npc) {
+            super(npc);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an npc's third index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class NpcThirdClickEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link NpcClickEvent}.
+         */
+        public NpcThirdClickEvent(Npc npc) {
+            super(npc);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an npc's fourth index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class NpcFourthClickEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link NpcClickEvent}.
+         */
+        public NpcFourthClickEvent(Npc npc) {
+            super(npc);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an npc's fifth index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class NpcFifthClickEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link NpcClickEvent}.
+         */
+        public NpcFifthClickEvent(Npc npc) {
+            super(npc);
+        }
+    }
+
+    /**
      * The instance of the npc.
      */
     private final Npc npc;

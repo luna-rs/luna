@@ -14,6 +14,51 @@ import static com.google.common.base.Preconditions.checkState;
 class ObjectClickEvent extends Event {
 
     /**
+     * An event implementation sent when a player clicks an npc's first index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ObjectFirstClickEvent extends ObjectClickEvent {
+
+        /**
+         * Creates a new {@link ObjectFirstClickEvent}.
+         */
+        public ObjectFirstClickEvent(int id, int x, int y) {
+            super(id, x, y);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an npc's second index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ObjectSecondClickEvent extends ObjectClickEvent {
+
+        /**
+         * Creates a new {@link ObjectSecondClickEvent}.
+         */
+        public ObjectSecondClickEvent(int id, int x, int y) {
+            super(id, x, y);
+        }
+    }
+
+    /**
+     * An event implementation sent when a player clicks an object's third index.
+     *
+     * @author lare96 <http://github.org/lare96>
+     */
+    public static final class ObjectThirdClickEvent extends ObjectClickEvent {
+
+        /**
+         * Creates a new {@link ObjectThirdClickEvent}.
+         */
+        public ObjectThirdClickEvent(int id, int x, int y) {
+            super(id, x, y);
+        }
+    }
+
+    /**
      * The identifier for the clicked object.
      */
     private final int id;
