@@ -1,3 +1,15 @@
+/*
+ A plugin that adds functionality for restoring prayer at altars.
+
+ SUPPORTS:
+  -> Recharging prayer at altars.
+
+ TODO:
+  -> Add more altar object identifiers.
+
+ AUTHOR: lare96
+*/
+
 import io.luna.game.event.impl.ObjectFirstClickEvent
 import io.luna.game.model.mobile.Skill.PRAYER
 import io.luna.game.model.mobile.{Animation, Player}
@@ -7,7 +19,7 @@ import io.luna.game.model.mobile.{Animation, Player}
 private val ALTARS = Set(409, 3243)
 
 /* Recharge prayer animation. */
-private val RECHARGE_ANIMATION = new Animation(645)
+private val ANIMATION = new Animation(645)
 
 
 /* A method that attempts to recharge the player's prayer. */
@@ -17,7 +29,7 @@ private def rechargePrayer(plr: Player) = {
   if (skill.getLevel < skill.getStaticLevel) {
     skill.setLevel(skill.getStaticLevel)
 
-    plr.animation(RECHARGE_ANIMATION)
+    plr.animation(ANIMATION)
     plr.sendMessage("You recharge your Prayer points.")
   } else {
     plr.sendMessage("You already have full Prayer points.")
@@ -26,7 +38,7 @@ private def rechargePrayer(plr: Player) = {
 
 
 /* If the object being clicked is an altar, recharge prayer. */
->>[ObjectFirstClickEvent] { (msg, plr) =>
+intercept[ObjectFirstClickEvent] { (msg, plr) =>
   if (ALTARS.contains(msg.getId)) {
     rechargePrayer(plr)
     msg.terminate

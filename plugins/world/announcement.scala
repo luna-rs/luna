@@ -1,7 +1,11 @@
 /*
- Announcement plugin, supports:
-   -> Selecting a random announcement from 'MESSAGES' to be sent every 'TICK_INTERVAL'
-   -> Filtering which players will see the announcement messages
+ A plugin that adds functionality for sending 'world' announcements.
+
+ SUPPORTS:
+  -> Random message selection at fixed interval.
+  -> Filtering certain players from the announcements.
+
+ AUTHOR: lare96
 */
 
 import io.luna.game.event.impl.ServerLaunchEvent
@@ -33,7 +37,7 @@ private val FILTER = (plr: Player) => plr.rights <=@ RIGHTS_ADMIN // Only player
  select one message from 'MESSAGES', filter all players online with 'FILTER', and send all the
  remaining players the message.
 */
->>[ServerLaunchEvent] { (msg, plr) =>
+intercept[ServerLaunchEvent] { (msg, plr) =>
   world.scheduleForever(TICK_INTERVAL) {
     world.getPlayers.
       filter(FILTER).

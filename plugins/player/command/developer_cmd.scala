@@ -4,6 +4,8 @@
 
  All developer and administrator "fun" or debugging commands should be put in this plugin to minimize confusion and
  promote the organization of future plugins.
+
+ AUTHOR: lare96
 */
 
 import java.util.Objects
@@ -17,7 +19,7 @@ import io.luna.game.model.mobile._
 
 
 /* A command that allows for attributes to be dynamically set. */
->>@[CommandEvent]("attr", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("attr", RIGHTS_DEV) { (msg, plr) =>
   val args: Array[String] = msg.getArgs
   val name = args(0)
 
@@ -40,12 +42,12 @@ import io.luna.game.model.mobile._
 }
 
 /* A command that sends a message depicting the player's current position. */
->>@[CommandEvent]("mypos", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("mypos", RIGHTS_DEV) { (msg, plr) =>
   plr.sendMessage(s"Your current position is ${plr.position}.")
 }
 
 /* A command that moves a player to a different position. */
->>@[CommandEvent]("move", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("move", RIGHTS_DEV) { (msg, plr) =>
   val args = msg.getArgs
 
   val x = args(0).toInt
@@ -56,7 +58,7 @@ import io.luna.game.model.mobile._
 }
 
 /* A command that opens the player's bank. */
->>@[CommandEvent]("bank", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("bank", RIGHTS_DEV) { (msg, plr) =>
   plr.bank.open
 }
 
@@ -64,7 +66,7 @@ import io.luna.game.model.mobile._
  A command that sets the skill level for a player. "all" will set all skills to the
  specified level.
 */
->>@[CommandEvent]("set_skill", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("set_skill", RIGHTS_DEV) { (msg, plr) =>
   val name = msg.getArgs()(0).capitalize
   val level = msg.getArgs()(1).toInt
   val range = if (name.equals("All")) {
@@ -94,43 +96,43 @@ import io.luna.game.model.mobile._
 }
 
 /* A command that spawns a non-player character. */
->>@[CommandEvent]("npc", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("npc", RIGHTS_DEV) { (msg, plr) =>
   val args = msg.getArgs
   world.addNpc(args(0).toInt, plr.position)
 }
 
 /* A command that will play music. */
->>@[CommandEvent]("music", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("music", RIGHTS_DEV) { (msg, plr) =>
   plr.sendMusic(msg.getArgs()(0).toInt)
 }
 
 /* A command that opens an interface. */
->>@[CommandEvent]("interface", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("interface", RIGHTS_DEV) { (msg, plr) =>
   plr.sendInterface(msg.getArgs()(0).toInt)
 }
 
 /* A command that plays a sound. */
->>@[CommandEvent]("sound", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("sound", RIGHTS_DEV) { (msg, plr) =>
   plr.sendSound(msg.getArgs()(0).toInt, 0, 0)
 }
 
 /* A command that plays a graphic. */
->>@[CommandEvent]("graphic", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("graphic", RIGHTS_DEV) { (msg, plr) =>
   plr.graphic(new Graphic(msg.getArgs()(0).toInt))
 }
 
 /* A command that plays an animation. */
->>@[CommandEvent]("animation", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("animation", RIGHTS_DEV) { (msg, plr) =>
   plr.animation(new Animation(msg.getArgs()(0).toInt))
 }
 
 /* A command that turns a player into a non-player character. */
->>@[CommandEvent]("player_npc", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("player_npc", RIGHTS_DEV) { (msg, plr) =>
   plr.transform(msg.getArgs()(0).toInt)
 }
 
 /* A command that spawns an item. */
->>@[CommandEvent]("item", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("item", RIGHTS_DEV) { (msg, plr) =>
   val id = msg.getArgs()(0).toInt
   val amount = msg.getArgs()(1).toInt
 
@@ -138,7 +140,7 @@ import io.luna.game.model.mobile._
 }
 
 /* A command that spawns item(s) by name. */
->>@[CommandEvent]("item_name", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("item_name", RIGHTS_DEV) { (msg, plr) =>
   val name = msg.getArgs()(0).toLowerCase.replaceAll("_", " ")
   val amount = msg.getArgs()(1).toInt
 
@@ -162,7 +164,7 @@ import io.luna.game.model.mobile._
 
 // TODO: Turn this into one command using an interface, once option dialogues are done.
 /* A command that clears the inventory, bank, and equipment of a player. */
->>@[CommandEvent]("empty", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("empty", RIGHTS_DEV) { (msg, plr) =>
   plr.inventory.clear
   plr.bank.clear
   plr.equipment.clear
@@ -171,19 +173,19 @@ import io.luna.game.model.mobile._
 }
 
 /* A command that clears the inventory of a player. */
->>@[CommandEvent]("empty_inventory", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("empty_inventory", RIGHTS_DEV) { (msg, plr) =>
   plr.inventory.clear
   plr.sendMessage("You have successfully emptied your inventory.")
 }
 
 /* A command that clears the bank of a player. */
->>@[CommandEvent]("empty_bank", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("empty_bank", RIGHTS_DEV) { (msg, plr) =>
   plr.bank.clear
   plr.sendMessage("You have successfully emptied your bank.")
 }
 
 /* A command that clears the equipment of a player. */
->>@[CommandEvent]("empty_equipment", RIGHTS_DEV) { (msg, plr) =>
+intercept_@[CommandEvent]("empty_equipment", RIGHTS_DEV) { (msg, plr) =>
   plr.equipment.clear
   plr.sendMessage("You have successfully emptied your equipment.")
 }

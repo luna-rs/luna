@@ -1,10 +1,14 @@
 /*
- Prayer plugin, supports:
-  -> Praying at altars
-  -> Burying bones
+ A plugin for the Prayer skill that adds functionality for burying bones.
+
+ SUPPORTS:
+  -> Burying most bones.
+  -> Throttling (can only bury every 1.2 seconds).
 
  TODO:
-  -> Prayer activation and draining
+  -> Add more types of bones.
+
+ AUTHOR: lare96
 */
 
 import io.luna.game.event.impl.ItemFirstClickEvent
@@ -22,7 +26,7 @@ private case class Bone(id: Int, exp: Double)
 private val BURY_ANIMATION = new Animation(827)
 
 /*
- A table of all the bones that can be used for prayer.
+ A table of all the bones that can be buried.
 
  bone_symbol -> Bone
 */
@@ -41,14 +45,16 @@ private val BONE_TABLE = Map(
 
  id -> Bone
 */
-private val ID_TO_BONE = BONE_TABLE.values.map { it => it.id -> it }.toMap
+private val ID_TO_BONE = BONE_TABLE.values.map(bone => bone.id -> bone).toMap
 
 
 /* Attempt to bury a bone, if we haven't recently just buried one. */
 private def buryBone(plr: Player, bone: Bone) = {
   if (plr.elapsedTime("last_bone_bury", 1200)) {
 
+    plr.interruptAction()
     plr.animation(BURY_ANIMATION)
+
     plr.skill(PRAYER).addExperience(bone.exp)
     plr.inventory.remove(new Item(bone.id))
 
@@ -61,7 +67,7 @@ private def buryBone(plr: Player, bone: Bone) = {
 
 
 /* If the item being clicked is a bone, attempt to bury it. */
->>[ItemFirstClickEvent] { (msg, plr) =>
+intercept[ItemFirstClickEvent] { (msg, plr) =>
   ID_TO_BONE.get(msg.getId).foreach { it =>
     buryBone(plr, it)
     msg.terminate

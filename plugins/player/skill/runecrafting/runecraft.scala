@@ -1,14 +1,12 @@
 /*
- Runecrafting plugin, supports:
+ A plugin for the Runecrafting skill that adds functionality for crafting normal runes.
+
+ SUPPORTS:
   -> Differentiating between rune essence and pure essence
   -> All runes on all altars
   -> Level multipliers (double cosmics, double nats, etc)
 
- TODO:
-  -> Rune essence pouches
-  -> Combination runes
-  -> Tiaras
-  -> Talismans
+ AUTHOR: lare96
 */
 
 import io.luna.game.event.impl.ObjectFirstClickEvent
@@ -58,7 +56,7 @@ private val RUNE_TABLE = Map(
 
  altar_id -> Rune
 */
-private val ALTAR_TO_RUNE = RUNE_TABLE.values.map { it => it.altarId -> it }.toMap
+private val ALTAR_TO_RUNE = RUNE_TABLE.values.map(rune => rune.altarId -> rune).toMap
 
 
 /* Attempt to craft the argued rune. */
@@ -109,7 +107,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 
 
 /* If the object being clicked is an altar, attempt to craft runes of that altar. */
->>[ObjectFirstClickEvent] { (msg, plr) =>
+intercept[ObjectFirstClickEvent] { (msg, plr) =>
   ALTAR_TO_RUNE.get(msg.getId).foreach { it =>
     craftRunes(plr, it)
     msg.terminate

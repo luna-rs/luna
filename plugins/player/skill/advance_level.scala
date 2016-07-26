@@ -1,8 +1,12 @@
 /*
- Plugin for players advancing skill levels, supports:
+ A plugin that adds functionality for advancing skill levels.
+
+ SUPPORTS:
    -> Fireworks, congratulations interface, etc.
-   -> Recalculation of combat level when combat skills change
-   -> Queuing messages for level and experience changes
+   -> Recalculation of combat level when combat skills change.
+   -> Queuing messages for level and experience changes.
+
+ AUTHOR: lare96
 */
 
 import io.luna.game.event.impl.SkillChangeEvent
@@ -40,13 +44,7 @@ val LEVEL_UP_TABLE = Vector(
 )
 
 
-/*
- Determine if a player has advanced a level, and if they have:
-   -> Send the chat box interface congratulating them
-   -> Send a chat box message congratulating them
-   -> Play the 'LEVEL_UP_GRAPHIC' graphic
-   -> Recalculate the combat level, if a combat skill was advanced
- */
+/* Determine if a player has advanced a level, and if they have, notify them. */
 def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
   val set = plr.getSkills
   val skill = plr.skill(id)
@@ -75,7 +73,7 @@ def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
 
 
 /* When a player's skills change, send the update to the client and check if they've advanced a level. */
->>@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
+intercept_@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
   plr.sendSkillUpdate(msg.getId)
 
   if (msg.getOldStaticLevel < 99) {

@@ -1,8 +1,15 @@
 /*
- Plugin for logging in, supports:
-   -> Giving 'starter packages' on first login
-   -> Indicating if the player is muted (and for how long)
-   -> Configuring interface states
+ A plugin that adds functionality for performing specific tasks on login.
+
+ SUPPORTS:
+  -> Giving 'starter packages' on first login.
+  -> Indicating if the player is muted (and for how long).
+  -> Configuring interface states.
+
+ TODO:
+  -> Add more interface states.
+
+ AUTHOR: lare96
 */
 
 import java.time.LocalDate
@@ -47,7 +54,7 @@ private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(dat
 
 
 /* Give 'starter package' if the player is new. */
->>[LoginEvent] { (msg, plr) =>
+intercept[LoginEvent] { (msg, plr) =>
   val inventory = plr.inventory
   val equipment = plr.equipment
 
@@ -64,7 +71,7 @@ private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(dat
 }
 
 /* If the player is muted, indicate that they are and when it will be lifted. */
->>[LoginEvent] { (msg, plr) =>
+intercept[LoginEvent] { (msg, plr) =>
   val date: String = plr.attr("unmute_date")
 
   date match {
@@ -75,6 +82,6 @@ private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(dat
 }
 
 /* Configure interface states. */
->>[LoginEvent] { (msg, plr) =>
+intercept[LoginEvent] { (msg, plr) =>
   plr.sendState(173, if (plr.getWalkingQueue.isRunning) 1 else 0)
 }

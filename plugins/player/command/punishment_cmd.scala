@@ -1,10 +1,17 @@
 /*
- Punishment plugin, supports:
-   -> Internet protocol address ban
-   -> Permanent ban/mute
-   -> Temporary ban/mute
-     -> Specific punishment lift dates using 'LocalDate'
-   -> Kicking (forced disconnect)
+ A plugin for applying punishments to players through the use of commands.
+
+ SUPPORTS:
+  -> Internet protocol address ban.
+  -> Permanent ban/mute.
+  -> Temporary ban/mute.
+   -> Specific punishment lift dates using 'LocalDate'.
+  -> Kicking (forced disconnect).
+
+ TODO:
+  -> MAC address ban (maybe?).
+
+ AUTHOR: lare96
 */
 
 import java.time.LocalDate
@@ -39,7 +46,7 @@ private def punishDuration(msg: CommandEvent) = {
 
 
 /* Perform an IP ban on a player. */
->>@[CommandEvent]("ip_ban", RIGHTS_ADMIN) { (msg, plr) =>
+intercept_@[CommandEvent]("ip_ban", RIGHTS_ADMIN) { (msg, plr) =>
   val file = File("./data/players/blacklist.txt")
 
   findPunish(msg).foreach(it => {
@@ -52,7 +59,7 @@ private def punishDuration(msg: CommandEvent) = {
 }
 
 /* Perform a permanent ban on a player. */
->>@[CommandEvent]("perm_ban", RIGHTS_ADMIN) { (msg, plr) =>
+intercept_@[CommandEvent]("perm_ban", RIGHTS_ADMIN) { (msg, plr) =>
   findPunish(msg).foreach(it => {
     it.attr("unban_date", "never")
     it.logout
@@ -62,7 +69,7 @@ private def punishDuration(msg: CommandEvent) = {
 }
 
 /* Perform a permanent mute on a player. */
->>@[CommandEvent]("perm_mute", RIGHTS_MOD) { (msg, plr) =>
+intercept_@[CommandEvent]("perm_mute", RIGHTS_MOD) { (msg, plr) =>
   findPunish(msg).foreach(it => {
     it.attr("unmute_date", "never")
 
@@ -71,7 +78,7 @@ private def punishDuration(msg: CommandEvent) = {
 }
 
 /* Perform a temporary ban on a player. */
->>@[CommandEvent]("ban", RIGHTS_MOD) { (msg, plr) =>
+intercept_@[CommandEvent]("ban", RIGHTS_MOD) { (msg, plr) =>
   val duration = punishDuration(msg)
 
   findPunish(msg).foreach(it => {
@@ -83,7 +90,7 @@ private def punishDuration(msg: CommandEvent) = {
 }
 
 /* Perform a temporary mute on a player. */
->>@[CommandEvent]("mute", RIGHTS_MOD) { (msg, plr) =>
+intercept_@[CommandEvent]("mute", RIGHTS_MOD) { (msg, plr) =>
   val duration = punishDuration(msg)
 
   findPunish(msg).foreach(it => {
@@ -94,4 +101,4 @@ private def punishDuration(msg: CommandEvent) = {
 }
 
 /* Perform a forced disconnect on a player. */
->>@[CommandEvent]("kick", RIGHTS_MOD) { (msg, plr) => findPunish(msg).foreach(_.logout) }
+intercept_@[CommandEvent]("kick", RIGHTS_MOD) { (msg, plr) => findPunish(msg).foreach(_.logout) }

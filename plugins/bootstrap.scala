@@ -1,15 +1,17 @@
 /*
- A bootstrapper acting as the "master dependency" for all other plugins. All of the complex, high level, 'dirty work' is
- done in this plugin in order to ensure that other plugins can be written as idiomatically as possible.
+ A bootstrapper acting as the "master dependency" for all other plugins. All of the complex, high level, 'dirty work'
+ is done in this plugin in order to ensure that other plugins can be written as idiomatically as possible.
 
- The interception of posted events can be handled through the '>>' (intercept) and '>>@' (intercept at/on) methods. '>>' for
- generic events and '>>@' for events that override the 'matches' method in the Event class. The only difference is that
- '>>@' takes a set of arguments that will matched against the events arguments.
+ The interception of posted events can be handled through the 'intercept' and 'intercept_@' methods. 'intercept' to
+ always intercept and 'intercept_@' to intercept if the arguments given are in agreement with the 'matches'
+ method in the Event class.
 
  Please note that normal methods and fields must come before event interception.
 
- Also, because this plugin acts as a master dependency great caution needs to be taken when modifying its contents. Changing
- and/or removing the wrong thing could result in breaking every single plugin.
+ Also, because this plugin acts as a master dependency great caution needs to be taken when modifying its
+ contents. Changing and/or removing the wrong thing could result in breaking every single plugin.
+
+ AUTHOR: lare96
 */
 
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
@@ -74,8 +76,8 @@ private def scalaToJavaFunc[E <: Event](func: (E, Player) => Unit) = new BiConsu
 }
 
 
-/* Intercept at (>>@) method. Allows event interception to happen with matching on parameters. */
-def >>@[E <: Event](args: Any*)(func: (E, Player) => Unit)(implicit tag: ClassTag[E]) = {
+/* Intercept at method. Allows event interception to happen with matching on parameters. */
+def intercept_@[E <: Event](args: Any*)(func: (E, Player) => Unit)(implicit tag: ClassTag[E]) = {
 
   /* The Scala event listener converted to a BiConsumer. This will be executed from Java. */
   def eventListener(newArgs: Seq[AnyRef]) = scalaToJavaFunc(
@@ -95,8 +97,8 @@ def >>@[E <: Event](args: Any*)(func: (E, Player) => Unit)(implicit tag: ClassTa
   submit(args.collect { case any: Any => any.asInstanceOf[AnyRef] })
 }
 
-/* Intercept (>>) method. Allows for events to be intercepted, with no matching. */
-def >>[E <: Event](func: (E, Player) => Unit)(implicit tag: ClassTag[E]) =
+/* Intercept method. Allows for events to be intercepted, with no matching. */
+def intercept[E <: Event](func: (E, Player) => Unit)(implicit tag: ClassTag[E]) =
   pipelines.addEventListener(tag.runtimeClass, new EventListener(scalaToJavaFunc(func)))
 
 
@@ -125,15 +127,15 @@ def async(func: => Unit) = service.submit(new Runnable() {
 /* Implicit class for 'Player' instances. Mainly consists of aliases for outbound messages. */
 implicit class RichPlayer(plr: Player) {
 
-  /* Aliases for credentials. */
-  def address = plr.getSession.getHostAddress
-  def name = plr.getUsername.capitalize
-  def rights = plr.getRights
+  /* Inlined aliases for credentials. */
+  @inline def address = plr.getSession.getHostAddress
+  @inline def name = plr.getUsername
+  @inline def rights = plr.getRights
 
-  /* Aliases for containers. */
-  def bank = plr.getBank
-  def inventory = plr.getInventory
-  def equipment = plr.getEquipment
+  /* Inlined aliases for containers. */
+  @inline def bank = plr.getBank
+  @inline def inventory = plr.getInventory
+  @inline def equipment = plr.getEquipment
 
   /* Aliases for outbound messages. */
   def sendMessage(message: String) = plr.queue(new GameChatboxMessageWriter(message))
@@ -149,6 +151,9 @@ implicit class RichPlayer(plr: Player) {
 
   /* Alias for update flags. */
   def flag(updateFlag: UpdateFlag) = plr.getUpdateFlags.flag(updateFlag)
+
+  /* Alias for resetting the walking queue. */
+  def stopWalking = plr.getWalkingQueue.clear()
 }
 
 
@@ -186,25 +191,25 @@ implicit class RichMobileEntity(mob: MobileEntity) {
 implicit class RichPlayerRights(rights: PlayerRights) {
 
   /*
-   Comparison function aliases. So we can compare rights just like we compare numbers. We
+   Inlined comparison function aliases. So we can compare rights just like we compare numbers. We
    put '@' at the end of the functions so people don't get them confused with the normal comparison operators.
   */
-  def <=@(other: PlayerRights) = rights.equalOrLess(other)
-  def >=@(other: PlayerRights) = rights.equalOrGreater(other)
-  def >@(other: PlayerRights) = rights.greater(other)
-  def <@(other: PlayerRights) = rights.less(other)
-  def ==@(other: PlayerRights) = rights.equal(other)
+  @inline def <=@(other: PlayerRights) = rights.equalOrLess(other)
+  @inline def >=@(other: PlayerRights) = rights.equalOrGreater(other)
+  @inline def >@(other: PlayerRights) = rights.greater(other)
+  @inline def <@(other: PlayerRights) = rights.less(other)
+  @inline def ==@(other: PlayerRights) = rights.equal(other)
 }
 
 
 /* Implicit class for 'Entity' instances. */
 implicit class RichEntity(entity: Entity) {
 
-  /* Aliases related to position. */
-  def position = entity.getPosition
-  def x = entity.getPosition.getX
-  def y = entity.getPosition.getY
-  def z = entity.getPosition.getZ
+  /* Inlined aliases related to position. */
+  @inline def position = entity.getPosition
+  @inline def x = entity.getPosition.getX
+  @inline def y = entity.getPosition.getY
+  @inline def z = entity.getPosition.getZ
 }
 
 
