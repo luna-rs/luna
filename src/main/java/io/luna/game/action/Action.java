@@ -136,6 +136,6 @@ public abstract class Action<T extends MobileEntity> {
      * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
      */
     public final boolean isInterrupted() {
-        return runner.isRunning();
+        return !runner.isRunning();
     }
 }
