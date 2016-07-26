@@ -40,6 +40,8 @@ public final class GsonUtils {
      * Shortcut to function {@link Gson#toJson(JsonElement, Appendable)}.
      */
     public static void writeJson(JsonElement element, File file) throws IOException {
-        GSON.toJson(element, new FileWriter(file));
+        try (FileWriter fw = new FileWriter(file)) {
+            fw.append(GSON.toJson(element));
+        }
     }
 }
