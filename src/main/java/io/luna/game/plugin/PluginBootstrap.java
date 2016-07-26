@@ -108,7 +108,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     @Override
     public EventListenerPipelineSet call() throws Exception {
         init();
-        LOGGER.info("A total of {} Scala plugins were successfully interpreted.", box(pipelines.listenerCount()));
+        LOGGER.info("A total of {} Scala plugin files were successfully interpreted.", box(files.size()));
         return pipelines;
     }
 
