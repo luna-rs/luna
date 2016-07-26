@@ -788,7 +788,8 @@
   },
   {
     "opcode": 192,
-    "size": 12
+    "size": 12,
+    "payload": "ItemOnObjectMessageReader"
   },
   {
     "opcode": 193,
