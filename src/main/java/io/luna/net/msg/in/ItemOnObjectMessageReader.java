@@ -1,10 +1,13 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.action.DistancedAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ItemOnObjectEvent;
+import io.luna.game.model.Position;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Player;
+import io.luna.game.plugin.PluginManager;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
@@ -32,7 +35,17 @@ public final class ItemOnObjectMessageReader extends MessageReader {
             return null;
         }
 
-        return new ItemOnObjectEvent(itemId, itemIndex, itemInterfaceId, objectId, objectX, objectY);
+        Position pos = new Position(objectX, objectY, player.getPosition().getZ());
+        player.submitAction(new DistancedAction<Player>(player, pos, 1, true) {
+            @Override
+            protected void execute() {
+                player.face(pos);
+                
+                PluginManager plugins = player.getPlugins();
+                plugins.post(new ItemOnObjectEvent(itemId, itemIndex, itemInterfaceId, objectId, objectX, objectY), player);
+            }
+        });
+        return null;
     }
 
     /**
