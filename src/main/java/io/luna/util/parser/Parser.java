@@ -9,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The base class for all parsers. Provides functionality that allows subclasses to perform asynchronous parsing of various
@@ -27,31 +29,34 @@ public abstract class Parser<T1, T2> implements Runnable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The path to the file being parsed.
+     * A {@link List} of paths of files to parse.
      */
-    private final Path path;
+    private final List<Path> parseFiles;
 
     /**
      * Creates a new {@link Parser}.
      *
-     * @param path The path to the file being parsed.
+     * @param paths An array of paths of files to parse.
      */
-    public Parser(String path) {
-        this.path = Paths.get(path);
+    public Parser(String... paths) {
+        parseFiles = Arrays.stream(paths).map(Paths::get).
+            collect(Collectors.toList());
     }
 
     @Override
     public final void run() {
-        try (BufferedReader in = Files.newBufferedReader(path)) {
-            List<T2> readObjects = new ArrayList<>();
-            T1 reader = getReader(in);
+        for (Path path : parseFiles) {
+            try (BufferedReader in = Files.newBufferedReader(path)) {
+                List<T2> readObjects = new ArrayList<>();
+                T1 reader = getReader(in);
 
-            while (canRead(reader)) {
-                readObjects.add(doRead(reader));
+                while (canRead(reader)) {
+                    readObjects.add(doRead(reader));
+                }
+                onReadComplete(readObjects);
+            } catch (Exception e) {
+                LOGGER.catching(Level.FATAL, e);
             }
-            onReadComplete(readObjects);
-        } catch (Exception e) {
-            LOGGER.catching(Level.FATAL, e);
         }
     }
 
