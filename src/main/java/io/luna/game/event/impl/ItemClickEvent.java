@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class ItemClickEvent extends Event {
+public class ItemClickEvent extends Event {
 
     /**
      * An event implementation sent whenever a player clicks an item's first index.
@@ -110,7 +110,7 @@ class ItemClickEvent extends Event {
      * @param index The index of the item clicked.
      * @param interfaceId The identifier of the interface the item was clicked on.
      */
-    ItemClickEvent(int id, int index, int interfaceId) {
+    private ItemClickEvent(int id, int index, int interfaceId) {
         this.id = id;
         this.index = index;
         this.interfaceId = interfaceId;

@@ -12,7 +12,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class NpcClickEvent extends Event {
+public class NpcClickEvent extends Event {
 
     /**
      * An event implementation sent when a player clicks an npc's first index.
@@ -99,7 +99,7 @@ class NpcClickEvent extends Event {
      *
      * @param npc The instance of the npc.
      */
-    NpcClickEvent(Npc npc) {
+    private NpcClickEvent(Npc npc) {
         this.npc = npc;
     }
 

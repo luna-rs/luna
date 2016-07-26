@@ -2,7 +2,10 @@ package io.luna.net.msg.in;
 
 import io.luna.game.action.DistancedAction;
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ObjectFirstClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
+import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.plugin.PluginManager;
@@ -41,14 +44,14 @@ public final class ObjectClickMessageReader extends MessageReader {
     /**
      * Handle an object click for any index.
      */
-    private void handleClick(Player player, int id, int x, int y) {
-        checkState(x >= 0, "x coordinate out of range");
-        checkState(y >= 0, "y coordinate out of range");
-        checkState(id > 0, "id out of range");
+    private void handleClick(Player player, ObjectClickEvent evt) {
+        checkState(evt.getX() >= 0, "x coordinate out of range");
+        checkState(evt.getY() >= 0, "y coordinate out of range");
+        checkState(evt.getId() > 0, "id out of range");
 
         // TODO: Size calculations
         // TODO: Make sure object really exists
-        Position position = new Position(x, y, player.getPosition().getZ());
+        Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
         player.submitAction(new DistancedAction<Player>(player, position, 1, true) {
             @Override
             protected void execute() {
@@ -56,7 +59,7 @@ public final class ObjectClickMessageReader extends MessageReader {
                 player.getWalkingQueue().clear();
 
                 PluginManager plugins = player.getPlugins();
-                plugins.post(new ObjectFirstClickEvent(id, x, y), player);
+                plugins.post(evt, player);
             }
         });
     }
@@ -68,7 +71,7 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, id, x, y);
+        handleClick(player, new ObjectFirstClickEvent(id, x, y));
     }
 
     /**
@@ -78,7 +81,7 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, id, x, y);
+        handleClick(player, new ObjectSecondClickEvent(id, x, y));
     }
 
     /**
@@ -88,6 +91,6 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, id, x, y);
+        handleClick(player, new ObjectThirdClickEvent(id, x, y));
     }
 }

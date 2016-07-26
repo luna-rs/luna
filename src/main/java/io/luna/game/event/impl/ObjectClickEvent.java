@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class ObjectClickEvent extends Event {
+public class ObjectClickEvent extends Event {
 
     /**
      * An event implementation sent when a player clicks an npc's first index.
@@ -80,7 +80,7 @@ class ObjectClickEvent extends Event {
      * @param x The x coordinate of the object.
      * @param y The y coordinate of the object.
      */
-    ObjectClickEvent(int id, int x, int y) {
+    private ObjectClickEvent(int id, int x, int y) {
         this.id = id;
         this.x = x;
         this.y = y;
