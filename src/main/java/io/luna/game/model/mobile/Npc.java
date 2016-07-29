@@ -111,6 +111,11 @@ public final class Npc extends MobileEntity {
         transformId = -1;
     }
 
+    @Override
+    public int getCombatLevel() {
+        return combatDefinition.getCombatLevel();
+    }
+
     /**
      * Transforms this {@code Npc} into another {@code Npc}.
      *
