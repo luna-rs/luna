@@ -11,7 +11,7 @@ import java.util.Objects;
 
 /**
  * A single update block contained within an {@link UpdateBlockSet} and sent within a {@link Player} or {@link Npc} update
- * message.
+ * message. Implementations <strong>must be stateless</strong> so instances can be shared concurrently.
  *
  * @author lare96 <http://github.org/lare96>
  */

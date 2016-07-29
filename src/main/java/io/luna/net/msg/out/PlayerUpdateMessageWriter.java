@@ -4,16 +4,6 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.PlayerAnimationUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerAppearanceUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerChatUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerFacePositionUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerForceChatUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerForceMovementUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerGraphicUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerInteractionUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerPrimaryHitUpdateBlock;
-import io.luna.game.model.mobile.update.PlayerSecondaryHitUpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
 import io.luna.game.model.mobile.update.UpdateState;
@@ -35,20 +25,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
     /**
      * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
      */
-    private final UpdateBlockSet<Player> blockSet = new UpdateBlockSet<>();
-
-    {
-        blockSet.add(new PlayerGraphicUpdateBlock());
-        blockSet.add(new PlayerAnimationUpdateBlock());
-        blockSet.add(new PlayerForceChatUpdateBlock());
-        blockSet.add(new PlayerChatUpdateBlock());
-        blockSet.add(new PlayerForceMovementUpdateBlock());
-        blockSet.add(new PlayerInteractionUpdateBlock());
-        blockSet.add(new PlayerAppearanceUpdateBlock());
-        blockSet.add(new PlayerFacePositionUpdateBlock());
-        blockSet.add(new PlayerPrimaryHitUpdateBlock());
-        blockSet.add(new PlayerSecondaryHitUpdateBlock());
-    }
+    private final UpdateBlockSet<Player> blockSet = UpdateBlockSet.PLAYER_BLOCK_SET;
 
     @Override
     public ByteMessage write(Player player) {

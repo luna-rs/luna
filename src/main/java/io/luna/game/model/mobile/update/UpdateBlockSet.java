@@ -21,6 +21,40 @@ import static com.google.common.base.Preconditions.checkState;
 public final class UpdateBlockSet<E extends MobileEntity> {
 
     /**
+     * A global instance of the {@link Player} update block set.
+     */
+    public static final UpdateBlockSet<Player> PLAYER_BLOCK_SET = new UpdateBlockSet<>();
+
+    /**
+     * A global instance of the {@link Npc} update block set.
+     */
+    public static final UpdateBlockSet<Npc> NPC_BLOCK_SET = new UpdateBlockSet<>();
+
+    static {
+        /* Build the player block set. */
+        PLAYER_BLOCK_SET.add(new PlayerGraphicUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerAnimationUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerForceChatUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerChatUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerForceMovementUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerInteractionUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerAppearanceUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerFacePositionUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerPrimaryHitUpdateBlock());
+        PLAYER_BLOCK_SET.add(new PlayerSecondaryHitUpdateBlock());
+        
+        /* Build the non-player character block set. */
+        NPC_BLOCK_SET.add(new NpcAnimationUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcSecondaryHitUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcGraphicUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcInteractionUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcForceChatUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcPrimaryHitUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcTransformUpdateBlock());
+        NPC_BLOCK_SET.add(new NpcFacePositionUpdateBlock());
+    }
+
+    /**
      * An ordered {@link Set} containing all of the {@link UpdateBlock}s that can be encoded.
      */
     private final Set<UpdateBlock<E>> updateBlocks = new LinkedHashSet<>();
@@ -31,7 +65,7 @@ public final class UpdateBlockSet<E extends MobileEntity> {
      *
      * @param block The {@link UpdateBlock} to add.
      */
-    public void add(UpdateBlock<E> block) {
+    private void add(UpdateBlock<E> block) {
         checkState(updateBlocks.add(block), "updateBlocks.contains(block)");
     }
 

@@ -3,14 +3,6 @@ package io.luna.net.msg.out;
 import io.luna.game.model.Direction;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.NpcAnimationUpdateBlock;
-import io.luna.game.model.mobile.update.NpcFacePositionUpdateBlock;
-import io.luna.game.model.mobile.update.NpcForceChatUpdateBlock;
-import io.luna.game.model.mobile.update.NpcGraphicUpdateBlock;
-import io.luna.game.model.mobile.update.NpcInteractionUpdateBlock;
-import io.luna.game.model.mobile.update.NpcPrimaryHitUpdateBlock;
-import io.luna.game.model.mobile.update.NpcSecondaryHitUpdateBlock;
-import io.luna.game.model.mobile.update.NpcTransformUpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
 import io.luna.game.model.mobile.update.UpdateState;
@@ -32,18 +24,7 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
     /**
      * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
      */
-    private final UpdateBlockSet<Npc> blockSet = new UpdateBlockSet<>();
-
-    {
-        blockSet.add(new NpcAnimationUpdateBlock());
-        blockSet.add(new NpcSecondaryHitUpdateBlock());
-        blockSet.add(new NpcGraphicUpdateBlock());
-        blockSet.add(new NpcInteractionUpdateBlock());
-        blockSet.add(new NpcForceChatUpdateBlock());
-        blockSet.add(new NpcPrimaryHitUpdateBlock());
-        blockSet.add(new NpcTransformUpdateBlock());
-        blockSet.add(new NpcFacePositionUpdateBlock());
-    }
+    private final UpdateBlockSet<Npc> blockSet = UpdateBlockSet.NPC_BLOCK_SET;
 
     @Override
     public ByteMessage write(Player player) {
