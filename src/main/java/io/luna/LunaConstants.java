@@ -78,13 +78,13 @@ public final class LunaConstants {
      * you for example, you won't even be able to see the mob attacking you until it's eventually updated! Staggered updating
      * solves this and many other issues by updating the most important mobs before anyone else.
      * <p>
+     * The price of this feature is performance, as all of the mobs in your region have to be sorted by the {@link
+     * RegionPriorityComparator} to determine which are the most important. Very minimal servers have this feature available,
+     * simply because most servers aren't active enough to run into these types of issues. Therefore, I've kept the option
      * available for bigger servers that might need this feature and can deal with the performance loss while smaller servers
      * can disable it completely.
      * <p>
-     * The price of this feature is performance, as all of the mobs in your region have to be sorted by the {@link
-     * RegionPriorityComparator} to determine which are the most important. Very minimal servers have this feature available,
-     * simply because most servers aren't active enough to run into these types of issues. Therefore, I've kept the option To
-     * summarize, very large servers should have this enabled, any other servers should have it disabled.
+     * To summarize, very large servers should have this enabled, any other servers should have it disabled.
      */
     public static final boolean STAGGERED_UPDATING;
 
