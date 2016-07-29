@@ -18,6 +18,9 @@ import io.luna.game.model.mobile.Player;
  */
 public abstract class SkillAction extends Action<Player> {
 
+    /* TODO rename this along with subclasses to not include "skill"
+         because these types of actions aren't just specific to skills */
+
     /**
      * Creates a new {@link SkillAction}.
      */
