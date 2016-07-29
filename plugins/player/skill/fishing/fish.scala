@@ -25,13 +25,13 @@ private case class Fish(id: Int, level: Int, exp: Double)
 
 /* Class representing tools that can be used to catch fish. */
 private case class Tool(
-  id: Int,
-  level: Int,
-  bait: Option[Int],
-  chance: Double,
-  animation: Int,
-  fish: Fish*
-)
+                         id: Int,
+                         level: Int,
+                         bait: Option[Int],
+                         chance: Double,
+                         animation: Int,
+                         fish: Fish*
+                       )
 
 
 /* A collection of constants describing data for each fish that can be caught. */
@@ -76,7 +76,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingSkillA
     if (skill.getLevel < tool.level) {
       plr.sendMessage(s"You need a Fishing level of ${tool.level} to fish here.")
       false
-    } else if (!tool.bait.forall(player.inventory.contains)) {
+    } else if (!tool.bait.forall(plr.inventory.contains)) {
       plr.sendMessage(s"You do not have the bait required to fish here.")
       false
     } else if (!plr.inventory.contains(tool.id)) {
