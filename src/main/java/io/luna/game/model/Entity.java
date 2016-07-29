@@ -95,6 +95,13 @@ public abstract class Entity {
     }
 
     /**
+     * @return The distance in tiles from {@code other}.
+     */
+    public int distanceFrom(Entity other) {
+        return position.getDistance(other.getPosition());
+    }
+
+    /**
      * Fired when the state of this {@code Entity} is set to {@code IDLE}.
      */
     public void onIdle() {
