@@ -325,14 +325,14 @@ implicit class RichItemContainer(items: ItemContainer) {
 }
 
 
-/* Implicit class for 'IndexedSeq' instances. */
-implicit class RichIndexedSeq[T](indexed: IndexedSeq[T]) {
+/* Implicit class for 'Seq' instances. Please make note of the performance implications for 'LinearSeq'. */
+implicit class RichSeq[T](seq: Seq[T]) {
 
-  /* Shuffle the elements of an 'IndexedSeq' (Fisher-Yates algorithm). */
-  def shuffle = Random.shuffle(indexed)
+  /* Shuffle the elements of an 'Seq' (Fisher-Yates algorithm). */
+  def shuffle = Random.shuffle(seq)
 
-  /* Selects a random element from the 'IndexedSeq'. */
-  def randomElement = indexed((rand.nextDouble * indexed.length).toInt)
+  /* Selects a random element from the 'Seq'. */
+  def randomElement = seq((rand.nextDouble * seq.length).toInt)
 }
 
 
@@ -342,4 +342,18 @@ implicit class RichTraversable[T](traversable: Traversable[T]) {
   /* Lazy filter function, to distinguish from the normal filter functions. */
   def lazyFilter(pred: T => Boolean) = traversable.withFilter(pred)
   def lazyFilterNot(pred: T => Boolean) = traversable.withFilter(it => !pred(it))
+}
+
+
+/* Implicit class for 'Int' instances. */
+implicit class RichInt(int: Int) {
+
+  /* Simple loop function, without parameters. */
+  def times(action: => Unit) = {
+    var times = 0
+    while (times != int) {
+      times += 1
+      action
+    }
+  }
 }
