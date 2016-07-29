@@ -46,7 +46,7 @@ public abstract class MobileEntity extends Entity {
     /**
      * The {@link WalkingQueue} assigned to this {@code MobileEntity}.
      */
-    private final WalkingQueue walkingQueue = new WalkingQueue(this);
+    protected final WalkingQueue walkingQueue = new WalkingQueue(this);
 
     /**
      * The index of this mob in its list.
