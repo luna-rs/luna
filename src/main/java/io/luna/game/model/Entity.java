@@ -160,6 +160,7 @@ public abstract class Entity {
         if (position != null) {
             RegionCoordinates prev = RegionCoordinates.create(position);
             if (prev.equals(next)) {
+                plugins.post(new PositionChangeEvent(position, newPosition, this));
                 position = newPosition;
                 return;
             }
