@@ -30,7 +30,7 @@ public abstract class ProducingSkillAction extends SkillAction {
     }
 
     @Override
-    protected void execute() {
+    protected void call() {
         if (!canProduce()) {
             interrupt();
             return;

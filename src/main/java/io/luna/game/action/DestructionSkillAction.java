@@ -24,7 +24,7 @@ public abstract class DestructionSkillAction extends SkillAction {
     }
 
     @Override
-    public final void execute() {
+    public final void call() {
         if (!canDestruct()) {
             interrupt();
             return;

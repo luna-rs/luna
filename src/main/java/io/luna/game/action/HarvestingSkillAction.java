@@ -41,7 +41,7 @@ public abstract class HarvestingSkillAction extends SkillAction {
     }
 
     @Override
-    public final void execute() {
+    public final void call() {
         if (!canHarvest()) {
             interrupt();
             return;

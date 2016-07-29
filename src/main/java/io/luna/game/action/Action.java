@@ -1,19 +1,16 @@
 package io.luna.game.action;
 
+import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.task.Task;
 
 /**
  * An abstraction model representing an Action that can be executed by a {@link MobileEntity}. Actions have their own set of
- * unique traits that make them different from {@link Task}s:
- * <ul>
- *     <li> There can only be <strong>one</strong> Action processing at a time per mob
- *     <li> Pending Actions will replace the currently processing Action
- *     <li>An Action must be submitted to an ActionSet, <strong>not</strong> TaskManager
- * </ul>
- * An acceptable analogy for Actions is that they are higher-level Tasks. This is reinforced by the fact that they use Task
- * under-the-hood.
+ * unique traits that make them different from {@link Task}s: <ul> <li> There can only be <strong>one</strong> Action
+ * processing at a time per mob <li> Pending Actions will replace the currently processing Action <li>An Action must be
+ * submitted to an ActionSet, <strong>not</strong> TaskManager </ul> An acceptable analogy for Actions is that they are
+ * higher-level Tasks. This is reinforced by the fact that they use Task under-the-hood.
  *
  * @param <T> The mob that this Action is dedicated to.
  * @author lare96 <http://github.org/lare96>
@@ -44,7 +41,11 @@ public abstract class Action<T extends MobileEntity> {
 
         @Override
         protected void execute() {
-            call();
+            if (mob.getState() == EntityState.INACTIVE) {
+                interrupt();
+            } else {
+                call();
+            }
         }
     }
 
