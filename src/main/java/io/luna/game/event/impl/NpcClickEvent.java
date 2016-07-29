@@ -3,9 +3,8 @@ package io.luna.game.event.impl;
 import io.luna.game.event.Event;
 import io.luna.game.model.mobile.Npc;
 
+import java.util.Arrays;
 import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * An event implementation sent when a player clicks any npc index.
@@ -105,8 +104,7 @@ public class NpcClickEvent extends Event {
 
     @Override
     public final boolean matches(Object... args) {
-        checkState(args.length == 1, "args.length != 1");
-        return Objects.equals(args[0], npc.getId());
+        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, npc.getId()));
     }
 
     /**

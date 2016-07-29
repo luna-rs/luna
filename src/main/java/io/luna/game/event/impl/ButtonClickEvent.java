@@ -2,9 +2,8 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 
+import java.util.Arrays;
 import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * An event implementation sent whenever a player clicks a button on an interface.
@@ -29,8 +28,7 @@ public final class ButtonClickEvent extends Event {
 
     @Override
     public boolean matches(Object... args) {
-        checkState(args.length == 1, "args.length != 1");
-        return Objects.equals(args[0], id);
+        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, id));
     }
 
     /**
