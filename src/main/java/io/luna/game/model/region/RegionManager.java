@@ -1,11 +1,14 @@
 package io.luna.game.model.region;
 
+import io.luna.LunaConstants;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -77,13 +80,16 @@ public final class RegionManager {
      */
     public Set<Player> getSurroundingPlayers(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
-        Set<Player> localPlayers = new TreeSet<>(new RegionPriorityComparator(player));
+        Set<Player> localPlayers = getBackingSet(player);
 
         for (Region region : allRegions) {
             List<Player> regionPlayers = region.getEntities(EntityType.PLAYER);
 
-            regionPlayers.stream().filter(it -> it.getPosition().isViewable(player.getPosition()))
-                .forEach(localPlayers::add);
+            for (Player inRegion : regionPlayers) {
+                if (inRegion.isViewable(player)) {
+                    localPlayers.add(inRegion);
+                }
+            }
         }
         return localPlayers;
     }
@@ -97,13 +103,25 @@ public final class RegionManager {
      */
     public Set<Npc> getSurroundingNpcs(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
-        Set<Npc> localNpcs = new TreeSet<>(new RegionPriorityComparator(player));
+        Set<Npc> localNpcs = getBackingSet(player);
 
         for (Region region : allRegions) {
             List<Npc> regionNpcs = region.getEntities(EntityType.NPC);
-            regionNpcs.stream().filter(it -> it.getPosition().isViewable(player.getPosition())).forEach(localNpcs::add);
+
+            for (Npc inRegion : regionNpcs) {
+                if (inRegion.isViewable(player)) {
+                    localNpcs.add(inRegion);
+                }
+            }
         }
         return localNpcs;
+    }
+
+    /**
+     * Returns the backing set that will be used to get surrounding {@link Player}s or {@link Npc}s.
+     */
+    private <T extends MobileEntity> Set<T> getBackingSet(Player player) {
+        return LunaConstants.STAGGERED_UPDATING ? new TreeSet<>(new RegionPriorityComparator(player)) : new HashSet<>();
     }
 
     /**
