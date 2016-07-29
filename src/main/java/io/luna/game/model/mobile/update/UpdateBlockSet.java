@@ -110,9 +110,8 @@ public final class UpdateBlockSet<E extends MobileEntity> {
         msg.putBytes(encodedBlocks);
         if (cacheBlocks) {
             player.setCachedBlock(encodedBlocks);
-        } else {
-            encodedBlocks.release();
         }
+        encodedBlocks.release();
     }
 
     /**
