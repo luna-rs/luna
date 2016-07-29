@@ -46,10 +46,8 @@ private final class FillAction(plr: Player, oldId: Int, newId: Int) extends Prod
 /* Intercept an item on object event, fill items if applicable. */
 intercept[ItemOnObjectEvent] { (msg, plr) =>
   if (WATER_SOURCES.contains(msg.getObjectId)) {
-
-    val itemId = msg.getItemId
-    FILLABLES.get(itemId).foreach { it =>
-      plr.submitAction(new FillAction(plr, itemId, it))
+    FILLABLES.get(msg.getItemId).foreach { it =>
+      plr.submitAction(new FillAction(plr, msg.getItemId, it))
       msg.terminate
     }
   }
