@@ -518,12 +518,12 @@ public class ItemContainer implements Iterable<Item> {
     /**
      * Computes the amount of indexes required to hold {@code items} in this container.
      *
-     * @param items The items to compute the index count for.
+     * @param forItems The items to compute the index count for.
      * @return The index count.
      */
-    public final int computeIndexCount(Item... items) {
+    public final int computeIndexCount(Item... forItems) {
         int indexCount = 0;
-        for (Item item : items) {
+        for (Item item : forItems) {
             ItemDefinition def = item.getItemDef();
             boolean stackable = (policy == STANDARD && def.isStackable()) || policy == ALWAYS;
 
@@ -537,10 +537,10 @@ public class ItemContainer implements Iterable<Item> {
                 Item existing = items[index];
                 if ((existing.getAmount() + item.getAmount()) <= 0) {
                     indexCount++;
-                    continue;
                 }
+            } else {
+                indexCount += item.getAmount();
             }
-            indexCount += item.getAmount();
         }
         return indexCount;
     }
