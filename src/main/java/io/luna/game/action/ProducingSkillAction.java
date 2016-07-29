@@ -13,6 +13,16 @@ import io.luna.net.msg.out.GameChatboxMessageWriter;
 public abstract class ProducingSkillAction extends SkillAction {
 
     /**
+     * The array of items currently being added.
+     */
+    protected Item[] currentAdd;
+
+    /**
+     * The array of items currently being removed.
+     */
+    protected Item[] currentRemove;
+
+    /**
      * Creates a new {@link ProducingSkillAction}.
      */
     public ProducingSkillAction(Player player, boolean instant, int delay) {
@@ -21,27 +31,39 @@ public abstract class ProducingSkillAction extends SkillAction {
 
     @Override
     protected void execute() {
-        Inventory inventory = mob.getInventory();
-
-        Item[] remove = remove();
-        Item[] add = add();
-
-        if (!inventory.containsAll(remove)) {
+        if (!canProduce()) {
             interrupt();
             return;
         }
 
-        int newSlots = inventory.computeIndexCount(add);
-        int oldSlots = inventory.computeIndexCount(remove);
+        Inventory inventory = mob.getInventory();
+
+        currentRemove = remove();
+        currentAdd = add();
+
+        if (!inventory.containsAll(currentRemove)) {
+            interrupt();
+            return;
+        }
+
+        int newSlots = inventory.computeIndexCount(currentAdd);
+        int oldSlots = inventory.computeIndexCount(currentRemove);
         if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
             mob.queue(new GameChatboxMessageWriter("You do not have enough space in your inventory."));
             interrupt();
             return;
         }
 
-        inventory.removeAll(remove);
-        inventory.addAll(add);
+        inventory.removeAll(currentRemove);
+        inventory.addAll(currentAdd);
         onProduce();
+    }
+
+    /**
+     * Function invoked at the beginning of every Action loop. Return {@code false} to interrupt the Action.
+     */
+    protected boolean canProduce() {
+        return true;
     }
 
     /**

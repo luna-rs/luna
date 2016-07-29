@@ -12,6 +12,11 @@ import io.luna.game.model.mobile.Player;
 public abstract class DestructionSkillAction extends SkillAction {
 
     /**
+     * The array of items currently being removed.
+     */
+    protected Item[] currentRemove;
+
+    /**
      * Creates a new {@link DestructionSkillAction}.
      */
     public DestructionSkillAction(Player player, boolean instant, int delay) {
@@ -20,21 +25,33 @@ public abstract class DestructionSkillAction extends SkillAction {
 
     @Override
     public final void execute() {
-        Inventory inventory = mob.getInventory();
-        Item[] remove = remove();
+        if (!canDestruct()) {
+            interrupt();
+            return;
+        }
 
-        if (inventory.containsAll(remove)) {
-            inventory.removeAll(remove);
-            onDestruction();
+        Inventory inventory = mob.getInventory();
+        currentRemove = remove();
+
+        if (inventory.containsAll(currentRemove)) {
+            inventory.removeAll(currentRemove);
+            onDestruct();
         } else {
             interrupt();
         }
     }
 
     /**
+     * Function invoked at the beginning of every Action loop. Return {@code false} to interrupt the Action.
+     */
+    protected boolean canDestruct() {
+        return true;
+    }
+
+    /**
      * Function invoked when {@code remove()} is successfully removed from the {@link Inventory}.
      */
-    protected void onDestruction() {
+    protected void onDestruct() {
 
     }
 
