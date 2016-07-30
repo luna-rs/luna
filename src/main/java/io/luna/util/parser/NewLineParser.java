@@ -39,10 +39,10 @@ public abstract class NewLineParser extends Parser<Scanner, String> {
     /**
      * Creates a new {@link NewLineParser}.
      *
-     * @param path The path to the file being parsed.
+     * @param paths The paths to the files being parsed.
      */
-    public NewLineParser(String path) {
-        super(path);
+    public NewLineParser(String... paths) {
+        super(paths);
     }
 
     @Override

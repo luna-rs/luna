@@ -23,10 +23,10 @@ public abstract class GsonParser<T> extends Parser<JsonArray, T> {
     /**
      * Creates a new {@link GsonParser}.
      *
-     * @param path The path to the file being parsed.
+     * @param paths The paths to the files being parsed.
      */
-    public GsonParser(String path) {
-        super(path);
+    public GsonParser(String... paths) {
+        super(paths);
     }
 
     @Override
