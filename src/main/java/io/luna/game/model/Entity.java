@@ -48,6 +48,11 @@ public abstract class Entity {
     protected Position position;
 
     /**
+     * The current {@link Region} this {@code Entity} is in.
+     */
+    protected Region currentRegion;
+
+    /**
      * Creates a new {@link Entity}.
      *
      * @param context The context to be managed in.
@@ -146,6 +151,10 @@ public abstract class Entity {
             break;
         case INACTIVE:
             onInactive();
+
+            if (currentRegion != null) {
+                currentRegion.removeEntity(this);
+            }
             break;
         }
     }
@@ -165,21 +174,19 @@ public abstract class Entity {
 
         RegionCoordinates next = RegionCoordinates.create(newPosition);
         if (position != null) {
-            RegionCoordinates prev = RegionCoordinates.create(position);
-            if (prev.equals(next)) {
+            if (currentRegion.getCoordinates().equals(next)) {
                 plugins.post(new PositionChangeEvent(position, newPosition, this));
                 position = newPosition;
                 return;
             }
-
-            Region fromRegion = world.getRegions().getRegion(prev);
-            fromRegion.removeEntity(this);
+            currentRegion.removeEntity(this);
         }
         Region toRegion = world.getRegions().getRegion(next);
         toRegion.addEntity(this);
 
         plugins.post(new PositionChangeEvent(position, newPosition, this));
         position = newPosition;
+        currentRegion = toRegion;
     }
 
     /**
