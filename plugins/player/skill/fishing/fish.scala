@@ -25,13 +25,13 @@ private case class Fish(id: Int, level: Int, exp: Double)
 
 /* Class representing tools that can be used to catch fish. */
 private case class Tool(
-                         id: Int,
-                         level: Int,
-                         bait: Option[Int],
-                         chance: Double,
-                         animation: Int,
-                         fish: Fish*
-                       )
+  id: Int,
+  level: Int,
+  bait: Option[Int],
+  chance: Double,
+  animation: Int,
+  fish: Fish*
+)
 
 
 /* A collection of constants describing data for each fish that can be caught. */
