@@ -32,7 +32,8 @@ public final class RegionPriorityComparator implements Comparator<MobileEntity> 
     /**
      * An {@link ImmutableList} of the factors that will be used to compare mobs.
      */
-    private final ImmutableList<RegionFactor> factors = ImmutableList.of(this::comparePosition, this::compareCombat);
+    private final ImmutableList<RegionFactor> factors = ImmutableList
+        .of(this::comparePosition, this::compareSize, this::compareCombatLevel, this::compareCombat);
 
     /**
      * The {@link Player} being updated.
@@ -66,42 +67,51 @@ public final class RegionPriorityComparator implements Comparator<MobileEntity> 
     }
 
     /**
-     * Compare the left and right mob positions. Awards {@code 1} point factor.
+     * Compare mob positions. Awards {@code 1} point factor.
      */
     private P2<Integer, Integer> comparePosition(MobileEntity left, MobileEntity right) {
         int leftDistance = player.distanceFrom(left);
         int rightDistance = player.distanceFrom(right);
-
-        if (leftDistance > rightDistance) {
-            return p(1, 0);
-        } else if (rightDistance > leftDistance) {
-            return p(0, 1);
-        } else {
-            return p(1, 1);
-        }
+        return compareValues(leftDistance, rightDistance, 1);
     }
 
     /**
-     * Compare the left and right mob combat levels. Awards {@code 2} point factors.
+     * Compare mob sizes. Awards {@code 1} point factor.
+     */
+    private P2<Integer, Integer> compareSize(MobileEntity left, MobileEntity right) {
+        int leftSize = left.size();
+        int rightSize = right.size();
+        return compareValues(leftSize, rightSize, 1);
+    }
+
+    /**
+     * Compare mob combat levels. Awards {@code 2} point factors.
      */
     private P2<Integer, Integer> compareCombatLevel(MobileEntity left, MobileEntity right) {
-        int leftLevel = left.getCombatLevel() - player.getCombatLevel();
-        int rightLevel = right.getCombatLevel() - player.getCombatLevel();
-
-        if (leftLevel > rightLevel) {
-            return p(2, 0);
-        } else if (rightLevel > leftLevel) {
-            return p(0, 2);
-        } else {
-            return p(2, 2);
-        }
+        int leftCombatLevel = left.getCombatLevel();
+        int rightCombatLevel = right.getCombatLevel();
+        return compareValues(leftCombatLevel, rightCombatLevel, 2);
     }
 
     /**
-     * Compare the left and right mob combat states. Awards {@code 3} point factors.
+     * Compare mob combat states. Awards {@code 3} point factors.
      */
-    private P2<Integer, Integer> compareCombat(MobileEntity left, MobileEntity right) {
-        // TODO implement when combat is done
-        return p(3, 3);
+    private P2<Integer, Integer> compareCombat(MobileEntity left, MobileEntity right) { // TODO finish when combat is done
+        int leftCombat = /* left.inCombat() ? 1 :*/ 0;
+        int rightCombat = /* right.inCombat() ? 1 :*/ 0;
+        return compareValues(leftCombat, rightCombat, 3);
+    }
+
+    /**
+     * Compares the input values and awards points based on a which one is greater.
+     */
+    private P2<Integer, Integer> compareValues(int left, int right, int points) {
+        if (left > right) {
+            return p(points, 0);
+        } else if (right > left) {
+            return p(0, points);
+        } else {
+            return p(points, points);
+        }
     }
 }
