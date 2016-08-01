@@ -2,6 +2,7 @@ package io.luna.game.model.region;
 
 import com.google.common.collect.ImmutableList;
 import fj.P2;
+import io.luna.LunaConstants;
 import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.Player;
 
@@ -11,18 +12,19 @@ import java.util.function.BiFunction;
 import static fj.P.p;
 
 /**
- * A {@link Comparator} implementation that compares {@link MobileEntity}s being added to the local lists of {@link Player}s.
- * The purpose of this is to prevent the loss of functionality when staggering updating.
+ * A {@link Comparator} implementation that ensures that important mobs are added to the local list of a player before other
+ * (less important) mobs.
  *
  * @author lare96 <http://github.org/lare96>
+ * @see LunaConstants#STAGGERED_UPDATING
  */
 public final class RegionPriorityComparator implements Comparator<MobileEntity> {
 
     /**
      * A makeshift type alias for the verbose and confusing {@link BiFunction} type declaration.
      */
-    @FunctionalInterface private interface RegionFactor
-        extends BiFunction<MobileEntity, MobileEntity, P2<Integer, Integer>> {
+    @FunctionalInterface
+    private interface RegionFactor extends BiFunction<MobileEntity, MobileEntity, P2<Integer, Integer>> {
         /* It's times like this I miss Scala, :( could just do:
              type RegionFactor = (MobileEntity, MobileEntity) => (Int, Int) */
     }
