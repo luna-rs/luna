@@ -1,3 +1,19 @@
+/*
+ A plugin that adds functionality for eating food.
+
+ SUPPORTS:
+  -> Eating a variety of consumables.
+  -> Multi-portion foods (pizzas, cakes, etc).
+  -> Foods with different throttle rates (karambwans, pies, etc).
+
+ TODO:
+  -> Support for less commonly used foods.
+  -> Stop eating process if player has just died.
+  -> Confirm duel rule for no food.
+
+ AUTHOR: lare96
+*/
+
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.{Inventory, Item}
@@ -5,11 +21,18 @@ import io.luna.game.model.mobile.Skill.HITPOINTS
 import io.luna.game.model.mobile.{Animation, Player}
 
 
+/* Class representing food in the 'FOOD_TABLE'. */
 private case class Food(healAmount: Int, consumeDelay: Long, ids: Int*)
 
 
+/* Consume food animation. */
 private val ANIMATION = new Animation(829)
-// TODO confirm 1800 is proper delay
+
+/*
+ A table of all the foods that can be eaten.
+
+ food_symbol -> Food
+*/
 private val FOOD_TABLE = Map(
   'cooked_meat -> Food(2, 1800, 2142),
   'cooked_chicken -> Food(2, 1800, 2140),
@@ -42,6 +65,11 @@ private val FOOD_TABLE = Map(
   'tuna_potato -> Food(22, 1800, 7060)
 )
 
+/*
+ A different mapping of the 'FOOD_TABLE' that maps food ids to their data.
+
+ food_id -> Food
+*/
 private val ID_TO_FOOD = {
   def foodLookupFunction(id: Int) = FOOD_TABLE.values.find(food => food.ids.contains(id)).get
 
@@ -51,29 +79,30 @@ private val ID_TO_FOOD = {
 }
 
 
-private def consume(plr: Player, food: Food, index: Int) = {
+/* Attempt to consume food, if we haven't just recently consumed any. */
+private def consume(plr: Player, food: Food, index: Int): Unit = {
+  val inventory = plr.inventory
+  val skill = plr.skill(HITPOINTS)
+  val ids = food.ids
 
-  // TODO don't eat food if player is dead
-  // TODO dueling, no food rule
   if (!plr.elapsedTime("last_food_consume", food.consumeDelay)) {
     return
   }
 
-  val inventory = plr.inventory
   val toConsume = inventory.get(index)
   if (inventory.remove(toConsume, index)) {
 
-    val nextIndex = food.ids.indexOf(toConsume.getId) + 1
-    val nextFood = if (food.ids.isDefinedAt(nextIndex)) None else Some(food.ids(nextIndex))
-    nextFood.foreach(id => inventory.add(new Item(id), index))
+    val nextIndex = ids.indexOf(toConsume.getId) + 1
+    if (ids.isDefinedAt(nextIndex)) { /* Add unfinished portion to inventory, if there is one. */
+      inventory.add(new Item(ids(nextIndex)), index)
+    }
 
     plr.sendMessage(s"You eat the ${getNameForId(toConsume.getId)}.")
     plr.animation(ANIMATION)
 
-    val skill = plr.skill(HITPOINTS)
     if (skill.getLevel < skill.getStaticLevel) {
       skill.increaseLevel(food.healAmount)
-      plr.sendMessage("It healed some health.")
+      plr.sendMessage("It heals some health.")
     }
   }
 
@@ -82,9 +111,9 @@ private def consume(plr: Player, food: Food, index: Int) = {
 }
 
 
+/* Intercept first click item event, attempt to consume food if applicable. */
 intercept[ItemFirstClickEvent] { (msg, plr) =>
   if (msg.getInterfaceId == Inventory.INVENTORY_DISPLAY_ID) {
-
     ID_TO_FOOD.get(msg.getId).foreach { food =>
       consume(plr, food, msg.getIndex)
       msg.terminate
