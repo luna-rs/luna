@@ -73,7 +73,7 @@ private val FOOD_TABLE = Map(
 private val ID_TO_FOOD = {
   def foodLookupFunction(id: Int) = FOOD_TABLE.values.find(food => food.ids.contains(id)).get
 
-  FOOD_TABLE.values.
+  FOOD_TABLE.values. // TODO: Does this need to be simplified?
     flatMap(food => food.ids).
     map(id => id -> foodLookupFunction(id)).toMap
 }
