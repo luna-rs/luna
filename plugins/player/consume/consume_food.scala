@@ -101,7 +101,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
     plr.animation(ANIMATION)
 
     if (skill.getLevel < skill.getStaticLevel) {
-      skill.increaseLevel(food.healAmount)
+      skill.increaseLevel(food.healAmount, skill.getStaticLevel)
       plr.sendMessage("It heals some health.")
     }
   }
