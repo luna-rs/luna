@@ -53,6 +53,7 @@ private val TUNA = Fish(359, 35, 80.0)
 private val LOBSTER = Fish(377, 40, 90.0)
 private val BASS = Fish(363, 46, 100.0)
 private val SWORDFISH = Fish(371, 50, 100.0)
+private val MONKFISH = Fish(7944, 62, 120.0)
 private val SHARK = Fish(383, 76, 110.0)
 
 /* A collection of constants describing data for each tool that can be used. */
@@ -60,8 +61,9 @@ private val SMALL_NET = Tool(303, 1, None, 0.10, 621, SHRIMP, ANCHOVY)
 private val FISHING_ROD = Tool(307, 5, Some(313), 0.15, 622, SARDINE, HERRING, PIKE)
 private val BIG_NET = Tool(305, 16, None, 0.07, 620, MACKEREL, OYSTER, COD, BASS, CASKET, LEATHER_BOOTS, LEATHER_GLOVES, SEAWEED)
 private val FLY_FISHING_ROD = Tool(309, 20, Some(314), 0.20, 622, TROUT, SALMON)
-private val HARPOON = Tool(311, 35, None, 0.15, 618, TUNA, SWORDFISH)
-private val LOBSTER_POT = Tool(301, 40, None, 0.05, 619, LOBSTER)
+private val HARPOON = Tool(311, 35, None, 0.10, 618, TUNA, SWORDFISH)
+private val LOBSTER_POT = Tool(301, 40, None, 0.10, 619, LOBSTER)
+private val MONKFISH_NET = Tool(303, 62, None, 0.05, 621, MONKFISH)
 private val SHARK_HARPOON = Tool(311, 76, None, 0.01, 618, SHARK)
 
 
@@ -160,6 +162,10 @@ intercept_@[NpcFirstClickEvent](313) { (msg, plr) =>
 
 intercept_@[NpcFirstClickEvent](316, 319) { (msg, plr) =>
   plr.submitAction(new FishAction(plr, SMALL_NET))
+}
+
+intercept_@[NpcFirstClickEvent](1174) { (msg, plr) =>
+  plr.submitAction(new FishAction(plr, MONKFISH_NET))
 }
 
 /* A collection of intercepted second index click events for fishing spots. */
