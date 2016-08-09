@@ -20,6 +20,8 @@ import io.luna.game.model.item.{Inventory, Item}
 import io.luna.game.model.mobile.Skill.HITPOINTS
 import io.luna.game.model.mobile.{Animation, Player}
 
+import scala.collection.mutable
+
 
 /* Class representing food in the 'FOOD_TABLE'. */
 private case class Food(healAmount: Int, consumeDelay: Long, ids: Int*)
@@ -71,11 +73,15 @@ private val FOOD_TABLE = Map(
  food_id -> Food
 */
 private val ID_TO_FOOD = {
-  def foodLookupFunction(id: Int) = FOOD_TABLE.values.find(food => food.ids.contains(id)).get
+  val newMap = mutable.HashMap[Int, Food]
 
-  FOOD_TABLE.values. // TODO: Does this need to be simplified?
-    flatMap(food => food.ids).
-    map(id => id -> foodLookupFunction(id)).toMap
+  for ((symbol, food) <- FOOD_TABLE) {
+    for (foodId <- food.ids) {
+      newMap += foodId -> food
+    }
+  }
+
+  newMap
 }
 
 
