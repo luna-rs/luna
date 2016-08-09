@@ -1,7 +1,26 @@
+/*
+ A plugin that adds functionality for drinking potions.
+
+ SUPPORTS:
+  -> Drinking a variety of no.
+  -> Multi-portion foods (pizzas, cakes, etc).
+  -> Foods with different throttle rates (karambwans, pies, etc).
+
+ TODO:
+  -> Support for less commonly used foods.
+  -> Stop eating process if player has just died.
+  -> Confirm duel rule for no food.
+
+ AUTHOR: lare96
+*/
+
+import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.`def`.ItemDefinition._
-import io.luna.game.model.item.Item
+import io.luna.game.model.item.{Inventory, Item}
 import io.luna.game.model.mobile.Skill._
 import io.luna.game.model.mobile.{Animation, Player}
+
+import scala.collection.mutable
 
 
 /* Class representing potions in the 'POTION_TABLE'. */
@@ -49,7 +68,26 @@ private val POTION_TABLE = Map(
   'super_restore -> Potion(3024, 3026, 3028, 3030, plr => onRestorePotion(plr, true))
 )
 
+/*
+ A different mapping of the 'POTION_TABLE' that maps potion doses to their data.
 
+ potion_id -> Potion
+*/
+private val ID_TO_POTION = {
+  val newMap = mutable.Map[Integer, Potion]()
+
+  for ((symbol, potion) <- POTION_TABLE) {
+    newMap += (potion.oneDose, POTION_TABLE(symbol))
+    +=(potion.twoDose, POTION_TABLE(symbol))
+    +=(potion.threeDose, POTION_TABLE(symbol))
+    +=(potion.fourDose, POTION_TABLE(symbol))
+  }
+
+  newMap
+}
+
+
+/* A function invoked when a zamorak brew is sipped. */
 private def onZamorakBrew(plr: Player) = {
   val attack = plr.skill(ATTACK)
   val strength = plr.skill(STRENGTH)
@@ -60,10 +98,11 @@ private def onZamorakBrew(plr: Player) = {
   attack.increaseLevel(2 + (0.20 * attack.getStaticLevel))
   strength.increaseLevel(2 + (0.12 * strength.getStaticLevel))
   defence.decreaseLevel(2 + (0.10 * defence.getStaticLevel))
-  hp.decreaseLevel(2 + (0.10 * hp.getStaticLevel, 0))
+  hp.decreaseLevel(2 + (0.10 * hp.getStaticLevel), 0)
   prayer.increaseLevel(0.10 * prayer.getStaticLevel)
 }
 
+/* A function invoked when a saradomin brew is sipped. */
 private def onSaradominBrew(plr: Player) = {
   val attack = plr.skill(ATTACK)
   val strength = plr.skill(STRENGTH)
@@ -80,45 +119,48 @@ private def onSaradominBrew(plr: Player) = {
   ranged.decreaseLevel(0.10 * ranged.getStaticLevel, 0)
 }
 
-private def onAntipoison(plr: Player, immunity: Boolean = false, immunityDuration: Int = 0) = {
-  // TODO Finish when combat is done.
-}
+/* A function invoked when a potion with anti-poisoning properties is sipped. */
+private def onAntipoison(plr: Player, immunity: Boolean = false, immunityDuration: Int = 0) = ???
 
+/* A function invoked when a prayer potion is sipped. */
 private def onPrayerPotion(plr: Player) = {
   val prayer = plr.skill(PRAYER)
   prayer.increaseLevel(7 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
 }
 
+/* A function invoked when a non-combat skill potion is sipped. */
 private def onSkillPotion(plr: Player, skillId: Int) = {
   val skill = plr.skill(skillId)
   skill.increaseLevel(3)
 }
 
+/* A function invoked when a energy or super energy potion is sipped. */
 private def onEnergyPotion(plr: Player, superPotion: Boolean = false) = {
   val amount = if (superPotion) 0.20 else 0.10
   plr.setRunEnergy(plr.getRunEnergy + amount)
 }
 
+/* A function invoked when a restore or super restore potion is sipped. */
 private def onRestorePotion(plr: Player, superPotion: Boolean = false) = {
   def boostAmount(level: Int) = if (superPotion) 8 + (0.25 * level) else 10 + (0.30 * level)
 
-  allSkills.lazyFilter(_ != PRAYER).
+  allSkills.lazyFilter(_ != PRAYER). /* Perform normal restore operation. */
     lazyFilter(_ != HITPOINTS).
     foreach { id =>
       val skill = plr.skill(id)
       skill.increaseLevel(boostAmount(skill.getStaticLevel), skill.getStaticLevel)
     }
 
-  if (superPotion) {
+  if (superPotion) { /* If super restore is being sipped, restore prayer as well. */
     val prayer = plr.skill(PRAYER)
     prayer.increaseLevel(8 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
   }
 }
 
-private def onAntifirePotion(plr: Player) = {
-  // TODO Finish when combat is done.
-}
+/* A function invoked when an anti-fire potion is sipped. */
+private def onAntifirePotion(plr: Player) = ???
 
+/* A function invoked when a combat skill potion is sipped. */
 private def onCombatPotion(plr: Player, skillId: Int, superPotion: Boolean = false) = {
   def boostAmount(level: Int) = if (superPotion) 5 + (0.15 * level) else 3 + (0.10 * level)
 
@@ -126,6 +168,7 @@ private def onCombatPotion(plr: Player, skillId: Int, superPotion: Boolean = fal
   skill.increaseLevel(boostAmount(skill.getStaticLevel))
 }
 
+/* Attempts to drink a potion and apply the appropriate effects to the player. */
 private def consume(plr: Player, potion: Potion, index: Int): Unit = {
   val inventory = plr.inventory
   val ids = Array(potion.fourDose, potion.threeDose, potion.twoDose, potion.oneDose)
@@ -138,7 +181,7 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
   if (inventory.remove(toConsume, index)) {
 
     val nextIndex = ids.indexOf(toConsume.getId) + 1
-    if (ids.isDefinedAt(nextIndex)) {
+    if (ids.isDefinedAt(nextIndex)) { /* Add the next dose or an empty vial to the inventory. */
       inventory.add(new Item(ids(nextIndex)), index)
     } else {
       inventory.add(VIAL)
@@ -158,4 +201,16 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
   }
 
   plr.resetTime("last_potion_consume")
+}
+
+
+/* Intercept the item click event, and if the item is a potion then drink it. */
+intercept[ItemFirstClickEvent] { (msg, plr) =>
+  if (msg.getInterfaceId == Inventory.INVENTORY_DISPLAY_ID) {
+
+    ID_TO_POTION.get(msg.getId).foreach { potion =>
+      consume(plr, potion, msg.getIndex)
+      msg.terminate
+    }
+  }
 }
