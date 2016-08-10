@@ -22,8 +22,8 @@ private case class FishingSpot(id: Int, homePos: Position, awayPos: Position) {
 }
 
 
-/* A range of how often fishing spots will move, in ticks (1-20 minutes). */
-private val MOVE_INTERVAL = 100 to 2000
+/* A range of how often fishing spots will move, in ticks. */
+private val MOVE_INTERVAL = 100 to 2000 // Fishing spots will currently move every 1-20 minutes.
 
 /* A Seq of fishing spots that will periodically move. */
 private val FISHING_SPOTS = Seq.empty[FishingSpot]
@@ -48,9 +48,8 @@ intercept[ServerLaunchEvent] { (msg, plr) =>
   if (FISHING_SPOTS.nonEmpty) {
     FISHING_SPOTS.foreach(spot => world.addNpc(spot.npcInstance))
 
-    world.schedule(MOVE_INTERVAL.randomElement) { task =>
+    world.scheduleInterval(MOVE_INTERVAL) { task =>
       moveFishingSpots
-      task.setDelay(MOVE_INTERVAL.randomElement)
     }
   }
 }
