@@ -72,7 +72,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   /*
    Compute essence id and amount, which will result in one of two operations:
      1. If pure essence is required, do a lookup for it
-     2. If pure essence isnt required, do a lookup for rune essence
+     2. If pure essence isn't required, do a lookup for rune essence
        -> If rune essence isn't found, do a lookup for pure essence
   */
   val (essenceId, essenceCount) = {
@@ -98,6 +98,8 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 
   plr.inventory.remove(new Item(essenceId, essenceCount))
   plr.inventory.add(new Item(rune.runeId, runeCount))
+
+  plr.sendMessage(s"You bind the temple's power into ${computeItemName(rune.runeId)}s.")
 
   plr.animation(ANIMATION)
   plr.graphic(GRAPHIC)

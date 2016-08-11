@@ -15,7 +15,6 @@
 */
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.`def`.ItemDefinition._
 import io.luna.game.model.item.{Inventory, Item}
 import io.luna.game.model.mobile.Skill._
 import io.luna.game.model.mobile.{Animation, Player}
@@ -25,12 +24,12 @@ import scala.collection.mutable
 
 /* Class representing potions in the 'POTION_TABLE'. */
 private case class Potion(
-  fourDose: Int,
-  threeDose: Int,
-  twoDose: Int,
-  oneDose: Int,
-  effect: Player => Unit
-)
+                           fourDose: Int,
+                           threeDose: Int,
+                           twoDose: Int,
+                           oneDose: Int,
+                           effect: Player => Unit
+                         )
 
 
 /* Item instance for empty vials. */
@@ -151,7 +150,8 @@ private def onRestorePotion(plr: Player, superPotion: Boolean = false) = {
       skill.increaseLevel(boostAmount(skill.getStaticLevel), skill.getStaticLevel)
     }
 
-  if (superPotion) { /* If super restore is being sipped, restore prayer as well. */
+  if (superPotion) {
+    /* If super restore is being sipped, restore prayer as well. */
     val prayer = plr.skill(PRAYER)
     prayer.increaseLevel(8 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
   }
@@ -187,7 +187,7 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
       inventory.add(VIAL)
     }
 
-    plr.sendMessage(s"You drink some of your ${getNameForId(toConsume.getId)}.")
+    plr.sendMessage(s"You drink some of your ${computeItemName(toConsume.getId)}.")
     val dosesLeft = ids.length - nextIndex
     if (dosesLeft > 0) {
       plr.sendMessage(s"You have $dosesLeft doses of potion left.")

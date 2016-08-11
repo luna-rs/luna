@@ -13,7 +13,6 @@
 
 import io.luna.game.action.HarvestingSkillAction
 import io.luna.game.event.impl.NpcClickEvent.{NpcFirstClickEvent, NpcSecondClickEvent}
-import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Animation.CANCEL_ANIMATION
 import io.luna.game.model.mobile.Skill.FISHING
@@ -25,13 +24,13 @@ private case class Fish(id: Int, level: Int, exp: Double)
 
 /* Class representing tools that can be used to catch fish. */
 private case class Tool(
-  id: Int,
-  level: Int,
-  bait: Option[Int],
-  chance: Double,
-  animation: Int,
-  fish: Fish*
-)
+                         id: Int,
+                         level: Int,
+                         bait: Option[Int],
+                         chance: Double,
+                         animation: Int,
+                         fish: Fish*
+                       )
 
 
 /* A collection of constants describing data for each fish that can be caught. */
@@ -82,7 +81,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingSkillA
       plr.sendMessage(s"You do not have the bait required to fish here.")
       false
     } else if (!plr.inventory.contains(tool.id)) {
-      plr.sendMessage(s"You need a ${getNameForId(tool.id)} to fish here.")
+      plr.sendMessage(s"You need a ${computeItemName(tool.id)} to fish here.")
       false
     } else {
       plr.animation(new Animation(tool.animation))
@@ -102,7 +101,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingSkillA
 
   /* Function executed when we receive some fish. */
   override def onHarvest() = {
-    currentAdd.foreach(it => plr.sendMessage(s"You catch some ${getNameForId(it.getId)}."))
+    currentAdd.foreach(it => plr.sendMessage(s"You catch some ${computeItemName(it.getId)}."))
 
     skill.addExperience(exp)
     exp = 0.0

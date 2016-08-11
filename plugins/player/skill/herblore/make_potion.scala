@@ -10,10 +10,8 @@
  AUTHOR: lare96
 */
 
-
 import io.luna.game.action.ProducingSkillAction
 import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.model.`def`.ItemDefinition._
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Skill.HERBLORE
 import io.luna.game.model.mobile.{Animation, Player}
@@ -81,7 +79,7 @@ private final class MakePotionAction(plr: Player, potion: Potion) extends Produc
   }
 
   override def onProduce() = {
-    plr.sendMessage(s"You mix the ${getNameForId(potion.secondaryId)} into your potion.")
+    plr.sendMessage(s"You mix the ${computeItemName(potion.secondaryId)} into your potion.")
     plr.animation(ANIMATION)
     skill.addExperience(potion.exp)
   }

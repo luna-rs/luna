@@ -8,7 +8,6 @@
 */
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Player
 import io.luna.game.model.mobile.Skill.HERBLORE
@@ -61,7 +60,7 @@ private def identifyHerb(plr: Player, herb: Herb) {
 
     skill.addExperience(herb.exp)
 
-    plr.sendMessage(s"You identify the ${getNameForId(herb.identifiedId)}.")
+    plr.sendMessage(s"You identify the ${computeItemName(herb.identifiedId)}.")
   } else {
     plr.sendMessage(s"You need a Herblore level of $levelRequired to identify this herb.")
   }

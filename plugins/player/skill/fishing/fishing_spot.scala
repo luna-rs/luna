@@ -53,4 +53,3 @@ intercept[ServerLaunchEvent] { (msg, plr) =>
     }
   }
 }
-

@@ -15,7 +15,6 @@
 */
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.{Inventory, Item}
 import io.luna.game.model.mobile.Skill.HITPOINTS
 import io.luna.game.model.mobile.{Animation, Player}
@@ -103,7 +102,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
       inventory.add(new Item(ids(nextIndex)), index)
     }
 
-    plr.sendMessage(s"You eat the ${getNameForId(toConsume.getId)}.")
+    plr.sendMessage(s"You eat the ${computeItemName(toConsume.getId)}.")
     plr.animation(ANIMATION)
 
     if (skill.getLevel < skill.getStaticLevel) {

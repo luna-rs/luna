@@ -13,7 +13,6 @@
 import io.luna.game.action.ProducingSkillAction
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.model.`def`.ItemDefinition._
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Skill.HERBLORE
 import io.luna.game.model.mobile.{Animation, Player}
@@ -73,7 +72,7 @@ private final class MakeUnfAction(plr: Player, unf: UnfPotion) extends Producing
   }
 
   override def onProduce() = {
-    plr.sendMessage(s"You put the ${getNameForId(unf.herbId)} into the vial of water.")
+    plr.sendMessage(s"You put the ${computeItemName(unf.herbId)} into the vial of water.")
     plr.animation(ANIMATION)
   }
 

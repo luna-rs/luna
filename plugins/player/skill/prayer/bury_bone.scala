@@ -12,7 +12,6 @@
 */
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Skill.PRAYER
 import io.luna.game.model.mobile.{Animation, Player}
@@ -43,7 +42,7 @@ private def buryBone(plr: Player, id: Int, exp: Double) = {
     plr.inventory.remove(new Item(bone.id))
 
     plr.sendMessage("You dig a hole in the ground.")
-    plr.sendMessage(s"You bury the ${ItemDefinition.getNameForId(bone.id)}.")
+    plr.sendMessage(s"You bury the ${computeItemName(bone.id)}.")
 
     plr.resetTime("last_bone_bury")
   }

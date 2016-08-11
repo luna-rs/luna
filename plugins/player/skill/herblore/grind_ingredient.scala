@@ -1,6 +1,15 @@
+/*
+ A plugin related to the Herblore skill that adds functionality for grinding potion ingredients.
+
+ SUPPORTS:
+  -> Grinding all secondary potion ingredients.
+  -> Grinding all ingredients in the inventory.
+
+ AUTHOR: lare96
+*/
+
 import io.luna.game.action.ProducingSkillAction
 import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.model.`def`.ItemDefinition.getNameForId
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.{Animation, Player}
 
@@ -25,7 +34,7 @@ private final class GrindAction(plr: Player, oldId: Int, newId: Int) extends Pro
 
   override def onProduce() = {
     val nextWord = if (newId == 6693) "a" else "some"
-    plr.sendMessage(s"You grind the ${getNameForId(oldId)} into $nextWord ${getNameForId(newId)}.")
+    plr.sendMessage(s"You grind the ${computeItemName(oldId)} into $nextWord ${computeItemName(newId)}.")
 
     plr.animation(ANIMATION)
   }
