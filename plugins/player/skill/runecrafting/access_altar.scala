@@ -98,8 +98,8 @@ private def enterWithTiara(plr: Player, altar: Altar, msg: Event) = {
 
 /* A function that moves the player outside the altar. */
 private def exitWithPortal(plr: Player, altar: Altar, msg: Event) = {
-  plr.teleport(altar.exitPos)
   plr.sendMessage("You step through the portal...")
+  plr.teleport(altar.exitPos)
   msg.terminate
 }
 
