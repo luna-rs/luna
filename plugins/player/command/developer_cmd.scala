@@ -18,7 +18,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mobile._
 
 
-/* A command that allows for attributes to be dynamically set. */
+/* A command that allows for attributes to be dynamically retrieved or set. */
 intercept_@[CommandEvent]("attr", RIGHTS_DEV) { (msg, plr) =>
   val args: Array[String] = msg.getArgs
   val name = args(0)
