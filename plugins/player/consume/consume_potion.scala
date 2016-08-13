@@ -3,23 +3,18 @@
 
  SUPPORTS:
   -> Drinking a variety of potions.
-  -> Multi-portion foods (pizzas, cakes, etc).
-  -> Foods with different throttle rates (karambwans, pies, etc).
+  -> Potion status and level effects.
 
  TODO:
-  -> Support for less commonly used foods.
-  -> Stop eating process if player has just died.
-  -> Confirm duel rule for no food.
+  -> Support for more potions.
 
  AUTHOR: lare96
 */
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.item.{Inventory, Item}
+import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.Skill._
 import io.luna.game.model.mobile.{Animation, Player}
-
-import scala.collection.mutable
 
 
 /* Class representing potions in the 'POTION_TABLE'. */
@@ -177,16 +172,17 @@ private val POTION_TABLE = Map(
  potion_id -> Potion
 */
 private val ID_TO_POTION = {
-  val newMap = mutable.Map[Integer, Potion]()
+  val mappings = /* Creates an Iterable[List[(Int, Potion)]] */
+    for {
+      (symbol, potion) <- POTION_TABLE
+    } yield (potion.oneDose, potion) ::
+      (potion.twoDose, potion) ::
+      (potion.threeDose, potion) ::
+      (potion.fourDose, potion) :: Nil
 
-  for ((symbol, potion) <- POTION_TABLE) {
-    newMap += (potion.oneDose, POTION_TABLE(symbol))
-    +=(potion.twoDose, POTION_TABLE(symbol))
-    +=(potion.threeDose, POTION_TABLE(symbol))
-    +=(potion.fourDose, POTION_TABLE(symbol))
-  }
-
-  newMap
+  mappings.
+    flatten. /* We flatten it to Iterable[(Int, Potion)] */
+    toMap /* And finally, convert it to a Map[Int, Potion] */
 }
 
 
@@ -254,8 +250,7 @@ private def onRestorePotion(plr: Player, superPotion: Boolean = false) = {
       skill.increaseLevel(boostAmount(skill.getStaticLevel), skill.getStaticLevel)
     }
 
-  if (superPotion) {
-    /* If super restore is being sipped, restore prayer as well. */
+  if (superPotion) { /* If super restore is being sipped, restore prayer as well. */
     val prayer = plr.skill(PRAYER)
     prayer.increaseLevel(8 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
   }
@@ -280,6 +275,8 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
   if (!plr.elapsedTime("last_potion_consume", food.consumeDelay)) {
     return
   }
+
+  plr.interruptAction()
 
   val toConsume = inventory.get(index)
   if (inventory.remove(toConsume, index)) {
@@ -310,11 +307,8 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
 
 /* Intercept the item click event, and if the item is a potion then drink it. */
 intercept[ItemFirstClickEvent] { (msg, plr) =>
-  if (msg.getInterfaceId == Inventory.INVENTORY_DISPLAY_ID) {
-
-    ID_TO_POTION.get(msg.getId).foreach { potion =>
-      consume(plr, potion, msg.getIndex)
-      msg.terminate
-    }
+  ID_TO_POTION.get(msg.getId).foreach { potion =>
+    consume(plr, potion, msg.getIndex)
+    msg.terminate
   }
 }
