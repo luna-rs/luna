@@ -175,10 +175,10 @@ private val ID_TO_POTION = {
   val mappings = /* Creates an Iterable[List[(Int, Potion)]] */
     for {
       (symbol, potion) <- POTION_TABLE
-    } yield (potion.oneDose, potion) ::
-      (potion.twoDose, potion) ::
-      (potion.threeDose, potion) ::
-      (potion.fourDose, potion) :: Nil
+    } yield potion.oneDose -> potion ::
+      potion.twoDose -> potion ::
+      potion.threeDose -> potion ::
+      potion.fourDose -> potion :: Nil
 
   mappings.
     flatten. /* We flatten it to Iterable[(Int, Potion)] */
