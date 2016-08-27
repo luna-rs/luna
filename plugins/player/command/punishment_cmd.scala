@@ -23,16 +23,16 @@ import scala.reflect.io.File
 
 /* Perform a lookup for the person we're punishing. */
 private def findPunish(msg: CommandEvent) = {
-  val name = msg.getArgs()(0).replaceAll("_", "")
+  val name = msg.args(0).replaceAll("_", "")
 
   world.getPlayers.
-    filterNot(_.rights >=@ RIGHTS_ADMIN).
-    filter(_.getUsername.equalsIgnoreCase(name))
+    filterNot(_.rights >= RIGHTS_ADMIN).
+    filter(_.name.equalsIgnoreCase(name))
 }
 
 /* Construct a string with punishment lift date ~ [yyyy-mm-dd]. */
 private def punishDuration(msg: CommandEvent) = {
-  val args = msg.getArgs
+  val args = msg.args
 
   val years = if (args.length == 4) args(3).toInt else 0
   val months = if (args.length == 3) args(2).toInt else 0
@@ -46,59 +46,48 @@ private def punishDuration(msg: CommandEvent) = {
 
 
 /* Perform an IP ban on a player. */
-intercept_@[CommandEvent]("ip_ban", RIGHTS_ADMIN) { (msg, plr) =>
+on[CommandEvent]("ip_ban", RIGHTS_ADMIN) { msg =>
   val file = File("./data/players/blacklist.txt")
 
-  findPunish(msg).foreach(it => {
+  findPunish(msg).foreach(plr => {
     async {
-      file.appendAll(System.lineSeparator, it.address)
+      file.appendAll(System.lineSeparator, plr.address)
     }
-    it.logout
-    world.messageToAll(s"${plr.name} has just blacklisted (ip banned) ${it.name}!")
+    plr.logout
   })
 }
 
 /* Perform a permanent ban on a player. */
-intercept_@[CommandEvent]("perm_ban", RIGHTS_ADMIN) { (msg, plr) =>
-  findPunish(msg).foreach(it => {
-    it.attr("unban_date", "never")
-    it.logout
-
-    world.messageToAll(s"${plr.name} has just permanently banned ${it.name}!")
+on[CommandEvent]("perm_ban", RIGHTS_ADMIN) { msg =>
+  findPunish(msg).foreach(plr => {
+    plr.attr("unban_date", "never")
+    plr.logout
   })
 }
 
 /* Perform a permanent mute on a player. */
-intercept_@[CommandEvent]("perm_mute", RIGHTS_MOD) { (msg, plr) =>
-  findPunish(msg).foreach(it => {
-    it.attr("unmute_date", "never")
-
-    world.messageToAll(s"${plr.name} has just permanently muted ${it.name}!")
+on[CommandEvent]("perm_mute", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach(plr => {
+    plr.attr("unmute_date", "never")
+    plr.logout
   })
 }
 
 /* Perform a temporary ban on a player. */
-intercept_@[CommandEvent]("ban", RIGHTS_MOD) { (msg, plr) =>
-  val duration = punishDuration(msg)
-
-  findPunish(msg).foreach(it => {
-    it.attr("unban_date", duration)
-    it.logout
-
-    world.messageToAll(s"${plr.name} has just banned ${it.name} until [$duration]!")
+on[CommandEvent]("ban", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach(plr => {
+    plr.attr("unban_date", punishDuration(msg))
+    plr.logout
   })
 }
 
 /* Perform a temporary mute on a player. */
-intercept_@[CommandEvent]("mute", RIGHTS_MOD) { (msg, plr) =>
-  val duration = punishDuration(msg)
-
-  findPunish(msg).foreach(it => {
-    it.attr("unmute_date", duration)
-
-    world.messageToAll(s"${plr.name} has just muted ${it.name} until [$duration]!")
+on[CommandEvent]("mute", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach(plr => {
+    plr.attr("unmute_date", punishDuration(msg))
+    plr.logout
   })
 }
 
 /* Perform a forced disconnect on a player. */
-intercept_@[CommandEvent]("kick", RIGHTS_MOD) { (msg, plr) => findPunish(msg).foreach(_.logout) }
+on[CommandEvent]("kick", RIGHTS_MOD) { findPunish(_).foreach(_.logout) }

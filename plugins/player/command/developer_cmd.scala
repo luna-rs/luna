@@ -19,13 +19,17 @@ import io.luna.game.model.mobile._
 
 
 /* A command that allows for attributes to be dynamically retrieved or set. */
-intercept_@[CommandEvent]("attr", RIGHTS_DEV) { (msg, plr) =>
-  val args: Array[String] = msg.getArgs
-  val name = args(0)
+on[CommandEvent]("attr", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+  val name = msg.args(0)
+  val length = msg.args.length
 
-  if (args.length == 2) {
-    val oldValue: Double = plr.attr(name)
-    val newValue = args(1)
+  if (length == 1) {
+    plr.sendMessage(s"attribute{name=$name, current_value=${ plr.attr(name) }}")
+  } else if (length == 2) {
+    val oldValue = plr.attr(name)
+    val newValue = msg.args(1)
+
     if (Doubles.tryParse(newValue) != null) {
       plr.attr(name, newValue.toDouble)
     } else if (Ints.tryParse(newValue) != null) {
@@ -35,48 +39,43 @@ intercept_@[CommandEvent]("attr", RIGHTS_DEV) { (msg, plr) =>
     } else {
       plr.attr(name, newValue)
     }
-    plr.sendMessage(s"Attribute{name=$name, oldValue=$oldValue, newValue=$newValue}")
-  } else {
-    plr.sendMessage(s"Attribute{name=$name, value=${plr.attr(name)}}")
+    plr.sendMessage(s"attribute{name=$name, old_value=$oldValue, new_value=$newValue}")
   }
 }
 
 /* A command that sends a message depicting the player's current position. */
-intercept_@[CommandEvent]("mypos", RIGHTS_DEV) { (msg, plr) =>
-  plr.sendMessage(s"Your current position is ${plr.position}.")
-}
+on[CommandEvent]("mypos", RIGHTS_DEV) { _.plr.sendMessage(s"Your current position is ${ plr.position }.") }
 
 /* A command that moves a player to a different position. */
-intercept_@[CommandEvent]("move", RIGHTS_DEV) { (msg, plr) =>
-  val args = msg.getArgs
+on[CommandEvent]("move", RIGHTS_DEV) { msg =>
+  val args = msg.args
 
   val x = args(0).toInt
   val y = args(1).toInt
   val z = if (args.length == 3) args(2).toInt else plr.z
 
-  plr.teleport(new Position(x, y, z))
+  msg.plr.teleport(new Position(x, y, z))
 }
 
 /* A command that opens the player's bank. */
-intercept_@[CommandEvent]("bank", RIGHTS_DEV) { (msg, plr) =>
-  plr.bank.open
-}
+on[CommandEvent]("bank", RIGHTS_DEV) { _.plr.bank.open }
 
 /*
  A command that sets the skill level for a player. "all" will set all skills to the
  specified level.
 */
-intercept_@[CommandEvent]("set_skill", RIGHTS_DEV) { (msg, plr) =>
-  val name = msg.getArgs()(0).capitalize
-  val level = msg.getArgs()(1).toInt
-  val range = if (name.equals("All")) {
+on[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+  val name = msg.args(0).capitalize
+  val level = msg.args(1).toInt
+  val skills = if (name.equals("All")) {
     0 until 21
   } else {
     val id = Skill.getId(name)
     id until id + 1
   }
 
-  def setSkillValues(id: Int, level: Int) = {
+  skills.foreach { id =>
     val skill = plr.skill(id)
     val set = plr.getSkills
 
@@ -89,82 +88,85 @@ intercept_@[CommandEvent]("set_skill", RIGHTS_DEV) { (msg, plr) =>
     }
 
     plr.sendSkillUpdate(id)
-    plr.sendMessage(s"You successfully set your ${Skill.getName(id)} level to $level.")
+    plr.sendMessage(s"You successfully set your ${ Skill.getName(id) } level to $level.")
   }
-
-  range.foreach(setSkillValues(_, level))
 }
 
 /* A command that spawns a non-player character. */
-intercept_@[CommandEvent]("npc", RIGHTS_DEV) { (msg, plr) =>
-  val args = msg.getArgs
-  world.addNpc(args(0).toInt, plr.position)
+on[CommandEvent]("npc", RIGHTS_DEV) { msg =>
+  world.addNpc(msg.args(0).toInt, msg.plr.position)
 }
 
 /* A command that will play music. */
-intercept_@[CommandEvent]("music", RIGHTS_DEV) { (msg, plr) =>
-  plr.sendMusic(msg.getArgs()(0).toInt)
+on[CommandEvent]("music", RIGHTS_DEV) { msg =>
+  msg.plr.sendMusic(msg.args(0).toInt)
 }
 
 /* A command that opens an interface. */
-intercept_@[CommandEvent]("interface", RIGHTS_DEV) { (msg, plr) =>
-  plr.sendInterface(msg.getArgs()(0).toInt)
+on[CommandEvent]("interface", RIGHTS_DEV) { msg =>
+  msg.plr.sendInterface(msg.args(0).toInt)
 }
 
 /* A command that plays a sound. */
-intercept_@[CommandEvent]("sound", RIGHTS_DEV) { (msg, plr) =>
-  plr.sendSound(msg.getArgs()(0).toInt, 0, 0)
+on[CommandEvent]("sound", RIGHTS_DEV) { msg =>
+  msg.plr.sendSound(msg.args(0).toInt, 0, 0)
 }
 
 /* A command that plays a graphic. */
-intercept_@[CommandEvent]("graphic", RIGHTS_DEV) { (msg, plr) =>
-  plr.graphic(new Graphic(msg.getArgs()(0).toInt))
+on[CommandEvent]("graphic", RIGHTS_DEV) { msg =>
+  msg.plr.graphic(new Graphic(msg.args(0).toInt))
 }
 
 /* A command that plays an animation. */
-intercept_@[CommandEvent]("animation", RIGHTS_DEV) { (msg, plr) =>
-  plr.animation(new Animation(msg.getArgs()(0).toInt))
+on[CommandEvent]("animation", RIGHTS_DEV) { msg =>
+  msg.plr.animation(new Animation(msg.args(0).toInt))
 }
 
 /* A command that turns a player into a non-player character. */
-intercept_@[CommandEvent]("player_npc", RIGHTS_DEV) { (msg, plr) =>
-  plr.transform(msg.getArgs()(0).toInt)
+on[CommandEvent]("player_npc", RIGHTS_DEV) { msg =>
+  msg.plr.transform(msg.args(0).toInt)
 }
 
 /* A command that spawns an item. */
-intercept_@[CommandEvent]("item", RIGHTS_DEV) { (msg, plr) =>
-  val id = msg.getArgs()(0).toInt
-  val amount = msg.getArgs()(1).toInt
+on[CommandEvent]("item", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+  val id = msg.args(0).toInt
+  val amount = msg.args(1).toInt
 
   plr.inventory.add(new Item(id, amount))
 }
 
 /* A command that spawns item(s) by name. */
-intercept_@[CommandEvent]("item_name", RIGHTS_DEV) { (msg, plr) =>
-  val name = msg.getArgs()(0).toLowerCase.replaceAll("_", " ")
-  val amount = msg.getArgs()(1).toInt
+on[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+  val name = msg.args(0).toLowerCase.replaceAll("_", " ")
+  val amount = msg.args(1).toInt
 
   val filtered = ItemDefinition.DEFINITIONS.
-    filter(Objects.nonNull _).
-    filterNot(_.isNoted).
-    filter(_.getName.toLowerCase.contains(name))
+    lazyFilter(Objects.nonNull _).
+    lazyFilterNot(_.isNoted).
+    lazyFilter(_.getName.toLowerCase.contains(name))
 
-  filtered.foreach { it =>
-    val add = new Item(it.getId, amount)
+  filtered.foreach(definition => {
+    val add = new Item(definition.getId, amount)
 
     if (plr.inventory.hasCapacityFor(add)) {
       plr.inventory.add(add)
-    } else {
+    } else if (plr.bank.hasCapacityFor(add)) {
       plr.bank.add(add)
+    } else {
+      plr.sendMessage(s"Not enough space in bank or inventory for ${ definition.getName }.")
     }
-  }
+  })
 
-  plr.sendMessage(s"Found ${filtered.length} items during lookup, with search term [$name].")
+  plr.sendMessage(s"Found ${ filtered.length } items during lookup, with search term [$name].")
 }
 
 // TODO: Turn this into one command using an interface, once option dialogues are done.
 /* A command that clears the inventory, bank, and equipment of a player. */
-intercept_@[CommandEvent]("empty", RIGHTS_DEV) { (msg, plr) =>
+on[CommandEvent]("empty", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+
   plr.inventory.clear
   plr.bank.clear
   plr.equipment.clear
@@ -173,19 +175,25 @@ intercept_@[CommandEvent]("empty", RIGHTS_DEV) { (msg, plr) =>
 }
 
 /* A command that clears the inventory of a player. */
-intercept_@[CommandEvent]("empty_inventory", RIGHTS_DEV) { (msg, plr) =>
+on[CommandEvent]("empty_inventory", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+
   plr.inventory.clear
   plr.sendMessage("You have successfully emptied your inventory.")
 }
 
 /* A command that clears the bank of a player. */
-intercept_@[CommandEvent]("empty_bank", RIGHTS_DEV) { (msg, plr) =>
+on[CommandEvent]("empty_bank", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+
   plr.bank.clear
   plr.sendMessage("You have successfully emptied your bank.")
 }
 
 /* A command that clears the equipment of a player. */
-intercept_@[CommandEvent]("empty_equipment", RIGHTS_DEV) { (msg, plr) =>
+on[CommandEvent]("empty_equipment", RIGHTS_DEV) { msg =>
+  val plr = msg.plr
+
   plr.equipment.clear
   plr.sendMessage("You have successfully emptied your equipment.")
 }
