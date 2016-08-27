@@ -8,7 +8,7 @@ import io.luna.game.event.impl.ButtonClickEvent
 
 
 /* Withdraw items as unnoted. */
-intercept_@[ButtonClickEvent](5387) { (msg, plr) => plr.attr("withdraw_as_note", false) }
+on[ButtonClickEvent](5387) { _.plr.attr("withdraw_as_note", false) }
 
 /* Withdraw items as noted. */
-intercept_@[ButtonClickEvent](5386) { (msg, plr) => plr.attr("withdraw_as_note", true) }
+on[ButtonClickEvent](5386) { _.plr.attr("withdraw_as_note", true) }
