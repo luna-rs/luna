@@ -4,11 +4,13 @@ import com.google.gson.JsonObject;
 import com.moandjiezana.toml.Toml;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.region.RegionPriorityComparator;
+import io.luna.game.model.region.RegionUpdateComparator;
 import io.netty.util.ResourceLeakDetector.Level;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.util.HashSet;
+import java.util.TreeSet;
 
 import static io.luna.util.GsonUtils.getAsType;
 
@@ -42,11 +44,12 @@ public final class LunaConstants {
     }
 
     /**
-     * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code DISABLED} in a
-     * production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise in both scenarios.
+     * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code
+     * DISABLED} in a production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise in both
+     * scenarios.
      * <p>
-     * Please note as the leak detection levels get higher, the tradeoff is a <b>substantial</b> performance loss. {@code
-     * PARANOID} should <b>never</b> be used in a production environment.
+     * Please note as the leak detection levels get higher, the tradeoff is a <strong>substantial</strong>
+     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
      */
     public static final Level RESOURCE_LEAK_DETECTION;
 
@@ -71,20 +74,18 @@ public final class LunaConstants {
     public static final int CONNECTION_LIMIT;
 
     /**
-     * If staggered updating should be enabled.
+     * If staggered updating should be enabled. This feature is disabled by default because it introduces a slight
+     * performance regression. It should only be enabled by highly populated servers.
      * <p>
-     * As you know, only 15 players and npcs are updated for you per cycle regardless of how many are technically present
-     * around you. If there are more than 15 players your region and a mob that hasn't been updated for you decides to attack
-     * you for example, you won't even be able to see the mob attacking you until it's eventually updated! Staggered updating
-     * solves this and many other issues by updating the most important mobs before anyone else.
+     * Only {@code 15} players and npcs are updated for a player per cycle regardless of how many are technically
+     * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose a
+     * lot potential problems if a large volume of players are in one place.
      * <p>
-     * The price of this feature is performance, as all of the mobs in your region have to be sorted by the {@link
-     * RegionPriorityComparator} to determine which are the most important. Very minimal servers have this feature available,
-     * simply because most servers aren't active enough to run into these types of issues. Therefore, I've kept the option
-     * available for bigger servers that might need this feature and can deal with the performance loss while smaller servers
-     * can disable it completely.
+     * A solution to this problem is <strong>staggered updating</strong>, which is a fancy term for updating the most
+     * important players first. This is done through the {@link RegionUpdateComparator}.
      * <p>
-     * To summarize, very large servers should have this enabled, any other servers should have it disabled.
+     * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored within
+     * a {@link TreeSet} (O(log n) performance) instead of a regular {@link HashSet} (O(1) performance).
      */
     public static final boolean STAGGERED_UPDATING;
 
@@ -94,8 +95,8 @@ public final class LunaConstants {
     public static final Position STARTING_POSITION;
 
     /**
-     * If asynchronous and garbage-free logging should be enabled. Enabling asynchronous logging results in higher
-     * performance at the cost of more CPU usage.
+     * If asynchronous and garbage-free logging should be enabled. This feature is enabled by default because it
+     * improves performance.
      */
     public static final boolean ASYNCHRONOUS_LOGGING;
 }
