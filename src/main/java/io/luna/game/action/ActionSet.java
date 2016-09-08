@@ -3,21 +3,21 @@ package io.luna.game.action;
 import java.util.Optional;
 
 /**
- * A model that manages pending and processing {@link Action}s.
+ * A manager that handles pending and currently processing actions for a single mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ActionSet {
 
     /**
-     * The current {@link Action} being processed.
+     * The current action being processed.
      */
     private Optional<Action> currentAction = Optional.empty();
 
     /**
-     * Attempts to submit a new pending {@link Action} to this set.
+     * Attempts to submit a new action to this set.
      *
-     * @param pending The {@code Action} to submit.
+     * @param pending The action to submit.
      */
     public void submit(Action pending) {
         if (currentAction.isPresent()) {
@@ -37,7 +37,7 @@ public final class ActionSet {
     }
 
     /**
-     * Interrupts and discards the current {@link Action} being processed.
+     * Interrupts and discards the current action being processed.
      */
     public void interrupt() {
         if (currentAction.isPresent()) {
@@ -46,5 +46,12 @@ public final class ActionSet {
 
             currentAction = Optional.empty();
         }
+    }
+
+    /**
+     * Returns the currently processing action.
+     */
+    public Optional<Action> current() {
+        return currentAction;
     }
 }

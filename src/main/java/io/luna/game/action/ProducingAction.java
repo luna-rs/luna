@@ -6,41 +6,40 @@ import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
- * A {@link SkillAction} implementation that will remove items from and add items to the inventory.
+ * A {@link PlayerAction} implementation that will remove items from and add items to the inventory.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class ProducingSkillAction extends SkillAction {
+public abstract class ProducingAction extends PlayerAction {
 
     /**
-     * The array of items currently being added.
+     * The items being added.
      */
     protected Item[] currentAdd;
 
     /**
-     * The array of items currently being removed.
+     * The items being removed.
      */
     protected Item[] currentRemove;
 
     /**
-     * Creates a new {@link ProducingSkillAction}.
+     * Creates a new {@link ProducingAction}.
      */
-    public ProducingSkillAction(Player player, boolean instant, int delay) {
+    public ProducingAction(Player player, boolean instant, int delay) {
         super(player, instant, delay);
     }
 
     @Override
-    protected void call() {
+    protected final void call() {
         if (!canProduce()) {
             interrupt();
             return;
         }
 
-        Inventory inventory = mob.getInventory();
-
         currentRemove = remove();
         currentAdd = add();
 
+        Inventory inventory = mob.getInventory();
         if (!inventory.containsAll(currentRemove)) {
             interrupt();
             return;
@@ -60,7 +59,7 @@ public abstract class ProducingSkillAction extends SkillAction {
     }
 
     /**
-     * Function invoked at the beginning of every Action loop. Return {@code false} to interrupt the Action.
+     * Function invoked at the beginning of every action loop. Return {@code false} to interrupt the action.
      */
     protected boolean canProduce() {
         return true;

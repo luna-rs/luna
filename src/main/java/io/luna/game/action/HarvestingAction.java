@@ -3,41 +3,33 @@ package io.luna.game.action;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.Skill;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
+import io.luna.util.Rational;
 import io.netty.util.internal.ThreadLocalRandom;
 
-import static com.google.common.base.Preconditions.checkState;
-
 /**
- * A {@link SkillAction} implementation that uses an algorithm to determine if items should be removed from and added to the
- * inventory every tick.
+ * A {@link PlayerAction} implementation that uses an algorithm to determine if items should be removed from
+ * and/or added to the inventory every tick.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class HarvestingSkillAction extends SkillAction {
+public abstract class HarvestingAction extends PlayerAction {
 
     /**
-     * The {@link Skill} being used for this harvesting Action.
-     */
-    protected final Skill skill;
-
-    /**
-     * The array of items currently being added.
+     * The items being added.
      */
     protected Item[] currentAdd;
 
     /**
-     * The array of items currently being removed.
+     * The items being removed.
      */
     protected Item[] currentRemove;
 
     /**
-     * Creates a new {@link HarvestingSkillAction}.
+     * Creates a new {@link HarvestingAction}.
      */
-    public HarvestingSkillAction(Player player, int skillId) {
+    public HarvestingAction(Player player) {
         super(player, false, 1);
-        skill = player.skill(skillId);
     }
 
     @Override
@@ -47,16 +39,9 @@ public abstract class HarvestingSkillAction extends SkillAction {
             return;
         }
 
-        /* NOTE: Formula is a WIP and hasn't been tested much. */
-        double skillFactor = skill.getLevel() * 0.0009408206197;
-        double chanceFactor = harvestChance();
-        double totalFactor = skillFactor + chanceFactor;
+        double harvestChance = harvestChance().doubleValue();
         double currentRoll = ThreadLocalRandom.current().nextDouble();
-
-        checkState(chanceFactor >= 0.0, "harvestChance() must be > 0.0");
-        checkState(chanceFactor <= 1.0, "harvestChance() must be < 1.0");
-
-        if (totalFactor >= currentRoll) {
+        if (harvestChance >= currentRoll) {
             Inventory inventory = mob.getInventory();
 
             currentRemove = remove();
@@ -82,7 +67,7 @@ public abstract class HarvestingSkillAction extends SkillAction {
     }
 
     /**
-     * Function invoked at the beginning of every Action loop. Return {@code false} to interrupt the Action.
+     * Function invoked at the beginning of every action loop. Return {@code false} to interrupt the action.
      */
     protected boolean canHarvest() {
         return true;
@@ -103,9 +88,9 @@ public abstract class HarvestingSkillAction extends SkillAction {
     }
 
     /**
-     * Return the chance of harvesting {@code add()}.
+     * Return the chance of harvesting items.
      */
-    protected abstract double harvestChance();
+    protected abstract Rational harvestChance();
 
     /**
      * Return the items that will be added.

@@ -11,17 +11,17 @@ import io.luna.game.model.mobile.MobileEntity;
 public abstract class DistancedAction<T extends MobileEntity> extends Action<T> {
 
     /**
-     * The position to listen for.
+     * The position.
      */
     private final Position position;
 
     /**
-     * The radius to the position to listen for.
+     * The radius to the position.
      */
     private final int radius;
 
     /**
-     * If the action should be interrupted after execution.
+     * If the action should be interrupted.
      */
     private final boolean interrupt;
 
@@ -29,9 +29,9 @@ public abstract class DistancedAction<T extends MobileEntity> extends Action<T> 
      * Creates a new {@link DistancedAction}.
      *
      * @param mob The mob this action is for.
-     * @param position The position to listen for.
-     * @param radius The radius to the position to listen for.
-     * @param interrupt If the action should be interrupted after execution.
+     * @param position The position.
+     * @param radius The radius to the position.
+     * @param interrupt If the action should be interrupted.
      */
     public DistancedAction(T mob, Position position, int radius, boolean interrupt) {
         super(mob, true, 1);
