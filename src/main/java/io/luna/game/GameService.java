@@ -17,9 +17,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An {@link AbstractScheduledService} implementation that performs general game logic processing, provides functionality for
- * executing small asynchronous and concurrent tasks through a cached thread pool, and allows for tasks from other threads to
- * be executed on the game logic thread.
+ * An {@link AbstractScheduledService} implementation that performs general game logic processing, provides
+ * functionality for executing small asynchronous tasks, and allows for tasks from other threads to be executed on
+ * the game logic thread.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -31,7 +31,7 @@ public final class GameService extends AbstractScheduledService {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A cached thread pool that manages the execution of short, low priority, asynchronous and concurrent tasks.
+     * A cached thread pool that manages the execution of short, low priority, asynchronous tasks.
      */
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build()));
@@ -65,8 +65,8 @@ public final class GameService extends AbstractScheduledService {
      * <p>
      * <p>
      * This method should <b>never</b> be invoked unless by the underlying {@link AbstractScheduledService}. Illegal
-     * invocation of this method will lead to serious gameplay timing issues as well as other unexplainable and unpredictable
-     * issues related to gameplay.
+     * invocation of this method will lead to serious gameplay timing issues as well as other unexplainable and
+     * unpredictable issues related to gameplay.
      */
     @Override
     protected void runOneIteration() throws Exception {
@@ -99,9 +99,9 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Prints a message that this service has been terminated, and attempts to gracefully exit the application cleaning up
-     * resources and ensuring all players are logged out. If an exception is thrown during shutdown, the shutdown process is
-     * aborted completely and the application is exited.
+     * Prints a message that this service has been terminated, and attempts to gracefully exit the application
+     * cleaning up resources and ensuring all players are logged out. If an exception is thrown during shutdown, the
+     * shutdown process is aborted completely and the application is exited.
      */
     @Override
     protected void shutDown() {
@@ -130,8 +130,8 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short and low
-     * priority.
+     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short
+     * and low priority.
      *
      * @param t The task to execute.
      */
@@ -140,8 +140,8 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Executes the result-bearing {@code t} using the backing cached thread pool. Tasks submitted this way should generally
-     * be short and low priority.
+     * Executes the result-bearing {@code t} using the backing cached thread pool. Tasks submitted this way should
+     * generally be short and low priority.
      *
      * @param t The task to execute.
      * @return The {@link ListenableFuture} to track completion of the task.
@@ -151,8 +151,8 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short and low
-     * priority.
+     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short
+     * and low priority.
      *
      * @param t The task to execute.
      * @return The {@link ListenableFuture} to track completion of the task.
