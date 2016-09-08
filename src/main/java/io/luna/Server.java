@@ -1,5 +1,6 @@
 package io.luna;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -10,6 +11,7 @@ import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
+import io.luna.game.model.item.Shop;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
@@ -61,8 +63,7 @@ public final class Server {
     private final MessageRepository messageRepository = new MessageRepository();
 
     /**
-     * A package-private constructor to discourage external instantiation. The {@code launchService} instance is also
-     * initialized here.
+     * A package-private constructor to discourage external instantiation.
      */
     Server() {
         ExecutorService delegateService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
@@ -111,7 +112,8 @@ public final class Server {
 
         ImmutableSet<Integer> preferred = LunaNetworkConstants.PREFERRED_PORTS;
         if (!preferred.contains(LunaConstants.PORT)) {
-            LOGGER.warn("The preferred ports for Runescape servers are {}.", StringUtils.COMMA_JOINER.join(preferred));
+            Joiner commaJoiner = StringUtils.COMMA_JOINER;
+            LOGGER.warn("Preferred ports for Runescape servers are {}.", commaJoiner.join(preferred));
         }
     }
 
@@ -148,5 +150,6 @@ public final class Server {
         launchService.execute(() -> loadClass(EquipmentDefinition.class));
         launchService.execute(() -> loadClass(NpcCombatDefinition.class));
         launchService.execute(() -> loadClass(NpcDefinition.class));
+        launchService.execute(() -> loadClass(Shop.class));
     }
 }
