@@ -69,7 +69,7 @@ public abstract class Action<T extends MobileEntity> {
     protected final int delay;
 
     /**
-     * The {@link ActionRunner} that runs this action.
+     * The task processing this action.
      */
     private final ActionRunner runner;
 
