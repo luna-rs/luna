@@ -135,8 +135,7 @@ public final class Server {
     private void initPlugins() throws Exception {
         PluginManager plugins = context.getPlugins();
 
-        FutureUtils.addCallback(launchService.submit(new PluginBootstrap(context)),
-            plugins.getPipelines()::replacePipelines);
+        FutureUtils.addCallback(launchService.submit(new PluginBootstrap(context)), plugins.getPipelines()::swap);
     }
 
     /**
