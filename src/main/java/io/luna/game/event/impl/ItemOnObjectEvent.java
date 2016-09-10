@@ -1,55 +1,59 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.event.EventArguments;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An {@link Event} implementation sent when a player uses an item on an object.
+ * An event sent when a player uses an item on an object.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemOnObjectEvent extends Event {
+public final class ItemOnObjectEvent extends PlayerEvent {
 
     /**
-     * The identifier for the item used.
+     * The item identifier.
      */
     private final int itemId;
 
     /**
-     * The index of the item used.
+     * The item index.
      */
     private final int itemIndex;
 
     /**
-     * The interface that the item used is on.
+     * The item interface identifier.
      */
     private final int itemInterfaceId;
 
     /**
-     * The identifier for the target object.
+     * The object identifier.
      */
     private final int objectId;
 
     /**
-     * The x coordinate of the target object.
+     * The object's x coordinate.
      */
     private final int objectX;
 
     /**
-     * The y coordinate of the target object.
+     * The object's y coordinate.
      */
     private final int objectY;
 
     /**
      * Creates a new {@link ItemOnObjectEvent}.
      *
-     * @param itemId The identifier for the item used.
-     * @param itemIndex The index of the item used.
-     * @param itemInterfaceId The interface that the item used is on.
-     * @param objectId The identifier for the target object.
-     * @param objectX The x coordinate of the target object.
-     * @param objectY The y coordinate of the target object.
+     * @param player The player.
+     * @param itemId The item identifier.
+     * @param itemIndex The item index.
+     * @param itemInterfaceId The item interface identifier.
+     * @param objectId The object identifier.
+     * @param objectX The object's x coordinate.
+     * @param objectY The object's y coordinate.
      */
-    public ItemOnObjectEvent(int itemId, int itemIndex, int itemInterfaceId, int objectId, int objectX, int objectY) {
+    public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId,
+        int objectX, int objectY) {
+        super(player);
         this.itemId = itemId;
         this.itemIndex = itemIndex;
         this.itemInterfaceId = itemInterfaceId;
@@ -58,45 +62,50 @@ public final class ItemOnObjectEvent extends Event {
         this.objectY = objectY;
     }
 
+    @Override
+    public boolean matches(EventArguments args) {
+        return args.equals(0, itemId) && args.equals(1, objectId);
+    }
+
     /**
-     * @return The identifier for the item used.
+     * @return The item identifier.
      */
-    public int getItemId() {
+    public int itemId() {
         return itemId;
     }
 
     /**
-     * @return The index of the item used.
+     * @return The item index.
      */
-    public int getItemIndex() {
+    public int itemIndex() {
         return itemIndex;
     }
 
     /**
-     * @return The interface that the item used is on.
+     * @return The item interface identifier.
      */
-    public int getItemInterfaceId() {
+    public int itemInterfaceId() {
         return itemInterfaceId;
     }
 
     /**
-     * @return The identifier for the target object.
+     * @return The object identifier.
      */
-    public int getObjectId() {
+    public int objectId() {
         return objectId;
     }
 
     /**
-     * @return The x coordinate of the target object.
+     * @return The object's x coordinate.
      */
-    public int getObjectX() {
+    public int objectX() {
         return objectX;
     }
 
     /**
-     * @return The y coordinate of the target object.
+     * @return The object's y coordinate.
      */
-    public int getObjectY() {
+    public int objectY() {
         return objectY;
     }
 }

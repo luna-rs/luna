@@ -1,13 +1,13 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent whenever an player talks.
+ * An event sent when a player talks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ChatEvent extends Event {
+public final class ChatEvent extends PlayerEvent {
 
     /**
      * The chat effects.
@@ -20,55 +20,57 @@ public final class ChatEvent extends Event {
     private final int color;
 
     /**
-     * The length of the message sent.
+     * The message length.
      */
-    private final int textLength;
+    private final int messageLength;
 
     /**
-     * The actual message sent.
+     * The message.
      */
-    private final byte[] text;
+    private final byte[] message;
 
     /**
      * Creates a new {@link ChatEvent}.
      *
+     * @param player The player.
      * @param effects The chat effects.
      * @param color The chat color.
-     * @param textLength The length of the message sent.
-     * @param text The actual message sent.
+     * @param messageLength The message length.
+     * @param message The message.
      */
-    public ChatEvent(int effects, int color, int textLength, byte[] text) {
+    public ChatEvent(Player player, int effects, int color, int messageLength, byte[] message) {
+        super(player);
         this.effects = effects;
         this.color = color;
-        this.textLength = textLength;
-        this.text = text;
+        this.messageLength = messageLength;
+        this.message = message;
     }
 
     /**
      * @return The chat effects.
      */
-    public int getEffects() {
+    public int effects() {
         return effects;
     }
 
     /**
      * @return The chat color.
      */
-    public int getColor() {
+    public int color() {
         return color;
     }
 
     /**
-     * @return The length of the message sent.
+     * @return The message length.
      */
-    public int getTextLength() {
-        return textLength;
+    public int messageLength() {
+        return messageLength;
     }
 
     /**
-     * @return The actual message sent.
+     * @return The message.
      */
-    public byte[] getText() {
-        return text;
+    public byte[] message() {
+        return message;
     }
 }

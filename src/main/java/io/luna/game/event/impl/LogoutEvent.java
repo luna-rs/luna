@@ -1,22 +1,20 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent whenever a player logs out.
+ * An event sent when a player logs out.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class LogoutEvent extends Event {
+public final class LogoutEvent extends PlayerEvent {
 
     /**
-     * Singleton instance.
+     * Creates a new {@link LogoutEvent}.
+     *
+     * @param player The player.
      */
-    public static final Event INSTANCE = new LogoutEvent();
-
-    /**
-     * Private constructor to discourage external instantiation.
-     */
-    private LogoutEvent() {
+    public LogoutEvent(Player player) {
+        super(player);
     }
 }

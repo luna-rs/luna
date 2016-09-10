@@ -1,22 +1,20 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent whenever a player logs in.
+ * An event sent when a player logs in.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class LoginEvent extends Event {
+public final class LoginEvent extends PlayerEvent {
 
     /**
-     * Singleton instance.
+     * Creates a new {@link LoginEvent}.
+     *
+     * @param player The player.
      */
-    public static final Event INSTANCE = new LoginEvent();
-
-    /**
-     * Private constructor to discourage external instantiation.
-     */
-    private LoginEvent() {
+    public LoginEvent(Player player) {
+        super(player);
     }
 }

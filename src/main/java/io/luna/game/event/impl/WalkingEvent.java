@@ -1,17 +1,17 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.WalkingQueue.Step;
 
 /**
- * An event implementation sent when an player walks.
+ * An event sent when a player walks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WalkingEvent extends Event {
+public final class WalkingEvent extends PlayerEvent {
 
     /**
-     * The path that the player will walk.
+     * The walking path.
      */
     private final Step[] path;
 
@@ -23,25 +23,27 @@ public final class WalkingEvent extends Event {
     /**
      * Creates a new {@link WalkingEvent}.
      *
+     * @param player The player.
      * @param path The path that the player will walk.
      * @param running If the player is running.
      */
-    public WalkingEvent(Step[] path, boolean running) {
+    public WalkingEvent(Player player, Step[] path, boolean running) {
+        super(player);
         this.path = path;
         this.running = running;
     }
 
     /**
-     * @return The path that the player will walk.
+     * @return The walking path.
      */
-    public Step[] getPath() {
+    public Step[] path() {
         return path;
     }
 
     /**
-     * @return {@code true} if the player is running, {@code false} otherwise.
+     * @return If the player is running.
      */
-    public boolean getRunning() {
+    public boolean running() {
         return running;
     }
 }

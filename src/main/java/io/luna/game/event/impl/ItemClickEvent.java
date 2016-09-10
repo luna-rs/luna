@@ -1,19 +1,17 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
-
-import java.util.Arrays;
-import java.util.Objects;
+import io.luna.game.event.EventArguments;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent when a player clicks any item index.
+ * An event sent when a player clicks any item index.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class ItemClickEvent extends Event {
+public class ItemClickEvent extends PlayerEvent {
 
     /**
-     * An event implementation sent whenever a player clicks an item's first index.
+     * An event sent when a player clicks an item's first index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -22,13 +20,13 @@ public class ItemClickEvent extends Event {
         /**
          * Creates a new {@link ItemFirstClickEvent}.
          */
-        public ItemFirstClickEvent(int itemId, int slot, int interfaceId) {
-            super(itemId, slot, interfaceId);
+        public ItemFirstClickEvent(Player player, int itemId, int slot, int interfaceId) {
+            super(player, itemId, slot, interfaceId);
         }
     }
 
     /**
-     * An event implementation sent whenever a player clicks an item's second index.
+     * An event sent when a player clicks an item's second index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -37,13 +35,13 @@ public class ItemClickEvent extends Event {
         /**
          * Creates a new {@link ItemSecondClickEvent}.
          */
-        public ItemSecondClickEvent(int itemId, int slot, int interfaceId) {
-            super(itemId, slot, interfaceId);
+        public ItemSecondClickEvent(Player player, int itemId, int slot, int interfaceId) {
+            super(player, itemId, slot, interfaceId);
         }
     }
 
     /**
-     * An event implementation sent whenever a player clicks an item's third index.
+     * An event sent when a player clicks an item's third index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -52,13 +50,13 @@ public class ItemClickEvent extends Event {
         /**
          * Creates a new {@link ItemThirdClickEvent}.
          */
-        public ItemThirdClickEvent(int itemId, int slot, int interfaceId) {
-            super(itemId, slot, interfaceId);
+        public ItemThirdClickEvent(Player player, int itemId, int slot, int interfaceId) {
+            super(player, itemId, slot, interfaceId);
         }
     }
 
     /**
-     * An event implementation sent whenever a player clicks an item's fourth index.
+     * An event sent when a player clicks an item's fourth index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -67,13 +65,13 @@ public class ItemClickEvent extends Event {
         /**
          * Creates a new {@link ItemFourthClickEvent}.
          */
-        public ItemFourthClickEvent(int id, int index, int interfaceId) {
-            super(id, index, interfaceId);
+        public ItemFourthClickEvent(Player player, int id, int index, int interfaceId) {
+            super(player, id, index, interfaceId);
         }
     }
 
     /**
-     * An event implementation sent whenever a player clicks an item's fifth index.
+     * An event sent when a player clicks an item's fifth index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -82,8 +80,8 @@ public class ItemClickEvent extends Event {
         /**
          * Creates a new {@link ItemFifthClickEvent}.
          */
-        public ItemFifthClickEvent(int id, int index, int interfaceId) {
-            super(id, index, interfaceId);
+        public ItemFifthClickEvent(Player player, int id, int index, int interfaceId) {
+            super(player, id, index, interfaceId);
         }
     }
 
@@ -105,39 +103,41 @@ public class ItemClickEvent extends Event {
     /**
      * Creates a new {@link ItemClickEvent}.
      *
+     * @param player The player.
      * @param id The identifier of the item clicked.
      * @param index The index of the item clicked.
      * @param interfaceId The identifier of the interface the item was clicked on.
      */
-    private ItemClickEvent(int id, int index, int interfaceId) {
+    private ItemClickEvent(Player player, int id, int index, int interfaceId) {
+        super(player);
         this.id = id;
         this.index = index;
         this.interfaceId = interfaceId;
     }
 
     @Override
-    public final boolean matches(Object... args) {
-        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, id));
+    public final boolean matches(EventArguments args) {
+        return args.contains(id);
     }
 
     /**
      * @return The identifier of the item clicked.
      */
-    public final int getId() {
+    public final int id() {
         return id;
     }
 
     /**
      * @return The index of the item clicked.
      */
-    public final int getIndex() {
+    public final int index() {
         return index;
     }
 
     /**
      * @return The identifier of the interface the item was clicked on.
      */
-    public final int getInterfaceId() {
+    public final int interfaceId() {
         return interfaceId;
     }
 }

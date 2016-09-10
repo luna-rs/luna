@@ -1,22 +1,20 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent whenever a player changes regions.
+ * An event sent when a player changes regions.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class RegionChangedEvent extends Event {
+public final class RegionChangedEvent extends PlayerEvent {
 
     /**
-     * Singleton instance.
+     * Creates a new {@link RegionChangedEvent}.
+     *
+     * @param player The player.
      */
-    public static final Event INSTANCE = new RegionChangedEvent();
-
-    /**
-     * Private constructor to discourage external instantiation.
-     */
-    private RegionChangedEvent() {
+    public RegionChangedEvent(Player player) {
+        super(player);
     }
 }

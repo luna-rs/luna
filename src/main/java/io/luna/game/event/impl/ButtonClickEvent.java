@@ -1,40 +1,40 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
-
-import java.util.Arrays;
-import java.util.Objects;
+import io.luna.game.event.EventArguments;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent whenever a player clicks a button on an interface.
+ * An event sent when a player clicks a button on an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ButtonClickEvent extends Event {
+public final class ButtonClickEvent extends PlayerEvent {
 
     /**
-     * The identifier for the button that was clicked.
+     * The clicked button.
      */
     private final int id;
 
     /**
      * Creates a new {@link ButtonClickEvent}.
      *
-     * @param id The identifier for the button that was clicked.
+     * @param player The player.
+     * @param id The clicked button.
      */
-    public ButtonClickEvent(int id) {
+    public ButtonClickEvent(Player player, int id) {
+        super(player);
         this.id = id;
     }
 
     @Override
-    public boolean matches(Object... args) {
-        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, id));
+    public boolean matches(EventArguments args) {
+        return args.contains(id);
     }
 
     /**
-     * @return The identifier for the button that was clicked.
+     * @return The clicked button.
      */
-    public int getId() {
+    public int id() {
         return id;
     }
 }

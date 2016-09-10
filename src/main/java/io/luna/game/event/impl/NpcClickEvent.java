@@ -1,20 +1,18 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
+import io.luna.game.event.EventArguments;
 import io.luna.game.model.mobile.Npc;
-
-import java.util.Arrays;
-import java.util.Objects;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent when a player clicks any npc index.
+ * An event sent when a player clicks any npc index.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class NpcClickEvent extends Event {
+public class NpcClickEvent extends PlayerEvent {
 
     /**
-     * An event implementation sent when a player clicks an npc's first index.
+     * An event sent when a player clicks an npc's first index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -23,13 +21,13 @@ public class NpcClickEvent extends Event {
         /**
          * Creates a new {@link NpcClickEvent}.
          */
-        public NpcFirstClickEvent(Npc npc) {
-            super(npc);
+        public NpcFirstClickEvent(Player player, Npc npc) {
+            super(player, npc);
         }
     }
 
     /**
-     * An event implementation sent when a player clicks an npc's second index.
+     * An event sent when a player clicks an npc's second index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -38,13 +36,13 @@ public class NpcClickEvent extends Event {
         /**
          * Creates a new {@link NpcSecondClickEvent}.
          */
-        public NpcSecondClickEvent(Npc npc) {
-            super(npc);
+        public NpcSecondClickEvent(Player player, Npc npc) {
+            super(player, npc);
         }
     }
 
     /**
-     * An event implementation sent when a player clicks an npc's third index.
+     * An event sent when a player clicks an npc's third index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -53,13 +51,13 @@ public class NpcClickEvent extends Event {
         /**
          * Creates a new {@link NpcClickEvent}.
          */
-        public NpcThirdClickEvent(Npc npc) {
-            super(npc);
+        public NpcThirdClickEvent(Player player, Npc npc) {
+            super(player, npc);
         }
     }
 
     /**
-     * An event implementation sent when a player clicks an npc's fourth index.
+     * An event sent when a player clicks an npc's fourth index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -68,13 +66,13 @@ public class NpcClickEvent extends Event {
         /**
          * Creates a new {@link NpcClickEvent}.
          */
-        public NpcFourthClickEvent(Npc npc) {
-            super(npc);
+        public NpcFourthClickEvent(Player player, Npc npc) {
+            super(player, npc);
         }
     }
 
     /**
-     * An event implementation sent when a player clicks an npc's fifth index.
+     * An event sent when a player clicks an npc's fifth index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -83,34 +81,36 @@ public class NpcClickEvent extends Event {
         /**
          * Creates a new {@link NpcClickEvent}.
          */
-        public NpcFifthClickEvent(Npc npc) {
-            super(npc);
+        public NpcFifthClickEvent(Player player, Npc npc) {
+            super(player, npc);
         }
     }
 
     /**
-     * The instance of the npc.
+     * The non-player character.
      */
     private final Npc npc;
 
     /**
      * Creates a new {@link NpcClickEvent}.
      *
-     * @param npc The instance of the npc.
+     * @param player The player.
+     * @param npc The non-player character.
      */
-    private NpcClickEvent(Npc npc) {
+    private NpcClickEvent(Player player, Npc npc) {
+        super(player);
         this.npc = npc;
     }
 
     @Override
-    public final boolean matches(Object... args) {
-        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, npc.getId()));
+    public final boolean matches(EventArguments args) {
+        return args.contains(npc.getId());
     }
 
     /**
-     * @return The instance of the npc.
+     * @return The non-player character.
      */
-    public Npc getNpc() {
+    public Npc npc() {
         return npc;
     }
 }

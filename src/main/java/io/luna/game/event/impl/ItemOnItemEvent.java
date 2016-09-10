@@ -1,60 +1,59 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.Event;
-
-import java.util.Objects;
-
-import static com.google.common.base.Preconditions.checkState;
+import io.luna.game.event.EventArguments;
+import io.luna.game.model.mobile.Player;
 
 /**
- * An event implementation sent when a player uses an item on another item.
+ * An event sent when a player uses an item on another item.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemOnItemEvent extends Event {
+public final class ItemOnItemEvent extends PlayerEvent {
 
     /**
-     * The identifier of the item used.
+     * The used item identifier.
      */
     private final int usedId;
 
     /**
-     * The identifier of the target item.
+     * The target item identifier.
      */
     private final int targetId;
 
     /**
-     * The index of the item used.
+     * The used item index.
      */
     private final int usedIndex;
 
     /**
-     * The index of the target item.
+     * The target item index.
      */
     private final int targetIndex;
 
     /**
-     * The identifier for the interface the item used is on.
+     * The used interface identifier.
      */
     private final int usedInterfaceId;
 
     /**
-     * The identifier for the interface the target item is on.
+     * The target interface identifier.
      */
     private final int targetInterfaceId;
 
     /**
      * Creates a new {@link ItemOnItemEvent}.
      *
-     * @param usedId The identifier of the item used.
-     * @param targetId The identifier of the target item.
-     * @param usedIndex The index of the item used.
-     * @param targetIndex The index of the target item.
-     * @param usedInterfaceId The identifier for the interface the item used is on.
-     * @param targetInterfaceId The identifier for the interface the target item is on.
+     * @param player The player.
+     * @param usedId The used item identifier.
+     * @param targetId The target item identifier.
+     * @param usedIndex The used item index.
+     * @param targetIndex The target item index.
+     * @param usedInterfaceId The used interface identifier.
+     * @param targetInterfaceId The target interface identifier.
      */
-    public ItemOnItemEvent(int usedId, int targetId, int usedIndex, int targetIndex, int usedInterfaceId,
-        int targetInterfaceId) {
+    public ItemOnItemEvent(Player player, int usedId, int targetId, int usedIndex, int targetIndex,
+        int usedInterfaceId, int targetInterfaceId) {
+        super(player);
         this.usedId = usedId;
         this.targetId = targetId;
         this.usedIndex = usedIndex;
@@ -64,50 +63,50 @@ public final class ItemOnItemEvent extends Event {
     }
 
     @Override
-    public boolean matches(Object... args) {
-        checkState(args.length == 2, "args.length != 1");
-        return Objects.equals(args[0], usedId) && Objects.equals(args[1], targetId);
+    public boolean matches(EventArguments args) {
+        return args.equals(0, usedId) && args.equals(1, targetId) || args.equals(0, targetId) && args
+            .equals(1, usedId);
     }
 
     /**
-     * @return The identifier of the item used.
+     * @return The used item identifier.
      */
-    public int getUsedId() {
+    public int usedId() {
         return usedId;
     }
 
     /**
-     * @return The identifier of the target item.
+     * @return The target item identifier.
      */
-    public int getTargetId() {
+    public int targetId() {
         return targetId;
     }
 
     /**
-     * @return The index of the item used.
+     * @return The used item index.
      */
-    public int getUsedIndex() {
+    public int usedIndex() {
         return usedIndex;
     }
 
     /**
-     * @return The index of the target item.
+     * @return The target item index.
      */
-    public int getTargetIndex() {
+    public int targetIndex() {
         return targetIndex;
     }
 
     /**
-     * @return The identifier for the interface the item used is on.
+     * @return The used interface identifier.
      */
-    public int getUsedInterfaceId() {
+    public int usedInterfaceId() {
         return usedInterfaceId;
     }
 
     /**
-     * @return The identifier for the interface the target item is on.
+     * @return The target interface identifier.
      */
-    public int getTargetInterfaceId() {
+    public int targetInterfaceId() {
         return targetInterfaceId;
     }
 }

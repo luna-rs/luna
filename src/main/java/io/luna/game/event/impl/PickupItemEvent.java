@@ -1,38 +1,36 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-
-import java.util.Arrays;
-import java.util.Objects;
+import io.luna.game.event.EventArguments;
 
 /**
- * An event implementation sent whenever a player picks up an item.
+ * An event sent when a player picks up an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PickupItemEvent extends Event {
 
     /**
-     * The {@code x} coordinate of the item.
+     * The item's x coordinate.
      */
     private final int x;
 
     /**
-     * The {@code y} coordinate of the item.
+     * The item's y coordinate.
      */
     private final int y;
 
     /**
-     * The identifier for the item.
+     * The item identifier.
      */
     private final int id;
 
     /**
      * Creates a new {@link PickupItemEvent}.
      *
-     * @param x The {@code x} coordinate of the item.
-     * @param y The {@code y} coordinate of the item.
-     * @param id The identifier for the item.
+     * @param x The item's x coordinate.
+     * @param y The item's y coordinate.
+     * @param id The item identifier.
      */
     public PickupItemEvent(int x, int y, int id) {
         this.x = x;
@@ -41,28 +39,28 @@ public final class PickupItemEvent extends Event {
     }
 
     @Override
-    public boolean matches(Object... args) {
-        return Arrays.stream(args).anyMatch(it -> Objects.equals(it, id));
+    public boolean matches(EventArguments args) {
+        return args.contains(id);
     }
 
     /**
-     * @return The {@code x} coordinate of the item.
+     * @return The item's x coordinate.
      */
-    public int getX() {
+    public int x() {
         return x;
     }
 
     /**
-     * @return The {@code y} coordinate of the item.
+     * @return The item's y coordinate.
      */
-    public int getY() {
+    public int y() {
         return y;
     }
 
     /**
-     * @return The identifier for the item.
+     * @return The item identifier.
      */
-    public int getId() {
+    public int id() {
         return id;
     }
 }
