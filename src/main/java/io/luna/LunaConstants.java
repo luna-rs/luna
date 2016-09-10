@@ -3,7 +3,6 @@ package io.luna;
 import com.google.gson.JsonObject;
 import com.moandjiezana.toml.Toml;
 import io.luna.game.model.Position;
-import io.luna.game.model.mobile.Player;
 import io.luna.game.model.region.RegionUpdateComparator;
 import io.netty.util.ResourceLeakDetector.Level;
 
@@ -81,16 +80,17 @@ public final class LunaConstants {
      * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose a
      * lot potential problems if a large volume of players are in one place.
      * <p>
-     * A solution to this problem is <strong>staggered updating</strong>, which is a fancy term for updating the most
+     * A solution to this problem is <strong>staggered updating</strong>, which is a fancy term for updating the
+     * most
      * important players first. This is done through the {@link RegionUpdateComparator}.
      * <p>
-     * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored within
-     * a {@link TreeSet} (O(log n) performance) instead of a regular {@link HashSet} (O(1) performance).
+     * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored
+     * within a {@link TreeSet} (O(log n) performance) instead of a regular {@link HashSet} (O(1) performance).
      */
     public static final boolean STAGGERED_UPDATING;
 
     /**
-     * The {@link Position} that all new {@link Player}s will be placed to.
+     * The position that new players will start from.
      */
     public static final Position STARTING_POSITION;
 

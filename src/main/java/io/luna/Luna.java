@@ -5,7 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Instantiates a {@link Server} that will start this application.
+ * Instantiates a {@link Server} that will start Luna.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -17,7 +17,7 @@ public final class Luna {
     private static final Logger LOGGER;
 
     /**
-     * A private constructor to discourage external instantiation.
+     * A private constructor.
      */
     private Luna() {
     }
@@ -27,7 +27,7 @@ public final class Luna {
             Thread.currentThread().setName("LunaInitializationThread");
 
             if (LunaConstants.ASYNCHRONOUS_LOGGING) {
-                System.setProperty("Log4jContextSelector", // Enables asynchronous, garbage-free logging.
+                System.setProperty("Log4jContextSelector", /* Enables asynchronous, garbage-free logging. */
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
             }
             LOGGER = LogManager.getLogger();
@@ -37,9 +37,7 @@ public final class Luna {
     }
 
     /**
-     * Invoked when this program is started, initializes the {@link Server}.
-     *
-     * @param args The runtime arguments, none of which are parsed.
+     * Invoked when this program is started, initializes Luna.
      */
     public static void main(String[] args) {
         try {

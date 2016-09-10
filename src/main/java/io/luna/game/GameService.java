@@ -17,9 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An {@link AbstractScheduledService} implementation that performs general game logic processing, provides
- * functionality for executing small asynchronous tasks, and allows for tasks from other threads to be executed on
- * the game logic thread.
+ * A service that handles game logic processing.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -31,25 +29,25 @@ public final class GameService extends AbstractScheduledService {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A cached thread pool that manages the execution of short, low priority, asynchronous tasks.
+     * A cached thread pool for low-priority tasks.
      */
     private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
         Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build()));
 
     /**
-     * A queue of synchronization tasks.
+     * A queue of tasks to run.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
     /**
-     * An instance of the {@link LunaContext}.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
      * Creates a new {@link GameService}.
      *
-     * @param context The context this is being managed under.
+     * @param context The context instance.
      */
     public GameService(LunaContext context) {
         this.context = context;
@@ -60,14 +58,6 @@ public final class GameService extends AbstractScheduledService {
         return "LunaGameThread";
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <p>
-     * This method should <b>never</b> be invoked unless by the underlying {@link AbstractScheduledService}. Illegal
-     * invocation of this method will lead to serious gameplay timing issues as well as other unexplainable and
-     * unpredictable issues related to gameplay.
-     */
     @Override
     protected void runOneIteration() throws Exception {
         try {
@@ -98,14 +88,10 @@ public final class GameService extends AbstractScheduledService {
         return Scheduler.newFixedRateSchedule(600, 600, TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * Prints a message that this service has been terminated, and attempts to gracefully exit the application
-     * cleaning up resources and ensuring all players are logged out. If an exception is thrown during shutdown, the
-     * shutdown process is aborted completely and the application is exited.
-     */
     @Override
-    protected void shutDown() {
+    public void shutDown() {
         try {
+            /* TODO needs to be fixed, tested, and debugged */
             World world = context.getWorld();
 
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
@@ -121,48 +107,35 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Queues {@code t} to be executed on this game service thread.
-     *
-     * @param t The task to be queued.
+     * Queues a task to be ran on the next tick.
      */
     public void sync(Runnable t) {
         syncTasks.add(t);
     }
 
     /**
-     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short
-     * and low priority.
-     *
-     * @param t The task to execute.
+     * Runs an asynchronous task.
      */
     public void execute(Runnable t) {
         executorService.execute(t);
     }
 
     /**
-     * Executes the result-bearing {@code t} using the backing cached thread pool. Tasks submitted this way should
-     * generally be short and low priority.
-     *
-     * @param t The task to execute.
-     * @return The {@link ListenableFuture} to track completion of the task.
+     * Runs a result-bearing and listening asynchronous task.
      */
     public <T> ListenableFuture<T> submit(Callable<T> t) {
         return executorService.submit(t);
     }
 
     /**
-     * Executes {@code t} using the backing cached thread pool. Tasks submitted this way should generally be short
-     * and low priority.
-     *
-     * @param t The task to execute.
-     * @return The {@link ListenableFuture} to track completion of the task.
+     * Runs a listening asynchronous task.
      */
     public ListenableFuture<?> submit(Runnable t) {
         return executorService.submit(t);
     }
 
     /**
-     * @return An instance of the {@link LunaContext}.
+     * @return The context instance.
      */
     public LunaContext getContext() {
         return context;

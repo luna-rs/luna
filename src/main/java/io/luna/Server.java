@@ -1,7 +1,5 @@
 package io.luna;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -15,10 +13,7 @@ import io.luna.game.model.item.Shop;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
-import io.luna.net.LunaNetworkConstants;
 import io.luna.net.msg.MessageRepository;
-import io.luna.util.FutureUtils;
-import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -36,7 +31,7 @@ import static io.luna.util.ClassUtils.loadClass;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * Initializes the individual modules to launch {@link Luna}.
+ * A model that handles initialization logic.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -48,46 +43,44 @@ public final class Server {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The {@link ExecutorService} that will execute startup tasks.
+     * A thread pool that will run startup tasks.
      */
-    private final ListeningExecutorService launchService;
+    private final ListeningExecutorService launchPool;
 
     /**
-     * The {@link LunaContext} that this {@code Server} will be managed with.
+     * A luna context instance.
      */
     private final LunaContext context = new LunaContext();
 
     /**
-     * The repository containing data for incoming messages.
+     * A message repository.
      */
-    private final MessageRepository messageRepository = new MessageRepository();
+    private final MessageRepository repository = new MessageRepository();
 
     /**
-     * A package-private constructor to discourage external instantiation.
+     * A package-private constructor.
      */
     Server() {
         ExecutorService delegateService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
             new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
 
-        launchService = MoreExecutors.listeningDecorator(delegateService);
+        launchPool = MoreExecutors.listeningDecorator(delegateService);
     }
 
     /**
-     * Creates {@link Luna} by initializing all of the individual modules.
-     *
-     * @throws Exception If any exceptions are thrown during initialization.
+     * Runs the individual tasks that start Luna.
      */
     public void init() throws Exception {
         LOGGER.info("Luna is being initialized...");
 
-        initAsyncTasks();
+        initLaunchTasks();
         initPlugins();
         initGame();
 
-        launchService.shutdown();
-        launchService.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        launchPool.shutdown();
+        launchPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
-        bind();
+        initNetwork();
         LOGGER.info("Luna is now online on port {}!", box(LunaConstants.PORT));
 
         PluginManager plugins = context.getPlugins();
@@ -95,32 +88,22 @@ public final class Server {
     }
 
     /**
-     * Initializes the Netty implementation. Will block indefinitely until the {@link ServerBootstrap} is bound.
-     *
-     * @throws Exception If any exceptions are thrown while binding.
+     * Initializes the network server using Netty.
      */
-    private void bind() throws Exception {
+    private void initNetwork() throws Exception {
+        ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
+
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
 
-        ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
-
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
+        bootstrap.childHandler(new LunaChannelInitializer(context, repository));
         bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
-
-        ImmutableSet<Integer> preferred = LunaNetworkConstants.PREFERRED_PORTS;
-        if (!preferred.contains(LunaConstants.PORT)) {
-            Joiner commaJoiner = StringUtils.COMMA_JOINER;
-            LOGGER.warn("Preferred ports for Runescape servers are {}.", commaJoiner.join(preferred));
-        }
     }
 
     /**
-     * Initializes the {@link GameService} asynchronously.
-     *
-     * @throws Exception If any exceptions are thrown during initialization of the {@code GameService}.
+     * Initializes the game service.
      */
     private void initGame() throws Exception {
         GameService service = context.getService();
@@ -128,27 +111,22 @@ public final class Server {
     }
 
     /**
-     * Initializes the {@link PluginManager} asynchronously.
-     *
-     * @throws Exception If any exceptions are thrown while initializing the {@code PluginManager}.
+     * Initializes the plugin bootstrap.
      */
     private void initPlugins() throws Exception {
-        PluginManager plugins = context.getPlugins();
-
-        FutureUtils.addCallback(launchService.submit(new PluginBootstrap(context)), plugins.getPipelines()::swap);
+        PluginBootstrap bootstrap = new PluginBootstrap(context);
+        bootstrap.init(launchPool);
     }
 
     /**
-     * Initializes all miscellaneous startup tasks asynchronously.
-     *
-     * @throws Exception If any exceptions are thrown while initializing startup tasks.
+     * Initializes misc. startup tasks.
      */
-    private void initAsyncTasks() throws Exception {
-        launchService.execute(new MessageRepositoryParser(messageRepository));
-        launchService.execute(() -> loadClass(ItemDefinition.class));
-        launchService.execute(() -> loadClass(EquipmentDefinition.class));
-        launchService.execute(() -> loadClass(NpcCombatDefinition.class));
-        launchService.execute(() -> loadClass(NpcDefinition.class));
-        launchService.execute(() -> loadClass(Shop.class));
+    private void initLaunchTasks() throws Exception {
+        launchPool.execute(new MessageRepositoryParser(repository));
+        launchPool.execute(() -> loadClass(ItemDefinition.class));
+        launchPool.execute(() -> loadClass(EquipmentDefinition.class));
+        launchPool.execute(() -> loadClass(NpcCombatDefinition.class));
+        launchPool.execute(() -> loadClass(NpcDefinition.class));
+        launchPool.execute(() -> loadClass(Shop.class));
     }
 }
