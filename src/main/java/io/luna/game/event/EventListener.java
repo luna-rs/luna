@@ -1,36 +1,55 @@
 package io.luna.game.event;
 
-import io.luna.game.model.mobile.Player;
+import io.luna.game.plugin.PluginFailureException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
- * A wrapper for Scala plugin listeners to prevent repetition of the confusing and verbose type declaration. In the {@link
- * EventListenerPipeline} this class acts as a listener for {@link Event}s.
+ * A listener that intercepts events.
  *
- * @param <E> The type of {@link Event} that this listener is listening for.
+ * @param <E> The type of event being intercepted.
  * @author lare96 <http://github.org/lare96>
  */
 public final class EventListener<E extends Event> {
 
     /**
-     * The wrapped listener function.
+     * The asynchronous logger.
      */
-    private final BiConsumer<E, Player> function;
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * The listener function.
+     */
+    private final Consumer<E> listener;
 
     /**
      * Creates a new {@link EventListener}.
      *
-     * @param function The wrapped listener function.
+     * @param listener The listener function.
      */
-    public EventListener(BiConsumer<E, Player> function) {
-        this.function = function;
+    public EventListener(Consumer<E> listener) {
+        this.listener = listener;
     }
 
     /**
-     * @return The wrapped listener function.
+     * Applies the wrapped function and handles exceptions.
      */
-    public BiConsumer<E, Player> getFunction() {
-        return function;
+    public void apply(E msg) throws PluginFailureException {
+        try {
+            listener.accept(msg);
+        } catch (PluginFailureException failure) { // fail, recoverable
+            LOGGER.catching(failure);
+        } catch (Exception other) { // unknown, unrecoverable
+            throw new PluginFailureException(other);
+        }
+    }
+
+    /**
+     * Returns the raw listener function, without error handling.
+     */
+    public Consumer<E> getListener() {
+        return listener;
     }
 }

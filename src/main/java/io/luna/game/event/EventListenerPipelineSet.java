@@ -6,52 +6,46 @@ import com.google.common.collect.UnmodifiableIterator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
- * A model containing mappings of {@link EventListenerPipeline}s that listen for specific event types.
- * <p>
- * The {@code replacePipelines(EventListenerPipelineSet)} method allows for a completely new pipeline set to replace the
- * existing pipeline set during runtime. This allows for 'hotfixing', a process in which all {@link EventListener}s are
- * dynamically updated effectively 'refreshing' all event-based content (plugins) without compilation or restarting the
- * server.
+ * A set of pipelines mapped to their respective event traversal types.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class EventListenerPipelineSet implements Iterable<EventListenerPipeline<?>> {
 
     /**
-     * A {@link Map} that holds a set of {@link EventListenerPipeline}s.
+     * The map of pipelines.
      */
-    public final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
+    public final Map<EventType, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
-     * Add a {@link EventListener} to an {@link EventListenerPipeline}. If no pipeline exists for the event, a new one will
-     * be created for it.
-     *
-     * @param eventClass The event listener type.
-     * @param eventListener The event listener that will be added to the pipeline.
+     * Adds a new event listener to a pipeline within this set.
      */
-    public void addEventListener(Class<?> eventClass, EventListener<?> eventListener) {
-        pipelines.computeIfAbsent(eventClass, it -> new EventListenerPipeline<>()).add(eventListener);
+    public void add(EventType messageType, EventListener<?> listener) {
+        EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(messageType, EventListenerPipeline::new);
+        pipeline.add(listener);
     }
 
     /**
-     * Retrieves the {@link EventListenerPipeline} that listens for {@code eventClass}.
-     *
-     * @param eventClass The type of pipeline to retrieve.
-     * @return The pipeline, possibly {@code null} if no pipeline could be found.
+     * Retrieves a pipeline from this set. Will never return {@code null}.
      */
-    public EventListenerPipeline<?> retrievePipeline(Class<?> eventClass) {
-        return pipelines.get(eventClass);
+    public EventListenerPipeline<?> get(EventType messageType) {
+        EventListenerPipeline<?> pipeline = pipelines.get(messageType);
+        if (pipeline == null) {
+            throw new NoSuchElementException("no pipeline for " + messageType);
+        }
+        return pipeline;
     }
 
     /**
-     * Dynamically replaces the backing pipeline mappings with {@code newPipelines}. The argued pipelines are not modified,
-     * but references are held to its backing mappings.
+     * Swaps the backing set with {@code set}. Used for reloading plugins (aka. hot fixing,
+     * ninja fixing, etc).
      */
-    public void replacePipelines(EventListenerPipelineSet newPipelines) {
+    public void swap(EventListenerPipelineSet set) {
         pipelines.clear();
-        pipelines.putAll(newPipelines.pipelines);
+        pipelines.putAll(set.pipelines);
     }
 
     @Override
@@ -61,19 +55,9 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * @return The amount of pipelines in this set.
+     * Returns the amount of pipelines in this set.
      */
-    public int pipelineCount() {
+    public int size() {
         return pipelines.size();
-    }
-
-    /**
-     * @return The amount of listeners within every pipeline in this set.
-     */
-    public int listenerCount() {
-        return pipelines.values().
-            stream().
-            mapToInt(EventListenerPipeline::listenerCount).
-            sum();
     }
 }

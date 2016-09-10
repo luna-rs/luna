@@ -1,49 +1,53 @@
 package io.luna.game.event;
 
+import java.util.Optional;
+
 /**
- * An event passed through an {@link EventListenerPipeline} to be intercepted by {@link EventListener}s.
+ * An Object passed through a pipeline to be intercepted by event listeners. Events should
+ * <strong>always</strong> be immutable to ensure that they cannot be modified while being passed
+ * through the pipeline.
+ * <p>
+ * When writing getters for events, "get" should be omitted in order to conform to Scala conventions.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public class Event {
 
     /**
-     * The {@link EventListenerPipeline} this event is currently passing through, {@code null} if this event is not currently
-     * passing through a pipeline.
+     * The pipeline this event is passing through.
      */
-    private EventListenerPipeline pipeline;
+    private Optional<EventListenerPipeline> pipeline = Optional.empty();
 
     /**
-     * Determines if this event should be intercepted, when given {@code args}. Always returns {@code true} if not overridden
-     * regardless of the arguments.
-     *
-     * @param args The arguments for this event.
-     * @return {@code true} if this event can be intercepted, {@code false} otherwise.
+     * Matches the arguments of this event. Returns {@code true} if this event should be intercepted.
      */
-    public boolean matches(Object... args) {
+    public boolean matches(EventArguments args) {
         return true;
     }
 
     /**
-     * @return {@code true} if the underlying pipeline was successfully terminated, and {@code false} if {@code pipeline}
-     * field is {@code null} or the pipeline is already terminated.
+     * Terminates the passing of this event through a pipeline. Returns {@code false} if the event was
+     * not terminated.
      */
     public boolean terminate() {
-        return pipeline != null && pipeline.terminate();
+        if (pipeline.isPresent()) {
+            EventListenerPipeline current = pipeline.get();
+            return current.terminate();
+        }
+        return false;
     }
 
     /**
-     * @return The {@link EventListenerPipeline} this event is currently passing through, {@code null} if this event is not
-     * currently passing through a pipeline.
+     * @return The pipeline this event is passing through.
      */
-    public EventListenerPipeline getPipeline() {
+    public Optional<EventListenerPipeline> pipeline() {
         return pipeline;
     }
 
     /**
-     * Sets the {@link EventListenerPipeline} this event is currently passing through.
+     * Sets a new pipeline instance.
      */
-    protected void setPipeline(EventListenerPipeline pipeline) {
-        this.pipeline = pipeline;
+    public void pipeline(EventListenerPipeline pipeline) {
+        this.pipeline = Optional.ofNullable(pipeline);
     }
 }
