@@ -135,7 +135,7 @@ public final class WorldSynchronizer {
     }
 
     /**
-     * Post-synchronization clears update flags
+     * Post-synchronization prepares the mob for the next tick.
      */
     public void postSynchronize() {
         for (Player player : players) {
