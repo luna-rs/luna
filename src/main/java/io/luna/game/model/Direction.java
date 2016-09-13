@@ -3,7 +3,7 @@ package io.luna.game.model;
 import io.luna.game.model.mobile.WalkingQueue.Step;
 
 /**
- * An enumerated type whose elements represent a single movement direction.
+ * An enum representing movement directions.
  *
  * @author lare96 <http://github.org/lare96>
  * @author Graham
@@ -20,27 +20,21 @@ public enum Direction {
     SOUTH_EAST(7);
 
     /**
-     * The identifier for this {@code Direction}.
+     * The direction identifier.
      */
     private final int id;
 
     /**
      * Creates a new {@link Direction}.
      *
-     * @param id The identifier for this {@code Direction}.
+     * @param id The direction identifier.
      */
     Direction(int id) {
         this.id = id;
     }
 
     /**
-     * Gets the {@link Direction} between two coordinates.
-     *
-     * @param currentX The current {@code X} coordinate.
-     * @param currentY The current {@code Y} coordinate.
-     * @param nextX The next {@code X} coordinate.
-     * @param nextY The next {@code Y} coordinate.
-     * @return The direction.
+     * Returns the direction between two sets of coordinates.
      */
     @SuppressWarnings("Duplicates")
     public static Direction between(int currentX, int currentY, int nextX, int nextY) {
@@ -76,18 +70,14 @@ public enum Direction {
     }
 
     /**
-     * Gets the {@link Direction} between two {@link Step}s.
-     *
-     * @param current The current {@code Step}.
-     * @param next The next {@code Step} coordinate.
-     * @return The direction.
+     * Returns the direction between two steps.
      */
     public static Direction between(Step current, Step next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
     }
 
     /**
-     * @return The identifier for this {@code Direction}.
+     * @return The direction identifier.
      */
     public final int getId() {
         return id;

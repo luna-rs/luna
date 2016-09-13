@@ -1,93 +1,82 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.model.mobile.MobileEntity;
 import io.luna.game.model.mobile.MobileEntityList;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
-import io.luna.util.StringUtils;
 
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Manages the various types in the {@code io.luna.game.model} package and subpackages.
+ * A model that manages entities.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class World {
 
     /**
-     * The total amount of {@link Player}s that can be either logged in per game loop.
-     */
-    public static final int LOGIN_THRESHOLD = 50;
-
-    /**
-     * An instance of the {@link LunaContext}.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * The list of {@link Player}s in the world.
+     * A list of active players.
      */
-    private final MobileEntityList<Player> players = new MobileEntityList<>(2048);
+    private final MobileEntityList<Player> playerList = new MobileEntityList<>(2048);
 
     /**
-     * The list of {@link Npc}s in the world.
+     * A list of active npcs.
      */
-    private final MobileEntityList<Npc> npcs = new MobileEntityList<>(16384);
+    private final MobileEntityList<Npc> npcList = new MobileEntityList<>(16384);
 
     /**
-     * A {@link Queue} of {@link Player}s awaiting login.
+     * A queue of players awaiting login.
      */
     private final Queue<Player> logins = new ConcurrentLinkedQueue<>();
 
     /**
-     * A {@link Queue} of {@link Player}s awaiting logout.
+     * A queue of players awaiting logout.
      */
     private final Queue<Player> logouts = new ConcurrentLinkedQueue<>();
 
     /**
-     * The {@link RegionManager} that manages region caching.
+     * The region manager.
      */
     private final RegionManager regions = new RegionManager();
 
     /**
-     * The {@link TaskManager} that manages cycle based tasks.
+     * The task manager.
      */
     private final TaskManager tasks = new TaskManager();
 
     /**
-     * The {@link WorldSynchronizer} that will perform updating for all {@link MobileEntity}s.
+     * The world synchronizer.
      */
     private final WorldSynchronizer synchronizer = new WorldSynchronizer(this);
 
     /**
      * Creates a new {@link World}.
      *
-     * @param context An instance of the {@link LunaContext}.
+     * @param context The context instance
      */
     public World(LunaContext context) {
         this.context = context;
     }
 
     /**
-     * Schedules a {@link Task} using the underlying {@link TaskManager}.
-     *
-     * @param t The {@code Task} to schedule.
+     * Schedules {@code task} to run sometime in the future.
      */
-    public void schedule(Task t) {
-        tasks.schedule(t);
+    public void schedule(Task task) {
+        tasks.schedule(task);
     }
 
     /**
-     * Queues {@code player} to be logged in on the next game loop.
-     *
-     * @param player The {@link Player} to be logged in.
+     * Queues {@code player} for login on the next tick.
      */
     public void queueLogin(Player player) {
         if (player.getState() == EntityState.IDLE && !logins.contains(player)) {
@@ -96,20 +85,43 @@ public final class World {
     }
 
     /**
-     * Dequeues the {@link Queue} of {@link Player}s awaiting login.
+     * Adds players awaiting login to the world.
      */
     public void dequeueLogins() {
-        for (int amount = 0; amount < LOGIN_THRESHOLD; amount++) {
+        for (int amount = 0; amount < EntityConstants.LOGIN_THRESHOLD; amount++) {
             Player player = logins.poll();
             if (player == null) {
                 break;
             }
-            players.add(player);
+            playerList.add(player);
         }
     }
 
     /**
-     * Runs one iteration of the main game loop which includes processing {@link Task}s and synchronization.
+     * Queues {@code player} for logout on the next tick.
+     */
+    public void queueLogout(Player player) {
+        if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
+            logouts.add(player);
+        }
+    }
+
+    /**
+     * Removes players awaiting logout from the world.
+     */
+    public void dequeueLogouts() {
+        for (int amount = 0; amount < EntityConstants.LOGOUT_THRESHOLD; amount++) {
+            Player player = logouts.poll();
+            if (player == null) {
+                break;
+            }
+            /* TODO: Anti x-logging. */
+            playerList.remove(player);
+        }
+    }
+
+    /**
+     * Runs task processing and mob synchronization.
      */
     public void runGameLoop() {
         tasks.runTaskIteration();
@@ -120,84 +132,51 @@ public final class World {
     }
 
     /**
-     * Queues {@code player} to be logged out on the next game loop.
-     *
-     * @param player The {@link Player} to be logged out.
-     */
-    public void queueLogout(Player player) {
-        if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
-            logouts.add(player);
-        }
-    }
-
-    /**
-     * Dequeues the {@link Queue} of {@link Player}s awaiting logout.
-     */
-    public void dequeueLogouts() {
-        for (int amount = 0; amount < LOGIN_THRESHOLD; amount++) {
-            Player player = logouts.poll();
-            if (player == null) {
-                break;
-            }
-            // TODO: Do not remove if still in combat
-            players.remove(player);
-        }
-    }
-
-    /**
-     * Retrieves a {@link Player} instance by its {@code username}.
-     *
-     * @param username The username hash of the {@code Player}.
-     * @return The {@code Player} instance wrapped in an {@link Optional}, or an empty {@code Optional} if no {@code Player}
-     * was found.
+     * Retrieves a player by their username hash. Faster than {@code getPlayer(String)}.
      */
     public Optional<Player> getPlayer(long username) {
-        return players.findFirst(it -> it.getUsernameHash() == username);
+        return playerList.findFirst(player -> player.getUsernameHash() == username);
     }
 
     /**
-     * Retrieves a {@link Player} instance by its {@code username}.
-     *
-     * @param username The username of the {@code Player}.
-     * @return The {@code Player} instance wrapped in an {@link Optional}, or an empty {@code Optional} if no {@code Player}
-     * was found.
+     * Retrieves a player by their username.
      */
     public Optional<Player> getPlayer(String username) {
-        return getPlayer(StringUtils.encodeToBase37(username));
+        return playerList.findFirst(player -> player.getUsername().equals(username));
     }
 
     /**
-     * @return An instance of the {@link LunaContext}.
+     * @return The context instance.
      */
     public LunaContext getContext() {
         return context;
     }
 
     /**
-     * @return The {@link RegionManager} instance.
+     * @return The region manager.
      */
     public RegionManager getRegions() {
         return regions;
     }
 
     /**
-     * @return The {@link TaskManager} instance.
+     * @return The task manager
      */
     public TaskManager getTasks() {
         return tasks;
     }
 
     /**
-     * @return The list of {@link Player}s in the world.
+     * @return A list of active players.
      */
     public MobileEntityList<Player> getPlayers() {
-        return players;
+        return playerList;
     }
 
     /**
-     * @return The list of {@link Npc}s in the world.
+     * @return A list of active npcs.
      */
     public MobileEntityList<Npc> getNpcs() {
-        return npcs;
+        return npcList;
     }
 }

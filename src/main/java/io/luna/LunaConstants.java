@@ -14,7 +14,7 @@ import java.util.TreeSet;
 import static io.luna.util.GsonUtils.getAsType;
 
 /**
- * A set of constants parsed from the {@code luna.toml} file.
+ * Holds constants parsed from the {@code luna.toml} file.
  *
  * @author lare96 <http://github.org/lare96>
  */

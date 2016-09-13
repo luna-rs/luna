@@ -8,57 +8,63 @@ import io.luna.game.model.region.RegionCoordinates;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
 
 /**
- * An abstraction model representing anything that can be interacted with in the Runescape world.
+ * A model representing anything that can be interacted with.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class Entity {
 
     /**
-     * The {@link LunaContext} dedicated to this {@code Entity}.
+     * The context instance.
      */
     protected final LunaContext context;
 
     /**
-     * The {@link PluginManager} dedicated to this {@code Entity}.
+     * The plugin manager.
      */
     protected final PluginManager plugins;
 
     /**
-     * The {@link GameService} dedicated to this {@code Entity}.
+     * The game service.
      */
     protected final GameService service;
 
     /**
-     * The {@link World} dedicated to this {@code Entity}.
+     * The world.
      */
     protected final World world;
 
     /**
-     * The state of this {@code Entity}.
+     * The type.
+     */
+    protected final EntityType type;
+
+    /**
+     * The current state.
      */
     protected EntityState state = EntityState.IDLE;
 
     /**
-     * The position of this {@code Entity}.
+     * The current position.
      */
     protected Position position;
 
     /**
-     * The current {@link Region} this {@code Entity} is in.
+     * The current region.
      */
     protected Region currentRegion;
 
     /**
      * Creates a new {@link Entity}.
      *
-     * @param context The context to be managed in.
+     * @param context The context instance.
+     * @param type The type.
      */
-    public Entity(LunaContext context) {
+    public Entity(LunaContext context, EntityType type) {
         this.context = context;
+        this.type = type;
 
         plugins = context.getPlugins();
         service = context.getService();
@@ -69,151 +75,145 @@ public abstract class Entity {
 
     @Override
     public int hashCode() {
-        throw new UnsupportedOperationException("subclasses must implement 'hashCode'");
+        throw new UnsupportedOperationException("no 'hashCode'");
     }
 
     @Override
     public boolean equals(Object obj) {
-        throw new UnsupportedOperationException("subclasses must implement 'equals'");
+        throw new UnsupportedOperationException("no 'equals'");
     }
 
     @Override
     public String toString() {
-        throw new UnsupportedOperationException("subclasses must implement 'toString'");
+        throw new UnsupportedOperationException("no 'toString'");
     }
 
     /**
-     * @return The size of this {@code Entity}, will never be below {@code 0}.
+     * Returns this entity's size. Always greater than {@code 0}.
      */
     public abstract int size();
 
     /**
-     * @return The {@code EntityType} designated for this {@code Entity}.
+     * Determines if {@code entity} is viewable from this entity.
      */
-    public abstract EntityType type();
-
-    /**
-     * @return If {@code other} is viewable from the position of this {@code Entity}.
-     */
-    public boolean isViewable(Entity other) {
-        return position.isViewable(other.getPosition());
+    public boolean isViewable(Entity entity) {
+        return position.isViewable(entity.position);
     }
 
     /**
-     * @return The distance in tiles from {@code other}.
+     * Returns the distance between this entity and {@code entity}.
      */
-    public int distanceFrom(Entity other) {
-        return position.getDistance(other.getPosition());
+    public int distanceFrom(Entity entity) {
+        return position.getDistance(entity.position);
     }
 
     /**
-     * Fired when the state of this {@code Entity} is set to {@code IDLE}.
+     * Invoked when entering an {@code IDLE} state.
      */
     public void onIdle() {
     }
 
     /**
-     * Fired when the state of this {@code Entity} is set to {@code ACTIVE}.
+     * Invoked when entering an {@code ACTIVE} state.
      */
     public void onActive() {
     }
 
     /**
-     * Fired when the state of this {@code Entity} is set to {@code INACTIVE}.
+     * Invoked when entering an {@code INACTIVE} state.
      */
     public void onInactive() {
     }
 
     /**
-     * @return The current state that this {@code Entity} is in.
+     * Sets the current state and invokes the corresponding function.
      */
-    public final EntityState getState() {
-        return state;
-    }
+    public final void setState(EntityState newState) {
+        checkArgument(newState != EntityState.IDLE, "cannot set to IDLE");
 
-    /**
-     * Sets the value for {@link #state}. When a state is set, a corresponding listener of either {@code onIdle()}, {@code
-     * onActive()}, or {@code onInactive()} will be fired. If the value being set is equal to the current value, an exception
-     * will be thrown.
-     *
-     * @param state The state to set, cannot be {@code null} or {@code IDLE}.
-     * @throws IllegalArgumentException If the value being set is equal to the current value.
-     */
-    public final void setState(EntityState state) {
-        checkArgument(state != this.state, "this state has already been set");
-        checkArgument(state != EntityState.IDLE, "IDLE state cannot be explicitly set");
+        if (state != newState) {
+            state = newState;
 
-        this.state = requireNonNull(state);
-
-        switch (state) {
-        case ACTIVE:
-            onActive();
-            break;
-        case INACTIVE:
-            onInactive();
-
-            if (currentRegion != null) {
-                currentRegion.removeEntity(this);
+            switch (state) {
+            case ACTIVE:
+                onActive();
+                break;
+            case INACTIVE:
+                onInactive();
+                if (currentRegion != null) {
+                    currentRegion.removeEntity(this);
+                }
+                break;
             }
-            break;
         }
     }
 
     /**
-     * @return The position of this {@code Entity}.
-     */
-    public final Position getPosition() {
-        return position;
-    }
-
-    /**
-     * Sets the value for {@link #position}, cannot be {@code null}.
+     * Sets the current position and performs region checking.
      */
     public final void setPosition(Position newPosition) {
-        requireNonNull(newPosition, "newPosition == null");
-
         RegionCoordinates next = RegionCoordinates.create(newPosition);
         if (position != null) {
             if (currentRegion.getCoordinates().equals(next)) {
-                plugins.post(new PositionChangeEvent(position, newPosition, this));
+                plugins.post(new PositionChangeEvent(this, position, newPosition));
                 position = newPosition;
                 return;
             }
             currentRegion.removeEntity(this);
         }
-        Region toRegion = world.getRegions().getRegion(next);
-        toRegion.addEntity(this);
+        currentRegion = world.getRegions().getRegion(next);
+        currentRegion.addEntity(this);
 
-        plugins.post(new PositionChangeEvent(position, newPosition, this));
+        plugins.post(new PositionChangeEvent(this, position, newPosition));
         position = newPosition;
-        currentRegion = toRegion;
     }
 
     /**
-     * @return The {@link LunaContext} dedicated to this {@code Entity}.
+     * @return The context instance.
      */
     public LunaContext getContext() {
         return context;
     }
 
     /**
-     * @return The {@link PluginManager} dedicated to this {@code Entity}.
+     * @return The plugin manager.
      */
     public final PluginManager getPlugins() {
         return plugins;
     }
 
     /**
-     * @return The {@link GameService} dedicated to this {@code Entity}.
+     * @return The game service.
      */
     public final GameService getService() {
         return service;
     }
 
     /**
-     * @return The {@link World} dedicated to this {@code Entity}.
+     * @return The world.
      */
     public final World getWorld() {
         return world;
+    }
+
+    /**
+     * @return The current state.
+     */
+    public final EntityState getState() {
+        return state;
+    }
+
+    /**
+     * @return The current position.
+     */
+    public final Position getPosition() {
+        return position;
+    }
+
+    /**
+     * @return The current region.
+     */
+    public Region getCurrentRegion() {
+        return currentRegion;
     }
 }

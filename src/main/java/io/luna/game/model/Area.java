@@ -10,60 +10,73 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A chunk of {@link Position}s geometrically represented on the map as a 2D square or rectangle.
+ * A chunk of positions geometrically represented as a 2D square or rectangle.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Area {
 
     /**
-     * Creates a standard Area. Will use the south-west and north-east coordinates to construct a square or rectangle.
+     * Creates an area using south-west, north-east and z coordinates.
      */
     public static Area create(int southWestX, int southWestY, int northEastX, int northEastY, int z) {
         return new Area(southWestX, southWestY, northEastX, northEastY, z);
     }
 
     /**
-     * Creates a standard Area. Will use {@code (x, y, z)} coordinates to construct a square or rectangle with a specific
-     * radius.
+     * Creates an area using south-west and north-east coordinates.
+     */
+    public static Area create(int southWestX, int southWestY, int northEastX, int northEastY) {
+        return new Area(southWestX, southWestY, northEastX, northEastY, 0);
+    }
+
+    /**
+     * Creates an area using center and z coordinates along with a radius.
      */
     public static Area createWithRadius(int x, int y, int z, int radius) {
         return new Area(x - radius, y - radius, x + radius, y + radius, z);
     }
 
     /**
-     * The south-west {@code x} coordinate of the area.
+     * Creates an area using center coordinates along with a radius.
+     */
+    public static Area createWithRadius(int x, int y, int radius) {
+        return new Area(x - radius, y - radius, x + radius, y + radius, 0);
+    }
+
+    /**
+     * The south-west x coordinate.
      */
     private final int southWestX;
 
     /**
-     * The south-west {@code y} coordinate of the area.
+     * The south-west y coordinate.
      */
     private final int southWestY;
 
     /**
-     * The north-east {@code x} coordinate of the area.
+     * The north-east x coordinate.
      */
     private final int northEastX;
 
     /**
-     * The north-east {@code y} coordinate of the area.
+     * The north-east y coordinate.
      */
     private final int northEastY;
 
     /**
-     * The {@code z} coordinate of the area.
+     * The z coordinate.
      */
     private final int z;
 
     /**
      * Creates a new {@link Area}.
      *
-     * @param southWestX The south-west {@code x} coordinate of the area.
-     * @param southWestY The south-west {@code y} coordinate of the area.
-     * @param northEastX The north-east {@code x} coordinate of the area.
-     * @param northEastY The north-east {@code y} coordinate of the area.
-     * @param z The {@code z} coordinate of the area.
+     * @param southWestX The south-west x coordinate.
+     * @param southWestY The south-west y coordinate.
+     * @param northEastX The north-east x coordinate.
+     * @param northEastY The north-east y coordinate.
+     * @param z The z coordinate.
      */
     private Area(int southWestX, int southWestY, int northEastX, int northEastY, int z) {
         checkArgument(northEastX >= southWestX, "northEastX cannot be smaller than southWestX");
@@ -111,11 +124,7 @@ public final class Area {
     }
 
     /**
-     * Determines if this Area contains {@code position}. Does not need to compute any positions, therefore runs in O(1)
-     * time.
-     *
-     * @param position The position to determine this for.
-     * @return {@code true} if contained in this Area, {@code false} otherwise.
+     * Determines if this area contains {@code position}. Runs in O(1) time.
      */
     public boolean contains(Position position) {
         return position.getX() >= southWestX &&
@@ -126,14 +135,18 @@ public final class Area {
     }
 
     /**
-     * Computes all of the positions within this Area. This function runs in approximately O(n*m) where {@code n} depends on
-     * the length and {@code m} the width of the Area. Please note that the result of this function <strong>is not</strong>
-     * cached, meaning a new list will be computed and returned on each invocation.
-     *
-     * @return An {@link ArrayList} containing the positions within this Area.
+     * Determines if {@code entity} is within this area. Runs in O(1) time.
      */
-    public List<Position> computePositions() {
-        List<Position> toList = new ArrayList<>(computeSize());
+    public boolean contains(Entity entity) {
+        return contains(entity.getPosition());
+    }
+
+    /**
+     * Computes and returns a <strong>new</strong> list of positions that make up this
+     * area. Runs in approx. O(n*m) time.
+     */
+    public List<Position> toList() {
+        List<Position> toList = new ArrayList<>(size());
 
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
@@ -144,70 +157,77 @@ public final class Area {
     }
 
     /**
-     * Computes and returns a random Position within this Area. It is <strong>much</strong> cheaper to call this method
-     * rather than randomly selecting an element from {@code computePositions()}.
-     *
-     * @return The random position.
+     * Returns a random position from this area.
      */
-    public Position computeRandomPosition() {
-        int computeX = RandomUtils.inclusive(northEastX - southWestX) + southWestX;
-        int computeY = RandomUtils.inclusive(northEastY - southWestY) + southWestY;
-        return new Position(computeX, computeY, z);
+    public Position random() {
+        int randomX = RandomUtils.inclusive(northEastX - southWestX) + southWestX;
+        int randomY = RandomUtils.inclusive(northEastY - southWestY) + southWestY;
+        return new Position(randomX, randomY, z);
     }
 
     /**
-     * @return The length of this Area.
+     * Returns the center of this area.
      */
-    public int computeLength() {
-        // Areas are inclusive to base coordinates, so we add 1.
+    public Position center() {
+        int halfWidth = width() / 2;
+        int centerX = southWestX + halfWidth;
+        int centerY = southWestY + halfWidth;
+        return new Position(centerX, centerY);
+    }
+
+    /**
+     * Returns the length of this area.
+     */
+    public int length() {
+        /* Areas are inclusive to base coordinates, so we add 1 */
         return (northEastY - southWestY) + 1;
     }
 
     /**
-     * @return The width of this Area.
+     * Returns the width of this area.
      */
-    public int computeWidth() {
-        // Areas are inclusive to base coordinates, so we add 1.
+    public int width() {
+        /* Areas are inclusive to base coordinates, so we add 1. */
         return (northEastX - southWestX) + 1;
     }
 
     /**
-     * @return The size, or in other words -- the geometric area of this Area.
+     * Returns the size of this area (length * width).
      */
-    public int computeSize() {
-        return computeLength() * computeWidth();
+    public int size() {
+        return length() * width();
     }
 
     /**
-     * @return The south-west {@code x} coordinate of the area.
+     * @return The south-west x coordinate.
      */
     public int getSouthWestX() {
         return southWestX;
     }
 
     /**
-     * @return The south-west {@code y} coordinate of the area.
+     * @return The south-west y coordinate.
      */
     public int getSouthWestY() {
         return southWestY;
     }
 
     /**
-     * @return The north-east {@code x} coordinate of the area.
+     * @return The north-east x coordinate.
      */
     public int getNorthEastX() {
         return northEastX;
     }
 
     /**
-     * @return The north-east {@code y} coordinate of the area.
+     * @return The north-east y coordinate.
      */
     public int getNorthEastY() {
         return northEastY;
     }
 
     /**
-     * @return The {@code z} coordinate of the area.
+     * @return The z coordinate.
      */
     public int getZ() {
         return z;

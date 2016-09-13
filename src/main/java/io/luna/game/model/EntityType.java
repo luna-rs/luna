@@ -1,32 +1,29 @@
 package io.luna.game.model;
 
-import io.luna.game.model.mobile.MobileEntity;
-import io.luna.game.model.mobile.Player;
-
 /**
- * An enumerated type whose elements represent all of the types an {@link Entity} can be.
+ * An enum representing different entity types.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public enum EntityType {
 
     /**
-     * A ground item that can be picked up by a {@link Player}.
+     * A ground item.
      */
     ITEM,
 
     /**
-     * An object that can be interacted with by a {@link Player}.
+     * An object.
      */
     OBJECT,
 
     /**
-     * A {@link MobileEntity} that is controlled by a real person.
+     * A player mob.
      */
     PLAYER,
 
     /**
-     * A non-player controlled {@link MobileEntity}.
+     * A non-player mob.
      */
     NPC
 }

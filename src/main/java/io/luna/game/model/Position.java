@@ -7,33 +7,33 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A single absolute point on the Runescape map.
+ * A single point on the Runescape map.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Position {
 
     /**
-     * The absolute {@code X} coordinate.
+     * The x coordinate.
      */
     private final int x;
 
     /**
-     * The absolute {@code Y} coordinate.
+     * The y coordinate.
      */
     private final int y;
 
     /**
-     * The absolute {@code Z} coordinate.
+     * The z coordinate.
      */
     private final int z;
 
     /**
      * Creates a new {@link Position}.
      *
-     * @param x The absolute {@code X} coordinate.
-     * @param y The absolute {@code Y} coordinate.
-     * @param z The absolute {@code Z} coordinate.
+     * @param x The x coordinate.
+     * @param y The y coordinate.
+     * @param z The z coordinate.
      */
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
@@ -46,10 +46,10 @@ public final class Position {
     }
 
     /**
-     * Creates a new {@link Position} with a {@code Z} level of {@code 0}.
+     * Creates a new {@link Position} with {@code 0} as the z coordinate.
      *
-     * @param x The absolute {@code X} coordinate.
-     * @param y The absolute {@code Y} coordinate.
+     * @param x The x coordinate.
+     * @param y The y coordinate.
      */
     public Position(int x, int y) {
         this(x, y, 0);
@@ -78,11 +78,7 @@ public final class Position {
     }
 
     /**
-     * Determines if this {@link Position} is within the area defined by {@code center} and {@code radius}.
-     *
-     * @param center The center point of the radius.
-     * @param radius The distance to the center point.
-     * @return {@code true} if within the radius, {@code false} otherwise.
+     * Determines if this position is within the given radius.
      */
     public boolean isWithinRadius(Position center, int radius) {
         if (z != center.z) {
@@ -94,136 +90,119 @@ public final class Position {
     }
 
     /**
-     * Determines if this {@link Position} is within the area defined by {@code center} and {@code VIEWING_DISTANCE}.
-     *
-     * @param center The center point of the radius.
-     * @return {@code true} if within the viewable distance, {@code false} otherwise.
+     * Determines if this position is viewable from {@code position}.
      */
-    public boolean isViewable(Position center) {
-        return isWithinRadius(center, EntityConstants.VIEWING_DISTANCE);
+    public boolean isViewable(Position position) {
+        return isWithinRadius(position, EntityConstants.VIEWING_DISTANCE);
     }
 
     /**
-     * Determines the distance from this {@link Position} to {@code to}.
-     *
-     * @param to The {@code Position} to calculate the distance to.
-     * @return The distance between this {@code Position} and {@code to}.
+     * Returns the distance between this position and {@code position}.
      */
-    public int getDistance(Position to) {
-        int deltaX = Math.abs(to.x - x);
-        int deltaY = Math.abs(to.y - y);
+    public int getDistance(Position position) {
+        int deltaX = Math.abs(position.x - x);
+        int deltaY = Math.abs(position.y - y);
         return Math.max(deltaX, deltaY);
     }
 
     /**
-     * Returns a new {@link Position} moved by the specified coordinates.
-     *
-     * @param amountX The {@code X} amount to move.
-     * @param amountY The {@code Y} amount to move.
-     * @param amountZ The {@code Z} amount to move.
-     * @return The new moved instance of {@code Position}.
+     * Returns a new position moved by the specified amounts.
      */
     public Position move(int amountX, int amountY, int amountZ) {
         return new Position(x + amountX, y + amountY, z + amountZ);
     }
 
     /**
-     * Returns a new {@link Position} moved by the specified coordinates. The {@code Z} value remains unmodified.
-     *
-     * @param amountX The {@code X} amount to move.
-     * @param amountY The {@code Y} amount to move.
-     * @return The new moved instance of {@code Position}.
+     * Returns a new position moved by the specified amounts. The z coordinate will remain
+     * the same.
      */
     public Position move(int amountX, int amountY) {
         return move(amountX, amountY, z);
     }
 
     /**
-     * @return The {@code X} region coordinate.
+     * Returns the x coordinate of the position's region.
      */
     public int getRegionX() {
         return (x >> 3) - 6;
     }
 
     /**
-     * @return The {@code Y} region coordinate.
+     * Returns the y coordinate of the position's region.
      */
     public int getRegionY() {
         return (y >> 3) - 6;
     }
 
     /**
-     * Gets the local {@code X} coordinate relative to {@code base}.
-     *
-     * @param base The relative base position.
-     * @return The local {@code X} coordinate.
+     * Returns the local x coordinate relative to {@code base}.
      */
     public int getLocalX(Position base) {
         return x - (base.getRegionX() << 3);
     }
 
     /**
-     * Gets the local {@code Y} coordinate relative to {@code base}.
-     *
-     * @param base The relative base position.
-     * @return The local {@code Y} coordinate.
+     * Returns the local y coordinate relative to {@code base}.
      */
     public int getLocalY(Position base) {
         return y - (base.getRegionY() << 3);
     }
 
     /**
-     * @return The local {@code X} coordinate relative to this {@link Position}.
+     * Returns the local x coordinate relative to this position.
      */
     public int getLocalX() {
         return getLocalX(this);
     }
 
     /**
-     * @return The local {@code Y} coordinate relative to this {@link Position}.
+     * Returns the local y coordinate relative to this position.
      */
     public int getLocalY() {
         return getLocalY(this);
     }
 
     /**
-     * @return The {@code X} coordinate region chunk.
+     * Returns the x coordinate of this position's region chunk.
      */
     public int getChunkX() {
         return (x >> 6);
     }
 
     /**
-     * @return The {@code Y} coordinate region chunk.
+     * Returns the y coordinate of this position's region chunk.
      */
     public int getChunkY() {
         return (y >> 6);
     }
 
     /**
-     * @return The identifier for the region this {@link Position} is in.
+     * Returns the identifier of this position's region.
      */
     public int getRegionId() {
         return ((getChunkX() << 8) + getChunkY());
     }
 
     /**
-     * @return The absolute {@code X} coordinate.
+     * @return The x coordinate.
      */
+
     public int getX() {
         return x;
     }
 
     /**
-     * @return The absolute {@code Y} coordinate.
+     * @return The y coordinate.
      */
+
     public int getY() {
         return y;
     }
 
     /**
-     * @return The absolute {@code Z} coordinate.
+     * @return The z coordinate.
      */
+
     public int getZ() {
         return z;
     }
