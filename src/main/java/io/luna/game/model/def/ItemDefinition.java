@@ -1,60 +1,59 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import io.luna.game.model.item.Item;
 import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.OptionalInt;
 
 /**
- * A cached definition that describes a specific {@link Item}.
+ * A definition model describing an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ItemDefinition {
 
-    /**
-     * An {@link ImmutableList} of the cached {@code ItemDefinition}s.
-     */
-    public static final ImmutableList<ItemDefinition> DEFINITIONS;
+    /* TODO remove 'special_value' entry from item_defs.json */
 
     /**
-     * The default {@link ItemDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Item}.
+     * A list of item definitions.
      */
-    public static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, -1, false, 0.0, false,
-        StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+    private static final ImmutableList<ItemDefinition> DEFINITIONS;
 
     /**
-     * Returns a {@link List} with all definitions that have a name value of {@code name}. If no definitions are found, an
-     * empty list will be returned.
+     * A default definition. Used as a substitute for {@code null}.
      */
-    public static List<ItemDefinition> getDefinitions(String name) {
-        return DEFINITIONS.stream().
-            filter(it -> it.name.equals(name)).collect(Collectors.toList());
+    public static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, false, 0.0,
+        false, StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+
+    /**
+     * Retrieves the definition for {@code id}.
+     */
+    public static ItemDefinition get(int id) {
+        ItemDefinition def = DEFINITIONS.get(id);
+        if (def == DEFAULT) {
+            throw new NoSuchElementException("No definition for id " + id);
+        }
+        return def;
     }
 
     /**
-     * Returns the item name of the argued identifier, wrapped in an option.
+     * Returns an iterable containing all definitions.
      */
-    public static Optional<String> computeNameForId(int id) {
-        return Optional.ofNullable(DEFINITIONS.get(id)).map(ItemDefinition::getName);
+    public static Iterable<ItemDefinition> all() {
+        return DEFINITIONS;
     }
 
     /**
-     * Returns the item name of the argued identifier. If a definition does not exist for it, a {@link
-     * NoSuchElementException} will be thrown.
+     * Returns the item name of {@code id}.
      */
-    public static String getNameForId(int id) {
-        return computeNameForId(id).get();
+    public static String computeNameForId(int id) {
+        return get(id).getName();
     }
 
-    static {
+    static { /* Populate the immutable list with definitions. */
         ItemDefinition[] definitions = new ItemDefinition[7956];
         Arrays.fill(definitions, DEFAULT);
 
@@ -65,221 +64,207 @@ public final class ItemDefinition {
     }
 
     /**
-     * The identifier for the {@code Item}.
+     * The identifier.
      */
     private final int id;
 
     /**
-     * The name of the {@code Item}.
+     * The name.
      */
     private final String name;
 
     /**
-     * The description of the {@code Item}.
+     * The examine text.
      */
     private final String examine;
 
     /**
-     * If the {@code Item} is stackable.
+     * If the item is stackable.
      */
     private final boolean stackable;
 
     /**
-     * The base value of the {@code Item}, used for shop prices and low/high alch values.
+     * The base value.
      */
-    private final int baseValue;
+    private final int value;
 
     /**
-     * The 'special' value of the {@code Item}, unrelated to the base value.
+     * The noted identifier.
      */
-    private final int specialValue;
+    private final OptionalInt notedId;
 
     /**
-     * The noted id of the {@code Item}, -1 if this definition is noted.
+     * The unnoted identifier.
      */
-    private final int notedId;
+    private final OptionalInt unnotedId;
 
     /**
-     * The unnoted id of the {@code Item}, -1 if this definition is unnoted.
-     */
-    private final int unnotedId;
-
-    /**
-     * If the {@code Item} is for members only.
+     * If this item is members only.
      */
     private final boolean membersOnly;
 
     /**
-     * The weight value of the {@code Item}.
+     * The weight.
      */
     private final double weight;
 
     /**
-     * If the {@code Item} is tradeable.
+     * If this item can be traded.
      */
     private final boolean tradeable;
 
     /**
-     * The inventory actions of the {@code Item}.
+     * A list of inventory actions.
      */
-    private final ImmutableSet<String> inventoryActions;
+    private final ImmutableList<String> inventoryActions;
 
     /**
-     * The ground actions of the {@code Item}.
+     * A list of ground actions.
      */
-    private final ImmutableSet<String> groundActions;
+    private final ImmutableList<String> groundActions;
 
     /**
      * Creates a new {@link ItemDefinition}.
      *
-     * @param id The identifier for the {@code Item}.
-     * @param name The name of the {@code Item}.
-     * @param examine The description of the {@code Item}.
-     * @param stackable If the {@code Item} is stackable.
-     * @param baseValue The base value of the {@code Item}, used for shop prices and low/high alch values.
-     * @param specialValue The 'special' value of the {@code Item}, unrelated to the base value.
-     * @param notedId The noted id of the {@code Item}, -1 if this definition is noted.
-     * @param unnotedId The unnoted id of the {@code Item}, -1 if this definition is unnoted.
-     * @param membersOnly If the {@code Item} is for members only.
-     * @param weight The weight value of the {@code Item}.
-     * @param tradeable If the {@code Item} is tradeable.
-     * @param inventoryActions The inventory actions of the {@code Item}.
-     * @param groundActions The ground actions of the {@code Item}.
+     * @param id The identifier.
+     * @param name The name.
+     * @param examine The examine text.
+     * @param stackable If the item is stackable.
+     * @param value The base value.
+     * @param notedId The noted identifier.
+     * @param unnotedId The unnoted identifier.
+     * @param membersOnly If this item is members only.
+     * @param weight The weight.
+     * @param tradeable If this item can be traded.
+     * @param inventoryActions A list of inventory actions.
+     * @param groundActions A list of ground actions.
      */
-    public ItemDefinition(int id, String name, String examine, boolean stackable, int baseValue, int specialValue,
-        int notedId, int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
+    public ItemDefinition(int id, String name, String examine, boolean stackable, int value, int notedId,
+        int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
         String[] groundActions) {
         this.id = id;
         this.name = name;
         this.examine = examine;
         this.stackable = stackable;
-        this.baseValue = baseValue;
-        this.specialValue = specialValue;
-        this.notedId = notedId;
-        this.unnotedId = unnotedId;
+        this.value = value;
+        this.notedId = notedId == -1 ? OptionalInt.empty() : OptionalInt.of(notedId);
+        this.unnotedId = unnotedId == -1 ? OptionalInt.empty() : OptionalInt.of(unnotedId);
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
-        this.inventoryActions = ImmutableSet.copyOf(inventoryActions);
-        this.groundActions = ImmutableSet.copyOf(groundActions);
+        this.inventoryActions = ImmutableList.copyOf(inventoryActions);
+        this.groundActions = ImmutableList.copyOf(groundActions);
     }
 
     /**
-     * @return {@code true} if {@code action} is contained by the backing set of inventory actions.
+     * Determines if {@code action} is an inventory action.
      */
     public boolean hasInventoryAction(String action) {
         return inventoryActions.contains(action);
     }
 
     /**
-     * @return {@code true} if {@code action} is contained by the backing set of ground actions.
+     * Determines if {@code action} is a ground action.
      */
     public boolean hasGroundAction(String action) {
         return groundActions.contains(action);
     }
 
     /**
-     * @return {@code true} if this item can be noted, {@code false} otherwise.
+     * Returns {@code true} if the item can be noted.
      */
-    public boolean canBeNoted() {
-        return notedId != -1;
+    public boolean isNoteable() {
+        return notedId.isPresent();
     }
 
     /**
-     * @return {@code true} if this item is noted, {@code false} otherwise.
+     * Returns {@code true} if the item is noted.
      */
     public boolean isNoted() {
-        return examine.equals("Swap this note at any bank for the equivalent item.");
+        return unnotedId.isPresent();
     }
 
     /**
-     * @return The identifier for the {@code Item}.
+     * @return The item identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The name of the {@code Item}.
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The description of the {@code Item}.
+     * @return The examine text.
      */
     public String getExamine() {
         return examine;
     }
 
     /**
-     * @return If the {@code Item} is stackable.
+     * @return If the item is stackable.
      */
     public boolean isStackable() {
         return stackable;
     }
 
     /**
-     * @return The base value of the {@code Item}, used for shop prices and low/high alch values.
+     * @return The base value.
      */
-    public int getBaseValue() {
-        return baseValue;
+    public int getValue() {
+        return value;
     }
 
     /**
-     * @return The 'special' value of the {@code Item}, unrelated to the base value.
+     * @return The noted identifier.
      */
-    public int getSpecialValue() {
-        return specialValue;
-    }
-
-    /**
-     * @return The noted id of the {@code Item}, -1 if this definition is noted.
-     */
-    public int getNotedId() {
+    public OptionalInt getNotedId() {
         return notedId;
     }
 
     /**
-     * @return The unnoted id of the {@code Item}, -1 if this definition is unnoted.
+     * @return The unnoted identifier.
      */
-    public int getUnnotedId() {
+    public OptionalInt getUnnotedId() {
         return unnotedId;
     }
 
     /**
-     * @return If the {@code Item} is for members only.
+     * @return If this item is members only.
      */
     public boolean isMembersOnly() {
         return membersOnly;
     }
 
     /**
-     * @return The weight value of the {@code Item}.
+     * @return The weight.
      */
     public double getWeight() {
         return weight;
     }
 
     /**
-     * @return If the {@code Item} is tradeable.
+     * @return If this item can be traded.
      */
     public boolean isTradeable() {
         return tradeable;
     }
 
     /**
-     * @return The inventory actions of the {@code Item}.
+     * @return A list of inventory actions.
      */
-    public ImmutableSet<String> getInventoryActions() {
+    public ImmutableList<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
-     * @return The ground actions of the {@code Item}.
+     * @return A list of ground actions.
      */
-    public ImmutableSet<String> getGroundActions() {
+    public ImmutableList<String> getGroundActions() {
         return groundActions;
     }
 }

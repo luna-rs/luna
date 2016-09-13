@@ -3,41 +3,40 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Skill;
-import io.luna.game.model.mobile.SkillSet;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
- * A cached definition that describes a specific {@link Item} that can be equipped.
+ * A definition model describing an item that can be equipped.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class EquipmentDefinition {
 
     /**
-     * An inner-class that details the level needed in a specific skill in order to equip an item.
+     * A model detailing a skill equipment requirement.
      */
     public static final class EquipmentRequirement {
 
         /**
-         * The skill identifier.
+         * The skill.
          */
         private final int id;
 
         /**
-         * The level needed.
+         * The level.
          */
         private final int level;
 
         /**
          * Creates a new {@link EquipmentRequirement}.
          *
-         * @param name The skill identifier.
-         * @param level The level needed.
+         * @param name The skill.
+         * @param level The level.
          */
         public EquipmentRequirement(String name, int level) {
             this.level = level;
@@ -45,22 +44,14 @@ public final class EquipmentDefinition {
         }
 
         /**
-         * Returns {@code true} if the argued {@link SkillSet} satisfies this requirement, {@code false} otherwise.
-         */
-        public boolean satisfies(SkillSet skills) {
-            Skill skill = skills.getSkill(id);
-            return skill.getStaticLevel() >= level;
-        }
-
-        /**
-         * @return The skill identifier.
+         * @return The skill.
          */
         public int getId() {
             return id;
         }
 
         /**
-         * @return The level needed.
+         * @return The level.
          */
         public int getLevel() {
             return level;
@@ -68,27 +59,29 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * An {@link ImmutableMap} of the cached {@code EquipmentDefinition}s.
+     * A map of equipment definitions.
      */
     public static final ImmutableMap<Integer, EquipmentDefinition> DEFINITIONS;
 
     /**
-     * The default {@link EquipmentDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Item}.
+     * Retrieves the definition for {@code id}.
      */
-    public static final EquipmentDefinition DEFAULT = new EquipmentDefinition(-1, -1, false, false, false,
-        new EquipmentRequirement[] {}, new int[] {});
-
-    /**
-     * Retrieves an {@link EquipmentDefinition} by {@code id}.
-     *
-     * @param id The identifier to retrieve the definition of.
-     * @return The definition.
-     */
-    public static EquipmentDefinition getDefinition(int id) {
-        return DEFINITIONS.getOrDefault(id, DEFAULT);
+    public static EquipmentDefinition get(int id) {
+        EquipmentDefinition def = DEFINITIONS.get(id);
+        if (def == null) {
+            throw new NoSuchElementException("No definition for " + id);
+        }
+        return def;
     }
 
-    static {
+    /**
+     * Returns an iterable containing all definitions.
+     */
+    public static Iterable<EquipmentDefinition> all() {
+        return DEFINITIONS.values();
+    }
+
+    static { /* Populate the immutable map with definitions. */
         Map<Integer, EquipmentDefinition> definitions = new LinkedHashMap<>();
 
         EquipmentDefinitionParser parser = new EquipmentDefinitionParser(definitions);
@@ -98,50 +91,50 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * The identifier for the item.
+     * The item identifier.
      */
     private final int id;
 
     /**
-     * The index this item equips to.
+     * The equipment index.
      */
     private final int index;
 
     /**
-     * If this item is a two-handed weapon.
+     * If this item is two-handed.
      */
     private final boolean twoHanded;
 
     /**
-     * If this item covers the entire torso, including arms.
+     * If this item covers the arms and torso.
      */
     private final boolean fullBody;
 
     /**
-     * If this item covers the entire head.
+     * If this item covers the head and face.
      */
     private final boolean fullHelmet;
 
     /**
-     * An {@link ImmutableList} containing all of the {@link EquipmentRequirement}s for this item.
+     * A list of equipment requirements.
      */
     private final ImmutableList<EquipmentRequirement> requirements;
 
     /**
-     * An {@link ImmutableList} containing the bonuses for this item.
+     * A list of equipment bonuses.
      */
     private final ImmutableList<Integer> bonuses;
 
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
-     * @param id The identifier for the item.
-     * @param index The index this item equips to.
-     * @param twoHanded If this item is a two-handed weapon.
-     * @param fullBody If this item covers the entire torso, including arms.
-     * @param fullHelmet If this item covers the entire head.
-     * @param requirements An array containing all of the {@link EquipmentRequirement}s for this item.
-     * @param bonuses An array containing the bonuses for this item.
+     * @param id The item identifier.
+     * @param index The equipment index.
+     * @param twoHanded If this item is two-handed.
+     * @param fullBody If this item covers the arms and torso.
+     * @param fullHelmet If this item covers the head and face.
+     * @param requirements A list of equipment requirements.
+     * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
         EquipmentRequirement[] requirements, int[] bonuses) {
@@ -155,49 +148,49 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * @return The identifier for the item.
+     * @return The item identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The index this item equips to.
+     * @return The equipment index.
      */
     public int getIndex() {
         return index;
     }
 
     /**
-     * @return {@code true} if this item is a two-handed weapon, {@code false} otherwise.
+     * @return If this item is two-handed.
      */
     public boolean isTwoHanded() {
         return twoHanded;
     }
 
     /**
-     * @return {@code true} if this item covers the entire torso including arms, {@code false otherwise}.
+     * @return If this item covers the arms and torso.
      */
     public boolean isFullBody() {
         return fullBody;
     }
 
     /**
-     * @return {@code true} if this item covers the entire head, {@code false} otherwise.
+     * @return If this item covers the head and face.
      */
     public boolean isFullHelmet() {
         return fullHelmet;
     }
 
     /**
-     * @return An {@link ImmutableList} containing all of the {@link EquipmentRequirement}s for this item.
+     * @return A list of equipment requirements.
      */
     public ImmutableList<EquipmentRequirement> getRequirements() {
         return requirements;
     }
 
     /**
-     * @return An {@link ImmutableList} containing the bonuses for this item.
+     * @return A list of equipment bonuses.
      */
     public ImmutableList<Integer> getBonuses() {
         return bonuses;

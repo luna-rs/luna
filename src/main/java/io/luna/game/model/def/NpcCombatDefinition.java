@@ -3,116 +3,118 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
-import io.luna.game.model.mobile.Npc;
 import io.luna.util.parser.impl.NpcCombatDefinitionParser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
- * A cached definition that describes specific combat properties for {@link Npc}s.
+ * A definition model describing an attackable non-player.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcCombatDefinition {
 
     /**
-     * The attack skill index in the {@code skills} list.
+     * The attack skill index.
      */
     public static final int ATTACK = 0;
 
     /**
-     * The strength skill index in the {@code skills} list.
+     * The strength skill index.
      */
     public static final int STRENGTH = 1;
 
     /**
-     * The defence skill index in the {@code skills} list.
+     * The defence skill index.
      */
     public static final int DEFENCE = 2;
 
     /**
-     * The ranged skill index in the {@code skills} list.
+     * The ranged skill index.
      */
     public static final int RANGED = 3;
 
     /**
-     * The magic skill index in the {@code skills} list.
+     * The magic skill index.
      */
     public static final int MAGIC = 4;
 
     /**
-     * The stab attack bonus in the {@code bonuses} list.
+     * The stab attack bonus index.
      */
     public static final int STAB_ATTACK = 0;
 
     /**
-     * The slash attack bonus in the {@code bonuses} list.
+     * The slash attack bonus index.
      */
     public static final int SLASH_ATTACK = 1;
 
     /**
-     * The crush attack bonus in the {@code bonuses} list.
+     * The crush attack bonus index.
      */
     public static final int CRUSH_ATTACK = 2;
 
     /**
-     * The magic attack bonus in the {@code bonuses} list.
+     * The magic attack bonus index.
      */
     public static final int MAGIC_ATTACK = 3;
 
     /**
-     * The ranged attack bonus in the {@code bonuses} list.
+     * The ranged attack bonus index.
      */
     public static final int RANGED_ATTACK = 4;
 
     /**
-     * The stab defence bonus in the {@code bonuses} list.
+     * The stab defence bonus index.
      */
     public static final int STAB_DEFENCE = 5;
 
     /**
-     * The slash defence bonus in the {@code bonuses} list.
+     * The slash defence bonus index.
      */
     public static final int SLASH_DEFENCE = 6;
 
     /**
-     * The crush defence bonus in the {@code bonuses} list.
+     * The crush defence bonus index.
      */
     public static final int CRUSH_DEFENCE = 7;
 
     /**
-     * The magic defence bonus in the {@code bonuses} list.
+     * The magic defence bonus index.
      */
     public static final int MAGIC_DEFENCE = 8;
 
     /**
-     * The ranged defence bonus in the {@code bonuses} list.
+     * The ranged defence bonus index.
      */
     public static final int RANGED_DEFENCE = 9;
 
     /**
-     * A {@link ImmutableMap} of the cached {@code NpcCombatDefinition}s.
+     * A map of non-player combat definitions.
      */
     public static final ImmutableMap<Integer, NpcCombatDefinition> DEFINITIONS;
 
     /**
-     * The default {@link NpcCombatDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Npc}.
+     * Retrieves the definition for {@code id}.
      */
-    public static final NpcCombatDefinition DEFAULT = new NpcCombatDefinition(-1, 8, false, false, -1, -1, -1, -1, -1, -1,
-        -1, new int[5], new int[10]);
-
-    /**
-     * Retrieves a cached {@link NpcCombatDefinition} by its {@code id}.
-     *
-     * @param id The identifier to retrieve the {@code NpcCombatDefinition}.
-     * @return The {@code NpcCombatDefinition} instance.
-     */
-    public static NpcCombatDefinition getDefinition(int id) {
-        return DEFINITIONS.getOrDefault(id, DEFAULT);
+    public static NpcCombatDefinition get(int id) {
+        NpcCombatDefinition def = DEFINITIONS.get(id);
+        if (def == null) {
+            throw new NoSuchElementException("No definition for id " + id);
+        }
+        return def;
     }
 
-    static {
+    /**
+     * Returns an iterable containing all definitions.
+     */
+    public static Iterable<NpcCombatDefinition> all() {
+        return DEFINITIONS.values();
+    }
+
+    static { /* Populate the immutable map with definitions. */
         Map<Integer, NpcCombatDefinition> definitions = new LinkedHashMap<>();
 
         NpcCombatDefinitionParser parser = new NpcCombatDefinitionParser(definitions);
@@ -122,95 +124,93 @@ public final class NpcCombatDefinition {
     }
 
     /**
-     * The id of the {@code Npc} this definition is for.
+     * The non-player identifier.
      */
     private final int id;
 
     /**
-     * The amount of ticks it takes to respawn.
+     * The respawn time (in ticks).
      */
-    private final int respawnTicks;
+    private final int respawnTime;
 
     /**
-     * If the {@code Npc} is aggressive.
+     * If the non-player is aggressive.
      */
     private final boolean aggressive;
 
     /**
-     * If the {@code Npc} is poisonous.
+     * If the non-player is poisonous.
      */
     private final boolean poisonous;
 
     /**
-     * The combat level of the {@code Npc}.
+     * The combat level.
      */
-    private final int combatLevel;
+    private final int level;
 
     /**
-     * The hitpoint amount of the {@code Npc}.
+     * The hitpoint amount.
      */
     private final int hitpoints;
 
     /**
-     * The maximum hit of the {@code Npc}.
+     * The maximum hit.
      */
     private final int maximumHit;
 
     /**
-     * The attack speed of the {@code Npc}.
+     * The attack speed.
      */
     private final int attackSpeed;
 
     /**
-     * The attack animation of the {@code Npc}.
+     * The attack animation.
      */
     private final int attackAnimation;
 
     /**
-     * The defence animation of the {@code Npc}.
+     * The defence animation
      */
     private final int defenceAnimation;
 
     /**
-     * The death animation of the {@code Npc}.
+     * The death animation.
      */
     private final int deathAnimation;
 
     /**
-     * The skills (attack, strength, defence, ranged, magic) of the {@code Npc}.
+     * A list of skills.
      */
     private final ImmutableList<Integer> skills;
 
     /**
-     * The bonuses (stab atk, slash atk, crush atk, magic atk, ranged atk, stab def, slash def, crush def, magic def, ranged
-     * def) of the {@code Npc}.
+     * A list of bonuses.
      */
     private final ImmutableList<Integer> bonuses;
 
     /**
-     * @param id The id of the {@code Npc} this definition is for.
-     * @param respawnTicks The amount of ticks it takes to respawn.
-     * @param aggressive If the {@code Npc} is aggressive.
-     * @param poisonous If the {@code Npc} is poisonous.
-     * @param combatLevel The combat level of the {@code Npc}.
-     * @param hitpoints The hitpoint amount of the {@code Npc}.
-     * @param maximumHit The maximum hit of the {@code Npc}.
-     * @param attackSpeed The attack speed of the {@code Npc}.
-     * @param attackAnimation The attack animation of the {@code Npc}.
-     * @param defenceAnimation The defence animation of the {@code Npc}.
-     * @param deathAnimation The death animation of the {@code Npc}.
-     * @param skills The skills (attack, strength, defence, ranged, magic) of the {@code Npc}.
-     * @param bonuses The bonuses (stab atk, slash atk, crush atk, magic atk, ranged atk, stab def, slash def, crush def,
-     * magic def, ranged def) of the {@code Npc}.
+     * @param id The non-player identifier.
+     * @param respawnTime The respawn time (in ticks).
+     * @param aggressive If the non-player is aggressive.
+     * @param poisonous If the non-player is poisonous.
+     * @param level The combat level.
+     * @param hitpoints The hitpoint amount.
+     * @param maximumHit The maximum hit.
+     * @param attackSpeed The attack speed.
+     * @param attackAnimation The attack animation.
+     * @param defenceAnimation The defence animation
+     * @param deathAnimation The death animation.
+     * @param skills A list of skills.
+     * @param bonuses A list of bonuses.
      */
-    public NpcCombatDefinition(int id, int respawnTicks, boolean aggressive, boolean poisonous, int combatLevel,
-        int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation, int deathAnimation,
-        int[] skills, int[] bonuses) {
+    public NpcCombatDefinition(int id, int respawnTime, boolean aggressive, boolean poisonous, int level,
+        int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
+        int deathAnimation, int[] skills, int[] bonuses) {
         this.id = id;
-        this.respawnTicks = respawnTicks;
+        this.respawnTime = respawnTime;
         this.aggressive = aggressive;
         this.poisonous = poisonous;
-        this.combatLevel = combatLevel;
+        this.level = level;
         this.hitpoints = hitpoints;
         this.maximumHit = maximumHit;
         this.attackSpeed = attackSpeed;
@@ -222,92 +222,91 @@ public final class NpcCombatDefinition {
     }
 
     /**
-     * @return The id of the {@code Npc} this definition is for.
+     * @return The non-player identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The amount of ticks it takes to respawn.
+     * @return The respawn time (in ticks).
      */
-    public int getRespawnTicks() {
-        return respawnTicks;
+    public int getRespawnTime() {
+        return respawnTime;
     }
 
     /**
-     * @return {@code true} if the {@code Npc} is aggressive, {@code false} otherwise.
+     * @return If the non-player is aggressive.
      */
     public boolean isAggressive() {
         return aggressive;
     }
 
     /**
-     * @return {@code true} if the {@code Npc} is poisonous, {@code false} otherwise.
+     * @return If the non-player is poisonous.
      */
     public boolean isPoisonous() {
         return poisonous;
     }
 
     /**
-     * @return The combat level of the {@code Npc}.
+     * @return The combat level.
      */
-    public int getCombatLevel() {
-        return combatLevel;
+    public int getLevel() {
+        return level;
     }
 
     /**
-     * @return The hitpoint amount of the {@code Npc}.
+     * @return The hitpoint amount.
      */
     public int getHitpoints() {
         return hitpoints;
     }
 
     /**
-     * @return The maximum hit of the {@code Npc}.
+     * @return The maximum hit.
      */
     public int getMaximumHit() {
         return maximumHit;
     }
 
     /**
-     * @return The attack speed of the {@code Npc}.
+     * @return The attack speed.
      */
     public int getAttackSpeed() {
         return attackSpeed;
     }
 
     /**
-     * @return The attack animation of the {@code Npc}.
+     * @return The attack animation.
      */
     public int getAttackAnimation() {
         return attackAnimation;
     }
 
     /**
-     * @return The defence animation of the {@code Npc}.
+     * @return The defence animation.
      */
     public int getDefenceAnimation() {
         return defenceAnimation;
     }
 
     /**
-     * @return The death animation of the {@code Npc}.
+     * @return The death animation.
      */
     public int getDeathAnimation() {
         return deathAnimation;
     }
 
     /**
-     * @return The skills (attack, strength, defence, ranged, magic) of the {@code Npc}.
+     * @return A list of skills.
      */
     public ImmutableList<Integer> getSkills() {
         return skills;
     }
 
     /**
-     * @return The bonuses (stab atk, slash atk, crush atk, magic atk, ranged atk, stab def, slash def, crush def, magic def,
-     * ranged def) of the {@code Npc}.
+     * @return A list of bonuses.
      */
     public ImmutableList<Integer> getBonuses() {
         return bonuses;

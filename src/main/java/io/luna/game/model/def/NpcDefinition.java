@@ -1,32 +1,56 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import io.luna.game.model.mobile.Npc;
 import io.luna.util.StringUtils;
 import io.luna.util.parser.impl.NpcDefinitionParser;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 /**
- * A cached definition that describes a specific {@link Npc}.
+ * A definition model describing a non-player.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcDefinition {
 
     /**
-     * An {@link ImmutableList} of the cached {@code NpcDefinition}s.
+     * A list of non-player definitions.
      */
     public static final ImmutableList<NpcDefinition> DEFINITIONS;
 
     /**
-     * The default {@link NpcDefinition} used when none in {@code DEFINITIONS} can be assigned to an {@code Npc}.
+     * A default definition. Used as a substitute for {@code null}.
      */
-    public static final NpcDefinition DEFAULT = new NpcDefinition(-1, null, null, -1, -1, -1, -1, -1,
+    private static final NpcDefinition DEFAULT = new NpcDefinition(-1, null, null, -1, -1, -1, -1, -1,
         StringUtils.EMPTY_ARRAY);
 
-    static {
+    /**
+     * Retrieves the definition for {@code id}.
+     */
+    public static NpcDefinition get(int id) {
+        NpcDefinition def = DEFINITIONS.get(id);
+        if (def == DEFAULT) {
+            throw new NoSuchElementException("No definition for id " + id);
+        }
+        return def;
+    }
+
+    /**
+     * Returns an iterable containing all definitions.
+     */
+    public static Iterable<NpcDefinition> all() {
+        return DEFINITIONS;
+    }
+
+    /**
+     * Returns the non-player name of {@code id}.
+     */
+    public static String computeNameForId(int id) {
+        return get(id).getName();
+    }
+
+    static { /* Populate the immutable list with definitions. */
         NpcDefinition[] definitions = new NpcDefinition[8152];
         Arrays.fill(definitions, DEFAULT);
 
@@ -37,143 +61,143 @@ public final class NpcDefinition {
     }
 
     /**
-     * The identification for the {@code Npc}.
+     * The identifier.
      */
     private final int id;
 
     /**
-     * The name of the {@code Npc}.
+     * The name.
      */
     private final String name;
 
     /**
-     * The description of the {@code Npc}.
+     * The examine text.
      */
-    private final String description;
+    private final String examine;
 
     /**
-     * The size of the {@code Npc}.
+     * The size.
      */
     private final int size;
 
     /**
-     * The walking animation for the {@code Npc}.
+     * The walking animation.
      */
     private final int walkAnimation;
 
     /**
-     * The walking-back animation for the {@code Npc}.
+     * The walking-back animation.
      */
     private final int walkBackAnimation;
 
     /**
-     * The walking-left animation for the {@code Npc}.
+     * The walking-left animation.
      */
     private final int walkLeftAnimation;
 
     /**
-     * The walking-right for the {@code Npc}.
+     * The walking-right animation.
      */
     private final int walkRightAnimation;
 
     /**
-     * The actions for the {@code Npc}.
+     * A list of actions.
      */
-    private final ImmutableSet<String> actions;
+    private final ImmutableList<String> actions;
 
     /**
      * Creates a new {@link NpcDefinition}.
      *
-     * @param id The identification for the {@code Npc}.
-     * @param name The name of the {@code Npc}.
-     * @param description The description of the {@code Npc}.
-     * @param size The size of the {@code Npc}.
-     * @param walkAnimation The walking animation for the {@code Npc}.
-     * @param walkBackAnimation The walking-back animation for the {@code Npc}.
-     * @param walkLeftAnimation The walking-left animation for the {@code Npc}.
-     * @param walkRightAnimation The walking-right animation for the {@code Npc}.
-     * @param actions The actions for the {@code Npc}.
+     * @param id The identifier.
+     * @param name The name.
+     * @param examine The examine text.
+     * @param size The size.
+     * @param walkAnimation The walking animation.
+     * @param walkBackAnimation The walking-back animation.
+     * @param walkLeftAnimation The walking-left animation.
+     * @param walkRightAnimation The walking-right animation.
+     * @param actions A list of actions.
      */
-    public NpcDefinition(int id, String name, String description, int size, int walkAnimation, int walkBackAnimation,
+    public NpcDefinition(int id, String name, String examine, int size, int walkAnimation, int walkBackAnimation,
         int walkLeftAnimation, int walkRightAnimation, String[] actions) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.examine = examine;
         this.size = size;
         this.walkAnimation = walkAnimation;
         this.walkBackAnimation = walkBackAnimation;
         this.walkLeftAnimation = walkLeftAnimation;
         this.walkRightAnimation = walkRightAnimation;
-        this.actions = ImmutableSet.copyOf(actions);
+        this.actions = ImmutableList.copyOf(actions);
     }
 
     /**
-     * @return {@code true} if {@code action} is contained by the backing set of actions.
+     * Determines if {@code action} is an action.
      */
     public boolean hasAction(String action) {
         return actions.contains(action);
     }
 
     /**
-     * @return The identification of the {@code Npc}.
+     * @return The identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The name of the {@code Npc}.
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The description of the {@code Npc}.
+     * @return The examine text.
      */
-    public String getDescription() {
-        return description;
+    public String getExamine() {
+        return examine;
     }
 
     /**
-     * @return The size of the {@code Npc}.
+     * @return The size.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * @return The walking animation for the {@code Npc}.
+     * @return The walking animation.
      */
     public int getWalkAnimation() {
         return walkAnimation;
     }
 
     /**
-     * @return The walking-back animation for the {@code Npc}.
+     * @return The walking-back animation.
      */
     public int getWalkBackAnimation() {
         return walkBackAnimation;
     }
 
     /**
-     * @return The walking-left animation for the {@code Npc}.
+     * @return The walking-left animation.
      */
     public int getWalkLeftAnimation() {
         return walkLeftAnimation;
     }
 
     /**
-     * @return The walking-right animation for the {@code Npc}.
+     * @return The walking-right animation.
      */
     public int getWalkRightAnimation() {
         return walkRightAnimation;
     }
 
     /**
-     * @return The actions for the {@code Npc}.
+     * @return A list of actions.
      */
-    public ImmutableSet<String> getActions() {
+    public ImmutableList<String> getActions() {
         return actions;
     }
 }
