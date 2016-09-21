@@ -3,36 +3,35 @@ package io.luna.game.model.item;
 import java.util.Optional;
 
 /**
- * A listener that is fired by {@link ItemContainer}. One should aim to extend {@link ItemContainerAdapter} for generic use
- * cases rather than implement this directly.
+ * A model representing a listener within an item container. One should aim to extend the adapter instead to
+ * reduce boilerplate.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public interface ItemContainerListener {
 
     /**
-     * Fired when an {@link Item} is added, removed, or replaced.
-     *
-     * @param container The {@link ItemContainer} firing the event.
-     * @param index The index the update is occurring on.
+     * Invoked after an item on one index is updated.
      */
-    default void itemUpdated(ItemContainer container, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    default void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
     }
 
     /**
-     * Fired when an {@link Item}s are added, removed, or replaced in bulk. This is to prevent firing multiple {@code
-     * itemUpdated(ItemContainer, int)} events for a single operation.
-     *
-     * @param container The {@link ItemContainer} firing the event.
+     * Invoked after an item on one index is updated during a bulk operation.
      */
-    default void bulkItemsUpdated(ItemContainer container) {
+    default void onBulkUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+
     }
 
     /**
-     * Fired when the capacity of {@code container} is exceeded.
-     *
-     * @param container The {@link ItemContainer} firing the event.
+     * Invoked after a series of bulk update invocations.
      */
-    default void capacityExceeded(ItemContainer container) {
+    default void onBulkUpdateCompleted(ItemContainer items) {
+    }
+
+    /**
+     * Invoked when the capacity is exceeded.
+     */
+    default void onCapacityExceeded(ItemContainer items) {
     }
 }

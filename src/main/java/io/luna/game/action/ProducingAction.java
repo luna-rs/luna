@@ -45,8 +45,8 @@ public abstract class ProducingAction extends PlayerAction {
             return;
         }
 
-        int newSlots = inventory.computeIndexCount(currentAdd);
-        int oldSlots = inventory.computeIndexCount(currentRemove);
+        int newSlots = inventory.computeSize(currentAdd);
+        int oldSlots = inventory.computeSize(currentRemove);
         if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
             mob.queue(new GameChatboxMessageWriter("You do not have enough space in your inventory."));
             interrupt();

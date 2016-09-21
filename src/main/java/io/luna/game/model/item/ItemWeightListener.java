@@ -2,85 +2,82 @@ package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mobile.Player;
-import io.luna.net.msg.out.UpdateWeightMessageWriter;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * An {@link ItemContainerListener} implementation that will update the weight value of a {@link Player}.
+ * A listener that will update a player's weight.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ItemWeightListener implements ItemContainerListener {
 
     /**
-     * The {@link Player} to listen for.
+     * The player.
      */
     private final Player player;
 
     /**
+     * A list of weight changes.
+     */
+    private final List<Double> weightChanges = new ArrayList<>();
+
+    /**
      * Creates a new {@link ItemWeightListener}.
      *
-     * @param player The {@link Player} to listen for.
+     * @param player The player.
      */
     public ItemWeightListener(Player player) {
         this.player = player;
     }
 
     @Override
-    public void itemUpdated(ItemContainer container, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    public void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
         updateWeight(oldItem, newItem);
-        queueWeight();
     }
 
     @Override
-    public void bulkItemsUpdated(ItemContainer container) {
-        updateAllWeight();
-        queueWeight();
+    public void onBulkUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+        weightChanges.add(computeWeightDifference(oldItem, newItem));
+    }
+
+    @Override
+    public void onBulkUpdateCompleted(ItemContainer items) {
+        Iterator<Double> iterator = weightChanges.iterator();
+        double currentWeight = player.getWeight();
+
+        while (iterator.hasNext()) {
+            currentWeight += iterator.next();
+            iterator.remove();
+        }
+        player.setWeight(currentWeight);
     }
 
     /**
-     * Updates the weight value for a single set of items.
+     * Updates the weight for a single item set.
      */
     private void updateWeight(Optional<Item> oldItem, Optional<Item> newItem) {
-        double subtract = applyWeight(oldItem);
-        double add = applyWeight(newItem);
-
-        double currentWeight = player.getWeight();
-        currentWeight -= subtract;
-        currentWeight += add;
-
-        player.setWeight(currentWeight, false);
+        player.setWeight(player.getWeight() + computeWeightDifference(oldItem, newItem));
     }
 
     /**
-     * Updates the weight value for all items in {@code container}.
+     * Computes the weight difference for a single item set.
      */
-    private void updateAllWeight() {
-        player.setWeight(0.0, false);
-
-        player.getInventory().stream().
-            filter(Objects::nonNull).
-            forEach(it -> updateWeight(Optional.empty(), Optional.of(it)));
-        player.getEquipment().stream().
-            filter(Objects::nonNull).
-            forEach(it -> updateWeight(Optional.empty(), Optional.of(it)));
+    private double computeWeightDifference(Optional<Item> oldItem, Optional<Item> newItem) {
+        double subtract = computeWeight(oldItem);
+        double add = computeWeight(newItem);
+        return add - subtract;
     }
 
     /**
-     * Converts an {@link Optional} into a {@code double} describing its weight value.
+     * Computes the weight of {@code item}.
      */
-    private double applyWeight(Optional<Item> item) {
+    private double computeWeight(Optional<Item> item) {
         return item.map(Item::getItemDef).
             map(ItemDefinition::getWeight).
             orElse(0.0);
-    }
-
-    /**
-     * Queues an {@link UpdateWeightMessageWriter} message.
-     */
-    private void queueWeight() {
-        player.queue(new UpdateWeightMessageWriter((int) player.getWeight()));
     }
 }

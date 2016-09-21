@@ -3,14 +3,14 @@ package io.luna.game.model.item;
 import io.luna.game.model.mobile.Player;
 
 /**
- * An {@link ItemContainer} implementation that manages the inventory for a {@link Player}.
+ * An item container model representing a player's inventory.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class Inventory extends ItemContainer {
 
     /**
-     * An {@link ItemContainerAdapter} implementation that listens for changes to the inventory.
+     * An adapter listening for inventory changes.
      */
     private final class InventoryListener extends ItemContainerAdapter {
 
@@ -33,19 +33,19 @@ public final class Inventory extends ItemContainer {
     }
 
     /**
-     * The inventory item display widget identifier.
+     * The inventory item display.
      */
     public static final int INVENTORY_DISPLAY_ID = 3214;
 
     /**
-     * The {@link Player} this instance is dedicated to.
+     * The player.
      */
     private final Player player;
 
     /**
      * Creates a new {@link Inventory}.
      *
-     * @param player The {@link Player} this instance is dedicated to.
+     * @param player The player.
      */
     public Inventory(Player player) {
         super(28, StackPolicy.STANDARD);

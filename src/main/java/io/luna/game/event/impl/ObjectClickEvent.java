@@ -4,11 +4,13 @@ import io.luna.game.event.EventArguments;
 import io.luna.game.model.mobile.Player;
 
 /**
- * An event sent when a player clicks any object index.
+ * An object-click based event. Not intended for interception.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public class ObjectClickEvent extends PlayerEvent {
+
+    /* Needs to be public so inner classes are visible. */
 
     /**
      * An event sent when a player clicks an npc's first index.

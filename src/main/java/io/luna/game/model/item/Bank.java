@@ -1,21 +1,22 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.inter.StaticInventoryInterface;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
-import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 
+import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
- * An {@link ItemContainer} implementation that manages the bank for a {@link Player}.
+ * An item container model representing a player's bank.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class Bank extends ItemContainer {
 
     /**
-     * An {@link ItemContainerAdapter} implementation that listens for changes to the bank.
+     * An adapter listening for bank changes.
      */
     private final class BankListener extends ItemContainerAdapter {
 
@@ -38,161 +39,157 @@ public final class Bank extends ItemContainer {
     }
 
     /**
-     * The size of all bank instances.
+     * The size.
      */
     public static final int SIZE = 352;
 
     /**
-     * The main interface identifier for banks.
+     * The main interface.
      */
     private static final int INTERFACE_ID = 5292;
 
     /**
-     * The inventory overlay identifier for banks.
+     * The inventory overlay.
      */
     private static final int INVENTORY_OVERLAY_ID = 5063;
 
     /**
-     * The bank item display widget identifier.
+     * The bank item display.
      */
     public static final int BANK_DISPLAY_ID = 5382;
 
     /**
-     * The inventory item display widget identifier.
+     * The inventory item display.
      */
     private static final int INVENTORY_DISPLAY_ID = 5064;
 
     /**
-     * The withdraw mode state identifier.
+     * The withdraw mode state.
      */
     public static final int WITHDRAW_MODE_STATE_ID = 115;
 
     /**
-     * The {@link Player} this instance is dedicated to.
+     * The player.
      */
     private final Player player;
 
     /**
+     * The inventory.
+     */
+    private final Inventory inventory;
+
+    /**
      * Creates a new {@link Bank}.
      *
-     * @param player The {@link Player} this instance is dedicated to.
+     * @param player The player.
      */
     public Bank(Player player) {
         super(SIZE, StackPolicy.ALWAYS);
         this.player = player;
+        inventory = player.getInventory();
 
         addListener(new BankListener());
     }
 
     /**
-     * Opens the banking interface for the underlying player.
+     * Opens the banking interface.
      */
     public void open() {
         shift();
 
-        player.queue(new InventoryOverlayMessageWriter(INTERFACE_ID, INVENTORY_OVERLAY_ID));
+        StaticInventoryInterface inter = new StaticInventoryInterface(INTERFACE_ID, INVENTORY_OVERLAY_ID);
+        player.getInterfaces().open(inter);
+
         player.setWithdrawAsNote(false);
 
-        forceRefresh();
+        refresh();
     }
 
     /**
-     * Deposits an {@link Item} from the underlying player's {@link Inventory}.
-     *
-     * @param inventoryIndex The {@code Inventory} index that the {@code Item} will be deposited from.
-     * @param amount The amount of the {@code Item} to deposit.
-     * @return {@code true} if the {@code Item} was successfully deposited, {@code false} otherwise.
+     * Deposits an item from the inventory. Returns {@code true} if successful.
      */
     public boolean deposit(int inventoryIndex, int amount) {
-        Inventory inventory = player.getInventory();
-        Item depositItem = inventory.get(inventoryIndex);
+        Item inventoryItem = inventory.get(inventoryIndex);
 
-        if (depositItem == null || amount < 1) { // Item doesn't exist in inventory.
+        if (inventoryItem == null || amount < 1) {
             return false;
         }
 
-        int existingAmount = inventory.computeAmountForId(depositItem.getId());
-        if (amount > existingAmount) { // Deposit amount is more than we actually have, size it down.
+        int existingAmount = inventory.computeAmountForId(inventoryItem.getId());
+        if (amount > existingAmount) {
             amount = existingAmount;
         }
-        depositItem = depositItem.createWithAmount(amount);
+        inventoryItem = inventoryItem.createWithAmount(amount);
 
-        ItemDefinition def = depositItem.getItemDef();
-        Item newDepositItem = depositItem.createWithId(def.isNoted() ? def.getUnnotedId() : depositItem.getId());
+        ItemDefinition def = inventoryItem.getItemDef();
+        Item depositItem = inventoryItem.createWithId(def.getUnnotedId().orElse(inventoryItem.getId()));
 
-        int remaining = computeRemainingSize(); // Do we have enough space in the bank?
-        if (remaining < 1 && computeIndexForId(newDepositItem.getId()) == -1) {
+        int remaining = computeRemainingSize();
+        Optional<Integer> depositIndex = computeIndexForId(depositItem.getId());
+        if (remaining < 1 && !depositIndex.isPresent()) {
             fireCapacityExceededEvent();
             return false;
         }
 
-        if (inventory.remove(depositItem)) {
-            add(newDepositItem);
-            forceRefresh();
+        if (inventory.remove(inventoryItem)) {
+            add(depositItem);
+            refresh();
             return true;
         }
         return false;
     }
 
     /**
-     * Withdraws an {@link Item} from the underlying player's {@code Bank}.
-     *
-     * @param bankIndex The {@code Bank} index that the {@code Item} will be deposited from.
-     * @param amount The amount of the {@code Item} to withdraw.
-     * @return {@code true} if the {@code Item} was successfully deposited, {@code false} otherwise.
+     * Withdraws an item from the bank. Returns {@code true} if successful.
      */
     public boolean withdraw(int bankIndex, int amount) {
-        Inventory inventory = player.getInventory();
-        Item withdrawItem = get(bankIndex);
+        Item bankItem = get(bankIndex);
 
-        if (withdrawItem == null || amount < 1) { // Item doesn't exist in bank.
+        if (bankItem == null || amount < 1) {
             return false;
         }
 
-        int existingAmount = withdrawItem.getAmount();
-        if (amount > existingAmount) { // Withdraw amount is more than we actually have, size it down.
+        int existingAmount = bankItem.getAmount();
+        if (amount > existingAmount) {
             amount = existingAmount;
         }
 
         OptionalInt newId = OptionalInt.empty();
-        if (player.isWithdrawAsNote()) { // Configure the noted id of the item we're withdrawing, if applicable.
-            ItemDefinition def = withdrawItem.getItemDef();
-            if (def.canBeNoted()) {
-                newId = OptionalInt.of(def.getNotedId());
+        if (player.isWithdrawAsNote()) {
+            ItemDefinition def = bankItem.getItemDef();
+            if (def.isNoteable()) {
+                newId = def.getNotedId();
             } else {
                 player.queue(new GameChatboxMessageWriter("This item cannot be withdrawn as a note."));
             }
         }
-
-        Item newWithdrawItem = withdrawItem.createWithId(newId.orElse(withdrawItem.getId()));
-        ItemDefinition newDef = newWithdrawItem.getItemDef();
+        Item withdrawItem = bankItem.createWithId(newId.orElse(bankItem.getId()));
+        ItemDefinition newDef = withdrawItem.getItemDef();
 
         int remaining = inventory.computeRemainingSize();
-        if (remaining < 1) { // Do we have enough space in the inventory?
+        if (remaining < 1) {
             inventory.fireCapacityExceededEvent();
             return false;
         }
 
-        if (amount > remaining && !newDef.isStackable()) { // Size down withdraw amount to inventory space.
+        if (amount > remaining && !newDef.isStackable()) {
             amount = remaining;
         }
+        bankItem = bankItem.createWithAmount(amount);
         withdrawItem = withdrawItem.createWithAmount(amount);
-        newWithdrawItem = newWithdrawItem.createWithAmount(amount);
 
-        if (remove(withdrawItem)) {
-            inventory.add(newWithdrawItem);
-            forceRefresh();
+        if (remove(bankItem)) {
+            inventory.add(withdrawItem);
+            refresh();
             return true;
         }
         return false;
     }
 
     /**
-     * Forces a refresh of {@code Bank} items to the {@code BANK_DISPLAY_ID} widget and {@link Inventory} items to the {@code
-     * INVENTORY_DISPLAY_ID} widget.
+     * Refreshes the bank and inventory.
      */
-    private void forceRefresh() {
-        Inventory inventory = player.getInventory();
+    private void refresh() {
         player.queue(constructRefresh(BANK_DISPLAY_ID));
         player.queue(inventory.constructRefresh(INVENTORY_DISPLAY_ID));
     }

@@ -25,8 +25,15 @@ public final class ItemDefinition {
     /**
      * A default definition. Used as a substitute for {@code null}.
      */
-    public static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, false, 0.0,
+    private static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, false, 0.0,
         false, StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+
+    /**
+     * Returns the amount of loaded definitions.
+     */
+    public static int count() {
+        return DEFINITIONS.size();
+    }
 
     /**
      * Retrieves the definition for {@code id}.
