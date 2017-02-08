@@ -1,7 +1,7 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.model.mobile.MobileEntityList;
+import io.luna.game.model.mobile.MobList;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.region.RegionManager;
@@ -27,12 +27,12 @@ public final class World {
     /**
      * A list of active players.
      */
-    private final MobileEntityList<Player> playerList = new MobileEntityList<>(2048);
+    private final MobList<Player> playerList = new MobList<>(2048);
 
     /**
      * A list of active npcs.
      */
-    private final MobileEntityList<Npc> npcList = new MobileEntityList<>(16384);
+    private final MobList<Npc> npcList = new MobList<>(16384);
 
     /**
      * A queue of players awaiting login.
@@ -169,14 +169,14 @@ public final class World {
     /**
      * @return A list of active players.
      */
-    public MobileEntityList<Player> getPlayers() {
+    public MobList<Player> getPlayers() {
         return playerList;
     }
 
     /**
      * @return A list of active npcs.
      */
-    public MobileEntityList<Npc> getNpcs() {
+    public MobList<Npc> getNpcs() {
         return npcList;
     }
 }

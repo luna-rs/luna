@@ -1,8 +1,9 @@
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
-import io.luna.game.model.item.{RationalItem, RationalItemTable}
+import io.luna.game.model.item.{Item, RationalItem, RationalItemTable}
 
 
-private val CASKET = 405
+private val CASKET = new Item(405)
+private val DEFAULT = new Item(995, 500)
 private val CASKET_TABLE = new RationalItemTable(
   new RationalItem(995, 8 to 3000, CHANCE_COMMON), // Coins
   new RationalItem(1623, 1, CHANCE_COMMON), // Uncut sapphire
@@ -17,11 +18,12 @@ private val CASKET_TABLE = new RationalItemTable(
 )
 
 
-on[ItemFirstClickEvent](CASKET) { msg =>
+onargs[ItemFirstClickEvent](CASKET.getId) { msg =>
   // TODO add item dialogue
   val inventory = msg.plr.inventory
   if (inventory.remove(CASKET)) {
-    inventory.add(CASKET_TABLE.computeIndexed)
+    val item = CASKET_TABLE.selectIndexed.getOrElse(DEFAULT)
+    inventory.add(item)
   }
 }
 

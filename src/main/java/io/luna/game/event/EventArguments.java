@@ -13,6 +13,11 @@ import java.util.Objects;
 public final class EventArguments implements Iterable<Object> {
 
     /**
+     * An event arguments Object with no arguments.
+     */
+    public static final EventArguments NO_ARGS = new EventArguments(new Object[] {});
+
+    /**
      * The arguments.
      */
     private final ImmutableList<Object> args;
@@ -35,21 +40,21 @@ public final class EventArguments implements Iterable<Object> {
      * Determines if the arguments contains {@code value}.
      */
     public boolean contains(Object value) {
-        return args.contains(value);
+        return this != NO_ARGS && args.contains(value);
     }
 
     /**
      * Determines if the argument at {@code index} equals {@code value}.
      */
     public boolean equals(int index, Object value) {
-        return Objects.equals(get(index), value);
+        return this != NO_ARGS && Objects.equals(get(index), value);
     }
 
     /**
      * Retrieves the argument at {@code index}.
      */
     public Object get(int index) {
-        return args.get(index);
+        return this == NO_ARGS ? null : args.get(index);
     }
 
     /**

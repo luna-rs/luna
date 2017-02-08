@@ -9,21 +9,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link GsonParser} implementation that reads {@link NpcCombatDefinition}s.
+ * A {@link GsonParser} implementation that reads NPC combat definitions.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     /**
-     * The {@link Map} that will contain parsed {@link NpcCombatDefinition}s.
+     * The map of parsed definitions.
      */
     private final Map<Integer, NpcCombatDefinition> definitions;
 
     /**
      * Creates a new {@link NpcCombatDefinitionParser}.
      *
-     * @param definitions The {@link Map} that will contain parsed {@link NpcCombatDefinition}s.
+     * @param definitions The map of parsed definitions.
      */
     public NpcCombatDefinitionParser(Map<Integer, NpcCombatDefinition> definitions) {
         super("./data/npcs/npc_combat_defs.json");

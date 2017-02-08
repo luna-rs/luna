@@ -5,15 +5,16 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
+import io.luna.game.model.Chance;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
-import io.luna.game.model.item.Shop;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.MessageRepository;
+import io.luna.util.Rational;
 import io.luna.util.parser.impl.MessageRepositoryParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -72,7 +73,13 @@ public final class Server {
      */
     public void init() throws Exception {
         LOGGER.info("Luna is being initialized...");
-
+        Rational CHANCE_ALWAYS = Chance.ALWAYS;
+        Rational CHANCE_VERY_COMMON = Chance.VERY_COMMON;
+        Rational CHANCE_COMMON = Chance.COMMON;
+        Rational CHANCE_UNCOMMON = Chance.UNCOMMON;
+        Rational CHANCE_VERY_UNCOMMON = Chance.VERY_UNCOMMON;
+        Rational CHANCE_RARE = Chance.RARE;
+        Rational CHANCE_VERY_RARE = Chance.VERY_RARE;
         initLaunchTasks();
         initPlugins();
         initGame();
@@ -115,7 +122,7 @@ public final class Server {
      */
     private void initPlugins() throws Exception {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        bootstrap.init(launchPool);
+        bootstrap.load(launchPool);
     }
 
     /**
@@ -127,6 +134,5 @@ public final class Server {
         launchPool.execute(() -> loadClass(EquipmentDefinition.class));
         launchPool.execute(() -> loadClass(NpcCombatDefinition.class));
         launchPool.execute(() -> loadClass(NpcDefinition.class));
-        launchPool.execute(() -> loadClass(Shop.class));
     }
 }

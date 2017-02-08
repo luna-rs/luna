@@ -81,8 +81,7 @@ public final class LunaConstants {
      * lot potential problems if a large volume of players are in one place.
      * <p>
      * A solution to this problem is <strong>staggered updating</strong>, which is a fancy term for updating the
-     * most
-     * important players first. This is done through the {@link RegionUpdateComparator}.
+     * most important players first. This is done through the {@link RegionUpdateComparator}.
      * <p>
      * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored
      * within a {@link TreeSet} (O(log n) performance) instead of a regular {@link HashSet} (O(1) performance).

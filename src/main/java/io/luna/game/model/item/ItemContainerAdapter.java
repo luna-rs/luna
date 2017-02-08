@@ -13,6 +13,10 @@ import java.util.Optional;
  */
 public abstract class ItemContainerAdapter implements ItemContainerListener {
 
+    /* TODO Don't send an entire container update even on a bulk operation.
+     Think of better solution.
+     */
+
     /**
      * The player.
      */
@@ -32,11 +36,7 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
      */
     @Override
     public void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
-        if (newItem.isPresent()) {
-            sendItem(newItem.get(), index);
-        } else {
-            sendItem(null, index);
-        }
+        sendItem(newItem.orElse(null), index);
     }
 
     /**

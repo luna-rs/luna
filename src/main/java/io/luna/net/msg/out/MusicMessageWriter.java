@@ -13,14 +13,14 @@ import io.luna.net.msg.MessageWriter;
 public final class MusicMessageWriter extends MessageWriter {
 
     /**
-     * The identifier of the song.
+     * The song identifier.
      */
     private final int id;
 
     /**
      * Creates a new {@link MusicMessageWriter}.
      *
-     * @param id The identifier of the song.
+     * @param id The song identifier.
      */
     public MusicMessageWriter(int id) {
         this.id = id;

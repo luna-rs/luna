@@ -8,80 +8,83 @@ import io.netty.buffer.PooledByteBufAllocator;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link ByteBuf} wrapper tailored to the specifications of the Runescape protocol. These wrappers are backed by pooled
- * direct buffers when possible, otherwise they're backed by pooled heap buffers.
+ * A {@link ByteBuf} wrapper tailored to the specifications of the Runescape protocol.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
-     * A buffer pool that will help reduce the overhead from allocating and deallocating direct buffers.
+     * A buffer pool.
      */
     public static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
 
     /**
-     * An array of bit masks used for bitwise operations.
+     * An array of bit masks.
      */
     private static final int[] BIT_MASK = new int[32];
 
     /**
-     * @return Creates a {@link ByteMessage} used to read and write raw messages.
+     * Creates a {@link ByteMessage} used to read and write raw messages.
      */
     public static ByteMessage message() {
         return new ByteMessage(ALLOC.buffer(128), -1, MessageType.RAW);
     }
 
     /**
-     * @return Creates a {@link ByteMessage} used to read and write game messages.
+     * Creates a {@link ByteMessage} used to read and write game messages.
      */
     public static ByteMessage message(int opcode, MessageType type) {
         return new ByteMessage(ALLOC.buffer(128), opcode, type);
     }
 
     /**
-     * @return Creates a fixed type {@link ByteMessage} used to read and write game messages.
+     * Creates a fixed type {@link ByteMessage} used to read and write game messages.
      */
     public static ByteMessage message(int opcode) {
         return message(opcode, MessageType.FIXED);
     }
 
     /**
-     * @return Creates a raw {@link ByteMessage} wrapped around the specified {@link ByteBuf}.
+     * Creates a raw {@link ByteMessage} wrapped around the specified {@link ByteBuf}.
      */
     public static ByteMessage wrap(ByteBuf buf) {
         return new ByteMessage(buf, -1, MessageType.RAW);
     }
 
     /**
-     * The backing byte buffer used to read and write data.
+     * The backing byte buffer.
      */
     private final ByteBuf buf;
 
     /**
-     * The opcode, {@code -1} if this message does not have an opcode.
+     * The opcode, {@code -1} if there isn't one.
      */
     private final int opcode;
 
     /**
-     * The header type of this message.
+     * The header type.
      */
     private final MessageType type;
 
     /**
-     * The current bit position when writing bits.
+     * The current bit index.
      */
     private int bitIndex = -1;
 
-    /**
-     * A static initialization block that calculates the bit masks.
-     */
-    static {
+    static { /* Initialize bit masks. */
         for (int i = 0; i < BIT_MASK.length; i++) {
             BIT_MASK[i] = (1 << i) - 1;
         }
     }
 
+    /**
+     * Creates a new {@link ByteMessage}.
+     *
+     * @param buf The backing byte buffer.
+     * @param opcode The opcode, {@code -1} if there isn't one.
+     * @param type The header type.
+     */
     private ByteMessage(ByteBuf buf, int opcode, MessageType type) {
         super(buf);
         this.buf = buf;
@@ -109,10 +112,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Writes the bytes from the argued buffer into this buffer. This method does not modify the argued buffer.
-     *
-     * @param from The argued buffer that bytes will be written from.
-     * @return An instance of this byte message.
+     * Writes bytes from the argued buffer into this buffer.
      */
     public ByteMessage putBytes(ByteBuf from) {
         for (int i = 0; i < from.writerIndex(); i++) {
@@ -122,20 +122,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Writes the bytes from the argued buffer into this buffer. This method does not modify the argued buffer.
-     *
-     * @param from The argued buffer that bytes will be written from.
-     * @return An instance of this byte message.
+     * Writes bytes from the argued buffer into this buffer.
      */
     public ByteMessage putBytes(ByteMessage from) {
         return putBytes(from.getBuffer());
     }
 
     /**
-     * Writes the bytes from the argued buffer into this buffer.
-     *
-     * @param from The argued buffer that bytes will be written from.
-     * @return An instance of this byte message.
+     * Writes bytes from the argued array into this buffer.
      */
     public ByteMessage putBytes(byte[] from) {
         buf.writeBytes(from, 0, from.length);
@@ -143,9 +137,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Writes the bytes from the argued byte array into this buffer, in reverse.
-     *
-     * @param data The data to write to this buffer.
+     * Writes bytes in reverse from the argued array into this buffer.
      */
     public ByteMessage putBytesReverse(byte[] data) {
         for (int i = data.length - 1; i >= 0; i--) {
@@ -157,9 +149,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes the value as a variable amount of bits.
      *
-     * @param amount The amount of bits to write.
-     * @param value The value of the bits.
-     * @return An instance of this byte message.
      * @throws IllegalArgumentException If the number of bits is not between {@code 1} and {@code 32} inclusive.
      */
     public ByteMessage putBits(int amount, int value) {
@@ -195,10 +184,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Writes a boolean bit flag.
-     *
-     * @param flag The flag to write.
-     * @return An instance of this byte message.
+     * Writes a boolean bit.
      */
     public ByteMessage putBit(boolean flag) {
         putBits(1, flag ? 1 : 0);
@@ -207,10 +193,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a {@code byte}.
-     *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @return An instance of this byte message.
      */
     public ByteMessage put(int value, ByteTransform type) {
         switch (type) {
@@ -232,9 +214,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a normal {@code byte}.
-     *
-     * @param value The value to write.
-     * @return An instance of this byte message.
      */
     public ByteMessage put(int value) {
         put(value, ByteTransform.NORMAL);
@@ -244,10 +223,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a {@code short}.
      *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return An instance of this byte message.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
     public ByteMessage putShort(int value, ByteTransform type, ByteOrder order) {
@@ -270,9 +245,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a normal big-endian {@code short}.
-     *
-     * @param value The value to write.
-     * @return An instance of this byte message.
      */
     public ByteMessage putShort(int value) {
         putShort(value, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -281,10 +253,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a big-endian {@code short}.
-     *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @return An instance of this byte message.
      */
     public ByteMessage putShort(int value, ByteTransform type) {
         putShort(value, type, ByteOrder.BIG);
@@ -293,10 +261,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a standard {@code short}.
-     *
-     * @param value The value to write.
-     * @param order The byte endianness type.
-     * @return An instance of this byte message.
      */
     public ByteMessage putShort(int value, ByteOrder order) {
         putShort(value, ByteTransform.NORMAL, order);
@@ -305,11 +269,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as an {@code int}.
-     *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return An instance of this byte message.
      */
     public ByteMessage putInt(int value, ByteTransform type, ByteOrder order) {
         switch (order) {
@@ -354,10 +313,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a big-endian {@code int}.
-     *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @return An instance of this byte message.
      */
     public ByteMessage putInt(int value, ByteTransform type) {
         putInt(value, type, ByteOrder.BIG);
@@ -366,10 +321,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a standard {@code int}.
-     *
-     * @param value The value to write.
-     * @param order The byte endianness type.
-     * @return An instance of this byte message.
      */
     public ByteMessage putInt(int value, ByteOrder order) {
         putInt(value, ByteTransform.NORMAL, order);
@@ -379,10 +330,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a {@code long}.
      *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return An instance of this byte message.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
     public ByteMessage putLong(long value, ByteTransform type, ByteOrder order) {
@@ -417,9 +364,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a standard big-endian {@code long}.
-     *
-     * @param value The value to write.
-     * @return An instance of this byte message.
      */
     public ByteMessage putLong(long value) {
         putLong(value, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -428,10 +372,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a big-endian {@code long}.
-     *
-     * @param value The value to write.
-     * @param type The byte transformation type
-     * @return An instance of this byte message.
      */
     public ByteMessage putLong(long value, ByteTransform type) {
         putLong(value, type, ByteOrder.BIG);
@@ -440,10 +380,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a value as a standard {@code long}.
-     *
-     * @param value The value to write.
-     * @param order The byte endianness type. to write.
-     * @return An instance of this byte message.
      */
     public ByteMessage putLong(long value, ByteOrder order) {
         putLong(value, ByteTransform.NORMAL, order);
@@ -452,9 +388,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Writes a RuneScape {@code String} value.
-     *
-     * @param string The string to write.
-     * @return An instance of this byte message.
      */
     public ByteMessage putString(String string) {
         for (byte value : string.getBytes()) {
@@ -466,10 +399,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a value as a {@code byte}.
-     *
-     * @param signed if the byte is signed.
-     * @param type The byte transformation type
-     * @return The value of the byte.
      */
     public int get(boolean signed, ByteTransform type) {
         int value = buf.readByte();
@@ -491,8 +420,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard signed {@code byte}.
-     *
-     * @return The value of the byte.
      */
     public int get() {
         return get(true, ByteTransform.NORMAL);
@@ -500,9 +427,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard {@code byte}.
-     *
-     * @param signed If the byte is signed.
-     * @return The value of the byte.
      */
     public int get(boolean signed) {
         return get(signed, ByteTransform.NORMAL);
@@ -510,9 +434,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed {@code byte}.
-     *
-     * @param type The byte transformation type
-     * @return The value of the byte.
      */
     public int get(ByteTransform type) {
         return get(true, type);
@@ -521,10 +442,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a {@code short} value.
      *
-     * @param signed If the short is signed.
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return The value of the short.
      * @throws UnsupportedOperationException if middle or inverse-middle value types are selected.
      */
     public int getShort(boolean signed, ByteTransform type, ByteOrder order) {
@@ -548,8 +465,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard signed big-endian {@code short}.
-     *
-     * @return The value of the short.
      */
     public int getShort() {
         return getShort(true, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -557,9 +472,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard big-endian {@code short}.
-     *
-     * @param signed If the short is signed.
-     * @return The value of the short.
      */
     public int getShort(boolean signed) {
         return getShort(signed, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -567,9 +479,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed big-endian {@code short}.
-     *
-     * @param type The byte transformation type
-     * @return The value of the short.
      */
     public int getShort(ByteTransform type) {
         return getShort(true, type, ByteOrder.BIG);
@@ -577,10 +486,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a big-endian {@code short}.
-     *
-     * @param signed If the short is signed.
-     * @param type The byte transformation type
-     * @return The value of the short.
      */
     public int getShort(boolean signed, ByteTransform type) {
         return getShort(signed, type, ByteOrder.BIG);
@@ -588,9 +493,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed standard {@code short}.
-     *
-     * @param order The byte endianness type.
-     * @return The value of the short.
      */
     public int getShort(ByteOrder order) {
         return getShort(true, ByteTransform.NORMAL, order);
@@ -598,10 +500,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard {@code short}.
-     *
-     * @param signed If the short is signed.
-     * @param order The byte endianness type.
-     * @return The value of the short.
      */
     public int getShort(boolean signed, ByteOrder order) {
         return getShort(signed, ByteTransform.NORMAL, order);
@@ -609,10 +507,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed {@code short}.
-     *
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return The value of the short.
      */
     public int getShort(ByteTransform type, ByteOrder order) {
         return getShort(true, type, order);
@@ -620,11 +514,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads an {@code int}.
-     *
-     * @param signed If the integer is signed.
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return The value of the integer.
      */
     public int getInt(boolean signed, ByteTransform type, ByteOrder order) {
         long value = 0;
@@ -659,8 +548,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed standard big-endian {@code int}.
-     *
-     * @return The value of the integer.
      */
     public int getInt() {
         return getInt(true, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -668,9 +555,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard big-endian {@code int}.
-     *
-     * @param signed If the integer is signed.
-     * @return The value of the integer.
      */
     public int getInt(boolean signed) {
         return getInt(signed, ByteTransform.NORMAL, ByteOrder.BIG);
@@ -678,9 +562,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed big-endian {@code int}.
-     *
-     * @param type The byte transformation type
-     * @return The value of the integer.
      */
     public int getInt(ByteTransform type) {
         return getInt(true, type, ByteOrder.BIG);
@@ -688,10 +569,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a big-endian {@code int}.
-     *
-     * @param signed If the integer is signed.
-     * @param type The byte transformation type
-     * @return The value of the integer.
      */
     public int getInt(boolean signed, ByteTransform type) {
         return getInt(signed, type, ByteOrder.BIG);
@@ -699,9 +576,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed standard {@code int}.
-     *
-     * @param order The byte endianness type.
-     * @return The value of the integer.
      */
     public int getInt(ByteOrder order) {
         return getInt(true, ByteTransform.NORMAL, order);
@@ -709,10 +583,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a standard {@code int}.
-     *
-     * @param signed If the integer is signed.
-     * @param order The byte endianness type.
-     * @return The value of the integer.
      */
     public int getInt(boolean signed, ByteOrder order) {
         return getInt(signed, ByteTransform.NORMAL, order);
@@ -720,10 +590,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed {@code int}.
-     *
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return The value of the integer.
      */
     public int getInt(ByteTransform type, ByteOrder order) {
         return getInt(true, type, order);
@@ -732,9 +598,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a signed {@code long} value.
      *
-     * @param type The byte transformation type
-     * @param order The byte endianness type.
-     * @return The value of the long.
      * @throws UnsupportedOperationException if middle or inverse-middle value types are selected.
      */
     public long getLong(ByteTransform type, ByteOrder order) {
@@ -769,8 +632,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed standard big-endian {@code long}.
-     *
-     * @return The value of the long.
      */
     public long getLong() {
         return getLong(ByteTransform.NORMAL, ByteOrder.BIG);
@@ -778,9 +639,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed big-endian {@code long}.
-     *
-     * @param type The byte transformation type.
-     * @return The value of the long.
      */
     public long getLong(ByteTransform type) {
         return getLong(type, ByteOrder.BIG);
@@ -788,9 +646,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a signed standard {@code long}.
-     *
-     * @param order The byte endianness type.
-     * @return The value of the long.
      */
     public long getLong(ByteOrder order) {
         return getLong(ByteTransform.NORMAL, order);
@@ -798,8 +653,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
      * Reads a RuneScape {@code String} value.
-     *
-     * @return The value of the string.
      */
     public String getString() {
         byte temp;
@@ -811,21 +664,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Reads the amount of bytes into the array, starting at the current position.
-     *
-     * @param amount The amount to read.
-     * @return A buffer filled with the data.
+     * Reads bytes into an array, starting at the current position.
      */
     public byte[] getBytes(int amount) {
         return getBytes(amount, ByteTransform.NORMAL);
     }
 
     /**
-     * Reads the amount of bytes into a byte array, starting at the current position.
-     *
-     * @param amount The amount of bytes.
-     * @param type The byte transformation type of each byte.
-     * @return A buffer filled with the data.
+     * Reads bytes into an array, starting at the current position.
      */
     public byte[] getBytes(int amount, ByteTransform type) {
         byte[] data = new byte[amount];
@@ -836,12 +682,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Reads the amount of bytes from the buffer in reverse, starting at {@code current_position + amount} and reading in
-     * reverse until the current position.
-     *
-     * @param amount The amount of bytes to read.
-     * @param type The byte transformation type of each byte.
-     * @return A buffer filled with the data.
+     * Reads bytes in reverse into an array, starting at {@code current_position + amount} until the
+     * current position.
      */
     public byte[] getBytesReverse(int amount, ByteTransform type) {
         byte[] data = new byte[amount];
@@ -874,14 +716,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * @return The opcode, {@code -1} if this message does not have an opcode.
+     * @return The opcode, {@code -1} if there isn't one.
      */
     public int getOpcode() {
         return opcode;
     }
 
     /**
-     * @return The header type of this message.
+     * @return The header type.
      */
     public MessageType getType() {
         return type;

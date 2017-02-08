@@ -13,21 +13,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link GsonParser} implementation that reads {@link EquipmentDefinition}s.
+ * A {@link GsonParser} implementation that reads equipment definitions.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinition> {
 
     /**
-     * A {@link Map} that will contain parsed {@link EquipmentDefinition}s.
+     * A map of parsed definitions.
      */
     private final Map<Integer, EquipmentDefinition> definitions;
 
     /**
      * Creates a new {@link EquipmentDefinitionParser}.
      *
-     * @param definitions A {@link Map} that will contain parsed {@link EquipmentDefinition}s.
+     * @param definitions A map of parsed definitions.
      */
     public EquipmentDefinitionParser(Map<Integer, EquipmentDefinition> definitions) {
         super("./data/items/equipment_defs.json");

@@ -1,48 +1,47 @@
 package io.luna.net.codec.login;
 
 import io.luna.net.codec.IsaacCipher;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 
 /**
- * An immutable upstream Netty message that contains the decoded data from the login protocol.
+ * A model representing decoded login protocol data.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginCredentialsMessage {
 
     /**
-     * The username of the player.
+     * The username.
      */
     private final String username;
 
     /**
-     * The password of the player.
+     * The password.
      */
     private final String password;
 
     /**
-     * The encryptor for encrypting game messages.
+     * The encryptor.
      */
     private final IsaacCipher encryptor;
 
     /**
-     * The decryptor for decrypting game messages.
+     * The decryptor.
      */
     private final IsaacCipher decryptor;
 
     /**
-     * The pipeline for the underlying {@link Channel}.
+     * The channel pipeline.
      */
     private final ChannelPipeline pipeline;
 
     /**
      * Creates a new {@link LoginCredentialsMessage}.
      *
-     * @param username The username of the player.
-     * @param password The password of the player.
-     * @param encryptor The encryptor for encrypting game messages.
-     * @param decryptor The decryptor for decrypting game messages.
+     * @param username The username.
+     * @param password The password.
+     * @param encryptor The encryptor.
+     * @param decryptor The decryptor.
      */
     public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
         ChannelPipeline pipeline) {
@@ -54,35 +53,35 @@ public final class LoginCredentialsMessage {
     }
 
     /**
-     * @return The username of the player.
+     * @return The username.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * @return The password of the player.
+     * @return The password.
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * @return The encryptor for encrypting game messages.
+     * @return The encryptor.
      */
     public IsaacCipher getEncryptor() {
         return encryptor;
     }
 
     /**
-     * @return The decryptor for decrypting game messages.
+     * @return The decryptor.
      */
     public IsaacCipher getDecryptor() {
         return decryptor;
     }
 
     /**
-     * @return The pipeline for the underlying {@link Channel}.
+     * @return The channel pipeline.
      */
     public ChannelPipeline getPipeline() {
         return pipeline;

@@ -14,23 +14,26 @@
  AUTHOR: lare96
 */
 
-import java.util.Optional
-import java.util.concurrent.{Callable, ThreadLocalRandom, TimeUnit}
+import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 import java.util.function._
+import java.util.{Optional, OptionalInt}
 
-import io.luna.game.event.{Event, EventListener}
+import com.google.common.collect.BoundType
+import io.luna.game.action.Action
+import io.luna.game.event.{Event, EventArguments, EventListener}
+import io.luna.game.model._
 import io.luna.game.model.`def`.ItemDefinition
-import io.luna.game.model.item.{Item, ItemContainer, RationalItem}
+import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mobile._
 import io.luna.game.model.mobile.attr.AttributeValue
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
-import io.luna.game.model.{Entity, EntityType, Position, World}
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag
 import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 import io.luna.util.{Rational, StringUtils}
 
 import scala.collection.JavaConversions._
+import scala.collection.generic.FilterMonadic
 import scala.reflect.ClassTag
 import scala.util.Random
 
@@ -59,7 +62,7 @@ val TYPE_ITEM = EntityType.ITEM
 val SKILL_ATTACK = Skill.ATTACK
 val SKILL_DEFENCE = Skill.DEFENCE
 val SKILL_STRENGTH = Skill.STRENGTH
-val SKILL_HITPOITNS = Skill.HITPOINTS
+val SKILL_HITPOINTS = Skill.HITPOINTS
 val SKILL_RANGED = Skill.RANGED
 val SKILL_PRAYER = Skill.PRAYER
 val SKILL_MAGIC = Skill.MAGIC
@@ -79,30 +82,42 @@ val SKILL_FARMING = Skill.FARMING
 val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
 
 
-/* Aliases for 'RationalItem'. */
-val CHANCE_ALWAYS = RationalItem.ALWAYS
-val CHANCE_VERY_COMMON = RationalItem.VERY_COMMON
-val CHANCE_COMMON = RationalItem.COMMON
-val CHANCE_UNCOMMON = RationalItem.UNCOMMON
-val CHANCE_VERY_UNCOMMON = RationalItem.VERY_UNCOMMON
-val CHANCE_RARE = RationalItem.RARE
-val CHANCE_VERY_RARE = RationalItem.VERY_RARE
-
-
 /* Implicit conversions. */
 implicit def javaToScalaRange(range: com.google.common.collect.Range[java.lang.Integer]): Range = {
   failIf(!range.hasLowerBound || !range.hasUpperBound,
     "Conversion from Range[Integer] to Range requires a lower and upper bound")
 
-  val lower = range.lowerEndpoint.toInt
-  val upper = range.upperEndpoint.toInt
+  var lower = range.lowerEndpoint.toInt
+  var upper = range.upperEndpoint.toInt
+
+  if (range.lowerBoundType == BoundType.OPEN) {
+    lower += 1
+  }
+  if (range.upperBoundType == BoundType.OPEN) {
+    upper -= 1
+  }
 
   lower to upper
 }
 
-implicit def javaToScalaOptional[T <: Optional[T]](optional: T): Option[T] = {
+implicit def scalaToJavaRange(range: Range): com.google.common.collect.Range[java.lang.Integer] = {
+  if (range.isInclusive) {
+    com.google.common.collect.Range.closed(range.start, range.end)
+  } else {
+    com.google.common.collect.Range.closedOpen(range.start, range.end)
+  }
+}
+
+implicit def javaToScalaOptional[T](optional: Optional[T]): Option[T] = {
   if (optional.isPresent) {
     Some(optional.get)
+  } else {
+    None
+  }
+}
+implicit def javaToScalaOptionalInt(optional: OptionalInt): Option[Int] = {
+  if (optional.isPresent) {
+    Some(optional.getAsInt)
   } else {
     None
   }
@@ -161,25 +176,16 @@ implicit def scalaToJavaSupplier[T](func: () => T): Supplier[T] = new Supplier[T
 
 /* Random generation functions. */
 def rand = ThreadLocalRandom.current
-def rand[E](seq: Seq[E]) = seq((rand.nextDouble * seq.length).toInt)
-def rand[E](arr: Array[E]) = arr((rand.nextDouble * arr.length).toInt)
-def rand(fromInclusive: Int = 0, toInclusive: Int) = rand.nextInt((toInclusive - fromInclusive) + 1) + fromInclusive
-
+def rand[E](seq: Seq[E]): E = seq((rand.nextDouble * seq.length).toInt)
+def rand(from: Int, to: Int): Int = rand.nextInt((to - from) + 1) + from
+def rand(to: Int): Int = rand.nextInt(to + 1)
 
 /* Retrieves the system time in 'MILLISECONDS'. */
 def currentTimeMillis = TimeUnit.MILLISECONDS.convert(System.nanoTime, TimeUnit.NANOSECONDS)
 
 
 /* Retrieves the name of an item. */
-def nameOfItem(id: Int) = {
-  val name = ItemDefinition.computeNameForId(id)
-  if (name.isPresent) {
-    name.get
-  } else {
-    fail("no name found for 'id'")
-  }
-}
-def nameOfItem(item: Item) = nameOfItem(item.getId)
+def nameOfItem(id: Int) = ItemDefinition.computeNameForId(id)
 
 
 /* Appends an article between a prefix and suffix. */
@@ -207,27 +213,22 @@ def failIf(cond: Boolean, msg: => Any = "[failure]: cond == false") = if (cond) 
 /* Normal event interception function. No matching happens here. */
 def on[E <: Event](eventListener: E => Unit)
   (implicit tag: ClassTag[E]): Unit =
-  pipelines.addEventListener(tag.runtimeClass, new EventListener(eventListener))
+  pipelines.add(tag.runtimeClass, new EventListener(EventArguments.NO_ARGS, eventListener))
 
 /*
  Event interception function, with matching on parameters. This method requires that at least one argument
  is specified, in order to avoid conflicts with the previous "on" method.
+
+ TODO: Find a way to overload this method with the previous one.
 */
-def on[E <: Event](arg1: Any, argOther: Any*)
+def onargs[E <: Event](arg1: Any, argOther: Any*)
   (eventListener: E => Unit)
   (implicit tag: ClassTag[E]): Unit = {
 
-  val argList = (List(argOther) ++ List(arg1)).map(_.asInstanceOf[AnyRef])
+  val eventArgs = new EventArguments(
+    (List(arg1) ++ List(argOther).flatten).map(_.asInstanceOf[AnyRef]).toArray)
 
-  val newEventListener = (msg: E) => {
-    if (msg.matches(argList: _*)) {
-      eventListener(msg)
-      msg.terminate
-      return
-    }
-  }
-
-  pipelines.addEventListener(tag.runtimeClass, new EventListener(newEventListener))
+  pipelines.add(tag.runtimeClass, new EventListener(eventArgs, eventListener))
 }
 
 
@@ -240,10 +241,6 @@ def async(func: => Unit) = service.submit(new Runnable {
       case e: Exception => e.printStackTrace()
     }
   }
-})
-
-def async[T](func: => T) = service.submit(new Callable[T] {
-  override def call = func
 })
 
 
@@ -269,7 +266,7 @@ implicit class RichPlayer(plr: Player) {
   def sendMessage(message: String) = plr.queue(new GameChatboxMessageWriter(message))
   def sendWidgetText(text: String, widget: Int) = plr.queue(new WidgetTextMessageWriter(text, widget))
   def sendForceTab(id: Int) = plr.queue(new ForceTabMessageWriter(id))
-  def sendChatboxInterface(id: Int) = plr.queue(new ChatboxInterfaceMessageWriter(id))
+  def sendChatboxInterface(id: Int) = plr.queue(new DialogueInterfaceMessageWriter(id))
   def sendSkillUpdate(id: Int) = plr.queue(new SkillUpdateMessageWriter(id))
   def sendMusic(id: Int) = plr.queue(new MusicMessageWriter(id))
   def sendSound(id: Int, loops: Int = 0, delay: Int = 0) = plr.queue(new SoundMessageWriter(id, loops, delay))
@@ -291,7 +288,7 @@ implicit class RichPlayer(plr: Player) {
 }
 
 
-implicit class RichMobileEntity(mob: MobileEntity) {
+implicit class RichMobileEntity(mob: Mob) {
 
   def attr[T](key: String): T = {
     val attr: AttributeValue[T] = mob.getAttributes.get(key)
@@ -302,6 +299,14 @@ implicit class RichMobileEntity(mob: MobileEntity) {
     val attr: AttributeValue[T] = mob.getAttributes.get(key)
     attr.set(value)
   }
+
+  class AttrOps(key: String) {
+    def increment(amount: Int) = {
+      val value = attr[Int](key)
+
+    }
+  }
+  def attrOps[T](key: String) = new AttrOps(key)
 
   def attrEquals(key: String, equals: Any) = equals == attr(key)
 
@@ -338,11 +343,28 @@ implicit class RichEntity(entity: Entity) {
 
 implicit class RichWorld(world: World) {
 
-  def addNpc(npc: Npc): Npc = {
-    world.getNpcs.add(npc)
-    npc
+  def add[E <: Mob](mob: E) = {
+    if (mob.getType == TYPE_PLAYER) {
+      val plr = mob.asInstanceOf[Player]
+      players.add(plr)
+      plr
+    } else if (mob.getType == TYPE_NPC) {
+      val npc = mob.asInstanceOf[Npc]
+      npcs.add(npc)
+      npc
+    } else {
+      throw new IllegalArgumentException
+    }
   }
-  def addNpc(id: Int, position: Position): Npc = addNpc(new Npc(ctx, id, position))
+
+  def submit[E <: Mob](action: Action[E]) = {
+    val mob = action.getMob
+    if (mob == null) {
+      fail("cannot submit Action with <null> mob")
+    } else {
+      mob.submitAction(action)
+    }
+  }
 
   def schedule(delay: Int, instant: Boolean = false)(action: Task => Unit) =
     world.schedule(new Task(instant, delay) {
@@ -393,7 +415,14 @@ implicit class RichWorld(world: World) {
     }
   }
 
-  def messageToAll(str: String) = world.getPlayers.foreach(_.sendMessage(str))
+  def players = world.getPlayers
+  def npcs = world.getNpcs
+
+  def messageToAll(str: String) = players.foreach(_.sendMessage(str))
+
+  def getRegion(pos: Position) = world.getRegions.getRegion(pos)
+
+  def getViewableEntities(pos: Position, et: EntityType) = world.getRegions.getViewableEntities(pos, et)
 }
 
 
@@ -414,11 +443,13 @@ implicit class RichArray[T](array: Array[T]) {
 
 
 implicit class RichItemContainer(items: ItemContainer) {
+
   def getIdForIndex(index: Int) = items.computeIdForIndex(index).orElse(-1)
 }
 
 
 implicit class RichSeq[T](seq: Seq[T]) {
+
   def shuffle = Random.shuffle(seq)
 }
 
@@ -429,6 +460,30 @@ implicit class RichTraversable[T](traversable: Traversable[T]) {
   def lazyFilterNot(pred: T => Boolean) = traversable.withFilter(it => !pred(it))
 }
 
+implicit class RichIterable[T](traversable: java.lang.Iterable[T]) {
+
+  def lazyFilter(pred: T => Boolean) = traversable.withFilter(pred)
+  def lazyFilterNot(pred: T => Boolean) = traversable.withFilter(it => !pred(it))
+}
+
+implicit class RichFilterMonadic[A, R](filter: FilterMonadic[A, R]) {
+
+  def lazyFilter(pred: A => Boolean) = filter.withFilter(pred)
+  def lazyFilterNot(pred: A => Boolean) = filter.withFilter(it => !pred(it))
+}
+
+implicit class RichMap[K, V](map: Map[K, V]) {
+
+  def tryKeys(keys: K*): Option[Option[V]] = {
+    for (k <- keys) {
+      val v = map.get(k)
+      if (v.isDefined) {
+        return Some(v)
+      }
+    }
+    None
+  }
+}
 
 implicit class RichInt(int: Int) {
 

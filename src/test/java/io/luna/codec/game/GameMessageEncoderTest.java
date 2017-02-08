@@ -45,7 +45,7 @@ public final class GameMessageEncoderTest {
         buffer.clear();
 
         // variable length messages
-        msg = ByteMessage.message(54, MessageType.VARIABLE);
+        msg = ByteMessage.message(54, MessageType.VAR);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
@@ -59,7 +59,7 @@ public final class GameMessageEncoderTest {
         buffer.clear();
 
         // variable short length messages
-        msg = ByteMessage.message(54, MessageType.VARIABLE_SHORT);
+        msg = ByteMessage.message(54, MessageType.VAR_SHORT);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 

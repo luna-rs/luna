@@ -49,7 +49,7 @@ public final class ItemDefinition {
     /**
      * Returns an iterable containing all definitions.
      */
-    public static Iterable<ItemDefinition> all() {
+    public static ImmutableList<ItemDefinition> all() {
         return DEFINITIONS;
     }
 

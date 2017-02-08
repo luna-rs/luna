@@ -3,7 +3,6 @@ package io.luna.net.msg.out;
 import io.luna.game.model.Direction;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
 import io.luna.game.model.mobile.update.UpdateState;
 import io.luna.game.model.region.RegionManager;
@@ -14,30 +13,29 @@ import io.luna.net.msg.MessageWriter;
 import java.util.Iterator;
 
 /**
- * A {@link MessageWriter} implementation that sends an update message containing the underlying {@link Player} and {@link
- * Npc}s surrounding them.
+ * A {@link MessageWriter} implementation that sends an NPC update message.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcUpdateMessageWriter extends MessageWriter {
 
     /**
-     * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
+     * The NPC update block set.
      */
     private final UpdateBlockSet<Npc> blockSet = UpdateBlockSet.NPC_BLOCK_SET;
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(65, MessageType.VARIABLE_SHORT);
+        ByteMessage msg = ByteMessage.message(65, MessageType.VAR_SHORT);
         ByteMessage blockMsg = ByteMessage.message();
 
         try {
             msg.startBitAccess();
             msg.putBits(8, player.getLocalNpcs().size());
 
-            Iterator<Npc> $it = player.getLocalNpcs().iterator();
-            while ($it.hasNext()) {
-                Npc other = $it.next();
+            Iterator<Npc> iterator = player.getLocalNpcs().iterator();
+            while (iterator.hasNext()) {
+                Npc other = iterator.next();
 
                 if (other.isViewable(player)) {
                     handleMovement(other, msg);
@@ -45,7 +43,7 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
                 } else {
                     msg.putBit(true);
                     msg.putBits(2, 3);
-                    $it.remove();
+                    iterator.remove();
                 }
             }
 
@@ -81,10 +79,6 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
 
     /**
      * Adds {@code addNpc} in the view of {@code player}.
-     *
-     * @param msg The main update message.
-     * @param player The {@link Player} this update message is being sent for.
-     * @param addNpc The {@link Npc} being added.
      */
     private void addNpc(Player player, Npc addNpc, ByteMessage msg) {
         boolean updateRequired = !addNpc.getUpdateFlags().isEmpty();
@@ -102,9 +96,6 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
 
     /**
      * Handles walking movement for {@code npc}.
-     *
-     * @param npc The {@link Player} to handle running and walking for.
-     * @param msg The main update message.
      */
     private void handleMovement(Npc npc, ByteMessage msg) {
         boolean updateRequired = !npc.getUpdateFlags().isEmpty();

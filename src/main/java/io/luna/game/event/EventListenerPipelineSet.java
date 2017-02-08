@@ -6,7 +6,6 @@ import com.google.common.collect.UnmodifiableIterator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A set of pipelines mapped to their respective event traversal types.
@@ -18,12 +17,12 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * The map of pipelines.
      */
-    public final Map<EventType, EventListenerPipeline<?>> pipelines = new HashMap<>();
+    public final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
      * Adds a new event listener to a pipeline within this set.
      */
-    public void add(EventType messageType, EventListener<?> listener) {
+    public void add(Class<?> messageType, EventListener<?> listener) {
         EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(messageType, EventListenerPipeline::new);
         pipeline.add(listener);
     }
@@ -31,17 +30,12 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * Retrieves a pipeline from this set. Will never return {@code null}.
      */
-    public EventListenerPipeline<?> get(EventType messageType) {
-        EventListenerPipeline<?> pipeline = pipelines.get(messageType);
-        if (pipeline == null) {
-            throw new NoSuchElementException("no pipeline for " + messageType);
-        }
-        return pipeline;
+    public EventListenerPipeline<?> get(Class<?> messageType) {
+        return pipelines.get(messageType);
     }
 
     /**
-     * Swaps the backing set with {@code set}. Used for reloading plugins (aka. hot fixing,
-     * ninja fixing, etc).
+     * Swaps the backing set with {@code set}. Used for reloading plugins (aka. hot fixing, ninja fixing, etc).
      */
     public void swap(EventListenerPipelineSet set) {
         pipelines.clear();

@@ -10,15 +10,14 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.action.ProducingSkillAction
+import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.Skill.HERBLORE
 import io.luna.game.model.mobile.{Animation, Player}
 
 
 /* Class representing potions in the 'POTION_TABLE'. */
-private case class Potion(id: Int, level: Int, unfId: Int, secondaryId: Int, exp: Double)
+private case class Potion(id: Int, unf: Int, secondary: Int, level: Int, exp: Double)
 
 
 /* Animation for making finished potions. */
@@ -30,43 +29,152 @@ private val ANIMATION = new Animation(363)
  potion_symbol -> Potion
 */
 private val POTION_TABLE = Map(
-  'attack_potion -> Potion(221, 3, 91, 121, 25.0),
-  'antipoison -> Potion(175, 5, 91, 235, 37.5),
-  'strength_potion -> Potion(115, 8, 95, 225, 50.0),
-  'serum_207 -> Potion(3410, 15, 97, 592, 50.0),
-  'restore_potion -> Potion(127, 22, 97, 223, 62.5),
-  'blamish_oil -> Potion(1582, 25, 97, 1581, 80.0),
-  'energy_potion -> Potion(3010, 26, 97, 1975, 67.5),
-  'defence_potion -> Potion(133, 30, 99, 239, 75.0),
-  'agility_potion -> Potion(3034, 34, 3002, 2152, 80.0),
-  'prayer_potion -> Potion(139, 38, 99, 231, 87.5),
-  'super_attack -> Potion(145, 45, 101, 221, 100.0),
-  'super_antipoison -> Potion(181, 48, 101, 235, 106.3),
-  'fishing_potion -> Potion(151, 50, 103, 231, 112.5),
-  'super_energy -> Potion(3018, 52, 103, 2970, 117.5),
-  'super_strength -> Potion(157, 55, 105, 225, 125.0),
-  'super_restore -> Potion(3026, 63, 3004, 223, 142.5),
-  'super_defence -> Potion(163, 66, 107, 239, 150.0),
-  'antifire_potion -> Potion(2454, 69, 2483, 243, 157.5),
-  'ranging_potion -> Potion(169, 72, 109, 245, 162.5),
-  'magic_potion -> Potion(3042, 76, 2483, 3138, 172.5),
-  'zamorak_brew -> Potion(169, 78, 75, 247, 175.0),
-  'saradomin_brew -> Potion(169, 81, 3002, 6693, 180.0)
+  'attack_potion -> Potion(id = 221,
+    unf = 91,
+    secondary = 121,
+    level = 3,
+    exp = 25.0),
+
+  'antipoison -> Potion(id = 175,
+    unf = 91,
+    secondary = 235,
+    level = 5,
+    exp = 37.5),
+
+  'strength_potion -> Potion(id = 115,
+    unf = 95,
+    secondary = 225,
+    level = 8,
+    exp = 50.0),
+
+  'serum_207 -> Potion(id = 3410,
+    unf = 97,
+    secondary = 592,
+    level = 15,
+    exp = 50.0),
+
+  'restore_potion -> Potion(id = 127,
+    unf = 97,
+    secondary = 223,
+    level = 22,
+    exp = 62.5),
+
+  'blamish_oil -> Potion(id = 1582,
+    unf = 97,
+    secondary = 1581,
+    level = 25,
+    exp = 80.0),
+
+  'energy_potion -> Potion(id = 3010,
+    unf = 97,
+    secondary = 1975,
+    level = 26,
+    exp = 67.5),
+
+  'defence_potion -> Potion(id = 133,
+    unf = 99,
+    secondary = 239,
+    level = 30,
+    exp = 75.0),
+
+  'agility_potion -> Potion(id = 3034,
+    unf = 3002,
+    secondary = 2152,
+    level = 34,
+    exp = 80.0),
+
+  'prayer_potion -> Potion(id = 139,
+    unf = 99,
+    secondary = 231,
+    level = 38,
+    exp = 87.5),
+
+  'super_attack -> Potion(id = 145,
+    unf = 101,
+    secondary = 221,
+    level = 45,
+    exp = 100.0),
+
+  'super_antipoison -> Potion(id = 181,
+    unf = 101,
+    secondary = 235,
+    level = 48,
+    exp = 106.3),
+
+  'fishing_potion -> Potion(id = 151,
+    unf = 103,
+    secondary = 231,
+    level = 50,
+    exp = 112.5),
+
+  'super_energy -> Potion(id = 3018,
+    unf = 103,
+    secondary = 2970,
+    level = 52,
+    exp = 117.5),
+
+  'super_strength -> Potion(id = 157,
+    unf = 105,
+    secondary = 225,
+    level = 55,
+    exp = 125.0),
+
+  'super_restore -> Potion(id = 3026,
+    unf = 3004,
+    secondary = 223,
+    level = 63,
+    exp = 142.5),
+
+  'super_defence -> Potion(id = 163,
+    unf = 107,
+    secondary = 239,
+    level = 66,
+    exp = 150.0),
+
+  'antifire_potion -> Potion(id = 2454,
+    unf = 2483,
+    secondary = 243,
+    level = 69,
+    exp = 157.5),
+
+  'ranging_potion -> Potion(id = 169,
+    unf = 109,
+    secondary = 245,
+    level = 72,
+    exp = 162.5),
+
+  'magic_potion -> Potion(id = 3042,
+    unf = 2483,
+    secondary = 3138,
+    level = 76,
+    exp = 172.5),
+
+  'zamorak_brew -> Potion(id = 169,
+    unf = 75,
+    secondary = 247,
+    level = 78,
+    exp = 175.0),
+
+  'saradomin_brew -> Potion(id = 169,
+    unf = 3002,
+    secondary = 6693,
+    level = 81,
+    exp = 180.0)
 )
 
 /*
  A different mapping of the 'POTION_TABLE' that maps ingredients to potions.
 
- (unf_potion_id, secondary_id) -> Potion
+ (unf_potion_id, secondary_ingredient_id) -> Potion
 */
 private val INGREDIENTS_TO_POTION =
-  POTION_TABLE.values.map(potion => (potion.unfId, potion.secondaryId) -> potion).toMap
+  POTION_TABLE.values.map(potion => (potion.unf, potion.secondary) -> potion).toMap
 
 
 /* An Action that will be used to make finished potions. */
-private final class MakePotionAction(plr: Player, potion: Potion) extends ProducingSkillAction(plr, true, 2) {
+private final class MakePotionAction(plr: Player, potion: Potion) extends ProducingAction(plr, true, 2) {
 
-  private val skill = plr.skill(HERBLORE)
+  private val skill = plr.skill(SKILL_HERBLORE)
 
   override def canInit = {
     val levelRequired = potion.level
@@ -79,27 +187,23 @@ private final class MakePotionAction(plr: Player, potion: Potion) extends Produc
   }
 
   override def onProduce() = {
-    plr.sendMessage(s"You mix the ${computeItemName(potion.secondaryId)} into your potion.")
+    plr.sendMessage(s"You mix the ${ nameOfItem(potion.secondary) } into your potion.")
     plr.animation(ANIMATION)
     skill.addExperience(potion.exp)
   }
 
   override def add = Array(new Item(potion.id))
-  override def remove = Array(new Item(potion.unfId), new Item(potion.secondaryId))
+  override def remove = Array(new Item(potion.unf), new Item(potion.secondary))
 }
 
 
 /* Make finished potions if the required items are present. */
-intercept[ItemOnItemEvent] { (msg, plr) =>
-  val usedId = msg.getUsedId
-  val targetId = msg.getTargetId
+on[ItemOnItemEvent] { msg =>
+  val potionOption = INGREDIENTS_TO_POTION.get(msg.targetId -> msg.usedId).
+    orElse(INGREDIENTS_TO_POTION.get(msg.usedId -> msg.targetId))
 
-  /* Perform a lookup both ways: if the first lookup isn't found it defaults to the second. */
-  val potion = INGREDIENTS_TO_POTION.get(targetId -> usedId).
-    orElse(INGREDIENTS_TO_POTION.get(usedId -> targetId))
-
-  potion.foreach { it => /* Perform action for either the first or second lookup, or none. */
-    plr.submitAction(new MakePotionAction(plr, it))
+  potionOption.foreach { potion => /* Perform action for either the first or second lookup, or none. */
+    msg.plr.submitAction(new MakePotionAction(msg.plr, potion))
     msg.terminate
   }
 }

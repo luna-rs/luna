@@ -3,32 +3,32 @@ package io.luna.game.model.mobile;
 import io.luna.util.StringUtils;
 
 /**
- * An immutable class that holds the credentials for a {@link Player}.
+ * A model representing a player's credentials.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PlayerCredentials {
 
     /**
-     * The username credential.
+     * The username.
      */
     private final String username;
 
     /**
-     * The password credential.
+     * The password.
      */
     private final String password;
 
     /**
-     * The username hash credential, generated from the {@code username}.
+     * The username hash.
      */
     private final long usernameHash;
 
     /**
      * Creates a new {@link PlayerCredentials}.
      *
-     * @param username The username credential.
-     * @param password The password credential.
+     * @param username The username.
+     * @param password The password.
      */
     public PlayerCredentials(String username, String password) {
         this.username = username;
@@ -37,14 +37,14 @@ public final class PlayerCredentials {
     }
 
     /**
-     * @return The username credential.
+     * @return The username.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * @return The password credential.
+     * @return The password.
      */
     public String getPassword() {
         return password;

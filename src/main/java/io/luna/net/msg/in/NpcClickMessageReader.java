@@ -18,12 +18,12 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a player clicks an npc.
+ * A {@link MessageReader} implementation that intercepts data sent on NPC clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -55,7 +55,7 @@ public final class NpcClickMessageReader extends MessageReader {
     /**
      * Handles any npc click index.
      */
-    private void handleClick(Player player, int index, Function<Npc, NpcClickEvent> evt) {
+    private void handleClick(Player player, int index, BiFunction<Player, Npc, NpcClickEvent> evt) {
         World world = player.getWorld();
         checkState(index >= 0 && index < world.getNpcs().capacity(), "index[" + index + "] out of range");
 
@@ -64,7 +64,7 @@ public final class NpcClickMessageReader extends MessageReader {
             @Override
             protected void execute() {
                 PluginManager plugins = player.getPlugins();
-                plugins.post(evt.apply(npc), player);
+                plugins.post(evt.apply(player, npc));
 
                 player.interact(npc);
             }

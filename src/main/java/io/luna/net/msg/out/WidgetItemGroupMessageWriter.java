@@ -12,27 +12,29 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * A {@link MessageWriter} implementation that displays a group of {@link Item}s on a widget.
+ * A {@link MessageWriter} implementation that displays a group of items on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class WidgetItemGroupMessageWriter extends MessageWriter {
 
+    /* TODO support for the indexed version of this? */
+
     /**
-     * The identifier of the widget that the items will de displayed on.
+     * The widget identifier.
      */
     private final int id;
 
     /**
-     * The {@link Item}s that will be displayed on the widget.
+     * The items.
      */
     private final Collection<? extends Item> items;
 
     /**
      * Creates a new {@link WidgetItemGroupMessageWriter}.
      *
-     * @param id The identifier of the widget that the items will de displayed on.
-     * @param items The {@link Item}s that will be displayed on the widget.
+     * @param id The widget identifier.
+     * @param items The items.
      */
     public WidgetItemGroupMessageWriter(int id, Collection<? extends Item> items) {
         this.id = id;
@@ -42,8 +44,8 @@ public final class WidgetItemGroupMessageWriter extends MessageWriter {
     /**
      * Creates a new {@link WidgetItemGroupMessageWriter}.
      *
-     * @param id The identifier of the widget that the items will de displayed on.
-     * @param items The {@link Item}s that will be displayed on the widget.
+     * @param id The widget identifier.
+     * @param items The items.
      */
     public WidgetItemGroupMessageWriter(int id, Item[] items) {
         this(id, Arrays.asList(items));
@@ -51,7 +53,7 @@ public final class WidgetItemGroupMessageWriter extends MessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(53, MessageType.VARIABLE_SHORT);
+        ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
         msg.putShort(id);
         msg.putShort(items.size());
 

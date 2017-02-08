@@ -6,8 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
- * A {@link MessageToByteEncoder} implementation that encodes and writes the data contained within the {@link
- * LoginResponseMessage} to a buffer that will be sent to the client.
+ * A {@link MessageToByteEncoder} implementation that encodes the login response.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -18,7 +17,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
         out.writeByte(msg.getResponse().getOpcode());
 
         if (msg.getResponse() == LoginResponse.NORMAL) {
-            out.writeByte(msg.getRights().getOpcode());
+            out.writeByte(msg.getRights().getClientValue());
             out.writeBoolean(msg.isFlagged());
         }
     }

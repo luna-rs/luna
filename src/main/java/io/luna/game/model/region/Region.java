@@ -7,33 +7,31 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * A location in the world that is {@code 32x32} in size. Used primarily for caching various types of {@link Entity}s.
+ * A model representing a location on the map {@code 32x32} in size.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Region {
 
     /**
-     * The {@link RegionCoordinates} this class was constructed with.
+     * The coordinates.
      */
     private final RegionCoordinates coordinates;
 
     /**
-     * A {@link Set} of active {@link Entity}s in this {@code Region}.
+     * A set of entities within this region.
      */
     private final Set<Entity> entities = Sets.newConcurrentHashSet();
 
     /**
      * Creates a new {@link Region}.
      *
-     * @param coordinates The {@link RegionCoordinates} to construct this class with.
+     * @param coordinates The coordinates.
      */
     Region(RegionCoordinates coordinates) {
         this.coordinates = coordinates;
@@ -57,55 +55,45 @@ public final class Region {
     }
 
     /**
-     * Adds an {@link Entity} to the backing queue.
-     *
-     * @param e The entity to add.
+     * Adds an entity to this region.
      */
     public void addEntity(Entity e) {
         entities.add(e);
     }
 
     /**
-     * Removes an {@link Entity} from the backing queue.
-     *
-     * @param e The entity to remove.
+     * Removes an entity from this region.
      */
     public void removeEntity(Entity e) {
         entities.remove(e);
     }
 
     /**
-     * Retrieves and returns an {@link ArrayList} of {@link Entity}s that correspond to the given {@code types}. The {@link
-     * EntityType}s given must be in accordance with the type of list returned or a {@link ClassCastException} will be
-     * thrown.
-     *
-     * @param types The types to include in the returned list.
-     * @return The list with the types.
+     * Retrieves a list of entities of the argued type.
      */
     @SuppressWarnings("unchecked")
-    public <E extends Entity> List<E> getEntities(EntityType... types) {
-        Set<EntityType> typeFilter = EnumSet.copyOf(Arrays.asList(types));
+    public <E extends Entity> List<E> getEntities(EntityType type) {
         List<E> filtered = new ArrayList<>();
-        entities.stream().filter(it -> typeFilter.contains(it.type())).forEach(it -> filtered.add((E) it));
+        entities.stream().filter(it -> it.getType() == type).forEach(it -> filtered.add((E) it));
         return filtered;
     }
 
     /**
-     * @return A shallow, immutable copy of the {@link Entity}s in this region.
+     * Returns a shallow and immutable copy of the backing set.
      */
     public ImmutableList<Entity> toList() {
         return ImmutableList.copyOf(entities);
     }
 
     /**
-     * @return A shallow, mutable copy of the {@link Entity}s in this region.
+     * Returns a shallow copy of the backing set.
      */
     public Entity[] toArray() {
         return Iterables.toArray(entities, Entity.class);
     }
 
     /**
-     * @return The {@link RegionCoordinates} this class was constructed with.
+     * @return The coordinates.
      */
     public RegionCoordinates getCoordinates() {
         return coordinates;

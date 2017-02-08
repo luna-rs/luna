@@ -4,6 +4,7 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mobile.Player;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * An event sent when the equipment of a player changes.
@@ -58,8 +59,8 @@ public final class EquipmentChangeEvent extends PlayerEvent {
     /**
      * @return The old item identifier on the index.
      */
-    public Optional<Integer> oldId() {
-        return oldItem.map(Item::getId);
+    public OptionalInt oldId() {
+        return oldItem.isPresent() ? OptionalInt.of(oldItem.get().getId()) : OptionalInt.empty();
     }
 
     /**
@@ -72,7 +73,7 @@ public final class EquipmentChangeEvent extends PlayerEvent {
     /**
      * @return The new item identifier on the index.
      */
-    public Optional<Integer> newId() {
-        return newItem.map(Item::getId);
+    public OptionalInt newId() {
+        return newItem.isPresent() ? OptionalInt.of(newItem.get().getId()) : OptionalInt.empty();
     }
 }

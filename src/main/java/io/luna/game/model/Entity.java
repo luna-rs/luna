@@ -197,6 +197,13 @@ public abstract class Entity {
     }
 
     /**
+     * @return The type.
+     */
+    public EntityType getType() {
+        return type;
+    }
+
+    /**
      * @return The current state.
      */
     public final EntityState getState() {

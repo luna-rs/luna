@@ -5,21 +5,21 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that sends the run energy value to the client.
+ * A {@link MessageWriter} implementation that displays the run energy value.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class UpdateRunEnergyMessageWriter extends MessageWriter {
 
     /**
-     * The run energy value to send.
+     * The run energy.
      */
     private final int energy;
 
     /**
      * Creates a new {@link UpdateRunEnergyMessageWriter}.
      *
-     * @param energy The run energy value to send.
+     * @param energy The run energy.
      */
     public UpdateRunEnergyMessageWriter(int energy) {
         this.energy = energy;

@@ -8,21 +8,21 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
- * A {@link MessageToByteEncoder} implementation that encodes all {@link GameMessage}s into {@link ByteBuf}s.
+ * A {@link MessageToByteEncoder} implementation that encodes game messages.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> {
 
     /**
-     * The encryptor for this message.
+     * The encryptor.
      */
     private final IsaacCipher encryptor;
 
     /**
      * Creates a new {@link GameMessageEncoder}.
      *
-     * @param encryptor The encryptor for this encoder.
+     * @param encryptor The encryptor.
      */
     public GameMessageEncoder(IsaacCipher encryptor) {
         this.encryptor = encryptor;
@@ -31,9 +31,9 @@ public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> 
     @Override
     public void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) throws Exception {
         out.writeByte(msg.getOpcode() + encryptor.nextInt());
-        if (msg.getType() == MessageType.VARIABLE) {
+        if (msg.getType() == MessageType.VAR) {
             out.writeByte(msg.getSize());
-        } else if (msg.getType() == MessageType.VARIABLE_SHORT) {
+        } else if (msg.getType() == MessageType.VAR_SHORT) {
             out.writeShort(msg.getSize());
         }
         out.writeBytes(msg.getPayload().getBuffer());

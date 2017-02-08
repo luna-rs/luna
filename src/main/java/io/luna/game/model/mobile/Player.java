@@ -11,39 +11,40 @@ import io.luna.game.model.Position;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mobile.attr.AttributeValue;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
+import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
-import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
-import io.luna.net.msg.out.StateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.session.GameSession;
-import io.luna.net.session.Session;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
+import static io.luna.game.model.item.Bank.BANK_DISPLAY_ID;
+import static io.luna.game.model.item.Equipment.EQUIPMENT_DISPLAY_ID;
+import static io.luna.game.model.item.Inventory.INVENTORY_DISPLAY_ID;
 
 /**
- * A {@link MobileEntity} implementation that is controlled by a real person.
+ * A model representing a player-controlled mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class Player extends MobileEntity {
+public final class Player extends Mob {
 
     /**
      * The asynchronous logger.
@@ -51,93 +52,100 @@ public final class Player extends MobileEntity {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The {@link Set} of local {@code Player}s.
+     * A set of local players.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>();
 
     /**
-     * The {@link Set} of local {@code Npc}s.
+     * A set of local npcs.
      */
     private final Set<Npc> localNpcs = new LinkedHashSet<>();
 
     /**
-     * The {@link PlayerAppearance} container assigned to this player.
+     * The appearance.
      */
     private final PlayerAppearance appearance = new PlayerAppearance();
 
     /**
-     * The credentials of this {@code Player}.
+     * The credentials.
      */
     private final PlayerCredentials credentials;
 
     /**
-     * The inventory {@link ItemContainer} implementation.
+     * The inventory.
      */
     private final Inventory inventory = new Inventory(this);
 
     /**
-     * The equipment {@link ItemContainer} implementation.
+     * The equipment.
      */
     private final Equipment equipment = new Equipment(this);
 
     /**
-     * The bank {@link ItemContainer} implementation.
+     * The bank.
      */
     private final Bank bank = new Bank(this);
 
     /**
-     * The current cached block for this update cycle.
+     * The cached update block.
      */
     private ByteMessage cachedBlock;
 
     /**
-     * The authority level of this {@code Player}.
+     * The rights.
      */
     private PlayerRights rights = PlayerRights.PLAYER;
 
     /**
-     * The {@link Session} assigned to this {@code Player}.
+     * The game session.
      */
     private GameSession session;
 
     /**
-     * The last known region that this {@code Player} was in.
+     * The last known region.
      */
     private Position lastRegion;
 
     /**
-     * If the region has changed during this cycle.
+     * If the region has changed.
      */
     private boolean regionChanged;
 
     /**
-     * The walking direction of this {@code Player}.
+     * The running direction.
      */
     private Direction runningDirection = Direction.NONE;
 
     /**
-     * The {@link Chat} message to send during this update block.
+     * The chat message.
      */
-    private Chat chat;
+    private Optional<Chat> chat = Optional.empty();
 
     /**
-     * The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
+     * The forced movement route.
      */
-    private ForcedMovement forceMovement;
+    private Optional<ForcedMovement> forcedMovement = Optional.empty();
 
     /**
-     * The identifier of the {@link Npc} to transform into.
+     * The transformation identifier.
      */
-    private int transformId = -1;
+    private OptionalInt transformId = OptionalInt.empty();
+
+    /**
+     * The currently open shop name.
+     */
+    private Optional<String> currentShop = Optional.empty();
 
     /**
      * Creates a new {@link Player}.
      *
-     * @param context The context to be managed in.
+     * @param context The context instance.
+     * @param credentials The credentials.
      */
     public Player(LunaContext context, PlayerCredentials credentials) {
-        super(context);
+        super(context, EntityType.PLAYER);
         this.credentials = credentials;
+
         setPosition(LunaConstants.STARTING_POSITION);
 
         if (credentials.getUsername().equals("lare96")) {
@@ -148,11 +156,6 @@ public final class Player extends MobileEntity {
     @Override
     public int size() {
         return 1;
-    }
-
-    @Override
-    public EntityType type() {
-        return EntityType.PLAYER;
     }
 
     @Override
@@ -183,47 +186,70 @@ public final class Player extends MobileEntity {
 
         queue(new AssignmentMessageWriter(true));
 
-        int[] interfaces = { 2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962 };
-        for (int index = 0; index < interfaces.length; index++) {
-            queue(new TabInterfaceMessageWriter(index, interfaces[index]));
-        }
+        displayTabInterfaces();
 
         int size = SkillSet.size();
         for (int index = 0; index < size; index++) {
             queue(new SkillUpdateMessageWriter(index));
         }
 
-        queue(new UpdateRunEnergyMessageWriter((int) getRunEnergy()));
+        int runEnergy = (int) getRunEnergy();
+        queue(new UpdateRunEnergyMessageWriter(runEnergy));
 
-        inventory.fireBulkItemsUpdatedEvent();
-        equipment.fireBulkItemsUpdatedEvent();
-        bank.fireBulkItemsUpdatedEvent();
+        queue(inventory.constructRefresh(INVENTORY_DISPLAY_ID));
+        queue(equipment.constructRefresh(EQUIPMENT_DISPLAY_ID));
+        queue(bank.constructRefresh(BANK_DISPLAY_ID));
 
         queue(new GameChatboxMessageWriter("Welcome to Luna!"));
 
-        plugins.post(LoginEvent.INSTANCE, this);
+        plugins.post(new LoginEvent(this));
 
         LOGGER.info("{} has logged in.", this);
     }
 
     @Override
     public void onInactive() {
-        plugins.post(LogoutEvent.INSTANCE);
-
-        LOGGER.info("{} has logged out.", this);
+        plugins.post(new LogoutEvent(this));
 
         PlayerSerializer serializer = new PlayerSerializer(this);
         serializer.asyncSave(service);
+
+        LOGGER.info("{} has logged out.", this);
     }
 
     @Override
     public void reset() {
-        chat = null;
+        chat = Optional.empty();
+        forcedMovement = Optional.empty();
         regionChanged = false;
     }
 
     /**
-     * Gracefully logs this {@code Player} instance out of the server.
+     * Displays the default tab interfaces.
+     */
+    public void displayTabInterfaces() {
+        int[] interfaces = { 2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962 };
+        for (int index = 0; index < interfaces.length; index++) {
+            queue(new TabInterfaceMessageWriter(index, interfaces[index]));
+        }
+
+       /* interfaces.open(new TabInterface(2423, Tab.COMBAT));
+        interfaces.open(new TabInterface(3917, Tab.SKILL));
+        interfaces.open(new TabInterface(638, Tab.QUEST));
+        interfaces.open(new TabInterface(3213, Tab.INVENTORY));
+        interfaces.open(new TabInterface(1644, Tab.EQUIPMENT));
+        interfaces.open(new TabInterface(5608, Tab.PRAYER));
+        interfaces.open(new TabInterface(1151, Tab.MAGIC)); TODO ancient magicks support
+        interfaces.open(new TabInterface(5065, Tab.FRIENDS));
+        interfaces.open(new TabInterface(5715, Tab.IGNORES));
+        interfaces.open(new TabInterface(2449, Tab.LOGOUT));
+        interfaces.open(new TabInterface(904, Tab.SETTINGS));
+        interfaces.open(new TabInterface(147, Tab.EMOTE));
+        interfaces.open(new TabInterface(962, Tab.MUSIC)); */
+    }
+
+    /**
+     * Disconnects this player.
      */
     public void logout() {
         Channel channel = session.getChannel();
@@ -233,46 +259,48 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Send {@code chat} message for this cycle.
-     *
-     * @param chat The {@link Chat} message to send during this update block.
+     * Sends the {@code chat} message.
      */
     public void chat(Chat chat) {
-        this.chat = requireNonNull(chat);
+        this.chat = Optional.of(chat);
         updateFlags.flag(UpdateFlag.CHAT);
     }
 
     /**
-     * Send {@code forceMovement} message for this cycle.
-     *
-     * @param forceMovement The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
+     * Traverses the path in {@code forcedMovement}.
      */
-    public void forceMovement(ForcedMovement forceMovement) {
-        this.forceMovement = requireNonNull(forceMovement);
+    public void forceMovement(ForcedMovement forcedMovement) {
+        this.forcedMovement = Optional.of(forcedMovement);
         updateFlags.flag(UpdateFlag.FORCE_MOVEMENT);
     }
 
     /**
-     * Transforms this {@code Player} into the {@link Npc} represented by {@code npcId}. An identifier of {@code -1} disables
-     * the transformation.
-     *
-     * @param npcId The {@code Npc} to transform this {@code Player} into.
+     * Transforms this player into an npc with {@code id}.
      */
-    public void transform(int npcId) {
-        transformId = npcId;
+    public void transform(int id) {
+        transformId = OptionalInt.of(id);
         updateFlags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
-     * A shortcut function to {@link GameSession#queue(MessageWriter)}.
+     * Turns a transformed player back into a player.
+     */
+    public void untransform() { /* TODO better method name than 'untransform' ? */
+        if (transformId.isPresent()) {
+            transformId = OptionalInt.empty();
+            updateFlags.flag(UpdateFlag.APPEARANCE);
+        }
+    }
+
+    /**
+     * A shortcut function to {@code GameSession.queue(MessageWriter)}.
      */
     public void queue(MessageWriter msg) {
         session.queue(msg);
     }
 
     /**
-     * @return {@code true} if the position and last known region of the {@code Player} means a {@link
-     * RegionChangeMessageWriter} message needs to be queued, {@code false} otherwise.
+     * Determines if the player needs to send a region update message.
      */
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
@@ -282,17 +310,17 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "withdraw_as_note" attribute and sends the state.
+     * Sets the 'withdraw_as_note' attribute.
      */
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         attr.set(withdrawAsNote);
 
-        queue(new StateMessageWriter(Bank.WITHDRAW_MODE_STATE_ID, withdrawAsNote ? 1 : 0));
+        queue(new ConfigMessageWriter(Bank.WITHDRAW_MODE_STATE_ID, withdrawAsNote ? 1 : 0));
     }
 
     /**
-     * Gets the "withdraw_as_note" attribute.
+     * Gets the 'withdraw_as_note' attribute.
      */
     public boolean isWithdrawAsNote() {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
@@ -300,9 +328,13 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "run_energy" attribute and sends the value.
+     * Sets the 'run_energy' attribute.
      */
     public void setRunEnergy(double runEnergy) {
+        if (runEnergy > 100.0) {
+            runEnergy = 100.0;
+        }
+
         AttributeValue<Double> attr = attributes.get("run_energy");
         attr.set(runEnergy);
 
@@ -310,7 +342,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Gets the "run_energy" attribute.
+     * Gets the 'run_energy' attribute.
      */
     public double getRunEnergy() {
         AttributeValue<Double> attr = attributes.get("run_energy");
@@ -318,7 +350,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "unmute_date" attribute.
+     * Sets the 'unmute_date' attribute.
      */
     public void setUnmuteDate(String unmuteDate) {
         AttributeValue<String> attr = attributes.get("unmute_date");
@@ -326,7 +358,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Gets the "unmute_date" attribute.
+     * Gets the 'unmute_date' attribute.
      */
     public String getUnmuteDate() {
         AttributeValue<String> attr = attributes.get("unmute_date");
@@ -334,7 +366,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "unban_date" attribute.
+     * Sets the 'unban_date' attribute.
      */
     public void setUnbanDate(String unbanDate) {
         AttributeValue<String> attr = attributes.get("unban_date");
@@ -342,7 +374,7 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Gets the "unban_date" attribute.
+     * Gets the 'unban_date' attribute.
      */
     public String getUnbanDate() {
         AttributeValue<String> attr = attributes.get("unban_date");
@@ -350,26 +382,17 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Sets the "weight" attribute.
+     * Sets the 'weight' attribute.
      */
-    public void setWeight(double weight, boolean queue) {
+    public void setWeight(double weight) {
         AttributeValue<Double> attr = attributes.get("weight");
         attr.set(weight);
 
-        if (queue) {
-            queue(new UpdateWeightMessageWriter((int) weight));
-        }
+        queue(new UpdateWeightMessageWriter((int) weight));
     }
 
     /**
-     * Sets the "weight" attribute, queues a {@link UpdateWeightMessageWriter} message.
-     */
-    public void setWeight(double weight) {
-        setWeight(weight, true);
-    }
-
-    /**
-     * Gets the "weight" attribute.
+     * Gets the 'weight' attribute.
      */
     public double getWeight() {
         AttributeValue<Double> attr = attributes.get("weight");
@@ -377,63 +400,63 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * Returns {@code true} if the "unmute_date" attribute is not equal to "n/a".
+     * Returns {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
      */
     public boolean isMuted() {
         return !getUnmuteDate().equals("n/a");
     }
 
     /**
-     * Returns {@code true} if the "unban_date" attribute is not equal to "n/a".
+     * Returns {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
      */
     public boolean isBanned() {
         return !getUnbanDate().equals("n/a");
     }
 
     /**
-     * @return The authority level of this {@code Player}.
+     * @return The rights.
      */
     public PlayerRights getRights() {
         return rights;
     }
 
     /**
-     * Sets the value for {@link #rights}.
+     * Sets the rights.
      */
     public void setRights(PlayerRights rights) {
         this.rights = rights;
     }
 
     /**
-     * @return The username of this {@code Player}.
+     * @return The username.
      */
     public String getUsername() {
         return credentials.getUsername();
     }
 
     /**
-     * @return The password of this {@code Player}.
+     * @return The password.
      */
     public String getPassword() {
         return credentials.getPassword();
     }
 
     /**
-     * @return The username hash of this {@code Player}.
+     * @return The username hash.
      */
     public long getUsernameHash() {
         return credentials.getUsernameHash();
     }
 
     /**
-     * @return The {@link Session} assigned to this {@code Player}.
+     * @return The game session.
      */
     public GameSession getSession() {
         return session;
     }
 
     /**
-     * Sets the value for {@link #session}.
+     * Sets the game session.
      */
     public void setSession(GameSession session) {
         checkState(this.session == null, "session already set!");
@@ -441,133 +464,146 @@ public final class Player extends MobileEntity {
     }
 
     /**
-     * @return The {@link Set} of local {@code Player}s.
+     * @return The set of local players.
      */
     public Set<Player> getLocalPlayers() {
         return localPlayers;
     }
 
     /**
-     * @return The {@link Set} of local {@code Npc}s.
+     * @return The set of local npcs.
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
     }
 
     /**
-     * @return The current cached block for this update cycle.
+     * @return The cached update block.
      */
     public ByteMessage getCachedBlock() {
         return cachedBlock;
     }
 
     /**
-     * Sets the value for {@link #cachedBlock}.
+     * Sets the cached update block.
      */
-    public void setCachedBlock(ByteMessage cachedBlock) {
-        ByteMessage currentBlock = this.cachedBlock;
+    public void setCachedBlock(ByteMessage newMsg) {
 
-        // Release reference to currently cached block, if we have one.
-        if (currentBlock != null) {
-            currentBlock.release();
-        }
-
-        // If we need to set a new cached block, retain a reference to it. Otherwise it means that the current block
-        // reference was just being cleared.
+        /* Release reference to old cached block. */
         if (cachedBlock != null) {
-            cachedBlock.retain();
+            cachedBlock.release();
         }
-        this.cachedBlock = cachedBlock;
+
+        /* Retain a reference to new cached block.. */
+        if (newMsg != null) {
+            newMsg.retain();
+        }
+
+        cachedBlock = newMsg;
     }
 
     /**
-     * @return The last known region that this {@code Player} was in.
+     * @return The last known region.
      */
     public Position getLastRegion() {
         return lastRegion;
     }
 
     /**
-     * Sets the value for {@link #lastRegion}.
+     * Sets the last known region.
      */
     public void setLastRegion(Position lastRegion) {
         this.lastRegion = lastRegion;
     }
 
     /**
-     * @return {@code true} if the region has changed during this cycle, {@code false} otherwise.
+     * @return {@code true} if the region has changed.
      */
     public boolean isRegionChanged() {
         return regionChanged;
     }
 
     /**
-     * Sets the value for {@link #regionChanged}.
+     * Sets if the region has changed.
      */
     public void setRegionChanged(boolean regionChanged) {
         this.regionChanged = regionChanged;
     }
 
     /**
-     * @return The walking direction of this {@code Player}.
+     * @return The running direction.
      */
     public Direction getRunningDirection() {
         return runningDirection;
     }
 
     /**
-     * Sets the value for {@link #runningDirection}.
+     * Sets the running direction.
      */
     public void setRunningDirection(Direction runningDirection) {
         this.runningDirection = runningDirection;
     }
 
     /**
-     * @return The {@link Chat} message to send during this update block.
+     * @return The chat message.
      */
-    public Chat getChat() {
+    public Optional<Chat> getChat() {
         return chat;
     }
 
     /**
-     * @return The {@link ForcedMovement} that dictates where this {@code Player} will be forced to move.
+     * @return The forced movement route.
      */
-    public ForcedMovement getForceMovement() {
-        return forceMovement;
+    public Optional<ForcedMovement> getForcedMovement() {
+        return forcedMovement;
     }
 
     /**
-     * @return The {@link PlayerAppearance} container assigned to this player.
+     * @return The appearance.
      */
     public PlayerAppearance getAppearance() {
         return appearance;
     }
 
     /**
-     * @return The identifier of the {@link Npc} to transform into.
+     * @return The transformation identifier.
      */
-    public int getTransformId() {
+    public OptionalInt getTransformId() {
         return transformId;
     }
 
     /**
-     * @return The inventory {@link ItemContainer} implementation.
+     * @return The inventory.
      */
     public Inventory getInventory() {
         return inventory;
     }
 
     /**
-     * @return The equipment {@link ItemContainer} implementation.
+     * @return The equipment.
      */
     public Equipment getEquipment() {
         return equipment;
     }
 
     /**
-     * @return The bank {@link ItemContainer} implementation.
+     * @return The bank.
      */
     public Bank getBank() {
         return bank;
+    }
+
+    /**
+     * @return The currently open shop name.
+     */
+    public Optional<String> getCurrentShop() {
+        return currentShop;
+    }
+
+    /**
+     * Sets the currently open shop name.
+     */
+    public void setCurrentShop(String currentShop) {
+        this.currentShop = Optional.ofNullable(currentShop);
     }
 }

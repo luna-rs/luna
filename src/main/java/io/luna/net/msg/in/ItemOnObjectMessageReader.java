@@ -16,7 +16,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when an item is used on an object.
+ * A {@link MessageReader} implementation that intercepts data sent when an item is used on an object.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -40,9 +40,10 @@ public final class ItemOnObjectMessageReader extends MessageReader {
             @Override
             protected void execute() {
                 player.face(pos);
-                
+
                 PluginManager plugins = player.getPlugins();
-                plugins.post(new ItemOnObjectEvent(itemId, itemIndex, itemInterfaceId, objectId, objectX, objectY), player);
+                plugins.post(
+                    new ItemOnObjectEvent(player, itemId, itemIndex, itemInterfaceId, objectId, objectX, objectY));
             }
         });
         return null;
@@ -51,14 +52,14 @@ public final class ItemOnObjectMessageReader extends MessageReader {
     /**
      * Returns {@code true} if the data decoded is valid.
      */
-    private boolean validate(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId, int objectX,
-        int objectY) {
+    private boolean validate(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId,
+        int objectX, int objectY) {
         checkState(itemInterfaceId > 0, "itemInterfaceId out of range");
         checkState(objectId > 0, "objectId out of range");
         checkState(objectY > 0, "objectY out of range");
         checkState(itemIndex >= 0, "itemIndex out of range");
         checkState(objectX > 0, "objectX out of range");
-        checkState(Item.isIdentifier(itemId), "itemId out of range");
+        checkState(Item.isIdWithinRange(itemId), "itemId out of range");
 
         switch (itemInterfaceId) {
         case 3214:

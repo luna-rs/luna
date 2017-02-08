@@ -12,7 +12,7 @@ import io.luna.net.msg.MessageWriter;
 public final class SoundMessageWriter extends MessageWriter {
 
     /**
-     * The identifier for the sound.
+     * The sound identifier.
      */
     private final int id;
 
@@ -29,7 +29,7 @@ public final class SoundMessageWriter extends MessageWriter {
     /**
      * Creates a new {@link SoundMessageWriter}.
      *
-     * @param id The identifier for the sound.
+     * @param id The sound identifier.
      * @param loops How many times the sound should loop (?).
      * @param delay The amount of client ticks before the sound should play.
      */
@@ -42,7 +42,7 @@ public final class SoundMessageWriter extends MessageWriter {
     /**
      * Creates a new {@link SoundMessageWriter} with no loops or delay.
      *
-     * @param id The identifier for the sound.
+     * @param id The sound identifier.
      */
     public SoundMessageWriter(int id) {
         this(id, 0, 0);

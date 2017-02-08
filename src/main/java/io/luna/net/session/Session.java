@@ -1,6 +1,5 @@
 package io.luna.net.session;
 
-import io.luna.game.model.mobile.Player;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
@@ -8,26 +7,26 @@ import java.net.InetSocketAddress;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An abstraction model that determines how I/O operations are handled for a {@link Player}.
+ * A model representing a client connected to this server.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public class Session {
 
     /**
-     * The {@link Channel} to send and receive messages through.
+     * The client's channel.
      */
     private final Channel channel;
 
     /**
-     * The address that the connection was received from.
+     * The client's IP address.
      */
     private final String hostAddress;
 
     /**
      * Creates a new {@link Session}.
      *
-     * @param channel The {@link Channel} to send and receive messages through.
+     * @param channel The client's channel.
      */
     public Session(Channel channel) {
         this.channel = channel;
@@ -35,9 +34,9 @@ public class Session {
     }
 
     /**
-     * Disposes of this {@code Session} by closing the {@link Channel} and executing the {@code onDispose()} listener.
+     * Closes the underlying channel.
      */
-    public final void dispose() {
+    public final void close() {
         Channel channel = getChannel();
         checkState(!channel.isActive(), "call getChannel().close() instead!");
 
@@ -45,30 +44,27 @@ public class Session {
     }
 
     /**
-     * Executed when this {@link Session} needs to be disposed of.
+     * Executed when {@code close()} is invoked.
      */
     public void onDispose() {
-
+         /* TODO Just use close().addListener(...) ??? */
     }
 
     /**
-     * Implementations decide which messages are handled and how they are handled. Messages are ignored completely by
-     * default.
-     *
-     * @param msg The message to handle.
+     * Implementations decide how messages are handled. Messages are ignored completely by default.
      */
     public void handleUpstreamMessage(Object msg) throws Exception {
     }
 
     /**
-     * @return The {@link Channel} to send and receive messages through.
+     * @return The client's channel.
      */
     public final Channel getChannel() {
         return channel;
     }
 
     /**
-     * @return The address that the connection was received from.
+     * @return The client's IP address.
      */
     public final String getHostAddress() {
         return hostAddress;

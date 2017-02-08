@@ -1,14 +1,14 @@
 package io.luna.game.model.mobile;
 
 /**
- * A container for the data that represents a single {@code Animation}.
+ * A model representing an animation performed by a mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Animation {
 
     /**
-     * An enumerated type containing all of the different priorities that an {@code Animation} can take on.
+     * An enum representing animation priority levels.
      */
     public enum AnimationPriority {
         LOW(-1),
@@ -16,21 +16,21 @@ public final class Animation {
         HIGH(1);
 
         /**
-         * The {@code int} value of this priority.
+         * The priority.
          */
         private final int value;
 
         /**
          * Creates a new {@link AnimationPriority}.
          *
-         * @param value The {@code int} value of this priority.
+         * @param value The priority.
          */
         AnimationPriority(int value) {
             this.value = value;
         }
 
         /**
-         * @return The {@code int} value of this priority.
+         * @return The priority.
          */
         public final int getValue() {
             return value;
@@ -38,32 +38,31 @@ public final class Animation {
     }
 
     /**
-     * An {@code Animation} that will cancel any currently playing {@code Animation}. It is assigned a priority of {@code
-     * HIGH}.
+     * An animation that cancels the current animation.
      */
-    public static final Animation CANCEL_ANIMATION = new Animation(65535, AnimationPriority.HIGH);
+    public static final Animation CANCEL = new Animation(65535, AnimationPriority.HIGH);
 
     /**
-     * The identifier for this {@code Animation}.
+     * The identifier.
      */
     private final int id;
 
     /**
-     * The delay of this {@code Animation}.
+     * The delay.
      */
     private final int delay;
 
     /**
-     * The priority of this {@code Animation}.
+     * The priority.
      */
     private final AnimationPriority priority;
 
     /**
      * Creates a new {@link Animation}.
      *
-     * @param id The identifier for this {@code Animation}.
-     * @param delay The delay of this {@code Animation}.
-     * @param priority The priority of this {@code Animation}.
+     * @param id The identifier.
+     * @param delay The delay.
+     * @param priority The priority.
      */
     public Animation(int id, int delay, AnimationPriority priority) {
         this.id = id;
@@ -74,8 +73,8 @@ public final class Animation {
     /**
      * Creates a new {@link Animation} with a delay of {@code 0}.
      *
-     * @param id The identifier for this {@code Animation}.
-     * @param priority The priority of this {@code Animation}.
+     * @param id The identifier.
+     * @param priority The priority.
      */
     public Animation(int id, AnimationPriority priority) {
         this(id, 0, priority);
@@ -84,28 +83,35 @@ public final class Animation {
     /**
      * Creates a new {@link Animation} with a delay of {@code 0} and a priority of {@code NORMAL}.
      *
-     * @param id The identifier for this {@code Animation}.
+     * @param id The identifier.
      */
     public Animation(int id) {
         this(id, 0, AnimationPriority.NORMAL);
     }
 
     /**
-     * @return The identifier for this {@code Animation}.
+     * Determines if this animation overrides {@code animation}.
+     */
+    public final boolean overrides(Animation animation) {
+        return priority.value >= animation.priority.value;
+    }
+
+    /**
+     * @return The identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The delay of this {@code Animation}.
+     * @return The delay.
      */
     public int getDelay() {
         return delay;
     }
 
     /**
-     * @return The priority of this {@code Animation}.
+     * @return The priority.
      */
     public AnimationPriority getPriority() {
         return priority;

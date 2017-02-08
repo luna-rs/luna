@@ -14,4 +14,4 @@ import io.luna.game.event.impl.ButtonClickEvent
 
 
 /* If the logout button is clicked, logout the player. */
-intercept_@[ButtonClickEvent](2458) { (msg, plr) => plr.logout }
+onargs[ButtonClickEvent](2458) { _.plr.logout }

@@ -7,22 +7,21 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that assigns a {@link Player} a client-sided index and members status for the
- * duration of their login session.
+ * A {@link MessageWriter} implementation that assigns a client-sided index and members status.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class AssignmentMessageWriter extends MessageWriter {
 
     /**
-     * If the {@link Player} should have a member or free-to-play status.
+     * If assigning members or free-to-play status.
      */
     private final boolean members;
 
     /**
      * Creates a new {@link AssignmentMessageWriter}.
      *
-     * @param members If the {@link Player} should have a member or free-to-play status.
+     * @param members If assigning members or free-to-play status.
      */
     public AssignmentMessageWriter(boolean members) {
         this.members = members;

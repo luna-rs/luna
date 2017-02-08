@@ -7,21 +7,21 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that synchronizes a {@link Skill} with the client.
+ * A {@link MessageWriter} implementation that displays the skill level and experience.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class SkillUpdateMessageWriter extends MessageWriter {
 
     /**
-     * The identifier for the skill being updated.
+     * The skill identifier.
      */
     private final int id;
 
     /**
      * Creates a new {@link SkillUpdateMessageWriter}.
      *
-     * @param id The identifier for the skill being updated.
+     * @param id The skill identifier.
      */
     public SkillUpdateMessageWriter(int id) {
         this.id = id;

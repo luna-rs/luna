@@ -16,14 +16,14 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import io.luna.game.event.impl.LoginEvent
-import io.luna.game.model.item.{Equipment, Item}
+import io.luna.game.model.item.Item
 
 
 /* Formats dates into the pattern specified. */
 private val DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, uuuu")
 
 /* A table of items that will be added to the inventory on the first login. */
-private val STARTER_ITEMS = Vector(
+private val STARTER_ITEMS = List(
   new Item(995, 10000), // Coins
   new Item(556, 250), // Air runes
   new Item(555, 250), // Water runes
@@ -34,54 +34,49 @@ private val STARTER_ITEMS = Vector(
 )
 
 /* A table of equipment that will be equipped dynamically on the first login. */
-private val STARTER_EQUIPMENT = Vector(
-  (Equipment.HEAD, new Item(1153)), // Iron full helm
-  (Equipment.CHEST, new Item(1115)), // Iron platebody
-  (Equipment.LEGS, new Item(1067)), // Iron platelegs
-  (Equipment.WEAPON, new Item(1323)), // Iron scimitar
-  (Equipment.SHIELD, new Item(1191)), // Iron kiteshield
-  (Equipment.AMULET, new Item(1731)), // Amulet of power
-  (Equipment.FEET, new Item(4121)), // Iron boots
-  (Equipment.HANDS, new Item(1063)), // Leather vambraces
-  (Equipment.RING, new Item(2570)), // Ring of life
-  (Equipment.CAPE, new Item(1019)), // Black cape
-  (Equipment.AMMUNITION, new Item(882, 750)) // Bronze arrows
+private val STARTER_EQUIPMENT = List(
+  new Item(1153), // Iron full helm
+  new Item(1115), // Iron platebody
+  new Item(1067), // Iron platelegs
+  new Item(1323), // Iron scimitar
+  new Item(1191), // Iron kiteshield
+  new Item(1731), // Amulet of power
+  new Item(4121), // Iron boots
+  new Item(1063), // Leather vambraces
+  new Item(2570), // Ring of life
+  new Item(1019), // Black cape
+  new Item(882, 750) // Bronze arrows
 )
 
 
-/* Formats the given date, using 'DATE_FORMATTER'. */
-private def formatDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(date))
-
-
 /* Give 'starter package' if the player is new. */
-intercept[LoginEvent] { (msg, plr) =>
-  val inventory = plr.inventory
-  val equipment = plr.equipment
-
+on[LoginEvent] { msg =>
+  val plr = msg.plr
   if (plr.attr("first_login")) {
     plr.sendMessage("This is your first login. Enjoy your starter package!")
 
-    inventory.addAll(STARTER_ITEMS)
-    equipment.bulkOperation {
-      STARTER_EQUIPMENT.foreach(it => equipment.set(it._1, it._2))
-    }
+    plr.inventory.addAll(STARTER_ITEMS)
+    plr.equipment.addAll(STARTER_EQUIPMENT)
 
     plr.attr("first_login", false)
   }
 }
 
 /* If the player is muted, indicate that they are and when it will be lifted. */
-intercept[LoginEvent] { (msg, plr) =>
+on[LoginEvent] { msg =>
+  val plr = msg.plr
   val date: String = plr.attr("unmute_date")
 
   date match {
     case "n/a" => // Do nothing, we aren't muted.
     case "never" => plr.sendMessage("You are permanently muted. It can only be overturned by an administrator.")
-    case _ => plr.sendMessage(s"You are muted. You will be unmuted on ${formatDate(date)}.")
+    case _ => plr.sendMessage(s"You are muted. You will be unmuted on ${ DATE_FORMATTER.format(LocalDate.parse(date)) }.")
   }
 }
 
 /* Configure interface states. */
-intercept[LoginEvent] { (msg, plr) =>
-  plr.sendState(173, if (plr.getWalkingQueue.isRunning) 1 else 0)
+on[LoginEvent] { msg =>
+  val plr = msg.plr
+
+  plr.sendConfig(173, if (plr.walking.isRunning) 1 else 0)
 }

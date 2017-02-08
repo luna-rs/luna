@@ -3,22 +3,22 @@ package io.luna.game.model.mobile.attr;
 import java.util.Objects;
 
 /**
- * A wrapper that contains simple functions to retrieve and modify the value mapped with an {@link AttributeKey}.
+ * A model representing a value within an attribute.
  *
- * @param <T> The {@link Object} type represented by this value.
+ * @param <T> The Object type represented by this value.
  * @author lare96 <http://github.org/lare96>
  */
 public final class AttributeValue<T> {
 
     /**
-     * The value within this wrapper.
+     * The value.
      */
     private T value;
 
     /**
      * Creates a new {@link AttributeValue}.
      *
-     * @param value The value within this wrapper.
+     * @param value The value.
      */
     public AttributeValue(T value) {
         this.value = value;
@@ -42,14 +42,14 @@ public final class AttributeValue<T> {
     }
 
     /**
-     * @return The value within this wrapper.
+     * @return The value.
      */
     public T get() {
         return value;
     }
 
     /**
-     * Sets the value for {@link #value}.
+     * Sets the value.
      */
     public void set(T value) {
         this.value = value;

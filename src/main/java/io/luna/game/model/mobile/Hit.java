@@ -1,14 +1,14 @@
 package io.luna.game.model.mobile;
 
 /**
- * A container for the data that represents a single {@code Hit} inflicted on a {@link MobileEntity}.
+ * A model representing a hitsplat on a mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Hit {
 
     /**
-     * An enumerated type representing all of the types that a {@link Hit} can take on.
+     * An enum representing hitsplat types.
      */
     public enum HitType {
         BLOCKED(0),
@@ -17,21 +17,21 @@ public final class Hit {
         DISEASE(3);
 
         /**
-         * The identifier for this {@code HitType}.
+         * The opcode.
          */
         private final int opcode;
 
         /**
          * Creates a new {@link HitType}.
          *
-         * @param opcode The identifier for this {@code HitType}.
+         * @param opcode The opcode.
          */
         HitType(int opcode) {
             this.opcode = opcode;
         }
 
         /**
-         * @return The identifier for this {@code HitType}.
+         * @return The opcode.
          */
         public final int getOpcode() {
             return opcode;
@@ -39,20 +39,20 @@ public final class Hit {
     }
 
     /**
-     * The damage within this {@code Hit}.
+     * The damage.
      */
     private final int damage;
 
     /**
-     * The {@code HitType} of this {@code Hit}.
+     * The type.
      */
     private final HitType type;
 
     /**
      * Creates a new {@link Hit}.
      *
-     * @param damage The damage within this {@code Hit}.
-     * @param type The {@code HitType} of this {@code Hit}.
+     * @param damage The damage.
+     * @param type The type.
      */
     public Hit(int damage, HitType type) {
         this.damage = damage;
@@ -60,23 +60,23 @@ public final class Hit {
     }
 
     /**
-     * Creates a new {@link Hit} with a {@code HitType} of {@code NORMAL}.
+     * Creates a new {@link Hit} with a type of {@code NORMAL}.
      *
-     * @param damage The damage within this {@code Hit}.
+     * @param damage The damage.
      */
     public Hit(int damage) {
         this(damage, HitType.NORMAL);
     }
 
     /**
-     * @return The damage within this {@code Hit}.
+     * @return The damage.
      */
     public int getDamage() {
         return damage;
     }
 
     /**
-     * @return The {@code HitType} of this {@code Hit}.
+     * @return The type.
      */
     public HitType getType() {
         return type;

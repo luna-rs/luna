@@ -5,21 +5,21 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that sends the weight value to the client.
+ * A {@link MessageWriter} implementation that displays the weight value.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class UpdateWeightMessageWriter extends MessageWriter {
 
     /**
-     * The weight value to send.
+     * The weight.
      */
     private final int weight;
 
     /**
      * Creates new {@link UpdateWeightMessageWriter}.
      *
-     * @param weight The weight value to send.
+     * @param weight The weight.
      */
     public UpdateWeightMessageWriter(int weight) {
         this.weight = weight;

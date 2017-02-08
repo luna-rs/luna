@@ -4,46 +4,42 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 
 /**
- * A container for the data that will be used to force a {@link Player} to move to a certain destination. For basic
- * movements, only the static factory methods are needed.
+ * A model representing a route for forced player movement.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ForcedMovement {
 
+    /* TODO: Something wrong either here or in the update block, as this doesn't work.
+      Needs to be fixed asap. */
+
     /**
-     * The {@link Position} the {@link Player} is moving from.
+     * The starting position.
      */
     private final Position startPosition;
 
     /**
-     * The {@link Position} the {@link Player} is moving to.
+     * The destination position.
      */
     private final Position endPosition;
 
     /**
-     * The time in ticks that it will take to move across the {@code X} axis.
+     * The movement duration along the x-axis.
      */
     private final int durationX;
 
     /**
-     * The time in ticks that it will take to move across the {@code Y} axis.
+     * The movement duration along the y-axis.
      */
     private final int durationY;
 
     /**
-     * The {@link Direction} that the {@link Player} is moving in.
+     * The movement direction.
      */
     private final Direction direction;
 
     /**
-     * A static factory method that creates an {@code ForceMovement} instance that will move {@code player} across the {@code
-     * X} axis.
-     *
-     * @param player The {@link Player} whose {@link Position} will be used as the starting {@code Position}.
-     * @param amount The amount to move the {@code X} position of the {@code player} by.
-     * @param duration The amount of time in ticks that it will take for the move to complete.
-     * @return A {@code ForcedMovement} instance with these properties.
+     * Creates a new {@link ForcedMovement} for movement across the x-axis.
      */
     public static ForcedMovement forceMoveX(Player player, int amount, int duration) {
         Position destination = player.getPosition().move(amount, 0);
@@ -53,13 +49,7 @@ public final class ForcedMovement {
     }
 
     /**
-     * A static factory method that creates an {@code ForceMovement} instance that will move {@code player} across the {@code
-     * Y} axis.
-     *
-     * @param player The {@link Player} whose {@link Position} will be used as the starting {@code Position}.
-     * @param amount The amount to move the {@code Y} position of the {@code player} by.
-     * @param duration The amount of time in ticks that it will take for the move to complete.
-     * @return A {@code ForcedMovement} instance with these properties.
+     * Creates a new {@link ForcedMovement} for movement across the y-axis.
      */
     public static ForcedMovement forceMoveY(Player player, int amount, int duration) {
         Position destination = player.getPosition().move(0, amount);
@@ -71,13 +61,14 @@ public final class ForcedMovement {
     /**
      * Creates a new {@link ForcedMovement}.
      *
-     * @param startPosition The {@link Position} the {@link Player} is moving from.
-     * @param endPosition The {@link Position} the {@link Player} is moving to.
-     * @param durationX The time in ticks that it will take to move across the {@code X} axis.
-     * @param durationY The time in ticks that it will take to move across the {@code Y} axis.
-     * @param direction The {@link Direction} that the {@link Player} is moving in.
+     * @param startPosition The starting position.
+     * @param endPosition The destination position.
+     * @param durationX The movement duration along the x-axis.
+     * @param durationY The movement duration along the y-axis.
+     * @param direction The movement direction.
      */
-    public ForcedMovement(Position startPosition, Position endPosition, int durationX, int durationY, Direction direction) {
+    public ForcedMovement(Position startPosition, Position endPosition, int durationX, int durationY,
+        Direction direction) {
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.durationX = durationX;
@@ -86,35 +77,35 @@ public final class ForcedMovement {
     }
 
     /**
-     * @return The {@link Position} the {@link Player} is moving from.
+     * @return The starting position.
      */
     public Position getStartPosition() {
         return startPosition;
     }
 
     /**
-     * @return The {@link Position} the {@link Player} is moving to.
+     * @return The destination position.
      */
     public Position getEndPosition() {
         return endPosition;
     }
 
     /**
-     * @return The time in ticks that it will take to move across the {@code X} axis.
+     * @return The movement duration along the x-axis..
      */
     public int getDurationX() {
         return durationX;
     }
 
     /**
-     * @return The time in ticks that it will take to move across the {@code Y} axis.
+     * @return The movement duration along the y-axis.
      */
     public int getDurationY() {
         return durationY;
     }
 
     /**
-     * @return The {@link Direction} that the {@link Player} is moving in.
+     * @return The movement direction.
      */
     public Direction getDirection() {
         return direction;

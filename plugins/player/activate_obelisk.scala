@@ -7,6 +7,7 @@ import scala.collection.mutable
 // TODO replace with activated models
 // TODO only loop through current region players
 // TODO lock movement on teleport
+// TODO destination should be an area as well
 private case class Obelisk(id: Int, destination: Position, teleportArea: Area)
 
 private val GRAPHIC = new Graphic(342)
@@ -21,29 +22,22 @@ private val OBELISKS = Map(
   14831 -> Obelisk(14831, new Position(3307, 3916), Area.create(3306, 3914, 3310, 3918)) // Level 50 obelisk
 )
 
-private val OBELISK_IDS = OBELISKS.mapValues(obelisk => obelisk.id)
+private val OBELISK_IDS = OBELISKS.keys.toVector
 
-private val obelisksActivated = mutable.Map(
-  14829 -> false, // Level 13 obelisk
-  14830 -> false, // Level 19 obelisk
-  14827 -> false, // Level 27 obelisk
-  14828 -> false, // Level 35 obelisk
-  14826 -> false, // Level 44 obelisk
-  14831 -> false // Level 50 obelisk
-)
+private val obelisksActivated = mutable.Set.empty[Int]
 
 
 private def activate(plr: Player, obelisk: Obelisk) = {
-  if (obelisksActivated(obelisk.id)) {
+  if (obelisksActivated.contains(obelisk.id)) {
     plr.sendMessage("This Obelisk has already been activated!")
   } else {
-    obelisksActivated(obelisk.id) = true
+    obelisksActivated.add(obelisk.id)
 
     plr.sendMessage("You activate the ancient Obelisk...")
 
+    val nextObelisk = OBELISKS(rand(OBELISK_IDS))
 
-    val nextObelisk = OBELISKS(OBELISK_IDS.randomElement)
-    val plrs = world.getRegions.getViewableEntities(obelisk.destination, TYPE_PLAYER)
+    /*val plrs: Set[Player] = world.getViewableEntities(obelisk.destination, TYPE_PLAYER)
 
     world.scheduleOnce(7) {
       plrs.foreach { it =>
@@ -56,13 +50,12 @@ private def activate(plr: Player, obelisk: Obelisk) = {
           it.teleport(nextObelisk.destination)
           it.sendMessage("You have been teleported by ancient magic!")
         }
-        obelisksActivated(obelisk.id) = false
-      }
-    }
+        obelisksActivated.remove(obelisk.id)
+      }*/
   }
 }
 
 
-intercept[ObjectFirstClickEvent] { (msg, plr) =>
-
+on[ObjectFirstClickEvent] { msg =>
+  OBELISKS.get(msg.id).foreach(activate(msg.plr, _))
 }

@@ -7,12 +7,11 @@ import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.EquipmentRequirement;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.Skill;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -48,19 +47,25 @@ public final class Equipment extends ItemContainer {
 
         @Override
         public void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
-            sendItemGroup(items);
+            super.onSingleUpdate(items, oldItem, newItem, index);
+
+            updateBonus(oldItem, newItem);
+            writeBonuses();
             sendEvent(oldItem, newItem, index);
         }
 
         @Override
         public void onBulkUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+            super.onBulkUpdate(items, oldItem, newItem, index);
+
             updateBonus(oldItem, newItem);
             sendEvent(oldItem, newItem, index);
         }
 
         @Override
         public void onBulkUpdateCompleted(ItemContainer items) {
-            sendItemGroup(items);
+            super.onBulkUpdateCompleted(items);
+
             writeBonuses();
         }
 
@@ -405,14 +410,6 @@ public final class Equipment extends ItemContainer {
         newItem.map(Item::getEquipDef).
             map(EquipmentDefinition::getBonuses).
             ifPresent(it -> indexes.forEach(index -> bonuses[index] += it.get(index)));
-    }
-
-    /**
-     * Updates the bonuses for all items.
-     */
-    private void updateAllBonuses() {
-        Arrays.fill(bonuses, 0);
-        forEach(it -> updateBonus(Optional.empty(), Optional.of(it)));
     }
 
     /**

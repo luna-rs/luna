@@ -10,17 +10,17 @@ import com.google.common.base.Joiner;
 public final class StringUtils {
 
     /**
-     * An empty array of {@code String}s.
+     * An empty array of strings.
      */
     public static final String[] EMPTY_ARRAY = {};
 
     /**
      * An array containing valid {@code char}s.
      */
-    public static final char VALID_CHARACTERS[] = { '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', ':', ';', '.', '>', '<', ',', '"', '[', ']', '|',
-        '?', '/', '`' };
+    public static final char VALID_CHARACTERS[] = { '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+        'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', ':', ';', '.', '>', '<', ',', '"',
+        '[', ']', '|', '?', '/', '`' };
 
     /**
      * A {@link Joiner} that joins strings together with a ",".
@@ -29,11 +29,8 @@ public final class StringUtils {
 
     /**
      * Computes the indefinite article of {@code thing}.
-     *
-     * @param thing The thing to compute for.
-     * @return The indefinite article.
      */
-    public static String computeIndefiniteArticle(String thing) {
+    public static String computeArticle(String thing) {
         char first = thing.toLowerCase().charAt(0);
         boolean vowel = "aeiouAEIOU".indexOf(first) != -1;
         return vowel ? "an" : "a";
@@ -41,19 +38,13 @@ public final class StringUtils {
 
     /**
      * Appends the indefinite article of {@code thing} to {@code thing}.
-     *
-     * @param thing The thing to compute for.
-     * @return The indefinite article appended after {@code thing}.
      */
-    public static String appendIndefiniteArticle(String thing) {
-        return computeIndefiniteArticle(thing) + " " + thing;
+    public static String addArticle(String thing) {
+        return computeArticle(thing) + " " + thing;
     }
 
     /**
      * Encodes {@code s} to a base-37 {@code long}.
-     *
-     * @param s The {@link String} to encode.
-     * @return The encoded {@code String}.
      */
     public static long encodeToBase37(String s) {
         long l = 0L;
@@ -76,9 +67,6 @@ public final class StringUtils {
 
     /**
      * Decodes {@code l} into a {@link String}.
-     *
-     * @param l The base-37 {@code long} to decode.
-     * @return The decoded {@code l}.
      */
     public static String decodeFromBase37(long l) {
         int i = 0;

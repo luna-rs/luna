@@ -10,14 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * A static-utility class that contains functions for manipulating {@code Object}s related to {@link Gson}.
+ * A static-utility class that contains functions for Google GSON.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GsonUtils {
 
     /**
-     * A general purpose {@link Gson} instance that has no registered type adapters.
+     * A general purpose {@link Gson} instance.
      */
     public static final Gson GSON = new GsonBuilder().disableInnerClassSerialization().setPrettyPrinting()
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();

@@ -7,21 +7,20 @@ import java.util.Scanner;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A {@link Parser} implementation specifically designated for files that have a series of {@code Object}s separated by a new
- * line.
+ * A {@link Parser} implementation designated for files that have tokens separated by a new line.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class NewLineParser extends Parser<Scanner, String> {
 
     /**
-     * An enumerated type representing the policies for when an empty line is encountered.
+     * An enum representing empty line policies.
      */
     public enum EmptyLinePolicy {
 
         /**
-         * Ignore that the line is empty and treat it as if it was a normal line, reading it and forwarding it to the
-         * implementing class.
+         * Ignore that the line is empty and treat it as if it was a normal line, reading it and forwarding it
+         * to the implementing class.
          */
         READ,
 
@@ -83,8 +82,8 @@ public abstract class NewLineParser extends Parser<Scanner, String> {
     public abstract void readNextLine(String nextLine) throws Exception;
 
     /**
-     * @return The {@link EmptyLinePolicy} that determines what happens when an empty line is encountered while parsing
-     * various lines of data.
+     * @return The {@link EmptyLinePolicy} that determines what happens when an empty line is encountered
+     * while parsing various lines of data.
      */
     public EmptyLinePolicy emptyLinePolicy() {
         return EmptyLinePolicy.SKIP;

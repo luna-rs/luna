@@ -10,73 +10,83 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link String} wrapper also known as an alias that defines behavior and functionality for attributes. {@code String}
- * keys are forcibly interned and aliased on startup into an {@link IdentityHashMap} to be easily accessible as well as high
- * performing.
+ * A model representing a String wrapper also known as an alias that defines behavior and functionality for
+ * attributes. String keys are forcibly interned and aliased on startup into an {@link IdentityHashMap} to
+ * be easily accessible as well as high performing.
  * <p>
- * The naming convention for all {@code String} keys is {@code lower_underscore}. Spaces and uppercase letters are not
- * allowed. For simplicity, attributes can only be represented as primitives or the String type.
+ * The naming convention for all String keys is {@code lower_underscore}. Spaces and uppercase letters are
+ * not allowed. For simplicity, attributes can only be represented as primitives or the String type.
  *
- * @param <T> The {@link Object} type represented by this key.
+ * @param <T> The Object type represented by this key.
  * @author lare96 <http://github.org/lare96>
  */
 public final class AttributeKey<T> {
 
     /**
-     * An {@link IdentityHashMap} of {@link String} keys mapped to their {@code AttributeKey} aliases. All {@code String}s
-     * added to this map are forcibly interned so we can compare them by their identity for faster performance.
+     * A map of interned String keys to their metadata.
      */
     public static final Map<String, AttributeKey> ALIASES = new IdentityHashMap<>();
 
     static {
+
+        /* Run energy */
         forPersistent("run_energy", 100.0);
+
+        /* Login */
         forPersistent("first_login", true);
+
+        /* Punishment */
         forPersistent("unban_date", "n/a");
         forPersistent("unmute_date", "n/a");
 
+        /* Cooking */
+        forTransient("food_to_cook", 0);
+
+        /* Prayer */
         forTransient("last_bone_bury", 0L);
+
+        /* Consumables */
+        forTransient("last_food_consume", 0L);
+        forTransient("last_potion_consume", 0L);
+
+        /* Banking */
         forTransient("withdraw_as_note", false);
+
+        /* Weight */
         forTransient("weight", 0.0);
     }
 
     /**
-     * Aliases {@code name} with an initial value of {@code initialValue} that will be written to and read from the character
-     * file.
-     *
-     * @param name The name of this key.
-     * @param initialValue The initial value of this key.
+     * Aliases a new {@code persistent} key with the argued name and initial value.
      */
     public static <T> void forPersistent(String name, T initialValue) {
         ALIASES.put(name, new AttributeKey<>(name, initialValue, true));
     }
 
     /**
-     * Aliases {@code name} with an initial value of {@code initialValue}.
-     *
-     * @param name The name of this key.
-     * @param initialValue The initial value of this key.
+     * Aliases a new {@code transient} key with the argued name and initial value.
      */
     public static <T> void forTransient(String name, T initialValue) {
         ALIASES.put(name, new AttributeKey<>(name, initialValue, false));
     }
 
     /**
-     * The name of this alias.
+     * The name.
      */
     private final String name;
 
     /**
-     * The initial value of this alias.
+     * The initial value.
      */
     private final T initialValue;
 
     /**
-     * If the value of this alias should be serialized.
+     * If the attribute should be serialized.
      */
     private final boolean isPersistent;
 
     /**
-     * The fully-qualified class name of this attribute type.
+     * The fully-qualified class name of the attribute type.
      */
     private final String typeName;
 
@@ -84,8 +94,8 @@ public final class AttributeKey<T> {
      * Creates a new {@link AttributeKey}.
      *
      * @param name The name of this alias.
-     * @param initialValue The initial value of this alias.
-     * @param isPersistent If the value of this alias should be serialized.
+     * @param initialValue The initial value.
+     * @param isPersistent If the attribute should be serialized.
      */
     private AttributeKey(String name, T initialValue, boolean isPersistent) {
         checkState(!ALIASES.containsKey(name.intern()), "attribute {" + name + "} already exists");
@@ -113,28 +123,28 @@ public final class AttributeKey<T> {
     }
 
     /**
-     * @return The name of this alias.
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The initial value of this alias.
+     * @return The initial value.
      */
     public T getInitialValue() {
         return initialValue;
     }
 
     /**
-     * @return {@code true} if the value of this alias should be serialized, {@code false} otherwise.
+     * @return {@code true} if the attribute should be serialized.
      */
     public boolean isPersistent() {
         return isPersistent;
     }
 
     /**
-     * @return The fully-qualified class name of this attribute type.
+     * @return The fully-qualified class name of the attribute type.
      */
     public String getTypeName() {
         return typeName;

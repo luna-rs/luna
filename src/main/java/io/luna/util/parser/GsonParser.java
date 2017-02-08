@@ -8,7 +8,7 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 
 /**
- * A {@link Parser} implementation specifically designated for {@code JSON} files.
+ * A {@link Parser} implementation designated for {@code JSON} files.
  *
  * @param <T> The type of {@code Object} being parsed.
  * @author lare96 <http://github.org/lare96>

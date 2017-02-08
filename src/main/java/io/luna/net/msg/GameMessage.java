@@ -6,39 +6,38 @@ import io.luna.net.codec.MessageType;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A message that can act as an inbound or outbound packet of data. It can be safely used across multiple threads due to it
- * being immutable.
+ * A model representing an incoming or outgoing packet.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameMessage {
 
     /**
-     * The opcode of this message.
+     * The opcode.
      */
     private final int opcode;
 
     /**
-     * The size of this message.
+     * The size.
      */
     private final int size;
 
     /**
-     * The type of this message.
+     * The message type.
      */
     private final MessageType type;
 
     /**
-     * The payload of this message.
+     * The payload.
      */
     private final ByteMessage payload;
 
     /**
      * Creates a new {@link GameMessage}.
      *
-     * @param opcode The opcode of this message.
-     * @param type The type of this message.
-     * @param payload The payload of this message.
+     * @param opcode The opcode.
+     * @param type The message type.
+     * @param payload The payload.
      */
     public GameMessage(int opcode, MessageType type, ByteMessage payload) {
         checkArgument(opcode >= 0, "opcode < 0");
@@ -51,28 +50,28 @@ public final class GameMessage {
     }
 
     /**
-     * @return The opcode of this message.
+     * @return The opcode.
      */
     public int getOpcode() {
         return opcode;
     }
 
     /**
-     * @return The size of this message.
+     * @return The size.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * @return The type of this message.
+     * @return The message type.
      */
     public MessageType getType() {
         return type;
     }
 
     /**
-     * @return The payload of this message.
+     * @return The payload.
      */
     public ByteMessage getPayload() {
         return payload;

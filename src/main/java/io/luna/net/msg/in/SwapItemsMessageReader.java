@@ -1,16 +1,19 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
+import java.util.Optional;
+
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} attempts to rearrange items.
+ * A {@link MessageReader} implementation that intercepts data sent when rearranging items.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -29,15 +32,24 @@ public final class SwapItemsMessageReader extends MessageReader {
         checkState(toIndex >= 0, "toIndex < 0");
 
         boolean insertMode = (insertionMode == 1); // 0 = swap, 1 = insert
+        Optional<ItemContainer> itemContainer = Optional.empty();
 
         switch (interfaceId) {
         case 3214:
-            player.getInventory().swap(insertMode, fromIndex, toIndex);
+            itemContainer = Optional.of(player.getInventory());
             break;
         case 5382:
-            player.getBank().swap(insertMode, fromIndex, toIndex);
+            itemContainer = Optional.of(player.getBank());
             break;
         }
+
+        itemContainer.ifPresent(items -> {
+            if (insertMode) {
+                items.insert(fromIndex, toIndex);
+            } else {
+                items.swap(fromIndex, toIndex);
+            }
+        });
         return null;
     }
 }

@@ -14,7 +14,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to pick up an item.
+ * A {@link MessageReader} implementation that intercepts data when a ground item is clicked on.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -26,7 +26,7 @@ public final class PickupItemMessageReader extends MessageReader {
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
-        checkState(Item.isIdentifier(id), "invalid item id");
+        checkState(Item.isIdWithinRange(id), "invalid item id");
 
         PluginManager plugins = player.getPlugins();
         Position position = new Position(x, y, player.getPosition().getZ());
@@ -34,7 +34,7 @@ public final class PickupItemMessageReader extends MessageReader {
         player.submitAction(new DistancedAction<Player>(player, position, 0, true) {
             @Override
             protected void execute() {
-                plugins.post(new PickupItemEvent(x, y, id), player);
+                plugins.post(new PickupItemEvent(player, x, y, id));
             }
         });
         return null;

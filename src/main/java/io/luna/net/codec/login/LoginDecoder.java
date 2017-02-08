@@ -22,42 +22,42 @@ import static io.luna.LunaConstants.RSA_MODULUS;
 import static io.luna.net.LunaNetworkConstants.SESSION_KEY;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes the entire login protocol in states.
+ * A {@link ByteToMessageDecoder} implementation that decodes the login protocol.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginDecoder extends ByteToMessageDecoder {
 
     /**
-     * A cryptographically secure random number generator.
+     * A cryptographically secure RNG.
      */
     private static final Random RANDOM = new SecureRandom();
 
     /**
-     * The current state of decoding the protocol.
+     * The current state.
      */
     private State state = State.HANDSHAKE;
 
     /**
-     * The size of the last portion of the protocol.
+     * The size of the RSA block.
      */
     private int rsaBlockSize;
 
     /**
-     * The underlying context to be managed under.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * The repository containing data for incoming messages.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
      * Creates a new {@link LoginDecoder}.
      *
-     * @param context The underlying context to be managed under.
-     * @param messageRepository The repository containing data for incoming messages.
+     * @param context The context instance.
+     * @param messageRepository The message repository.
      */
     public LoginDecoder(LunaContext context, MessageRepository messageRepository) {
         this.context = context;
@@ -69,11 +69,9 @@ public final class LoginDecoder extends ByteToMessageDecoder {
         switch (state) {
         case HANDSHAKE:
             Attribute<Session> attribute = ctx.channel().attr(SESSION_KEY);
-
             attribute.set(new LoginSession(context, ctx.channel(), messageRepository));
 
             decodeHandshake(ctx, in, out);
-
             state = State.LOGIN_TYPE;
             break;
         case LOGIN_TYPE:
@@ -87,12 +85,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the handshake portion of the login protocol.
-     *
-     * @param ctx The channel handler context.
-     * @param in The data that is being decoded.
-     * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
+     * Decodes the handshake.
      */
     private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.readableBytes() >= 2) {
@@ -111,12 +104,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the portion of the login protocol where the login type and RSA block size are determined.
-     *
-     * @param ctx The channel handler context.
-     * @param in The data that is being decoded.
-     * @param out The list of decoded messages.
-     * @throws Exception If any exceptions occur while decoding this portion of the protocol.
+     * Decodes the login type and RSA block size.
      */
     private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         if (in.readableBytes() >= 2) {
@@ -129,11 +117,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the RSA portion of the login protocol.
-     *
-     * @param ctx The channel handler context.
-     * @param in The data that is being decoded.
-     * @param out The list of decoded messages.
+     * Decodes the RSA block.
      */
     private void decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         if (in.readableBytes() >= rsaBlockSize) {
@@ -164,7 +148,8 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             long clientHalf = rsaBuffer.readLong();
             long serverHalf = rsaBuffer.readLong();
 
-            int[] isaacSeed = { (int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32), (int) serverHalf };
+            int[] isaacSeed = { (int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
+                (int) serverHalf };
 
             IsaacCipher decryptor = new IsaacCipher(isaacSeed);
             for (int i = 0; i < isaacSeed.length; i++) {
@@ -185,7 +170,7 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * An enumerated type whose elements represent the various stages of the login protocol.
+     * An enum representing login decoder states.
      */
     private enum State {
         HANDSHAKE,

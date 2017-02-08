@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes all {@link ByteBuf}s into {@link GameMessage}s.
+ * A {@link ByteToMessageDecoder} implementation that decodes game messages.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -31,45 +31,45 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The ISAAC that will decrypt incoming messages.
+     * The decryptor.
      */
     private final IsaacCipher decryptor;
 
     /**
-     * The repository containing data for incoming messages.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
-     * The state of the message currently being decoded.
+     * The current state.
      */
     private State state = State.OPCODE;
 
     /**
-     * The opcode of the message currently being decoded.
+     * The current opcode.
      */
     private int opcode = -1;
 
     /**
-     * The size of the message currently being decoded.
+     * The current size.
      */
     private int size = -1;
 
     /**
-     * The type of the message currently being decoded.
+     * The current message type.
      */
     private MessageType type = MessageType.RAW;
 
     /**
-     * The message that was decoded and needs to be queued.
+     * The decoded message.
      */
     private Optional<GameMessage> currentMessage = Optional.empty();
 
     /**
      * Creates a new {@link GameMessageDecoder}.
      *
-     * @param decryptor The decryptor for this decoder.
-     * @param messageRepository The repository containing data for incoming messages.
+     * @param decryptor The decryptor.
+     * @param messageRepository The message repository.
      */
     public GameMessageDecoder(IsaacCipher decryptor, MessageRepository messageRepository) {
         this.decryptor = decryptor;
@@ -89,16 +89,14 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
             payload(in);
             break;
         }
-        currentMessage.ifPresent($it -> {
-            out.add($it);
+        currentMessage.ifPresent(msg -> {
+            out.add(msg);
             currentMessage = Optional.empty();
         });
     }
 
     /**
-     * Decodes the opcode of the {@link GameMessage}.
-     *
-     * @param in The data being decoded.
+     * Decodes the opcode.
      */
     private void opcode(ByteBuf in) {
         if (in.isReadable()) {
@@ -107,15 +105,15 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
             size = messageRepository.getSize(opcode);
 
             if (size == -1) {
-                type = MessageType.VARIABLE;
+                type = MessageType.VAR;
             } else if (size == -2) {
-                type = MessageType.VARIABLE_SHORT;
+                type = MessageType.VAR_SHORT;
             } else {
                 type = MessageType.FIXED;
             }
 
             if (size == 0) {
-                queueMessage(Unpooled.EMPTY_BUFFER);
+                queueMsg(Unpooled.EMPTY_BUFFER);
                 return;
             }
             state = size == -1 || size == -2 ? State.SIZE : State.PAYLOAD;
@@ -123,9 +121,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the size of the {@link GameMessage}.
-     *
-     * @param in The data being decoded.
+     * Decodes the size.
      */
     private void size(ByteBuf in) {
         int bytes = size == -1 ? Byte.BYTES : Short.BYTES;
@@ -142,15 +138,13 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Decodes the payload of the {@link GameMessage}.
-     *
-     * @param in The data being decoded.
+     * Decodes the payload.
      */
     private void payload(ByteBuf in) {
         if (in.isReadable(size)) {
             ByteBuf newBuffer = in.readBytes(size);
             try {
-                queueMessage(newBuffer);
+                queueMsg(newBuffer);
             } finally {
                 newBuffer.release();
             }
@@ -158,11 +152,9 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Prepares a {@link GameMessage} to be queued upstream and handled on the main game thread.
-     *
-     * @param payload The payload of the {@code GameMessage}.
+     * Prepares a packet to be queued upstream.
      */
-    private void queueMessage(ByteBuf payload) {
+    private void queueMsg(ByteBuf payload) {
         checkState(opcode >= 0, "opcode < 0");
         checkState(size >= 0, "size < 0");
         checkState(type != MessageType.RAW, "type == MessageType.RAW");
@@ -183,7 +175,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * Resets the state of this {@code MessageDecoder} to its default.
+     * Resets the decoder's state.
      */
     private void resetState() {
         opcode = -1;
@@ -192,7 +184,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     }
 
     /**
-     * An enumerated type whose elements represent all of the possible states of this {@code MessageDecoder}.
+     * An enum representing decoder states.
      */
     private enum State {
         OPCODE,

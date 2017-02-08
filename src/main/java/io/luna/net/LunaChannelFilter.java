@@ -14,7 +14,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.ipfilter.AbstractRemoteAddressFilter;
-import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
 import java.net.InetAddress;
@@ -22,13 +21,12 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 
 /**
- * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active connections
- * they already have and whether or not they are blacklisted. A threshold is put on the amount of successful connections
- * allowed to be made in order to provide security from socket flooder attacks.
+ * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active
+ * connections they already have and whether or not they are blacklisted. A threshold is put on the amount of
+ * successful connections allowed to be made in order to provide security from socket flooder attacks.
  * <p>
- * <p>
- * <strong>One {@code LunaChannelFilter} instance must be shared across all pipelines in order to ensure that every channel
- * is using the same multiset.</strong>
+ * <strong>One instance of this class must be shared across all pipelines in order to ensure that every
+ * channel is using the same multiset.</strong>
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -36,8 +34,6 @@ import java.util.Set;
 
     /**
      * A {@link NewLineParser} implementation that parses blacklisted addresses.
-     *
-     * @author lare96 <http://github.org/lare96>
      */
     private final class BlacklistParser extends NewLineParser {
 
@@ -55,28 +51,26 @@ import java.util.Set;
     }
 
     /**
-     * An {@link ImmutableSet} containing whitelisted addresses. Addresses within this {@code ImmutableSet} bypass channel
-     * filtering completely.
+     * An immutable set containing whitelisted (filter bypassing) addresses.
      */
     public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
 
     /**
-     * An {@link AttributeKey} used to access an {@link Attribute} describing which {@link LoginResponse} should be sent for
-     * rejected channels.
+     * An attribute describing the login response for rejected channels.
      */
     private static final AttributeKey<LoginResponse> RESPONSE_KEY = AttributeKey.valueOf("channel.RESPONSE_KEY");
 
     /**
-     * A concurrent {@link Multiset} containing active connections.
+     * A concurrent multiset containing active connections.
      */
     private final Multiset<String> connections = ConcurrentHashMultiset.create();
 
     /**
-     * A concurrent {@link Set} containing blacklisted addresses.
+     * A concurrent set containing blacklisted addresses.
      */
     private final Set<String> blacklist = Sets.newConcurrentHashSet();
 
-    {
+    { /* Initialize blacklisted addresses. */
         NewLineParser parser = new BlacklistParser();
         parser.run();
     }
@@ -124,7 +118,7 @@ import java.util.Set;
     }
 
     /**
-     * Retrieves the host address name from the {@link InetSocketAddress}.
+     * Retrieves the host address name.
      */
     private String address(InetSocketAddress remoteAddress) {
         InetAddress inet = remoteAddress.getAddress();
@@ -132,7 +126,7 @@ import java.util.Set;
     }
 
     /**
-     * Sets the {@code RESPONSE_KEY} attribute to {@code response}.
+     * Sets the {@code RESPONSE_KEY} attribute to the argued response.
      */
     private void response(ChannelHandlerContext ctx, LoginResponse response) {
         Channel channel = ctx.channel();

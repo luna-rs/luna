@@ -11,11 +11,17 @@
 
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.{Animation, Graphic, Player, Skill}
+import io.luna.game.model.mobile.{Animation, Graphic, Player}
 
 
 /* Class representing runes in the 'RUNE_TABLE'. */
-private case class Rune(runeId: Int, level: Int, exp: Double, multiplier: Int, altarId: Int, pureEssence: Boolean)
+private case class Rune(
+  id: Int,
+  altar: Int,
+  multiplier: Int,
+  level: Int,
+  exp: Double
+)
 
 
 /* Rune essence identifier. */
@@ -36,19 +42,83 @@ private val GRAPHIC = new Graphic(186, 100)
  rune_symbol -> Rune
 */
 private val RUNE_TABLE = Map(
-  'air_rune -> Rune(556, 1, 5.0, 11, 2478, false),
-  'mind_rune -> Rune(558, 2, 5.5, 14, 2479, false),
-  'water_rune -> Rune(555, 5, 6.0, 19, 2480, false),
-  'earth_rune -> Rune(557, 9, 6.5, 26, 2481, false),
-  'fire_rune -> Rune(554, 14, 7.0, 35, 2482, false),
-  'body_rune -> Rune(559, 20, 7.5, 46, 2483, false),
-  'cosmic_rune -> Rune(564, 27, 8.0, 59, 2484, true),
-  'chaos_rune -> Rune(562, 35, 8.5, 74, 2487, true),
-  'nature_rune -> Rune(561, 44, 9.0, 91, 2486, true),
-  'law_rune -> Rune(563, 54, 9.5, 99, 2485, true),
-  'death_rune -> Rune(560, 65, 10.0, 99, 2488, true),
-  'blood_rune -> Rune(565, 80, 10.5, 99, 7141, true),
-  'soul_rune -> Rune(566, 95, 11.0, 99, 7138, true)
+  'air_rune -> Rune(id = 556,
+    altar = 2478,
+    multiplier = 11,
+    level = 1,
+    exp = 5.0),
+
+  'mind_rune -> Rune(id = 558,
+    altar = 2479,
+    multiplier = 14,
+    level = 2,
+    exp = 5.5),
+
+  'water_rune -> Rune(id = 555,
+    altar = 2480,
+    multiplier = 19,
+    level = 5,
+    exp = 6.0),
+
+  'earth_rune -> Rune(id = 557,
+    altar = 2481,
+    multiplier = 26,
+    level = 9,
+    exp = 6.5),
+
+  'fire_rune -> Rune(id = 554,
+    altar = 2482,
+    multiplier = 35,
+    level = 14,
+    exp = 7.0),
+
+  'body_rune -> Rune(id = 559,
+    altar = 2483,
+    multiplier = 46,
+    level = 20,
+    exp = 7.5),
+
+  'cosmic_rune -> Rune(id = 564,
+    altar = 2484,
+    multiplier = 59,
+    level = 27,
+    exp = 8.0),
+
+  'chaos_rune -> Rune(id = 562,
+    altar = 2487,
+    multiplier = 74,
+    level = 35,
+    exp = 8.5),
+
+  'nature_rune -> Rune(id = 561,
+    altar = 2486,
+    multiplier = 91,
+    level = 44,
+    exp = 9.0),
+
+  'law_rune -> Rune(id = 563,
+    altar = 2485,
+    multiplier = 99,
+    level = 54,
+    exp = 9.5),
+
+  'death_rune -> Rune(id = 560,
+    altar = 2488,
+    multiplier = 99,
+    level = 65,
+    exp = 10.0),
+
+  'blood_rune -> Rune(id = 565,
+    altar = 7141,
+    multiplier = 99,
+    level = 80,
+    exp = 10.5),
+
+  'soul_rune -> Rune(id = 566,
+    altar = 7138,
+    multiplier = 99,
+    level = 95,
+    exp = 11.0)
 )
 
 /*
@@ -56,16 +126,16 @@ private val RUNE_TABLE = Map(
 
  altar_id -> Rune
 */
-private val ALTAR_TO_RUNE = RUNE_TABLE.values.map(rune => rune.altarId -> rune).toMap
+private val ALTAR_TO_RUNE = RUNE_TABLE.values.map(rune => rune.altar -> rune).toMap
 
 
 /* Attempt to craft the argued rune. */
 private def craftRunes(plr: Player, rune: Rune): Unit = {
-  val skill = plr.skill(Skill.RUNECRAFTING)
+  val inventory = plr.inventory
+  val skill = plr.skill(SKILL_RUNECRAFTING)
 
-  val levelRequired = rune.level /* Are we a high enough level? */
-  if (skill.getLevel < levelRequired) {
-    plr.sendMessage(s"You need a Runecrafting level of $levelRequired to craft these runes.")
+  if (skill.getLevel < rune.level) {
+    plr.sendMessage(s"You need a Runecrafting level of ${ rune.level } to craft these runes.")
     return
   }
 
@@ -76,9 +146,9 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
        -> If rune essence isn't found, do a lookup for pure essence
   */
   val (essenceId, essenceCount) = {
-    def lookup(id: Int) = plr.inventory.computeAmountForId(id)
+    def lookup(id: Int) = inventory.computeAmountForId(id)
 
-    if (rune.pureEssence) {
+    if (rune.level > 20) {
       (PURE_ESSENCE, lookup(PURE_ESSENCE))
     } else {
       val count = lookup(RUNE_ESSENCE)
@@ -96,10 +166,10 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 
   plr.interruptAction()
 
-  plr.inventory.remove(new Item(essenceId, essenceCount))
-  plr.inventory.add(new Item(rune.runeId, runeCount))
+  inventory.remove(new Item(essenceId, essenceCount))
+  inventory.add(new Item(rune.id, runeCount))
 
-  plr.sendMessage(s"You bind the temple's power into ${computeItemName(rune.runeId)}s.")
+  plr.sendMessage(s"You bind the temple's power into ${ nameOfItem(rune.id) }s.")
 
   plr.animation(ANIMATION)
   plr.graphic(GRAPHIC)
@@ -109,9 +179,9 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 
 
 /* If the object being clicked is an altar, attempt to craft runes of that altar. */
-intercept[ObjectFirstClickEvent] { (msg, plr) =>
-  ALTAR_TO_RUNE.get(msg.getId).foreach { it =>
-    craftRunes(plr, it)
+on[ObjectFirstClickEvent] { msg =>
+  ALTAR_TO_RUNE.get(msg.id).foreach { it =>
+    craftRunes(msg.plr, it)
     msg.terminate
   }
 }

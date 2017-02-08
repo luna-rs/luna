@@ -1,10 +1,10 @@
 package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.EntityType;
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
@@ -14,24 +14,24 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A group of {@link UpdateBlock}s that will be encoded and written to the main update buffer.
+ * A model representing a group of update blocks. This model <strong>must remain stateless</strong> so instances
+ * can be shared concurrently.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class UpdateBlockSet<E extends MobileEntity> {
+public final class UpdateBlockSet<E extends Mob> {
 
     /**
-     * A global instance of the {@link Player} update block set.
+     * A global instance of the player update block set.
      */
     public static final UpdateBlockSet<Player> PLAYER_BLOCK_SET = new UpdateBlockSet<>();
 
     /**
-     * A global instance of the {@link Npc} update block set.
+     * A global instance of the NPC update block set.
      */
     public static final UpdateBlockSet<Npc> NPC_BLOCK_SET = new UpdateBlockSet<>();
 
-    static {
-        /* Build the player block set. */
+    static { /* Initialize the player and NPC update block sets. */
         PLAYER_BLOCK_SET.add(new PlayerGraphicUpdateBlock());
         PLAYER_BLOCK_SET.add(new PlayerAnimationUpdateBlock());
         PLAYER_BLOCK_SET.add(new PlayerForceChatUpdateBlock());
@@ -42,8 +42,7 @@ public final class UpdateBlockSet<E extends MobileEntity> {
         PLAYER_BLOCK_SET.add(new PlayerFacePositionUpdateBlock());
         PLAYER_BLOCK_SET.add(new PlayerPrimaryHitUpdateBlock());
         PLAYER_BLOCK_SET.add(new PlayerSecondaryHitUpdateBlock());
-        
-        /* Build the non-player character block set. */
+
         NPC_BLOCK_SET.add(new NpcAnimationUpdateBlock());
         NPC_BLOCK_SET.add(new NpcSecondaryHitUpdateBlock());
         NPC_BLOCK_SET.add(new NpcGraphicUpdateBlock());
@@ -55,47 +54,36 @@ public final class UpdateBlockSet<E extends MobileEntity> {
     }
 
     /**
-     * An ordered {@link Set} containing all of the {@link UpdateBlock}s that can be encoded.
+     * An ordered set containing update blocks.
      */
     private final Set<UpdateBlock<E>> updateBlocks = new LinkedHashSet<>();
 
     /**
-     * Adds an {@link UpdateBlock} to this {@code UpdateBlockSet}. Throws an {@link IllegalStateException} if this {@code
-     * UpdateBlockSet} already contains {@code block}.
-     *
-     * @param block The {@link UpdateBlock} to add.
+     * Adds an update block to this set.
      */
     private void add(UpdateBlock<E> block) {
         checkState(updateBlocks.add(block), "updateBlocks.contains(block)");
     }
 
     /**
-     * Encodes the update blocks for {@code forMob} and appends the data to {@code msg}.
-     *
-     * @param forMob The {@link MobileEntity} to encode update blocks for.
-     * @param msg The main update buffer.
-     * @param state The {@link UpdateState} that the underlying {@link Player} is in.
+     * Encodes update blocks for a player or NPC.
      */
     public void encodeUpdateBlocks(E forMob, ByteMessage msg, UpdateState state) {
         if (forMob.getUpdateFlags().isEmpty() && state != UpdateState.ADD_LOCAL) {
             return;
         }
 
-        if (forMob.type() == EntityType.PLAYER) {
+        if (forMob.getType() == EntityType.PLAYER) {
             encodePlayerBlocks(forMob, msg, state);
-        } else if (forMob.type() == EntityType.NPC) {
+        } else if (forMob.getType() == EntityType.NPC) {
             encodeNpcBlocks(forMob, msg, state);
         } else {
-            throw new IllegalStateException("forMob.type() must be PLAYER or NPC");
+            throw new IllegalStateException("forMob.getType() must be PLAYER or NPC");
         }
     }
 
     /**
-     * Encodes update blocks specifically for a {@link Player}.
-     *
-     * @param forMob The {@code Player} to encode update blocks for.
-     * @param msg The main update buffer.
-     * @param state The {@link UpdateState} that the underlying {@code Player} is in.
+     * Encodes update blocks for a player, specifically.
      */
     private void encodePlayerBlocks(E forMob, ByteMessage msg, UpdateState state) {
         Player player = (Player) forMob;
@@ -115,11 +103,7 @@ public final class UpdateBlockSet<E extends MobileEntity> {
     }
 
     /**
-     * Encodes update blocks specifically for a {@link Npc}.
-     *
-     * @param forMob The {@code Npc} to encode update blocks for.
-     * @param msg The main update buffer.
-     * @param state The {@link UpdateState} that the underlying {@code Npc} is in.
+     * Encodes update blocks specifically for an NPC, specifically.
      */
     private void encodeNpcBlocks(E forMob, ByteMessage msg, UpdateState state) {
         ByteMessage encodedBlocks = encodeBlocks(forMob, state);
@@ -129,11 +113,7 @@ public final class UpdateBlockSet<E extends MobileEntity> {
     }
 
     /**
-     * Encodes the {@link UpdateBlock}s for {@code forMob} and returns the buffer containing the data.
-     *
-     * @param forMob The {@link MobileEntity} to encode for.
-     * @param state The {@link UpdateState} that the underlying {@link Player} is in.
-     * @return The buffer containing the data.
+     * Encodes update blocks and returns the buffer containing the data.
      */
     private ByteMessage encodeBlocks(E forMob, UpdateState state) {
         ByteMessage encodedBlock = ByteMessage.message();

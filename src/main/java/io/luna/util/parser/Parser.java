@@ -14,8 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The base class for all parsers. Provides functionality that allows subclasses to perform asynchronous parsing of various
- * types of files. Also provides a completion handler with a {@link List} of the successfully parsed {@code Objects}.
+ * An abstraction model providing functionality for asynchronous parsing of various types of files.[
  *
  * @param <T1> The reader that will be parsing the file.
  * @param <T2> The {@code Object} being parsed.
@@ -29,18 +28,17 @@ public abstract class Parser<T1, T2> implements Runnable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A {@link List} of paths of files to parse.
+     * A list of files to parse.
      */
     private final List<Path> parseFiles;
 
     /**
      * Creates a new {@link Parser}.
      *
-     * @param paths An array of paths of files to parse.
+     * @param paths A list of files to parse.
      */
     public Parser(String... paths) {
-        parseFiles = Arrays.stream(paths).map(Paths::get).
-            collect(Collectors.toList());
+        parseFiles = Arrays.stream(paths).map(Paths::get).collect(Collectors.toList());
     }
 
     @Override

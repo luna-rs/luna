@@ -9,21 +9,21 @@ import io.luna.util.parser.GsonParser;
 import java.util.List;
 
 /**
- * A {@link GsonParser} implementation that parses data that will later be contained within a {@link MessageRepository}.
+ * A {@link GsonParser} implementation that parses incoming packet data.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class MessageRepositoryParser extends GsonParser<P3<Integer, Integer, String>> {
 
     /**
-     * The {@link MessageRepository} that the data will be added to.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
      * Creates a new {@link MessageRepositoryParser}.
      *
-     * @param messageRepository The {@link MessageRepository} that the data will be added to.
+     * @param messageRepository The message repository.
      */
     public MessageRepositoryParser(MessageRepository messageRepository) {
         super("./data/io/message_repository.json");
@@ -34,7 +34,7 @@ public final class MessageRepositoryParser extends GsonParser<P3<Integer, Intege
     public P3<Integer, Integer, String> readObject(JsonObject reader) throws Exception {
         int opcode = reader.get("opcode").getAsInt();
         int size = reader.get("size").getAsInt();
-        String payload = reader.has("payload") ? reader.get("payload").getAsString() : "GenericMessageReader";
+        String payload = reader.has("payload") ? reader.get("payload").getAsString() : null;
         return P.p(opcode, size, payload);
     }
 

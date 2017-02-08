@@ -7,8 +7,7 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that changes the color of the text on an interface. Used for things like updating
- * the quest title on the quest tab with green when you have completed it.
+ * A {@link MessageWriter} implementation that changes the color of the text on an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */

@@ -1,6 +1,5 @@
 package io.luna.game.task;
 
-import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,8 +11,7 @@ import java.util.Objects;
 import java.util.Queue;
 
 /**
- * Handles the processing and execution of {@link Task}s. Functions contained within this class should only be invoked on the
- * {@link GameService} thread to ensure thread safety.
+ * A model containing functions to handle processing of tasks.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -25,19 +23,17 @@ public final class TaskManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A {@link List} of tasks that have been submitted and are awaiting execution.
+     * A list of tasks awaiting execution.
      */
     private final List<Task> awaitingExecution = new LinkedList<>();
 
     /**
-     * A {@link Queue} of tasks that are ready to be executed.
+     * A queue of tasks ready to be executed.
      */
     private final Queue<Task> executionQueue = new ArrayDeque<>();
 
     /**
-     * Schedules {@code t} to run in the underlying {@code TaskManager}.
-     *
-     * @param t The {@link Task} to schedule.
+     * Schedules a new task to be ran.
      */
     public void schedule(Task t) {
         t.onSchedule();
@@ -53,16 +49,15 @@ public final class TaskManager {
     }
 
     /**
-     * Runs an iteration of the {@link Task} processing logic. All {@link Exception}s thrown by {@code Task}s are caught and
-     * logged by the underlying {@link Logger}.
+     * A function that runs an iteration of task processing.
      */
     public void runTaskIteration() {
-        Iterator<Task> $it = awaitingExecution.iterator();
-        while ($it.hasNext()) {
-            Task it = $it.next();
+        Iterator<Task> iterator = awaitingExecution.iterator();
+        while (iterator.hasNext()) {
+            Task it = iterator.next();
 
             if (!it.isRunning()) {
-                $it.remove();
+                iterator.remove();
                 continue;
             }
             it.onLoop();
@@ -87,7 +82,7 @@ public final class TaskManager {
     }
 
     /**
-     * Iterates through all active {@link Task}s and cancels all that have {@code attachment} as their attachment.
+     * Cancels active tasks with the argued attachment.
      */
     public void cancel(Object attachment) {
         awaitingExecution.stream().filter(it -> Objects.equals(attachment, it.getAttachment().orElse(null)))

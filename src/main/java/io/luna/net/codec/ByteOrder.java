@@ -1,7 +1,7 @@
 package io.luna.net.codec;
 
 /**
- * An enumerated type whose elements represent the possible endianness of game messages.
+ * An enum representing endianness of game messages.
  *
  * @author lare96 <http://github.org/lare96>
  */

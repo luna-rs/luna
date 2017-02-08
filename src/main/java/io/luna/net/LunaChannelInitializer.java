@@ -12,7 +12,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 /**
- * The {@link ChannelInitializer} implementation that will initialize {@link SocketChannel}s before they are registered.
+ * A {@link ChannelInitializer} implementation that will initialize {@link SocketChannel}s before they are
+ * registered.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -29,25 +30,25 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
     private final ChannelHandler loginEncoder = new LoginEncoder();
 
     /**
-     * Filters channels based on the amount of active connections they have.
+     * Filters channels based on their active connection count.
      */
     public final ChannelHandler channelFilter = new LunaChannelFilter();
 
     /**
-     * The underlying context to be managed under.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * The repository containing data for incoming messages.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
      * Creates a new {@link LunaChannelInitializer}.
      *
-     * @param context The underlying context to be managed under.
-     * @param messageRepository The repository containing data for incoming messages.
+     * @param context The context instance.
+     * @param messageRepository The message repository.
      */
     public LunaChannelInitializer(LunaContext context, MessageRepository messageRepository) {
         this.context = context;

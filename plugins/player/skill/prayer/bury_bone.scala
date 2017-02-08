@@ -13,7 +13,6 @@
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.Skill.PRAYER
 import io.luna.game.model.mobile.{Animation, Player}
 
 
@@ -38,11 +37,11 @@ private def buryBone(plr: Player, id: Int, exp: Double) = {
     plr.interruptAction()
     plr.animation(ANIMATION)
 
-    plr.skill(PRAYER).addExperience(bone.exp)
-    plr.inventory.remove(new Item(bone.id))
+    plr.skill(SKILL_PRAYER).addExperience(exp)
+    plr.inventory.remove(new Item(id))
 
     plr.sendMessage("You dig a hole in the ground.")
-    plr.sendMessage(s"You bury the ${computeItemName(bone.id)}.")
+    plr.sendMessage(s"You bury the ${ nameOfItem(id) }.")
 
     plr.resetTime("last_bone_bury")
   }
@@ -50,10 +49,10 @@ private def buryBone(plr: Player, id: Int, exp: Double) = {
 
 
 /* If the item being clicked is a bone, attempt to bury it. */
-intercept[ItemFirstClickEvent] { (msg, plr) =>
-  val boneId = msg.getId
+on[ItemFirstClickEvent] { msg =>
+  val boneId = msg.id
   BONES.get(boneId).foreach { experience =>
-    buryBone(plr, boneId, experience)
+    buryBone(msg.plr, boneId, experience)
     msg.terminate
   }
 }

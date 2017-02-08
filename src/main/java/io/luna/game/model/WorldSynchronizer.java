@@ -1,7 +1,7 @@
 package io.luna.game.model;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.luna.game.model.mobile.MobileEntityList;
+import io.luna.game.model.mobile.MobList;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -64,12 +64,12 @@ public final class WorldSynchronizer {
     /**
      * A list of players.
      */
-    private final MobileEntityList<Player> players;
+    private final MobList<Player> players;
 
     /**
      * A list of npcs.
      */
-    private final MobileEntityList<Npc> npcs;
+    private final MobList<Npc> npcs;
 
     /**
      * A synchronization barrier.
@@ -139,13 +139,13 @@ public final class WorldSynchronizer {
      */
     public void postSynchronize() {
         for (Player player : players) {
-            player.getSession().flushQueue();
-            player.clearFlags();
+            player.getSession().flush();
+            player.resetFlags();
             player.setCachedBlock(null);
         }
 
         for (Npc npc : npcs) {
-            npc.clearFlags();
+            npc.resetFlags();
         }
     }
 }

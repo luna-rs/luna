@@ -3,12 +3,14 @@ package io.luna.game.model.mobile.update;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mobile.Player;
 import io.luna.game.model.mobile.PlayerAppearance;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 
+import java.util.OptionalInt;
+
 /**
- * An {@link PlayerUpdateBlock} implementation that handles the updating of the appearance of {@link Player}s.
+ * A {@link PlayerUpdateBlock} implementation that handles the {@code APPEARANCE} update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -26,32 +28,35 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
         ByteMessage buf = ByteMessage.message();
         PlayerAppearance appearance = mob.getAppearance();
 
-        buf.put(appearance.get(PlayerAppearance.GENDER));
+        int gender = appearance.get(PlayerAppearance.GENDER);
+        buf.put(gender);
         buf.put(-1);
         buf.put(-1);
 
-        if (mob.getTransformId() != -1) {
+        OptionalInt transformId = mob.getTransformId();
+        if (transformId.isPresent()) {
             buf.putShort(-1);
-            buf.putShort(mob.getTransformId());
+            buf.putShort(transformId.getAsInt());
         } else {
-            encodeModelValues(buf, mob);
+            encodeModels(buf, mob);
         }
-        encodeModelColorValues(buf, mob);
-        encodeAnimationValues(buf, mob);
+        encodeModelColors(buf, mob);
+        encodeAnimations(buf, mob);
 
         buf.putLong(mob.getUsernameHash());
         buf.put(mob.getCombatLevel());
-        buf.putShort(0); // Skill level, used for Burthrope Games' Room iirc
+        buf.putShort(0); /* Skill level, used for Burthrope games' room. */
 
-        msg.put(buf.getBuffer().writerIndex(), ByteTransform.C);
+        int currentIndex = buf.getBuffer().writerIndex();
+        msg.put(currentIndex, ByteTransform.C);
         msg.putBytes(buf);
         buf.release();
     }
 
     /**
-     * Encodes values related to the model of the {@link Player}.
+     * Encodes values related to the model.
      */
-    private void encodeModelValues(ByteMessage buf, Player mob) {
+    private void encodeModels(ByteMessage buf, Player mob) {
         Equipment equipment = mob.getEquipment();
         PlayerAppearance appearance = mob.getAppearance();
 
@@ -60,7 +65,7 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
         buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.AMULET).orElse(0)); // Amulet model.
         buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.WEAPON).orElse(0)); // Weapon model.
 
-        if (equipment.indexOccupied(Equipment.CHEST)) { // Chest model.
+        if (equipment.occupied(Equipment.CHEST)) { // Chest model.
             buf.putShort(0x200 + equipment.get(Equipment.CHEST).getId());
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.CHEST));
@@ -68,21 +73,21 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
 
         buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.SHIELD).orElse(0)); // Shield model.
 
-        boolean isFullBody = equipment.retrieve(Equipment.CHEST).map(it -> it.getEquipmentDef().isFullBody()).
-            orElse(false);
+        boolean isFullBody = equipment.retrieve(Equipment.CHEST).map(it -> it.getEquipDef().isFullBody())
+            .orElse(false);
         if (isFullBody) { // Arms model.
             buf.put(0);
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.ARMS));
         }
 
-        if (equipment.indexOccupied(Equipment.LEGS)) { // Legs model.
+        if (equipment.occupied(Equipment.LEGS)) { // Legs model.
             buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.LEGS).get());
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.LEGS));
         }
 
-        boolean isFullHelmet = equipment.retrieve(Equipment.HEAD).map(it -> it.getEquipmentDef().isFullHelmet()).
+        boolean isFullHelmet = equipment.retrieve(Equipment.HEAD).map(it -> it.getEquipDef().isFullHelmet()).
             orElse(false);
         if (isFullHelmet) { // Head model.
             buf.put(0);
@@ -90,13 +95,13 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.HEAD));
         }
 
-        if (equipment.indexOccupied(Equipment.HANDS)) { // Hands model.
+        if (equipment.occupied(Equipment.HANDS)) { // Hands model.
             buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.HANDS).get());
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.HANDS));
         }
 
-        if (equipment.indexOccupied(Equipment.FEET)) { // Feet model.
+        if (equipment.occupied(Equipment.FEET)) { // Feet model.
             buf.putShort(0x200 + equipment.computeIdForIndex(Equipment.FEET).get());
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.FEET));
@@ -112,7 +117,7 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
     /**
      * Encodes values related to the model colors of the {@link Player}.
      */
-    private void encodeModelColorValues(ByteMessage buf, Player mob) {
+    private void encodeModelColors(ByteMessage buf, Player mob) {
         PlayerAppearance appearance = mob.getAppearance();
 
         buf.put(appearance.get(PlayerAppearance.HAIR_COLOR));
@@ -125,7 +130,8 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
     /**
      * Encodes values related to the animations of the {@link Player}.
      */
-    private void encodeAnimationValues(ByteMessage buf, Player mob) {
+    private void encodeAnimations(ByteMessage buf, Player mob) {
+        /* TODO configurable animations for weapons and other effects */
         buf.putShort(0x328);
         buf.putShort(0x337);
         buf.putShort(0x333);

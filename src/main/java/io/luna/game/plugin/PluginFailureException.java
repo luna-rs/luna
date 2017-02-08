@@ -1,10 +1,7 @@
 package io.luna.game.plugin;
 
-import io.luna.game.event.EventListenerPipeline;
-
 /**
- * A {@link RuntimeException} implementation thrown when an unhandled {@link Exception} is thrown up to the {@link
- * EventListenerPipeline} from within a plugin.
+ * A {@link RuntimeException} implementation thrown when a plugin fails to execute.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -13,16 +10,16 @@ public final class PluginFailureException extends RuntimeException {
     /**
      * Creates a new {@link PluginFailureException}.
      *
-     * @param reason The reason for the plugin failure.
+     * @param reason The reason.
      */
-    public PluginFailureException(Object reason) {
-        super(String.valueOf(reason));
+    public PluginFailureException(String reason) {
+        super(reason);
     }
 
     /**
-     * Creates a new {@link PluginFailureException} with {@code cause} as the cause.
+     * Creates a new {@link PluginFailureException}.
      *
-     * @param cause The {@link Exception} to wrap within this {@code PluginFailureException}.
+     * @param cause The cause.
      */
     public PluginFailureException(Exception cause) {
         super(cause.getMessage(), cause);

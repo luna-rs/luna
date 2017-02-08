@@ -1,7 +1,7 @@
 package io.luna.net.codec.login;
 
 /**
- * An enumerated type whose elements represent all of the possible login responses.
+ * An enum representing login responses.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -23,21 +23,21 @@ public enum LoginResponse {
     MEMBERS_ONLY_AREA(17);
 
     /**
-     * The response code.
+     * The opcode.
      */
     private final int opcode;
 
     /**
      * Creates a new {@link LoginResponse}.
      *
-     * @param opcode The response code.
+     * @param opcode The opcode.
      */
     LoginResponse(int opcode) {
         this.opcode = opcode;
     }
 
     /**
-     * @return The response code.
+     * @return The opcode.
      */
     public final int getOpcode() {
         return opcode;

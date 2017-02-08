@@ -18,7 +18,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * The type of message traversing this pipeline.
      */
-    private final EventType messageType;
+    private final Class<?> messageType;
 
     /**
      * The pipeline of listeners.
@@ -35,7 +35,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      *
      * @param messageType The type of message traversing this pipeline.
      */
-    public EventListenerPipeline(EventType messageType) {
+    public EventListenerPipeline(Class<?> messageType) {
         this.messageType = messageType;
     }
 
@@ -92,7 +92,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * @return The type of message traversing this pipeline.
      */
-    public EventType getMessageType() {
+    public Class<?> getMessageType() {
         return messageType;
     }
 }

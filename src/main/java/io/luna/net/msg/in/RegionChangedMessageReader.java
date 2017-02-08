@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when the region changes.
+ * A {@link MessageReader} implementation that intercepts data sent when the region changes.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -17,7 +17,7 @@ public final class RegionChangedMessageReader extends MessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         if (player.isRegionChanged()) {
             player.setRegionChanged(false);
-            return RegionChangedEvent.INSTANCE;
+            return new RegionChangedEvent(player);
         }
         return null;
     }

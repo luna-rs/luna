@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to walk.
+ * A {@link MessageReader} implementation that intercepts player movement data.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -33,6 +33,11 @@ public final class WalkingMessageReader extends MessageReader {
             // impl
         }
 
+        WalkingQueue walkingQueue = player.getWalkingQueue();
+        if (walkingQueue.isLocked()) {
+            return null;
+        }
+
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];
 
@@ -44,7 +49,6 @@ public final class WalkingMessageReader extends MessageReader {
         int y = payload.getShort(false, ByteOrder.LITTLE);
         boolean running = payload.get(false, ByteTransform.S) == 1;
 
-        WalkingQueue walkingQueue = player.getWalkingQueue();
         walkingQueue.setRunningPath(running);
         walkingQueue.clear();
         Step[] steps = new Step[pathSize + 1];
@@ -52,6 +56,6 @@ public final class WalkingMessageReader extends MessageReader {
         for (int i = 0; i < pathSize; i++) {
             walkingQueue.add(steps[i + 1] = new Step(path[i][0] + x, path[i][1] + y));
         }
-        return new WalkingEvent(steps, running);
+        return new WalkingEvent(player, steps, running);
     }
 }

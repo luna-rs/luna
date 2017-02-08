@@ -14,20 +14,20 @@ import io.luna.net.msg.MessageWriter;
 public final class WidgetTextMessageWriter extends MessageWriter {
 
     /**
-     * The text to display on the widget.
+     * The text.
      */
     private final String text;
 
     /**
-     * The identifier for the widget that the text will be displayed on.
+     * The widget identifier.
      */
     private final int id;
 
     /**
      * Creates a new {@link WidgetTextMessageWriter}.
      *
-     * @param text The text to display on the widget.
-     * @param id The identifier for the widget that the text will be displayed on.
+     * @param text The text.
+     * @param id The widget identifier.
      */
     public WidgetTextMessageWriter(String text, int id) {
         this.text = text;
@@ -36,7 +36,7 @@ public final class WidgetTextMessageWriter extends MessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(126, MessageType.VARIABLE_SHORT);
+        ByteMessage msg = ByteMessage.message(126, MessageType.VAR_SHORT);
         msg.putString(text);
         msg.putShort(id, ByteTransform.A);
         return msg;

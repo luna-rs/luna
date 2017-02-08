@@ -20,6 +20,11 @@ public final class EventListener<E extends Event> {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
+     * The arguments.
+     */
+    private final EventArguments args;
+
+    /**
      * The listener function.
      */
     private final Consumer<E> listener;
@@ -27,10 +32,12 @@ public final class EventListener<E extends Event> {
     /**
      * Creates a new {@link EventListener}.
      *
+     * @param args The arguments.
      * @param listener The listener function.
      */
-    public EventListener(Consumer<E> listener) {
+    public EventListener(EventArguments args, Consumer<E> listener) {
         this.listener = listener;
+        this.args = args;
     }
 
     /**
@@ -38,7 +45,12 @@ public final class EventListener<E extends Event> {
      */
     public void apply(E msg) throws PluginFailureException {
         try {
-            listener.accept(msg);
+            if (args == EventArguments.NO_ARGS) {
+                listener.accept(msg);
+            } else if (msg.matches(args)) {
+                listener.accept(msg);
+                msg.terminate();
+            }
         } catch (PluginFailureException failure) { // fail, recoverable
             LOGGER.catching(failure);
         } catch (Exception other) { // unknown, unrecoverable
@@ -47,9 +59,16 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * Returns the raw listener function, without error handling.
+     * @return The listener function.
      */
     public Consumer<E> getListener() {
         return listener;
+    }
+
+    /**
+     * @return The arguments.
+     */
+    public EventArguments getArgs() {
+        return args;
     }
 }

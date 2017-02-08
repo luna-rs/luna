@@ -25,8 +25,8 @@ import scala.reflect.io.File
 private def findPunish(msg: CommandEvent) = {
   val name = msg.args(0).replaceAll("_", "")
 
-  world.getPlayers.
-    filterNot(_.rights >= RIGHTS_ADMIN).
+  world.players.
+    filter(_.rights <= RIGHTS_MOD).
     filter(_.name.equalsIgnoreCase(name))
 }
 
@@ -46,48 +46,48 @@ private def punishDuration(msg: CommandEvent) = {
 
 
 /* Perform an IP ban on a player. */
-on[CommandEvent]("ip_ban", RIGHTS_ADMIN) { msg =>
+onargs[CommandEvent]("ip_ban", RIGHTS_ADMIN) { msg =>
   val file = File("./data/players/blacklist.txt")
 
-  findPunish(msg).foreach(plr => {
+  findPunish(msg).foreach { plr =>
     async {
       file.appendAll(System.lineSeparator, plr.address)
     }
     plr.logout
-  })
+  }
 }
 
 /* Perform a permanent ban on a player. */
-on[CommandEvent]("perm_ban", RIGHTS_ADMIN) { msg =>
-  findPunish(msg).foreach(plr => {
+onargs[CommandEvent]("perm_ban", RIGHTS_ADMIN) { msg =>
+  findPunish(msg).foreach { plr =>
     plr.attr("unban_date", "never")
     plr.logout
-  })
+  }
 }
 
 /* Perform a permanent mute on a player. */
-on[CommandEvent]("perm_mute", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach(plr => {
+onargs[CommandEvent]("perm_mute", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach { plr =>
     plr.attr("unmute_date", "never")
     plr.logout
-  })
+  }
 }
 
 /* Perform a temporary ban on a player. */
-on[CommandEvent]("ban", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach(plr => {
+onargs[CommandEvent]("ban", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach { plr =>
     plr.attr("unban_date", punishDuration(msg))
     plr.logout
-  })
+  }
 }
 
 /* Perform a temporary mute on a player. */
-on[CommandEvent]("mute", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach(plr => {
+onargs[CommandEvent]("mute", RIGHTS_MOD) { msg =>
+  findPunish(msg).foreach { plr =>
     plr.attr("unmute_date", punishDuration(msg))
     plr.logout
-  })
+  }
 }
 
 /* Perform a forced disconnect on a player. */
-on[CommandEvent]("kick", RIGHTS_MOD) { findPunish(_).foreach(_.logout) }
+onargs[CommandEvent]("kick", RIGHTS_MOD) { findPunish(_).foreach(_.logout) }

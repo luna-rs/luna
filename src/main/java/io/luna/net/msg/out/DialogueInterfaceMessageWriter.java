@@ -10,19 +10,19 @@ import io.luna.net.msg.MessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ChatboxInterfaceMessageWriter extends MessageWriter {
+public final class DialogueInterfaceMessageWriter extends MessageWriter {
 
     /**
-     * The interface to display on the chatbox.
+     * The interface to display.
      */
     private final int id;
 
     /**
-     * Creates a new {@link ChatboxInterfaceMessageWriter}.
+     * Creates a new {@link DialogueInterfaceMessageWriter}.
      *
-     * @param id The interface to display on the chatbox.
+     * @param id The interface to display.
      */
-    public ChatboxInterfaceMessageWriter(int id) {
+    public DialogueInterfaceMessageWriter(int id) {
         this.id = id;
     }
 

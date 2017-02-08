@@ -1,33 +1,33 @@
 package io.luna.game.model.mobile;
 
 /**
- * A container for the data that represents a single {@code Graphic}.
+ * A model representing a graphic performed by a mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Graphic {
 
     /**
-     * The identifier for this {@code Graphic}.
+     * The identifier.
      */
     private final int id;
 
     /**
-     * The delay for this {@code Graphic}.
+     * The delay.
      */
     private final int delay;
 
     /**
-     * The height for this {@code Graphic}.
+     * The height.
      */
     private final int height;
 
     /**
      * Creates a new {@link Graphic}.
      *
-     * @param id The identifier for this {@code Graphic}.
-     * @param delay The delay for this {@code Graphic}.
-     * @param height The height for this {@code Graphic}.
+     * @param id The identifier.
+     * @param delay The delay.
+     * @param height The height.
      */
     public Graphic(int id, int delay, int height) {
         this.id = id;
@@ -38,8 +38,8 @@ public final class Graphic {
     /**
      * Creates a new {@link Graphic} with a delay of {@code 0}.
      *
-     * @param id The identifier for this {@code Graphic}.
-     * @param height The height for this {@code Graphic}.
+     * @param id The identifier.
+     * @param height The height.
      */
     public Graphic(int id, int height) {
         this(id, 0, height);
@@ -48,28 +48,28 @@ public final class Graphic {
     /**
      * Creates a new {@link Graphic} with a delay and height of {@code 0}.
      *
-     * @param id The identifier for this {@code Graphic}.
+     * @param id The identifier.
      */
     public Graphic(int id) {
         this(id, 0);
     }
 
     /**
-     * @return The identifier for this {@code Graphic}.
+     * @return The identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The delay for this {@code Graphic}.
+     * @return The delay.
      */
     public int getDelay() {
         return delay;
     }
 
     /**
-     * @return The height for this {@code Graphic}.
+     * @return The height.
      */
     public int getHeight() {
         return height;

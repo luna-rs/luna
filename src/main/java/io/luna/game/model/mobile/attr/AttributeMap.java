@@ -12,34 +12,29 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A wrapper for a {@link Map} that contains a function to retrieve an {@link AttributeValue} by its {@code String} key. The
- * retrieval of attributes is very high performing because it utilizes string interning and its own method of caching.
+ * A model that uses a map internally along with its own caching mechanisms to manage attributes.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class AttributeMap implements Iterable<Entry<String, AttributeValue<?>>> {
 
     /**
-     * An {@link IdentityHashMap} that holds our {@link AttributeKey} and {@link AttributeValue} pair.
+     * A map that holds attribute key and value pairs.
      */
     private final Map<String, AttributeValue<?>> attributes = new IdentityHashMap<>(AttributeKey.ALIASES.size());
 
     /**
-     * The last retrieved key.
+     * The last key.
      */
     private String lastKey;
 
     /**
-     * The last retrieved value.
+     * The last value.
      */
     private AttributeValue lastValue;
 
     /**
-     * Retrieves an {@link AttributeValue} by its {@code key}. Unfortunately this function is not type safe, so it may throw
-     * a {@link AttributeTypeException} if used with the wrong underlying type.
-     *
-     * @param key The key to retrieve the {@code AttributeValue} with.
-     * @return The retrieved {@code AttributeValue}.
+     * Retrieves the value of an attribute by its String key. Not type safe.
      */
     @SuppressWarnings("unchecked")
     public <T> AttributeValue<T> get(String key) {
@@ -56,7 +51,8 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
 
         try {
             lastKey = alias.getName();
-            lastValue = attributes.computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
+            lastValue = attributes
+                .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
 
             return lastValue;
         } catch (ClassCastException e) {

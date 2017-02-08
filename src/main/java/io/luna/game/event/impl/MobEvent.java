@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 
@@ -15,21 +15,21 @@ class MobEvent extends Event {
     /**
      * The mob.
      */
-    protected final MobileEntity mob;
+    protected final Mob mob;
 
     /**
      * Creates a new {@link MobEvent}.
      *
      * @param mob The mob.
      */
-    public MobEvent(MobileEntity mob) {
+    public MobEvent(Mob mob) {
         this.mob = mob;
     }
 
     /**
      * @return The mob.
      */
-    public MobileEntity mob() {
+    public Mob mob() {
         return mob;
     }
 

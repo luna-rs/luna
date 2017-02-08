@@ -8,21 +8,21 @@ import io.luna.util.parser.GsonParser;
 import java.util.List;
 
 /**
- * A {@link GsonParser} implementation that reads {@link NpcDefinition}s.
+ * A {@link GsonParser} implementation that reads NPC definitions.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
 
     /**
-     * The array that will contain parsed {@link NpcDefinition}s.
+     * The array of parsed definitions.
      */
     private final NpcDefinition[] definitions;
 
     /**
      * Creates a new {@link NpcDefinitionParser}.
      *
-     * @param definitions The array that will contain parsed {@link NpcDefinition}s.
+     * @param definitions The array of parsed definitions.
      */
     public NpcDefinitionParser(NpcDefinition[] definitions) {
         super("./data/npcs/npc_defs.json");

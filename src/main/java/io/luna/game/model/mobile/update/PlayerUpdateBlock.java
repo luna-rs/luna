@@ -1,12 +1,10 @@
 package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
-import io.luna.net.msg.out.PlayerUpdateMessageWriter;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 
 /**
- * An {@link UpdateBlock} implementation specific to {@link Player}s contained within an {@link UpdateBlockSet} and sent
- * within a {@link PlayerUpdateMessageWriter}.
+ * A model representing a player update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -15,8 +13,8 @@ public abstract class PlayerUpdateBlock extends UpdateBlock<Player> {
     /**
      * Creates a new {@link PlayerUpdateBlock}.
      *
-     * @param mask The bit mask for this update block.
-     * @param flag The update flag associated with this update block.
+     * @param mask The bit mask.
+     * @param flag The update flag.
      */
     public PlayerUpdateBlock(int mask, UpdateFlag flag) {
         super(mask, flag);

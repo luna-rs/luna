@@ -9,8 +9,6 @@ public final class ClassUtils {
 
     /**
      * Ensures that {@code clazz} will be loaded by its {@link ClassLoader}.
-     *
-     * @param clazz The class to load.
      */
     public static void loadClass(Class<?> clazz) {
         try {

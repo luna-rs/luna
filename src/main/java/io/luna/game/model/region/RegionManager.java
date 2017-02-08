@@ -4,7 +4,7 @@ import io.luna.LunaConstants;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 
@@ -17,7 +17,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages all of the cached {@link Region}s and the {@link Entity}s contained within them.
+ * A model that manages regions occupied by entities.
  *
  * @author lare96 <http://github.org/lare96>
  * @author Graham
@@ -25,58 +25,60 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RegionManager {
 
     /**
-     * The map of cached {@link Region}s.
+     * A map of regions currently or previously occupied by entities.
      */
     private final Map<RegionCoordinates, Region> regions = new ConcurrentHashMap<>();
 
     /**
-     * Returns a {@link Region} based on the given region {@code X} and region {@code Y} coordinates.
-     *
-     * @param x The region {@code X} coordinate.
-     * @param y The region {@code Y} coordinate.
-     * @return The region in accordance with these coordinates.
+     * Returns or constructs a region based on the argued coordinates.
      */
     public Region getRegion(int x, int y) {
         return getRegion(new RegionCoordinates(x, y));
     }
 
     /**
-     * Returns a {@link Region} based on the given {@code pos}.
-     *
-     * @param pos The position.
-     * @return The region in accordance with this {@code pos}.
+     * Returns or constructs a region based on the argued position.
      */
     public Region getRegion(Position pos) {
         return getRegion(RegionCoordinates.create(pos));
     }
 
     /**
-     * Returns a {@link Region} based on the given {@code coordinates}, creates and inserts a new {@code Region} if none
-     * present.
-     *
-     * @param coordinates The {@link RegionCoordinates}.
-     * @return The region in accordance with {@code coordinates}.
+     * Returns or constructs a region based on the argued region coordinates.
      */
     public Region getRegion(RegionCoordinates coordinates) {
         return regions.computeIfAbsent(coordinates, Region::new);
     }
 
     /**
-     * Determines if a {@link Region} exists in accordance with {@code pos}.
-     *
-     * @param pos The position.
-     * @return {@code true} if a {@code Region} exists, {@code false} otherwise.
+     * Determines if a cached region exists for a position.
      */
     public boolean exists(Position pos) {
         return regions.containsKey(RegionCoordinates.create(pos));
     }
 
     /**
-     * Gets all of the {@link Player}s surrounding {@code player}, prioritized in an order somewhat identical to Runescape.
-     * This is done so that staggered updating does not interfere negatively with gameplay.
-     *
-     * @param player The {@link Player}.
-     * @return The local, prioritized, {@code Player}s.
+     * Computes a set of entities within a region viewable from the argued position.
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends Entity> Set<E> getViewableEntities(Position position, EntityType type) {
+        List<Region> allRegions = getSurroundingRegions(position);
+        Set<E> entities = new HashSet<>();
+
+        for (Region region : allRegions) {
+            List<E> regionEntities = region.getEntities(type);
+
+            for (Entity inRegion : regionEntities) {
+                if (inRegion.getPosition().isViewable(position)) {
+                    entities.add((E) inRegion);
+                }
+            }
+        }
+        return entities;
+    }
+
+    /**
+     * Computes a set of viewable players, potentially ordered using the region update comparator.
      */
     public Set<Player> getSurroundingPlayers(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
@@ -95,11 +97,7 @@ public final class RegionManager {
     }
 
     /**
-     * Gets all of the {@link Npc}s surrounding {@code player}, prioritized in an order somewhat identical to Runescape. This
-     * is done so that staggered updating does not interfere negatively with gameplay.
-     *
-     * @param player The {@link Player}.
-     * @return The local, prioritized, {@code Npc}s.
+     * Computes a set of viewable NPCs, potentially ordered using the region update comparator.
      */
     public Set<Npc> getSurroundingNpcs(Player player) {
         List<Region> allRegions = getSurroundingRegions(player.getPosition());
@@ -118,17 +116,15 @@ public final class RegionManager {
     }
 
     /**
-     * Returns the backing set that will be used to get surrounding {@link Player}s or {@link Npc}s.
+     * Constructs and returns the backing set used to hold mobs.
      */
-    private <T extends MobileEntity> Set<T> getBackingSet(Player player) {
-        return LunaConstants.STAGGERED_UPDATING ? new TreeSet<>(new RegionPriorityComparator(player)) : new HashSet<>();
+    private <T extends Mob> Set<T> getBackingSet(Player player) {
+        return LunaConstants.STAGGERED_UPDATING ? new TreeSet<>(new RegionUpdateComparator(player)) :
+            new HashSet<>();
     }
 
     /**
-     * Gets the {@link Region}s surrounding {@code pos}.
-     *
-     * @param pos The {@link Position}.
-     * @return The surrounding regions.
+     * Computes a list of regions surrounding a position.
      */
     private List<Region> getSurroundingRegions(Position pos) {
         RegionCoordinates coordinates = RegionCoordinates.create(pos);

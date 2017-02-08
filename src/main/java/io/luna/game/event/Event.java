@@ -20,10 +20,10 @@ public class Event {
 
     /**
      * Matches the arguments of this event, returns {@code true} if this event should be
-     * intercepted. Throws an {@link IllegalStateException} by default.
+     * intercepted. Returns {@code true} by default.
      */
     public boolean matches(EventArguments args) {
-        throw new IllegalStateException("No matching implementation found");
+        return true;
     }
 
     /**

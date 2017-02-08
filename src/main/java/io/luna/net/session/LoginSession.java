@@ -24,28 +24,28 @@ import java.util.function.Function;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link Session} implementation that handles networking for a {@link Player} during login.
+ * A {@link Session} implementation that handles login networking.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class LoginSession extends Session {
 
     /**
-     * The {@link World} dedicated to this {@code LoginSession}.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * The repository containing data for incoming messages.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
      * Creates a new {@link GameSession}.
      *
-     * @param context The context to be managed under.
-     * @param channel The {@link Channel} for this session.
-     * @param messageRepository The repository containing data for incoming messages.
+     * @param context The context instance.
+     * @param channel The channel.
+     * @param messageRepository The message repository.
      */
     public LoginSession(LunaContext context, Channel channel, MessageRepository messageRepository) {
         super(channel);
@@ -62,12 +62,11 @@ public final class LoginSession extends Session {
     }
 
     /**
-     * Loads the character file and sends the {@link LoginResponse} code to the client.
-     *
-     * @param msg The message containing the credentials.
-     * @throws Exception If any errors occur while handling credentials.
+     * Handles the received login credentials.
      */
     private void handleCredentials(LoginCredentialsMessage msg) throws Exception {
+        // TODO: Pretty ugly, find a nicer way of doing this?
+
         Channel channel = getChannel();
         World world = context.getWorld();
         LoginResponse response = LoginResponse.NORMAL;
@@ -101,8 +100,8 @@ public final class LoginSession extends Session {
         } else {
             future.addListener(it -> {
                 pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(msg.getEncryptor()));
-                pipeline
-                    .replace("login-decoder", "game-decoder", new GameMessageDecoder(msg.getDecryptor(), messageRepository));
+                pipeline.replace("login-decoder", "game-decoder",
+                    new GameMessageDecoder(msg.getDecryptor(), messageRepository));
 
                 GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(),
                     messageRepository);
@@ -116,7 +115,7 @@ public final class LoginSession extends Session {
     }
 
     /**
-     * Returns an optional describing the result of managing punishments for {@code player}.
+     * Returns an optional describing the result of managing punishments.
      */
     private Optional<LoginResponse> handlePunishments(Player player) {
         // TODO: Pretty ugly, find a nicer way of doing this?

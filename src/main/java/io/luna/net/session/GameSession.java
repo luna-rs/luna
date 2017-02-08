@@ -13,44 +13,44 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- * A {@link Session} implementation that handles networking for a {@link Player} during gameplay.
+ * A {@link Session} implementation that handles gameplay networking.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameSession extends Session {
 
     /**
-     * The player assigned to this {@code GameSession}.
+     * The player.
      */
     private final Player player;
 
     /**
-     * The message encryptor.
+     * The encryptor.
      */
     private final IsaacCipher encryptor;
 
     /**
-     * The message decryptor.
+     * The decryptor.
      */
     private final IsaacCipher decryptor;
 
     /**
-     * The repository containing data for incoming messages.
+     * The message repository.
      */
     private final MessageRepository messageRepository;
 
     /**
-     * A bounded queue of inbound {@link GameMessage}s.
+     * A bounded queue of decoded game packets.
      */
     private final Queue<GameMessage> inboundQueue = new ArrayBlockingQueue<>(LunaNetworkConstants.MESSAGE_LIMIT);
 
     /**
      * Creates a new {@link GameSession}.
      *
-     * @param channel The channel for this session.
-     * @param encryptor The message encryptor.
-     * @param decryptor The message decryptor.
-     * @param messageRepository The repository containing data for incoming messages.
+     * @param channel The client's channel.
+     * @param encryptor The encryptor.
+     * @param decryptor The decryptor.
+     * @param messageRepository The message repository.
      */
     public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor,
         MessageRepository messageRepository) {
@@ -74,9 +74,7 @@ public final class GameSession extends Session {
     }
 
     /**
-     * Writes {@code msg} to the underlying channel; The channel is not flushed.
-     *
-     * @param msg The message to queue.
+     * Writes a message to the underlying channel; The channel is not flushed.
      */
     public void queue(MessageWriter msg) {
         Channel channel = getChannel();
@@ -87,11 +85,9 @@ public final class GameSession extends Session {
     }
 
     /**
-     * Flushes all pending {@link GameMessage}s within the channel's queue. Repeated calls to this method are relatively
-     * expensive, which is why messages should be queued up with {@code queue(MessageWriter)} and flushed once at the end of
-     * the cycle.
+     * Flushes the underlying channel.
      */
-    public void flushQueue() {
+    public void flush() {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
@@ -100,7 +96,7 @@ public final class GameSession extends Session {
     }
 
     /**
-     * Dequeues the inbound queue, handling all logic accordingly.
+     * Dequeues decoded game packets and applies their listeners to them.
      */
     public void dequeue() {
         for (; ; ) {
@@ -114,14 +110,14 @@ public final class GameSession extends Session {
     }
 
     /**
-     * @return The message encryptor.
+     * @return The encryptor.
      */
     public IsaacCipher getEncryptor() {
         return encryptor;
     }
 
     /**
-     * @return The message decryptor.
+     * @return The decryptor.
      */
     public IsaacCipher getDecryptor() {
         return decryptor;

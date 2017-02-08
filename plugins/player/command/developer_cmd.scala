@@ -8,8 +8,6 @@
  AUTHOR: lare96
 */
 
-import java.util.Objects
-
 import com.google.common.primitives.{Doubles, Ints}
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.Position
@@ -19,7 +17,7 @@ import io.luna.game.model.mobile._
 
 
 /* A command that allows for attributes to be dynamically retrieved or set. */
-on[CommandEvent]("attr", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("attr", RIGHTS_DEV) { msg =>
   val plr = msg.plr
   val name = msg.args(0)
   val length = msg.args.length
@@ -44,27 +42,27 @@ on[CommandEvent]("attr", RIGHTS_DEV) { msg =>
 }
 
 /* A command that sends a message depicting the player's current position. */
-on[CommandEvent]("mypos", RIGHTS_DEV) { _.plr.sendMessage(s"Your current position is ${ plr.position }.") }
+onargs[CommandEvent]("mypos", RIGHTS_DEV) { msg => msg.plr.sendMessage(s"Your current position is ${ msg.plr.position }.") }
 
 /* A command that moves a player to a different position. */
-on[CommandEvent]("move", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("move", RIGHTS_DEV) { msg =>
   val args = msg.args
 
   val x = args(0).toInt
   val y = args(1).toInt
-  val z = if (args.length == 3) args(2).toInt else plr.z
+  val z = if (args.length == 3) args(2).toInt else msg.plr.z
 
   msg.plr.teleport(new Position(x, y, z))
 }
 
 /* A command that opens the player's bank. */
-on[CommandEvent]("bank", RIGHTS_DEV) { _.plr.bank.open }
+onargs[CommandEvent]("bank", RIGHTS_DEV) { msg => msg.plr.bank.open }
 
 /*
  A command that sets the skill level for a player. "all" will set all skills to the
  specified level.
 */
-on[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
   val plr = msg.plr
   val name = msg.args(0).capitalize
   val level = msg.args(1).toInt
@@ -93,42 +91,42 @@ on[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
 }
 
 /* A command that spawns a non-player character. */
-on[CommandEvent]("npc", RIGHTS_DEV) { msg =>
-  world.addNpc(msg.args(0).toInt, msg.plr.position)
+onargs[CommandEvent]("npc", RIGHTS_DEV) { msg =>
+  world.add(new Npc(ctx, msg.args(0).toInt, msg.plr.position))
 }
 
 /* A command that will play music. */
-on[CommandEvent]("music", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("music", RIGHTS_DEV) { msg =>
   msg.plr.sendMusic(msg.args(0).toInt)
 }
 
 /* A command that opens an interface. */
-on[CommandEvent]("interface", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("interface", RIGHTS_DEV) { msg =>
   msg.plr.sendInterface(msg.args(0).toInt)
 }
 
 /* A command that plays a sound. */
-on[CommandEvent]("sound", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("sound", RIGHTS_DEV) { msg =>
   msg.plr.sendSound(msg.args(0).toInt, 0, 0)
 }
 
 /* A command that plays a graphic. */
-on[CommandEvent]("graphic", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("graphic", RIGHTS_DEV) { msg =>
   msg.plr.graphic(new Graphic(msg.args(0).toInt))
 }
 
 /* A command that plays an animation. */
-on[CommandEvent]("animation", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("animation", RIGHTS_DEV) { msg =>
   msg.plr.animation(new Animation(msg.args(0).toInt))
 }
 
 /* A command that turns a player into a non-player character. */
-on[CommandEvent]("player_npc", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("player_npc", RIGHTS_DEV) { msg =>
   msg.plr.transform(msg.args(0).toInt)
 }
 
 /* A command that spawns an item. */
-on[CommandEvent]("item", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("item", RIGHTS_DEV) { msg =>
   val plr = msg.plr
   val id = msg.args(0).toInt
   val amount = msg.args(1).toInt
@@ -137,15 +135,16 @@ on[CommandEvent]("item", RIGHTS_DEV) { msg =>
 }
 
 /* A command that spawns item(s) by name. */
-on[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
   val plr = msg.plr
   val name = msg.args(0).toLowerCase.replaceAll("_", " ")
   val amount = msg.args(1).toInt
 
-  val filtered = ItemDefinition.DEFINITIONS.
-    lazyFilter(Objects.nonNull _).
+  var count = 0
+  val filtered = ItemDefinition.all.
     lazyFilterNot(_.isNoted).
     lazyFilter(_.getName.toLowerCase.contains(name))
+
 
   filtered.foreach(definition => {
     val add = new Item(definition.getId, amount)
@@ -157,14 +156,15 @@ on[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
     } else {
       plr.sendMessage(s"Not enough space in bank or inventory for ${ definition.getName }.")
     }
+    count += 1
   })
 
-  plr.sendMessage(s"Found ${ filtered.length } items during lookup, with search term [$name].")
+  plr.sendMessage(s"Found $count items during lookup, with search term [$name].")
 }
 
 // TODO: Turn this into one command using an interface, once option dialogues are done.
 /* A command that clears the inventory, bank, and equipment of a player. */
-on[CommandEvent]("empty", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("empty", RIGHTS_DEV) { msg =>
   val plr = msg.plr
 
   plr.inventory.clear
@@ -175,7 +175,7 @@ on[CommandEvent]("empty", RIGHTS_DEV) { msg =>
 }
 
 /* A command that clears the inventory of a player. */
-on[CommandEvent]("empty_inventory", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("empty_inventory", RIGHTS_DEV) { msg =>
   val plr = msg.plr
 
   plr.inventory.clear
@@ -183,7 +183,7 @@ on[CommandEvent]("empty_inventory", RIGHTS_DEV) { msg =>
 }
 
 /* A command that clears the bank of a player. */
-on[CommandEvent]("empty_bank", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("empty_bank", RIGHTS_DEV) { msg =>
   val plr = msg.plr
 
   plr.bank.clear
@@ -191,7 +191,7 @@ on[CommandEvent]("empty_bank", RIGHTS_DEV) { msg =>
 }
 
 /* A command that clears the equipment of a player. */
-on[CommandEvent]("empty_equipment", RIGHTS_DEV) { msg =>
+onargs[CommandEvent]("empty_equipment", RIGHTS_DEV) { msg =>
   val plr = msg.plr
 
   plr.equipment.clear

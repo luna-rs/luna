@@ -2,7 +2,7 @@ package io.luna.game.action;
 
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 import io.luna.game.task.Task;
 
 /**
@@ -19,7 +19,7 @@ import io.luna.game.task.Task;
  * @param <T> The mob that this Action is dedicated to.
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class Action<T extends MobileEntity> {
+public abstract class Action<T extends Mob> {
 
     /**
      * A {@link Task} implementation that processes an Action.
@@ -76,7 +76,7 @@ public abstract class Action<T extends MobileEntity> {
     /**
      * Creates a new {@link Action}.
      *
-     * @param mob The {@link MobileEntity} assigned to this action.
+     * @param mob The {@link Mob} assigned to this action.
      * @param instant If this action executes instantly.
      * @param delay The delay of this action.
      */

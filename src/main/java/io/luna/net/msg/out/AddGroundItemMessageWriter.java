@@ -15,20 +15,20 @@ import io.luna.net.msg.MessageWriter;
 public final class AddGroundItemMessageWriter extends MessageWriter {
 
     /**
-     * The item that will be displayed.
+     * The item.
      */
     private final Item item;
 
     /**
-     * The offset of the item from the player.
+     * The position offset.
      */
     private final int offset;
 
     /**
      * Creates a new {@link AddGroundItemMessageWriter}.
      *
-     * @param item The item that will be displayed.
-     * @param offset The offset of the item from the player.
+     * @param item The item.
+     * @param offset The position offset.
      */
     public AddGroundItemMessageWriter(Item item, int offset) {
         this.item = item;

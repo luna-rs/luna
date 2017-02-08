@@ -12,20 +12,20 @@ import io.luna.net.msg.MessageWriter;
 public final class WidgetVisibilityMessageWriter extends MessageWriter {
 
     /**
-     * The identifier of the widget to make hidden or unhidden.
+     * The widget identifier.
      */
     private final int id;
 
     /**
-     * If the widget should be hidden or unhidden.
+     * If the widget should be hidden.
      */
     private final boolean hide;
 
     /**
      * Creates a new {@link WidgetVisibilityMessageWriter}.
      *
-     * @param id The identifier of the widget to make hidden or unhidden.
-     * @param hide If the widget should be hidden or unhidden.
+     * @param id The widget identifier.
+     * @param hide If the widget should be hidden.
      */
     public WidgetVisibilityMessageWriter(int id, boolean hide) {
         this.id = id;

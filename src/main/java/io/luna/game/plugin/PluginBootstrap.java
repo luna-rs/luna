@@ -2,10 +2,15 @@ package io.luna.game.plugin;
 
 import com.google.common.collect.FluentIterable;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.gson.JsonObject;
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.game.model.Chance;
 import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,8 +43,25 @@ import static org.apache.logging.log4j.util.Unbox.box;
 public final class PluginBootstrap implements Callable<EventListenerPipelineSet> {
 
     /**
-     * A {@link ByteArrayOutputStream} implementation that intercepts output from the {@code Scala} interpreter and forwards
-     * the output to {@code System.err} when there is an evaluation error.
+     * A callback that will swap old event pipelines out for newly constructed ones.
+     */
+    private final class PluginBootstrapCallback implements FutureCallback<EventListenerPipelineSet> {
+
+        @Override
+        public void onSuccess(EventListenerPipelineSet result) {
+            PluginManager plugins = context.getPlugins();
+            plugins.getPipelines().swap(result);
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+            LOGGER.catching(t);
+        }
+    }
+
+    /**
+     * A stream that intercepts output from the {@code Scala} interpreter and forwards the output to {@code System
+     * .err} when there is an evaluation error.
      */
     private final class ScalaConsole extends ByteArrayOutputStream {
 
@@ -55,7 +77,8 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
             if (matcher.find()) {
                 String fileName = currentFile.get();
                 String message = output.substring(output.indexOf(':', 10) + 8);
-                LOGGER.fatal("Error while interpreting plugin file \"{}\" {}{}", fileName, System.lineSeparator(), message);
+                LOGGER
+                    .fatal("Error while interpreting plugin \"{}\" {}{}", fileName, System.lineSeparator(), message);
             }
         }
     }
@@ -66,39 +89,39 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The directory that contains all files related to plugins.
+     * The directory containing plugin files.
      */
     private static final String DIR = "./plugins/";
 
     /**
-     * The {@link EventListenerPipelineSet} that listeners from plugins will be added to.
+     * The pipeline set.
      */
     private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
     /**
-     * A {@link Map} of the file names in {@code DIR} to their contents.
+     * A map of file names to their contents.
      */
     private final Map<String, String> files = new HashMap<>();
 
     /**
-     * The current file that is being evaluated.
+     * The current file being evaluated.
      */
     private final AtomicReference<String> currentFile = new AtomicReference<>();
 
     /**
-     * The {@link LunaContext} that will be used to inject state into plugins.
+     * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * The {@link ScriptEngine} that will evaluate the {@code Scala} scripts.
+     * The script engine evaluating {@code Scala} code.
      */
     private final ScriptEngine engine;
 
     /**
      * Creates a new {@link PluginBootstrap}.
      *
-     * @param context The {@link LunaContext} that will be used to inject state into plugins.
+     * @param context The context instance.
      */
     public PluginBootstrap(LunaContext context) {
         this.context = context;
@@ -113,9 +136,24 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     }
 
     /**
+     * Initializes this bootstrap using the argued listening executor.
+     */
+    public void load(ListeningExecutorService service) {
+        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback());
+    }
+
+    /**
+     * Initializes this bootstrap using the default listening executor.
+     */
+    public void load() {
+        GameService service = context.getService();
+        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback());
+    }
+
+    /**
      * Initializes this bootstrapper, loading all of the plugins.
      */
-    public void init() throws Exception {
+    private void init() throws Exception {
         PrintStream oldConsole = Console.out();
         ScalaConsole newConsole = new ScalaConsole();
 
@@ -142,10 +180,11 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     }
 
     /**
-     * Parses all of the files in {@code DIR} and caches their contents into {@code files}.
+     * Parses files in the plugin directory and caches their contents.
      */
     private void initFiles() throws Exception {
-        FluentIterable<File> dirFiles = Files.fileTreeTraverser().preOrderTraversal(new File(DIR)).filter(File::isFile);
+        FluentIterable<File> dirFiles = Files.fileTreeTraverser().preOrderTraversal(new File(DIR))
+            .filter(File::isFile);
 
         for (File file : dirFiles) {
             files.put(file.getName(), Files.toString(file, StandardCharsets.UTF_8));
@@ -153,12 +192,20 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     }
 
     /**
-     * Injects state into the {@code engine} and evaluates dependencies from {@code DIR}.
+     * Injects state into the script engine and evaluates dependencies.
      */
     private void initDependencies() throws Exception {
         engine.put("ctx: io.luna.LunaContext", context);
         engine.put("logger: org.apache.logging.log4j.Logger", LOGGER);
         engine.put("pipelines: io.luna.game.event.EventListenerPipelineSet", pipelines);
+
+        engine.put("CHANCE_ALWAYS: io.luna.util.Rational", Chance.ALWAYS);
+        engine.put("CHANCE_VERY_COMMON: io.luna.util.Rational", Chance.VERY_COMMON);
+        engine.put("CHANCE_COMMON: io.luna.util.Rational", Chance.COMMON);
+        engine.put("CHANCE_UNCOMMON: io.luna.util.Rational", Chance.UNCOMMON);
+        engine.put("CHANCE_VERY_UNCOMMON: io.luna.util.Rational", Chance.VERY_UNCOMMON);
+        engine.put("CHANCE_RARE: io.luna.util.Rational", Chance.RARE);
+        engine.put("CHANCE_VERY_RARE: io.luna.util.Rational", Chance.VERY_RARE);
 
         Toml toml = new Toml().read(files.remove("dependencies.toml"));
         JsonObject reader = toml.getTable("dependencies").to(JsonObject.class);
@@ -174,7 +221,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     }
 
     /**
-     * Evaluates all of the dependant plugins from within {@code DIR}.
+     * Evaluates the rest of the normal plugins.
      */
     private void initPlugins() throws Exception {
         for (Entry<String, String> fileEntry : files.entrySet()) {

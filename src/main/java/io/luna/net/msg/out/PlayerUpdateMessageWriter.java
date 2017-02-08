@@ -4,7 +4,6 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateBlock;
 import io.luna.game.model.mobile.update.UpdateBlockSet;
 import io.luna.game.model.mobile.update.UpdateState;
 import io.luna.game.model.region.RegionManager;
@@ -15,21 +14,20 @@ import io.luna.net.msg.MessageWriter;
 import java.util.Iterator;
 
 /**
- * A {@link MessageWriter} implementation that sends an update message containing the underlying {@link Player} and other
- * {@code Player}s surrounding them.
+ * A {@link MessageWriter} implementation that sends a player update message.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PlayerUpdateMessageWriter extends MessageWriter {
 
     /**
-     * The {@link UpdateBlockSet} that will manage all of the {@link UpdateBlock}s.
+     * The player update block set.
      */
     private final UpdateBlockSet<Player> blockSet = UpdateBlockSet.PLAYER_BLOCK_SET;
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(81, MessageType.VARIABLE_SHORT);
+        ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
         ByteMessage blockMsg = ByteMessage.message();
 
         try {
@@ -39,9 +37,9 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
             blockSet.encodeUpdateBlocks(player, blockMsg, UpdateState.UPDATE_SELF);
 
             msg.putBits(8, player.getLocalPlayers().size());
-            Iterator<Player> $it = player.getLocalPlayers().iterator();
-            while ($it.hasNext()) {
-                Player other = $it.next();
+            Iterator<Player> iterator = player.getLocalPlayers().iterator();
+            while (iterator.hasNext()) {
+                Player other = iterator.next();
 
                 if (other.isViewable(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
                     handleMovement(other, msg);
@@ -49,7 +47,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
                 } else {
                     msg.putBit(true);
                     msg.putBits(2, 3);
-                    $it.remove();
+                    iterator.remove();
                 }
             }
 
@@ -88,10 +86,6 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
 
     /**
      * Adds {@code addPlayer} in the view of {@code player}.
-     *
-     * @param msg The main update message.
-     * @param player The {@link Player} this update message is being sent for.
-     * @param addPlayer The {@code Player} being added.
      */
     private void addPlayer(ByteMessage msg, Player player, Player addPlayer) {
         msg.putBits(11, addPlayer.getIndex());
@@ -106,9 +100,6 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
 
     /**
      * Handles running, walking, and teleportation movement for {@code player}.
-     *
-     * @param player The {@link Player} to handle running and walking for.
-     * @param msg The main update message.
      */
     private void handleMovement(Player player, ByteMessage msg) {
         boolean needsUpdate = !player.getUpdateFlags().isEmpty();

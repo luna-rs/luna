@@ -6,42 +6,42 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that handles both {@code byte} and {@code short} state messages.
+ * A {@link MessageWriter} implementation that handles configuration.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class StateMessageWriter extends MessageWriter {
+public final class ConfigMessageWriter extends MessageWriter {
 
     /**
-     * The identifier for the state.
+     * The identifier.
      */
     private final int id;
 
     /**
-     * The value of the state.
+     * The value.
      */
     private final int state;
 
     /**
-     * Creates a new {@link StateMessageWriter}.
+     * Creates a new {@link ConfigMessageWriter}.
      *
-     * @param id The identifier for the state.
-     * @param state The value of the state.
+     * @param id The identifier.
+     * @param state The value.
      */
-    public StateMessageWriter(int id, int state) {
+    public ConfigMessageWriter(int id, int state) {
         this.id = id;
         this.state = state;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        return state <= Byte.MAX_VALUE ? writeByteState() : writeShortState();
+        return state <= Byte.MAX_VALUE ? writeByteConfig() : writeShortConfig();
     }
 
     /**
      * Returns a {@link ByteMessage} containing the {@code short} version of this message.
      */
-    private ByteMessage writeByteState() {
+    private ByteMessage writeByteConfig() {
         ByteMessage msg = ByteMessage.message(36);
         msg.putShort(id, ByteOrder.LITTLE);
         msg.put(state);
@@ -51,7 +51,7 @@ public final class StateMessageWriter extends MessageWriter {
     /**
      * Returns a {@link ByteMessage} containing the {@code byte} version of this message.
      */
-    private ByteMessage writeShortState() {
+    private ByteMessage writeShortConfig() {
         ByteMessage msg = ByteMessage.message(87);
         msg.putShort(id, ByteOrder.LITTLE);
         msg.putInt(state, ByteOrder.MIDDLE);

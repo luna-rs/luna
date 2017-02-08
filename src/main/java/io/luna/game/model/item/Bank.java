@@ -1,9 +1,9 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.inter.StaticInventoryInterface;
 import io.luna.game.model.mobile.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
+import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -97,9 +97,7 @@ public final class Bank extends ItemContainer {
     public void open() {
         shift();
 
-        StaticInventoryInterface inter = new StaticInventoryInterface(INTERFACE_ID, INVENTORY_OVERLAY_ID);
-        player.getInterfaces().open(inter);
-
+        player.queue(new InventoryOverlayMessageWriter(INTERFACE_ID, INVENTORY_OVERLAY_ID));
         player.setWithdrawAsNote(false);
 
         refresh();

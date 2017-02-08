@@ -1,21 +1,33 @@
 package io.luna.net.msg;
 
+import io.luna.game.event.Event;
+import io.luna.game.model.mobile.Player;
 import io.luna.util.ThreadUtils;
 
 /**
- * A repository that contains data related to incoming {@link GameMessage}s.
+ * A model containing data describing incoming game packets.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class MessageRepository {
 
     /**
-     * An array of integers that contain the incoming message sizes.
+     * A generic packet listener.
+     */
+    private static final MessageReader GENERIC_LISTENER = new MessageReader() {
+        @Override
+        public Event read(Player player, GameMessage msg) throws Exception {
+            return null;
+        }
+    };
+
+    /**
+     * The incoming packet sizes.
      */
     private final int[] sizes = new int[257];
 
     /**
-     * An array of {@link MessageReader}s that act as listeners for incoming messages.
+     * The incoming packet listeners.
      */
     private final MessageReader[] messageReaders = new MessageReader[257];
 
@@ -27,37 +39,30 @@ public final class MessageRepository {
     }
 
     /**
-     * Adds a new {@link MessageReader} handler along with its size.
-     *
-     * @param opcode The opcode of the message handler.
-     * @param size The size of the message.
-     * @param messageReaderName The class name of the {@link MessageReader}, implicitly prefixed with the {@code
-     * io.luna.net.msg.in} package.
-     * @throws ReflectiveOperationException If any errors occur while instantiating the {@link MessageReader}.
+     * Adds new data describing an incoming packet.
      */
     public void addHandler(int opcode, int size, String messageReaderName) throws ReflectiveOperationException {
         ThreadUtils.ensureInitThread();
 
-        Class<?> messageReaderClass = Class.forName("io.luna.net.msg.in." + messageReaderName);
         sizes[opcode] = size;
-        messageReaders[opcode] = (MessageReader) messageReaderClass.newInstance();
+
+        if (messageReaderName != null) {
+            Class<?> messageReaderClass = Class.forName("io.luna.net.msg.in." + messageReaderName);
+            messageReaders[opcode] = (MessageReader) messageReaderClass.newInstance();
+        } else {
+            messageReaders[opcode] = GENERIC_LISTENER;
+        }
     }
 
     /**
-     * Retrieves the size of a message by {@code opcode}.
-     *
-     * @param opcode The opcode to retrieve the size of.
-     * @return The size of {@code opcode}.
+     * Retrieves an incoming packet's size.
      */
     public int getSize(int opcode) {
         return sizes[opcode];
     }
 
     /**
-     * Retrieves the incoming message handler for {@code opcode}.
-     *
-     * @param opcode The opcode to retrieve the message handler for.
-     * @return The message handler for {@code opcode}, never {@code null}.
+     * Retrieves an incoming packet's listener.
      */
     public MessageReader getHandler(int opcode) {
         return messageReaders[opcode];

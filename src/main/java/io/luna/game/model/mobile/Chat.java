@@ -1,33 +1,33 @@
 package io.luna.game.model.mobile;
 
 /**
- * A container for the data that represents a single line of {@code Chat} text.
+ * A model representing a line of player chat.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Chat {
 
     /**
-     * The message that will be displayed to other {@code Player}s.
+     * The message.
      */
     private final byte[] message;
 
     /**
-     * The color of the message.
+     * The message color.
      */
     private final int color;
 
     /**
-     * The various effects that the message take on.
+     * The message effects.
      */
     private final int effects;
 
     /**
      * Creates a new {@link Chat}.
      *
-     * @param message The message that will be displayed to other {@code Player}s.
-     * @param color The color of the message.
-     * @param effects The various effects that the message take on.
+     * @param message The message.
+     * @param color The message color.
+     * @param effects The message effects.
      */
     public Chat(byte[] message, int color, int effects) {
         this.message = message;
@@ -36,21 +36,21 @@ public final class Chat {
     }
 
     /**
-     * @return The message that will be displayed to other {@code Player}s.
+     * @return The message.
      */
     public byte[] getMessage() {
         return message;
     }
 
     /**
-     * @return The color of the message.
+     * @return The message color.
      */
     public int getColor() {
         return color;
     }
 
     /**
-     * @return The various effects that the message take on.
+     * @return The message effects.
      */
     public int getEffects() {
         return effects;

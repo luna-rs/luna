@@ -17,37 +17,34 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A collection of {@link Skill}s for a {@link MobileEntity}.
+ * A model representing a group of skills.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class SkillSet implements Iterable<Skill> {
 
     /**
-     * An {@link ImmutableList} containing the experience needed for each level.
+     * An immutable list containing the experience needed for each level.
      */
     public static final ImmutableList<Integer> EXPERIENCE_TABLE;
 
     /**
-     * A {@link Range} containing all valid skill identifier values.
+     * A range containing valid skill identifiers.
      */
     public static final Range<Integer> SKILL_IDENTIFIERS = Range.closedOpen(0, 21);
 
     /**
-     * The maximum amount of experience that can be obtained in a single skill.
+     * The maximum amount of attainable experience in a single skill.
      */
     public static final int MAXIMUM_EXPERIENCE = 200_000_000;
 
     /**
-     * The amount that all experience will be multiplied by.
+     * The experience multiplier.
      */
-    public static final double EXPERIENCE_MULTIPLIER = 1;
+    public static final double EXPERIENCE_MULTIPLIER = 1.0;
 
     /**
-     * Retrieves the experience amount for {@code level}. Runs in O(1) time.
-     *
-     * @param level The level to retrieve the experience for.
-     * @return The experience for the level.
+     * Retrieves the amount of experience needing to be attained for a level. Runs in O(1) time.
      */
     public static int experienceForLevel(int level) {
         checkArgument(level >= 1 && level <= 99, "level < 1 || level > 99");
@@ -55,18 +52,15 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns the size of all {@code SkillSet}s.
+     * Returns the total amount of valid skills.
      */
     public static int size() {
         return SKILL_IDENTIFIERS.upperEndpoint();
     }
 
     /**
-     * Retrieves the level for {@code experience}. Runs in O(n) time, but should still return blazingly fast assuming the
-     * {@code experience} value is high.
-     *
-     * @param experience The experience to retrieve the level for.
-     * @return The level for the experience.
+     * Retrieves a level for the attained experience. Runs in O(n) time, but should still run very fast
+     * assuming the experience value is high.
      */
     public static int levelForExperience(int experience) {
         checkArgument(experience >= 0 && experience <= MAXIMUM_EXPERIENCE,
@@ -85,10 +79,7 @@ public final class SkillSet implements Iterable<Skill> {
         throw new IllegalStateException("unable to compute level for experience amount, " + experience);
     }
 
-    /**
-     * Computes the values for the experience table.
-     */
-    static {
+    static { /* Initialize experience table cache. */
         int[] experienceTable = new int[100];
         int points = 0, output = 0;
         for (int lvl = 1; lvl <= 99; lvl++) {
@@ -100,18 +91,18 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * The {@link MobileEntity} instance.
+     * The mob.
      */
-    private final MobileEntity mob;
+    private final Mob mob;
 
     /**
-     * The array of {@link Skill}s contained within this {@code SkillSet}.
+     * The array of skills.
      */
-    private final Skill[] skills = IntStream.range(SKILL_IDENTIFIERS.lowerEndpoint(), SKILL_IDENTIFIERS.upperEndpoint())
-        .mapToObj(it -> new Skill(it, this)).toArray(Skill[]::new);
+    private final Skill[] skills = IntStream.range(0, size()).mapToObj(it -> new Skill(it, this))
+        .toArray(Skill[]::new);
 
     /**
-     * The cached combat level of the {@code mob} in this skill set.
+     * The cached combat level.
      */
     private int combatLevel = -1;
 
@@ -123,9 +114,9 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * Creates a new {@link SkillSet}.
      *
-     * @param mob The {@link MobileEntity} instance.
+     * @param mob The mob.
      */
-    public SkillSet(MobileEntity mob) {
+    public SkillSet(Mob mob) {
         this.mob = mob;
     }
 
@@ -137,8 +128,8 @@ public final class SkillSet implements Iterable<Skill> {
 
     @Override
     public Spliterator<Skill> spliterator() {
-        return Spliterators
-            .spliterator(skills, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.DISTINCT);
+        return Spliterators.spliterator(skills,
+            Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.DISTINCT);
     }
 
     /**
@@ -149,28 +140,23 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Retrieve the {@link Skill} instance that corresponds to {@code id}.
-     *
-     * @param id The identifier for the {@code Skill} that will be retrieved.
-     * @return The retrieved {@code Skill}.
+     * Retrieve the skill with the argued identifier.
      */
     public Skill getSkill(int id) {
         return skills[id];
     }
 
     /**
-     * <strong>Please note that this function does not give direct access to the backing array but instead creates a shallow
-     * copy.</strong>
-     *
-     * @return The shallow copy of the backing skill array.
+     * Returns a copy of the backing array. <strong>Please note that this function does not give direct access to
+     * the backing array but instead creates a shallow copy.</strong>
      */
     public Skill[] toArray() {
         return Arrays.copyOf(skills, skills.length);
     }
 
     /**
-     * Sets the backing array of skills to {@code newSkills}. The backing array will not hold any references to the argued
-     * array. The argued array must have a capacity equal to that of the backing array.
+     * Sets the backing array of skills. The backing array will not hold any references to the argued array. The
+     * argued array must have a capacity equal to that of the backing array.
      */
     public void setSkills(Skill[] newSkills) {
         checkState(newSkills.length == skills.length, "incompatible skill array");
@@ -191,17 +177,17 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * @return The {@link MobileEntity} instance.
+     * @return The mob.
      */
-    public MobileEntity getMob() {
+    public Mob getMob() {
         return mob;
     }
 
     /**
-     * @return The cached combat level of the {@code mob} in this skill set.
+     * @return The cached combat level.
      */
     public int getCombatLevel() {
-        if (combatLevel == -1) {
+        if (combatLevel == -1) { /* Initialize and cache the value if needed. */
             int magLvl = skills[Skill.MAGIC].getStaticLevel();
             int ranLvl = skills[Skill.RANGED].getStaticLevel();
             int attLvl = skills[Skill.ATTACK].getStaticLevel();
@@ -213,7 +199,7 @@ public final class SkillSet implements Iterable<Skill> {
             double mag = magLvl * 1.5;
             double ran = ranLvl * 1.5;
             double attstr = attLvl + strLvl;
-            double combatLvl = 0;
+            double combatLvl = 0.0;
 
             if (ran > attstr && ran > mag) {
                 combatLvl = ((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((ranLvl) * 0.4875);
@@ -228,21 +214,21 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * @return The {@link Stream} that will traverse over this iterable.
+     * Constructs a stream that will traverse over this iterable.
      */
     public Stream<Skill> stream() {
         return StreamSupport.stream(spliterator(), false);
     }
 
     /**
-     * @return {@code true} if this skill set is firing events, {@code false} otherwise.
+     * @return {@code true} if this skill set is firing events.
      */
     public boolean isFiringEvents() {
         return firingEvents;
     }
 
     /**
-     * Sets if this skill set is firing events or not.
+     * Sets if this skill set is firing events.
      */
     public void setFiringEvents(boolean firingEvents) {
         this.firingEvents = firingEvents;

@@ -18,7 +18,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a player clicks an object.
+ * A {@link MessageReader} implementation that intercepts data sent object clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -45,13 +45,13 @@ public final class ObjectClickMessageReader extends MessageReader {
      * Handle an object click for any index.
      */
     private void handleClick(Player player, ObjectClickEvent evt) {
-        checkState(evt.getX() >= 0, "x coordinate out of range");
-        checkState(evt.getY() >= 0, "y coordinate out of range");
-        checkState(evt.getId() > 0, "id out of range");
+        checkState(evt.x() >= 0, "x coordinate out of range");
+        checkState(evt.y() >= 0, "y coordinate out of range");
+        checkState(evt.id() > 0, "id out of range");
 
         // TODO: Size calculations
         // TODO: Make sure object really exists
-        Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
+        Position position = new Position(evt.x(), evt.y(), player.getPosition().getZ());
         player.submitAction(new DistancedAction<Player>(player, position, 1, true) {
             @Override
             protected void execute() {
@@ -59,7 +59,7 @@ public final class ObjectClickMessageReader extends MessageReader {
                 player.getWalkingQueue().clear();
 
                 PluginManager plugins = player.getPlugins();
-                plugins.post(evt, player);
+                plugins.post(evt);
             }
         });
     }
@@ -71,7 +71,7 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, new ObjectFirstClickEvent(id, x, y));
+        handleClick(player, new ObjectFirstClickEvent(player, id, x, y));
     }
 
     /**
@@ -81,7 +81,7 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, new ObjectSecondClickEvent(id, x, y));
+        handleClick(player, new ObjectSecondClickEvent(player, id, x, y));
     }
 
     /**
@@ -91,6 +91,6 @@ public final class ObjectClickMessageReader extends MessageReader {
         int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ByteTransform.A);
-        handleClick(player, new ObjectThirdClickEvent(id, x, y));
+        handleClick(player, new ObjectThirdClickEvent(player, id, x, y));
     }
 }

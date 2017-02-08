@@ -3,8 +3,7 @@ package io.luna.game.model.mobile;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.WorldSynchronizer;
-import io.luna.net.msg.out.StateMessageWriter;
+import io.luna.net.msg.out.ConfigMessageWriter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -14,7 +13,7 @@ import java.util.Queue;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An implementation of the walking queue, assigned to all {@link MobileEntity}s.
+ * A model representing an implementation of the walking queue.
  *
  * @author lare96 <http://github.org/lare96>
  * @author Graham
@@ -22,25 +21,25 @@ import static com.google.common.base.Preconditions.checkState;
 public final class WalkingQueue {
 
     /**
-     * A POJO representing a single step in a {@code WalkingQueue}.
+     * A model representing a step in the walking queue.
      */
     public static final class Step {
 
         /**
-         * The {@code x} coordinate.
+         * The x coordinate.
          */
         private final int x;
 
         /**
-         * The {@code y} coordinate.
+         * The y coordinate.
          */
         private final int y;
 
         /**
          * Creates a new {@link Step}.
          *
-         * @param x The {@code x} coordinate.
-         * @param y The {@code x} coordinate.
+         * @param x The x coordinate.
+         * @param y The y coordinate.
          */
         public Step(int x, int y) {
             checkState(x >= 0, "x < 0");
@@ -51,9 +50,9 @@ public final class WalkingQueue {
         }
 
         /**
-         * Creates a new {@link Step} from {@code position}.
+         * Creates a new {@link Step}.
          *
-         * @param position The {@link Position} to create the new {@code Step} from.
+         * @param position The position.
          */
         public Step(Position position) {
             this(position.getX(), position.getY());
@@ -77,14 +76,14 @@ public final class WalkingQueue {
         }
 
         /**
-         * @return The {@code x} coordinate.
+         * @return The x coordinate.
          */
         public int getX() {
             return x;
         }
 
         /**
-         * @return The {@code y} coordinate.
+         * @return The y coordinate.
          */
         public int getY() {
             return y;
@@ -92,34 +91,37 @@ public final class WalkingQueue {
     }
 
     /**
-     * The base value of run energy it takes to move across a single tile. Increasing this number will make run energy
-     * deplete faster, decreasing it will make it deplete slower.
+     * The base amount of energy it takes to move across one tile.
      */
     private static final double DRAIN_PER_TILE = 0.117;
 
     /**
-     * The base value of run energy restored per tick. Increasing this number will make run energy restore faster, decreasing
-     * it will make it restore slower.
+     * The base value of run energy restored per tick.
      */
     private static final double RESTORE_PER_TICK = 0.096;
 
     /**
-     * A {@link Deque} of the current {@link Step}s.
+     * A deque of current steps.
      */
-    private final Deque<Step> steps = new ArrayDeque<>();
+    private final Deque<Step> current = new ArrayDeque<>();
 
     /**
-     * A {@link Deque} of the previous {@link Step}s.
+     * A deque of previous steps.
      */
-    private final Deque<Step> previousSteps = new ArrayDeque<>();
+    private final Deque<Step> previous = new ArrayDeque<>();
 
     /**
-     * The {@link MobileEntity} assigned to this walking queue.
+     * The mob.
      */
-    private final MobileEntity mob;
+    private final Mob mob;
 
     /**
-     * If the {@link MobileEntity} assigned to this walking queue is running.
+     * If movement is locked.
+     */
+    private boolean locked;
+
+    /**
+     * If the mob is running.
      */
     private boolean running;
 
@@ -131,15 +133,15 @@ public final class WalkingQueue {
     /**
      * Create a new {@link WalkingQueue}.
      *
-     * @param mob The {@link MobileEntity} assigned to this walking queue.
+     * @param mob The mob.
      */
-    public WalkingQueue(MobileEntity mob) {
+    public WalkingQueue(Mob mob) {
         this.mob = mob;
     }
 
     /**
-     * Called every tick by the {@link WorldSynchronizer}, this method determines your next walking and running directions as
-     * well as your new position after taking one step (or two steps, if running).
+     * A function that determines your next walking and running directions, as well as your new position after
+     * taking steps.
      */
     public void process() {
         Step current = new Step(mob.getPosition());
@@ -153,18 +155,18 @@ public final class WalkingQueue {
             runningPath = true;
         }
 
-        Step next = steps.poll();
+        Step next = this.current.poll();
         if (next != null) {
-            previousSteps.add(next);
+            previous.add(next);
             walkingDirection = Direction.between(current, next);
             current = next;
 
             if (runningPath) {
-                next = decrementRunEnergy() ? steps.poll() : null;
+                next = decrementRunEnergy() ? this.current.poll() : null;
 
                 if (next != null) {
                     restoreEnergy = false;
-                    previousSteps.add(next);
+                    previous.add(next);
                     runningDirection = Direction.between(current, next);
                     current = next;
                 } else {
@@ -185,37 +187,33 @@ public final class WalkingQueue {
     }
 
     /**
-     * Adds a first {@link Step} to this walking queue.
-     *
-     * @param step The {@code Step} to add.
+     * Adds an initial step to this walking queue.
      */
     public void addFirst(Step step) {
-        steps.clear();
+        current.clear();
         runningPath = false;
 
         Queue<Step> backtrack = new ArrayDeque<>();
-        while (!previousSteps.isEmpty()) {
-            Step prev = previousSteps.pollLast();
+        while (!previous.isEmpty()) {
+            Step prev = previous.pollLast();
             backtrack.add(prev);
 
             if (prev.equals(step)) {
                 backtrack.forEach(this::add);
-                previousSteps.clear();
+                previous.clear();
                 return;
             }
         }
-        previousSteps.clear();
+        previous.clear();
 
         add(step);
     }
 
     /**
-     * Adds a {@link Step} that isn't the first step, to this walking queue.
-     *
-     * @param next The next {@code Step} to add.
+     * Adds a non-initial step to this walking queue.
      */
     public void add(Step next) {
-        Step last = steps.peekLast();
+        Step last = current.peekLast();
         if (last == null) {
             last = new Step(mob.getPosition());
         }
@@ -239,22 +237,21 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
-            steps.add(new Step(nextX - deltaX, nextY - deltaY));
+            current.add(new Step(nextX - deltaX, nextY - deltaY));
         }
     }
 
     /**
-     * Clears the backing {@link Deque}s in this walking queue, effectively stopping the movement of the assigned {@link
-     * MobileEntity}.
+     * Clears the current and previous steps.
      */
     public void clear() {
-        steps.clear();
-        previousSteps.clear();
+        current.clear();
+        previous.clear();
     }
 
     /**
-     * Implements an algorithm that will deplete run energy. Will return {@code false} if no run energy is available to
-     * deplete, and {@code true} otherwise.
+     * A function that implements an algorithm to deplete run energy. Returns {@code false} if the player can no
+     * longer run.
      */
     private boolean decrementRunEnergy() {
         Player player = (Player) mob;
@@ -263,7 +260,7 @@ public final class WalkingQueue {
         if (runEnergy <= 0) {
             running = false;
             runningPath = false;
-            player.queue(new StateMessageWriter(173, 0));
+            player.queue(new ConfigMessageWriter(173, 0));
             return false;
         }
 
@@ -278,8 +275,7 @@ public final class WalkingQueue {
     }
 
     /**
-     * Implements an algorithm that will restore run energy. Will return {@code false} if no run energy is available to
-     * deplete, and {@code true} otherwise.
+     * A function that implements an algorithm to restore run energy.
      */
     private void incrementRunEnergy() {
         Player player = (Player) mob;
@@ -299,36 +295,36 @@ public final class WalkingQueue {
     }
 
     /**
-     * @return The amount of {@link Step}s remaining in this walking queue.
+     * Returns the amount of remaining steps.
      */
     public int remaining() {
-        return steps.size();
+        return current.size();
     }
 
     /**
-     * @return {@code true} if this walking queue is empty, {@code false} otherwise.
+     * Returns whether or not there are remaining steps.
      */
     public boolean empty() {
         return remaining() == 0;
     }
 
     /**
-     * @return {@code true} if this WalkingQueue has running enabled.
+     * @return {@code true} if the mob is running.
      */
     public boolean isRunning() {
         return running;
     }
 
     /**
-     * Sets the running flag status of this WalkingQueue.
+     * Sets if the mob is running.
      */
     public void setRunning(boolean running) {
-        checkState(mob.type() == EntityType.PLAYER, "cannot change running value for NPCs");
+        checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
         this.running = running;
     }
 
     /**
-     * @return {@code true} if the current path is a running path, {@code false} otherwise.
+     * @return {@code true} if the current path is a running path.
      */
     public boolean isRunningPath() {
         return runningPath;
@@ -338,8 +334,21 @@ public final class WalkingQueue {
      * Sets if the current path is a running path.
      */
     public void setRunningPath(boolean runningPath) {
-        checkState(mob.type() == EntityType.PLAYER, "cannot change running value for NPCs");
+        checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
         this.runningPath = runningPath;
     }
 
+    /**
+     * @return {@code true} if movement is locked.
+     */
+    public boolean isLocked() {
+        return locked;
+    }
+
+    /**
+     * Sets if movement is locked.
+     */
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
 }

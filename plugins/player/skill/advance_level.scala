@@ -10,16 +10,17 @@
 */
 
 import io.luna.game.event.impl.SkillChangeEvent
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag
+import io.luna.game.model.mobile.update.UpdateFlagSet
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mobile.{Graphic, Player, Skill}
 import io.luna.util.StringUtils
 
 
 /* Graphic played when a player advances a level. */
-val LEVEL_UP_GRAPHIC = new Graphic(199)
+private val GRAPHIC = new Graphic(199)
 
 /* A table that contains data for displaying the level up chat box interface. */
-val LEVEL_UP_TABLE = Vector(
+private val LEVEL_UP_TABLE = Vector(
   (6248, 6249, 6247),
   (6254, 6255, 6253),
   (6207, 6208, 6206),
@@ -45,24 +46,24 @@ val LEVEL_UP_TABLE = Vector(
 
 
 /* Determine if a player has advanced a level, and if they have, notify them. */
-def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
+private def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
   val set = plr.getSkills
   val skill = plr.skill(id)
   val newLevel = skill.getStaticLevel
 
   if (oldLevel < newLevel) {
-    skill.setLevel(if (id != Skill.HITPOINTS) newLevel else skill.getLevel + 1)
+    skill.setLevel(if (id != SKILL_HITPOINTS) newLevel else skill.getLevel + 1)
 
     val (firstLineId, secondLineId, interfaceId) = LEVEL_UP_TABLE(id)
     val name = Skill.getName(id)
-    val message = s"Congratulations, you just advanced ${StringUtils.computeIndefiniteArticle(name)} $name level!"
+    val message = s"Congratulations, you just advanced ${ StringUtils.computeArticle(name) } $name level!"
 
     plr.sendMessage(message)
     plr.sendWidgetText(message, firstLineId)
     plr.sendWidgetText(s"Your $name level is now $newLevel.", secondLineId)
     plr.sendChatboxInterface(interfaceId)
 
-    plr.graphic(LEVEL_UP_GRAPHIC)
+    plr.graphic(GRAPHIC)
 
     if (Skill.isCombatSkill(id)) {
       set.resetCombatLevel()
@@ -73,10 +74,10 @@ def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
 
 
 /* When a player's skills change, send the update to the client and check if they've advanced a level. */
-intercept_@[SkillChangeEvent](TYPE_PLAYER) { (msg, plr) =>
-  plr.sendSkillUpdate(msg.getId)
+onargs[SkillChangeEvent](TYPE_PLAYER) { msg =>
+  msg.plr.sendSkillUpdate(msg.id)
 
-  if (msg.getOldStaticLevel < 99) {
-    advanceLevel(plr, msg.getId, msg.getOldStaticLevel)
+  if (msg.oldStaticLevel < 99) {
+    advanceLevel(msg.plr, msg.id, msg.oldStaticLevel)
   }
 }

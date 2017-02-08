@@ -1,18 +1,16 @@
 package io.luna.game.model.mobile.update;
 
-import io.luna.game.model.mobile.MobileEntity;
-
 import java.util.EnumSet;
 
 /**
- * A container backed by an {@link EnumSet} that manages all of the {@link UpdateFlag}s for {@link MobileEntity}s.
+ * A model that manages update flags for mobs.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class UpdateFlagHolder {
+public final class UpdateFlagSet {
 
     /**
-     * An enumerated type that holds all of the values representing update flags for {@link MobileEntity}s.
+     * An enum representing update flags.
      */
     public enum UpdateFlag {
         APPEARANCE,
@@ -29,44 +27,40 @@ public final class UpdateFlagHolder {
     }
 
     /**
-     * An {@link EnumSet} that will contain all active {@link UpdateFlag}s.
+     * A set that tracks flagged update blocks.
      */
     private final EnumSet<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
 
     /**
-     * Adds {@code flag} to the backing {@link EnumSet}.
-     *
-     * @param flag The {@link UpdateFlag} to add.
+     * Flag an update block.
      */
     public void flag(UpdateFlag flag) {
         flags.add(flag);
     }
 
     /**
-     * Removes {@code flag} from the backing {@link EnumSet}.
-     *
-     * @param flag The {@link UpdateFlag} to remove.
+     * Unflag an update block.
      */
     public void unflag(UpdateFlag flag) {
         flags.remove(flag);
     }
 
-    /*
-     * @return {@code true} if the backing {@link EnumSet} contains {@code flag}, false otherwise.
+    /**
+     * Retrieves the flag status of an update block.
      */
     public boolean get(UpdateFlag flag) {
         return flags.contains(flag);
     }
 
     /**
-     * @return {@code true} if the backing {@link EnumSet} is empty.
+     * Returns if the backing set is empty or not.
      */
     public boolean isEmpty() {
         return flags.isEmpty();
     }
 
     /**
-     * Clears the backing {@link EnumSet} of all elements.
+     * Clears the backing set.
      */
     public void clear() {
         flags.clear();

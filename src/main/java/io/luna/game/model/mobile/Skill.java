@@ -3,7 +3,6 @@ package io.luna.game.model.mobile;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.luna.game.event.impl.SkillChangeEvent;
-import io.luna.game.model.EntityType;
 import io.luna.game.plugin.PluginManager;
 
 import java.util.HashMap;
@@ -12,7 +11,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A representation of a single skill within a {@link SkillSet}.
+ * A model representing a skill within a skill set.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -22,9 +21,9 @@ public final class Skill {
      * The ordered names of all available skills (id -> name).
      */
     public static final ImmutableList<String> ID_TO_NAME = ImmutableList
-        .of("Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting", "Fletching",
-            "Fishing", "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer",
-            "Farming", "Runecrafting");
+        .of("Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting",
+            "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility",
+            "Thieving", "Slayer", "Farming", "Runecrafting");
 
     /**
      * The ordered names of all available skills (name -> id).
@@ -32,141 +31,133 @@ public final class Skill {
     public static final ImmutableMap<String, Integer> NAME_TO_ID;
 
     /**
-     * The attack skill identifier in the skill set.
+     * The attack identifier.
      */
     public static final int ATTACK = 0;
 
     /**
-     * The defence skill identifier in the skill set.
+     * The defence identifier.
      */
     public static final int DEFENCE = 1;
 
     /**
-     * The strength skill identifier in the skill set.
+     * The strength identifier.
      */
     public static final int STRENGTH = 2;
 
     /**
-     * The hitpoints skill identifier in the skill set.
+     * The hitpoints identifier.
      */
     public static final int HITPOINTS = 3;
 
     /**
-     * The ranged skill identifier in the skill set.
+     * The ranged identifier.
      */
     public static final int RANGED = 4;
 
     /**
-     * The prayer skill identifier in the skill set.
+     * The prayer identifier.
      */
     public static final int PRAYER = 5;
 
     /**
-     * The magic skill identifier in the skill set.
+     * The magic identifier.
      */
     public static final int MAGIC = 6;
 
     /**
-     * The cooking skill identifier in the skill set.
+     * The cooking identifier.
      */
     public static final int COOKING = 7;
 
     /**
-     * The woodcutting skill identifier in the skill set.
+     * The woodcutting identifier.
      */
     public static final int WOODCUTTING = 8;
 
     /**
-     * The fletching skill identifier in the skill set.
+     * The fletching identifier.
      */
     public static final int FLETCHING = 9;
 
     /**
-     * The fishing skill identifier in the skill set.
+     * The fishing identifier.
      */
     public static final int FISHING = 10;
 
     /**
-     * The firemaking skill identifier in the skill set.
+     * The firemaking identifier.
      */
     public static final int FIREMAKING = 11;
 
     /**
-     * The crafting skill identifier in the skill set.
+     * The crafting identifier.
      */
     public static final int CRAFTING = 12;
 
     /**
-     * The smithing skill identifier in the skill set.
+     * The smithing identifier.
      */
     public static final int SMITHING = 13;
 
     /**
-     * The mining skill identifier in the skill set.
+     * The mining identifier.
      */
     public static final int MINING = 14;
 
     /**
-     * The herblore skill identifier in the skill set.
+     * The herblore identifier.
      */
     public static final int HERBLORE = 15;
 
     /**
-     * The agility skill identifier in the skill set.
+     * The agility identifier.
      */
     public static final int AGILITY = 16;
 
     /**
-     * The thieving skill identifier in the skill set.
+     * The thieving identifier.
      */
     public static final int THIEVING = 17;
 
     /**
-     * The slayer skill identifier in the skill set.
+     * The slayer identifier.
      */
     public static final int SLAYER = 18;
 
     /**
-     * The farming skill identifier in the skill set.
+     * The farming identifier.
      */
     public static final int FARMING = 19;
 
     /**
-     * The runecrafting skill identifier in the skill set.
+     * The runecrafting identifier.
      */
     public static final int RUNECRAFTING = 20;
 
     /**
-     * Retrieve the name of a skill by {@code id}.
-     *
-     * @param id The id to retrieve the name of.
-     * @return The name of the skill.
+     * Retrieves the name of a skill by its identifier.
      */
     public static String getName(int id) {
         return ID_TO_NAME.get(id);
     }
 
     /**
-     * Retrieve the id of a skill by {@code name}.
-     *
-     * @param name The name to retrieve the id of.
-     * @return The id of the skill.
+     * Retrieves the identifier of a skill by its name.
      */
     public static int getId(String name) {
         return NAME_TO_ID.get(name);
     }
 
     /**
-     * Determines if the skill specified by {@code id} is a combat skill.
-     *
-     * @param id The id to determine a combat skill.
-     * @return {@code true} if the skill is a combat skill, {@code false} otherwise.
+     * Determines if a skill is a factor in combat level calculations (attack, strength, defence, hitpoints, ranged,
+     * prayer, magic).
      */
     public static boolean isCombatSkill(int id) {
         return id >= ATTACK && id <= MAGIC;
     }
 
-    static {
+    static { /* Initialize name -> identifier cache. */
         Map<String, Integer> skills = new HashMap<>();
 
         int index = 0;
@@ -178,36 +169,36 @@ public final class Skill {
     }
 
     /**
-     * The {@link SkillSet} that this skill is a part of.
+     * The skill set.
      */
     private transient final SkillSet skills;
 
     /**
-     * The identifier that determines which skill this instance represents.
+     * The skill identifier.
      */
     private transient final int id;
 
     /**
-     * The cached static level of this skill. Used to avoid repeated calculations of the experience-based level.
+     * The static (experience based) skill level. Cached to avoid potentially expensive {@code
+     * levelForExperience(int)} calls.
      */
     private transient int staticLevel = -1;
 
     /**
-     * The skill level. It can be increased or decreased with various consumables, spells, and special attacks from players
-     * and monsters.
+     * The dynamic skill level.
      */
     private int level = 1;
 
     /**
-     * The experience attained for this skill. Can be used to determine the static skill level.
+     * The attained experience.
      */
     private double experience;
 
     /**
      * Creates a new {@link Skill}.
      *
-     * @param id The identifier that determines which skill this instance represents.
-     * @param skills The {@link SkillSet} that this skill is a part of.
+     * @param id The skill identifier.
+     * @param skills The skill set.
      */
     public Skill(int id, SkillSet skills) {
         this.id = id;
@@ -220,9 +211,7 @@ public final class Skill {
     }
 
     /**
-     * Adds {@code amount} experience to this skill.
-     *
-     * @param amount The amount of experience to add.
+     * Adds experience to this skill.
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
@@ -233,77 +222,114 @@ public final class Skill {
 
     /**
      * Notifies plugins of any level or experience changes.
-     *
-     * @param oldExperience The old experience value.
-     * @param oldStaticLevel The old static level value.
-     * @param oldLevel The old dynamic level value.
      */
     private void notifyListeners(double oldExperience, int oldStaticLevel, int oldLevel) {
         if (!skills.isFiringEvents()) {
             return;
         }
 
-        MobileEntity mob = skills.getMob();
+        Mob mob = skills.getMob();
         PluginManager plugins = mob.getPlugins();
 
         SkillChangeEvent evt = new SkillChangeEvent(mob, oldExperience, oldStaticLevel, oldLevel, id);
-        if (mob.type() == EntityType.PLAYER) {
-            plugins.post(evt, (Player) mob);
-        } else {
-            plugins.post(evt);
-        }
+        plugins.post(evt);
     }
 
     /**
-     * @return The identifier that determines which skill this instance represents.
+     * Retrieves the name of this skill.
+     */
+    public String name() {
+        return getName(id);
+    }
+
+    /**
+     * @return The skill identifier.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The static or, "experience-based" skill level.
+     * @return The static (experience based) skill level.
      */
     public int getStaticLevel() {
-        if (staticLevel == -1) {
+        if (staticLevel == -1) { /* Compute and cache the value if needed. */
             staticLevel = SkillSet.levelForExperience((int) experience);
         }
         return staticLevel;
     }
 
     /**
-     * @return The skill level.
+     * @return The dynamic skill level.
      */
     public int getLevel() {
         return level;
     }
 
     /**
-     * Sets the skill level.
+     * Sets the dynamic skill level.
      */
     public void setLevel(int newLevel) {
         if (newLevel < 0) {
             newLevel = 0;
         }
+
         int oldStaticLevel = getStaticLevel();
         int oldLevel = level;
-        level = newLevel;
 
+        level = newLevel;
         if (oldLevel == level) {
             return;
         }
+
         notifyListeners(experience, oldStaticLevel, oldLevel);
     }
 
     /**
-     * @return The experience attained for this skill.
+     * Increases the dynamic skill level.
+     */
+    public void increaseLevel(int amount, int bound) {
+        int newAmount = getLevel() + amount;
+        if (newAmount > bound) {
+            newAmount = bound;
+        }
+        setLevel(newAmount);
+    }
+
+    /**
+     * Increases the dynamic skill level to a maximum of the static level.
+     */
+    public void increaseLevel(int amount) {
+        increaseLevel(amount, getStaticLevel() + amount);
+    }
+
+    /**
+     * Decreases the dynamic skill level.
+     */
+    public void decreaseLevel(int amount, int bound) {
+        int newAmount = getLevel() - amount;
+        if (newAmount < bound) {
+            newAmount = bound;
+        }
+        setLevel(newAmount);
+    }
+
+    /**
+     * Increases the dynamic skill level to a minimum of 0.
+     */
+    public void decreaseLevel(int amount) {
+        decreaseLevel(amount, 0);
+    }
+
+    /**
+     * @return The attained experience.
      */
     public double getExperience() {
         return experience;
     }
 
     /**
-     * Sets the experience attained for this skill.
+     * Sets the attained experience.
      */
     public void setExperience(double newExperience) {
         if (newExperience < 0) {

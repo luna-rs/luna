@@ -25,7 +25,8 @@ import static java.util.Objects.requireNonNull;
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A default access level constructor to discourage external instantiation outside of the {@code io.luna.net} package.
+     * A default access level constructor to discourage external instantiation outside of the
+     * {@code io.luna.net} package.
      */
     LunaUpstreamHandler() {
     }
@@ -36,7 +37,8 @@ import static java.util.Objects.requireNonNull;
 
         if (!channelReadTimeout) {
             Optional<String> msg = Optional.ofNullable(e.getMessage());
-            msg.filter(it -> !LunaNetworkConstants.IGNORED_EXCEPTIONS.contains(it)).ifPresent(it -> LOGGER.catching(e));
+            msg.filter(it -> !LunaNetworkConstants.IGNORED_EXCEPTIONS.contains(it))
+                .ifPresent(it -> LOGGER.catching(e));
         }
         ctx.channel().close();
     }
@@ -44,7 +46,7 @@ import static java.util.Objects.requireNonNull;
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Session session = getSession(ctx);
-        session.dispose();
+        session.close();
     }
 
     @Override
@@ -54,11 +56,7 @@ import static java.util.Objects.requireNonNull;
     }
 
     /**
-     * Gets the {@link Session} instance from the {@link ChannelHandlerContext}, and validates it to ensure it isn't {@code
-     * null}.
-     *
-     * @param ctx The channel handler context.
-     * @return The session instance.
+     * Retrieves and validates a session instance from a {@link ChannelHandlerContext}.
      */
     private Session getSession(ChannelHandlerContext ctx) {
         Session session = ctx.channel().attr(LunaNetworkConstants.SESSION_KEY).get();

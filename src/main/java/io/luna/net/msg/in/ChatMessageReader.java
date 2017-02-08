@@ -11,7 +11,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} manually talks.
+ * A {@link MessageReader} implementation that intercepts data sent on manual chat.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -28,11 +28,11 @@ public final class ChatMessageReader extends MessageReader {
         checkState(color >= 0, "invalid color value");
         checkState(size > 0, "invalid size, not large enough");
 
-        if (player.isMuted()) { // The player trying to speak is muted.
+        if (player.isMuted()) { /* Muted, don't construct an event. */
             return null;
         }
 
         player.chat(new Chat(message, color, effects));
-        return new ChatEvent(effects, color, size, message);
+        return new ChatEvent(player, effects, color, size, message);
     }
 }

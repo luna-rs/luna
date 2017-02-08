@@ -10,7 +10,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A chunk of positions geometrically represented as a 2D square or rectangle.
+ * A group of positions represented geometrically as a square, cube, rectangle, or rectangular prism.
  *
  * @author lare96 <http://github.org/lare96>
  */

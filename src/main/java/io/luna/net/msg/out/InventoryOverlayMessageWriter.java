@@ -13,20 +13,20 @@ import io.luna.net.msg.MessageWriter;
 public final class InventoryOverlayMessageWriter extends MessageWriter {
 
     /**
-     * The identifier of the interface to open.
+     * The interface identifier.
      */
     private final int interfaceId;
 
     /**
-     * The identifier of the interface to overlay the inventory space.
+     * The inventory overlay interface identifier.
      */
     private final int overlayInterfaceId;
 
     /**
      * Creates a new {@link InventoryOverlayMessageWriter}.
      *
-     * @param interfaceId The identifier of the interface to open.
-     * @param overlayInterfaceId The identifier of the interface to overlay the inventory space.
+     * @param interfaceId The interface identifier.
+     * @param overlayInterfaceId The inventory overlay interface identifier.
      */
     public InventoryOverlayMessageWriter(int interfaceId, int overlayInterfaceId) {
         this.interfaceId = interfaceId;

@@ -5,42 +5,42 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * An abstraction model that contains functions that enable units of work to be carried out in cyclic intervals.
+ * A model representing a cyclic unit of work.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class Task {
 
     /**
-     * If this {@code Task} executes upon being submitted.
+     * If execution happens instantly upon being scheduled.
      */
     private final boolean instant;
 
     /**
-     * The dynamic delay of this {@code Task}.
+     * The cyclic delay.
      */
     private int delay;
 
     /**
-     * If this {@code Task} is currently running.
+     * If registration has taken place.
      */
     private boolean running = true;
 
     /**
-     * A counter that determines when this {@code Task} is ready to execute.
+     * A counter that determines when execution should take place.
      */
     private int counter;
 
     /**
-     * An attachment for this {@code Task} instance.
+     * An optional attachment.
      */
     private Optional<Object> key = Optional.empty();
 
     /**
      * Creates a new {@link Task}.
      *
-     * @param instant If this {@code Task} executes upon being submitted.
-     * @param delay The dynamic delay of this {@code Task}.
+     * @param instant If execution happens instantly upon being scheduled.
+     * @param delay The cyclic delay.
      */
     public Task(boolean instant, int delay) {
         checkArgument(delay > 0);
@@ -52,21 +52,19 @@ public abstract class Task {
     /**
      * Creates a new {@link Task} that doesn't execute instantly.
      *
-     * @param delay The dynamic delay of this {@code Task}.
+     * @param delay The cyclic delay.
      */
     public Task(int delay) {
         this(false, delay);
     }
 
     /**
-     * A function executed when the {@code counter} reaches the {@code delay}.
+     * A function representing the unit of work that will be carried out.
      */
     protected abstract void execute();
 
     /**
-     * Determines if this {@code Task} is ready to execute.
-     *
-     * @return {@code true} if this {@code Task} can execute, {@code false} otherwise.
+     * Determines if execution should take place.
      */
     final boolean canExecute() {
         if (++counter >= delay && running) {
@@ -77,7 +75,7 @@ public abstract class Task {
     }
 
     /**
-     * Cancels this {@code Task}. If this {@code Task} is already cancelled, does nothing.
+     * Cancels all subsequent executions. Does nothing if already cancelled.
      */
     public final void cancel() {
         if (running) {
@@ -87,40 +85,35 @@ public abstract class Task {
     }
 
     /**
-     * A function executed when this {@code Task} is iterated over by the {@link TaskManager}.
+     * A function executed when iterated over.
      */
     protected void onLoop() {
 
     }
 
     /**
-     * A function executed when this {@code Task} is submitted to the {@link TaskManager}.
+     * A function executed on registration.
      */
     protected void onSchedule() {
 
     }
 
     /**
-     * A function executed when this {@code Task} is cancelled.
+     * A function executed on cancellation.
      */
     protected void onCancel() {
 
     }
 
     /**
-     * A function executed when this {@code Task} throws an {@code Exception}.
-     *
-     * @param e The {@code Exception} thrown by this {@code Task}.
+     * A function executed on thrown exceptions.
      */
     protected void onException(Exception e) {
 
     }
 
     /**
-     * Attaches {@code newKey} to this {@code Task}. The equivalent of doing {@code Optional.ofNullable(newKey)}.
-     *
-     * @param newKey The new key to attach to this {@code Task}.
-     * @return An instance of this {@code Task} for method chaining.
+     * Attaches a new key.
      */
     public Task attach(Object newKey) {
         key = Optional.ofNullable(newKey);
@@ -128,35 +121,35 @@ public abstract class Task {
     }
 
     /**
-     * @return {@code true} if this {@code Task} executes upon being submitted, {@code false} otherwise.
+     * @return {@code true} if execution happens instantly upon being scheduled.
      */
     public boolean isInstant() {
         return instant;
     }
 
     /**
-     * @return The dynamic delay of this {@code Task}.
+     * @return The cyclic delay.
      */
     public int getDelay() {
         return delay;
     }
 
     /**
-     * Sets the delay of this {@code Task} to {@code delay}.
+     * Sets the cyclic delay.
      */
     public void setDelay(int delay) {
         this.delay = delay;
     }
 
     /**
-     * @return {@code true} if this {@code Task} is running, {@code false} otherwise.
+     * @return {@code true} if registration has taken place.
      */
     public boolean isRunning() {
         return running;
     }
 
     /**
-     * @return The attachment for this {@code Task} instance.
+     * @return An optional attachment.
      */
     public Optional<Object> getAttachment() {
         return key;

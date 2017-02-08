@@ -18,7 +18,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a player clicks an item.
+ * A {@link MessageReader} implementation that intercepts data sent on item clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -46,7 +46,7 @@ public final class ItemClickMessageReader extends MessageReader {
      * Returns {@code true} if the item clicked is valid.
      */
     private boolean validate(Player player, int id, int index, int interfaceId) {
-        checkState(Item.isIdentifier(id), "itemId out of range");
+        checkState(Item.isIdWithinRange(id), "itemId out of range");
         checkState(index >= 0, "index out of range");
         checkState(interfaceId > 0, "interfaceId out of range");
 
@@ -69,7 +69,7 @@ public final class ItemClickMessageReader extends MessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
-        return new ItemFirstClickEvent(id, index, interfaceId);
+        return new ItemFirstClickEvent(player, id, index, interfaceId);
     }
 
     /**
@@ -83,7 +83,7 @@ public final class ItemClickMessageReader extends MessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
-        return new ItemSecondClickEvent(id, index, interfaceId);
+        return new ItemSecondClickEvent(player, id, index, interfaceId);
     }
 
     /**
@@ -97,7 +97,7 @@ public final class ItemClickMessageReader extends MessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
-        return new ItemThirdClickEvent(id, index, interfaceId);
+        return new ItemThirdClickEvent(player, id, index, interfaceId);
     }
 
     /**
@@ -111,7 +111,7 @@ public final class ItemClickMessageReader extends MessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
-        return new ItemFourthClickEvent(id, index, interfaceId);
+        return new ItemFourthClickEvent(player, id, index, interfaceId);
     }
 
     /**
@@ -125,6 +125,6 @@ public final class ItemClickMessageReader extends MessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
-        return new ItemFifthClickEvent(id, index, interfaceId);
+        return new ItemFifthClickEvent(player, id, index, interfaceId);
     }
 }

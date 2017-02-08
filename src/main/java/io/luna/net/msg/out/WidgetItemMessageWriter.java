@@ -7,33 +7,33 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays a single {@link Item} on a widget.
+ * A {@link MessageWriter} implementation that displays an item on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class WidgetItemMessageWriter extends MessageWriter {
 
     /**
-     * The identifier for the widget that the {@link Item} will be displayed on.
+     * The widget identifier.
      */
     private final int id;
 
     /**
-     * The index on the widget that the {@link Item} will be displayed on.
+     * The widget index.
      */
     private final int index;
 
     /**
-     * The {@link Item} that will be displayed on the widget.
+     * The item.
      */
     private final Item item;
 
     /**
      * Creates a new {@link WidgetItemMessageWriter}.
      *
-     * @param id The identifier for the widget that the {@link Item} will be displayed on.
-     * @param index The index on the widget that the {@link Item} will be displayed on.
-     * @param item The {@link Item} that will be displayed on the widget.
+     * @param id The widget identifier.
+     * @param index The widget index.
+     * @param item The item.
      */
     public WidgetItemMessageWriter(int id, int index, Item item) {
         this.id = id;
@@ -43,16 +43,22 @@ public final class WidgetItemMessageWriter extends MessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(34, MessageType.VARIABLE_SHORT);
+        ByteMessage msg = ByteMessage.message(34, MessageType.VAR_SHORT);
         msg.putShort(id);
         msg.put(index);
-        msg.putShort(item.getId() + 1);
 
-        if (item.getAmount() > 254) {
-            msg.put(255);
-            msg.putShort(item.getAmount());
+        if (item == null) {
+            msg.putShort(0);
+            msg.put(0);
         } else {
-            msg.put(item.getAmount());
+            msg.putShort(item.getId() + 1);
+
+            if (item.getAmount() > 254) {
+                msg.put(255);
+                msg.putShort(item.getAmount());
+            } else {
+                msg.put(item.getAmount());
+            }
         }
         return msg;
     }

@@ -2,7 +2,7 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.Entity;
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 import io.luna.game.model.mobile.Npc;
 import io.luna.game.model.mobile.Player;
 
@@ -39,8 +39,8 @@ class EntityEvent extends Event {
     /**
      * Returns the entity as a mob.
      */
-    public MobileEntity mob() {
-        return (MobileEntity) entity;
+    public Mob mob() {
+        return (Mob) entity;
     }
 
     /**

@@ -5,21 +5,21 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that either displays or removes the multi-combat sign.
+ * A {@link MessageWriter} implementation that displays or removes the multi-combat sign.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class MultiCombatMessageWriter extends MessageWriter {
 
     /**
-     * If the multi-combat sign should be displayed or removed.
+     * If the multi-combat sign should be displayed.
      */
     private final boolean display;
 
     /**
      * Creates a new {@link MultiCombatMessageWriter}.
      *
-     * @param display If the multi-combat sign should be displayed or removed.
+     * @param display If the multi-combat sign should be displayed.
      */
     public MultiCombatMessageWriter(boolean display) {
         this.display = display;

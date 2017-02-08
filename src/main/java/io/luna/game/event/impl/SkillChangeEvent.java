@@ -1,6 +1,6 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.model.mobile.MobileEntity;
+import io.luna.game.model.mobile.Mob;
 
 /**
  * An event sent when a mob's skills change.
@@ -37,7 +37,7 @@ public final class SkillChangeEvent extends MobEvent {
      * @param oldLvl The old level.
      * @param id The id of the skill whose experience was changed.
      */
-    public SkillChangeEvent(MobileEntity mob, double oldExp, int oldStaticLvl, int oldLvl, int id) {
+    public SkillChangeEvent(Mob mob, double oldExp, int oldStaticLvl, int oldLvl, int id) {
         super(mob);
         this.oldExp = oldExp;
         this.oldStaticLvl = oldStaticLvl;

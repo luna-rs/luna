@@ -5,7 +5,7 @@ import io.luna.game.model.Position;
 import java.util.Objects;
 
 /**
- * An {@code x} and {@code y} coordinate equal to a {@link Position}s coordinates divided by {@code 32}.
+ * A model representing absolute coordinates divided by {@code 32}.
  *
  * @author Graham
  * @author lare96 <http://github.org/lare96>
@@ -13,30 +13,27 @@ import java.util.Objects;
 public final class RegionCoordinates {
 
     /**
-     * Creates a new {@link RegionCoordinates} from {@code pos}.
-     *
-     * @param pos The position to create from.
-     * @return The newly created {@code RegionCoordinates}.
+     * Creates a new {@link RegionCoordinates} from the argued position.
      */
     public static RegionCoordinates create(Position pos) {
         return new RegionCoordinates(pos.getX() / 32, pos.getY() / 32);
     }
 
     /**
-     * The {@code X} region coordinate.
+     * The x coordinate.
      */
     private final int x;
 
     /**
-     * The {@code Y} region coordinate.
+     * The y coordinate.
      */
     private final int y;
 
     /**
      * Creates a new {@link RegionCoordinates}.
      *
-     * @param x The {@code X} region coordinate.
-     * @param y The {@code Y} region coordinate.
+     * @param x The x coordinate.
+     * @param y The y coordinate.
      */
     RegionCoordinates(int x, int y) {
         this.x = x;
@@ -61,14 +58,14 @@ public final class RegionCoordinates {
     }
 
     /**
-     * @return The {@code X} region coordinate.
+     * @return The x coordinate.
      */
     public int getX() {
         return x;
     }
 
     /**
-     * @return The {@code Y} region coordinate.
+     * @return The y coordinate.
      */
     public int getY() {
         return y;

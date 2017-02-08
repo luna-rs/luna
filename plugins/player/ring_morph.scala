@@ -16,6 +16,7 @@ private def morph(plr: Player, msg: Event, to: Int) = {
   plr.sendForceTab(3)
   plr.sendTabInterface(3, 6014)
 
+  plr.lockMovement
   plr.transform(to)
   msg.terminate
 }
@@ -23,7 +24,10 @@ private def morph(plr: Player, msg: Event, to: Int) = {
 private def unmorph(plr: Player) = {
   if (plr.inventory.computeRemainingSize > 1) {
     plr.equipment.unequip(RING)
+
     plr.displayTabInterfaces()
+
+    plr.unlockMovement
     plr.transform(-1)
   } else {
     plr.sendMessage("You do not have enough space in your inventory.")
@@ -31,17 +35,15 @@ private def unmorph(plr: Player) = {
 }
 
 
-intercept[EquipmentChangeEvent] { (msg, plr) =>
-  if (msg.getIndex == RING) {
-    val optionId = msg.getNewItem.map(_.getId)
-    optionId.foreach {
-      case RING_OF_STONE => morph(plr, msg, STONE_MORPH)
-      case EASTER_RING => morph(plr, msg, rand(EGGS_MORPH))
+on[EquipmentChangeEvent] { msg =>
+  if (msg.index == RING) {
+
+    msg.newId.foreach {
+      case RING_OF_STONE => morph(msg.plr, msg, STONE_MORPH)
+      case EASTER_RING => morph(msg.plr, msg, rand(EGGS_MORPH))
     }
   }
 }
 
 // unmorph (figure out proper id)
-intercept_@[ButtonClickEvent](23132) { (msg, plr) =>
-  unmorph(plr)
-}
+onargs[ButtonClickEvent](23132) { msg => unmorph(msg.plr) }

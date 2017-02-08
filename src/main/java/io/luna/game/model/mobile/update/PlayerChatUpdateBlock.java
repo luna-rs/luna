@@ -2,13 +2,13 @@ package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.mobile.Chat;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 
 /**
- * An {@link PlayerUpdateBlock} implementation that handles the {@link Chat} update block.
+ * A {@link PlayerUpdateBlock} implementation for the {@code CHAT} update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -23,9 +23,10 @@ public final class PlayerChatUpdateBlock extends PlayerUpdateBlock {
 
     @Override
     public void write(Player mob, ByteMessage msg) {
-        msg.putShort(((mob.getChat().getColor() & 0xff) << 8) + (mob.getChat().getEffects() & 0xff), ByteOrder.LITTLE);
-        msg.put(mob.getRights().getOpcode());
-        msg.put(mob.getChat().getMessage().length, ByteTransform.C);
-        msg.putBytesReverse(mob.getChat().getMessage());
+        Chat chat = mob.getChat().get();
+        msg.putShort(((chat.getColor() & 0xff) << 8) + (chat.getEffects() & 0xff), ByteOrder.LITTLE);
+        msg.put(mob.getRights().getClientValue());
+        msg.put(chat.getMessage().length, ByteTransform.C);
+        msg.putBytesReverse(chat.getMessage());
     }
 }

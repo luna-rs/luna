@@ -16,7 +16,6 @@
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.Skill.HITPOINTS
 import io.luna.game.model.mobile.{Animation, Player}
 
 
@@ -166,7 +165,7 @@ private val ID_TO_FOOD = {
 /* Attempt to consume food, if we haven't just recently consumed any. */
 private def consume(plr: Player, food: Food, index: Int): Unit = {
   val inventory = plr.inventory
-  val skill = plr.skill(HITPOINTS)
+  val skill = plr.skill(SKILL_HITPOINTS)
   val ids = food.ids
 
   if (!plr.elapsedTime("last_food_consume", food.delay)) {
@@ -183,7 +182,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
       inventory.add(new Item(ids(nextIndex)), index)
     }
 
-    plr.sendMessage(s"You eat the ${nameOfItem(toConsume.getId)}.")
+    plr.sendMessage(s"You eat the ${ nameOfItem(toConsume.getId) }.")
     plr.animation(ANIMATION)
 
     if (skill.getLevel < skill.getStaticLevel) {
@@ -193,14 +192,13 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
   }
 
   plr.resetTime("last_food_consume")
-  plr.resetTime("last_potion_consume")
 }
 
 
 /* Intercept first click item event, attempt to consume food if applicable. */
-intercept[ItemFirstClickEvent] { (msg, plr) =>
-  ID_TO_FOOD.get(msg.getId).foreach { food =>
-    consume(plr, food, msg.getIndex)
+on[ItemFirstClickEvent] { msg =>
+  ID_TO_FOOD.get(msg.id).foreach { food =>
+    consume(msg.plr, food, msg.index)
     msg.terminate
   }
 }

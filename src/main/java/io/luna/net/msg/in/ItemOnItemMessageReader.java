@@ -13,7 +13,7 @@ import io.luna.net.msg.MessageReader;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a player uses an item on another item.
+ * A {@link MessageReader} implementation that intercepts data sent when an item is used on another item.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -33,20 +33,21 @@ public final class ItemOnItemMessageReader extends MessageReader {
         if (!validate(player, usedId, targetId, usedIndex, targetIndex, usedInterfaceId, targetInterfaceId)) {
             return null;
         }
-        return new ItemOnItemEvent(usedId, targetId, usedIndex, targetIndex, usedInterfaceId, targetInterfaceId);
+        return new ItemOnItemEvent(player, usedId, targetId, usedIndex, targetIndex, usedInterfaceId,
+            targetInterfaceId);
     }
 
     /**
      * Returns {@code true} if the decoded data is valid.
      */
-    private boolean validate(Player player, int usedId, int targetId, int usedIndex, int targetIndex, int usedInterfaceId,
-        int targetInterfaceId) {
+    private boolean validate(Player player, int usedId, int targetId, int usedIndex, int targetIndex,
+        int usedInterfaceId, int targetInterfaceId) {
 
         checkState(targetIndex >= 0, "targetIndex is out of range");
         checkState(usedIndex >= 0, "usedIndex is out of range");
-        checkState(Item.isIdentifier(targetId), "targetId is invalid item identifier");
+        checkState(Item.isIdWithinRange(targetId), "targetId is out of range");
         checkState(targetInterfaceId > 0, "targetInterfaceId is invalid interface identifier");
-        checkState(Item.isIdentifier(usedId), "usedId is invalid item identifier");
+        checkState(Item.isIdWithinRange(usedId), "usedId is out of range");
         checkState(usedInterfaceId > 0, "usedInterfaceId is invalid identifier");
 
         // TODO remove boilerplate

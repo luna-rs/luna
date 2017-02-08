@@ -11,7 +11,7 @@ import static io.netty.util.internal.StringUtil.simpleClassName;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} clicks widgets on an interface.
+ * A {@link MessageReader} implementation that intercepts data sent when a widget is clicked.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -26,6 +26,6 @@ public final class ButtonClickMessageReader extends MessageReader {
         checkState(buttonId >= 0, "buttonId < 0");
 
         LOGGER.debug("[{}]: {}", simpleClassName(this), box(buttonId));
-        return new ButtonClickEvent(buttonId);
+        return new ButtonClickEvent(player, buttonId);
     }
 }

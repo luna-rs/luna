@@ -2,12 +2,12 @@ package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.mobile.Graphic;
 import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateFlagHolder.UpdateFlag;
+import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
 /**
- * An {@link PlayerUpdateBlock} implementation that handles the {@link Graphic} update block.
+ * A {@link PlayerUpdateBlock} implementation for the {@code GRAPHIC} update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -22,7 +22,8 @@ public final class PlayerGraphicUpdateBlock extends PlayerUpdateBlock {
 
     @Override
     public void write(Player mob, ByteMessage msg) {
-        msg.putShort(mob.getGraphic().getId(), ByteOrder.LITTLE);
-        msg.putInt(mob.getGraphic().getHeight() << 16 | mob.getGraphic().getDelay() & 0xFFFF);
+        Graphic graphic = mob.getGraphic().get();
+        msg.putShort(graphic.getId(), ByteOrder.LITTLE);
+        msg.putInt(graphic.getHeight() << 16 | graphic.getDelay() & 0xFFFF);
     }
 }

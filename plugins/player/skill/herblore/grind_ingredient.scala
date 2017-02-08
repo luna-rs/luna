@@ -8,7 +8,7 @@
  AUTHOR: lare96
 */
 
-import io.luna.game.action.ProducingSkillAction
+import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mobile.{Animation, Player}
@@ -30,11 +30,11 @@ private val INGREDIENTS = Map(
 
 
 /* An Action that will grind all ingredients in an inventory. */
-private final class GrindAction(plr: Player, oldId: Int, newId: Int) extends ProducingSkillAction(plr, true, 2) {
+private final class GrindAction(plr: Player, oldId: Int, newId: Int) extends ProducingAction(plr, true, 2) {
 
   override def onProduce() = {
     val nextWord = if (newId == 6693) "a" else "some"
-    plr.sendMessage(s"You grind the ${computeItemName(oldId)} into $nextWord ${computeItemName(newId)}.")
+    plr.sendMessage(s"You grind the ${ nameOfItem(oldId) } into $nextWord ${ nameOfItem(newId) }.")
 
     plr.animation(ANIMATION)
   }
@@ -54,10 +54,10 @@ private def grind(plr: Player, id: Int, evt: ItemOnItemEvent) = {
 
 
 /* Intercept an item on item event, handle using ingredient with pestle and mortar. */
-intercept[ItemOnItemEvent] { (msg, plr) =>
-  if (msg.getUsedId == PESTLE_AND_MORTAR) {
-    grind(plr, msg.getTargetId, msg)
-  } else if (msg.getTargetId == PESTLE_AND_MORTAR) {
-    grind(plr, msg.getUsedId, msg)
+on[ItemOnItemEvent] { msg =>
+  if (msg.usedId == PESTLE_AND_MORTAR) {
+    grind(msg.plr, msg.targetId, msg)
+  } else if (msg.targetId == PESTLE_AND_MORTAR) {
+    grind(msg.plr, msg.usedId, msg)
   }
 }

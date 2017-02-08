@@ -9,8 +9,6 @@
  AUTHOR: lare96
 */
 
-import java.util.Optional
-
 import io.luna.game.event.impl.{EquipmentChangeEvent, LoginEvent}
 import io.luna.game.model.item.Equipment.HEAD
 import io.luna.game.model.item.Item
@@ -32,24 +30,23 @@ private val TIARAS = Map(
   5543 -> 128, // Nature tiara
   5541 -> 256, // Chaos tiara
   5545 -> 512, // Law tiara
-  5547 -> 1024, // Death tiara
-  5549 -> ???, // Blood tiara
-  5551 -> ??? // Soul tiara
+  5547 -> 1024 // Death tiara
 )
 
 
 /* A function that sends the tiara key and value config when logging in. */
 private def sendLoginConfig(plr: Player) = {
-  val headId = plr.inventory.computeIdForIndex(HEAD).orElse(-1)
+  val headId = plr.inventory.getIdForIndex(HEAD)
   val value = TIARAS.get(headId)
 
   plr.sendConfig(CONFIG_KEY, value.getOrElse(0))
 }
 
+
 /* A function that sends the tiara key and value config when changing equipment. */
-private def sendEquipmentConfig(plr: Player, oldItem: Optional[Item], newItem: Optional[Item]) = {
-  val oldTiara = if (oldItem.isPresent) TIARAS.get(oldItem.get.getId) else None
-  val newTiara = if (newItem.isPresent) TIARAS.get(newItem.get.getId) else None
+private def sendEquipmentConfig(plr: Player, oldItem: Option[Item], newItem: Option[Item]) = {
+  val oldTiara = oldItem.flatMap(x => TIARAS.get(x.getId))
+  val newTiara = newItem.flatMap(x => TIARAS.get(x.getId))
 
   if (oldTiara.isDefined && newTiara.isEmpty) { // Unequipped item is a tiara, equipped item is not.
     plr.sendConfig(CONFIG_KEY, 0)
@@ -62,11 +59,11 @@ private def sendEquipmentConfig(plr: Player, oldItem: Optional[Item], newItem: O
 
 
 /* Intercept event to send config key and value on login. */
-intercept[LoginEvent] { (msg, plr) => sendLoginConfig(plr) }
+on[LoginEvent] { msg => sendLoginConfig(msg.plr) }
 
 /* Intercept event to send config key and value on equipment change. */
-intercept[EquipmentChangeEvent] { (msg, plr) =>
-  if (msg.getIndex == HEAD) {
-    sendEquipmentConfig(plr, msg.getOldItem, msg.getNewItem)
+on[EquipmentChangeEvent] { msg =>
+  if (msg.index == HEAD) {
+    sendEquipmentConfig(msg.plr, msg.oldItem, msg.newItem)
   }
 }
