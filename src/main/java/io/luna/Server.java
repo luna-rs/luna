@@ -73,13 +73,7 @@ public final class Server {
      */
     public void init() throws Exception {
         LOGGER.info("Luna is being initialized...");
-        Rational CHANCE_ALWAYS = Chance.ALWAYS;
-        Rational CHANCE_VERY_COMMON = Chance.VERY_COMMON;
-        Rational CHANCE_COMMON = Chance.COMMON;
-        Rational CHANCE_UNCOMMON = Chance.UNCOMMON;
-        Rational CHANCE_VERY_UNCOMMON = Chance.VERY_UNCOMMON;
-        Rational CHANCE_RARE = Chance.RARE;
-        Rational CHANCE_VERY_RARE = Chance.VERY_RARE;
+
         initLaunchTasks();
         initPlugins();
         initGame();
