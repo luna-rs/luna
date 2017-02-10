@@ -50,7 +50,9 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
         @Override
         public void onSuccess(EventListenerPipelineSet result) {
             PluginManager plugins = context.getPlugins();
-            plugins.getPipelines().swap(result);
+            GameService service = context.getService();
+
+            service.sync(() -> plugins.getPipelines().swap(result));
         }
 
         @Override
