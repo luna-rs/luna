@@ -19,8 +19,9 @@ import java.util.function._
 import java.util.{Optional, OptionalInt}
 
 import com.google.common.collect.BoundType
+import io.luna.LunaContext
 import io.luna.game.action.Action
-import io.luna.game.event.{Event, EventArguments, EventListener}
+import io.luna.game.event.{EventListenerPipelineSet, Event, EventArguments, EventListener}
 import io.luna.game.model._
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.ItemContainer
@@ -31,11 +32,18 @@ import io.luna.game.plugin.PluginFailureException
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 import io.luna.util.{Rational, StringUtils}
+import org.apache.logging.log4j.Logger
 
 import scala.collection.JavaConversions._
 import scala.collection.generic.FilterMonadic
 import scala.reflect.ClassTag
 import scala.util.Random
+
+
+/* The injected state. */
+val ctx = $ctx$.asInstanceOf[LunaContext]
+val logger = $logger$.asInstanceOf[Logger]
+val pipelines = $pipelines$.asInstanceOf[EventListenerPipelineSet]
 
 
 /* Aliases for 'LunaContext'. */
@@ -80,6 +88,16 @@ val SKILL_THIEVING = Skill.THIEVING
 val SKILL_SLAYER = Skill.SLAYER
 val SKILL_FARMING = Skill.FARMING
 val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
+
+
+/* Aliases for 'Chance'. */
+val CHANCE_ALWAYS = Chance.ALWAYS
+val CHANCE_VERY_COMMON = Chance.VERY_COMMON
+val CHANCE_COMMON = Chance.COMMON
+val CHANCE_UNCOMMON = Chance.UNCOMMON
+val CHANCE_VERY_UNCOMMON = Chance.VERY_UNCOMMON
+val CHANCE_RARE = Chance.RARE
+val CHANCE_VERY_RARE = Chance.VERY_RARE
 
 
 /* Implicit conversions. */
@@ -179,6 +197,7 @@ def rand = ThreadLocalRandom.current
 def rand[E](seq: Seq[E]): E = seq((rand.nextDouble * seq.length).toInt)
 def rand(from: Int, to: Int): Int = rand.nextInt((to - from) + 1) + from
 def rand(to: Int): Int = rand.nextInt(to + 1)
+
 
 /* Retrieves the system time in 'MILLISECONDS'. */
 def currentTimeMillis = TimeUnit.MILLISECONDS.convert(System.nanoTime, TimeUnit.NANOSECONDS)
