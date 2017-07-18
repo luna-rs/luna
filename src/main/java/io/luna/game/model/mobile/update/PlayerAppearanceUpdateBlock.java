@@ -2,6 +2,8 @@ package io.luna.game.model.mobile.update;
 
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mobile.Player.PrayerIcon;
+import io.luna.game.model.mobile.Player.SkullIcon;
 import io.luna.game.model.mobile.PlayerAppearance;
 import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
@@ -29,9 +31,12 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
         PlayerAppearance appearance = mob.getAppearance();
 
         int gender = appearance.get(PlayerAppearance.GENDER);
+        PrayerIcon prayer = mob.getPrayerIcon();
+        SkullIcon skull = mob.getSkullIcon();
+
         buf.put(gender);
-        buf.put(-1);
-        buf.put(-1);
+        buf.put(prayer.getId());
+        buf.put(skull.getId());
 
         OptionalInt transformId = mob.getTransformId();
         if (transformId.isPresent()) {
@@ -56,6 +61,7 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
     /**
      * Encodes values related to the model.
      */
+    @SuppressWarnings("ConstantConditions")
     private void encodeModels(ByteMessage buf, Player mob) {
         Equipment equipment = mob.getEquipment();
         PlayerAppearance appearance = mob.getAppearance();

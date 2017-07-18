@@ -47,6 +47,70 @@ import static io.luna.game.model.item.Inventory.INVENTORY_DISPLAY_ID;
 public final class Player extends Mob {
 
     /**
+     * An enum representing prayer icons.
+     */
+    public enum PrayerIcon {
+        NONE(-1),
+        PROTECT_FROM_MELEE(0),
+        PROTECT_FROM_MISSILES(1),
+        PROTECT_FROM_MAGIC(2),
+        RETRIBUTION(3),
+        SMITE(4),
+        REDEMPTION(5);
+
+        /**
+         * The identifier.
+         */
+        private final int id;
+
+        /**
+         * Creates a new {@link PrayerIcon}.
+         *
+         * @param id The identifier.
+         */
+        PrayerIcon(int id) {
+            this.id = id;
+        }
+
+        /**
+         * @return The identifier.
+         */
+        public int getId() {
+            return id;
+        }
+    }
+
+    /**
+     * An enum representing skull icons.
+     */
+    public enum SkullIcon {
+        NONE(-1),
+        WHITE(0),
+        RED(1);
+
+        /**
+         * The identifier.
+         */
+        private final int id;
+
+        /**
+         * Creates a new {@link SkullIcon}.
+         *
+         * @param id The identifier.
+         */
+        SkullIcon(int id) {
+            this.id = id;
+        }
+
+        /**
+         * @return The identifier.
+         */
+        public int getId() {
+            return id;
+        }
+    }
+
+    /**
      * The asynchronous logger.
      */
     private static final Logger LOGGER = LogManager.getLogger();
@@ -135,6 +199,16 @@ public final class Player extends Mob {
      * The currently open shop name.
      */
     private Optional<String> currentShop = Optional.empty();
+
+    /**
+     * The prayer icon.
+     */
+    private PrayerIcon prayerIcon = PrayerIcon.NONE;
+
+    /**
+     * The skull icon.
+     */
+    private SkullIcon skullIcon = SkullIcon.NONE;
 
     /**
      * Creates a new {@link Player}.
@@ -605,5 +679,35 @@ public final class Player extends Mob {
      */
     public void setCurrentShop(String currentShop) {
         this.currentShop = Optional.ofNullable(currentShop);
+    }
+
+    /**
+     * @return The prayer icon.
+     */
+    public PrayerIcon getPrayerIcon() {
+        return prayerIcon;
+    }
+
+    /**
+     * Sets the prayer icon.
+     */
+    public void setPrayerIcon(PrayerIcon prayerIcon) {
+        this.prayerIcon = prayerIcon;
+        updateFlags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The skull icon.
+     */
+    public SkullIcon getSkullIcon() {
+        return skullIcon;
+    }
+
+    /**
+     * Sets the skull icon.
+     */
+    public void setSkullIcon(SkullIcon skullIcon) {
+        this.skullIcon = skullIcon;
+        updateFlags.flag(UpdateFlag.APPEARANCE);
     }
 }
