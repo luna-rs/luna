@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -141,7 +143,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Initializes this bootstrap using the argued listening executor.
      */
     public void load(ListeningExecutorService service) {
-        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback());
+        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(), service);
     }
 
     /**
@@ -149,7 +151,10 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      */
     public void load() {
         GameService service = context.getService();
-        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback());
+        Executor directExecutor = MoreExecutors.directExecutor();
+
+        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(),
+                directExecutor);
     }
 
     /**
@@ -188,7 +193,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
         FluentIterable<File> dirFiles = Files.fileTreeTraverser().preOrderTraversal(new File(DIR)).filter(File::isFile);
 
         for (File file : dirFiles) {
-            files.put(file.getName(), Files.toString(file, StandardCharsets.UTF_8));
+            files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
         }
     }
 
