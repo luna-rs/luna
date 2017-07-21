@@ -138,7 +138,10 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Initializes this bootstrap using the argued listening executor.
      */
     public void load(ListeningExecutorService service) {
-        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(), service);
+        Executor directExecutor = MoreExecutors.directExecutor();
+
+        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(),
+                directExecutor);
     }
 
     /**
