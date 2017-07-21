@@ -78,7 +78,7 @@ public final class Server {
         initPlugins();
         initGame();
 
-        //launchPool.shutdown();
+        launchPool.shutdown();
         launchPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         initNetwork();
