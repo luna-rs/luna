@@ -15,15 +15,10 @@ import scala.Console;
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.interpreter.Scripted;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.script.SimpleBindings;
-import javax.script.SimpleScriptContext;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -129,7 +124,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      */
     public PluginBootstrap(LunaContext context) {
         this.context = context;
-        engine = new ScriptEngineManager().getEngineByName("scala");
+        engine = new ScriptEngineManager(ClassLoader.getSystemClassLoader()).getEngineByName("scala");
     }
 
     @Override
@@ -201,9 +196,9 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Injects state into the script engine and evaluates dependencies.
      */
     private void initDependencies() throws Exception {
-        engine.put("$ctx$: io.luna.LunaContext", context);
-        engine.put("$logger$: org.apache.logging.log4j.Logger", LOGGER);
-        engine.put("$pipelines$: io.luna.game.event.EventListenerPipelineSet", pipelines);
+        engine.put("$ctx$", context);
+        engine.put("$logger$", LOGGER);
+        engine.put("$pipelines$", pipelines);
 
         currentFile.set("bootstrap.scala");
 
