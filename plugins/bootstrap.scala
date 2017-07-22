@@ -141,28 +141,6 @@ implicit def javaToScalaOptionalInt(optional: OptionalInt): Option[Int] = {
   }
 }
 
-// TODO Remove when Scala 2.12 becomes stable in the coming months
-implicit def javaToScalaConsumer[T](consumer: Consumer[T]): T => Unit
-= (t: T) => consumer.accept(t)
-
-implicit def javaToScalaBiConsumer[T, U](biConsumer: BiConsumer[T, U]): (T, U) => Unit
-= (t: T, u: U) => biConsumer.accept(t, u)
-
-implicit def javaToScalaFunction[T, R](function: Function[T, R]): T => R
-= (t: T) => function.apply(t)
-
-implicit def javaToScalaBiFunction[T, U, R](biFunction: BiFunction[T, U, R]): (T, U) => R
-= (t: T, u: U) => biFunction.apply(t, u)
-
-implicit def javaToScalaPredicate[T](predicate: Predicate[T]): T => Boolean
-= (t: T) => predicate.test(t)
-
-implicit def javaToScalaBiPredicate[T, U](biPredicate: BiPredicate[T, U]): (T, U) => Boolean
-= (t: T, u: U) => biPredicate.test(t, u)
-
-implicit def javaToScalaSupplier[T](supplier: Supplier[T]): () => T
-= () => supplier.get
-
 implicit def scalaToJavaConsumer[T](func: T => Unit): Consumer[T] = new Consumer[T] {
   override def accept(t: T) = func(t)
 }
