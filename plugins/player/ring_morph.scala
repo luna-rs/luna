@@ -28,7 +28,7 @@ private def unmorph(plr: Player) = {
     plr.displayTabInterfaces()
 
     plr.unlockMovement
-    plr.transform(-1)
+    plr.untransform
   } else {
     plr.sendMessage("You do not have enough space in your inventory.")
   }
@@ -41,9 +41,9 @@ on[EquipmentChangeEvent] { msg =>
     msg.newId.foreach {
       case RING_OF_STONE => morph(msg.plr, msg, STONE_MORPH)
       case EASTER_RING => morph(msg.plr, msg, rand(EGGS_MORPH))
+      case _ =>
     }
   }
 }
 
-// unmorph (figure out proper id)
-onargs[ButtonClickEvent](23132) { msg => unmorph(msg.plr) }
+onargs[ButtonClickEvent](6020) { msg => unmorph(msg.plr) }

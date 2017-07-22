@@ -164,7 +164,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
 
         Console.setOut(new PrintStream(newConsole));
         try {
-            initClasspath();
+           initClasspath();
             initFiles();
             initDependencies();
             initPlugins();
@@ -188,7 +188,9 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Parses files in the plugin directory and caches their contents.
      */
     private void initFiles() throws Exception {
-        FluentIterable<File> dirFiles = Files.fileTreeTraverser().preOrderTraversal(new File(DIR)).filter(File::isFile);
+        FluentIterable<File> dirFiles = Files.fileTreeTraverser().
+                preOrderTraversal(new File(DIR)).
+                filter(File::isFile);
 
         for (File file : dirFiles) {
             files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
