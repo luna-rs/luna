@@ -186,30 +186,30 @@ public class ObjectDefinition {
     }
 
     /**
-     * @return the isImpenetrable
+     * @return if is Impenetrable
      */
-    public boolean isIsImpenetrable() {
+    public boolean isImpenetrable() {
         return isImpenetrable;
     }
 
     /**
-     * @return the isInteractive
+     * @return if is Interactive
      */
-    public boolean isIsInteractive() {
+    public boolean isInteractive() {
         return isInteractive;
     }
 
     /**
-     * @return the isObstructive
+     * @return if is Obstructive
      */
-    public boolean isIsObstructive() {
+    public boolean isObstructive() {
         return isObstructive;
     }
 
     /**
-     * @return the isSolid
+     * @return if is Solid
      */
-    public boolean isIsSolid() {
+    public boolean isSolid() {
         return isSolid;
     }
 }
