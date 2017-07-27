@@ -50,7 +50,7 @@ public class ObjectDefinition {
 
     static {
         /* Populate the immutable list with definitions. */
-        ObjectDefinition[] definitions = new ObjectDefinition[8152];
+        ObjectDefinition[] definitions = new ObjectDefinition[14974];
         Arrays.fill(definitions, DEFAULT);
 
         ObjectDefinitionParser parser = new ObjectDefinitionParser(definitions);
