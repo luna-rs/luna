@@ -36,7 +36,7 @@ public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
         String examine = reader.get("examine").getAsString();
         int length = reader.get("length").getAsInt();
         int width = reader.get("width").getAsInt();
-        String[] actions = GsonUtils.getAsType(reader.get("actions"), String[].class);
+        String[] actions = GsonUtils.getAsType(reader.get("menu_actions"), String[].class);
         boolean isImp = reader.get("is_impenetrable").getAsBoolean();
         boolean isInt = reader.get("is_interactive").getAsBoolean();
         boolean isObs = reader.get("is_obstructive").getAsBoolean();
