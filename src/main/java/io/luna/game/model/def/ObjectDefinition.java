@@ -1,9 +1,8 @@
-
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.util.StringUtils;
-import io.luna.util.parser.impl.NpcDefinitionParser;
+import io.luna.util.parser.impl.ObjectDefinitionParser;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
@@ -12,24 +11,23 @@ import java.util.NoSuchElementException;
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  */
 public class ObjectDefinition {
-    
-    
+
     /**
-     * A list of non-player definitions.
+     * A list of definitions.
      */
-    public static final ImmutableList<NpcDefinition> DEFINITIONS;
+    public static final ImmutableList<ObjectDefinition> DEFINITIONS;
 
     /**
      * A default definition. Used as a substitute for {@code null}.
      */
-    private static final NpcDefinition DEFAULT = new NpcDefinition(-1, null, null, -1, -1, -1, -1, -1,
-        StringUtils.EMPTY_ARRAY);
+    private static final ObjectDefinition DEFAULT = new ObjectDefinition(-1, null, null, false, false, false, false, -1, -1,
+            StringUtils.EMPTY_ARRAY);
 
     /**
      * Retrieves the definition for {@code id}.
      */
-    public static NpcDefinition get(int id) {
-        NpcDefinition def = DEFINITIONS.get(id);
+    public static ObjectDefinition get(int id) {
+        ObjectDefinition def = DEFINITIONS.get(id);
         if (def == DEFAULT) {
             throw new NoSuchElementException("No definition for id " + id);
         }
@@ -39,7 +37,7 @@ public class ObjectDefinition {
     /**
      * Returns an iterable containing all definitions.
      */
-    public static Iterable<NpcDefinition> all() {
+    public static Iterable<ObjectDefinition> all() {
         return DEFINITIONS;
     }
 
@@ -50,11 +48,12 @@ public class ObjectDefinition {
         return get(id).getName();
     }
 
-    static { /* Populate the immutable list with definitions. */
-        NpcDefinition[] definitions = new NpcDefinition[8152];
+    static {
+        /* Populate the immutable list with definitions. */
+        ObjectDefinition[] definitions = new ObjectDefinition[8152];
         Arrays.fill(definitions, DEFAULT);
 
-        NpcDefinitionParser parser = new NpcDefinitionParser(definitions);
+        ObjectDefinitionParser parser = new ObjectDefinitionParser(definitions);
         parser.run();
 
         DEFINITIONS = ImmutableList.copyOf(definitions);
@@ -89,29 +88,29 @@ public class ObjectDefinition {
      * A list of actions.
      */
     private final ImmutableList<String> actions;
-    
+
     /**
      * If the object is impenetrable.
      */
     private final boolean isImpenetrable;
-    
+
     /**
      * If the object is interactive.
      */
     private final boolean isInteractive;
-    
+
     /**
      * If the object is obstructive
      */
     private final boolean isObstructive;
-    
+
     /**
      * If the object is solid
      */
     private final boolean isSolid;
 
     /**
-     * Creates a new {@link NpcDefinition}.
+     * Creates a new {@link ObjectDefinition}.
      *
      * @param id The identifier.
      * @param name The name.
@@ -165,9 +164,6 @@ public class ObjectDefinition {
         return examine;
     }
 
-
-  
-
     /**
      * @return A list of actions.
      */
@@ -217,4 +213,3 @@ public class ObjectDefinition {
         return isSolid;
     }
 }
-
