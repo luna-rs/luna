@@ -10,6 +10,7 @@ import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
+import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
@@ -128,5 +129,6 @@ public final class Server {
         launchPool.execute(() -> loadClass(EquipmentDefinition.class));
         launchPool.execute(() -> loadClass(NpcCombatDefinition.class));
         launchPool.execute(() -> loadClass(NpcDefinition.class));
+        launchPool.execute(() -> loadClass(ObjectDefinition.class));
     }
 }
