@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
- *
+ * A definition model describing an in-game object such as doors and trees.
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  */
-public class ObjectDefinition {
+public final class ObjectDefinition {
 
     /**
      * A list of definitions.
@@ -42,7 +42,7 @@ public class ObjectDefinition {
     }
 
     /**
-     * Returns the non-player name of {@code id}.
+     * Returns the object name of {@code id}.
      */
     public static String computeNameForId(int id) {
         return get(id).getName();
