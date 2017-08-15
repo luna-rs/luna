@@ -6,7 +6,7 @@ import io.luna.game.model.mobile.Mob;
 import io.luna.game.task.Task;
 
 /**
- * An abstraction model representing a mob-specific tasks. Actions have their own set of unique traits that make
+ * An abstraction model representing a mob-specific task. Actions have their own set of unique traits that make
  * them different from tasks
  * <ul>
  * <li>Actions are mob-specific
