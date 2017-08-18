@@ -117,7 +117,7 @@ public final class PlayerSerializer {
      * Asynchronously serializes all persistent data.
      */
     public ListenableFuture<Void> asyncSave(GameService service) {
-        return service.submit((Callable<Void>) () -> {
+        return service.submit(() -> {
             save();
             return null;
         });
