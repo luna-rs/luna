@@ -56,7 +56,7 @@ public final class Npc extends Mob {
         this.id = id;
 
         /* Set definition values. */
-        definition = NpcDefinition.DEFINITIONS.get(id);
+        definition = NpcDefinition.get(id);
         combatDefinition = NpcCombatDefinition.get(id);
 
         /* Set the current hitpoint level. */
@@ -122,7 +122,7 @@ public final class Npc extends Mob {
      */
     public void transform(int id) {
         transformId = OptionalInt.of(id);
-        definition = NpcDefinition.DEFINITIONS.get(id);
+        definition = NpcDefinition.get(id);
         updateFlags.flag(UpdateFlag.TRANSFORM);
     }
 

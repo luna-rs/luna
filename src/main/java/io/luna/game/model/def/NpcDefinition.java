@@ -1,63 +1,63 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import io.luna.util.IterableArray;
 import io.luna.util.StringUtils;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.NpcDefinitionParser;
 
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
- * A definition model describing a non-player.
+ * A definition model describing a non-player mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcDefinition {
 
     /**
-     * A list of non-player definitions.
+     * The definition count.
      */
-    public static final ImmutableList<NpcDefinition> DEFINITIONS;
+    public static final int SIZE = 8152;
 
     /**
-     * A default definition. Used as a substitute for {@code null}.
+     * An iterable array of definitions.
      */
-    private static final NpcDefinition DEFAULT = new NpcDefinition(-1, null, null, -1, -1, -1, -1, -1,
-        StringUtils.EMPTY_ARRAY);
+    private static final IterableArray<NpcDefinition> DEFINITIONS = new IterableArray<>(SIZE);
 
     /**
-     * Retrieves the definition for {@code id}.
+     * Sets the backing definitions.
+     */
+    public static void set(NpcDefinition[] definitions) {
+        ThreadUtils.ensureInitThread();
+
+        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
+    }
+
+    /**
+     * Retrieves a definition.
      */
     public static NpcDefinition get(int id) {
         NpcDefinition def = DEFINITIONS.get(id);
-        if (def == DEFAULT) {
+        if (def == null) {
             throw new NoSuchElementException("No definition for id " + id);
         }
         return def;
     }
 
     /**
-     * Returns an iterable containing all definitions.
+     * Returns all definitions.
      */
     public static Iterable<NpcDefinition> all() {
         return DEFINITIONS;
     }
 
     /**
-     * Returns the non-player name of {@code id}.
+     * Returns the name of a non-player.
      */
     public static String computeNameForId(int id) {
         return get(id).getName();
-    }
-
-    static { /* Populate the immutable list with definitions. */
-        NpcDefinition[] definitions = new NpcDefinition[8152];
-        Arrays.fill(definitions, DEFAULT);
-
-        NpcDefinitionParser parser = new NpcDefinitionParser(definitions);
-        parser.run();
-
-        DEFINITIONS = ImmutableList.copyOf(definitions);
     }
 
     /**

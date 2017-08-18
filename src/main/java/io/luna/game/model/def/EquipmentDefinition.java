@@ -4,21 +4,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.mobile.Skill;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
+import scala.tools.nsc.doc.model.Def;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
- * A definition model describing an item that can be equipped.
+ * A model describing an equipment item definition.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class EquipmentDefinition {
 
     /**
-     * A model detailing a skill equipment requirement.
+     * A model describing equipment requirements.
      */
     public static final class EquipmentRequirement {
 
@@ -61,10 +64,19 @@ public final class EquipmentDefinition {
     /**
      * A map of equipment definitions.
      */
-    public static final ImmutableMap<Integer, EquipmentDefinition> DEFINITIONS;
+    private static final Map<Integer, EquipmentDefinition> DEFINITIONS = new LinkedHashMap<>();
 
     /**
-     * Retrieves the definition for {@code id}.
+     * Sets the backing definitions.
+     */
+    public static void set(LinkedHashMap<Integer, EquipmentDefinition> newDefinitions) {
+        ThreadUtils.ensureInitThread();
+
+        DEFINITIONS.putAll(newDefinitions);
+    }
+
+    /**
+     * Retrieves a definition.
      */
     public static EquipmentDefinition get(int id) {
         EquipmentDefinition def = DEFINITIONS.get(id);
@@ -75,23 +87,14 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * Returns an iterable containing all definitions.
+     * Returns all definitions.
      */
     public static Iterable<EquipmentDefinition> all() {
         return DEFINITIONS.values();
     }
 
-    static { /* Populate the immutable map with definitions. */
-        Map<Integer, EquipmentDefinition> definitions = new LinkedHashMap<>();
-
-        EquipmentDefinitionParser parser = new EquipmentDefinitionParser(definitions);
-        parser.run();
-
-        DEFINITIONS = ImmutableMap.copyOf(definitions);
-    }
-
     /**
-     * The item identifier.
+     * The identifier.
      */
     private final int id;
 
@@ -128,7 +131,7 @@ public final class EquipmentDefinition {
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
-     * @param id The item identifier.
+     * @param id The identifier.
      * @param index The equipment index.
      * @param twoHanded If this item is two-handed.
      * @param fullBody If this item covers the arms and torso.
@@ -137,7 +140,7 @@ public final class EquipmentDefinition {
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-        EquipmentRequirement[] requirements, int[] bonuses) {
+                               EquipmentRequirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
@@ -148,7 +151,7 @@ public final class EquipmentDefinition {
     }
 
     /**
-     * @return The item identifier.
+     * @return The identifier.
      */
     public int getId() {
         return id;

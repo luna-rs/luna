@@ -15,18 +15,10 @@ import java.util.List;
 public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
 
     /**
-     * The array of parsed definitions.
-     */
-    private final ObjectDefinition[] definitions;
-
-    /**
      * Creates a new {@link ObjectDefinitionParser}.
-     *
-     * @param definitions The array of parsed definitions.
      */
-    public ObjectDefinitionParser(ObjectDefinition[] definitions) {
+    public ObjectDefinitionParser() {
         super("./data/objects/obj_defs.json");
-        this.definitions = definitions;
     }
 
     @Override
@@ -36,16 +28,20 @@ public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
         String examine = reader.get("examine").getAsString();
         int length = reader.get("length").getAsInt();
         int width = reader.get("width").getAsInt();
-        String[] actions = GsonUtils.getAsType(reader.get("menu_actions"), String[].class);
-        boolean isImp = reader.get("is_impenetrable").getAsBoolean();
-        boolean isInt = reader.get("is_interactive").getAsBoolean();
-        boolean isObs = reader.get("is_obstructive").getAsBoolean();
-        boolean isSolid = reader.get("is_solid").getAsBoolean();
-        return new ObjectDefinition(id, name, examine, isSolid, isImp, isObs, isInt, width, length, actions);
+        boolean isImp = reader.get("impenetrable?").getAsBoolean();
+        boolean isInt = reader.get("interactive?").getAsBoolean();
+        boolean isObs = reader.get("obstructive?").getAsBoolean();
+        boolean isSolid = reader.get("solid?").getAsBoolean();
+        String[] actions = GsonUtils.getAsType(reader.get("actions"), String[].class);
+
+        return new ObjectDefinition(id, name, examine, length, width, isImp, isInt, isObs, isSolid, actions);
     }
 
     @Override
     public void onReadComplete(List<ObjectDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> definitions[it.getId()] = it);
+        ObjectDefinition[] definitions = new ObjectDefinition[14974];
+        readObjects.forEach(def -> definitions[def.getId()] = def);
+
+        ObjectDefinition.set(definitions);
     }
 }

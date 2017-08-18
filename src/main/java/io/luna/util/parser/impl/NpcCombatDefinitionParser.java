@@ -5,6 +5,8 @@ import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,26 +18,18 @@ import java.util.Map;
 public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     /**
-     * The map of parsed definitions.
-     */
-    private final Map<Integer, NpcCombatDefinition> definitions;
-
-    /**
      * Creates a new {@link NpcCombatDefinitionParser}.
-     *
-     * @param definitions The map of parsed definitions.
      */
-    public NpcCombatDefinitionParser(Map<Integer, NpcCombatDefinition> definitions) {
+    public NpcCombatDefinitionParser() {
         super("./data/npcs/npc_combat_defs.json");
-        this.definitions = definitions;
     }
 
     @Override
     public NpcCombatDefinition readObject(JsonObject reader) throws Exception {
         int id = reader.get("id").getAsInt();
         int respawnTicks = reader.get("respawn_ticks").getAsInt();
-        boolean aggressive = reader.get("aggressive").getAsBoolean();
-        boolean poisonous = reader.get("poisonous").getAsBoolean();
+        boolean aggressive = reader.get("aggressive?").getAsBoolean();
+        boolean poisonous = reader.get("poisonous?").getAsBoolean();
         int combatLevel = reader.get("level").getAsInt();
         int hitpoints = reader.get("hitpoints").getAsInt();
         int maximumHit = reader.get("maximum_hit").getAsInt();
@@ -52,6 +46,9 @@ public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     @Override
     public void onReadComplete(List<NpcCombatDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> definitions.put(it.getId(), it));
+        LinkedHashMap<Integer, NpcCombatDefinition> definitions = new LinkedHashMap<>();
+        readObjects.forEach(def -> definitions.put(def.getId(), def));
+
+        NpcCombatDefinition.set(definitions);
     }
 }

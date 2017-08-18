@@ -1,12 +1,18 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import io.luna.util.IterableArray;
 import io.luna.util.StringUtils;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.OptionalInt;
+import java.util.PrimitiveIterator;
 
 /**
  * A definition model describing an item.
@@ -15,41 +21,40 @@ import java.util.OptionalInt;
  */
 public final class ItemDefinition {
 
-    /* TODO remove 'special_value' entry from item_defs.json */
+    /**
+     * The definition count.
+     */
+    public static final int SIZE = 7956;
 
     /**
-     * A list of item definitions.
+     * An iterable array of definitions.
      */
-    private static final ImmutableList<ItemDefinition> DEFINITIONS;
+    private static final IterableArray<ItemDefinition> DEFINITIONS = new IterableArray<>(SIZE);
 
     /**
-     * A default definition. Used as a substitute for {@code null}.
+     * Sets the backing definitions.
      */
-    private static final ItemDefinition DEFAULT = new ItemDefinition(-1, null, null, false, -1, -1, -1, false, 0.0,
-        false, StringUtils.EMPTY_ARRAY, StringUtils.EMPTY_ARRAY);
+    public static void set(ItemDefinition[] definitions) {
+        ThreadUtils.ensureInitThread();
 
-    /**
-     * Returns the amount of loaded definitions.
-     */
-    public static int count() {
-        return DEFINITIONS.size();
+        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
     }
 
     /**
-     * Retrieves the definition for {@code id}.
+     * Retrieves a definition.
      */
     public static ItemDefinition get(int id) {
         ItemDefinition def = DEFINITIONS.get(id);
-        if (def == DEFAULT) {
+        if (def == null) {
             throw new NoSuchElementException("No definition for id " + id);
         }
         return def;
     }
 
     /**
-     * Returns an iterable containing all definitions.
+     * Returns all definitions.
      */
-    public static ImmutableList<ItemDefinition> all() {
+    public static Iterable<ItemDefinition> all() {
         return DEFINITIONS;
     }
 
@@ -58,16 +63,6 @@ public final class ItemDefinition {
      */
     public static String computeNameForId(int id) {
         return get(id).getName();
-    }
-
-    static { /* Populate the immutable list with definitions. */
-        ItemDefinition[] definitions = new ItemDefinition[7956];
-        Arrays.fill(definitions, DEFAULT);
-
-        ItemDefinitionParser parser = new ItemDefinitionParser(definitions);
-        parser.run();
-
-        DEFINITIONS = ImmutableList.copyOf(definitions);
     }
 
     /**
@@ -147,8 +142,8 @@ public final class ItemDefinition {
      * @param groundActions A list of ground actions.
      */
     public ItemDefinition(int id, String name, String examine, boolean stackable, int value, int notedId,
-        int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
-        String[] groundActions) {
+                          int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
+                          String[] groundActions) {
         this.id = id;
         this.name = name;
         this.examine = examine;

@@ -9,6 +9,8 @@ import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,27 +22,19 @@ import java.util.Map;
 public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinition> {
 
     /**
-     * A map of parsed definitions.
-     */
-    private final Map<Integer, EquipmentDefinition> definitions;
-
-    /**
      * Creates a new {@link EquipmentDefinitionParser}.
-     *
-     * @param definitions A map of parsed definitions.
      */
-    public EquipmentDefinitionParser(Map<Integer, EquipmentDefinition> definitions) {
+    public EquipmentDefinitionParser() {
         super("./data/items/equipment_defs.json");
-        this.definitions = definitions;
     }
 
     @Override
     public EquipmentDefinition readObject(JsonObject reader) throws Exception {
         int id = reader.get("id").getAsInt();
         int index = reader.get("index").getAsInt();
-        boolean twoHanded = reader.get("two_handed").getAsBoolean();
-        boolean fullBody = reader.get("full_body").getAsBoolean();
-        boolean fullHelmet = reader.get("full_helmet").getAsBoolean();
+        boolean twoHanded = reader.get("two_handed?").getAsBoolean();
+        boolean fullBody = reader.get("full_body?").getAsBoolean();
+        boolean fullHelmet = reader.get("full_helmet?").getAsBoolean();
         EquipmentRequirement[] requirements = decodeReqs(reader.get("requirements"));
         int[] bonuses = GsonUtils.getAsType(reader.get("bonuses"), int[].class);
 
@@ -49,7 +43,10 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
 
     @Override
     public void onReadComplete(List<EquipmentDefinition> readObjects) throws Exception {
-        readObjects.forEach(it -> definitions.put(it.getId(), it));
+        LinkedHashMap<Integer, EquipmentDefinition> definitions = new LinkedHashMap<>();
+        readObjects.forEach(def -> definitions.put(def.getId(), def));
+
+        EquipmentDefinition.set(definitions);
     }
 
     /**

@@ -1,41 +1,53 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import io.luna.util.IterableArray;
 import io.luna.util.StringUtils;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.ObjectDefinitionParser;
+
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
- * A definition model describing an in-game object such as doors and trees.
+ * A definition model describing in-game objects.
+ *
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  */
 public final class ObjectDefinition {
 
     /**
+     * The definition count.
+     */
+    public static final int SIZE = 14974;
+
+    /**
      * A list of definitions.
      */
-    public static final ImmutableList<ObjectDefinition> DEFINITIONS;
+    public static final IterableArray<ObjectDefinition> DEFINITIONS = new IterableArray<>(SIZE);
 
     /**
-     * A default definition. Used as a substitute for {@code null}.
+     * Sets the backing definitions.
      */
-    private static final ObjectDefinition DEFAULT = new ObjectDefinition(-1, null, null, false, false, false, false, -1, -1,
-            StringUtils.EMPTY_ARRAY);
+    public static void set(ObjectDefinition[] definitions) {
+        ThreadUtils.ensureInitThread();
+
+        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
+    }
 
     /**
-     * Retrieves the definition for {@code id}.
+     * Retrieves a definition.
      */
     public static ObjectDefinition get(int id) {
         ObjectDefinition def = DEFINITIONS.get(id);
-        if (def == DEFAULT) {
+        if (def == null) {
             throw new NoSuchElementException("No definition for id " + id);
         }
         return def;
     }
 
     /**
-     * Returns an iterable containing all definitions.
+     * Returns all definitions.
      */
     public static Iterable<ObjectDefinition> all() {
         return DEFINITIONS;
@@ -48,16 +60,6 @@ public final class ObjectDefinition {
         return get(id).getName();
     }
 
-    static {
-        /* Populate the immutable list with definitions. */
-        ObjectDefinition[] definitions = new ObjectDefinition[14974];
-        Arrays.fill(definitions, DEFAULT);
-
-        ObjectDefinitionParser parser = new ObjectDefinitionParser(definitions);
-        parser.run();
-
-        DEFINITIONS = ImmutableList.copyOf(definitions);
-    }
 
     /**
      * The identifier.
@@ -75,14 +77,14 @@ public final class ObjectDefinition {
     private final String examine;
 
     /**
-     * The width.
-     */
-    private final int width;
-
-    /**
      * The length.
      */
     private final int length;
+
+    /**
+     * The width.
+     */
+    private final int width;
 
     /**
      * A list of actions.
@@ -100,12 +102,12 @@ public final class ObjectDefinition {
     private final boolean isInteractive;
 
     /**
-     * If the object is obstructive
+     * If the object is obstructive.
      */
     private final boolean isObstructive;
 
     /**
-     * If the object is solid
+     * If the object is solid.
      */
     private final boolean isSolid;
 
@@ -115,24 +117,25 @@ public final class ObjectDefinition {
      * @param id The identifier.
      * @param name The name.
      * @param examine The examine text.
-     * @param isSolid If it is solid
-     * @param isImpenetrable
-     * @param isObstructive
-     * @param isInteractive
-     * @param width
-     * @param length
+     * @param length The length.
+     * @param width The width.
+     * @param isImpenetrable If the object is impenetrable.
+     * @param isInteractive If the object is interactive.
+     * @param isObstructive If the object is obstructive.
+     * @param isSolid If it is solid.
      * @param actions A list of actions.
      */
-    public ObjectDefinition(int id, String name, String examine, boolean isSolid, boolean isImpenetrable, boolean isObstructive, boolean isInteractive, int width, int length, String[] actions) {
+    public ObjectDefinition(int id, String name, String examine,  int length,int width, boolean isImpenetrable,
+                            boolean isInteractive, boolean isObstructive, boolean isSolid, String[] actions) {
         this.id = id;
         this.name = name;
         this.examine = examine;
-        this.isSolid = isSolid;
+        this.length = length;
+        this.width = width;
         this.isImpenetrable = isImpenetrable;
         this.isInteractive = isInteractive;
         this.isObstructive = isObstructive;
-        this.width = width;
-        this.length = length;
+        this.isSolid = isSolid;
         this.actions = ImmutableList.copyOf(actions);
     }
 
@@ -165,51 +168,51 @@ public final class ObjectDefinition {
     }
 
     /**
-     * @return A list of actions.
-     */
-    public ImmutableList<String> getActions() {
-        return actions;
-    }
-
-    /**
-     * @return the width
-     */
-    public int getWidth() {
-        return width;
-    }
-
-    /**
-     * @return the length
+     * @return The length.
      */
     public int getLength() {
         return length;
     }
 
     /**
-     * @return if is Impenetrable
+     * @return The width.
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * @return If the object is impenetrable.
      */
     public boolean isImpenetrable() {
         return isImpenetrable;
     }
 
     /**
-     * @return if is Interactive
+     * @return If the object is interactive.
      */
     public boolean isInteractive() {
         return isInteractive;
     }
 
     /**
-     * @return if is Obstructive
+     * @return If the object is obstructive.
      */
     public boolean isObstructive() {
         return isObstructive;
     }
 
     /**
-     * @return if is Solid
+     * @return If it is solid.
      */
     public boolean isSolid() {
         return isSolid;
+    }
+
+    /**
+     * @return A list of actions.
+     */
+    public ImmutableList<String> getActions() {
+        return actions;
     }
 }

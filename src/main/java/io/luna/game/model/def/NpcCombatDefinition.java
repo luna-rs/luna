@@ -3,6 +3,7 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.NpcCombatDefinitionParser;
 
 import java.util.LinkedHashMap;
@@ -92,12 +93,21 @@ public final class NpcCombatDefinition {
     public static final int RANGED_DEFENCE = 9;
 
     /**
-     * A map of non-player combat definitions.
+     * A map of definitions.
      */
-    public static final ImmutableMap<Integer, NpcCombatDefinition> DEFINITIONS;
+    private static final Map<Integer, NpcCombatDefinition> DEFINITIONS = new LinkedHashMap<>();
 
     /**
-     * Retrieves the definition for {@code id}.
+     * Sets the backing definitions.
+     */
+    public static void set(LinkedHashMap<Integer, NpcCombatDefinition> newDefinitions) {
+        ThreadUtils.ensureInitThread();
+
+        DEFINITIONS.putAll(newDefinitions);
+    }
+
+    /**
+     * Retrieves a definition.
      */
     public static NpcCombatDefinition get(int id) {
         NpcCombatDefinition def = DEFINITIONS.get(id);
@@ -108,23 +118,14 @@ public final class NpcCombatDefinition {
     }
 
     /**
-     * Returns an iterable containing all definitions.
+     * Returns all definitions.
      */
     public static Iterable<NpcCombatDefinition> all() {
         return DEFINITIONS.values();
     }
 
-    static { /* Populate the immutable map with definitions. */
-        Map<Integer, NpcCombatDefinition> definitions = new LinkedHashMap<>();
-
-        NpcCombatDefinitionParser parser = new NpcCombatDefinitionParser(definitions);
-        parser.run();
-
-        DEFINITIONS = ImmutableMap.copyOf(definitions);
-    }
-
     /**
-     * The non-player identifier.
+     * The identifier.
      */
     private final int id;
 
@@ -189,7 +190,7 @@ public final class NpcCombatDefinition {
     private final ImmutableList<Integer> bonuses;
 
     /**
-     * @param id The non-player identifier.
+     * @param id The identifier.
      * @param respawnTime The respawn time (in ticks).
      * @param aggressive If the non-player is aggressive.
      * @param poisonous If the non-player is poisonous.
@@ -222,7 +223,7 @@ public final class NpcCombatDefinition {
     }
 
     /**
-     * @return The non-player identifier.
+     * @return The identifier.
      */
     public int getId() {
         return id;

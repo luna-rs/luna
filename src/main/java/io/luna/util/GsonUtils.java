@@ -19,8 +19,8 @@ public final class GsonUtils {
     /**
      * A general purpose {@link Gson} instance.
      */
-    public static final Gson GSON = new GsonBuilder().disableInnerClassSerialization().setPrettyPrinting()
-        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+    public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().
+            setPrettyPrinting().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
     /**
      * Shortcut to function {@link Gson#fromJson(JsonElement, Class)}.

@@ -22,7 +22,7 @@ public final class Item {
      * Determines if {@code id} is within range.
      */
     public static boolean isIdWithinRange(int id) {
-        return id > 0 && id < ItemDefinition.count();
+        return id > 0 && id < ItemDefinition.SIZE;
     }
 
     /**

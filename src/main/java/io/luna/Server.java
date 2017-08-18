@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
-import io.luna.game.model.Chance;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.NpcCombatDefinition;
@@ -15,8 +14,12 @@ import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.MessageRepository;
-import io.luna.util.Rational;
+import io.luna.util.parser.impl.EquipmentDefinitionParser;
+import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
+import io.luna.util.parser.impl.NpcCombatDefinitionParser;
+import io.luna.util.parser.impl.NpcDefinitionParser;
+import io.luna.util.parser.impl.ObjectDefinitionParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -29,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static io.luna.util.ClassUtils.loadClass;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -64,7 +66,7 @@ public final class Server {
      */
     Server() {
         ExecutorService delegateService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-            new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
+                new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
 
         launchPool = MoreExecutors.listeningDecorator(delegateService);
     }
@@ -125,10 +127,11 @@ public final class Server {
      */
     private void initLaunchTasks() throws Exception {
         launchPool.execute(new MessageRepositoryParser(repository));
-        launchPool.execute(() -> loadClass(ItemDefinition.class));
-        launchPool.execute(() -> loadClass(EquipmentDefinition.class));
-        launchPool.execute(() -> loadClass(NpcCombatDefinition.class));
-        launchPool.execute(() -> loadClass(NpcDefinition.class));
-        launchPool.execute(() -> loadClass(ObjectDefinition.class));
+
+        launchPool.execute(new EquipmentDefinitionParser());
+        launchPool.execute(new ItemDefinitionParser());
+        launchPool.execute(new NpcCombatDefinitionParser());
+        launchPool.execute(new NpcDefinitionParser());
+        launchPool.execute(new ObjectDefinitionParser());
     }
 }
