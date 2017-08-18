@@ -1,6 +1,6 @@
 package io.luna.net.session;
 
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.GameMessage;

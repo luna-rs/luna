@@ -14,7 +14,7 @@
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Player}
 
 
 /* Filling animation. */

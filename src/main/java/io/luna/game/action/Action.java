@@ -2,7 +2,7 @@ package io.luna.game.action;
 
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
-import io.luna.game.model.mobile.Mob;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
 
 /**

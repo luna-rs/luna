@@ -1,6 +1,6 @@
 package io.luna.net.codec.login;
 
-import io.luna.game.model.mobile.PlayerRights;
+import io.luna.game.model.mob.PlayerRights;
 
 /**
  * A model representing login response data.

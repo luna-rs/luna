@@ -13,7 +13,7 @@
 
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.Position
-import io.luna.game.model.mobile.Npc
+import io.luna.game.model.mob.Npc
 
 
 /* Class representing fishing spots in 'FISHING_SPOTS'. */

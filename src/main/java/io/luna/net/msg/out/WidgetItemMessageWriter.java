@@ -1,7 +1,7 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.item.Item;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.MessageWriter;

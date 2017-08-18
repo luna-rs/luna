@@ -2,9 +2,9 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.Entity;
-import io.luna.game.model.mobile.Mob;
-import io.luna.game.model.mobile.Npc;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 
 /**
  * An entity-based event. Not intended for interception.

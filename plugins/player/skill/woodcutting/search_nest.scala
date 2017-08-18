@@ -13,7 +13,7 @@
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.Player
+import io.luna.game.model.mob.Player
 
 
 /* An empty nest item instance. */

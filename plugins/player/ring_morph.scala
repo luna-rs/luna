@@ -1,7 +1,7 @@
 import io.luna.game.event.Event
 import io.luna.game.event.impl.{ButtonClickEvent, EquipmentChangeEvent}
 import io.luna.game.model.item.Equipment.RING
-import io.luna.game.model.mobile.Player
+import io.luna.game.model.mob.Player
 
 
 private val RING_OF_STONE = 6583

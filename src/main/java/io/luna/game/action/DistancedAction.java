@@ -1,7 +1,7 @@
 package io.luna.game.action;
 
 import io.luna.game.model.Position;
-import io.luna.game.model.mobile.Mob;
+import io.luna.game.model.mob.Mob;
 
 /**
  * An {@link Action} implementation that executes when the mob is within a certain range of a position.

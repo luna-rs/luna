@@ -1,7 +1,7 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 
 import java.util.ArrayList;
 import java.util.Iterator;

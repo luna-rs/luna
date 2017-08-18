@@ -13,7 +13,7 @@ import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.Position
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile._
+import io.luna.game.model.mob._
 
 
 /* A command that allows for attributes to be dynamically retrieved or set. */

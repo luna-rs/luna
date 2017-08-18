@@ -14,7 +14,7 @@ import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.Position
 import io.luna.game.model.item.Equipment.HEAD
-import io.luna.game.model.mobile.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Player}
 
 
 /* Class representing altars in the 'ALTAR_TABLE'. */

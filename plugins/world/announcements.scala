@@ -9,7 +9,7 @@
 */
 
 import io.luna.game.event.impl.ServerLaunchEvent
-import io.luna.game.model.mobile.Player
+import io.luna.game.model.mob.Player
 
 
 /* Announcement broadcast interval. */

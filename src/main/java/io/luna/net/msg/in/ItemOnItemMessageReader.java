@@ -4,7 +4,7 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.ItemOnItemEvent;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;

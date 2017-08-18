@@ -1,9 +1,9 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.model.mobile.MobList;
-import io.luna.game.model.mobile.Npc;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.MobList;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;

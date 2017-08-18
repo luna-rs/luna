@@ -1,6 +1,6 @@
 package io.luna.game.model.item;
 
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.WidgetItemMessageWriter;
 

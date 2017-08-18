@@ -16,7 +16,7 @@
 
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Player}
 
 
 /* Class representing food in the 'FOOD_TABLE'. */

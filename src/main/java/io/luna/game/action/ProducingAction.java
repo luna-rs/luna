@@ -2,7 +2,7 @@ package io.luna.game.action;
 
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**

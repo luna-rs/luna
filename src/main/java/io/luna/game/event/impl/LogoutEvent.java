@@ -1,6 +1,6 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 
 /**
  * An event sent when a player logs out.

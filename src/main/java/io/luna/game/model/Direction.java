@@ -1,6 +1,6 @@
 package io.luna.game.model;
 
-import io.luna.game.model.mobile.WalkingQueue.Step;
+import io.luna.game.model.mob.WalkingQueue.Step;
 
 /**
  * An enum representing movement directions.

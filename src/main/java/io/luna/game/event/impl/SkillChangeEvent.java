@@ -1,6 +1,6 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.model.mobile.Mob;
+import io.luna.game.model.mob.Mob;
 
 /**
  * An event sent when a mob's skills change.

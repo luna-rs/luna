@@ -1,6 +1,6 @@
 package io.luna.game.model.item;
 
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 
 /**
  * An item container model representing a player's inventory.

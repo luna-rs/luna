@@ -2,9 +2,9 @@ package io.luna.net.session;
 
 import io.luna.LunaContext;
 import io.luna.game.model.World;
-import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.PlayerCredentials;
-import io.luna.game.model.mobile.PlayerSerializer;
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerCredentials;
+import io.luna.game.model.mob.PlayerSerializer;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;

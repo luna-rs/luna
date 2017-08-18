@@ -1,7 +1,7 @@
 package io.luna.game.action;
 
-import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.WalkingQueue;
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.WalkingQueue;
 
 /**
  * An {@link Action} implementation that details actions related specifically to players.

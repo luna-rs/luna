@@ -3,8 +3,8 @@ package io.luna.game.model.region;
 import com.google.common.collect.ImmutableList;
 import fj.P2;
 import io.luna.LunaConstants;
-import io.luna.game.model.mobile.Mob;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 
 import java.util.Comparator;
 import java.util.function.BiFunction;

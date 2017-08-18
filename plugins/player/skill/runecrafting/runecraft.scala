@@ -11,7 +11,7 @@
 
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.{Animation, Graphic, Player}
+import io.luna.game.model.mob.{Animation, Graphic, Player}
 
 
 /* Class representing runes in the 'RUNE_TABLE'. */

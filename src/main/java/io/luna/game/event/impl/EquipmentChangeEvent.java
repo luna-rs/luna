@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.item.Item;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 
 import java.util.Optional;
 import java.util.OptionalInt;

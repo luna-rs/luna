@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.EventArguments;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 
 /**
  * An object-click based event. Not intended for interception.

@@ -14,8 +14,8 @@
 import io.luna.game.action.HarvestingAction
 import io.luna.game.event.impl.NpcClickEvent.{NpcFirstClickEvent, NpcSecondClickEvent}
 import io.luna.game.model.item.Item
-import io.luna.game.model.mobile.Animation.CANCEL
-import io.luna.game.model.mobile.{Animation, Player}
+import io.luna.game.model.mob.Animation.CANCEL
+import io.luna.game.model.mob.{Animation, Player}
 import io.luna.util.Rational
 
 

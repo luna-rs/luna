@@ -1,10 +1,10 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
-import io.luna.game.model.mobile.Npc;
-import io.luna.game.model.mobile.Player;
-import io.luna.game.model.mobile.update.UpdateBlockSet;
-import io.luna.game.model.mobile.update.UpdateState;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.update.UpdateBlockSet;
+import io.luna.game.model.mob.update.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;

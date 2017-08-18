@@ -10,9 +10,9 @@
 */
 
 import io.luna.game.event.impl.SkillChangeEvent
-import io.luna.game.model.mobile.update.UpdateFlagSet
-import io.luna.game.model.mobile.update.UpdateFlagSet.UpdateFlag
-import io.luna.game.model.mobile.{Graphic, Player, Skill}
+import io.luna.game.model.mob.update.UpdateFlagSet
+import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.{Graphic, Player, Skill}
 import io.luna.util.StringUtils
 
 

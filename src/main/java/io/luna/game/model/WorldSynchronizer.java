@@ -1,9 +1,9 @@
 package io.luna.game.model;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.luna.game.model.mobile.MobList;
-import io.luna.game.model.mobile.Npc;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.MobList;
+import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;

@@ -1,14 +1,10 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
-import io.luna.game.model.mobile.Skill;
+import io.luna.game.model.mob.Skill;
 import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.EquipmentDefinitionParser;
-import scala.tools.nsc.doc.model.Def;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;

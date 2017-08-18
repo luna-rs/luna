@@ -7,7 +7,7 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
-import io.luna.game.model.mobile.Player;
+import io.luna.game.model.mob.Player;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
