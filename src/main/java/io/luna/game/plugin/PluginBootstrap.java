@@ -11,24 +11,25 @@ import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import scala.Console;
 import scala.tools.nsc.Settings;
 import scala.tools.nsc.interpreter.Scripted;
+import scala.tools.nsc.settings.MutableSettings;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.ByteArrayOutputStream;
+import javax.script.ScriptException;
 import java.io.File;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Scanner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -55,30 +56,6 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
         @Override
         public void onFailure(Throwable t) {
             LOGGER.catching(t);
-        }
-    }
-
-    /**
-     * A stream that intercepts output from the {@code Scala} interpreter and forwards the output to {@code System
-     * .err} when there is an evaluation error.
-     */
-    private final class ScalaConsole extends ByteArrayOutputStream {
-
-        @Override
-        public synchronized void flush() {
-            Pattern pattern = Pattern.compile("<console>:([0-9]+): error:");
-
-            String output = toString();
-            Matcher matcher = pattern.matcher(output);
-
-            reset();
-
-            if (matcher.find()) {
-                String fileName = currentFile.get();
-                String message = output.substring(output.indexOf(':', 10) + 8);
-                LOGGER.fatal("Error while interpreting plugin \"{}\" {}{}", fileName, System.lineSeparator(),
-                        message);
-            }
         }
     }
 
@@ -159,29 +136,9 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Initializes this bootstrapper, loading all of the plugins.
      */
     private void init() throws Exception {
-        PrintStream oldConsole = Console.out();
-        ScalaConsole newConsole = new ScalaConsole();
-
-        Console.setOut(new PrintStream(newConsole));
-        try {
-           initClasspath();
-            initFiles();
-            initDependencies();
-            initPlugins();
-        } finally {
-            Console.setOut(oldConsole);
-        }
-    }
-
-    /**
-     * Configures the {@code Scala} interpreter to use the {@code Java} classpath.
-     */
-    private void initClasspath() throws Exception {
-        Scripted interpreter = (Scripted) engine;
-        Settings settings = interpreter.intp().settings();
-        Settings.BooleanSetting booleanSetting = (Settings.BooleanSetting) settings.usejavacp();
-
-        booleanSetting.value_$eq(true);
+        initFiles();
+        initDependencies();
+        initPlugins();
     }
 
     /**
@@ -193,7 +150,9 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
                 filter(File::isFile);
 
         for (File file : dirFiles) {
-            files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
+            if (file.getName().endsWith(".scala")) {
+                files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
+            }
         }
     }
 
@@ -201,14 +160,39 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Injects state into the script engine and evaluates dependencies.
      */
     private void initDependencies() throws Exception {
-        engine.put("$ctx$", context);
+        engine.put("$context$", context);
         engine.put("$logger$", LOGGER);
         engine.put("$pipelines$", pipelines);
 
         currentFile.set("bootstrap.scala");
 
         String bootstrap = files.remove(currentFile.get());
-        engine.eval(bootstrap);
+
+    }
+
+    /**
+     * Splits the Scala bootstrap up into modules.
+     */
+    private void splitModules(String bootstrap) throws ScriptException {
+        // TODO Cleanup, error handling by module. Temporary workaround.
+        StringBuilder eval = new StringBuilder();
+        boolean first = true;
+        try (Scanner sc = new Scanner(bootstrap)) {
+            while (sc.hasNextLine()) {
+                String nextLine = sc.nextLine();
+                if (nextLine.contains("$startModule$(\"module_")) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        engine.eval(eval.toString());
+                        eval.setLength(0);
+                    }
+                } else {
+                    eval.append(nextLine).append('\n');
+                }
+            }
+            engine.eval(eval.toString());
+        }
     }
 
     /**
