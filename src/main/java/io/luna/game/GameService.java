@@ -91,7 +91,6 @@ public final class GameService extends AbstractScheduledService {
     @Override
     public void shutDown() {
         try {
-            /* TODO needs to be fixed, tested, and debugged */
             World world = context.getWorld();
 
             LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
