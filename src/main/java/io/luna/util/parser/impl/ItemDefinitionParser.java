@@ -5,6 +5,7 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -13,6 +14,11 @@ import java.util.List;
  * @author lare96 <http://github.org/lare96>
  */
 public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
+
+    /**
+     * A String array of empty inventory and ground actions.
+     */
+    private final String[] empty = new String[]{"null", "null", "null", "null", "null"};
 
     /**
      * Creates a new {@link ItemDefinitionParser}.
@@ -26,18 +32,21 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
         int id = reader.get("id").getAsInt();
         String name = reader.get("name").getAsString();
         String examine = reader.get("examine").getAsString();
-        boolean stackable = reader.get("stackable?").getAsBoolean();
+        boolean stackable = reader.get("stack?").getAsBoolean();
         int baseValue = reader.get("value").getAsInt();
         int notedId = reader.get("noted_id").getAsInt();
         int unnotedId = reader.get("unnoted_id").getAsInt();
         boolean membersOnly = reader.get("members_only?").getAsBoolean();
         double weight = reader.get("weight").getAsDouble();
-        boolean tradable = reader.get("tradeable?").getAsBoolean();
+        boolean tradeable = reader.get("trade?").getAsBoolean();
         String[] inventoryActions = GsonUtils.getAsType(reader.get("inventory_actions"), String[].class);
         String[] groundActions = GsonUtils.getAsType(reader.get("ground_actions"), String[].class);
 
+        inventoryActions = inventoryActions.length == 0 ? empty : inventoryActions;
+        groundActions = groundActions.length == 0 ? empty : groundActions;
+
         return new ItemDefinition(id, name, examine, stackable, baseValue, notedId, unnotedId, membersOnly, weight,
-            tradable, inventoryActions, groundActions);
+                tradeable, inventoryActions, groundActions);
     }
 
     @Override

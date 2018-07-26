@@ -26,7 +26,7 @@ public final class MessageRepositoryParser extends GsonParser<P3<Integer, Intege
      * @param messageRepository The message repository.
      */
     public MessageRepositoryParser(MessageRepository messageRepository) {
-        super("./data/io/message_repository.json");
+        super("./data/io/message_repo.json");
         this.messageRepository = messageRepository;
     }
 
