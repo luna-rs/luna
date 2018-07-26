@@ -1,8 +1,5 @@
 /*
- A plugin for the Herblore skill that adds functionality for identifying herbs.
-
- SUPPORTS:
-  -> Identifying all herbs.
+ A plugin that identifies herbs.
 
  AUTHOR: lare96
 */

@@ -245,7 +245,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction
     val fishArray = new Array[Item](fishCount)
 
     def randomFish = {
-      val fish = rand(tool.fish)
+      val fish = pick(tool.fish)
 
       exp += fish.exp
       if (fish.level <= skill.getLevel) fish else tool.fish.head

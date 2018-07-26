@@ -4,9 +4,6 @@
  SUPPORTS:
   -> Making unfinished potions from all herbs.
 
- TODO:
-  -> Verify if vial of water can be used on herb.
-
  AUTHOR: lare96
 */
 

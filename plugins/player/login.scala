@@ -6,9 +6,6 @@
   -> Indicating if the player is muted (and for how long).
   -> Configuring interface states.
 
- TODO:
-  -> Add more interface states.
-
  AUTHOR: lare96
 */
 

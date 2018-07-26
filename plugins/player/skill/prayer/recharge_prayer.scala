@@ -4,9 +4,6 @@
  SUPPORTS:
   -> Recharging prayer at altars.
 
- TODO:
-  -> Add more altar object identifiers.
-
  AUTHOR: lare96
 */
 

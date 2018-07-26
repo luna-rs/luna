@@ -1,12 +1,6 @@
 /*
  A plugin that adds functionality for opening banks.
 
- SUPPORTS:
-  -> Opening a variety of banks by first click.
-
- TODO:
-  -> Add more bank identifiers.
-
  AUTHOR: lare96
 */
 

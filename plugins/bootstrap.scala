@@ -41,8 +41,13 @@ import scala.reflect.ClassTag
 import scala.util.Random
 
 
+/* A dummy method for the Java bootstrap. Is always the first declaration. */
+def $startModule$(name: String) {}
+
+
+$startModule$("module_fields")
 /* The injected state. */
-val ctx = $ctx$.asInstanceOf[LunaContext]
+val ctx = $context$.asInstanceOf[LunaContext]
 val logger = $logger$.asInstanceOf[Logger]
 val pipelines = $pipelines$.asInstanceOf[EventListenerPipelineSet]
 
@@ -101,11 +106,9 @@ val CHANCE_RARE = Rational.RARE
 val CHANCE_VERY_RARE = Rational.VERY_RARE
 
 
+$startModule$("module_implicit_functions")
 /* Implicit conversions. */
 implicit def javaToScalaRange(range: com.google.common.collect.Range[java.lang.Integer]): Range = {
-  failIf(!range.hasLowerBound || !range.hasUpperBound,
-    "Conversion from Range[Integer] to Range requires a lower and upper bound")
-
   var lower = range.lowerEndpoint.toInt
   var upper = range.upperEndpoint.toInt
 
@@ -171,9 +174,10 @@ implicit def scalaToJavaSupplier[T](func: () => T): Supplier[T] = new Supplier[T
 }
 
 
+$startModule$("module_miscellaneous_functions")
 /* Random generation functions. */
 def rand = ThreadLocalRandom.current
-def rand[E](seq: Seq[E]): E = seq((rand.nextDouble * seq.length).toInt)
+def pick[E](seq: Seq[E]): E = seq((rand.nextDouble * seq.length).toInt)
 def rand(from: Int, to: Int): Int = rand.nextInt((to - from) + 1) + from
 def rand(to: Int): Int = rand.nextInt(to + 1)
 
@@ -208,6 +212,7 @@ def fail(msg: Any = "[failure]: no reason specified") = throw new PluginFailureE
 def failIf(cond: Boolean, msg: => Any = "[failure]: cond == false") = if (cond) { fail(msg) }
 
 
+$startModule$("module_event_interception_functions")
 /* Normal event interception function. No matching happens here. */
 def on[E <: Event](eventListener: E => Unit)
   (implicit tag: ClassTag[E]): Unit =
@@ -242,6 +247,7 @@ def async(func: => Unit) = service.submit(new Runnable {
 })
 
 
+$startModule$("module_implicit_classes")
 /*
  All implicit (monkey patching) classes below are 'extending' Java classes by creating new functions for them. We
  do this to ensure that all code coming from Java is as concise and idiomatic (Scala-like) as possible.
@@ -391,9 +397,9 @@ implicit class RichWorld(world: World) {
   }
 
   def scheduleInterval(range: Range)(action: Task => Unit) = {
-    schedule(rand(range)) { task =>
+    schedule(pick(range)) { task =>
       action(task)
-      task.setDelay(rand(range))
+      task.setDelay(pick(range))
     }
   }
 

@@ -5,11 +5,8 @@
   -> Internet protocol address ban.
   -> Permanent ban/mute.
   -> Temporary ban/mute.
-   -> Specific punishment lift dates using 'LocalDate'.
+  -> Specific punishment lift dates.
   -> Kicking (forced disconnect).
-
- TODO:
-  -> MAC address ban (maybe?).
 
  AUTHOR: lare96
 */
@@ -21,6 +18,7 @@ import io.luna.game.event.impl.CommandEvent
 import scala.reflect.io.File
 
 
+// TODO Put a few of these together on one interface
 /* Perform a lookup for the person we're punishing. */
 private def findPunish(msg: CommandEvent) = {
   val name = msg.args(0).replaceAll("_", "")

@@ -32,6 +32,6 @@ on[ServerLaunchEvent] { msg =>
   world.scheduleForever(TICK_INTERVAL) {
     world.getPlayers.
       filter(FILTER).
-      foreach { _.sendMessage(rand(MESSAGES)) }
+      foreach { _.sendMessage(pick(MESSAGES)) }
   }
 }

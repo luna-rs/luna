@@ -5,9 +5,6 @@
   -> All fillable items.
   -> A variety of water sources.
 
- TODO:
-   -> Add more water sources.
-
  AUTHOR: lare96
 */
 

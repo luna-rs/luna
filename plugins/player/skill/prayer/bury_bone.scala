@@ -5,9 +5,6 @@
   -> Burying most bones.
   -> Throttling (can only bury every 1.2 seconds).
 
- TODO:
-  -> Add more types of bones.
-
  AUTHOR: lare96
 */
 
