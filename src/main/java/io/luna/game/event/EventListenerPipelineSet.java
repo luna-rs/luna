@@ -17,7 +17,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * The map of pipelines.
      */
-    public final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
+    private final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
      * Adds a new event listener to a pipeline within this set.
