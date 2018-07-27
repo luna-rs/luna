@@ -13,9 +13,7 @@ import java.util.Optional;
  */
 public abstract class ItemContainerAdapter implements ItemContainerListener {
 
-    /* TODO Don't send an entire container update even on a bulk operation.
-     Think of better solution.
-     */
+    // TODO Don't send an entire container update even on a bulk operation.
 
     /**
      * The player.

@@ -153,6 +153,8 @@ public abstract class Entity {
      */
     public final void setPosition(Position newPosition) {
         RegionCoordinates next = RegionCoordinates.create(newPosition);
+
+        // TODO Does this cover all possible scenarios? What if the player's next region is the same?
         if (position != null) {
             if (currentRegion.getCoordinates().equals(next)) {
                 plugins.post(new PositionChangeEvent(this, position, newPosition));

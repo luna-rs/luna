@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class ItemOnObjectMessageReader extends MessageReader {
 
+    // TODO Ensure Object exists
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int itemInterfaceId = msg.getPayload().getShort(false);

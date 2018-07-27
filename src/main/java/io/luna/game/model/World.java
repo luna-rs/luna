@@ -71,7 +71,7 @@ public final class World {
     /**
      * Schedules {@code task} to run sometime in the future.
      */
-    public void schedule(Task task) {
+    public void  schedule(Task task) {
         tasks.schedule(task);
     }
 
@@ -115,7 +115,7 @@ public final class World {
             if (player == null) {
                 break;
             }
-            /* TODO: Anti x-logging. */
+            // TODO Disable logout if player is still in Combat
             playerList.remove(player);
         }
     }

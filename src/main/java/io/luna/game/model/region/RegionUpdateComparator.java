@@ -24,8 +24,7 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
      * A makeshift type alias for the verbose and confusing {@link BiFunction} type declaration.
      */
     @FunctionalInterface private interface RegionFactor extends BiFunction<Mob, Mob, P2<Integer, Integer>> {
-        /* It's times like this I miss Scala :( could just do:
-             type RegionFactor = (MobileEntity, MobileEntity) => (Int, Int) */
+
     }
 
     /**

@@ -225,6 +225,7 @@ public abstract class Mob extends Entity {
     /**
      * Interacts with {@code entity}.
      */
+    // TODO Reset on movement, teleportation, etc.
     public final void interact(Entity entity) {
         if (entity == null) { /* Reset the current interaction. */
             interactionIndex = OptionalInt.of(65535);

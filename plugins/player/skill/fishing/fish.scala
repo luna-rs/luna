@@ -224,6 +224,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction
 
   override def canInit = {
     if (canFish) {
+      // TODO Message should correspond to the tool being used
       plr.sendMessage("You begin to fish...")
       true
     } else {

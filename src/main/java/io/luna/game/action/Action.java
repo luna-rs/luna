@@ -24,12 +24,12 @@ public abstract class Action<T extends Mob> {
     /**
      * A {@link Task} implementation that processes an Action.
      */
-    private final class ActionRunner extends Task {
+    private final class ActionProcessor extends Task {
 
         /**
-         * Creates a new {@link ActionRunner}.
+         * Creates a new {@link ActionProcessor}.
          */
-        private ActionRunner() {
+        private ActionProcessor() {
             super(instant, delay);
         }
 
@@ -71,7 +71,7 @@ public abstract class Action<T extends Mob> {
     /**
      * The task processing this action.
      */
-    private final ActionRunner runner;
+    private final ActionProcessor runner;
 
     /**
      * Creates a new {@link Action}.
@@ -84,27 +84,23 @@ public abstract class Action<T extends Mob> {
         this.mob = mob;
         this.instant = instant;
         this.delay = delay;
-        runner = new ActionRunner();
+        runner = new ActionProcessor();
     }
 
-    /**
-     * Will always throw an {@link UnsupportedOperationException}.
-     */
+    // TODO Add support for Action equality. You should be able to tell if two actions are equal.
     @Override
     public final boolean equals(Object obj) {
-        throw new UnsupportedOperationException("equals(Object) is not supported for type Action");
+        return false;
     }
 
-    /**
-     * Will always throw an {@link UnsupportedOperationException}.
-     */
+    // TODO This will be based off of whatever is put for "equals"
     @Override
     public final int hashCode() {
-        throw new UnsupportedOperationException("hashCode() is not supported for type Action");
+        return 0;
     }
 
     /**
-     * Initializes this action by scheduling the {@link ActionRunner}.
+     * Initializes this action by scheduling the {@link ActionProcessor}.
      */
     protected final void init() {
         World world = mob.getWorld();
@@ -112,7 +108,7 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Interrupts this action by cancelling the {@link ActionRunner}.
+     * Interrupts this action by cancelling the {@link ActionProcessor}.
      */
     protected final void interrupt() {
         runner.cancel();
@@ -133,15 +129,15 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Function called every {@code delay} by the {@link ActionRunner}.
+     * Function called every {@code delay} by the {@link ActionProcessor}.
      */
     protected abstract void call();
 
     /**
      * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
      */
-    public final boolean isInterrupted() {
-        return !runner.isRunning();
+    public final boolean isRunning() {
+        return runner.isRunning();
     }
 
     /**

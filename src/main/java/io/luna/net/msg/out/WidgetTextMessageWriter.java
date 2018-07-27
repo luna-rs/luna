@@ -13,6 +13,8 @@ import io.luna.net.msg.MessageWriter;
  */
 public final class WidgetTextMessageWriter extends MessageWriter {
 
+    // TODO Some sort of caching system to reduce duplicate writes?
+
     /**
      * The text.
      */

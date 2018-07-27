@@ -81,9 +81,7 @@ public final class Area {
     private Area(int southWestX, int southWestY, int northEastX, int northEastY, int z) {
         checkArgument(northEastX >= southWestX, "northEastX cannot be smaller than southWestX");
         checkArgument(northEastY >= southWestY, "northEastY cannot be smaller than southWestY");
-        checkArgument(southWestX >= 0 && southWestY >= 0 &&
-            northEastX >= 0 && northEastY >= 0 &&
-            z >= 0 && z <= 3, "Parameters must conform to rules of Position.class");
+        checkArgument(southWestX >= 0 && southWestY >= 0 && z >= 0 && z <= 3, "Parameters must conform to rules of Position.class");
 
         this.southWestX = southWestX;
         this.southWestY = southWestY;
@@ -143,7 +141,7 @@ public final class Area {
 
     /**
      * Computes and returns a <strong>new</strong> list of positions that make up this
-     * area. Runs in approx. O(n*m) time.
+     * area. Runs in approx. O(n^2) time.
      */
     public List<Position> toList() {
         List<Position> toList = new ArrayList<>(size());

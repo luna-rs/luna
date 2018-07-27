@@ -1,6 +1,5 @@
 package io.luna.game.plugin;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -11,18 +10,13 @@ import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import scala.tools.nsc.Settings;
-import scala.tools.nsc.interpreter.Scripted;
-import scala.tools.nsc.settings.MutableSettings;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -145,12 +139,10 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      * Parses files in the plugin directory and caches their contents.
      */
     private void initFiles() throws Exception {
-        FluentIterable<File> dirFiles = Files.fileTreeTraverser().
-                preOrderTraversal(new File(DIR)).
-                filter(File::isFile);
+        Iterable<File> dirFiles = Files.fileTraverser().depthFirstPreOrder(new File(DIR));
 
         for (File file : dirFiles) {
-            if (file.getName().endsWith(".scala")) {
+            if (file.isFile() && file.getName().endsWith(".scala")) {
                 files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
             }
         }
@@ -167,13 +159,13 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
         currentFile.set("bootstrap.scala");
 
         String bootstrap = files.remove(currentFile.get());
-
+        splitAndRunModules(bootstrap);
     }
 
     /**
      * Splits the Scala bootstrap up into modules.
      */
-    private void splitModules(String bootstrap) throws ScriptException {
+    private void splitAndRunModules(String bootstrap) throws ScriptException {
         // TODO Cleanup, error handling by module. Temporary workaround.
         StringBuilder eval = new StringBuilder();
         boolean first = true;

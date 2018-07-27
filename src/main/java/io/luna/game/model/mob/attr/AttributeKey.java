@@ -39,9 +39,6 @@ public final class AttributeKey<T> {
         forPersistent("unban_date", "n/a");
         forPersistent("unmute_date", "n/a");
 
-        /* Cooking */
-        forTransient("food_to_cook", 0);
-
         /* Prayer */
         forTransient("last_bone_bury", 0L);
 

@@ -10,7 +10,7 @@ import java.util.Iterator;
  * @author lare96 <http://github.org/lare96>
  */
 public final class IterableArray<T> implements Iterable<T> {
-
+// TODO Ugly stuff. Think of alternative and remove
     /**
      * The array.
      */
@@ -21,7 +21,7 @@ public final class IterableArray<T> implements Iterable<T> {
      *
      * @param array The array.
      */
-    public IterableArray(T[] array){
+    public IterableArray(T[] array) {
         this.array = array;
     }
 

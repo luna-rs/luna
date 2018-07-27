@@ -17,6 +17,7 @@ public abstract class PlayerAction extends Action<Player> {
         super(player, instant, delay);
     }
 
+    // TODO This could be applied to both Players and NPCs? Simplify?
     @Override
     protected final void onInit() {
         if (canInit()) {

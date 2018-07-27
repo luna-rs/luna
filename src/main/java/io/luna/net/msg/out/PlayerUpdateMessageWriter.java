@@ -25,6 +25,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
      */
     private final UpdateBlockSet<Player> blockSet = UpdateBlockSet.PLAYER_BLOCK_SET;
 
+    // TODO (Possible?) Buffer resource leak needs to be fixed. Will do more debugging
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
