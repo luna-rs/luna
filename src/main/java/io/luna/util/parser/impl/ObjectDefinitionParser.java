@@ -15,6 +15,12 @@ import java.util.List;
 public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
 
     /**
+     * A String array of empty object actions.
+     */
+    private final String[] empty = new String[]{"null", "null", "null", "null", "null", "null",
+            "null", "null", "null", "null"};
+
+    /**
      * Creates a new {@link ObjectDefinitionParser}.
      */
     public ObjectDefinitionParser() {
@@ -33,6 +39,8 @@ public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
         boolean isObs = reader.get("obstructive?").getAsBoolean();
         boolean isSolid = reader.get("solid?").getAsBoolean();
         String[] actions = GsonUtils.getAsType(reader.get("actions"), String[].class);
+
+        actions = actions.length == 0 ? empty : actions;
 
         return new ObjectDefinition(id, name, examine, length, width, isImp, isInt, isObs, isSolid, actions);
     }

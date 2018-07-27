@@ -15,6 +15,11 @@ import java.util.List;
 public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
 
     /**
+     * A String array of empty NPC actions.
+     */
+    private final String[] empty = new String[]{"null", "null", "null", "null", "null"};
+
+    /**
      * Creates a new {@link NpcDefinitionParser}.
      */
     public NpcDefinitionParser() {
@@ -32,6 +37,8 @@ public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
         int walkLeftAnimation = reader.get("walk_left_animation").getAsInt();
         int walkRightAnimation = reader.get("walk_right_animation").getAsInt();
         String[] actions = GsonUtils.getAsType(reader.get("actions"), String[].class);
+
+        actions = actions.length == 0 ? empty : actions;
 
         return new NpcDefinition(id, name, examine, size, walkAnimation, walkBackAnimation, walkLeftAnimation,
             walkRightAnimation, actions);
