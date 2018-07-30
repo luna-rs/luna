@@ -75393,8 +75393,8 @@
     "value": 0,
     "noted_id": -1,
     "unnoted_id": -1,
-    "stack?": false,
-    "members_only?": false,
+    "stack?": true,
+    "members_only?": true,
     "trade?": true,
     "inventory_actions": [
       "Eat",
