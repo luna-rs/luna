@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Session session = getSession(ctx);
-        session.close();
+        session.onDispose();
     }
 
     @Override

@@ -9,6 +9,7 @@ import io.luna.net.msg.MessageRepository;
 import io.luna.net.msg.MessageWriter;
 import io.netty.channel.Channel;
 
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -63,6 +64,7 @@ public final class GameSession extends Session {
 
     @Override
     public void onDispose() {
+        player.getTextCache().clear();
         player.getWorld().queueLogout(player);
     }
 
@@ -80,7 +82,8 @@ public final class GameSession extends Session {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            channel.write(msg.handleOutboundMessage(player), channel.voidPromise());
+            Optional<GameMessage> gameMsg = msg.handleOutboundMessage(player);
+            gameMsg.ifPresent(write -> channel.write(write, channel.voidPromise()));
         }
     }
 

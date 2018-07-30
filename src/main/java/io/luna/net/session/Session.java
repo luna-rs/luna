@@ -34,20 +34,10 @@ public class Session {
     }
 
     /**
-     * Closes the underlying channel.
-     */
-    public final void close() {
-        Channel channel = getChannel();
-        checkState(!channel.isActive(), "call getChannel().close() instead!");
-
-        onDispose();
-    }
-
-    /**
      * Executed when {@code close()} is invoked.
      */
     public void onDispose() {
-         /* TODO Just use close().addListener(...) ??? */
+
     }
 
     /**

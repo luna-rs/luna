@@ -34,6 +34,7 @@ public final class LunaConstants {
             JsonObject gameConstants = tomlReader.getTable("game").to(JsonObject.class);
             STAGGERED_UPDATING = gameConstants.get("staggered_updating").getAsBoolean();
             STARTING_POSITION = getAsType(gameConstants.get("starting_position"), Position.class);
+            PACKET_126_CACHING = gameConstants.get("packet_126_caching").getAsBoolean();
 
             JsonObject utilityConstants = tomlReader.getTable("utility").to(JsonObject.class);
             ASYNCHRONOUS_LOGGING = utilityConstants.get("asynchronous_logging").getAsBoolean();
@@ -98,4 +99,11 @@ public final class LunaConstants {
      * improves performance.
      */
     public static final boolean ASYNCHRONOUS_LOGGING;
+
+    /**
+     * If the String inputs sent as packet #126 should be recorded and cached. This should be enabled if
+     * you're performing frame #126 writes very frequently. The caching will improve performance if many writes
+     * are done, but can slightly regress performance if few are done.
+     */
+    public static final boolean PACKET_126_CACHING;
 }

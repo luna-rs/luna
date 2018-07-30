@@ -3,6 +3,8 @@ package io.luna.net.msg;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 
+import java.util.Optional;
+
 /**
  * An abstraction model representing an outbound message handler.
  *
@@ -18,8 +20,11 @@ public abstract class MessageWriter {
     /**
      * Converts the buffer returned by {@code write(Player)} to a game packet.
      */
-    public GameMessage handleOutboundMessage(Player player) {
+    public Optional<GameMessage> handleOutboundMessage(Player player) {
         ByteMessage msg = write(player);
-        return new GameMessage(msg.getOpcode(), msg.getType(), msg);
+        if(msg == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new GameMessage(msg.getOpcode(), msg.getType(), msg));
     }
 }
