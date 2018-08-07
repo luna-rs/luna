@@ -28,7 +28,9 @@ import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -149,6 +151,12 @@ public final class Player extends Mob {
      * The bank.
      */
     private final Bank bank = new Bank(this);
+
+    /**
+     * The text cache.
+     */
+    private final Map<Integer, String> textCache =
+            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : new HashMap<>(0);
 
     /**
      * The cached update block.
@@ -302,7 +310,7 @@ public final class Player extends Mob {
      * Displays the default tab interfaces.
      */
     public void displayTabInterfaces() {
-        int[] interfaces = { 2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962 };
+        int[] interfaces = {2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962};
         for (int index = 0; index < interfaces.length; index++) {
             queue(new TabInterfaceMessageWriter(index, interfaces[index]));
         }
@@ -412,6 +420,21 @@ public final class Player extends Mob {
         AttributeValue<Double> attr = attributes.get("run_energy");
         attr.set(runEnergy);
 
+        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+    }
+
+    /**
+     * Sets the 'run_energy' attribute.
+     */
+    public void increaseRunEnergy(double runEnergy) {
+        AttributeValue<Double> attr = attributes.get("run_energy");
+        double newEnergy = attr.get() + runEnergy;
+        if (newEnergy > 100.0) {
+            newEnergy = 100.0;
+        } else if (newEnergy < 0.0) {
+            newEnergy = 0.0;
+        }
+        attr.set(newEnergy);
         queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
@@ -709,5 +732,12 @@ public final class Player extends Mob {
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
         updateFlags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The text cache.
+     */
+    public Map<Integer, String> getTextCache() {
+        return textCache;
     }
 }
