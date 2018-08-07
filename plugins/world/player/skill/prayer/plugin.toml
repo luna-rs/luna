@@ -1,0 +1,8 @@
+[metadata]
+name = "Prayer"
+description = "Adds functionality for the Prayer skill."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

@@ -1,0 +1,8 @@
+[metadata]
+name = "Announcements"
+description = "Sends server-wide announcements at specified intervals."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

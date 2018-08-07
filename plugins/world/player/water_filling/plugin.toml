@@ -1,0 +1,8 @@
+[metadata]
+name = "Water filling"
+description = "Adds functionality for filling items with water."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

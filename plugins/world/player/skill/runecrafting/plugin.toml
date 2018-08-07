@@ -1,0 +1,8 @@
+[metadata]
+name = "Runecrafting"
+description = "Adds functionality for the Runecrafting skill."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

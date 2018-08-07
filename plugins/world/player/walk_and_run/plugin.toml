@@ -1,0 +1,8 @@
+[metadata]
+name = "Walk/Run button"
+description = "Adds functionality for toggling between running and walking using the button in the settings tab."
+hidden = true
+dependencies = [ ]
+authors = [
+  "lare96"
+]

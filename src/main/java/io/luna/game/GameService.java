@@ -13,7 +13,9 @@ import org.apache.logging.log4j.Logger;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,12 +31,6 @@ public final class GameService extends AbstractScheduledService {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A cached thread pool for low-priority tasks.
-     */
-    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
-        Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build()));
-
-    /**
      * A queue of tasks to run.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
@@ -45,12 +41,24 @@ public final class GameService extends AbstractScheduledService {
     private final LunaContext context;
 
     /**
+     * A cached thread pool for low-priority tasks.
+     */
+    private final ListeningExecutorService executorService;
+
+    /**
      * Creates a new {@link GameService}.
      *
      * @param context The context instance.
      */
     public GameService(LunaContext context) {
         this.context = context;
+    }
+
+    {
+        ThreadFactory workerFactory = new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build();
+        ExecutorService workerPool = Executors.newCachedThreadPool(workerFactory);
+
+        executorService = MoreExecutors.listeningDecorator(workerPool);
     }
 
     @Override
@@ -93,7 +101,7 @@ public final class GameService extends AbstractScheduledService {
         try {
             World world = context.getWorld();
 
-            LOGGER.fatal("The asynchronous game service has been shutdown, exiting...");
+            LOGGER.fatal("The game service has been shutdown, exiting...");
             syncTasks.forEach(Runnable::run);
             syncTasks.clear();
             world.getPlayers().clear();

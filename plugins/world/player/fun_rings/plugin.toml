@@ -1,0 +1,8 @@
+[metadata]
+name = "Fun rings"
+description = "Adds functionality for fun rings such as the Ring of Stone, Easter ring, etc."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

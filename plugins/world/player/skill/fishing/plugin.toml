@@ -1,0 +1,8 @@
+[metadata]
+name = "Fishing"
+description = "Adds functionality for the Fishing skill."
+hidden = false
+dependencies = [ ]
+authors = [
+  "lare96"
+]

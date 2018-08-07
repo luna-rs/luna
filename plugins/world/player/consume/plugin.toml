@@ -1,0 +1,8 @@
+[metadata]
+name = "Consume food/drinks"
+description = "Allows players to consume food and drinks."
+hidden = true
+dependencies = [ ]
+authors = [
+  "lare96"
+]

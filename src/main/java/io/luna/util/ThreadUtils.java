@@ -1,5 +1,10 @@
 package io.luna.util;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -16,5 +21,14 @@ public final class ThreadUtils {
         Thread currentThread = Thread.currentThread();
         boolean isInitThread = currentThread.getName().equals("LunaInitializationThread");
         checkState(isInitThread, String.format("thread[%s] not an initialization thread", currentThread));
+    }
+
+    /**
+     * Returns a new fixed thread pool containing] {@code Runtime.getRuntime().availableProcessors()}
+     * threads.
+     */
+    public static ExecutorService newThreadPool(String name) {
+        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+                new ThreadFactoryBuilder().setNameFormat(name).build());
     }
 }

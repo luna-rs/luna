@@ -1,55 +1,101 @@
 package io.luna.game.plugin;
 
-import com.google.common.io.Files;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
+import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.util.BlockingTaskManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Scanner;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PluginBootstrap implements Callable<EventListenerPipelineSet> {
+public final class PluginBootstrap {
 
     /**
-     * A callback that will swap old event pipelines out for newly constructed ones.
+     * A task that will load a single plugin directory.
      */
-    private final class PluginBootstrapCallback implements FutureCallback<EventListenerPipelineSet> {
+    private final class PluginLoader implements Runnable {
 
-        @Override
-        public void onSuccess(EventListenerPipelineSet result) {
-            PluginManager plugins = context.getPlugins();
-            GameService service = context.getService();
+        /**
+         * All plugin files and their contents.
+         */
+        private final LinkedHashMap<String, String> fileMap = new LinkedHashMap<>();
 
-            service.sync(() -> plugins.getPipelines().swap(result));
+        /**
+         * The plugin directory.
+         */
+        private final Path dir;
+
+        /**
+         * The plugin metadata file directory.
+         */
+        private final Path pluginMetadata;
+
+        /**
+         * Creates a new {@link PluginLoader}.
+         *
+         * @param dir The plugin directory.
+         * @param pluginMetadata The plugin metadata file directory.
+         */
+        public PluginLoader(Path dir, Path pluginMetadata) {
+            this.dir = dir;
+            this.pluginMetadata = pluginMetadata;
         }
 
         @Override
-        public void onFailure(Throwable t) {
-            LOGGER.catching(t);
+        public void run() {
+            //noinspection ConstantConditions
+            Set<String> fileList = Arrays.stream(dir.toFile().list()).
+                    filter(f -> f.endsWith(".scala")).
+                    collect(Collectors.toSet());
+
+            // Metadata TOML -> Java
+            PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).
+                    getTable("metadata").to(PluginMetadata.class);
+
+            // Read dependencies first, this order will be respected during script execution.
+            for (String dependencies : metadata.getDependencies()) {
+                loadFileContents(dependencies);
+                fileList.remove(dependencies);
+            }
+
+            // Read other scripts.
+            fileList.forEach(this::loadFileContents);
+            plugins.put(metadata.getName(), new Plugin(metadata, fileMap));
+        }
+
+        /**
+         * Loads the file with {@code fileName} into the backing map.
+         */
+        private void loadFileContents(String fileName) {
+            try {
+                byte[] sourceBytes = Files.readAllBytes(dir.resolve(fileName));
+                fileMap.put(fileName, new String(sourceBytes));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -61,7 +107,7 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     /**
      * The directory containing plugin files.
      */
-    private static final String DIR = "./plugins/";
+    private static final Path DIR = Paths.get("./plugins");
 
     /**
      * The pipeline set.
@@ -69,19 +115,19 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
     private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
     /**
-     * A map of file names to their contents.
+     * A map of plugin names to instances.
      */
-    private final Map<String, String> files = new HashMap<>();
-
-    /**
-     * The current file being evaluated.
-     */
-    private final AtomicReference<String> currentFile = new AtomicReference<>();
+    private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
 
     /**
      * The context instance.
      */
     private final LunaContext context;
+
+    /**
+     * The thread pool.
+     */
+    private final ListeningExecutorService threadPool;
 
     /**
      * The script engine evaluating {@code Scala} code.
@@ -93,107 +139,91 @@ public final class PluginBootstrap implements Callable<EventListenerPipelineSet>
      *
      * @param context The context instance.
      */
-    public PluginBootstrap(LunaContext context) {
+    public PluginBootstrap(LunaContext context, ListeningExecutorService threadPool) {
         this.context = context;
-        engine = new ScriptEngineManager(ClassLoader.getSystemClassLoader()).getEngineByName("scala");
-    }
-
-    @Override
-    public EventListenerPipelineSet call() throws Exception {
-        init();
-        LOGGER.info("A total of {} Scala plugin files were successfully interpreted.", box(files.size()));
-        return pipelines;
+        this.threadPool = threadPool;
+        engine = createScriptEngine();
     }
 
     /**
-     * Initializes this bootstrap using the argued listening executor.
+     * Creates a new {@link PluginBootstrap} that will <strong>synchronously</strong> bootstrap plugins.
+     *
+     * @param context The context instance.
      */
-    public void load(ListeningExecutorService service) {
-        Executor directExecutor = MoreExecutors.directExecutor();
-
-        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(),
-                directExecutor);
-    }
-
-    /**
-     * Initializes this bootstrap using the default listening executor.
-     */
-    public void load() {
-        GameService service = context.getService();
-        Executor directExecutor = MoreExecutors.directExecutor();
-
-        Futures.addCallback(service.submit(new PluginBootstrap(context)), new PluginBootstrapCallback(),
-                directExecutor);
+    public PluginBootstrap(LunaContext context) {
+        this(context, MoreExecutors.newDirectExecutorService());
     }
 
     /**
      * Initializes this bootstrapper, loading all of the plugins.
      */
-    private void init() throws Exception {
+    public int init() throws ScriptException, InterruptedException {
+        PluginManager pluginManager = context.getPlugins();
+        GameService service = context.getService();
+
         initFiles();
-        initDependencies();
         initPlugins();
+
+        service.sync(() -> pluginManager.getPipelines().swap(pipelines));
+        return plugins.size();
     }
 
     /**
-     * Parses files in the plugin directory and caches their contents.
+     * Concurrently parses files in the plugin directory and caches their contents.
      */
-    private void initFiles() throws Exception {
-        Iterable<File> dirFiles = Files.fileTraverser().depthFirstPreOrder(new File(DIR));
+    private void initFiles() throws InterruptedException {
+        BlockingTaskManager manager = new BlockingTaskManager(threadPool);
 
-        for (File file : dirFiles) {
-            if (file.isFile() && file.getName().endsWith(".scala")) {
-                files.put(file.getName(), Files.asCharSource(file, StandardCharsets.UTF_8).read());
+        // Traverse all paths and sub-paths.
+        Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
+        for (Path dir : directories) {
+            if (Files.isDirectory(dir)) {
+                Path pluginMetadata = dir.resolve("plugin.toml");
+                if (Files.exists(pluginMetadata)) {
+                    // Submit -- but do not execute file tasks.
+                    manager.submit(new PluginLoader(dir, pluginMetadata));
+                }
             }
         }
+        // Run file tasks and await completion.
+        manager.await();
     }
 
     /**
-     * Injects state into the script engine and evaluates dependencies.
+     * Injects state into the script engine and evaluates script files.
      */
-    private void initDependencies() throws Exception {
+    private void initPlugins() throws ScriptException {
+
+        // Inject context state.
         engine.put("$context$", context);
         engine.put("$logger$", LOGGER);
         engine.put("$pipelines$", pipelines);
 
-        currentFile.set("bootstrap.scala");
+        // Run the Scala bootstrap first.
+        Plugin bootstrap = plugins.remove("Bootstrap");
+        loadPlugin(bootstrap);
 
-        String bootstrap = files.remove(currentFile.get());
-        splitAndRunModules(bootstrap);
-    }
-
-    /**
-     * Splits the Scala bootstrap up into modules.
-     */
-    private void splitAndRunModules(String bootstrap) throws ScriptException {
-        // TODO Cleanup, error handling by module. Temporary workaround.
-        StringBuilder eval = new StringBuilder();
-        boolean first = true;
-        try (Scanner sc = new Scanner(bootstrap)) {
-            while (sc.hasNextLine()) {
-                String nextLine = sc.nextLine();
-                if (nextLine.contains("$startModule$(\"module_")) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        engine.eval(eval.toString());
-                        eval.setLength(0);
-                    }
-                } else {
-                    eval.append(nextLine).append('\n');
-                }
-            }
-            engine.eval(eval.toString());
+        // Then run other plugins.
+        for (Plugin other : plugins.values()) {
+            loadPlugin(other);
         }
     }
 
     /**
-     * Evaluates the rest of the normal plugins.
+     * Evaluates a single plugin directory.
      */
-    private void initPlugins() throws Exception {
-        for (Entry<String, String> fileEntry : files.entrySet()) {
-            currentFile.set(fileEntry.getKey());
-            engine.eval(fileEntry.getValue());
+    private void loadPlugin(Plugin plugin) throws ScriptException {
+        Map<String, String> pluginFiles = plugin.getFiles();
+        for (String file : pluginFiles.values()) {
+            engine.eval(file);
         }
+    }
+
+    /**
+     * Creates a new {@code Scala} script engine.
+     */
+    private ScriptEngine createScriptEngine() {
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        return new ScriptEngineManager(loader).getEngineByName("scala");
     }
 }

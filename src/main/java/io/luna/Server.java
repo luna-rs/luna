@@ -2,18 +2,14 @@ package io.luna;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
-import io.luna.game.model.def.EquipmentDefinition;
-import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.def.NpcCombatDefinition;
-import io.luna.game.model.def.NpcDefinition;
-import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.MessageRepository;
+import io.luna.util.BlockingTaskManager;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
@@ -29,7 +25,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -52,6 +47,11 @@ public final class Server {
     private final ListeningExecutorService launchPool;
 
     /**
+     * A service manager.
+     */
+    private final BlockingTaskManager tasks;
+
+    /**
      * A luna context instance.
      */
     private final LunaContext context = new LunaContext();
@@ -59,16 +59,16 @@ public final class Server {
     /**
      * A message repository.
      */
-    private final MessageRepository repository = new MessageRepository();
+    private final MessageRepository messageRepository = new MessageRepository();
 
     /**
      * A package-private constructor.
      */
     Server() {
-        ExecutorService delegateService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                new ThreadFactoryBuilder().setNameFormat("LunaInitializationThread").build());
+        ExecutorService delegateService = ThreadUtils.newThreadPool("LunaInitializationThread");
 
         launchPool = MoreExecutors.listeningDecorator(delegateService);
+        tasks = new BlockingTaskManager(launchPool);
     }
 
     /**
@@ -102,7 +102,7 @@ public final class Server {
 
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new LunaChannelInitializer(context, repository));
+        bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
         bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
     }
 
@@ -118,20 +118,22 @@ public final class Server {
      * Initializes the plugin bootstrap.
      */
     private void initPlugins() throws Exception {
-        PluginBootstrap bootstrap = new PluginBootstrap(context);
-        bootstrap.load(launchPool);
+        PluginBootstrap bootstrap = new PluginBootstrap(context, launchPool);
+        int pluginCount = bootstrap.init();
+
+        LOGGER.info("A total of {} Scala plugins have been loaded into memory.", box(pluginCount));
     }
 
     /**
      * Initializes misc. startup tasks.
      */
     private void initLaunchTasks() throws Exception {
-        launchPool.execute(new MessageRepositoryParser(repository));
-
-        launchPool.execute(new EquipmentDefinitionParser());
-        launchPool.execute(new ItemDefinitionParser());
-        launchPool.execute(new NpcCombatDefinitionParser());
-        launchPool.execute(new NpcDefinitionParser());
-        launchPool.execute(new ObjectDefinitionParser());
+        tasks.submit(new MessageRepositoryParser(messageRepository));
+        tasks.submit(new EquipmentDefinitionParser());
+        tasks.submit(new ItemDefinitionParser());
+        tasks.submit(new NpcCombatDefinitionParser());
+        tasks.submit(new NpcDefinitionParser());
+        tasks.submit(new ObjectDefinitionParser());
+        tasks.await();
     }
 }

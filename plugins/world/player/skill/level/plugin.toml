@@ -1,0 +1,8 @@
+[metadata]
+name = "Advance level"
+description = "Adds functionality for advancing skill levels."
+hidden = true
+dependencies = [ ]
+authors = [
+  "lare96"
+]
