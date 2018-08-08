@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
+import io.luna.util.ThreadUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,6 +21,8 @@ import java.util.concurrent.Phaser;
  * @author lare96 <http://github.org/lare96>
  */
 public final class WorldSynchronizer {
+
+    // TODO more elegant name
 
     /**
      * A model that applies the update procedure within a synchronization block.
@@ -79,8 +82,7 @@ public final class WorldSynchronizer {
     /**
      * A thread pool for parallel updating.
      */
-    private final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-        new ThreadFactoryBuilder().setNameFormat("WorldSynchronizerThread").build());
+    private final ExecutorService service = ThreadUtils.newThreadPool("WorldSynchronizationThread");
 
     /**
      * Creates a new {@link WorldSynchronizer}.
