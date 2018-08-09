@@ -3,9 +3,9 @@ name = "Bootstrap"
 description = "Acts as a master dependency for plugins, and allows Scala to interact with Java."
 hidden = true
 dependencies = [
-  "fields.scala"
-  "functions.scala"
-  "event_interception.scala"
+  "fields.scala",
+  "functions.scala",
+  "event_interception.scala",
   "implicit_classes.scala"
 ]
 authors = [
