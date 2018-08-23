@@ -11,7 +11,6 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
-import javax.script.ScriptException;
 import java.util.function.Consumer;
 
 /**
@@ -45,7 +44,7 @@ public final class CommandMessageReader extends MessageReader {
     /**
      * Constructs and loads another bootstrap instance.
      */
-    private void hotfix(Player player, LunaContext ctx) { // TODO Close Plugin manager GUI
+    private void hotfix(Player player, LunaContext ctx) {
         GameService service = ctx.getService();
         Consumer<String> sendMessage = msg -> player.queue(new GameChatboxMessageWriter(msg));
 
@@ -56,7 +55,7 @@ public final class CommandMessageReader extends MessageReader {
                 bootstrap.init();
 
                 service.sync(() -> sendMessage.accept("Hotfix request finished successfully!"));
-            } catch (ScriptException | InterruptedException e) {
+            } catch (Exception e) {
                 service.sync(() -> sendMessage.accept("Hotfix request failed. Please check console for errors."));
                 e.printStackTrace();
             }
