@@ -137,7 +137,7 @@ public final class PlayerAppearanceUpdateBlock extends PlayerUpdateBlock {
      * Encodes values related to the animations of the {@link Player}.
      */
     private void encodeAnimations(ByteMessage buf, Player mob) {
-        /* TODO configurable animations for weapons and other effects */
+        /* TODO Keep this data in Scala and create Object to manage these animations.*/
         buf.putShort(0x328);
         buf.putShort(0x337);
         buf.putShort(0x333);
