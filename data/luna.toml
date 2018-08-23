@@ -5,6 +5,7 @@
 starting_position = { x = 3222, y = 3222 }
 staggered_updating = false
 packet_126_caching = false
+password_hashing = false
 
 [network]
 port = 43594
@@ -15,3 +16,4 @@ connection_threshold = 2
 
 [utility]
 asynchronous_logging = true
+plugin_gui = true

@@ -35,9 +35,11 @@ public final class LunaConstants {
             STAGGERED_UPDATING = gameConstants.get("staggered_updating").getAsBoolean();
             STARTING_POSITION = getAsType(gameConstants.get("starting_position"), Position.class);
             PACKET_126_CACHING = gameConstants.get("packet_126_caching").getAsBoolean();
+            PASSWORD_HASHING = gameConstants.get("password_hashing").getAsBoolean();
 
             JsonObject utilityConstants = tomlReader.getTable("utility").to(JsonObject.class);
             ASYNCHRONOUS_LOGGING = utilityConstants.get("asynchronous_logging").getAsBoolean();
+            PLUGIN_GUI = utilityConstants.get("plugin_gui").getAsBoolean();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -69,7 +71,8 @@ public final class LunaConstants {
     public static final BigInteger RSA_EXPONENT;
 
     /**
-     * The maximum amount of connections allowed per channel.
+     * The maximum amount of connections allowed per channel. This restricts how many accounts can be logged in
+     * at the same time, from the same IP address.
      */
     public static final int CONNECTION_LIMIT;
 
@@ -81,7 +84,7 @@ public final class LunaConstants {
      * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose a
      * lot potential problems if a large volume of players are in one place.
      * <p>
-     * A solution to this problem is <strong>staggered updating</strong>, which is a fancy term for updating the
+     * A solution to this problem is <strong>staggered updating</strong>, which in this context means to update the
      * most important players first. This is done through the {@link RegionUpdateComparator}.
      * <p>
      * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored
@@ -90,20 +93,32 @@ public final class LunaConstants {
     public static final boolean STAGGERED_UPDATING;
 
     /**
-     * The position that new players will start from.
+     * The position that new players will start on.
      */
     public static final Position STARTING_POSITION;
 
     /**
-     * If asynchronous and garbage-free logging should be enabled. This feature is enabled by default because it
-     * improves performance.
+     * If asynchronous and garbage-free logging should be enabled. This feature improves logging performance.
      */
     public static final boolean ASYNCHRONOUS_LOGGING;
 
     /**
-     * If the String inputs sent as packet #126 should be recorded and cached. This should be enabled if
+     * If the String values sent within packet #126 should be recorded and cached. This should be enabled if
      * you're performing frame #126 writes very frequently. The caching will improve performance if many writes
-     * are done, but can slightly regress performance if few are done.
+     * are done, but can slightly regress performance if too few are done.
      */
     public static final boolean PACKET_126_CACHING;
+
+    /**
+     * If the plugin GUI should be opened on startup. The plugin GUI is an interactive interface that allows
+     * for plugins to be enabled, disabled, and reloaded. If this value is false all plugins will be loaded.
+     */
+    public static final boolean PLUGIN_GUI;
+
+    /**
+     * If passwords should be hashed using {@code BCrypt} to help protect against player database leaks and hacks.
+     * {@code BCrypt} is a one-way hash meaning that no one can decrypt it to obtain the original passwords. This
+     * should always be enabled when in a production environment for security reasons.
+     */
+    public static final boolean PASSWORD_HASHING;
 }
