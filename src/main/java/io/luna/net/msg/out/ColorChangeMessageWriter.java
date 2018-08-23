@@ -13,6 +13,8 @@ import io.luna.net.msg.MessageWriter;
  */
 public class ColorChangeMessageWriter extends MessageWriter {
 
+    // TODO Find all color values and make enumeration of standard colors.
+
     /**
      * The identifier for the text to change the color of.
      */
@@ -21,7 +23,7 @@ public class ColorChangeMessageWriter extends MessageWriter {
     /**
      * The new color to change it to.
      */
-    private final int color; // TODO: Find color values, make enumeration of standard colors
+    private final int color;
 
     /**
      * Creates a new {@link ColorChangeMessageWriter}.
