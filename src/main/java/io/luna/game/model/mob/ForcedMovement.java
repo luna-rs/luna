@@ -10,9 +10,6 @@ import io.luna.game.model.Position;
  */
 public final class ForcedMovement {
 
-    /* TODO: Something wrong either here or in the update block, as this doesn't work.
-      Needs to be fixed asap. */
-
     /**
      * The starting position.
      */
@@ -42,7 +39,7 @@ public final class ForcedMovement {
      * Creates a new {@link ForcedMovement} for movement across the x-axis.
      */
     public static ForcedMovement forceMoveX(Player player, int amount, int duration) {
-        Position destination = player.getPosition().move(amount, 0);
+        Position destination = player.getPosition().translate(amount, 0);
         Direction direction = amount < 0 ? Direction.WEST : Direction.EAST;
 
         return new ForcedMovement(player.getPosition(), destination, duration, 0, direction);
@@ -52,7 +49,7 @@ public final class ForcedMovement {
      * Creates a new {@link ForcedMovement} for movement across the y-axis.
      */
     public static ForcedMovement forceMoveY(Player player, int amount, int duration) {
-        Position destination = player.getPosition().move(0, amount);
+        Position destination = player.getPosition().translate(0, amount);
         Direction direction = amount < 0 ? Direction.SOUTH : Direction.NORTH;
 
         return new ForcedMovement(player.getPosition(), destination, 0, duration, direction);
