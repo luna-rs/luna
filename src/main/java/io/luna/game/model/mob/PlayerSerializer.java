@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.luna.LunaConstants;
 import io.luna.game.GameService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
@@ -13,6 +14,7 @@ import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.GsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.FileReader;
 import java.io.Reader;
@@ -72,13 +74,31 @@ public final class PlayerSerializer {
     }
 
     /**
+     * Returns either a hashed or plaintext password.
+     */
+    private String getPassword() {
+        String pw = player.getPassword();
+        return LunaConstants.PASSWORD_HASHING ? BCrypt.hashpw(pw, BCrypt.gensalt()) : pw;
+    }
+
+    /**
+     * Checks the input password for equality with the saved password.
+     */
+    private boolean checkPassword(String inputPassword, String savedPassword) {
+        if (LunaConstants.PASSWORD_HASHING) {
+            return BCrypt.checkpw(inputPassword, savedPassword);
+        }
+        return inputPassword.equals(savedPassword);
+    }
+
+    /**
      * Serializes all persistent data.
      */
     public void save() {
 
         /* Cache all main token tables. */
         JsonObject tokens = new JsonObject();
-        tokens.addProperty("password", player.getPassword());
+        tokens.addProperty("password", getPassword());
         tokens.add("position", toJsonTree(player.getPosition()));
         tokens.addProperty("rights", player.getRights().name());
         tokens.addProperty("running", player.getWalkingQueue().isRunning());
@@ -125,7 +145,7 @@ public final class PlayerSerializer {
     /**
      * Deserializes all persistent data and verifies the password.
      */
-    public LoginResponse load(String expectedPassword) {
+    public LoginResponse load(String enteredPassword) {
         if (!Files.exists(path)) {
             return LoginResponse.NORMAL;
         }
@@ -134,7 +154,7 @@ public final class PlayerSerializer {
             JsonObject jsonReader = (JsonObject) new JsonParser().parse(reader);
 
             String password = jsonReader.get("password").getAsString();
-            if (!expectedPassword.equals(password)) {
+            if (!checkPassword(enteredPassword, password)) {
                 return LoginResponse.INVALID_CREDENTIALS;
             }
 
