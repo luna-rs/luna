@@ -26,6 +26,6 @@ public final class NpcSecondaryHitUpdateBlock extends NpcUpdateBlock {
         msg.put(hit.getDamage(), ByteTransform.A);
         msg.put(hit.getType().getOpcode(), ByteTransform.C);
         msg.put(mob.getCurrentHp(), ByteTransform.A);
-        msg.put(mob.getCombatDefinition().getHitpoints());
+        msg.put(mob.getCombatDefinition().get().getHitpoints());
     }
 }

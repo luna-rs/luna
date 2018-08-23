@@ -26,6 +26,6 @@ public final class NpcPrimaryHitUpdateBlock extends NpcUpdateBlock {
         msg.put(hit.getDamage(), ByteTransform.C);
         msg.put(hit.getType().getOpcode(), ByteTransform.S);
         msg.put(mob.getCurrentHp(), ByteTransform.S);
-        msg.put(mob.getCombatDefinition().getHitpoints(), ByteTransform.C);
+        msg.put(mob.getCombatDefinition().get().getHitpoints(), ByteTransform.C);
     }
 }
