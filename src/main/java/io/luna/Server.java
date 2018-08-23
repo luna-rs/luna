@@ -24,6 +24,9 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.script.ScriptException;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -74,9 +77,7 @@ public final class Server {
     /**
      * Runs the individual tasks that start Luna.
      */
-    public void init() throws Exception {
-        LOGGER.info("Luna is being initialized...");
-
+    public void init() throws InterruptedException, ExecutionException, ScriptException, IOException {
         initLaunchTasks();
         initPlugins();
         initGame();
@@ -85,8 +86,8 @@ public final class Server {
         launchPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         initNetwork();
-        LOGGER.info("Luna is now online on port {}!", box(LunaConstants.PORT));
 
+        /* Post an event signalling that the server has launched. */
         PluginManager plugins = context.getPlugins();
         plugins.post(ServerLaunchEvent.INSTANCE);
     }
@@ -94,7 +95,7 @@ public final class Server {
     /**
      * Initializes the network server using Netty.
      */
-    private void initNetwork() throws Exception {
+    private void initNetwork() {
         ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
 
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -104,30 +105,32 @@ public final class Server {
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
         bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
+        LOGGER.info("Luna is now listening for connections on port {}!", box(LunaConstants.PORT));
     }
 
     /**
      * Initializes the game service.
      */
-    private void initGame() throws Exception {
+    private void initGame() {
         GameService service = context.getService();
         service.startAsync().awaitRunning();
+        LOGGER.info("The main game loop is now running.");
     }
 
     /**
      * Initializes the plugin bootstrap.
      */
-    private void initPlugins() throws Exception {
+    private void initPlugins() throws InterruptedException, IOException, ExecutionException, ScriptException {
         PluginBootstrap bootstrap = new PluginBootstrap(context, launchPool);
         int pluginCount = bootstrap.init();
 
-        LOGGER.info("A total of {} Scala plugins have been loaded into memory.", box(pluginCount));
+        LOGGER.info("{} Scala plugins have been loaded into memory.", box(pluginCount));
     }
 
     /**
      * Initializes misc. startup tasks.
      */
-    private void initLaunchTasks() throws Exception {
+    private void initLaunchTasks() throws InterruptedException {
         tasks.submit(new MessageRepositoryParser(messageRepository));
         tasks.submit(new EquipmentDefinitionParser());
         tasks.submit(new ItemDefinitionParser());
@@ -135,5 +138,6 @@ public final class Server {
         tasks.submit(new NpcDefinitionParser());
         tasks.submit(new ObjectDefinitionParser());
         tasks.await();
+        LOGGER.info("All launch tasks have completed successfully.");
     }
 }

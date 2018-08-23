@@ -1,6 +1,5 @@
 package io.luna;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,7 +8,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class Luna {
+public final class Luna  {
 
     /**
      * The asynchronous logger.
@@ -44,7 +43,7 @@ public final class Luna {
             Server luna = new Server();
             luna.init();
         } catch (Exception e) {
-            LOGGER.catching(Level.FATAL, e);
+            LOGGER.fatal("Luna could not be started.", e);
             System.exit(0);
         }
     }
