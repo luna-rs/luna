@@ -56,7 +56,8 @@ public final class CommandMessageReader extends MessageReader {
 
                 service.sync(() -> sendMessage.accept("Hotfix request finished successfully!"));
             } catch (Exception e) {
-                service.sync(() -> sendMessage.accept("Hotfix request failed. Please check console for errors."));
+                service.sync(() ->
+                        sendMessage.accept("Hotfix request failed. Please check console for error message."));
                 e.printStackTrace();
             }
         });

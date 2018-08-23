@@ -75,7 +75,7 @@
                         <Font size="14.0" />
                     </font>
                 </Label>
-            <Button fx:id="finished" layoutX="302.0" layoutY="286.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="105.0" text="Finished" />
+            <Button layoutX="302.0" layoutY="286.0" mnemonicParsing="false" onAction="#onFinished" prefHeight="25.0" prefWidth="105.0" text="Finished" />
             </children>
         </Pane>
     </children>
