@@ -185,6 +185,22 @@ public final class Bank extends ItemContainer {
     }
 
     /**
+     * Shifts all items to the left.
+     */
+    private void shift() {
+        Item[] newItems = new Item[getCapacity()];
+        int newIndex = 0;
+
+        for (Item item : this) {
+            if (item == null) {
+                continue;
+            }
+            newItems[newIndex++] = item;
+        }
+        System.arraycopy(newItems, 0, getItems(), 0, getCapacity());
+    }
+
+    /**
      * Refreshes the bank and inventory.
      */
     private void refresh() {

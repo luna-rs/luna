@@ -301,7 +301,7 @@ public class ItemContainer implements Iterable<Item> {
 
             for (int index = 0; index < until; index++) {
                 preferredIndex = (items[preferredIndex] != null && items[preferredIndex].getId() == item.getId()) ?
-                    preferredIndex : computeIndexForId(item.getId()).orElse(-1);
+                        preferredIndex : computeIndexForId(item.getId()).orElse(-1);
 
                 Item oldItem = items[preferredIndex];
                 items[preferredIndex] = null;
@@ -639,36 +639,9 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Shifts all items to the left.
+     * Sets the backing array to {@code newItems} (deep copy). Only used during Player login.
      */
-    public final void shift() { /* TODO: fire events? */
-        Item[] newItems = new Item[capacity];
-        int newIndex = 0;
-
-        for (Item item : items) {
-            if (item == null) {
-                continue;
-            }
-            newItems[newIndex++] = item;
-        }
-
-        setItems(newItems);
-    }
-
-    /**
-     * Sets the backing array to {@code newItems} (shallow copy).
-     */
-    public final void setItems(Item[] newItems) { /* TODO: fire events? */
-        checkArgument(newItems.length <= capacity, "newItems.length must be <= capacity");
-
-        System.arraycopy(newItems, 0, items, 0, capacity);
-    }
-
-    /**
-     * Sets the backing array to {@code newItems} (deep copy).
-     */
-    public final void setItems(IndexedItem[] newItems) { /* TODO: fire events? */
-        Arrays.fill(items, null);
+    public final void setItems(IndexedItem[] newItems) {
         size = 0;
         for (IndexedItem item : newItems) {
             items[item.getIndex()] = new Item(item.getId(), item.getAmount());
@@ -681,6 +654,13 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final Item[] toArray() {
         return Arrays.copyOf(items, items.length);
+    }
+
+    /**
+     * Returns the backing array for subclasses.
+     */
+   Item[] getItems() {
+        return items;
     }
 
     /**
