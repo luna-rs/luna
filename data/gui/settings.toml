@@ -1,0 +1,5 @@
+[settings]
+show_hidden = false
+dark_mode = true
+save_on_exit = true
+selected = ["Fun rings", "Banking", "Herblore", "Water filling", "Fishing", "Login/logout", "Advance level", "Runecrafting", "Commands", "Walk/Run button", "Consume food/drinks", "Announcements", "Prayer"]
