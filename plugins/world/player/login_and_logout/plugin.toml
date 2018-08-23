@@ -1,7 +1,7 @@
 [metadata]
-name = "Herblore"
-description = "Adds functionality for the Herblore skill."
-hidden = false
+name = "Login/logout"
+description = "Adds special functionality for logging in and out."
+hidden = true
 dependencies = [ ]
 authors = [
   "lare96"
