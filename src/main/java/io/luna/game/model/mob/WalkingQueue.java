@@ -162,7 +162,11 @@ public final class WalkingQueue {
             current = next;
 
             if (runningPath) {
-                next = decrementRunEnergy() ? this.current.poll() : null;
+                if(mob.getType() == EntityType.PLAYER) {
+                    next = decrementRunEnergy()? this.current.poll() : null;
+                } else {
+                    next = this.current.poll();
+                }
 
                 if (next != null) {
                     restoreEnergy = false;
@@ -175,7 +179,7 @@ public final class WalkingQueue {
             }
         }
 
-        if (restoreEnergy) {
+        if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
             incrementRunEnergy();
         }
 
