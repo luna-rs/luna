@@ -18,8 +18,6 @@ import java.util.Collection;
  */
 public final class WidgetItemGroupMessageWriter extends MessageWriter {
 
-    /* TODO support for the indexed version of this? */
-
     /**
      * The widget identifier.
      */
