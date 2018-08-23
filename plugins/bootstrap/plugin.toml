@@ -1,6 +1,6 @@
 [metadata]
 name = "Bootstrap"
-description = "Acts as a master dependency for plugins, and allows Scala to interact with Java. This plugin cannot be deselected."
+description = "Acts as an API for all plugins, and allows Scala to interact with Java. This plugin cannot be deselected."
 hidden = true
 dependencies = [
   "fields.scala",
