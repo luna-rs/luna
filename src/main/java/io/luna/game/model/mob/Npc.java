@@ -10,6 +10,7 @@ import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
@@ -32,7 +33,7 @@ public final class Npc extends Mob {
     /**
      * The combat definition.
      */
-    private NpcCombatDefinition combatDefinition;
+    private Optional<NpcCombatDefinition> combatDefinition;
 
     /**
      * The transformation identifier.
@@ -57,24 +58,26 @@ public final class Npc extends Mob {
 
         /* Set definition values. */
         definition = NpcDefinition.get(id);
-        combatDefinition = NpcCombatDefinition.get(id);
+        combatDefinition = Optional.ofNullable(NpcCombatDefinition.get(id));
 
-        /* Set the current hitpoint level. */
-        currentHp = combatDefinition.getHitpoints();
+        combatDefinition.ifPresent(def -> {
+            /* Set the current hitpoint level. */
+            currentHp = def.getHitpoints();
 
-        /* Set the attack, strength, defence, ranged, and magic levels. */
-        ImmutableList<Integer> skills = combatDefinition.getSkills();
-        Skill attack = skill(Skill.ATTACK);
-        Skill strength = skill(Skill.STRENGTH);
-        Skill defence = skill(Skill.DEFENCE);
-        Skill ranged = skill(Skill.RANGED);
-        Skill magic = skill(Skill.MAGIC);
+            /* Set the attack, strength, defence, ranged, and magic levels. */
+            ImmutableList<Integer> skills = def.getSkills();
+            Skill attack = skill(Skill.ATTACK);
+            Skill strength = skill(Skill.STRENGTH);
+            Skill defence = skill(Skill.DEFENCE);
+            Skill ranged = skill(Skill.RANGED);
+            Skill magic = skill(Skill.MAGIC);
 
-        attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
-        strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
-        defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
-        ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
-        magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+            attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
+            strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
+            defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
+            ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
+            magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+        });
 
         /* Set the position. */
         setPosition(position);
@@ -114,7 +117,7 @@ public final class Npc extends Mob {
 
     @Override
     public int getCombatLevel() {
-        return combatDefinition.getLevel();
+        return combatDefinition.map(NpcCombatDefinition::getLevel).orElse(0);
     }
 
     /**
@@ -143,7 +146,7 @@ public final class Npc extends Mob {
     /**
      * @return The combat definition.
      */
-    public NpcCombatDefinition getCombatDefinition() {
+    public Optional<NpcCombatDefinition> getCombatDefinition() {
         return combatDefinition;
     }
 
