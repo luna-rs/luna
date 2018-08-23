@@ -52,6 +52,7 @@ implicit def javaToScalaOptionalInt(optional: OptionalInt): Option[Int] = {
   }
 }
 
+// TODO IIRC These aren't needed anymore because of Scala 2.12. Will have to double check.
 implicit def scalaToJavaConsumer[T](func: T => Unit): Consumer[T] = new Consumer[T] {
   override def accept(t: T) = func(t)
 }
