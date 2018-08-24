@@ -7,6 +7,8 @@ package io.luna.game.plugin;
  */
 public final class PluginMetadata {
 
+    // TODO Replace "hidden" with "version" value.
+
     /**
      * The name.
      */
@@ -18,7 +20,7 @@ public final class PluginMetadata {
     private final String description;
 
     /**
-     * If displayed on the 'Plugin manager' GUI.
+     * If displayed on the Plugin GUI.
      */
     private final boolean hidden;
 
@@ -37,7 +39,7 @@ public final class PluginMetadata {
      *
      * @param name The name.
      * @param description The description.
-     * @param hidden If displayed on the 'Plugin manager' GUI.
+     * @param hidden If displayed on the Plugin GUI.
      * @param dependencies The scripts to run first.
      * @param authors The authors.
      */
@@ -64,7 +66,7 @@ public final class PluginMetadata {
     }
 
     /**
-     * @return If displayed on the 'Plugin manager' GUI.
+     * @return If displayed on the Plugin GUI.
      */
     public boolean isHidden() {
         return hidden;

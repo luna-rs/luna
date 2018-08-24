@@ -1,11 +1,15 @@
 package io.luna.game.plugin;
 
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 
 /**
- * A class representing a single plugin. Plugins are a collection of Scala scripts that make up a specific
- * piece of content.
+ * A model representing a single plugin. Plugins are a collection of Scala scripts and metadata that make
+ * up specific pieces of content. They adhere to a set of rules
+ * <ul>
+ * <li>Different plugins cannot share the same name
+ * <li>Plugins cannot be placed in same directory as the bootstrap
+ * <li>A plugin cannot have another plugin in itself
+ * </ul>
  *
  * @author lare96 <http://github.com/lare96>
  */

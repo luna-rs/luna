@@ -4,25 +4,33 @@ import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.moandjiezana.toml.Toml;
+import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.BlockingTaskManager;
+import io.luna.util.Rational;
+import io.luna.util.gui.PluginGui;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
@@ -32,6 +40,12 @@ import java.util.stream.Collectors;
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginBootstrap {
+
+    private final class LoadScriptException extends RuntimeException {
+        public LoadScriptException(String name, IOException e) {
+            super("Failed to read script " + name + ", its parent plugin will not be loaded.", e);
+        }
+    }
 
     /**
      * A task that will load a single plugin directory.
@@ -75,15 +89,27 @@ public final class PluginBootstrap {
             PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).
                     getTable("metadata").to(PluginMetadata.class);
 
-            // Read dependencies first, this order will be respected during script execution.
-            for (String dependencies : metadata.getDependencies()) {
-                loadFileContents(dependencies);
-                fileList.remove(dependencies);
+            // Check for duplicate plugins.
+            String pluginName = metadata.getName();
+            if (plugins.containsKey(pluginName)) {
+                LOGGER.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
+                return;
             }
 
-            // Read other scripts.
-            fileList.forEach(this::loadFileContents);
-            plugins.put(metadata.getName(), new Plugin(metadata, fileMap));
+            try {
+                // Read dependencies first, this order will be respected during script execution.
+                for (String dependencies : metadata.getDependencies()) {
+                    loadFileContents(dependencies);
+                    fileList.remove(dependencies);
+                }
+
+                // Read other scripts.
+                fileList.forEach(this::loadFileContents);
+            } catch (LoadScriptException e) {
+                LOGGER.catching(Level.WARN, e);
+                return;
+            }
+            plugins.put(pluginName, new Plugin(metadata, fileMap));
         }
 
         /**
@@ -94,7 +120,7 @@ public final class PluginBootstrap {
                 byte[] sourceBytes = Files.readAllBytes(dir.resolve(fileName));
                 fileMap.put(fileName, new String(sourceBytes));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new LoadScriptException(fileName, e);
             }
         }
     }
@@ -157,15 +183,15 @@ public final class PluginBootstrap {
     /**
      * Initializes this bootstrapper, loading all of the plugins.
      */
-    public int init() throws ScriptException, InterruptedException {
+    public Rational init() throws ScriptException, InterruptedException, IOException, ExecutionException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
-        initPlugins();
+        Rational pluginCount = initPlugins();
 
         service.sync(() -> pluginManager.getPipelines().swap(pipelines));
-        return plugins.size();
+        return pluginCount;
     }
 
     /**
@@ -191,8 +217,24 @@ public final class PluginBootstrap {
 
     /**
      * Injects state into the script engine and evaluates script files.
+     *
+     * @return Returns a fraction indicating how many plugins out of the total amount were loaded.
      */
-    private void initPlugins() throws ScriptException {
+    private Rational initPlugins() throws ScriptException, IOException, ExecutionException, InterruptedException {
+        Plugin bootstrap = plugins.remove("Bootstrap"); // Bootstrap not counted as a plugin.
+        int totalCount = plugins.size();
+
+        // Determine selected plugins and launch the GUI.
+        Set<String> selectedPlugins;
+        if (LunaConstants.PLUGIN_GUI) {
+            PluginGui gui = new PluginGui(plugins);
+            selectedPlugins = gui.launch();
+        } else {
+            List<String> selectedSettings = new Toml().read(new File("./data/gui/settings.toml")).
+                    getTable("network").getList("selected");
+            selectedPlugins = new HashSet<>(selectedSettings);
+        }
+        plugins.keySet().retainAll(selectedPlugins);
 
         // Inject context state.
         engine.put("$context$", context);
@@ -200,13 +242,15 @@ public final class PluginBootstrap {
         engine.put("$pipelines$", pipelines);
 
         // Run the Scala bootstrap first.
-        Plugin bootstrap = plugins.remove("Bootstrap");
         loadPlugin(bootstrap);
 
         // Then run other plugins.
         for (Plugin other : plugins.values()) {
             loadPlugin(other);
         }
+
+        int selectedCount = totalCount - plugins.size();
+        return new Rational(selectedCount, totalCount);
     }
 
     /**
