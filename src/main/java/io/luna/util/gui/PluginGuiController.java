@@ -283,7 +283,6 @@ final class PluginGuiController {
      */
     @FXML
     private void onFinished(ActionEvent evt) {
-        System.out.println("here1");
         gui.close();
     }
 

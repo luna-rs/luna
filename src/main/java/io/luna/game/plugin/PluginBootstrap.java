@@ -4,12 +4,13 @@ import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.moandjiezana.toml.Toml;
+import fj.P;
+import fj.P2;
 import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.BlockingTaskManager;
-import io.luna.util.Rational;
 import io.luna.util.gui.PluginGui;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -182,13 +183,16 @@ public final class PluginBootstrap {
 
     /**
      * Initializes this bootstrapper, loading all of the plugins.
+     *
+     * @return Returns a numerator and denominator indicating how many plugins out of the total
+     * amount were loaded.
      */
-    public Rational init() throws ScriptException, InterruptedException, IOException, ExecutionException {
+    public P2<Integer, Integer> init() throws ScriptException, InterruptedException, IOException, ExecutionException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
-        Rational pluginCount = initPlugins();
+        P2<Integer, Integer> pluginCount = initPlugins();
 
         service.sync(() -> pluginManager.getPipelines().swap(pipelines));
         return pluginCount;
@@ -218,9 +222,11 @@ public final class PluginBootstrap {
     /**
      * Injects state into the script engine and evaluates script files.
      *
-     * @return Returns a fraction indicating how many plugins out of the total amount were loaded.
+     * @return Returns a numerator and denominator indicating how many plugins out of the total
+     * amount were loaded.
      */
-    private Rational initPlugins() throws ScriptException, IOException, ExecutionException, InterruptedException {
+    private P2<Integer, Integer> initPlugins() throws ScriptException, IOException,
+            ExecutionException, InterruptedException {
         Plugin bootstrap = plugins.remove("Bootstrap"); // Bootstrap not counted as a plugin.
         int totalCount = plugins.size();
 
@@ -249,8 +255,8 @@ public final class PluginBootstrap {
             loadPlugin(other);
         }
 
-        int selectedCount = totalCount - plugins.size();
-        return new Rational(selectedCount, totalCount);
+        int selectedCount = plugins.size();
+        return P.p(selectedCount, totalCount);
     }
 
     /**

@@ -233,20 +233,20 @@ public final class PluginGui {
                 settings.save();
             }
 
-            // Dispose of Javafx resources.
-            FutureTask<?> hideWindow = new FutureTask<>(() -> getWindow().hide(), null);
-            Platform.runLater(hideWindow);
-            hideWindow.get();
-
             // Dispose of Swing resources.
-            EventQueue.invokeAndWait(() -> {
+            Runnable swingTask = () -> {
                 mainFrame.setVisible(false);
                 mainFrame.dispose();
-            });
+            };
+            if (EventQueue.isDispatchThread()) {
+                swingTask.run();
+            } else {
+                EventQueue.invokeAndWait(swingTask);
+            }
 
-            // Dispose remaining Javafx resources.
+            // Dispose of Javafx resources.
             Platform.exit();
-        } catch (InvocationTargetException | ExecutionException | InterruptedException ex) {
+        } catch (InvocationTargetException | InterruptedException ex) {
             openErrorAlert(ex);
         } finally {
             barrier.countDown();

@@ -2,6 +2,7 @@ package io.luna;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import fj.P2;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
@@ -122,9 +123,10 @@ public final class Server {
      */
     private void initPlugins() throws InterruptedException, IOException, ExecutionException, ScriptException {
         PluginBootstrap bootstrap = new PluginBootstrap(context, launchPool);
-        int pluginCount = bootstrap.init();
+        P2<Integer, Integer> pluginCount = bootstrap.init();
 
-        LOGGER.info("{} Scala plugins have been loaded into memory.", box(pluginCount));
+        String fractionString = pluginCount._1() + "/" + pluginCount._2();
+        LOGGER.info("[{}] Scala plugins have been loaded into memory.", fractionString);
     }
 
     /**
