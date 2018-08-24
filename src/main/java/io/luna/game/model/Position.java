@@ -7,11 +7,13 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A single point on the Runescape map.
+ * A single absolute point on the Runescape map.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Position {
+
+    // TODO Read up on tile system and confirm if all functions are named correctly.
 
     /**
      * The x coordinate.
@@ -78,22 +80,21 @@ public final class Position {
     }
 
     /**
-     * Determines if this position is within the given radius.
+     * Determines if this position is within the given distance of another position.
      */
-    public boolean isWithinRadius(Position center, int radius) {
-        if (z != center.z) {
+    public boolean isWithinDistance(Position pos, int distance) {
+        if (z != pos.z) {
             return false;
         }
-        int deltaX = center.x - x;
-        int deltaY = center.y - y;
-        return Math.abs(deltaX) <= radius && Math.abs(deltaY) <= radius;
+        int dist = getDistance(pos);
+        return dist <= distance;
     }
 
     /**
      * Determines if this position is viewable from {@code position}.
      */
     public boolean isViewable(Position position) {
-        return isWithinRadius(position, EntityConstants.VIEWING_DISTANCE);
+        return isWithinDistance(position, EntityConstants.VIEWING_DISTANCE);
     }
 
     /**
@@ -106,18 +107,18 @@ public final class Position {
     }
 
     /**
-     * Returns a new position moved by the specified amounts.
+     * Returns a new position translated by the specified amounts.
      */
-    public Position move(int amountX, int amountY, int amountZ) {
+    public Position translate(int amountX, int amountY, int amountZ) {
         return new Position(x + amountX, y + amountY, z + amountZ);
     }
 
     /**
-     * Returns a new position moved by the specified amounts. The z coordinate will remain
+     * Returns a new position translated by the specified amounts. The z coordinate will remain
      * the same.
      */
-    public Position move(int amountX, int amountY) {
-        return move(amountX, amountY, z);
+    public Position translate(int amountX, int amountY) {
+        return translate(amountX, amountY, z);
     }
 
     /**
