@@ -5,7 +5,7 @@
 starting_position = { x = 3222, y = 3222 }
 staggered_updating = false
 packet_126_caching = false
-password_hashing = false
+password_hashing = true
 
 [network]
 port = 43594
