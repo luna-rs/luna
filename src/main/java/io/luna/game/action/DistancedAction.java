@@ -43,7 +43,7 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
     @Override
     protected final void call() {
         Position mobPosition = mob.getPosition();
-        if (mobPosition.isWithinRadius(position, radius)) {
+        if (mobPosition.isWithinDistance(position, radius)) {
             execute();
 
             if (interrupt) {
