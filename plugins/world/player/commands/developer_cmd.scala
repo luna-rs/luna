@@ -7,10 +7,13 @@
 
 import com.google.common.primitives.{Doubles, Ints}
 import io.luna.game.event.impl.CommandEvent
-import io.luna.game.model.Position
+import io.luna.game.model.{Area, Position}
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob._
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 
 /* A command that allows for attributes to be dynamically retrieved or set. */
@@ -20,7 +23,7 @@ onargs[CommandEvent]("attr", RIGHTS_DEV) { msg =>
   val length = msg.args.length
 
   if (length == 1) {
-    plr.sendMessage(s"attribute{name=$name, current_value=${ plr.attr(name) }}")
+    plr.sendMessage(s"attribute{name=$name, current_value=${plr.attr(name)}}")
   } else if (length == 2) {
     val oldValue = plr.attr(name)
     val newValue = msg.args(1)
@@ -39,7 +42,7 @@ onargs[CommandEvent]("attr", RIGHTS_DEV) { msg =>
 }
 
 /* A command that sends a message depicting the player's current position. */
-onargs[CommandEvent]("mypos", RIGHTS_DEV) { msg => msg.plr.sendMessage(s"Your current position is ${ msg.plr.position }.") }
+onargs[CommandEvent]("mypos", RIGHTS_DEV) { msg => msg.plr.sendMessage(s"Your current position is ${msg.plr.position}.") }
 
 /* A command that moves a player to a different position. */
 onargs[CommandEvent]("move", RIGHTS_DEV) { msg =>
@@ -83,8 +86,16 @@ onargs[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
     }
 
     plr.sendSkillUpdate(id)
-    plr.sendMessage(s"You successfully set your ${ Skill.getName(id) } level to $level.")
+    plr.sendMessage(s"You successfully set your ${Skill.getName(id)} level to $level.")
   }
+}
+
+/* A command that returns details about the player's current region coordinates. */
+onargs[CommandEvent]("local", RIGHTS_DEV) { msg =>
+  val pos = msg.plr.position
+  val coords = msg.plr.regionCoordinates
+  msg.plr.sendMessage(coords.toString)
+  msg.plr.sendMessage(s"[local_x: ${coords.getLocalX(pos)}, local_y: ${coords.getLocalY(pos)}]")
 }
 
 /* A command that spawns a non-player character. */
@@ -151,7 +162,7 @@ onargs[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
     } else if (plr.bank.hasCapacityFor(add)) {
       plr.bank.add(add)
     } else {
-      plr.sendMessage(s"Not enough space in bank or inventory for ${ definition.getName }.")
+      plr.sendMessage(s"Not enough space in bank or inventory for ${definition.getName}.")
     }
     count += 1
   })
