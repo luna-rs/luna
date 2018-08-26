@@ -56,7 +56,7 @@ private def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
 
     val (firstLineId, secondLineId, interfaceId) = LEVEL_UP_TABLE(id)
     val name = Skill.getName(id)
-    val message = s"Congratulations, you just advanced ${ StringUtils.computeArticle(name) } $name level!"
+    val message = s"Congratulations, you just advanced ${StringUtils.computeArticle(name)} $name level!"
 
     plr.sendMessage(message)
     plr.sendWidgetText(message, firstLineId)
@@ -75,9 +75,11 @@ private def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
 
 /* When a player's skills change, send the update to the client and check if they've advanced a level. */
 onargs[SkillChangeEvent](TYPE_PLAYER) { msg =>
-  msg.plr.sendSkillUpdate(msg.id)
+  if (msg.mob.isInstanceOf[Player]) {
+    msg.plr.sendSkillUpdate(msg.id)
 
-  if (msg.oldStaticLevel < 99) {
-    advanceLevel(msg.plr, msg.id, msg.oldStaticLevel)
+    if (msg.oldStaticLevel < 99) {
+      advanceLevel(msg.plr, msg.id, msg.oldStaticLevel)
+    }
   }
 }
