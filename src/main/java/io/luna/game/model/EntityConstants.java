@@ -17,10 +17,10 @@ public final class EntityConstants {
     /**
      * The amount of players that can logout per tick.
      */
-    public static final int LOGOUT_THRESHOLD = 100;
+    public static final int LOGOUT_THRESHOLD = 50;
 
     /**
-     * The maximum amount of tiles away an entity is viewable from.
+     * The maximum amount of tiles a player can view.
      */
     public static final int VIEWING_DISTANCE = 15;
 
