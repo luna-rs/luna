@@ -213,6 +213,12 @@ implicit class RichWorld(world: World) {
     asScalaSet(world.getRegions.getViewableEntities(pos, et))
 }
 
+implicit class RichPosition(position: Position) {
+
+  def x = position.getX
+  def y = position.getY
+  def regionCoordinates = position.getRegionCoordinates
+}
 
 implicit class RichArray[T](array: Array[T]) {
 
