@@ -24,12 +24,12 @@ public abstract class Action<T extends Mob> {
     /**
      * A {@link Task} implementation that processes an Action.
      */
-    private final class ActionProcessor extends Task {
+    private final class ActionTask extends Task {
 
         /**
-         * Creates a new {@link ActionProcessor}.
+         * Creates a new {@link ActionTask}.
          */
-        private ActionProcessor() {
+        private ActionTask() {
             super(instant, delay);
         }
 
@@ -71,7 +71,7 @@ public abstract class Action<T extends Mob> {
     /**
      * The task processing this action.
      */
-    private final ActionProcessor runner;
+    private final ActionTask runner;
 
     /**
      * Creates a new {@link Action}.
@@ -84,23 +84,11 @@ public abstract class Action<T extends Mob> {
         this.mob = mob;
         this.instant = instant;
         this.delay = delay;
-        runner = new ActionProcessor();
-    }
-
-    // TODO Add support for Action equality. You should be able to tell if two actions are equal.
-    @Override
-    public final boolean equals(Object obj) {
-        return false;
-    }
-
-    // TODO This will be based off of whatever is put for "equals"
-    @Override
-    public final int hashCode() {
-        return 0;
+        runner = new ActionTask();
     }
 
     /**
-     * Initializes this action by scheduling the {@link ActionProcessor}.
+     * Initializes this action by scheduling the {@link ActionTask}.
      */
     protected final void init() {
         World world = mob.getWorld();
@@ -108,14 +96,14 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Interrupts this action by cancelling the {@link ActionProcessor}.
+     * Interrupts this action by cancelling the {@link ActionTask}.
      */
     protected final void interrupt() {
         runner.cancel();
     }
 
     /**
-     * Function invoked when this action initializes.
+     * Function invoked when this action is scheduled.
      */
     protected void onInit() {
 
@@ -129,9 +117,15 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Function called every {@code delay} by the {@link ActionProcessor}.
+     * Function called every {@code delay} by the {@link ActionTask}.
      */
     protected abstract void call();
+
+    /**
+     * Determines if this action is equal to {@code other}. This is used instead of {@code equals(Object)} so that
+     * the {@code equals(Object) -> hashCode()} contract isn't broken.
+     */
+    protected abstract boolean isEqual(Action other);
 
     /**
      * @return {@code true} if this Action has been interrupted, {@code false} otherwise.

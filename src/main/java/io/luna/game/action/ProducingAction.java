@@ -6,11 +6,11 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
- * A {@link PlayerAction} implementation that will remove items from and add items to the inventory.
+ * A {@link StationaryAction} implementation that will remove items from and add items to the inventory.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class ProducingAction extends PlayerAction {
+public abstract class ProducingAction extends StationaryAction<Player> {
 
     /**
      * The items being added.

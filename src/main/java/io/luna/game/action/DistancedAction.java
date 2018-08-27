@@ -13,17 +13,17 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
     /**
      * The position.
      */
-    private final Position position;
+    protected final Position position;
 
     /**
      * The radius to the position.
      */
-    private final int radius;
+    protected final int radius;
 
     /**
-     * If the action should be interrupted.
+     * If the action should be interrupted after one execution.
      */
-    private final boolean interrupt;
+    protected final boolean interrupt;
 
     /**
      * Creates a new {@link DistancedAction}.
@@ -31,7 +31,7 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
      * @param mob The mob this action is for.
      * @param position The position.
      * @param radius The radius to the position.
-     * @param interrupt If the action should be interrupted.
+     * @param interrupt If the action should be interrupted after one execution.
      */
     public DistancedAction(T mob, Position position, int radius, boolean interrupt) {
         super(mob, true, 1);

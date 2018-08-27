@@ -24,14 +24,10 @@ public final class ActionSet {
             Action current = currentAction.get();
 
             if (current.isRunning()) {
-                current.interrupt();
-
-                // TODO Action Objects themselves should decide what happens here
-                // Some actions in Runescape stop if you attempt them again while in progress and some are ignored.
-                if (current.getClass() == pending.getClass()) {
-                    currentAction = Optional.empty();
-                    return;
+                if (current.isEqual(pending)) {
+                    return; // Ignore repeated clicks.
                 }
+                current.interrupt();
             }
         }
         currentAction = Optional.of(pending);

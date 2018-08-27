@@ -8,12 +8,12 @@ import io.luna.util.Rational;
 import io.netty.util.internal.ThreadLocalRandom;
 
 /**
- * A {@link PlayerAction} implementation that uses an algorithm to determine if items should be removed from
+ * A {@link StationaryAction} implementation that uses an algorithm to determine if items should be removed from
  * and/or added to the inventory every tick.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class HarvestingAction extends PlayerAction {
+public abstract class HarvestingAction extends StationaryAction<Player> {
 
     /**
      * The items being added.

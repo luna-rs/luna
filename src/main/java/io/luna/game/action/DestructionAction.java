@@ -5,11 +5,11 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 
 /**
- * A {@link PlayerAction} implementation where items are removed from the inventory.
+ * A {@link StationaryAction} implementation where items are removed from the inventory.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class DestructionAction extends PlayerAction {
+public abstract class DestructionAction extends StationaryAction<Player> {
 
     /**
      * The items being removed.
