@@ -306,7 +306,7 @@ private final class FishAction(event: NpcClickEvent, tool: Tool) extends Harvest
 
   override def isEqual(other: Action[_]) = {
     other match {
-      case action: FishAction => event.npc().equals(action.event.npc())
+      case action: FishAction => event.npc.equals(action.event.npc)
       case _ => false
     }
   }
