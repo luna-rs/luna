@@ -6,11 +6,12 @@
   -> Big net fishing catching 1-3 fish, instead of 1.
 */
 
-import io.luna.game.action.HarvestingAction
+import io.luna.game.action.{Action, HarvestingAction}
+import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.{NpcFirstClickEvent, NpcSecondClickEvent}
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation.CANCEL
-import io.luna.game.model.mob.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Mob, Player}
 import io.luna.util.Rational
 
 
@@ -240,24 +241,24 @@ private val SHARK_HARPOON =
 
 
 /* An Action implementation that will manage the fish catching operation. */
-private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction(plr) {
+private final class FishAction(event: NpcClickEvent, tool: Tool) extends HarvestingAction(event.plr) {
 
   var noCatchMessage = false
   var exp = 0.0
-  val skill = plr.skill(SKILL_FISHING)
+  val skill = mob.skill(SKILL_FISHING)
 
   private def canFish = {
     if (skill.getLevel < tool.level) {
-      plr.sendMessage(s"You need a Fishing level of ${tool.level} to fish here.")
+      mob.sendMessage(s"You need a Fishing level of ${tool.level} to fish here.")
       false
-    } else if (!tool.bait.forall(plr.inventory.contains)) {
-      plr.sendMessage(s"You do not have the bait required to fish here.")
+    } else if (!tool.bait.forall(mob.inventory.contains)) {
+      mob.sendMessage(s"You do not have the bait required to fish here.")
       false
-    } else if (!plr.inventory.contains(tool.id)) {
-      plr.sendMessage(s"You need a ${nameOfItem(tool.id)} to fish here.")
+    } else if (!mob.inventory.contains(tool.id)) {
+      mob.sendMessage(s"You need a ${nameOfItem(tool.id)} to fish here.")
       false
     } else {
-      plr.animation(new Animation(tool.animation))
+      mob.animation(new Animation(tool.animation))
       true
     }
   }
@@ -265,7 +266,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction
   override def canInit = {
     if (canFish) {
       // TODO Message should correspond to the tool being used
-      plr.sendMessage("You begin to fish...")
+      mob.sendMessage("You begin to fish...")
       true
     } else {
       false
@@ -274,7 +275,7 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction
 
   override def onHarvest() = {
     if (!noCatchMessage) {
-      currentAdd.foreach(it => plr.sendMessage(s"You catch some ${nameOfItem(it.getId)}."))
+      currentAdd.foreach(it => mob.sendMessage(s"You catch some ${nameOfItem(it.getId)}."))
     }
 
     skill.addExperience(exp)
@@ -301,7 +302,14 @@ private final class FishAction(plr: Player, tool: Tool) extends HarvestingAction
 
   override def remove = tool.bait.map { it => Array(new Item(it)) }.getOrElse(Array.empty)
 
-  override def onInterrupt() = plr.animation(CANCEL)
+  override def onInterrupt() = mob.animation(CANCEL)
+
+  override def isEqual(other: Action[_]) = {
+    other match {
+      case action: FishAction => event.npc().equals(action.event.npc())
+      case _ => false
+    }
+  }
 }
 
 
