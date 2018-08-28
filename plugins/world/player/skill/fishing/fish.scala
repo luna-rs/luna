@@ -241,7 +241,7 @@ private val SHARK_HARPOON =
 
 
 /* An Action implementation that will manage the fish catching operation. */
-private final class FishAction(event: NpcClickEvent, tool: Tool) extends HarvestingAction(event.plr) {
+private final class FishAction(evt: NpcClickEvent, tool: Tool) extends HarvestingAction(evt.plr) {
 
   var noCatchMessage = false
   var exp = 0.0
@@ -306,7 +306,7 @@ private final class FishAction(event: NpcClickEvent, tool: Tool) extends Harvest
 
   override def isEqual(other: Action[_]) = {
     other match {
-      case action: FishAction => event.npc.equals(action.event.npc)
+      case action: FishAction => evt.npc.equals(action.evt.npc)
       case _ => false
     }
   }

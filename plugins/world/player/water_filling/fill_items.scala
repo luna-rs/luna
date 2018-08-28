@@ -6,10 +6,10 @@
   -> A variety of water sources.
 */
 
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Mob, Player}
 
 
 /* Filling animation. */
@@ -30,11 +30,22 @@ private val FILLABLES = Map(
 
 
 /* Fills all items in an inventory with water. */
-private final class FillAction(plr: Player, oldId: Int, newId: Int) extends ProducingAction(plr, true, 2) {
+private final class FillAction(evt: ItemOnObjectEvent, oldId: Int,
+                               newId: Int) extends ProducingAction(evt.plr, true, 2) {
   override def remove = Array(new Item(oldId))
   override def add = Array(new Item(newId))
 
   override def onProduce() = plr.animation(ANIMATION)
+
+  override def isEqual(other: Action[_]) = {
+    other match {
+      case action: FillAction =>
+        evt.objectId == action.evt.objectId &&
+          oldId == action.oldId &&
+          newId == action.newId
+      case _ => false
+    }
+  }
 }
 
 
@@ -43,7 +54,7 @@ on[ItemOnObjectEvent] { msg =>
   if (WATER_SOURCES.contains(msg.objectId)) {
 
     FILLABLES.get(msg.itemId).foreach { fillable =>
-      msg.plr.submitAction(new FillAction(msg.plr, msg.itemId, fillable))
+      msg.plr.submitAction(new FillAction(msg, msg.itemId, fillable))
       msg.terminate
     }
   }

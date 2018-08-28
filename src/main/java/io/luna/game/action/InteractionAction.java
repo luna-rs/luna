@@ -48,7 +48,7 @@ public final class InteractionAction extends DistancedAction<Player> {
     }
 
     @Override
-    protected boolean isEqual(Action other) {
+    protected boolean isEqual(Action<?> other) {
         if (other instanceof InteractionAction) {
             InteractionAction action = (InteractionAction) other;
             return interact.equals(action.interact);

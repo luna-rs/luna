@@ -5,10 +5,10 @@
   -> Making unfinished potions from all herbs.
 */
 
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Mob, Player}
 
 // TODO Use dialogues once completed
 /* Class representing potions in the 'POTION_TABLE'. */
@@ -189,6 +189,15 @@ private final class MakePotionAction(plr: Player, potion: Potion) extends Produc
 
   override def add = Array(new Item(potion.id))
   override def remove = Array(new Item(potion.unf), new Item(potion.secondary))
+
+  override def isEqual(other: Action[_]) = {
+    other match {
+      case action: MakePotionAction =>
+        potion.id == action.potion.id &&
+        potion.secondary == action.potion.secondary
+      case _ => false
+    }
+  }
 }
 
 

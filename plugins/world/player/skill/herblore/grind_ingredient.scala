@@ -6,10 +6,10 @@
   -> Grinding all ingredients in the inventory.
 */
 
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Mob, Player}
 
 // TODO Use dialogues once completed
 
@@ -40,6 +40,13 @@ private final class GrindAction(plr: Player, oldId: Int, newId: Int) extends Pro
 
   override def remove = Array(new Item(oldId))
   override def add = Array(new Item(newId))
+
+  override def isEqual(other: Action[_]) = {
+    other match {
+      case action: GrindAction => oldId == action.oldId
+      case _ => false
+    }
+  }
 }
 
 

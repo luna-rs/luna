@@ -19,12 +19,13 @@ public final class ActionSet {
      *
      * @param pending The action to submit.
      */
-    public void submit(Action pending) {
+    public void submit(Action<?> pending) {
         if (currentAction.isPresent()) {
-            Action current = currentAction.get();
+            Action<?> current = currentAction.get();
 
             if (current.isRunning()) {
                 if (current.isEqual(pending)) {
+                    current.onEquals(pending);
                     return; // Ignore repeated clicks.
                 }
                 current.interrupt();

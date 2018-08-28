@@ -5,11 +5,11 @@
   -> Making unfinished potions from all herbs.
 */
 
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Player}
+import io.luna.game.model.mob.{Animation, Mob, Player}
 
 // TODO Use dialogues once completed
 
@@ -95,10 +95,10 @@ private val IDENTIFIED_TO_UNF = UNF_POTION_TABLE.values.map(unf => unf.herb -> u
 
 
 /* An Action that will be used to make unfinished potions. */
-private final class MakeUnfAction(plr: Player, unf: UnfPotion) extends ProducingAction(plr, true, 2) {
+private final class MakeUnfAction(plr: Player, unfPotion: UnfPotion) extends ProducingAction(plr, true, 2) {
 
   override def canInit = {
-    val levelRequired = unf.level
+    val levelRequired = unfPotion.level
     if (plr.skill(SKILL_HERBLORE).getLevel < levelRequired) {
       plr.sendMessage(s"You need a Herblore level of $levelRequired to make this potion.")
       false
@@ -108,12 +108,22 @@ private final class MakeUnfAction(plr: Player, unf: UnfPotion) extends Producing
   }
 
   override def onProduce() = {
-    plr.sendMessage(s"You put the ${ nameOfItem(unf.herb) } into the vial of water.")
+    plr.sendMessage(s"You put the ${nameOfItem(unfPotion.herb)} into the vial of water.")
     plr.animation(ANIMATION)
   }
 
-  override def add = Array(new Item(unf.unf))
-  override def remove = Array(new Item(unf.herb), new Item(VIAL_OF_WATER))
+  override def add = Array(new Item(unfPotion.unf))
+
+  override def remove = Array(new Item(unfPotion.herb), new Item(VIAL_OF_WATER))
+
+  override def isEqual(other: Action[_]) = {
+    other match {
+      case action: MakeUnfAction =>
+        unfPotion.herb == action.unfPotion.herb &&
+        unfPotion.unf == action.unfPotion.unf
+      case _ => false
+    }
+  }
 }
 
 

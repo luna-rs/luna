@@ -117,6 +117,13 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
+     * Function invoked when two Actions are considered equal.
+     */
+    protected void onEquals(Action<?> other) {
+
+    }
+
+    /**
      * Function called every {@code delay} by the {@link ActionTask}.
      */
     protected abstract void call();
@@ -125,7 +132,7 @@ public abstract class Action<T extends Mob> {
      * Determines if this action is equal to {@code other}. This is used instead of {@code equals(Object)} so that
      * the {@code equals(Object) -> hashCode()} contract isn't broken.
      */
-    protected abstract boolean isEqual(Action other);
+    protected abstract boolean isEqual(Action<?> other);
 
     /**
      * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
