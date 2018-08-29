@@ -79,7 +79,7 @@ public final class World {
      * Queues {@code player} for login on the next tick.
      */
     public void queueLogin(Player player) {
-        if (player.getState() == EntityState.IDLE && !logins.contains(player)) {
+        if (player.getState() == EntityState.NEW && !logins.contains(player)) {
             logins.add(player);
         }
     }

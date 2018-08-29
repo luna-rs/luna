@@ -10,7 +10,7 @@ public enum EntityState {
     /**
      * An entity is awaiting registration.
      */
-    IDLE,
+    NEW,
 
     /**
      * An entity has been registered.

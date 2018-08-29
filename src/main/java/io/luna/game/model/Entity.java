@@ -44,7 +44,7 @@ public abstract class Entity {
     /**
      * The current state.
      */
-    protected EntityState state = EntityState.IDLE;
+    protected EntityState state = EntityState.NEW;
 
     /**
      * The current position.
@@ -102,7 +102,7 @@ public abstract class Entity {
     }
 
     /**
-     * Invoked when entering an {@code IDLE} state.
+     * Invoked when entering an {@code NEW} state.
      */
     public void onIdle() {
     }
@@ -123,7 +123,7 @@ public abstract class Entity {
      * Sets the current state and invokes the corresponding function.
      */
     public final void setState(EntityState newState) {
-        checkArgument(newState != EntityState.IDLE, "cannot set to IDLE");
+        checkArgument(newState != EntityState.NEW, "cannot set to NEW");
 
         if (state != newState) {
             state = newState;
