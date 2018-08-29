@@ -207,10 +207,7 @@ implicit class RichWorld(world: World) {
 
   def messageToAll(str: String) = players.foreach(_.sendMessage(str))
 
-  def getRegion(pos: Position) = world.getRegions.getRegion(pos)
-
-  def getViewableEntities(pos: Position, et: EntityType) =
-    asScalaSet(world.getRegions.getViewableEntities(pos, et))
+  def getRegion(pos: Position) = world.getRegions.getRegion(pos.getRegionCoordinates)
 }
 
 implicit class RichPosition(position: Position) {

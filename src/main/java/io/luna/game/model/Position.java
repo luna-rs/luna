@@ -1,19 +1,18 @@
 package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
+import io.luna.game.model.region.RegionCoordinates;
 
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A single absolute point on the Runescape map.
+ * A model representing a single tile on the Runescape map.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Position {
-
-    // TODO Read up on tile system and confirm if all functions are named correctly.
 
     /**
      * The x coordinate.
@@ -115,79 +114,64 @@ public final class Position {
 
     /**
      * Returns a new position translated by the specified amounts. The z coordinate will remain
-     * the same.
+     * unchanged.
      */
     public Position translate(int amountX, int amountY) {
         return translate(amountX, amountY, z);
     }
 
     /**
-     * Returns the x coordinate of the position's region.
+     * Returns the top-left x coordinate of this chunk.
      */
-    public int getRegionX() {
-        return (x >> 3) - 6;
+    public int getChunkX() {
+        return (x / 8) - 6;
     }
 
     /**
-     * Returns the y coordinate of the position's region.
+     * Returns the top-left y coordinate of this chunk.
      */
-    public int getRegionY() {
-        return (y >> 3) - 6;
+    public int getChunkY() {
+        return (y / 8) - 6;
     }
 
     /**
-     * Returns the local x coordinate relative to {@code base}.
+     * Returns the local x coordinate within the chunk of {@code base}.
      */
     public int getLocalX(Position base) {
-        return x - (base.getRegionX() << 3);
+        return x - (base.getChunkX() * 8);
     }
 
     /**
-     * Returns the local y coordinate relative to {@code base}.
+     * Returns the local y coordinate within the chunk of {@code base}.
      */
     public int getLocalY(Position base) {
-        return y - (base.getRegionY() << 3);
+        return y - (base.getChunkY() * 8);
     }
 
     /**
-     * Returns the local x coordinate relative to this position.
+     * Returns the local x coordinate within the chunk of this position.
      */
     public int getLocalX() {
         return getLocalX(this);
     }
 
     /**
-     * Returns the local y coordinate relative to this position.
+     * Returns the local y coordinate within the chunk of this position.
      */
     public int getLocalY() {
         return getLocalY(this);
     }
 
     /**
-     * Returns the x coordinate of this position's region chunk.
+     * Returns the coordinates of the region this position is in.
      */
-    public int getChunkX() {
-        return (x >> 6);
-    }
-
-    /**
-     * Returns the y coordinate of this position's region chunk.
-     */
-    public int getChunkY() {
-        return (y >> 6);
-    }
-
-    /**
-     * Returns the identifier of this position's region.
-     */
-    public int getRegionId() {
-        return ((getChunkX() << 8) + getChunkY());
+    public RegionCoordinates getRegionCoordinates() {
+        return new RegionCoordinates(this);
     }
 
     /**
      * @return The x coordinate.
      */
-
     public int getX() {
         return x;
     }
@@ -195,7 +179,6 @@ public final class Position {
     /**
      * @return The y coordinate.
      */
-
     public int getY() {
         return y;
     }
@@ -203,7 +186,6 @@ public final class Position {
     /**
      * @return The z coordinate.
      */
-
     public int getZ() {
         return z;
     }

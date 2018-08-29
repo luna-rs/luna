@@ -1,40 +1,54 @@
 package io.luna.game.model.region;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
- * A model representing a location on the map {@code 32x32} in size.
+ * A model containing entities within a map region.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Region {
 
     /**
-     * The coordinates.
+     * The region coordinates.
      */
     private final RegionCoordinates coordinates;
 
     /**
-     * A set of entities within this region.
+     * A map of entities.
      */
-    private final Set<Entity> entities = Sets.newConcurrentHashSet();
+    private final ImmutableMap<EntityType, Set<Entity>> entities;
+
+    { // Initializes the repository by creating concurrent sets for each entity type.
+        Map<EntityType, Set<Entity>> mutableEntities = new EnumMap<>(EntityType.class);
+        EntityType.VALUES.forEach(type ->
+                mutableEntities.put(type, Sets.newConcurrentHashSet()));
+        entities = Maps.immutableEnumMap(mutableEntities);
+    }
 
     /**
      * Creates a new {@link Region}.
      *
-     * @param coordinates The coordinates.
+     * @param coordinates The region coordinates.
      */
     Region(RegionCoordinates coordinates) {
         this.coordinates = coordinates;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("coordinates", coordinates).
+                add("entities", entities).toString();
     }
 
     @Override
@@ -43,53 +57,73 @@ public final class Region {
             return true;
         }
         if (obj instanceof Region) {
-            Region region = (Region) obj;
-            return Objects.equals(coordinates, region.coordinates);
+            Region other = (Region) obj;
+            return coordinates.equals(other.coordinates);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(coordinates);
+        return coordinates.hashCode();
     }
 
     /**
-     * Adds an entity to this region.
+     * Iterates through every {@link Entity} in this region and applies the consumer
+     * on them.
+     *
+     * @param action The consumer to apply.
      */
-    public void addEntity(Entity e) {
-        entities.add(e);
+    public void forEach(Consumer<? super Entity> action) {
+        for (Set<Entity> entitySet : entities.values()) {
+            entitySet.forEach(action);
+        }
     }
 
     /**
-     * Removes an entity from this region.
+     * Adds an entity to this repository.
+     *
+     * @param entity The entity to add.
+     * @return {@code true} if successful, {@code false} otherwise.
      */
-    public void removeEntity(Entity e) {
-        entities.remove(e);
+    public boolean add(Entity entity) {
+        return entities.get(entity.getType()).add(entity);
     }
 
     /**
-     * Retrieves a list of entities of the argued type.
+     * Removes an entity from this repository.
+     *
+     * @param entity The entity to remove.
+     * @return {@code true} if successful, {@code false} otherwise.
      */
-    @SuppressWarnings("unchecked")
-    public <E extends Entity> List<E> getEntities(EntityType type) {
-        List<E> filtered = new ArrayList<>();
-        entities.stream().filter(it -> it.getType() == type).forEach(it -> filtered.add((E) it));
-        return filtered;
+    public boolean remove(Entity entity) {
+        return entities.get(entity.getType()).remove(entity);
     }
 
     /**
-     * Returns a shallow and immutable copy of the backing set.
+     * Determines if this repository contains an entity.
+     *
+     * @param entity The entity to determine for.
+     * @return {@code true} if this repository contains the entity, {@code false} otherwise.
      */
-    public ImmutableList<Entity> toList() {
-        return ImmutableList.copyOf(entities);
+    public boolean contains(Entity entity) {
+        return entities.get(entity.getType()).contains(entity);
     }
 
     /**
-     * Returns a shallow copy of the backing set.
+     * Returns a {@link Set} containing all entities in this region of the specified type. The cast type
+     * must match the argued type or a {@link ClassCastException} will be thrown.
+     *
+     * @param type The type of entities to get.
+     * @param <E> The type to cast to. Must be a subclass of Entity.
+     * @return A set of entities casted to {@code <E>}. As long as {@code <E>} matches {@code type}, no errors will
+     * be thrown.
      */
-    public Entity[] toArray() {
-        return Iterables.toArray(entities, Entity.class);
+    public <E extends Entity> Set<E> getAll(EntityType type) {
+        /* Bad, but at least we know it'll be type safe since the
+        backing map is never exposed. */
+        //noinspection unchecked
+        return (Set<E>) entities.get(type);
     }
 
     /**

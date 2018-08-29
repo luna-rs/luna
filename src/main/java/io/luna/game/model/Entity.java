@@ -135,7 +135,7 @@ public abstract class Entity {
                 case INACTIVE:
                     onInactive();
                     if (currentRegion != null) {
-                        currentRegion.removeEntity(this);
+                        currentRegion.remove(this);
                     }
                     break;
             }
@@ -154,10 +154,10 @@ public abstract class Entity {
                 position = newPosition;
                 return;
             }
-            currentRegion.removeEntity(this);
+            currentRegion.remove(this);
         }
         currentRegion = world.getRegions().getRegion(next);
-        currentRegion.addEntity(this);
+        currentRegion.add(this);
 
         plugins.post(new PositionChangeEvent(this, position, newPosition));
         position = newPosition;

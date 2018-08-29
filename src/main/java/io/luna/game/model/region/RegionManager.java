@@ -1,7 +1,6 @@
 package io.luna.game.model.region;
 
 import io.luna.LunaConstants;
-import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
@@ -15,181 +14,132 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+
+import static io.luna.game.model.EntityConstants.VIEWING_DISTANCE;
 
 /**
- * A model that manages regions occupied by entities.
+ * A model containing a collection of loaded map regions.
  *
  * @author lare96 <http://github.org/lare96>
- * @author Graham
  */
 public final class RegionManager {
 
     /**
-     * A map of regions currently or previously occupied by entities.
+     * A concurrent map of loaded regions.
      */
     private final Map<RegionCoordinates, Region> regions = new ConcurrentHashMap<>();
 
     /**
-     * Returns or constructs a region based on the argued coordinates.
-     */
-    public Region getRegion(int x, int y) {
-        return getRegion(new RegionCoordinates(x, y));
-    }
-
-    /**
-     * Returns or constructs a region based on the argued position.
-     */
-    public Region getRegion(Position pos) {
-        return getRegion(RegionCoordinates.create(pos));
-    }
-
-    /**
-     * Returns or constructs a region based on the argued region coordinates.
+     * Retrieves a region based on the argued region coordinates, constructing and loading a new
+     * one if needed.
+     *
+     * @param coordinates The coordinates to construct a new region with.
+     * @return The existing or newly loaded region.
      */
     public Region getRegion(RegionCoordinates coordinates) {
         return regions.computeIfAbsent(coordinates, Region::new);
     }
 
     /**
-     * Determines if a cached region exists for a position.
+     * Returns a set of viewable players from the position of {@code player}, potentially ordered
+     * using the region update comparator.
+     *
+     * @param player The player to compute viewable players for.
+     * @return A set of viewable players.
      */
-    public boolean exists(Position pos) {
-        return regions.containsKey(RegionCoordinates.create(pos));
-    }
+    public Set<Player> getViewablePlayers(Player player) {
+        List<Region> viewableRegions = getViewableRegions(player.getPosition());
+        Set<Player> viewablePlayers = computeSetImpl(player);
 
-    /**
-     * Computes a set of entities within a region viewable from the argued position.
-     */
-    @SuppressWarnings("unchecked")
-    public <E extends Entity> Set<E> getViewableEntities(Position position, EntityType type) {
-        List<Region> allRegions = getSurroundingRegions(position);
-        Set<E> entities = new HashSet<>();
-
-        for (Region region : allRegions) {
-            List<E> regionEntities = region.getEntities(type);
-
-            for (Entity inRegion : regionEntities) {
-                if (inRegion.getPosition().isViewable(position)) {
-                    entities.add((E) inRegion);
+        for (Region region : viewableRegions) {
+            Set<Player> regionPlayers = region.getAll(EntityType.PLAYER);
+            for (Player inside : regionPlayers) {
+                if (inside.isViewable(player)) {
+                    viewablePlayers.add(inside);
                 }
             }
         }
-        return entities;
+        return viewablePlayers;
     }
 
     /**
-     * Computes a set of viewable players, potentially ordered using the region update comparator.
+     * Returns a set of viewable npcs from the position of {@code player}, potentially ordered
+     * using the region update comparator.
+     *
+     * @param player The player to compute viewable npcs for.
+     * @return A set of viewable npcs.
      */
-    public Set<Player> getSurroundingPlayers(Player player) {
-        List<Region> allRegions = getSurroundingRegions(player.getPosition());
-        Set<Player> localPlayers = getBackingSet(player);
+    public Set<Npc> getViewableNpcs(Player player) {
+        List<Region> viewableRegions = getViewableRegions(player.getPosition());
+        Set<Npc> viewableNpcs = computeSetImpl(player);
 
-        for (Region region : allRegions) {
-            List<Player> regionPlayers = region.getEntities(EntityType.PLAYER);
-
-            for (Player inRegion : regionPlayers) {
-                if (inRegion.isViewable(player)) {
-                    localPlayers.add(inRegion);
+        for (Region region : viewableRegions) {
+            Set<Npc> regionNpcs = region.getAll(EntityType.NPC);
+            for (Npc inside : regionNpcs) {
+                if (inside.isViewable(player)) {
+                    viewableNpcs.add(inside);
                 }
             }
         }
-        return localPlayers;
+        return viewableNpcs;
     }
 
     /**
-     * Computes a set of viewable NPCs, potentially ordered using the region update comparator.
+     * Returns the appropriate set to use when computing viewable mobs. Will either be a {@link TreeSet}
+     * or {@link HashSet} depending on Luna constants settings.
+     *
+     * @param player The player to compute for.
+     * @return The backing set that will be used.
      */
-    public Set<Npc> getSurroundingNpcs(Player player) {
-        List<Region> allRegions = getSurroundingRegions(player.getPosition());
-        Set<Npc> localNpcs = getBackingSet(player);
+    private <T extends Mob> Set<T> computeSetImpl(Player player) {
+        return LunaConstants.STAGGERED_UPDATING ?
+                new TreeSet<>(new RegionUpdateComparator(player)) : new HashSet<>();
+    }
 
-        for (Region region : allRegions) {
-            List<Npc> regionNpcs = region.getEntities(EntityType.NPC);
+    /**
+     * Returns a list of viewable regions from {@code position}.
+     *
+     * @param position The position to get viewable regions from.
+     * @return A list of viewable regions.
+     */
+    private List<Region> getViewableRegions(Position position) {
+        RegionCoordinates coords = position.getRegionCoordinates(); // Current region's coordinates.
+        int localX = coords.getLocalX(position), localY = coords.getLocalY(position); // Player's (x,y) in the region.
 
-            for (Npc inRegion : regionNpcs) {
-                if (inRegion.isViewable(player)) {
-                    localNpcs.add(inRegion);
-                }
-            }
+        boolean isEastViewable = localX + VIEWING_DISTANCE >= 63; // Is eastern region viewable?
+        boolean isWestViewable = localX - VIEWING_DISTANCE <= 0; // Is western region viewable?
+        boolean isNorthViewable = localY + VIEWING_DISTANCE >= 63; // Is northern region viewable?
+        boolean isSouthViewable = localY - VIEWING_DISTANCE <= 0; // Is southern region viewable?
+
+        List<Region> regions = new LinkedList<>(); // A list to store viewable regions.
+        Consumer<RegionCoordinates> addRegion = c -> regions.add(getRegion(c)); // Store a new region.
+
+        addRegion.accept(coords); // Store current region.
+
+        // First store regions for X-axis.
+        if (isEastViewable) {
+            addRegion.accept(coords.east()); // Store eastern region.
+        } else if (isWestViewable) {
+            addRegion.accept(coords.west()); // Store western region.
         }
-        return localNpcs;
-    }
 
-    /**
-     * Constructs and returns the backing set used to hold mobs.
-     */
-    private <T extends Mob> Set<T> getBackingSet(Player player) {
-        return LunaConstants.STAGGERED_UPDATING ? new TreeSet<>(new RegionUpdateComparator(player)) :
-            new HashSet<>();
-    }
+        // Then, for the Y-axis.
+        if (isNorthViewable) {
+            addRegion.accept(coords.north()); // Store northern region.
+        } else if (isSouthViewable) {
+            addRegion.accept(coords.south()); // Store southern region.
+        }
 
-    /**
-     * Computes a list of regions surrounding a position.
-     */
-    private List<Region> getSurroundingRegions(Position pos) {
-        RegionCoordinates coordinates = RegionCoordinates.create(pos);
-
-        int regionX = coordinates.getX();
-        int regionY = coordinates.getY();
-
-        List<Region> regions = new LinkedList<>();
-        regions.add(getRegion(coordinates)); // Initial region.
-
-        int x = pos.getX() % 32;
-        int y = pos.getY() % 32;
-
-        if (y == 15 || y == 16) {
-            // Middle of region.
-
-            if (x > 16) {
-
-                // Middle-right part of region.
-                regions.add(getRegion(regionX + 1, regionY));
-            } else if (x < 15) {
-
-                // Middle-left part of region.
-                regions.add(getRegion(regionX - 1, regionY));
-            }
-        } else if (y > 16) {
-            // Top part of region.
-
-            if (x > 16) {
-
-                // Top-right part of region.
-                regions.add(getRegion(regionX, regionY + 1));
-                regions.add(getRegion(regionX + 1, regionY));
-                regions.add(getRegion(regionX + 1, regionY + 1));
-            } else if (x < 15) {
-
-                // Top-left part of region.
-                regions.add(getRegion(regionX, regionY + 1));
-                regions.add(getRegion(regionX - 1, regionY));
-                regions.add(getRegion(regionX - 1, regionY + 1));
-            } else if (x == 15 || x == 16) {
-
-                // Top-middle part of region.
-                regions.add(getRegion(regionX, regionY + 1));
-            }
-        } else if (y < 15) {
-            // Bottom part of region.
-
-            if (x > 16) {
-
-                // Bottom-right part of region.
-                regions.add(getRegion(regionX, regionY - 1));
-                regions.add(getRegion(regionX + 1, regionY));
-                regions.add(getRegion(regionX + 1, regionY - 1));
-            } else if (x < 15) {
-
-                // Bottom-left part of region.
-                regions.add(getRegion(regionX, regionY - 1));
-                regions.add(getRegion(regionX - 1, regionY));
-                regions.add(getRegion(regionX - 1, regionY - 1));
-            } else if (x == 15 || x == 16) {
-
-                // Bottom-middle part of region.
-                regions.add(getRegion(regionX, regionY - 1));
-            }
+        // Finally, store all diagonal regions.
+        if (isNorthViewable && isEastViewable) {
+            addRegion.accept(coords.northEast()); // Store north-eastern region.
+        } else if (isNorthViewable && isWestViewable) {
+            addRegion.accept(coords.northWest()); // Store north-western region.
+        } else if (isSouthViewable && isEastViewable) {
+            addRegion.accept(coords.southEast()); // Store south-eastern region.
+        } else if (isSouthViewable && isWestViewable) {
+            addRegion.accept(coords.southWest()); // Store south-western region.
         }
         return regions;
     }
