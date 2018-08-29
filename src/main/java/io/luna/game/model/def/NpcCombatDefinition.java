@@ -1,14 +1,11 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.NpcCombatDefinitionParser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A definition model describing an attackable non-player.
@@ -16,6 +13,12 @@ import java.util.NoSuchElementException;
  * @author lare96 <http://github.org/lare96>
  */
 public final class NpcCombatDefinition {
+
+    /**
+     * The default definition.
+     */
+    private static final NpcCombatDefinition DEFAULT = new NpcCombatDefinition(-1, -1, false, false,
+            -1, -1, -1, -1, -1, -1, -1, new int[]{}, new int[]{});
 
     /**
      * The attack skill index.
@@ -110,11 +113,7 @@ public final class NpcCombatDefinition {
      * Retrieves a definition.
      */
     public static NpcCombatDefinition get(int id) {
-        NpcCombatDefinition def = DEFINITIONS.get(id);
-        if (def == null) {
-            throw new NoSuchElementException("No definition for id " + id);
-        }
-        return def;
+        return DEFINITIONS.get(id);
     }
 
     /**
@@ -190,6 +189,8 @@ public final class NpcCombatDefinition {
     private final ImmutableList<Integer> bonuses;
 
     /**
+     * Creates a new {@link NpcCombatDefinition}.
+     *
      * @param id The identifier.
      * @param respawnTime The respawn time (in ticks).
      * @param aggressive If the non-player is aggressive.
@@ -205,8 +206,8 @@ public final class NpcCombatDefinition {
      * @param bonuses A list of bonuses.
      */
     public NpcCombatDefinition(int id, int respawnTime, boolean aggressive, boolean poisonous, int level,
-        int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
-        int deathAnimation, int[] skills, int[] bonuses) {
+                               int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
+                               int deathAnimation, int[] skills, int[] bonuses) {
         this.id = id;
         this.respawnTime = respawnTime;
         this.aggressive = aggressive;

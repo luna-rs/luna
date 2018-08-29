@@ -2,11 +2,8 @@ package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.util.IterableArray;
-import io.luna.util.StringUtils;
 import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.ObjectDefinitionParser;
 
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 /**
@@ -181,6 +178,9 @@ public final class ObjectDefinition {
         return width;
     }
 
+    public int getSize() {
+        return length * width;
+    }
     /**
      * @return If the object is impenetrable.
      */
