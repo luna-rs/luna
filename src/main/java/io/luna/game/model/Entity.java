@@ -74,22 +74,16 @@ public abstract class Entity {
     }
 
     @Override
-    public int hashCode() {
-        throw new UnsupportedOperationException("no 'hashCode'");
-    }
+    public abstract int hashCode();
 
     @Override
-    public boolean equals(Object obj) {
-        throw new UnsupportedOperationException("no 'equals'");
-    }
+    public abstract boolean equals(Object obj);
 
     @Override
-    public String toString() {
-        throw new UnsupportedOperationException("no 'toString'");
-    }
+    public abstract String toString();
 
     /**
-     * Returns this entity's size. Always greater than {@code 0}.
+     * Returns this entity's size.
      */
     public abstract int size();
 
@@ -135,15 +129,15 @@ public abstract class Entity {
             state = newState;
 
             switch (state) {
-            case ACTIVE:
-                onActive();
-                break;
-            case INACTIVE:
-                onInactive();
-                if (currentRegion != null) {
-                    currentRegion.removeEntity(this);
-                }
-                break;
+                case ACTIVE:
+                    onActive();
+                    break;
+                case INACTIVE:
+                    onInactive();
+                    if (currentRegion != null) {
+                        currentRegion.removeEntity(this);
+                    }
+                    break;
             }
         }
     }
@@ -152,9 +146,8 @@ public abstract class Entity {
      * Sets the current position and performs region checking.
      */
     public final void setPosition(Position newPosition) {
-        RegionCoordinates next = RegionCoordinates.create(newPosition);
+        RegionCoordinates next = newPosition.getRegionCoordinates();
 
-        // TODO Does this cover all possible scenarios? What if the player's next region is the same?
         if (position != null) {
             if (currentRegion.getCoordinates().equals(next)) {
                 plugins.post(new PositionChangeEvent(this, position, newPosition));
