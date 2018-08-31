@@ -81,8 +81,8 @@ public final class LunaConstants {
      * performance regression. It should only be enabled by highly populated servers.
      * <p>
      * Only {@code 15} players and npcs are updated for a player per cycle regardless of how many are technically
-     * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose a
-     * lot potential problems if a large volume of players are in one place.
+     * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose
+     * potential problems if a large volume of players are in one place.
      * <p>
      * A solution to this problem is <strong>staggered updating</strong>, which in this context means to update the
      * most important players first. This is done through the {@link RegionUpdateComparator}.
