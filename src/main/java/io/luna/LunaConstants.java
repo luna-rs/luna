@@ -46,6 +46,11 @@ public final class LunaConstants {
     }
 
     /**
+     * A private constructor.
+     */
+    private LunaConstants() {}
+
+    /**
      * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code
      * DISABLED} in a production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise in both
      * scenarios.
