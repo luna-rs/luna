@@ -34,11 +34,11 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A model that handles initialization logic.
+ * A model that handles the Server initialization logic.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class Server {
+public final class LunaServer {
 
     /**
      * The asynchronous logger.
@@ -68,7 +68,7 @@ public final class Server {
     /**
      * A package-private constructor.
      */
-    Server() {
+    LunaServer() {
         ExecutorService delegateService = ThreadUtils.newThreadPool("LunaInitializationThread");
 
         launchPool = MoreExecutors.listeningDecorator(delegateService);
@@ -123,7 +123,7 @@ public final class Server {
      */
     private void initPlugins() throws InterruptedException, IOException, ExecutionException, ScriptException {
         PluginBootstrap bootstrap = new PluginBootstrap(context, launchPool);
-        P2<Integer, Integer> pluginCount = bootstrap.init();
+        P2<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
         String fractionString = pluginCount._1() + "/" + pluginCount._2();
         LOGGER.info("[{}] Scala plugins have been loaded into memory.", fractionString);

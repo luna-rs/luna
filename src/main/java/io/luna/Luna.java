@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Instantiates a {@link Server} that will start Luna.
+ * Instantiates a {@link LunaServer} that will start Luna.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -42,7 +42,7 @@ public final class Luna  {
      */
     public static void main(String[] args) {
         try {
-            Server luna = new Server();
+            LunaServer luna = new LunaServer();
             luna.init();
         } catch (Exception e) {
             LOGGER.fatal("Luna could not be started.", e);
