@@ -5,8 +5,7 @@ import io.luna.game.model.World;
 import io.luna.game.plugin.PluginManager;
 
 /**
- * A model representing a single instance of Runescape. Only one instance should exist at a time, unless
- * multiple servers are being ran on the same system.
+ * A model representing a single instance of Runescape. Only one instance should exist at a time.
  *
  * @author lare96 <http://github.org/lare96>
  */
