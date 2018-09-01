@@ -27,6 +27,8 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
 
     /**
      * Creates a new {@link HarvestingAction}.
+     *
+     * @param player The {@link Player} assigned to this action.
      */
     public HarvestingAction(Player player) {
         super(player, false, 1);
@@ -81,19 +83,19 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
     }
 
     /**
-     * Return the items that will be removed.
+     * @return The items that will be removed.
      */
     protected Item[] remove() {
         return Item.EMPTY_ARRAY;
     }
 
     /**
-     * Return the chance of harvesting items.
+     * @return The chance of harvesting items.
      */
     protected abstract Rational harvestChance();
 
     /**
-     * Return the items that will be added.
+     * @return The items that will be added.
      */
     protected abstract Item[] add();
 }

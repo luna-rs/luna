@@ -1,23 +1,74 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
+import io.luna.game.GameService;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
+import io.luna.net.msg.out.NpcUpdateMessageWriter;
+import io.luna.net.msg.out.PlayerUpdateMessageWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Phaser;
+
+import static io.luna.util.ThreadUtils.availableProcessors;
+import static io.luna.util.ThreadUtils.nameThreadFactory;
+import static io.luna.util.ThreadUtils.newFixedThreadPool;
 
 /**
- * A model that manages entities.
+ * A model that performs world processing and synchronization for mobs.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class World {
+
+    /**
+     * A model that sends {@link Player} and {@link Npc} synchronization packets.
+     */
+    private final class PlayerSynchronizationTask implements Runnable {
+
+        /**
+         * The player.
+         */
+        private final Player player;
+
+        /**
+         * Creates a new {@link PlayerSynchronizationTask}.
+         *
+         * @param player The player.
+         */
+        private PlayerSynchronizationTask(Player player) {
+            this.player = player;
+        }
+
+        @Override
+        public void run() {
+            synchronized (player) {
+                try {
+                    player.queue(new NpcUpdateMessageWriter());
+                    player.queue(new PlayerUpdateMessageWriter());
+                } catch (Exception e) {
+                    LOGGER.warn(player + " could not complete synchronization.", e);
+                    player.logout();
+                } finally {
+                    barrier.arriveAndDeregister();
+                }
+            }
+        }
+    }
+
+    /**
+     * The asynchronous logger.
+     */
+    private final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The context instance.
@@ -55,9 +106,15 @@ public final class World {
     private final TaskManager tasks = new TaskManager();
 
     /**
-     * The world synchronizer.
+     * A synchronization barrier.
      */
-    private final WorldSynchronizer synchronizer = new WorldSynchronizer(this);
+    private final Phaser barrier = new Phaser(1);
+
+    /**
+     * A thread pool for parallel updating.
+     */
+    private final ExecutorService service =
+            newFixedThreadPool(nameThreadFactory("WorldSynchronizationThread"), availableProcessors());
 
     /**
      * Creates a new {@link World}.
@@ -70,13 +127,17 @@ public final class World {
 
     /**
      * Schedules {@code task} to run sometime in the future.
+     *
+     * @param task The task to schedule.
      */
-    public void  schedule(Task task) {
+    public void schedule(Task task) {
         tasks.schedule(task);
     }
 
     /**
      * Queues {@code player} for login on the next tick.
+     *
+     * @param player The player to queue.
      */
     public void queueLogin(Player player) {
         if (player.getState() == EntityState.NEW && !logins.contains(player)) {
@@ -99,6 +160,8 @@ public final class World {
 
     /**
      * Queues {@code player} for logout on the next tick.
+     *
+     * @param player The player to queue.
      */
     public void queueLogout(Player player) {
         if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
@@ -115,24 +178,96 @@ public final class World {
             if (player == null) {
                 break;
             }
-            // TODO Disable logout if player is still in Combat
             playerList.remove(player);
         }
     }
 
     /**
-     * Runs task processing and mob synchronization.
+     * Runs one iteration of the main game loop. This method should <strong>never</strong> be called
+     * by anything other than the {@link GameService}.
      */
-    public void runGameLoop() {
-        tasks.runTaskIteration();
+    public void loop() {
 
-        synchronizer.preSynchronize();
-        synchronizer.synchronize();
-        synchronizer.postSynchronize();
+        // Handle logins and logouts.
+        dequeueLogins();
+        dequeueLogouts();
+
+        // Handle world synchronization.
+        preSynchronize();
+        synchronize();
+        postSynchronize();
+
+        // Process all tasks.
+        tasks.runTaskIteration();
     }
 
     /**
-     * Retrieves a player by their username hash. Faster than {@code getPlayer(String)}.
+     * Pre-synchronization part of the game loop, process all tick-dependant player logic.
+     */
+    private void preSynchronize() {
+        for (Player player : playerList) {
+            try {
+                player.getWalkingQueue().process();
+                player.sendRegionUpdate();
+                player.getSession().dequeueIncomingPackets();
+            } catch (Exception e) {
+                player.logout();
+                LOGGER.warn(player + " could not complete pre-synchronization.", e);
+            }
+        }
+
+        for (Npc npc : npcList) {
+            try {
+                npc.getWalkingQueue().process();
+            } catch (Exception e) {
+                npcList.remove(npc);
+                LOGGER.warn(npc + " could not complete pre-synchronization.", e);
+            }
+        }
+    }
+
+    /**
+     * Synchronization part of the game loop, apply the update procedure in parallel.
+     */
+    private void synchronize() {
+        barrier.bulkRegister(playerList.size());
+        for (Player player : playerList) {
+            service.execute(new PlayerSynchronizationTask(player));
+        }
+        barrier.arriveAndAwaitAdvance();
+    }
+
+    /**
+     * Post-synchronization part of the game loop, send all queued network data and reset
+     * variables.
+     */
+    private void postSynchronize() {
+        for (Player player : playerList) {
+            try {
+                player.getSession().flush();
+                player.resetFlags();
+                player.setCachedBlock(null);
+            } catch (Exception e) {
+                player.logout();
+                LOGGER.warn(player + " could not complete post-synchronization.", e);
+            }
+        }
+
+        for (Npc npc : npcList) {
+            try {
+                npc.resetFlags();
+            } catch (Exception e) {
+                npcList.remove(npc);
+                LOGGER.warn(npc + " could not complete post-synchronization.", e);
+            }
+        }
+    }
+
+    /**
+     * Retrieves a player by their username hash. Faster than {@link World#getPlayer(String)}
+     *
+     * @param username The username hash.
+     * @return The player, or no player.
      */
     public Optional<Player> getPlayer(long username) {
         return playerList.findFirst(player -> player.getUsernameHash() == username);
@@ -140,6 +275,9 @@ public final class World {
 
     /**
      * Retrieves a player by their username.
+     *
+     * @param username The username.
+     * @return The player, or no player.
      */
     public Optional<Player> getPlayer(String username) {
         return playerList.findFirst(player -> player.getUsername().equals(username));

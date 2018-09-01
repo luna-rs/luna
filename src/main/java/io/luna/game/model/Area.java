@@ -1,47 +1,54 @@
 package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 import io.luna.util.RandomUtils;
+import io.luna.util.RangeIterator;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static io.luna.game.model.Position.HEIGHT_LEVELS;
 
 /**
- * A group of positions represented geometrically as a square, cube, rectangle, or rectangular prism.
+ * A model representing a square-shaped 2D/3D area on the map.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class Area {
 
     /**
-     * Creates an area using south-west, north-east and z coordinates.
+     * Creates an {@link Area} using south-west, north-east and z coordinates.
      */
-    public static Area create(int southWestX, int southWestY, int northEastX, int northEastY, int z) {
+    public static Area create(int southWestX, int southWestY, int northEastX, int northEastY, Range<Integer> z) {
         return new Area(southWestX, southWestY, northEastX, northEastY, z);
     }
 
     /**
-     * Creates an area using south-west and north-east coordinates.
+     * Creates an {@link Area} using south-west and north-east coordinates. This is active across all
+     * height levels by default.
      */
     public static Area create(int southWestX, int southWestY, int northEastX, int northEastY) {
-        return new Area(southWestX, southWestY, northEastX, northEastY, 0);
+        return new Area(southWestX, southWestY, northEastX, northEastY, HEIGHT_LEVELS);
     }
 
     /**
-     * Creates an area using center and z coordinates along with a radius.
+     * Creates an {@link Area} using center and z coordinates along with a radius.
      */
-    public static Area createWithRadius(int x, int y, int z, int radius) {
+    public static Area createWithRadius(int x, int y, Range<Integer> z, int radius) {
         return new Area(x - radius, y - radius, x + radius, y + radius, z);
     }
 
     /**
-     * Creates an area using center coordinates along with a radius.
+     * Creates an {@link Area} using center coordinates along with a radius. This is active across all
+     * height levels by default.
      */
     public static Area createWithRadius(int x, int y, int radius) {
-        return new Area(x - radius, y - radius, x + radius, y + radius, 0);
+        return new Area(x - radius, y - radius, x + radius, y + radius, HEIGHT_LEVELS);
     }
 
     /**
@@ -65,9 +72,14 @@ public final class Area {
     private final int northEastY;
 
     /**
-     * The z coordinate.
+     * The z coordinate range.
      */
-    private final int z;
+    private final Range<Integer> z;
+
+    /**
+     * The iterable for z coordinate levels.
+     */
+    private final transient Iterable<Integer> zIterable = this::zIterator;
 
     /**
      * Creates a new {@link Area}.
@@ -76,12 +88,15 @@ public final class Area {
      * @param southWestY The south-west y coordinate.
      * @param northEastX The north-east x coordinate.
      * @param northEastY The north-east y coordinate.
-     * @param z The z coordinate.
+     * @param z The z coordinate range.
      */
-    private Area(int southWestX, int southWestY, int northEastX, int northEastY, int z) {
+    private Area(int southWestX, int southWestY, int northEastX, int northEastY, Range<Integer> z) {
         checkArgument(northEastX >= southWestX, "northEastX cannot be smaller than southWestX");
         checkArgument(northEastY >= southWestY, "northEastY cannot be smaller than southWestY");
-        checkArgument(southWestX >= 0 && southWestY >= 0 && z >= 0 && z <= 3, "Parameters must conform to rules of Position.class");
+        checkArgument(southWestX >= 0 && southWestY >= 0
+                        && z.upperEndpoint() <= HEIGHT_LEVELS.upperEndpoint()
+                        && z.lowerEndpoint() >= HEIGHT_LEVELS.lowerEndpoint(),
+                "Parameters must be within the bounds of a Position");
 
         this.southWestX = southWestX;
         this.southWestY = southWestY;
@@ -93,11 +108,11 @@ public final class Area {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).
-            add("southWestX", southWestX).
-            add("southWestY", southWestY).
-            add("northEastX", northEastX).
-            add("northEastY", northEastY).
-            add("z", z).toString();
+                add("southWestX", southWestX).
+                add("southWestY", southWestY).
+                add("northEastX", northEastX).
+                add("northEastY", northEastY).
+                add("z", z).toString();
     }
 
     @Override
@@ -113,42 +128,50 @@ public final class Area {
         if (obj instanceof Area) {
             Area other = (Area) obj;
             return southWestX == other.southWestX &&
-                southWestY == other.southWestY &&
-                northEastX == other.northEastX &&
-                northEastY == other.northEastY &&
-                z == other.z;
+                    southWestY == other.southWestY &&
+                    northEastX == other.northEastX &&
+                    northEastY == other.northEastY &&
+                    z.equals(other.z);
         }
         return false;
     }
 
     /**
      * Determines if this area contains {@code position}. Runs in O(1) time.
+     *
+     * @param position The position to lookup.
+     * @return {@code true} if {@code position} is within the bounds of this area.
      */
     public boolean contains(Position position) {
         return position.getX() >= southWestX &&
-            position.getX() <= northEastX &&
-            position.getY() >= southWestY &&
-            position.getY() <= northEastY &&
-            position.getZ() == z;
+                position.getX() <= northEastX &&
+                position.getY() >= southWestY &&
+                position.getY() <= northEastY &&
+                z.contains(position.getZ());
     }
 
     /**
      * Determines if {@code entity} is within this area. Runs in O(1) time.
+     *
+     * @param entity The entity to lookup.
+     * @return {@code true} if {@code entity} is within the bounds of this area.
      */
     public boolean contains(Entity entity) {
         return contains(entity.getPosition());
     }
 
     /**
-     * Computes and returns a <strong>new</strong> list of positions that make up this
-     * area. Runs in approx. O(n^2) time.
+     * Computes and returns a <strong>new</strong> list of positions that make up this area.
+     *
+     * @return A list of every {@link Position} in this area.
      */
     public List<Position> toList() {
         List<Position> toList = new ArrayList<>(size());
-
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
-                toList.add(new Position(x, y, z));
+                for (int z : zIterable) {
+                    toList.add(new Position(x, y, z));
+                }
             }
         }
         return toList;
@@ -156,15 +179,20 @@ public final class Area {
 
     /**
      * Returns a random position from this area.
+     *
+     * @return A random position from this area.
      */
     public Position random() {
         int randomX = RandomUtils.inclusive(northEastX - southWestX) + southWestX;
         int randomY = RandomUtils.inclusive(northEastY - southWestY) + southWestY;
-        return new Position(randomX, randomY, z);
+        int randomZ = RandomUtils.inclusive(z.lowerEndpoint(), z.upperEndpoint());
+        return new Position(randomX, randomY, randomZ);
     }
 
     /**
      * Returns the center of this area.
+     *
+     * @return The center position.
      */
     public Position center() {
         int halfWidth = width() / 2;
@@ -175,25 +203,45 @@ public final class Area {
 
     /**
      * Returns the length of this area.
+     *
+     * @return The length, in tiles.
      */
     public int length() {
-        /* Areas are inclusive to base coordinates, so we add 1 */
+        // Areas are inclusive to base coordinates, so we add 1.
         return (northEastY - southWestY) + 1;
     }
 
     /**
      * Returns the width of this area.
+     *
+     * @return The width, in tiles.
      */
     public int width() {
-        /* Areas are inclusive to base coordinates, so we add 1. */
+        // Areas are inclusive to base coordinates, so we add 1.
         return (northEastX - southWestX) + 1;
     }
 
     /**
      * Returns the size of this area (length * width).
+     *
+     * @return The total size, in tiles.
      */
     public int size() {
-        return length() * width();
+        int area = length() * width();
+        int size = area;
+        for (int z : zIterable) {
+            size = size + area;
+        }
+        return size;
+    }
+
+    /**
+     * Creates a returns a new {@link RangeIterator} that iterates over z coordinates.
+     *
+     * @return The z coordinate iterator.
+     */
+    public Iterator<Integer> zIterator() {
+        return new RangeIterator<>(z, DiscreteDomain.integers());
     }
 
     /**
@@ -227,7 +275,7 @@ public final class Area {
     /**
      * @return The z coordinate.
      */
-    public int getZ() {
+    public Range<Integer> getZ() {
         return z;
     }
 }

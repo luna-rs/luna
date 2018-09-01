@@ -69,9 +69,7 @@ public final class GameService extends AbstractScheduledService {
 
             // Run the main game loop.
             World world = context.getWorld();
-            world.dequeueLogins();
-            world.runGameLoop();
-            world.dequeueLogouts();
+            world.loop();
         } catch (Exception e) {
             LOGGER.catching(e);
         }

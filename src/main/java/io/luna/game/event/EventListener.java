@@ -1,8 +1,8 @@
 package io.luna.game.event;
 
-import io.luna.game.plugin.PluginFailureException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Iterables;
+import io.luna.game.plugin.PluginExecutionException;
 
 import java.util.function.Consumer;
 
@@ -15,9 +15,9 @@ import java.util.function.Consumer;
 public final class EventListener<E extends Event> {
 
     /**
-     * The asynchronous logger.
+     * The type of event being intercepted.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private final Class<?> eventType;
 
     /**
      * The arguments.
@@ -32,18 +32,30 @@ public final class EventListener<E extends Event> {
     /**
      * Creates a new {@link EventListener}.
      *
+     * @param eventType The type of event being intercepted.
      * @param args The arguments.
      * @param listener The listener function.
      */
-    public EventListener(EventArguments args, Consumer<E> listener) {
+    public EventListener(Class<?> eventType, EventArguments args, Consumer<E> listener) {
+        this.eventType = eventType;
         this.listener = listener;
         this.args = args;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).
+                add("eventType", eventType.getSimpleName()).
+                add("args", Iterables.toString(args)).toString();
+    }
+
     /**
      * Applies the wrapped function and handles exceptions.
+     *
+     * @param msg The event to apply the function with.
+     * @throws PluginExecutionException If an error occurs applying {@code msg} to the listener.
      */
-    public void apply(E msg) throws PluginFailureException {
+    public void apply(E msg) throws PluginExecutionException {
         try {
             if (args == EventArguments.NO_ARGS) {
                 listener.accept(msg);
@@ -51,11 +63,16 @@ public final class EventListener<E extends Event> {
                 listener.accept(msg);
                 msg.terminate();
             }
-        } catch (PluginFailureException failure) { // fail, recoverable
-            LOGGER.catching(failure);
-        } catch (Exception other) { // unknown, unrecoverable
-            throw new PluginFailureException(other);
+        } catch (Exception failure) {
+            throw new PluginExecutionException(this, failure);
         }
+    }
+
+    /**
+     * @return The type of event being intercepted.
+     */
+    public Class<?> getEventType() {
+        return eventType;
     }
 
     /**

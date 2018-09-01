@@ -1,17 +1,14 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.util.IterableArray;
-import io.luna.util.ThreadUtils;
-
-import java.util.NoSuchElementException;
+import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
  * A definition model describing in-game objects.
  *
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  */
-public final class ObjectDefinition {
+public final class ObjectDefinition implements Definition {
 
     /**
      * The definition count.
@@ -19,44 +16,9 @@ public final class ObjectDefinition {
     public static final int SIZE = 14974;
 
     /**
-     * A list of definitions.
+     * The object definitions.
      */
-    public static final IterableArray<ObjectDefinition> DEFINITIONS = new IterableArray<>(SIZE);
-
-    /**
-     * Sets the backing definitions.
-     */
-    public static void set(ObjectDefinition[] definitions) {
-        ThreadUtils.ensureInitThread();
-
-        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
-    }
-
-    /**
-     * Retrieves a definition.
-     */
-    public static ObjectDefinition get(int id) {
-        ObjectDefinition def = DEFINITIONS.get(id);
-        if (def == null) {
-            throw new NoSuchElementException("No definition for id " + id);
-        }
-        return def;
-    }
-
-    /**
-     * Returns all definitions.
-     */
-    public static Iterable<ObjectDefinition> all() {
-        return DEFINITIONS;
-    }
-
-    /**
-     * Returns the object name of {@code id}.
-     */
-    public static String computeNameForId(int id) {
-        return get(id).getName();
-    }
-
+    public static final DefinitionRepository<ObjectDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.
@@ -137,15 +99,16 @@ public final class ObjectDefinition {
     }
 
     /**
-     * Determines if {@code action} is an action.
+     * Determines if the backing action list contains {@code action}.
+     *
+     * @param action The action to look for.
+     * @return {@code true} if {@code action} is contained in the backing action list.
      */
     public boolean hasAction(String action) {
         return actions.contains(action);
     }
 
-    /**
-     * @return The identifier.
-     */
+    @Override
     public int getId() {
         return id;
     }

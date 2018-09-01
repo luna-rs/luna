@@ -19,7 +19,7 @@ public enum EntityType {
     ITEM,
 
     /**
-     * An object.
+     * A game object.
      */
     OBJECT,
 

@@ -1,20 +1,14 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.util.IterableArray;
-import io.luna.util.StringUtils;
-import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.NpcDefinitionParser;
-
-import java.util.Arrays;
-import java.util.NoSuchElementException;
+import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
  * A definition model describing a non-player mob.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcDefinition {
+public final class NpcDefinition implements Definition{
 
     /**
      * The definition count.
@@ -22,43 +16,9 @@ public final class NpcDefinition {
     public static final int SIZE = 8152;
 
     /**
-     * An iterable array of definitions.
+     * The NPC definition repository.
      */
-    private static final IterableArray<NpcDefinition> DEFINITIONS = new IterableArray<>(SIZE);
-
-    /**
-     * Sets the backing definitions.
-     */
-    public static void set(NpcDefinition[] definitions) {
-        ThreadUtils.ensureInitThread();
-
-        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
-    }
-
-    /**
-     * Retrieves a definition.
-     */
-    public static NpcDefinition get(int id) {
-        NpcDefinition def = DEFINITIONS.get(id);
-        if (def == null) {
-            throw new NoSuchElementException("No definition for id " + id);
-        }
-        return def;
-    }
-
-    /**
-     * Returns all definitions.
-     */
-    public static Iterable<NpcDefinition> all() {
-        return DEFINITIONS;
-    }
-
-    /**
-     * Returns the name of a non-player.
-     */
-    public static String computeNameForId(int id) {
-        return get(id).getName();
-    }
+    public static final DefinitionRepository<NpcDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.

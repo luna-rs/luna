@@ -1,93 +1,23 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
-import io.luna.game.model.mob.Skill;
-import io.luna.util.ThreadUtils;
+import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A model describing an equipment item definition.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class EquipmentDefinition {
+public final class EquipmentDefinition implements Definition {
 
     /**
-     * A model describing equipment requirements.
+     * The equipment definition repository.
      */
-    public static final class EquipmentRequirement {
-
-        /**
-         * The skill.
-         */
-        private final int id;
-
-        /**
-         * The level.
-         */
-        private final int level;
-
-        /**
-         * Creates a new {@link EquipmentRequirement}.
-         *
-         * @param name The skill.
-         * @param level The level.
-         */
-        public EquipmentRequirement(String name, int level) {
-            this.level = level;
-            id = Skill.getId(name);
-        }
-
-        /**
-         * @return The skill.
-         */
-        public int getId() {
-            return id;
-        }
-
-        /**
-         * @return The level.
-         */
-        public int getLevel() {
-            return level;
-        }
-    }
-
-    /**
-     * A map of equipment definitions.
-     */
-    private static final Map<Integer, EquipmentDefinition> DEFINITIONS = new LinkedHashMap<>();
-
-    /**
-     * Sets the backing definitions.
-     */
-    public static void set(LinkedHashMap<Integer, EquipmentDefinition> newDefinitions) {
-        ThreadUtils.ensureInitThread();
-
-        DEFINITIONS.putAll(newDefinitions);
-    }
-
-    /**
-     * Retrieves a definition.
-     */
-    public static EquipmentDefinition get(int id) {
-        EquipmentDefinition def = DEFINITIONS.get(id);
-        if (def == null) {
-            throw new NoSuchElementException("No definition for " + id);
-        }
-        return def;
-    }
-
-    /**
-     * Returns all definitions.
-     */
-    public static Iterable<EquipmentDefinition> all() {
-        return DEFINITIONS.values();
-    }
+    public static final DefinitionRepository<EquipmentDefinition> DEFINITIONS = new MapDefinitionRepository<>();
 
     /**
      * The identifier.
@@ -117,7 +47,7 @@ public final class EquipmentDefinition {
     /**
      * A list of equipment requirements.
      */
-    private final ImmutableList<EquipmentRequirement> requirements;
+    private final ImmutableMap<Integer, Integer> requirements;
 
     /**
      * A list of equipment bonuses.
@@ -136,19 +66,20 @@ public final class EquipmentDefinition {
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                               EquipmentRequirement[] requirements, int[] bonuses) {
+                               Map<Integer, Integer> requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = ImmutableList.copyOf(requirements);
+        this.requirements = ImmutableMap.copyOf(requirements);
         this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
     }
 
     /**
      * @return The identifier.
      */
+    @Override
     public int getId() {
         return id;
     }
@@ -184,7 +115,7 @@ public final class EquipmentDefinition {
     /**
      * @return A list of equipment requirements.
      */
-    public ImmutableList<EquipmentRequirement> getRequirements() {
+    public ImmutableMap<Integer, Integer> getRequirements() {
         return requirements;
     }
 

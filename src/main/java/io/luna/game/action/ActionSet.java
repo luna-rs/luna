@@ -48,7 +48,7 @@ public final class ActionSet {
     }
 
     /**
-     * Returns the currently processing action.
+     * @return The currently processing action.
      */
     public Optional<Action> current() {
         return currentAction;

@@ -69,81 +69,92 @@ public abstract class Entity {
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
-
-        onIdle();
     }
 
+    /**
+     * Forward to implementing classes.
+     */
     @Override
     public abstract int hashCode();
 
+    /**
+     * Forward to implementing classes.
+     */
     @Override
     public abstract boolean equals(Object obj);
 
+    /**
+     * Forward to implementing classes.
+     */
     @Override
     public abstract String toString();
 
     /**
      * Returns this entity's size.
+     *
+     * @return The size.
      */
     public abstract int size();
 
     /**
-     * Determines if {@code entity} is viewable from this entity.
+     * Determines if {@code other} is viewable from this entity.
+     *
+     * @param other The entity to compare.
+     * @return {@code true} if {@code other} is viewable.
      */
-    public boolean isViewable(Entity entity) {
-        return position.isViewable(entity.position);
+    public boolean isViewable(Entity other) {
+        return position.isViewable(other.position);
     }
 
     /**
-     * Returns the distance between this entity and {@code entity}.
+     * Returns the distance between this entity and {@code other}.
+     *
+     * @param other The entity to compare.
+     * @return The distance from {@code other}, in tiles.
      */
-    public int distanceFrom(Entity entity) {
-        return position.getDistance(entity.position);
-    }
-
-    /**
-     * Invoked when entering an {@code NEW} state.
-     */
-    public void onIdle() {
+    public int distanceFrom(Entity other) {
+        return position.getDistance(other.position);
     }
 
     /**
      * Invoked when entering an {@code ACTIVE} state.
      */
-    public void onActive() {
+    protected void onActive() {
     }
 
     /**
      * Invoked when entering an {@code INACTIVE} state.
      */
-    public void onInactive() {
+    protected void onInactive() {
     }
 
     /**
-     * Sets the current state and invokes the corresponding function.
+     * Sets the current state and invokes the corresponding state function.
+     *
+     * @param newState The new state.
      */
     public final void setState(EntityState newState) {
         checkArgument(newState != EntityState.NEW, "cannot set to NEW");
+        checkArgument(newState != state, "state already equal to " + newState);
 
-        if (state != newState) {
-            state = newState;
-
-            switch (state) {
-                case ACTIVE:
-                    onActive();
-                    break;
-                case INACTIVE:
-                    onInactive();
-                    if (currentRegion != null) {
-                        currentRegion.remove(this);
-                    }
-                    break;
-            }
+        state = newState;
+        switch (state) {
+            case ACTIVE:
+                onActive();
+                break;
+            case INACTIVE:
+                onInactive();
+                if (currentRegion != null) {
+                    currentRegion.remove(this);
+                }
+                break;
         }
     }
 
     /**
      * Sets the current position and performs region checking.
+     *
+     * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
         RegionCoordinates next = newPosition.getRegionCoordinates();

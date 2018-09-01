@@ -2,6 +2,8 @@ package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
 
+import static io.luna.game.model.Position.HEIGHT_LEVELS;
+
 /**
  * Holds constants related to entities.
  *
@@ -27,9 +29,9 @@ public final class EntityConstants {
     /**
      * The wilderness areas.
      */
-    public static final ImmutableList<Area> WILDERNESS = ImmutableList
-        .of(Area.create(2941, 3518, 3392, 3966, 0), Area.create(2941, 3518, 3392, 3966, 1),
-            Area.create(2941, 3518, 3392, 3966, 2), Area.create(2941, 3518, 3392, 3966, 3));
+    public static final ImmutableList<Area> WILDERNESS = ImmutableList.of(
+            Area.create(2941, 3518, 3392, 3966, HEIGHT_LEVELS)
+    );
 
     /**
      * A private constructor.

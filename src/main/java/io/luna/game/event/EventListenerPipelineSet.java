@@ -6,6 +6,7 @@ import com.google.common.collect.UnmodifiableIterator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * A set of pipelines mapped to their respective event traversal types.
@@ -21,23 +22,37 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
 
     /**
      * Adds a new event listener to a pipeline within this set.
+     *
+     * @param eventType The event type.
+     * @param listener The listener to add.
      */
-    public void add(Class<?> messageType, EventListener<?> listener) {
-        EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(messageType, EventListenerPipeline::new);
-        pipeline.add(listener);
+    public void add(Class<?> eventType, EventListener<?> listener) {
+        if (eventType.isInstance(Event.class)) {
+            EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType, EventListenerPipeline::new);
+            pipeline.add(listener);
+        }
     }
 
     /**
-     * Retrieves a pipeline from this set. Will never return {@code null}.
+     * Retrieves a pipeline from this set.
+     *
+     * @return The non-null pipeline that accepts {@code eventType}.
+     * @throws NoSuchElementException If there is no pipeline for {@code eventType}.
      */
-    public EventListenerPipeline<?> get(Class<?> messageType) {
-        return pipelines.get(messageType);
+    public EventListenerPipeline<?> get(Class<?> eventType) throws NoSuchElementException {
+        EventListenerPipeline<?> pipeline = pipelines.get(eventType);
+        if (pipeline == null) {
+            throw new NoSuchElementException("No pipeline for " + eventType.getCanonicalName());
+        }
+        return pipeline;
     }
 
     /**
-     * Swaps the backing set with {@code set}. Used for reloading plugins (aka. hot fixing, ninja fixing, etc).
+     * Replaces all of the pipelines the backing map with {@code set}. Used for reloading plugins.
+     *
+     * @param set The new pipeline set.
      */
-    public void swap(EventListenerPipelineSet set) {
+    public void replaceAll(EventListenerPipelineSet set) {
         pipelines.clear();
         pipelines.putAll(set.pipelines);
     }
@@ -50,6 +65,8 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
 
     /**
      * Returns the amount of pipelines in this set.
+     *
+     * @return The pipeline count.
      */
     public int size() {
         return pipelines.size();

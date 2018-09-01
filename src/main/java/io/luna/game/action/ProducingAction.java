@@ -59,7 +59,9 @@ public abstract class ProducingAction extends StationaryAction<Player> {
     }
 
     /**
-     * Function invoked at the beginning of every action loop. Return {@code false} to interrupt the action.
+     * Function invoked at the beginning of every action loop.
+     *
+     * @return {@code false} to interrupt the action.
      */
     protected boolean canProduce() {
         return true;
@@ -73,12 +75,12 @@ public abstract class ProducingAction extends StationaryAction<Player> {
     }
 
     /**
-     * Return the items that will be removed.
+     * @return The items that will be removed.
      */
     protected abstract Item[] remove();
 
     /**
-     * Return the items that will be added.
+     * @return The items that will be added.
      */
     protected abstract Item[] add();
 }

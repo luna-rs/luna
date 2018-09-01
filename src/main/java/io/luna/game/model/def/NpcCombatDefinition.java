@@ -2,17 +2,14 @@ package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
-import io.luna.util.ThreadUtils;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 
 /**
  * A definition model describing an attackable non-player.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcCombatDefinition {
+public final class NpcCombatDefinition implements Definition {
 
     /**
      * The default definition.
@@ -96,32 +93,9 @@ public final class NpcCombatDefinition {
     public static final int RANGED_DEFENCE = 9;
 
     /**
-     * A map of definitions.
+     * The NPC combat definition repository.
      */
-    private static final Map<Integer, NpcCombatDefinition> DEFINITIONS = new LinkedHashMap<>();
-
-    /**
-     * Sets the backing definitions.
-     */
-    public static void set(LinkedHashMap<Integer, NpcCombatDefinition> newDefinitions) {
-        ThreadUtils.ensureInitThread();
-
-        DEFINITIONS.putAll(newDefinitions);
-    }
-
-    /**
-     * Retrieves a definition.
-     */
-    public static NpcCombatDefinition get(int id) {
-        return DEFINITIONS.get(id);
-    }
-
-    /**
-     * Returns all definitions.
-     */
-    public static Iterable<NpcCombatDefinition> all() {
-        return DEFINITIONS.values();
-    }
+    public static final DefinitionRepository<NpcCombatDefinition> DEFINITIONS = new MapDefinitionRepository<>();
 
     /**
      * The identifier.
@@ -223,9 +197,7 @@ public final class NpcCombatDefinition {
         this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
     }
 
-    /**
-     * @return The identifier.
-     */
+    @Override
     public int getId() {
         return id;
     }

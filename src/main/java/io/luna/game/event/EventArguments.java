@@ -15,7 +15,7 @@ public final class EventArguments implements Iterable<Object> {
     /**
      * An event arguments Object with no arguments.
      */
-    public static final EventArguments NO_ARGS = new EventArguments(new Object[] {});
+    public static final EventArguments NO_ARGS = new EventArguments(new Object[]{});
 
     /**
      * The arguments.
@@ -37,7 +37,10 @@ public final class EventArguments implements Iterable<Object> {
     }
 
     /**
-     * Determines if the arguments contains {@code value}.
+     * Determines if the arguments contain {@code value}.
+     *
+     * @param value The value to look for.
+     * @return {@code true} if the arguments contain {@code value}.
      */
     public boolean contains(Object value) {
         return this != NO_ARGS && args.contains(value);
@@ -45,20 +48,27 @@ public final class EventArguments implements Iterable<Object> {
 
     /**
      * Determines if the argument at {@code index} equals {@code value}.
+     *
+     * @param index The index to look on.
+     * @param value The value to compare.
+     * @return {@code true} If the value at {@code index} equals {@code value}.
      */
     public boolean equals(int index, Object value) {
         return this != NO_ARGS && Objects.equals(get(index), value);
     }
 
     /**
-     * Retrieves the argument at {@code index}.
+     * Retrieves the value at {@code index}.
+     *
+     * @param index The index to retrieve from.
+     * @return The value at {@code index}.
      */
     public Object get(int index) {
         return this == NO_ARGS ? null : args.get(index);
     }
 
     /**
-     * Returns the amount of arguments.
+     * @return The amount of arguments.
      */
     public int size() {
         return args.size();

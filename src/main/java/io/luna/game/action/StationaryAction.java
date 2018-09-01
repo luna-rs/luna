@@ -32,7 +32,9 @@ public abstract class StationaryAction<T extends Mob> extends Action<T> {
     }
 
     /**
-     * Returns whether or not the action can be initialized. Return {@code false} to interrupt the action.
+     * Returns whether or not the action can be initialized.
+     *
+     * @return {@code false} to interrupt the action.
      */
     protected boolean canInit() {
         return true;

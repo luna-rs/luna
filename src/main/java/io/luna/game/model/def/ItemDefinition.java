@@ -1,25 +1,16 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
-import io.luna.util.IterableArray;
-import io.luna.util.StringUtils;
-import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.ItemDefinitionParser;
+import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.OptionalInt;
-import java.util.PrimitiveIterator;
 
 /**
  * A definition model describing an item.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemDefinition {
+public final class ItemDefinition implements Definition {
 
     /**
      * The definition count.
@@ -27,43 +18,9 @@ public final class ItemDefinition {
     public static final int SIZE = 7956;
 
     /**
-     * An iterable array of definitions.
+     * The item definition repository.
      */
-    private static final IterableArray<ItemDefinition> DEFINITIONS = new IterableArray<>(SIZE);
-
-    /**
-     * Sets the backing definitions.
-     */
-    public static void set(ItemDefinition[] definitions) {
-        ThreadUtils.ensureInitThread();
-
-        System.arraycopy(definitions, 0, DEFINITIONS.getArray(), 0, SIZE);
-    }
-
-    /**
-     * Retrieves a definition.
-     */
-    public static ItemDefinition get(int id) {
-        ItemDefinition def = DEFINITIONS.get(id);
-        if (def == null) {
-            throw new NoSuchElementException("No definition for id " + id);
-        }
-        return def;
-    }
-
-    /**
-     * Returns all definitions.
-     */
-    public static Iterable<ItemDefinition> all() {
-        return DEFINITIONS;
-    }
-
-    /**
-     * Returns the item name of {@code id}.
-     */
-    public static String computeNameForId(int id) {
-        return get(id).getName();
-    }
+    public static final DefinitionRepository<ItemDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.
@@ -189,6 +146,7 @@ public final class ItemDefinition {
     /**
      * @return The item identifier.
      */
+    @Override
     public int getId() {
         return id;
     }

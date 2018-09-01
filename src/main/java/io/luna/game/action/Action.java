@@ -117,7 +117,9 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Function invoked when two Actions are considered equal.
+     * Function invoked when two {@link Action}s are considered equal.
+     *
+     * @param other The other {@link Action} considered equal.
      */
     protected void onEquals(Action<?> other) {
 
@@ -131,6 +133,8 @@ public abstract class Action<T extends Mob> {
     /**
      * Determines if this action is equal to {@code other}. This is used instead of {@code equals(Object)} so that
      * the {@code equals(Object) -> hashCode()} contract isn't broken.
+     *
+     * @param other The other {@link Action} to compare.
      */
     protected abstract boolean isEqual(Action<?> other);
 

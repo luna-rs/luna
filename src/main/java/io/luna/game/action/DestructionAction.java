@@ -18,6 +18,10 @@ public abstract class DestructionAction extends StationaryAction<Player> {
 
     /**
      * Creates a new {@link DestructionAction}.
+     *
+     * @param player The {@link Player} assigned to this action.
+     * @param instant If this action executes instantly.
+     * @param delay The delay of this action.
      */
     public DestructionAction(Player player, boolean instant, int delay) {
         super(player, instant, delay);
@@ -42,7 +46,9 @@ public abstract class DestructionAction extends StationaryAction<Player> {
     }
 
     /**
-     * Function invoked at the beginning of every action loop. Return {@code false} to interrupt the action.
+     * Function invoked at the beginning of every action loop.
+     *
+     * @return {@code false} to interrupt the action.
      */
     protected boolean canDestruct() {
         return true;
@@ -56,7 +62,9 @@ public abstract class DestructionAction extends StationaryAction<Player> {
     }
 
     /**
-     * Returns the items that will be removed from the inventory.
+     * An attempt will be made to remove these {@link Item}s every {@code delay}.
+     *
+     * @return The items that will be removed from the inventory.
      */
     protected abstract Item[] remove();
 }
