@@ -18,7 +18,7 @@ public final class NpcDefinition implements Definition{
     /**
      * The NPC definition repository.
      */
-    public static final DefinitionRepository<NpcDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
+    public static final DefinitionRepository<NpcDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.

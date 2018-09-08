@@ -163,7 +163,7 @@ onargs[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
   val amount = msg.args(1).toInt
 
   var count = 0
-  val filtered = ItemDefinition.DEFINITIONS.
+  val filtered = ItemDefinition.ALL.
     lazyFilterNot(_.isNoted).
     lazyFilter(_.getName.toLowerCase.contains(name))
 

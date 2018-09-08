@@ -18,7 +18,7 @@ public final class ObjectDefinition implements Definition {
     /**
      * The object definitions.
      */
-    public static final DefinitionRepository<ObjectDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
+    public static final DefinitionRepository<ObjectDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.

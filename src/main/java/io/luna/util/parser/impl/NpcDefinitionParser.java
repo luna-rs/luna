@@ -46,6 +46,6 @@ public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
 
     @Override
     public void onReadComplete(List<NpcDefinition> readObjects) throws Exception {
-        readObjects.forEach(NpcDefinition.DEFINITIONS::storeDefinition);
+        readObjects.forEach(NpcDefinition.ALL::storeDefinition);
     }
 }

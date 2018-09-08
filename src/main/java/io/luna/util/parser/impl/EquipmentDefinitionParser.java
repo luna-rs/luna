@@ -42,8 +42,8 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
 
     @Override
     public void onReadComplete(List<EquipmentDefinition> readObjects) throws Exception {
-        readObjects.forEach(EquipmentDefinition.DEFINITIONS::storeDefinition);
-        EquipmentDefinition.DEFINITIONS.lock();
+        readObjects.forEach(EquipmentDefinition.ALL::storeDefinition);
+        EquipmentDefinition.ALL.lock();
     }
 
     /**

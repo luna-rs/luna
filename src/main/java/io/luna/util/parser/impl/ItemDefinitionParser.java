@@ -50,6 +50,6 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
 
     @Override
     public void onReadComplete(List<ItemDefinition> readObjects) throws Exception {
-        readObjects.forEach(ItemDefinition.DEFINITIONS::storeDefinition);
+        readObjects.forEach(ItemDefinition.ALL::storeDefinition);
     }
 }

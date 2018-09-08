@@ -47,6 +47,6 @@ public final class ObjectDefinitionParser extends GsonParser<ObjectDefinition> {
 
     @Override
     public void onReadComplete(List<ObjectDefinition> readObjects) throws Exception {
-        readObjects.forEach(ObjectDefinition.DEFINITIONS::storeDefinition);
+        readObjects.forEach(ObjectDefinition.ALL::storeDefinition);
     }
 }

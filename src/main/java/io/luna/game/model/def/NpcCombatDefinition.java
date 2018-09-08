@@ -89,7 +89,7 @@ public final class NpcCombatDefinition implements Definition {
     /**
      * The NPC combat definition repository.
      */
-    public static final DefinitionRepository<NpcCombatDefinition> DEFINITIONS = new MapDefinitionRepository<>();
+    public static final DefinitionRepository<NpcCombatDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
      * The identifier.

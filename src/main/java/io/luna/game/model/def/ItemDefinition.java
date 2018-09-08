@@ -20,7 +20,7 @@ public final class ItemDefinition implements Definition {
     /**
      * The item definition repository.
      */
-    public static final DefinitionRepository<ItemDefinition> DEFINITIONS = new ArrayDefinitionRepository<>(SIZE);
+    public static final DefinitionRepository<ItemDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
      * The identifier.

@@ -331,7 +331,7 @@ public final class Equipment extends ItemContainer {
         } else if (toIndex == Equipment.SHIELD) {
             // Equipping shield, so unequip 2h weapon.
             boolean weaponTwoHanded = getIdForIndex(WEAPON).
-                    flatMap(EquipmentDefinition.DEFINITIONS::get).
+                    flatMap(EquipmentDefinition.ALL::get).
                     map(EquipmentDefinition::isTwoHanded).
                     orElse(false);
             unequipIndex = weaponTwoHanded ? Optional.of(WEAPON) : Optional.empty();

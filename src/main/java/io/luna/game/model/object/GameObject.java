@@ -34,7 +34,7 @@ public final class GameObject extends Entity {
     public GameObject(LunaContext context, int id, Position position) {
         super(context, EntityType.OBJECT);
         this.id = id;
-        definition = ObjectDefinition.DEFINITIONS.retrieve(id);
+        definition = ObjectDefinition.ALL.retrieve(id);
 
         setPosition(position);
     }

@@ -93,7 +93,7 @@ def currentTimeMillis = TimeUnit.MILLISECONDS.convert(System.nanoTime, TimeUnit.
 
 
 /* Retrieves the name of an item. */
-def nameOfItem(id: Int) = ItemDefinition.DEFINITIONS.retrieve(id).getName
+def nameOfItem(id: Int) = ItemDefinition.ALL.retrieve(id).getName
 
 
 /* Appends an article between a prefix and suffix. */

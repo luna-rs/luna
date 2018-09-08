@@ -5,8 +5,11 @@ import io.luna.LunaContext;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.def.ItemDefinition;
 
 import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * An {@link Entity} implementation representing an item on a tile.
@@ -35,8 +38,17 @@ public class GroundItem extends Entity {
      */
     public GroundItem(LunaContext context, int id, int amount, Position position) {
         super(context, EntityType.ITEM);
+        checkArgument(Item.VALID_IDS.contains(id), "Invalid item identifier.");
+        checkArgument(amount > 0, "Amount must be above 0.");
+
+        // Non-stackable ground items are placed one by one.
+        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
+        checkArgument(def.isStackable() || amount == 1,
+                "Non-stackable ground items have a maximum amount of 1.");
+
         this.id = id;
         this.amount = amount;
+
         setPosition(position);
     }
 

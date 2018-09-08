@@ -148,13 +148,13 @@ public final class Item {
      * @return The item definition.
      */
     public ItemDefinition getItemDef() {
-        return ItemDefinition.DEFINITIONS.retrieve(id);
+        return ItemDefinition.ALL.retrieve(id);
     }
 
     /**
      * @return The equipment definition.
      */
     public EquipmentDefinition getEquipDef() {
-        return EquipmentDefinition.DEFINITIONS.retrieve(id);
+        return EquipmentDefinition.ALL.retrieve(id);
     }
 }

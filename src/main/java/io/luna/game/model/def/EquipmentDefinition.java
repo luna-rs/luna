@@ -93,7 +93,7 @@ public final class EquipmentDefinition implements Definition {
     /**
      * A map of equipment definitions.
      */
-    public static final DefinitionRepository<EquipmentDefinition> DEFINITIONS = new MapDefinitionRepository<>();
+    public static final DefinitionRepository<EquipmentDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
      * The identifier.

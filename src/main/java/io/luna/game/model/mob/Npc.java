@@ -50,8 +50,8 @@ public final class Npc extends Mob {
         this.id = id; // Base identifier, for resetting transformations.
 
         // Set definition values.
-        definition = NpcDefinition.DEFINITIONS.retrieve(id);
-        combatDefinition = NpcCombatDefinition.DEFINITIONS.get(id);
+        definition = NpcDefinition.ALL.retrieve(id);
+        combatDefinition = NpcCombatDefinition.ALL.get(id);
 
         // Set skill levels.
         setSkills();
@@ -91,8 +91,8 @@ public final class Npc extends Mob {
 
     @Override
     public void transform(int id) {
-        definition = NpcDefinition.DEFINITIONS.retrieve(id);
-        combatDefinition = NpcCombatDefinition.DEFINITIONS.get(id);
+        definition = NpcDefinition.ALL.retrieve(id);
+        combatDefinition = NpcCombatDefinition.ALL.get(id);
         transformId = Optional.of(id);
         setSkills();
         updateFlags.flag(UpdateFlag.TRANSFORM);

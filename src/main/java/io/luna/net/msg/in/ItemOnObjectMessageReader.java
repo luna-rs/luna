@@ -31,7 +31,7 @@ public final class ItemOnObjectMessageReader extends MessageReader {
         int itemIndexId = msg.getPayload().getShort(true, ByteOrder.LITTLE);
         int objectX = msg.getPayload().getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int itemId = msg.getPayload().getShort(false);
-        int size = ObjectDefinition.DEFINITIONS.retrieve(objectId).getSize();
+        int size = ObjectDefinition.ALL.retrieve(objectId).getSize();
 
         if (!validate(player, itemId, itemIndexId, itemInterfaceId, objectId, objectX, objectY)) {
             return null;
