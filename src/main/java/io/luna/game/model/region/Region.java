@@ -19,9 +19,6 @@ import java.util.function.Consumer;
  */
 public final class Region {
 
-    // TODO Only create the concurrent sets as needed, to save memory.
-    // TODO Might be better to declare four separate sets instead of trying to combine them in a map (RegionSet?)
-
     /**
      * The region coordinates.
      */
