@@ -95,7 +95,7 @@ private val IDENTIFIED_TO_UNF = UNF_POTION_TABLE.values.map(unf => unf.herb -> u
 
 
 /* An Action that will be used to make unfinished potions. */
-private final class MakeUnfAction(plr: Player, unfPotion: UnfPotion) extends ProducingAction(plr, true, 2) {
+private final class MakeUnfAction(val plr: Player, val unfPotion: UnfPotion) extends ProducingAction(plr, true, 2) {
 
   override def canInit = {
     val levelRequired = unfPotion.level
@@ -118,9 +118,9 @@ private final class MakeUnfAction(plr: Player, unfPotion: UnfPotion) extends Pro
 
   override def isEqual(other: Action[_]) = {
     other match {
-      case action: MakeUnfAction =>
-        unfPotion.herb == action.unfPotion.herb &&
-        unfPotion.unf == action.unfPotion.unf
+      case action: MakeUnfAction if
+      unfPotion.herb == action.unfPotion.herb &&
+        unfPotion.unf == action.unfPotion.unf => true
       case _ => false
     }
   }

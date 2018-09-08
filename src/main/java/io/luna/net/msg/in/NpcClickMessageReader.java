@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.action.DistancedAction;
+import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.NpcClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.NpcFifthClickEvent;
@@ -11,7 +11,6 @@ import io.luna.game.event.impl.NpcClickEvent.NpcThirdClickEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.plugin.PluginManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -60,15 +59,7 @@ public final class NpcClickMessageReader extends MessageReader {
         checkState(index >= 0 && index < world.getNpcs().capacity(), "index[" + index + "] out of range");
 
         Npc npc = world.getNpcs().get(index);
-        player.submitAction(new DistancedAction<Player>(player, npc.getPosition(), npc.size(), true) {
-            @Override
-            protected void execute() {
-                PluginManager plugins = player.getPlugins();
-                plugins.post(evt.apply(player, npc));
-
-                player.interact(npc);
-            }
-        });
+        player.submitAction(new InteractionAction(player, npc, evt.apply(player, npc)));
     }
 
     /**

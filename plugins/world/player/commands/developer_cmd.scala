@@ -6,11 +6,14 @@
 */
 
 import com.google.common.primitives.{Doubles, Ints}
+import io.luna.LunaContext
+import io.luna.game.GameService
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.{Area, Position}
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob._
+import io.luna.net.msg.out.{AddGroundItemMessageWriter, SendChunkMessageWriter, SystemUpdateMessageWriter}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -55,6 +58,17 @@ onargs[CommandEvent]("move", RIGHTS_DEV) { msg =>
   msg.plr.teleport(new Position(x, y, z))
 }
 
+onargs[CommandEvent]("t", RIGHTS_DEV) { msg =>
+  val item = new Item(4151)
+  msg.plr.queue(new SendChunkMessageWriter(msg.plr.position))
+  msg.plr.queue(new AddGroundItemMessageWriter(item, msg.args(0).toInt))
+}
+
+/* A command that updates the server after 60 seconds. */
+onargs[CommandEvent]("update_server", RIGHTS_DEV) { msg =>
+  service.scheduleSystemUpdate(100)
+}
+
 /* A command that opens the player's bank. */
 onargs[CommandEvent]("bank", RIGHTS_DEV) { msg => msg.plr.bank.open }
 
@@ -93,7 +107,7 @@ onargs[CommandEvent]("set_skill", RIGHTS_DEV) { msg =>
 /* A command that returns details about the player's current region coordinates. */
 onargs[CommandEvent]("local", RIGHTS_DEV) { msg =>
   val pos = msg.plr.position
-  val coords = msg.plr.regionCoordinates
+  val coords = pos.getRegionCoordinates
   msg.plr.sendMessage(coords.toString)
   msg.plr.sendMessage(s"[local_x: ${coords.getLocalX(pos)}, local_y: ${coords.getLocalY(pos)}]")
 }
@@ -149,7 +163,7 @@ onargs[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
   val amount = msg.args(1).toInt
 
   var count = 0
-  val filtered = ItemDefinition.all.
+  val filtered = ItemDefinition.DEFINITIONS.
     lazyFilterNot(_.isNoted).
     lazyFilter(_.getName.toLowerCase.contains(name))
 

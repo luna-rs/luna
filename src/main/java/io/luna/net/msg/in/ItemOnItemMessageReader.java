@@ -45,22 +45,22 @@ public final class ItemOnItemMessageReader extends MessageReader {
 
         checkState(targetIndex >= 0, "targetIndex is out of range");
         checkState(usedIndex >= 0, "usedIndex is out of range");
-        checkState(Item.isIdWithinRange(targetId), "targetId is out of range");
+        checkState(Item.VALID_IDS.contains(targetId), "targetId is out of range");
         checkState(targetInterfaceId > 0, "targetInterfaceId is invalid interface identifier");
-        checkState(Item.isIdWithinRange(usedId), "usedId is out of range");
+        checkState(Item.VALID_IDS.contains(usedId), "usedId is out of range");
         checkState(usedInterfaceId > 0, "usedInterfaceId is invalid identifier");
 
         // TODO remove boilerplate
         switch (usedInterfaceId) {
         case 3214:
             Inventory inventory = player.getInventory();
-            return inventory.computeIdForIndex(usedIndex).map(it -> it == usedId).orElse(false);
+            return inventory.getIdForIndex(usedIndex).map(it -> it == usedId).orElse(false);
         }
 
         switch (targetInterfaceId) {
         case 3214:
             Inventory inventory = player.getInventory();
-            return inventory.computeIdForIndex(targetIndex).map(it -> it == targetId).orElse(false);
+            return inventory.getIdForIndex(targetIndex).map(it -> it == targetId).orElse(false);
         }
         return false;
     }

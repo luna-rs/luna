@@ -6,7 +6,6 @@ import com.google.common.collect.UnmodifiableIterator;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
  * A set of pipelines mapped to their respective event traversal types.
@@ -27,7 +26,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
      * @param listener The listener to add.
      */
     public void add(Class<?> eventType, EventListener<?> listener) {
-        if (eventType.isInstance(Event.class)) {
+        if (Event.class.isAssignableFrom(eventType)) {
             EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType, EventListenerPipeline::new);
             pipeline.add(listener);
         }
@@ -36,15 +35,10 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * Retrieves a pipeline from this set.
      *
-     * @return The non-null pipeline that accepts {@code eventType}.
-     * @throws NoSuchElementException If there is no pipeline for {@code eventType}.
+     * @return The pipeline that accepts {@code eventType}.
      */
-    public EventListenerPipeline<?> get(Class<?> eventType) throws NoSuchElementException {
-        EventListenerPipeline<?> pipeline = pipelines.get(eventType);
-        if (pipeline == null) {
-            throw new NoSuchElementException("No pipeline for " + eventType.getCanonicalName());
-        }
-        return pipeline;
+    public EventListenerPipeline<?> get(Class<?> eventType) {
+        return pipelines.get(eventType);
     }
 
     /**

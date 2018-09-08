@@ -191,11 +191,11 @@ private def onZamorakBrew(plr: Player) = {
   val hp = plr.skill(SKILL_HITPOINTS)
   val prayer = plr.skill(SKILL_PRAYER)
 
-  attack.increaseLevel(2 + (0.20 * attack.getStaticLevel).toInt)
-  strength.increaseLevel(2 + (0.12 * strength.getStaticLevel).toInt)
-  defence.decreaseLevel(2 + (0.10 * defence.getStaticLevel).toInt)
-  hp.decreaseLevel(2 + (0.10 * hp.getStaticLevel).toInt, 0)
-  prayer.increaseLevel((0.10 * prayer.getStaticLevel).toInt)
+  attack.addLevels(2 + (0.20 * attack.getStaticLevel).toInt, true)
+  strength.addLevels(2 + (0.12 * strength.getStaticLevel).toInt, true)
+  defence.removeLevels(2 + (0.10 * defence.getStaticLevel).toInt)
+  hp.removeLevels(2 + (0.10 * hp.getStaticLevel).toInt)
+  prayer.addLevels((0.10 * prayer.getStaticLevel).toInt, true)
 }
 
 /* A function invoked when a saradomin brew is sipped. */
@@ -207,12 +207,12 @@ private def onSaradominBrew(plr: Player) = {
   val ranged = plr.skill(SKILL_RANGED)
   val magic = plr.skill(SKILL_MAGIC)
 
-  defence.increaseLevel(2 + (0.20 * defence.getStaticLevel).toInt)
-  hp.increaseLevel(2 + (0.15 * hp.getStaticLevel).toInt)
-  attack.decreaseLevel((0.10 * attack.getStaticLevel).toInt, 0)
-  strength.decreaseLevel((0.10 * strength.getStaticLevel).toInt, 0)
-  magic.decreaseLevel((0.10 * magic.getStaticLevel).toInt, 0)
-  ranged.decreaseLevel((0.10 * ranged.getStaticLevel).toInt, 0)
+  defence.addLevels(2 + (0.20 * defence.getStaticLevel).toInt, true)
+  hp.addLevels(2 + (0.15 * hp.getStaticLevel).toInt, true)
+  attack.removeLevels((0.10 * attack.getStaticLevel).toInt)
+  strength.removeLevels((0.10 * strength.getStaticLevel).toInt)
+  magic.removeLevels((0.10 * magic.getStaticLevel).toInt)
+  ranged.removeLevels((0.10 * ranged.getStaticLevel).toInt)
 }
 
 /* A function invoked when a potion with anti-poisoning properties is sipped. */
@@ -221,13 +221,13 @@ private def onAntipoison(plr: Player, immunityDuration: Option[Int]) = ???
 /* A function invoked when a prayer potion is sipped. */
 private def onPrayerPotion(plr: Player) = {
   val prayer = plr.skill(SKILL_PRAYER)
-  prayer.increaseLevel(7 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
+  prayer.addLevels(7 + (prayer.getStaticLevel / 4), false)
 }
 
 /* A function invoked when a non-combat skill potion is sipped. */
 private def onSkillPotion(plr: Player, skillId: Int) = {
   val skill = plr.skill(skillId)
-  skill.increaseLevel(3)
+  skill.addLevels(3, true)
 }
 
 /* A function invoked when a energy or super energy potion is sipped. */
@@ -242,12 +242,12 @@ private def onRestorePotion(plr: Player, superPotion: Boolean) = {
 
   plr.skills.lazyFilter(_.getId != SKILL_PRAYER). /* Perform normal restore operation. */
     lazyFilter(_.getId != SKILL_HITPOINTS).
-    foreach(skill => skill.increaseLevel(boostAmount(skill.getStaticLevel).toInt, skill.getStaticLevel))
+    foreach(skill => skill.addLevels(boostAmount(skill.getStaticLevel).toInt, false))
 
   if (superPotion) {
     /* If super restore is being sipped, restore prayer as well. */
     val prayer = plr.skill(SKILL_PRAYER)
-    prayer.increaseLevel(8 + (prayer.getStaticLevel / 4), prayer.getStaticLevel)
+    prayer.addLevels(8 + (prayer.getStaticLevel / 4), false)
   }
 }
 
@@ -259,7 +259,7 @@ private def onCombatPotion(plr: Player, skillId: Int, superPotion: Boolean = fal
   def boostAmount(level: Int) = if (superPotion) 5 + (0.15 * level) else 3 + (0.10 * level)
 
   val skill = plr.skill(skillId)
-  skill.increaseLevel(boostAmount(skill.getStaticLevel).toInt)
+  skill.addLevels(boostAmount(skill.getStaticLevel).toInt, true)
 }
 
 /* Attempts to drink a potion and apply the appropriate effects to the player. */

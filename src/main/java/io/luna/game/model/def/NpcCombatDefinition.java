@@ -12,12 +12,6 @@ import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 public final class NpcCombatDefinition implements Definition {
 
     /**
-     * The default definition.
-     */
-    private static final NpcCombatDefinition DEFAULT = new NpcCombatDefinition(-1, -1, false, false,
-            -1, -1, -1, -1, -1, -1, -1, new int[]{}, new int[]{});
-
-    /**
      * The attack skill index.
      */
     public static final int ATTACK = 0;

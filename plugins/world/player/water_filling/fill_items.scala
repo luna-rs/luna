@@ -30,19 +30,21 @@ private val FILLABLES = Map(
 
 
 /* Fills all items in an inventory with water. */
-private final class FillAction(evt: ItemOnObjectEvent, oldId: Int,
-                               newId: Int) extends ProducingAction(evt.plr, true, 2) {
+private final class FillAction(val evt: ItemOnObjectEvent, val oldId: Int,
+                               val newId: Int) extends ProducingAction(evt.plr, true, 2) {
   override def remove = Array(new Item(oldId))
+
   override def add = Array(new Item(newId))
 
-  override def onProduce() = plr.animation(ANIMATION)
+  override def onProduce() = mob.animation(ANIMATION)
 
   override def isEqual(other: Action[_]) = {
     other match {
-      case action: FillAction =>
-        evt.objectId == action.evt.objectId &&
-          oldId == action.oldId &&
-          newId == action.newId
+      case action: FillAction if
+      evt.objectId == action.evt.objectId &&
+        oldId == action.oldId &&
+        newId == action.newId => true
+
       case _ => false
     }
   }

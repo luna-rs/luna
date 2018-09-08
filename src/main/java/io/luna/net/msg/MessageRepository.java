@@ -4,6 +4,10 @@ import io.luna.game.event.Event;
 import io.luna.game.model.mob.Player;
 import io.luna.util.ThreadUtils;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * A model containing data describing incoming game packets.
  *
@@ -21,6 +25,7 @@ public final class MessageRepository {
         }
     };
 
+    private final AtomicBoolean initialized = new AtomicBoolean();
     /**
      * The incoming packet sizes.
      */
@@ -42,7 +47,7 @@ public final class MessageRepository {
      * Adds new data describing an incoming packet.
      */
     public void addHandler(int opcode, int size, String messageReaderName) throws ReflectiveOperationException {
-        ThreadUtils.ensureInitThread();
+        checkState(!initialized.get(), "Cannot add handlers to an initialized message repository.");
 
         sizes[opcode] = size;
 
@@ -52,6 +57,10 @@ public final class MessageRepository {
         } else {
             messageReaders[opcode] = GENERIC_LISTENER;
         }
+    }
+
+    public void setInitialized() {
+        checkState(initialized.compareAndSet(false, true), "Message repository already initialized.");
     }
 
     /**

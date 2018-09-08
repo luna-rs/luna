@@ -4,6 +4,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing an incoming or outgoing packet.
@@ -42,6 +43,7 @@ public final class GameMessage {
     public GameMessage(int opcode, MessageType type, ByteMessage payload) {
         checkArgument(opcode >= 0, "opcode < 0");
         checkArgument(type != MessageType.RAW, "type == MessageType.RAW");
+        requireNonNull(payload);
 
         this.opcode = opcode;
         this.type = type;

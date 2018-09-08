@@ -167,7 +167,7 @@ private val INGREDIENTS_TO_POTION =
 
 
 /* An Action that will be used to make finished potions. */
-private final class MakePotionAction(plr: Player, potion: Potion) extends ProducingAction(plr, true, 2) {
+private final class MakePotionAction(val plr: Player, val potion: Potion) extends ProducingAction(plr, true, 2) {
 
   private val skill = plr.skill(SKILL_HERBLORE)
 
@@ -182,19 +182,20 @@ private final class MakePotionAction(plr: Player, potion: Potion) extends Produc
   }
 
   override def onProduce() = {
-    plr.sendMessage(s"You mix the ${ nameOfItem(potion.secondary) } into your potion.")
+    plr.sendMessage(s"You mix the ${nameOfItem(potion.secondary)} into your potion.")
     plr.animation(ANIMATION)
     skill.addExperience(potion.exp)
   }
 
   override def add = Array(new Item(potion.id))
+
   override def remove = Array(new Item(potion.unf), new Item(potion.secondary))
 
   override def isEqual(other: Action[_]) = {
     other match {
-      case action: MakePotionAction =>
-        potion.id == action.potion.id &&
-        potion.secondary == action.potion.secondary
+      case action: MakePotionAction if
+      potion.id == action.potion.id &&
+        potion.secondary == action.potion.secondary => true
       case _ => false
     }
   }

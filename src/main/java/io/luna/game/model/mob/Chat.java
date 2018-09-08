@@ -46,13 +46,13 @@ public final class Chat {
      * @return The message color.
      */
     public int getColor() {
-        return color;
+        return (color & 0xff) << 8;
     }
 
     /**
      * @return The message effects.
      */
     public int getEffects() {
-        return effects;
+        return effects & 0xff;
     }
 }

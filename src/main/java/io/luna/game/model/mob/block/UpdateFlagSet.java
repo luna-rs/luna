@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.update;
+package io.luna.game.model.mob.block;
 
 import java.util.EnumSet;
 
@@ -17,13 +17,13 @@ public final class UpdateFlagSet {
         CHAT,
         GRAPHIC,
         ANIMATION,
-        FORCE_CHAT,
+        FORCED_CHAT,
         INTERACTION,
         FACE_POSITION,
         PRIMARY_HIT,
         SECONDARY_HIT,
         TRANSFORM,
-        FORCE_MOVEMENT
+        FORCED_MOVEMENT
     }
 
     /**
@@ -33,6 +33,8 @@ public final class UpdateFlagSet {
 
     /**
      * Flag an update block.
+     *
+     * @param flag The block to flag.
      */
     public void flag(UpdateFlag flag) {
         flags.add(flag);
@@ -40,6 +42,8 @@ public final class UpdateFlagSet {
 
     /**
      * Unflag an update block.
+     *
+     * @param flag The block to unflag.
      */
     public void unflag(UpdateFlag flag) {
         flags.remove(flag);
@@ -47,6 +51,9 @@ public final class UpdateFlagSet {
 
     /**
      * Retrieves the flag status of an update block.
+     *
+     * @param flag The flag to lookup.
+     * @return {@code true} if {@code flag} is flagged.
      */
     public boolean get(UpdateFlag flag) {
         return flags.contains(flag);
@@ -54,13 +61,15 @@ public final class UpdateFlagSet {
 
     /**
      * Returns if the backing set is empty or not.
+     *
+     * @return {@code true} if no blocks are flagged.
      */
     public boolean isEmpty() {
         return flags.isEmpty();
     }
 
     /**
-     * Clears the backing set.
+     * Clears all flagged blocks. When this method returns, all blocks will be unflagged.
      */
     public void clear() {
         flags.clear();

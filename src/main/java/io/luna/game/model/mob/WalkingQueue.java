@@ -91,16 +91,6 @@ public final class WalkingQueue {
     }
 
     /**
-     * The base amount of energy it takes to move across one tile.
-     */
-    private static final double DRAIN_PER_TILE = 0.117;
-
-    /**
-     * The base value of run energy restored per tick.
-     */
-    private static final double RESTORE_PER_TICK = 0.096;
-
-    /**
      * A deque of current steps.
      */
     private final Deque<Step> current = new ArrayDeque<>();
@@ -192,16 +182,20 @@ public final class WalkingQueue {
 
     /**
      * Adds an initial step to this walking queue.
+     *
+     * @param step The step to add.
      */
     public void addFirst(Step step) {
         current.clear();
         runningPath = false;
 
         Queue<Step> backtrack = new ArrayDeque<>();
-        while (!previous.isEmpty()) {
+        for(;;) {
             Step prev = previous.pollLast();
+            if(prev == null) {
+                break;
+            }
             backtrack.add(prev);
-
             if (prev.equals(step)) {
                 backtrack.forEach(this::add);
                 previous.clear();
@@ -215,6 +209,8 @@ public final class WalkingQueue {
 
     /**
      * Adds a non-initial step to this walking queue.
+     *
+     * @param next The step to add.
      */
     public void add(Step next) {
         Step last = current.peekLast();
@@ -254,8 +250,9 @@ public final class WalkingQueue {
     }
 
     /**
-     * A function that implements an algorithm to deplete run energy. Returns {@code false} if the player can no
-     * longer run.
+     * A function that implements an algorithm to deplete run energy.
+     *
+     * @return {@code false} if the player can no longer run.
      */
     private boolean decrementRunEnergy() {
         Player player = (Player) mob;
@@ -269,7 +266,7 @@ public final class WalkingQueue {
         }
 
         double totalWeight = player.getWeight();
-        double energyReduction = DRAIN_PER_TILE * 2 * Math
+        double energyReduction = 0.117 * 2 * Math
             .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
         double newValue = runEnergy - energyReduction;
         newValue = newValue < 0.0 ? 0.0 : newValue;
@@ -290,7 +287,7 @@ public final class WalkingQueue {
         }
 
         double agilityLevel = player.skill(Skill.AGILITY).getLevel();
-        double energyRestoration = RESTORE_PER_TICK * Math
+        double energyRestoration = 0.096 * Math
             .pow(Math.E, 0.0162569486104454583293005993255170468638949631744294 * agilityLevel);
         double newValue = runEnergy + energyRestoration;
         newValue = newValue > 100.0 ? 100.0 : newValue;
@@ -299,17 +296,21 @@ public final class WalkingQueue {
     }
 
     /**
-     * Returns the amount of remaining steps.
+     * Returns the current size of the walking queue.
+     *
+     * @return The amount of remaining steps.
      */
-    public int remaining() {
+    public int getRemainingSteps() {
         return current.size();
     }
 
     /**
      * Returns whether or not there are remaining steps.
+     *
+     * @return {@code true} if this walking queue is empty.
      */
-    public boolean empty() {
-        return remaining() == 0;
+    public boolean isEmpty() {
+        return getRemainingSteps() == 0;
     }
 
     /**
@@ -321,6 +322,8 @@ public final class WalkingQueue {
 
     /**
      * Sets if the mob is running.
+     *
+     * @param running The new value.
      */
     public void setRunning(boolean running) {
         checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
@@ -336,6 +339,8 @@ public final class WalkingQueue {
 
     /**
      * Sets if the current path is a running path.
+     *
+     * @param runningPath The new value.
      */
     public void setRunningPath(boolean runningPath) {
         checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
@@ -351,6 +356,8 @@ public final class WalkingQueue {
 
     /**
      * Sets if movement is locked.
+     *
+     * @param locked The new value.
      */
     public void setLocked(boolean locked) {
         this.locked = locked;

@@ -1,9 +1,12 @@
 package io.luna.util;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -23,12 +26,23 @@ public final class ThreadUtils {
         checkState(isInitThread, String.format("thread[%s] not an initialization thread", currentThread));
     }
 
+    public static ThreadFactory nameThreadFactory(String threadName) {
+        return new ThreadFactoryBuilder().setNameFormat(threadName).build();
+    }
+    public static int getCpuAmount() {
+        return Runtime.getRuntime().availableProcessors();
+    }
     /**
-     * Returns a new fixed thread pool containing] {@code Runtime.getRuntime().availableProcessors()}
+     * Returns a new fixed thread pool containing] {@code Runtime.getRuntime().cpuCount()}
      * threads.
      */
-    public static ExecutorService newThreadPool(String name) {
-        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                new ThreadFactoryBuilder().setNameFormat(name).build());
+    public static ListeningExecutorService newFixedThreadPool(ThreadFactory threadFactory, int nThreads) {
+       ExecutorService delegate = Executors.newFixedThreadPool(nThreads, threadFactory);
+       return MoreExecutors.listeningDecorator(delegate);
+    }
+
+    public static ListeningExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
+        ExecutorService delegate = Executors.newCachedThreadPool(threadFactory);
+        return MoreExecutors.listeningDecorator(delegate);
     }
 }

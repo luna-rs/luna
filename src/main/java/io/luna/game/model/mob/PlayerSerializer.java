@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.luna.LunaConstants;
-import io.luna.game.GameService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.attr.AttributeKey;
@@ -63,10 +62,11 @@ public final class PlayerSerializer {
         path = FILE_DIR.resolve(player.getUsername() + ".json");
     }
 
-    static { /* Initialize serialization directory. */
+    static {
         try {
+            // Initialize directories, if they don't exist.
             if (Files.notExists(FILE_DIR)) {
-                Files.createDirectory(FILE_DIR);
+                Files.createDirectories(FILE_DIR);
             }
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
@@ -75,6 +75,8 @@ public final class PlayerSerializer {
 
     /**
      * Returns either a hashed or plaintext password.
+     *
+     * @return The password. Might be hashed.
      */
     private String getPassword() {
         String pw = player.getPassword();
@@ -83,6 +85,10 @@ public final class PlayerSerializer {
 
     /**
      * Checks the input password for equality with the saved password.
+     *
+     * @param inputPassword The password sent from the client.
+     * @param savedPassword The saved character file password.
+     * @return {@code true} if the passwords are equal.
      */
     private boolean checkPassword(String inputPassword, String savedPassword) {
         if (LunaConstants.PASSWORD_HASHING) {
@@ -91,13 +97,14 @@ public final class PlayerSerializer {
         return inputPassword.equals(savedPassword);
     }
 
+
     /**
      * Serializes all persistent data.
      */
     public void save() {
-
-        /* Cache all main token tables. */
         JsonObject tokens = new JsonObject();
+
+        // Save all main tokens vital to the player.
         tokens.addProperty("password", getPassword());
         tokens.add("position", toJsonTree(player.getPosition()));
         tokens.addProperty("rights", player.getRights().name());
@@ -108,23 +115,24 @@ public final class PlayerSerializer {
         tokens.add("equipment", toJsonTree(player.getEquipment().toIndexedArray()));
         tokens.add("skills", toJsonTree(player.getSkills().toArray()));
 
-        /* Cache all attribute tokens. */
+        // Save all player attributes.
         JsonObject attributeTokens = new JsonObject();
-        for (Entry<String, AttributeValue<?>> it : player.getAttributes()) {
-            AttributeKey<?> key = AttributeKey.ALIASES.get(it.getKey());
-            AttributeValue<?> value = it.getValue();
+        for (Entry<String, AttributeValue> it : player.getAttributes()) {
+            AttributeKey key = AttributeKey.ALIASES.get(it.getKey());
+            AttributeValue value = it.getValue();
 
+            // Save only if the attribute is persistent.
             if (key.isPersistent()) {
-                JsonObject attributeElementTokens = new JsonObject();
-                attributeElementTokens.addProperty("type", key.getTypeName());
-                attributeElementTokens.add("value", toJsonTree(value.get()));
+                JsonObject struct = new JsonObject();
+                struct.addProperty("type", key.getTypeName());
+                struct.add("value", toJsonTree(value.get()));
 
-                attributeTokens.add(key.getName(), attributeElementTokens);
+                attributeTokens.add(key.getName(), struct);
             }
         }
-
-        /* Serialize all tokens. */
         tokens.add("attributes", attributeTokens);
+
+        // Write the tokens to the character file.
         try {
             GsonUtils.writeJson(tokens, path.toFile());
         } catch (Exception e) {
@@ -134,19 +142,22 @@ public final class PlayerSerializer {
 
     /**
      * Asynchronously serializes all persistent data.
+     *
+     * @return The listenable future.
      */
-    public ListenableFuture<Void> asyncSave(GameService service) {
-        return service.submit(() -> {
-            save();
-            return null;
-        });
+    public ListenableFuture<?> asyncSave() {
+        return player.getService().submit(this::save);
     }
 
     /**
      * Deserializes all persistent data and verifies the password.
+     *
+     * @param enteredPassword The entered password.
+     * @return The login response.
      */
     public LoginResponse load(String enteredPassword) {
         if (!Files.exists(path)) {
+            player.setPosition(LunaConstants.STARTING_POSITION);
             return LoginResponse.NORMAL;
         }
 

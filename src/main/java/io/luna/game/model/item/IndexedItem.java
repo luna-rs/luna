@@ -1,5 +1,7 @@
 package io.luna.game.model.item;
 
+import java.util.Objects;
+
 /**
  * A model representing an item paired with an index.
  *
@@ -13,33 +15,54 @@ public final class IndexedItem {
     private final int index;
 
     /**
-     * The item.
+     * The item identifier.
      */
-    private final Item item;
+    private final int id;
+
+    /**
+     * The item amount.
+     */
+    private final int amount;
 
     /**
      * Creates a new {@link IndexedItem}.
      *
      * @param index The index.
-     * @param item The item.
+     * @param id The item identifier.
+     * @param amount The item amount.
      */
-    public IndexedItem(int index, Item item) {
-        this.item = item;
+    public IndexedItem(int index, int id, int amount) {
         this.index = index;
+        this.id = id;
+        this.amount = amount;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof IndexedItem) {
+            IndexedItem other = (IndexedItem) obj;
+            return index == other.index &&
+                    id == other.id &&
+                    amount == other.amount;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+         return Objects.hash(index, id, amount);
     }
 
     /**
-     * Returns the item identifier.
+     * Returns this indexed item as an {@link Item}.
+     *
+     * @return The converted indexed item.
      */
-    public int getId() {
-        return item.getId();
-    }
-
-    /**
-     * Returns the item amount.
-     */
-    public int getAmount() {
-        return item.getAmount();
+    public Item toItem() {
+        return new Item(id, amount);
     }
 
     /**
@@ -50,9 +73,16 @@ public final class IndexedItem {
     }
 
     /**
-     * @return The item.
+     * @return The item identifier.
      */
-    public Item getItem() {
-        return item;
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @return The item amount.
+     */
+    public int getAmount() {
+        return amount;
     }
 }

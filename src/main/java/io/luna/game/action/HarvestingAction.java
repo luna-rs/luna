@@ -3,7 +3,6 @@ package io.luna.game.action;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.util.Rational;
 import io.netty.util.internal.ThreadLocalRandom;
 
@@ -14,6 +13,11 @@ import io.netty.util.internal.ThreadLocalRandom;
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class HarvestingAction extends StationaryAction<Player> {
+
+    /**
+     * An empty array of items.
+     */
+    private static final Item[] NO_ITEMS = {};
 
     /**
      * The items being added.
@@ -57,7 +61,7 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
             int newSlots = inventory.computeSize(currentAdd);
             int oldSlots = inventory.computeSize(currentRemove);
             if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
-                mob.queue(new GameChatboxMessageWriter("You do not have enough space in your inventory."));
+                mob.sendMessage("You do not have enough space in your inventory.");
                 interrupt();
                 return;
             }
@@ -69,7 +73,9 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
     }
 
     /**
-     * Function invoked at the beginning of every action loop. Return {@code false} to interrupt the action.
+     * Function invoked at the beginning of every action loop.
+     *
+     * @return {@code false} if the action should be interrupted.
      */
     protected boolean canHarvest() {
         return true;
@@ -86,7 +92,7 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
      * @return The items that will be removed.
      */
     protected Item[] remove() {
-        return Item.EMPTY_ARRAY;
+        return NO_ITEMS;
     }
 
     /**

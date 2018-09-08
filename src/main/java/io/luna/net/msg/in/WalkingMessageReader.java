@@ -24,18 +24,20 @@ public final class WalkingMessageReader extends MessageReader {
         int size = msg.getSize();
         ByteMessage payload = msg.getPayload();
 
-        if (opcode == 248) { // Minimap click.
-            size -= 14;
-            player.interruptAction();
-        } else if (opcode == 164) { // Yellow <x> click.
-            player.interruptAction();
-        } else if (opcode == 98) { // Red <x> click.
-            // impl
-        }
-
         WalkingQueue walkingQueue = player.getWalkingQueue();
         if (walkingQueue.isLocked()) {
             return null;
+        }
+
+        if (opcode == 248) { // Minimap click.
+            size -= 14;
+            player.interruptAction();
+            player.resetInteractingWith();
+        } else if (opcode == 164) { // Yellow <x> click.
+            player.interruptAction();
+            player.resetInteractingWith();
+        } else if (opcode == 98) { // Red <x> click.
+            // impl
         }
 
         int pathSize = (size - 5) / 2;

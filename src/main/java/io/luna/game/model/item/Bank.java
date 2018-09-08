@@ -2,11 +2,9 @@ package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * An item container model representing a player's bank.
@@ -104,7 +102,11 @@ public final class Bank extends ItemContainer {
     }
 
     /**
-     * Deposits an item from the inventory. Returns {@code true} if successful.
+     * Deposits an item from the inventory.
+     *
+     * @param inventoryIndex The index of the item to deposit.
+     * @param amount The amount to deposit.
+     * @return {@code true} if successful.
      */
     public boolean deposit(int inventoryIndex, int amount) {
         Item inventoryItem = inventory.get(inventoryIndex);
@@ -117,10 +119,10 @@ public final class Bank extends ItemContainer {
         if (amount > existingAmount) {
             amount = existingAmount;
         }
-        inventoryItem = inventoryItem.createWithAmount(amount);
+        inventoryItem = inventoryItem.withAmount(amount);
 
         ItemDefinition def = inventoryItem.getItemDef();
-        Item depositItem = inventoryItem.createWithId(def.getUnnotedId().orElse(inventoryItem.getId()));
+        Item depositItem = inventoryItem.withId(def.getUnnotedId().orElse(inventoryItem.getId()));
 
         int remaining = computeRemainingSize();
         Optional<Integer> depositIndex = computeIndexForId(depositItem.getId());
@@ -138,7 +140,11 @@ public final class Bank extends ItemContainer {
     }
 
     /**
-     * Withdraws an item from the bank. Returns {@code true} if successful.
+     * Withdraws an item from the bank.
+     *
+     * @param bankIndex The index of the item to withdraw.
+     * @param amount The amount to withdraw.
+     * @return {@code true} if successful.
      */
     public boolean withdraw(int bankIndex, int amount) {
         Item bankItem = get(bankIndex);
@@ -152,16 +158,16 @@ public final class Bank extends ItemContainer {
             amount = existingAmount;
         }
 
-        OptionalInt newId = OptionalInt.empty();
+        Optional<Integer> newId = Optional.empty();
         if (player.isWithdrawAsNote()) {
             ItemDefinition def = bankItem.getItemDef();
             if (def.isNoteable()) {
                 newId = def.getNotedId();
             } else {
-                player.queue(new GameChatboxMessageWriter("This item cannot be withdrawn as a note."));
+                player.sendMessage("This item cannot be withdrawn as a note.");
             }
         }
-        Item withdrawItem = bankItem.createWithId(newId.orElse(bankItem.getId()));
+        Item withdrawItem = bankItem.withId(newId.orElse(bankItem.getId()));
         ItemDefinition newDef = withdrawItem.getItemDef();
 
         int remaining = inventory.computeRemainingSize();
@@ -173,8 +179,8 @@ public final class Bank extends ItemContainer {
         if (amount > remaining && !newDef.isStackable()) {
             amount = remaining;
         }
-        bankItem = bankItem.createWithAmount(amount);
-        withdrawItem = withdrawItem.createWithAmount(amount);
+        bankItem = bankItem.withAmount(amount);
+        withdrawItem = withdrawItem.withAmount(amount);
 
         if (remove(bankItem)) {
             inventory.add(withdrawItem);
@@ -197,7 +203,7 @@ public final class Bank extends ItemContainer {
             }
             newItems[newIndex++] = item;
         }
-        System.arraycopy(newItems, 0, getItems(), 0, getCapacity());
+        System.arraycopy(newItems, 0, items, 0, getCapacity());
     }
 
     /**

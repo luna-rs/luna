@@ -37,8 +37,14 @@ public abstract class MessageReader {
             player.logout();
         } finally {
             ByteMessage payload = msg.getPayload(); /* Finally, release pooled buffer reference. */
-            if (payload.refCnt() > 0) {
-                payload.release();
+            payload.release();
+
+            int refCount = payload.refCnt();
+            if (refCount >= 1) {
+                // Should never be this high, but I've seen the leak detector report a buffer leak here.
+                // So if it occurs again we can debug it here and release it.
+                LOGGER.warn("Reference count too high [opcode: {}, ref_count: {}]", msg.getOpcode(), refCount);
+                payload.release(refCount);
             }
         }
     }

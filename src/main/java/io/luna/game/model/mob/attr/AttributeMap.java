@@ -1,9 +1,9 @@
 package io.luna.game.model.mob.attr;
 
 import com.google.common.collect.Iterators;
+import com.google.common.collect.UnmodifiableIterator;
 
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -16,12 +16,12 @@ import static java.util.Objects.requireNonNull;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AttributeMap implements Iterable<Entry<String, AttributeValue<?>>> {
+public final class AttributeMap implements Iterable<Entry<String, AttributeValue>> {
 
     /**
      * A map that holds attribute key and value pairs.
      */
-    private final Map<String, AttributeValue<?>> attributes = new IdentityHashMap<>(AttributeKey.ALIASES.size());
+    private final Map<String, AttributeValue> attributes = new IdentityHashMap<>(AttributeKey.ALIASES.size());
 
     /**
      * The last key.
@@ -35,33 +35,39 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
 
     /**
      * Retrieves the value of an attribute by its String key. Not type safe.
+     *
+     * @param key The attribute key.
+     * @return The attribute value.
+     * @throws AttributeTypeException If the return value cannot be casted to {@code <T>}.
      */
     @SuppressWarnings("unchecked")
-    public <T> AttributeValue<T> get(String key) {
+    public <T> AttributeValue<T> get(String key) throws AttributeTypeException {
+
 
         //noinspection StringEquality
-        if (lastKey == requireNonNull(key)) {
+        if (lastKey == requireNonNull(key)) { // Check if we can use our cached value.
             return lastValue;
         }
 
+        // Try and retrieve the key. If it's null, try again and forcibly intern the argument.
         AttributeKey<?> alias = Optional.ofNullable(AttributeKey.ALIASES.get(key)).
             orElse(AttributeKey.ALIASES.get(key.intern()));
-
         checkState(alias != null, "attributes need to be aliased in the AttributeKey class");
 
         try {
+            // Cache key and new attribute value, return cached value.
             lastKey = alias.getName();
             lastValue = attributes
                 .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
-
             return lastValue;
         } catch (ClassCastException e) {
+            // Throw an exception on type mismatch.
             throw new AttributeTypeException(alias);
         }
     }
 
     @Override
-    public Iterator<Entry<String, AttributeValue<?>>> iterator() {
+    public UnmodifiableIterator<Entry<String, AttributeValue>> iterator() {
         return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
     }
 }

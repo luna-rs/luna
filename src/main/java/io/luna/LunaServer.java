@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static io.luna.util.ThreadUtils.availableProcessors;
+import static io.luna.util.ThreadUtils.getCpuAmount;
 import static io.luna.util.ThreadUtils.nameThreadFactory;
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -48,7 +48,7 @@ public final class LunaServer {
      * An executor that will load launch tasks.
      */
     private final AsyncExecutor executor =
-            new AsyncExecutor(nameThreadFactory("LunaInitializationThread"), availableProcessors(), true);
+            AsyncExecutor.newSingletonExecutor(getCpuAmount(), nameThreadFactory("LunaInitializationThread"));
 
     /**
      * A luna context instance.

@@ -3,18 +3,16 @@ package io.luna.game.model.mob;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A model representing a group of skills.
@@ -31,7 +29,7 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * A range containing valid skill identifiers.
      */
-    public static final Range<Integer> SKILL_IDENTIFIERS = Range.closedOpen(0, 21);
+    public static final Range<Integer> SKILL_IDS = Range.closedOpen(0, 21);
 
     /**
      * The maximum amount of attainable experience in a single skill.
@@ -39,12 +37,10 @@ public final class SkillSet implements Iterable<Skill> {
     public static final int MAXIMUM_EXPERIENCE = 200_000_000;
 
     /**
-     * The experience multiplier.
-     */
-    public static final double EXPERIENCE_MULTIPLIER = 1.0;
-
-    /**
-     * Retrieves the amount of experience needing to be attained for a level. Runs in O(1) time.
+     * Retrieves the amount of experience needed to be attained for a level.
+     *
+     * @param level The level to determine for.
+     * @return The experience needed.
      */
     public static int experienceForLevel(int level) {
         checkArgument(level >= 1 && level <= 99, "level < 1 || level > 99");
@@ -55,7 +51,7 @@ public final class SkillSet implements Iterable<Skill> {
      * Returns the total amount of valid skills.
      */
     public static int size() {
-        return SKILL_IDENTIFIERS.upperEndpoint();
+        return SKILL_IDS.upperEndpoint();
     }
 
     /**
@@ -64,7 +60,7 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public static int levelForExperience(int experience) {
         checkArgument(experience >= 0 && experience <= MAXIMUM_EXPERIENCE,
-            "experience < 0 || experience > MAXIMUM_EXPERIENCE");
+                "experience < 0 || experience > MAXIMUM_EXPERIENCE");
 
         if (experience == 0) {
             return 1;
@@ -98,8 +94,7 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * The array of skills.
      */
-    private final Skill[] skills = IntStream.range(0, size()).mapToObj(it -> new Skill(it, this))
-        .toArray(Skill[]::new);
+    private final Skill[] skills;
 
     /**
      * The cached combat level.
@@ -118,18 +113,23 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public SkillSet(Mob mob) {
         this.mob = mob;
+
+        // Populate the skill set.
+        skills = new Skill[size()];
+        for (int index = 0; index < skills.length; index++) {
+            skills[index] = new Skill(index, this);
+        }
     }
 
     @Override
-    public Iterator<Skill> iterator() {
-        Iterator<Skill> mutableIterator = Arrays.asList(skills).iterator();
-        return Iterators.unmodifiableIterator(mutableIterator);
+    public UnmodifiableIterator<Skill> iterator() {
+        return Iterators.forArray(skills);
     }
 
     @Override
     public Spliterator<Skill> spliterator() {
         return Spliterators.spliterator(skills,
-            Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED | Spliterator.DISTINCT);
+                Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
     /**
@@ -141,25 +141,30 @@ public final class SkillSet implements Iterable<Skill> {
 
     /**
      * Retrieve the skill with the argued identifier.
+     *
+     * @param id The skill identifier.
+     * @return The skill.
      */
     public Skill getSkill(int id) {
         return skills[id];
     }
 
     /**
-     * Returns a copy of the backing array. <strong>Please note that this function does not give direct access to
-     * the backing array but instead creates a shallow copy.</strong>
+     * Returns a <strong>shallow</strong> copy of the backing array.
+     *
+     * @return A copy of the skills.
      */
     public Skill[] toArray() {
         return Arrays.copyOf(skills, skills.length);
     }
 
     /**
-     * Sets the backing array of skills. The backing array will not hold any references to the argued array. The
-     * argued array must have a capacity equal to that of the backing array.
+     * Sets the backing array of skills. The backing array will not hold any references to the argued
+     * array. The argued array must have a capacity equal to that of the backing array.
      */
     public void setSkills(Skill[] newSkills) {
-        checkState(newSkills.length == skills.length, "incompatible skill array");
+        checkArgument(newSkills.length == skills.length,
+                "newSkills.length must equal skills.length");
 
         firingEvents = false;
         try {
@@ -168,7 +173,6 @@ public final class SkillSet implements Iterable<Skill> {
                 Skill skill = new Skill(index, this);
                 skill.setExperience(newSkill.getExperience());
                 skill.setLevel(newSkill.getLevel());
-
                 skills[index++] = skill;
             }
         } finally {
@@ -184,29 +188,45 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * @return The cached combat level.
+     * Will either compute the combat level and cache it, or return the cached value.
+     *
+     * @return The combat level.
      */
     public int getCombatLevel() {
-        if (combatLevel == -1) { /* Initialize and cache the value if needed. */
-            int magLvl = skills[Skill.MAGIC].getStaticLevel();
-            int ranLvl = skills[Skill.RANGED].getStaticLevel();
-            int attLvl = skills[Skill.ATTACK].getStaticLevel();
-            int strLvl = skills[Skill.STRENGTH].getStaticLevel();
-            int defLvl = skills[Skill.DEFENCE].getStaticLevel();
-            int hitLvl = skills[Skill.HITPOINTS].getStaticLevel();
-            int prayLvl = skills[Skill.PRAYER].getStaticLevel();
+        if (combatLevel == -1) {
+            int magic = skills[Skill.MAGIC].getStaticLevel();
+            int ranged = skills[Skill.RANGED].getStaticLevel();
+            int attack = skills[Skill.ATTACK].getStaticLevel();
+            int strength = skills[Skill.STRENGTH].getStaticLevel();
+            int defence = skills[Skill.DEFENCE].getStaticLevel();
+            int hitpoints = skills[Skill.HITPOINTS].getStaticLevel();
+            int prayer = skills[Skill.PRAYER].getStaticLevel();
 
-            double mag = magLvl * 1.5;
-            double ran = ranLvl * 1.5;
-            double attstr = attLvl + strLvl;
-            double combatLvl = 0.0;
+            double defenceCalc = defence * 0.25;
+            double hitpointsCalc = hitpoints * 0.25;
+            double prayerCalc = (prayer / 2) * 0.25;
 
+            double mag = magic * 1.5;
+            double ran = ranged * 1.5;
+            double attstr = attack + strength;
+
+            double combatLvl;
             if (ran > attstr && ran > mag) {
-                combatLvl = ((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((ranLvl) * 0.4875);
+                combatLvl = defenceCalc +
+                        hitpointsCalc +
+                        prayerCalc +
+                        (ranged * 0.4875);
             } else if (mag > attstr) {
-                combatLvl = (((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((magLvl) * 0.4875));
+                combatLvl = defenceCalc +
+                        hitpointsCalc +
+                        prayerCalc +
+                        (magic * 0.4875);
             } else {
-                combatLvl = (((defLvl) * 0.25) + ((hitLvl) * 0.25) + ((prayLvl / 2) * 0.25) + ((attLvl) * 0.325) + ((strLvl) * 0.325));
+                combatLvl = defenceCalc +
+                        hitpointsCalc +
+                        prayerCalc +
+                        (attack * 0.325) +
+                        (strength * 0.325);
             }
             combatLevel = (int) combatLvl;
         }
@@ -229,6 +249,8 @@ public final class SkillSet implements Iterable<Skill> {
 
     /**
      * Sets if this skill set is firing events.
+     *
+     * @param firingEvents The value to set.
      */
     public void setFiringEvents(boolean firingEvents) {
         this.firingEvents = firingEvents;

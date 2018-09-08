@@ -1,11 +1,14 @@
 package io.luna.game;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
+import io.luna.game.model.mob.Player;
+import io.luna.game.task.Task;
+import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,10 +17,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 import static io.luna.util.ThreadUtils.nameThreadFactory;
 import static io.luna.util.ThreadUtils.newCachedThreadPool;
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -43,6 +44,11 @@ public final class GameService extends AbstractScheduledService {
     private final LunaContext context;
 
     /**
+     * The world instance.
+     */
+    private final World world;
+
+    /**
      * A thread pool for low-priority tasks.
      */
     private final ListeningExecutorService threadPool = newCachedThreadPool(nameThreadFactory("LunaWorkerThread"));
@@ -54,6 +60,7 @@ public final class GameService extends AbstractScheduledService {
      */
     public GameService(LunaContext context) {
         this.context = context;
+        world = context.getWorld();
     }
 
     @Override
@@ -68,7 +75,6 @@ public final class GameService extends AbstractScheduledService {
             runSynchronizationTasks();
 
             // Run the main game loop.
-            World world = context.getWorld();
             world.loop();
         } catch (Exception e) {
             LOGGER.catching(e);
@@ -83,18 +89,9 @@ public final class GameService extends AbstractScheduledService {
     @Override
     public void shutDown() {
         try {
-            switch (state()) {
-                case FAILED:
-                    // The service stopped unexpectedly.
-                    errorShutdown();
-                    return;
-                case TERMINATED:
-                    // We stopped the service ourselves.
-                    gracefulShutdown();
-                    return;
-            }
+            gracefulShutdown();
         } catch (Exception e) {
-            LOGGER.catching(e);
+            LOGGER.fatal("Luna could not be terminated gracefully.");
         }
         System.exit(0);
     }
@@ -119,13 +116,13 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to
-     * properly save resources before the application exits. This method will wait for as long as it needs
-     * to for all important threads to complete their remaining tasks.
+     * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to properly
+     * save resources before the application exits. This method will wait for as long as it needs to
+     * for all important threads to complete their remaining tasks.
      */
     private void gracefulShutdown() {
-        Stopwatch shutdownTimer = Stopwatch.createStarted();
         World world = context.getWorld();
+        LOGGER.info("Luna is being gracefully terminated. The application will exit once completed.");
 
         // Run any pending synchronization tasks.
         runSynchronizationTasks();
@@ -136,26 +133,29 @@ public final class GameService extends AbstractScheduledService {
         // Wait for any last minute low-priority tasks to complete.
         threadPool.shutdown();
         while (!threadPool.isTerminated()) {
-            sleepUninterruptibly(2, TimeUnit.SECONDS);
+            Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
         }
-
-        LOGGER.info("Luna was gracefully shutdown in {}s. The application will now exit...",
-                box(shutdownTimer.elapsed(TimeUnit.SECONDS)));
     }
 
     /**
-     * Performs a shutdown of Luna when an error is the cause. A last ditch attempt to save player data
-     * is made and the application terminates.
+     * Schedules a system update in {@code ticks} amount of time.
+     *
+     * @param ticks The amount of ticks to schedule for.
      */
-    private void errorShutdown() {
-        try {
-            World world = context.getWorld();
+    public void scheduleSystemUpdate(int ticks) {
 
-            // Do a sequential save of players.
-            world.getPlayers().forEach(plr -> plr.save(false));
-        } finally {
-            LOGGER.fatal("Luna terminated unexpectedly, exiting...", failureCause());
+        // Send out system update messages.
+        for (Player player : world.getPlayers()) {
+            player.queue(new SystemUpdateMessageWriter(ticks));
         }
+
+        // Schedule a graceful shutdown once the system update timer completes.
+        world.schedule(new Task(ticks + 5) {
+            @Override
+            protected void execute() {
+                stopAsync();
+            }
+        });
     }
 
     /**

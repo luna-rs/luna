@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.update;
+package io.luna.game.model.mob.block;
 
 /**
  * An enum representing update states.
@@ -8,7 +8,7 @@ package io.luna.game.model.mob.update;
 public enum UpdateState {
 
     /**
-     * Updating for themself (player updating specific).
+     * Updating for themselves.
      */
     UPDATE_SELF,
 

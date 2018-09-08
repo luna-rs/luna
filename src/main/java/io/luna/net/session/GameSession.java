@@ -9,9 +9,9 @@ import io.luna.net.msg.MessageRepository;
 import io.luna.net.msg.MessageWriter;
 import io.netty.channel.Channel;
 
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.Consumer;
 
 /**
  * A {@link Session} implementation that handles gameplay networking.
@@ -54,12 +54,17 @@ public final class GameSession extends Session {
      * @param messageRepository The message repository.
      */
     public GameSession(Player player, Channel channel, IsaacCipher encryptor, IsaacCipher decryptor,
-        MessageRepository messageRepository) {
+                       MessageRepository messageRepository) {
         super(channel);
         this.player = player;
         this.encryptor = encryptor;
         this.decryptor = decryptor;
         this.messageRepository = messageRepository;
+    }
+
+    @Override
+    public String toString() {
+        return player.toString();
     }
 
     @Override
@@ -82,8 +87,8 @@ public final class GameSession extends Session {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            Optional<GameMessage> gameMsg = msg.handleOutboundMessage(player);
-            gameMsg.ifPresent(write -> channel.write(write, channel.voidPromise()));
+            Consumer<GameMessage> writeMsg = it -> channel.write(it, channel.voidPromise());
+            msg.handleOutboundMessage(player).ifPresent(writeMsg);
         }
     }
 
@@ -101,7 +106,7 @@ public final class GameSession extends Session {
     /**
      * Dequeues decoded game packets and applies their listeners to them.
      */
-    public void dequeue() {
+    public void dequeueIncomingPackets() {
         for (; ; ) {
             GameMessage msg = inboundQueue.poll();
             if (msg == null) {
@@ -110,6 +115,10 @@ public final class GameSession extends Session {
             MessageReader inbound = messageRepository.getHandler(msg.getOpcode());
             inbound.handleInboundMessage(player, msg);
         }
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
     /**

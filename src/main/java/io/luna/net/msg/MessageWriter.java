@@ -18,7 +18,7 @@ public abstract class MessageWriter {
     public abstract ByteMessage write(Player player);
 
     /**
-     * Converts the buffer returned by {@code write(Player)} to a game packet.
+     * Converts the buffer returned by {@code encode(Player)} to a game packet.
      */
     public Optional<GameMessage> handleOutboundMessage(Player player) {
         ByteMessage msg = write(player);

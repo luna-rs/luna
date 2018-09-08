@@ -79,15 +79,15 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         switch (state) {
-        case OPCODE:
-            opcode(in);
-            break;
-        case SIZE:
-            size(in);
-            break;
-        case PAYLOAD:
-            payload(in);
-            break;
+            case OPCODE:
+                opcode(in);
+                break;
+            case SIZE:
+                size(in);
+                break;
+            case PAYLOAD:
+                payload(in);
+                break;
         }
         currentMessage.ifPresent(msg -> {
             out.add(msg);
@@ -143,11 +143,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     private void payload(ByteBuf in) {
         if (in.isReadable(size)) {
             ByteBuf newBuffer = in.readBytes(size);
-            try {
-                queueMsg(newBuffer);
-            } finally {
-                newBuffer.release();
-            }
+            queueMsg(newBuffer);
         }
     }
 
@@ -164,10 +160,10 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
             if (messageRepository.getHandler(opcode) == null) {
                 LOGGER.debug("No InboundGameMessage assigned to [opcode={}]", box(opcode));
                 currentMessage = Optional.empty();
+                payload.release();
                 return;
             }
 
-            payload.retain();
             currentMessage = Optional.of(new GameMessage(opcode, type, ByteMessage.wrap(payload)));
         } finally {
             resetState();

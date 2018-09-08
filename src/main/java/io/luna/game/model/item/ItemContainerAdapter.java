@@ -1,7 +1,6 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.WidgetItemMessageWriter;
 
 import java.util.Optional;
@@ -55,11 +54,13 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
      */
     @Override
     public void onCapacityExceeded(ItemContainer items) {
-        player.queue(new GameChatboxMessageWriter(getCapacityExceededMsg()));
+        player.sendMessage(getCapacityExceededMsg());
     }
 
     /**
      * Displays a group of items on widget {@code getWidgetId()}.
+     *
+     * @param container The items to display.
      */
     protected void sendItemGroup(ItemContainer container) {
         player.queue(container.constructRefresh(getWidgetId()));
@@ -67,6 +68,9 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
 
     /**
      * Displays a single item on widget {@code getWidgetId()} at {@code index}.
+     *
+     * @param item The item to display.
+     * @param index The index to display on.
      */
     protected void sendItem(Item item, int index) {
         player.queue(new WidgetItemMessageWriter(getWidgetId(), index, item));
@@ -74,11 +78,15 @@ public abstract class ItemContainerAdapter implements ItemContainerListener {
 
     /**
      * Returns the widget to display items on.
+     *
+     * @return The widget identifier.
      */
     public abstract int getWidgetId();
 
     /**
      * Returns the message sent when the capacity is exceeded.
+     *
+     * @return The capacity exceeded message.
      */
     public abstract String getCapacityExceededMsg();
 }

@@ -1,7 +1,6 @@
 package io.luna.net.msg.in;
 
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.CommandEvent;
 import io.luna.game.model.mob.Player;
@@ -10,7 +9,12 @@ import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.MessageReader;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import javax.script.ScriptException;
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -20,15 +24,21 @@ import java.util.function.Consumer;
  */
 public final class CommandMessageReader extends MessageReader {
 
+    /**
+     * The asynchronous logger.
+     */
+    private static final Logger LOGGER = LogManager.getLogger();
+
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         String string = msg.getPayload().getString();
         string = string.toLowerCase();
         int index = string.indexOf(' ');
 
-        /* Has to be done in Java because of classloader conflicts. */
-        if (string.equals("hotfix") && player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
-            hotfix(player, player.getContext());
+        // Has to be done in Java because of classloader conflicts.
+        PlayerRights rights = player.getRights();
+        if (string.equals("hotfix") && rights.equalOrGreater(PlayerRights.DEVELOPER)) {
+            startHotfix(player);
             return null;
         }
 
@@ -44,21 +54,20 @@ public final class CommandMessageReader extends MessageReader {
     /**
      * Constructs and loads another bootstrap instance.
      */
-    private void hotfix(Player player, LunaContext ctx) {
-        GameService service = ctx.getService();
-        Consumer<String> sendMessage = msg -> player.queue(new GameChatboxMessageWriter(msg));
+    private void startHotfix(Player player) {
+        LunaContext ctx = player.getContext();
+        Consumer<String> sendMessage = msg ->
+                player.queue(new GameChatboxMessageWriter(msg));
 
-        sendMessage.accept("Hotfix request received...");
-        service.execute(() -> {
+        sendMessage.accept("Hotfix request received.");
+        ctx.getService().submit(() -> {
             try {
                 PluginBootstrap bootstrap = new PluginBootstrap(ctx);
-                bootstrap.init();
-
-                service.sync(() -> sendMessage.accept("Hotfix request finished successfully!"));
-            } catch (Exception e) {
-                service.sync(() ->
-                        sendMessage.accept("Hotfix request failed. Please check console for error message."));
-                e.printStackTrace();
+                bootstrap.init(false);
+                sendMessage.accept("Hotfix request finished successfully.");
+            } catch (ScriptException | ExecutionException | IOException e) {
+                sendMessage.accept("Hotfix request failed. Please check console for error message.");
+                LOGGER.catching(e);
             }
         });
     }

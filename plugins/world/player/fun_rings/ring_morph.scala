@@ -46,19 +46,17 @@ private def unmorph(plr: Player) = {
     plr.displayTabInterfaces()
 
     plr.unlockMovement
-    plr.untransform()
+    plr.resetTransform()
   } else {
     plr.sendMessage("You do not have enough space in your inventory.")
   }
 }
-
 
 /* Listens for equipment changes. */
 on[EquipmentChangeEvent] { msg =>
   if (msg.index == RING) {
 
     msg.newId.foreach {
-      case RING_OF_STONE => morph(msg.plr, msg, STONE_MORPH)
       case EASTER_RING => morph(msg.plr, msg, pick(EGGS_MORPH))
       case _ =>
     }

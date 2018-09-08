@@ -149,9 +149,8 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      * Attempts to store {@code definition} in this repository.
      *
      * @param definition The definition to store.
-     * @throws IllegalStateException If {@code definition} cannot be stored.
      */
-    public final void storeDefinition(T definition) throws IllegalStateException {
+    public final void storeDefinition(T definition) {
         checkState(!locked, "Cannot add definitions to a locked repository.");
 
         int id = definition.getId();

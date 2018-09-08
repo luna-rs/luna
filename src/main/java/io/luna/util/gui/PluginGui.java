@@ -3,6 +3,7 @@ package io.luna.util.gui;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.game.plugin.Plugin;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -128,7 +129,7 @@ public final class PluginGui {
     /**
      * Launches this GUI and blocks until user input is received.
      */
-    public Set<String> launch() throws IOException, InterruptedException, ExecutionException {
+    public Set<String> launch() throws IOException, ExecutionException {
         checkState(!Platform.isFxApplicationThread(), "Cannot be called from Javafx thread.");
 
         // Load application.
@@ -139,7 +140,7 @@ public final class PluginGui {
         mainFrame.setVisible(true);
 
         // Wait here until user input is received.
-        barrier.await();
+        Uninterruptibles.awaitUninterruptibly(barrier);
 
         return settings.getSelected();
     }
@@ -177,17 +178,10 @@ public final class PluginGui {
     /**
      * Loads the Javafx components.
      */
-    private void loadScene() throws ExecutionException, InterruptedException {
+    private void loadScene() throws ExecutionException {
         FutureTask<Boolean> delegateTask = new FutureTask<>(new InitializeScene(), true);
         Platform.runLater(delegateTask);
-        delegateTask.get(); // Wait for task to complete before continuing.
-    }
-
-    /**
-     * Creates an alert instance.
-     */
-    Alert createAlert(AlertType alertType) {
-        return createAlert(alertType, null);
+        Uninterruptibles.getUninterruptibly(delegateTask); // Wait for task to complete before continuing.
     }
 
     /**

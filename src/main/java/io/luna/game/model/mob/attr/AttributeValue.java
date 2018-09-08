@@ -29,8 +29,8 @@ public final class AttributeValue<T> {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof AttributeValue<?>) {
-            AttributeValue<?> other = (AttributeValue<?>) obj;
+        if (obj instanceof AttributeValue) {
+            AttributeValue other = (AttributeValue) obj;
             return Objects.equals(value, other.value);
         }
         return false;
@@ -50,6 +50,8 @@ public final class AttributeValue<T> {
 
     /**
      * Sets the value.
+     *
+     * @param value The new value.
      */
     public void set(T value) {
         this.value = value;

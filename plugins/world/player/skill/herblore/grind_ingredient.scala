@@ -29,7 +29,8 @@ private val INGREDIENTS = Map(
 
 
 /* An Action that will grind all ingredients in an inventory. */
-private final class GrindAction(plr: Player, oldId: Int, newId: Int) extends ProducingAction(plr, true, 2) {
+private final class GrindAction(val plr: Player, val oldId: Int,
+                                val newId: Int) extends ProducingAction(plr, true, 2) {
 
   override def onProduce() = {
     val nextWord = if (newId == 6693) "a" else "some"

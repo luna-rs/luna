@@ -1,16 +1,14 @@
 package io.luna.game.plugin;
 
 import com.google.common.io.MoreFiles;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.moandjiezana.toml.Toml;
 import fj.P;
 import fj.P2;
-import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListenerPipelineSet;
-import io.luna.util.BlockingTaskManager;
+import io.luna.util.AsyncExecutor;
+import io.luna.util.ThreadUtils;
 import io.luna.util.gui.PluginGui;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +39,8 @@ import java.util.stream.Collectors;
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginBootstrap {
+
+    // TODO Script exception from Scala is useless, line number is (46?) lines off.
 
     private final class LoadScriptException extends RuntimeException {
         public LoadScriptException(String name, IOException e) {
@@ -152,11 +152,6 @@ public final class PluginBootstrap {
     private final LunaContext context;
 
     /**
-     * The thread pool.
-     */
-    private final ListeningExecutorService threadPool;
-
-    /**
      * The script engine evaluating {@code Scala} code.
      */
     private final ScriptEngine engine;
@@ -166,43 +161,35 @@ public final class PluginBootstrap {
      *
      * @param context The context instance.
      */
-    public PluginBootstrap(LunaContext context, ListeningExecutorService threadPool) {
-        this.context = context;
-        this.threadPool = threadPool;
-        engine = createScriptEngine();
-    }
-
-    /**
-     * Creates a new {@link PluginBootstrap} that will <strong>synchronously</strong> bootstrap plugins.
-     *
-     * @param context The context instance.
-     */
     public PluginBootstrap(LunaContext context) {
-        this(context, MoreExecutors.newDirectExecutorService());
+        this.context = context;
+        engine = createScriptEngine();
     }
 
     /**
      * Initializes this bootstrapper, loading all of the plugins.
      *
+     * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
      */
-    public P2<Integer, Integer> init() throws ScriptException, InterruptedException, IOException, ExecutionException {
+    public P2<Integer, Integer> init(boolean displayGui) throws ScriptException,
+            IOException, ExecutionException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
-        P2<Integer, Integer> pluginCount = initPlugins();
+        P2<Integer, Integer> pluginCount = initPlugins(displayGui);
 
-        service.sync(() -> pluginManager.getPipelines().swap(pipelines));
+        service.sync(() -> pluginManager.getPipelines().replaceAll(pipelines));
         return pluginCount;
     }
 
     /**
      * Concurrently parses files in the plugin directory and caches their contents.
      */
-    private void initFiles() throws InterruptedException {
-        BlockingTaskManager manager = new BlockingTaskManager(threadPool);
+    private void initFiles() throws ExecutionException {
+        AsyncExecutor executor = AsyncExecutor.newSingletonExecutor(ThreadUtils.getCpuAmount());
 
         // Traverse all paths and sub-paths.
         Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
@@ -211,33 +198,35 @@ public final class PluginBootstrap {
                 Path pluginMetadata = dir.resolve("plugin.toml");
                 if (Files.exists(pluginMetadata)) {
                     // Submit -- but do not execute file tasks.
-                    manager.submit(new PluginLoader(dir, pluginMetadata));
+                    executor.execute(new PluginLoader(dir, pluginMetadata));
                 }
             }
         }
+
         // Run file tasks and await completion.
-        manager.await();
+        executor.await();
     }
 
     /**
      * Injects state into the script engine and evaluates script files.
      *
+     * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
      */
-    private P2<Integer, Integer> initPlugins() throws ScriptException, IOException,
-            ExecutionException, InterruptedException {
+    private P2<Integer, Integer> initPlugins(boolean displayGui) throws ScriptException, IOException,
+            ExecutionException {
         Plugin bootstrap = plugins.remove("Bootstrap"); // Bootstrap not counted as a plugin.
         int totalCount = plugins.size();
 
         // Determine selected plugins and launch the GUI.
         Set<String> selectedPlugins;
-        if (LunaConstants.PLUGIN_GUI) {
+        if (displayGui) {
             PluginGui gui = new PluginGui(plugins);
             selectedPlugins = gui.launch();
         } else {
             List<String> selectedSettings = new Toml().read(new File("./data/gui/settings.toml")).
-                    getTable("network").getList("selected");
+                    getTable("settings").getList("selected");
             selectedPlugins = new HashSet<>(selectedSettings);
         }
         plugins.keySet().retainAll(selectedPlugins);

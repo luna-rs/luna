@@ -3,8 +3,9 @@ package io.luna.net.msg.out;
 import io.luna.game.model.Direction;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.update.UpdateBlockSet;
-import io.luna.game.model.mob.update.UpdateState;
+import io.luna.game.model.mob.block.NpcUpdateBlockSet;
+import io.luna.game.model.mob.block.UpdateBlockSet;
+import io.luna.game.model.mob.block.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
@@ -22,7 +23,7 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
     /**
      * The NPC update block set.
      */
-    private final UpdateBlockSet<Npc> blockSet = UpdateBlockSet.NPC_BLOCK_SET;
+    private final UpdateBlockSet<Npc> blockSet = new NpcUpdateBlockSet();
 
     @Override
     public ByteMessage write(Player player) {
@@ -39,7 +40,7 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
 
                 if (other.isViewable(player)) {
                     handleMovement(other, msg);
-                    blockSet.encodeUpdateBlocks(other, blockMsg, UpdateState.UPDATE_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
                     msg.putBit(true);
                     msg.putBits(2, 3);
@@ -50,13 +51,13 @@ public final class NpcUpdateMessageWriter extends MessageWriter {
             RegionManager regions = player.getWorld().getRegions();
             int npcsAdded = 0;
 
-            for (Npc other : regions.getSurroundingNpcs(player)) {
+            for (Npc other : regions.getViewableNpcs(player)) {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }
                 if (other.isViewable(player) && player.getLocalNpcs().add(other)) {
                     addNpc(player, other, msg);
-                    blockSet.encodeUpdateBlocks(other, blockMsg, UpdateState.ADD_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
                 }
                 npcsAdded++;
             }

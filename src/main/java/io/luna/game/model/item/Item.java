@@ -1,8 +1,11 @@
 package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Range;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
+
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -14,16 +17,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Item {
 
     /**
-     * An empty array of items.
+     * A range of valid item identifiers.
      */
-    public static final Item[] EMPTY_ARRAY = {};
-
-    /**
-     * Determines if {@code id} is within range.
-     */
-    public static boolean isIdWithinRange(int id) {
-        return id > 0 && id < ItemDefinition.SIZE;
-    }
+    public static final Range<Integer> VALID_IDS = Range.open(0, ItemDefinition.SIZE);
 
     /**
      * The identifier.
@@ -42,11 +38,28 @@ public final class Item {
      * @param amount The amount.
      */
     public Item(int id, int amount) {
-        checkArgument(isIdWithinRange(id), "id out of range");
+        checkArgument(VALID_IDS.contains(id), "id ["+id+"] out of range");
         checkArgument(amount > 0, "amount <= 0");
 
         this.id = id;
         this.amount = amount;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Item) {
+            Item other = (Item) obj;
+            return id == other.id && amount == other.amount;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, amount);
     }
 
     @Override
@@ -64,53 +77,14 @@ public final class Item {
     }
 
     /**
-     * @return The amount.
+     * Determines if this item encompasses {@code other}. An item that encompasses another item has an equal
+     * identifier to that item but an amount that's equal to or greater than the item.
+     *
+     * @param other The other item.
+     * @return {@code true} if this item encompasses {@code other}.
      */
-    public int getAmount() {
-        return amount;
-    }
-
-    /**
-     * Creates a new item with {@code amount + addAmount} and the same identifier.
-     */
-    public Item createAndIncrement(int addAmount) {
-        if (addAmount < 0) { /* Same effect as decrementing. */
-            return createAndDecrement(Math.abs(addAmount));
-        }
-
-        int newAmount = amount + addAmount;
-
-        if (newAmount < amount) { /* An overflow. */
-            newAmount = Integer.MAX_VALUE;
-        }
-        return new Item(id, newAmount);
-    }
-
-    /**
-     * Creates a new item with {@code amount - removeAmount} and the same identifier.
-     */
-    public Item createAndDecrement(int removeAmount) {
-        if (removeAmount < 0) { /* Same effect as incrementing. */
-            return createAndIncrement(Math.abs(removeAmount));
-        }
-
-        int newAmount = amount - removeAmount;
-
-        /* Value too low or an overflow. */
-        if (newAmount < 1 || newAmount > amount) {
-            newAmount = 1;
-        }
-        return new Item(id, newAmount);
-    }
-
-    /**
-     * Creates a new item with {@code newAmount} and the same identifier.
-     */
-    public Item createWithAmount(int newAmount) {
-        if (amount == newAmount) {
-            return this;
-        }
-        return new Item(id, newAmount);
+    public boolean encompasses(Item other) {
+        return id == other.id && amount >= other.amount;
     }
 
     /**
@@ -122,8 +96,11 @@ public final class Item {
 
     /**
      * Creates a new item with {@code newId} and the same amount.
+     *
+     * @param newId The new identifier.
+     * @return The new item.
      */
-    public Item createWithId(int newId) {
+    public Item withId(int newId) {
         if (id == newId) {
             return this;
         }
@@ -131,16 +108,53 @@ public final class Item {
     }
 
     /**
-     * Returns the item definition.
+     * @return The amount.
      */
-    public ItemDefinition getItemDef() {
-        return ItemDefinition.get(id);
+    public int getAmount() {
+        return amount;
     }
 
     /**
-     * Returns the equipment definition.
+     * Creates a new item with {@code amount + addAmount} and the same identifier.
+     *
+     * @param add The amount to add.
+     * @return The new item.
+     */
+    public Item changeAmount(int add) {
+        boolean positive = add < 0;
+        int newAmount = amount + add;
+
+        // Handle potential overflows and underflows.
+        if(newAmount < 0) {
+            newAmount = positive ? Integer.MAX_VALUE : 0;
+        }
+        return new Item(id, newAmount);
+    }
+
+    /**
+     * Creates a new item with {@code newAmount} and the same identifier.
+     *
+     * @param newAmount The new amount.
+     * @return The new item.
+     */
+    public Item withAmount(int newAmount) {
+        if (amount == newAmount) {
+            return this;
+        }
+        return new Item(id, newAmount);
+    }
+
+    /**
+     * @return The item definition.
+     */
+    public ItemDefinition getItemDef() {
+        return ItemDefinition.DEFINITIONS.retrieve(id);
+    }
+
+    /**
+     * @return The equipment definition.
      */
     public EquipmentDefinition getEquipDef() {
-        return EquipmentDefinition.get(id);
+        return EquipmentDefinition.DEFINITIONS.retrieve(id);
     }
 }

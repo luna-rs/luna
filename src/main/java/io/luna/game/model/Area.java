@@ -222,7 +222,7 @@ public final class Area {
     }
 
     /**
-     * Returns the size of this area (length * width).
+     * Returns the size of this area (length * width * height).
      *
      * @return The total size, in tiles.
      */

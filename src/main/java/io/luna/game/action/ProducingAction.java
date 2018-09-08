@@ -3,7 +3,6 @@ package io.luna.game.action;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.GameChatboxMessageWriter;
 
 /**
  * A {@link StationaryAction} implementation that will remove items from and add items to the inventory.
@@ -48,7 +47,7 @@ public abstract class ProducingAction extends StationaryAction<Player> {
         int newSlots = inventory.computeSize(currentAdd);
         int oldSlots = inventory.computeSize(currentRemove);
         if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
-            mob.queue(new GameChatboxMessageWriter("You do not have enough space in your inventory."));
+            mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();
             return;
         }

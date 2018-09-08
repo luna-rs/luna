@@ -10,7 +10,6 @@ import java.util.{Optional, OptionalInt}
 
 import com.google.common.collect.BoundType
 import io.luna.game.model.`def`.ItemDefinition
-import io.luna.game.plugin.PluginFailureException
 import io.luna.util.StringUtils
 
 
@@ -94,7 +93,7 @@ def currentTimeMillis = TimeUnit.MILLISECONDS.convert(System.nanoTime, TimeUnit.
 
 
 /* Retrieves the name of an item. */
-def nameOfItem(id: Int) = ItemDefinition.computeNameForId(id)
+def nameOfItem(id: Int) = ItemDefinition.DEFINITIONS.retrieve(id).getName
 
 
 /* Appends an article between a prefix and suffix. */
@@ -126,5 +125,5 @@ def logIf(cond: Boolean, msg: => Any) = if (cond) { log(msg) }
 
 
 /* Failure and assertion functions. */
-def fail(msg: Any = "[failure]: no reason specified") = throw new PluginFailureException(s"$msg")
-def failIf(cond: Boolean, msg: => Any = "[failure]: cond == false") = if (cond) { fail(msg) }
+def fail(msg: Any = "[failure]: no reason specified") = throw new RuntimeException(s"$msg")
+def failIf(cond: Boolean, msg: => Any = "[failure]: no reason specified") = if (cond) { fail(msg) }

@@ -241,7 +241,7 @@ private val SHARK_HARPOON =
 
 
 /* An Action implementation that will manage the fish catching operation. */
-private final class FishAction(evt: NpcClickEvent, tool: Tool) extends HarvestingAction(evt.plr) {
+private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends HarvestingAction(evt.plr) {
 
   var noCatchMessage = false
   var exp = 0.0
@@ -315,38 +315,38 @@ private final class FishAction(evt: NpcClickEvent, tool: Tool) extends Harvestin
 
 /* Intercepted first click events for fishing spots. */
 onargs[NpcFirstClickEvent](233, 234, 235, 236) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, FISHING_ROD))
+  msg.plr.submitAction(new FishAction(msg, FISHING_ROD))
 }
 
 onargs[NpcFirstClickEvent](309, 310, 311, 314, 315, 317, 318) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, FLY_FISHING_ROD))
+  msg.plr.submitAction(new FishAction(msg, FLY_FISHING_ROD))
 }
 
 onargs[NpcFirstClickEvent](312) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, LOBSTER_POT))
+  msg.plr.submitAction(new FishAction(msg, LOBSTER_POT))
 }
 
 onargs[NpcFirstClickEvent](313) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, BIG_NET))
+  msg.plr.submitAction(new FishAction(msg, BIG_NET))
 }
 
 onargs[NpcFirstClickEvent](316, 319) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, SMALL_NET))
+  msg.plr.submitAction(new FishAction(msg, SMALL_NET))
 }
 
 onargs[NpcFirstClickEvent](1174) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, MONKFISH_NET))
+  msg.plr.submitAction(new FishAction(msg, MONKFISH_NET))
 }
 
 /* Intercepted second click events for fishing spots. */
 onargs[NpcSecondClickEvent](309, 316, 319, 310, 311, 314, 315, 317, 318) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, FISHING_ROD))
+  msg.plr.submitAction(new FishAction(msg, FISHING_ROD))
 }
 
 onargs[NpcSecondClickEvent](312) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, HARPOON))
+  msg.plr.submitAction(new FishAction(msg, HARPOON))
 }
 
 onargs[NpcSecondClickEvent](313) { msg =>
-  msg.plr.submitAction(new FishAction(msg.plr, SHARK_HARPOON))
+  msg.plr.submitAction(new FishAction(msg, SHARK_HARPOON))
 }

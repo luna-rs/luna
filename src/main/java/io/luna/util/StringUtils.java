@@ -17,10 +17,10 @@ public final class StringUtils {
     /**
      * An array containing valid {@code char}s.
      */
-    public static final char VALID_CHARACTERS[] = { '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
-        'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', ':', ';', '.', '>', '<', ',', '"',
-        '[', ']', '|', '?', '/', '`' };
+    public static final char VALID_CHARACTERS[] = {'_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+            'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '+', '=', ':', ';', '.', '>', '<', ',', '"',
+            '[', ']', '|', '?', '/', '`'};
 
     /**
      * A {@link Joiner} that joins strings together with a ",".
@@ -30,8 +30,8 @@ public final class StringUtils {
     /**
      * Computes the indefinite article of {@code thing}.
      */
-    public static String computeArticle(String thing) {
-        char first = thing.toLowerCase().charAt(0);
+    public static String computeArticle(Object thing) {
+        char first = thing.toString().toLowerCase().charAt(0);
         boolean vowel = "aeiouAEIOU".indexOf(first) != -1;
         return vowel ? "an" : "a";
     }
@@ -39,8 +39,9 @@ public final class StringUtils {
     /**
      * Appends the indefinite article of {@code thing} to {@code thing}.
      */
-    public static String addArticle(String thing) {
-        return computeArticle(thing) + " " + thing;
+    public static String addArticle(Object thing) {
+        String asString = thing.toString();
+        return computeArticle(asString) + " " + asString;
     }
 
     /**
@@ -77,6 +78,18 @@ public final class StringUtils {
             ac[11 - i++] = VALID_CHARACTERS[(int) (l1 - l * 37L)];
         }
         return new String(ac, 12 - i, i);
+    }
+
+
+    public static String capitalize(String s) {
+        if (!s.isEmpty()) {
+            String capital = s.substring(0, 1).toUpperCase();
+            StringBuilder builder = new StringBuilder(s);
+
+            builder.setCharAt(0, capital.charAt(0));
+            return builder.toString();
+        }
+        return s;
     }
 
     /**

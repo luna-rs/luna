@@ -36,6 +36,6 @@ public enum EntityType {
     /**
      * An immutable enum set of these values.
      */
-    public static final ImmutableSet<EntityType> VALUES =
+    public static final ImmutableSet<EntityType> ALL =
             Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
 }

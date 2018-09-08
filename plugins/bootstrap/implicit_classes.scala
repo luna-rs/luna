@@ -8,7 +8,7 @@ import io.luna.game.model.{Entity, EntityType, Position, World}
 import io.luna.game.model.item.{Item, ItemContainer}
 import io.luna.game.model.mob.attr.AttributeValue
 import io.luna.game.model.mob.{Mob, Npc, Player, PlayerRights}
-import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 import io.luna.util.Rational
@@ -31,8 +31,6 @@ implicit class RichPlayer(plr: Player) {
   def inventory = plr.getInventory
 
   def equipment = plr.getEquipment
-
-  def sendMessage(message: String) = plr.queue(new GameChatboxMessageWriter(message))
 
   def sendWidgetText(text: String, widget: Int) = plr.queue(new WidgetTextMessageWriter(text, widget))
 
@@ -235,7 +233,7 @@ implicit class RichArray[T](array: Array[T]) {
 
 implicit class RichItemContainer(items: ItemContainer) {
 
-  def getIdForIndex(index: Int) = items.computeIdForIndex(index).orElse(-1)
+  def getIdForIndex(index: Int) = items.getIdForIndex(index).orElse(-1)
   def addAll(traversable: Iterable[Item]) = items.addAll(asJavaIterable(traversable))
 
 }

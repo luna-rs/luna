@@ -5,10 +5,7 @@ import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A {@link GsonParser} implementation that reads NPC combat definitions.
@@ -46,9 +43,6 @@ public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
 
     @Override
     public void onReadComplete(List<NpcCombatDefinition> readObjects) throws Exception {
-        LinkedHashMap<Integer, NpcCombatDefinition> definitions = new LinkedHashMap<>();
-        readObjects.forEach(def -> definitions.put(def.getId(), def));
-
-        NpcCombatDefinition.set(definitions);
+        readObjects.forEach(NpcCombatDefinition.DEFINITIONS::storeDefinition);
     }
 }

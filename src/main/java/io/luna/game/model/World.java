@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Phaser;
 
-import static io.luna.util.ThreadUtils.availableProcessors;
+import static io.luna.util.ThreadUtils.getCpuAmount;
 import static io.luna.util.ThreadUtils.nameThreadFactory;
 import static io.luna.util.ThreadUtils.newFixedThreadPool;
 
@@ -114,7 +114,7 @@ public final class World {
      * A thread pool for parallel updating.
      */
     private final ExecutorService service =
-            newFixedThreadPool(nameThreadFactory("WorldSynchronizationThread"), availableProcessors());
+            newFixedThreadPool(nameThreadFactory("WorldSynchronizationThread"), getCpuAmount());
 
     /**
      * Creates a new {@link World}.

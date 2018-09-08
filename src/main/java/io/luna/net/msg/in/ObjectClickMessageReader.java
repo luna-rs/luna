@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.action.DistancedAction;
+import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ObjectClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
@@ -8,7 +8,7 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
-import io.luna.game.plugin.PluginManager;
+import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -49,19 +49,10 @@ public final class ObjectClickMessageReader extends MessageReader {
         checkState(evt.y() >= 0, "y coordinate out of range");
         checkState(evt.id() > 0, "id out of range");
 
-        // TODO: Size calculations
         // TODO: Make sure object really exists
         Position position = new Position(evt.x(), evt.y(), player.getPosition().getZ());
-        player.submitAction(new DistancedAction<Player>(player, position, 1, true) {
-            @Override
-            protected void execute() {
-                player.face(position);
-                player.getWalkingQueue().clear();
-
-                PluginManager plugins = player.getPlugins();
-                plugins.post(evt);
-            }
-        });
+        GameObject object = new GameObject(player.getContext(), evt.id(), position);
+        player.submitAction(new InteractionAction(player, object, evt));
     }
 
     /**

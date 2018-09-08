@@ -34,6 +34,7 @@ public final class LunaConstants {
             JsonObject gameConstants = tomlReader.getTable("game").to(JsonObject.class);
             STAGGERED_UPDATING = gameConstants.get("staggered_updating").getAsBoolean();
             STARTING_POSITION = getAsType(gameConstants.get("starting_position"), Position.class);
+            EXPERIENCE_MULTIPLIER = gameConstants.get("experience_multiplier").getAsDouble();
             PACKET_126_CACHING = gameConstants.get("packet_126_caching").getAsBoolean();
             PASSWORD_HASHING = gameConstants.get("password_hashing").getAsBoolean();
 
@@ -101,6 +102,11 @@ public final class LunaConstants {
      * The position that new players will start on.
      */
     public static final Position STARTING_POSITION;
+
+    /**
+     * The experience multiplier. This value determines how fast mobs can level up their skills.
+     */
+    public static final double EXPERIENCE_MULTIPLIER;
 
     /**
      * If asynchronous and garbage-free logging should be enabled. This feature improves logging performance.

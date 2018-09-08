@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkState;
  * be easily accessible as well as high performing.
  * <p>
  * The naming convention for all String keys is {@code lower_underscore}. Spaces and uppercase letters are
- * not allowed. For simplicity, attributes can only be represented as primitives or the String type.
+ * not allowed.
  *
  * @param <T> The Object type represented by this key.
  * @author lare96 <http://github.org/lare96>
@@ -28,33 +28,25 @@ public final class AttributeKey<T> {
     public static final Map<String, AttributeKey> ALIASES = new IdentityHashMap<>();
 
     static {
-
-        /* Run energy */
+        // Persistent attributes. These are saved to the character file.
         forPersistent("run_energy", 100.0);
-
-        /* Login */
         forPersistent("first_login", true);
-
-        /* Punishment */
         forPersistent("unban_date", "n/a");
         forPersistent("unmute_date", "n/a");
 
-        /* Prayer */
+        // Transient attributes. These are reset on logout.
         forTransient("last_bone_bury", 0L);
-
-        /* Consumables */
         forTransient("last_food_consume", 0L);
         forTransient("last_potion_consume", 0L);
-
-        /* Banking */
         forTransient("withdraw_as_note", false);
-
-        /* Weight */
         forTransient("weight", 0.0);
     }
 
     /**
      * Aliases a new {@code persistent} key with the argued name and initial value.
+     *
+     * @param name The attribute name.
+     * @param initialValue The attribute's initial value.
      */
     public static <T> void forPersistent(String name, T initialValue) {
         ALIASES.put(name, new AttributeKey<>(name, initialValue, true));
@@ -62,6 +54,9 @@ public final class AttributeKey<T> {
 
     /**
      * Aliases a new {@code transient} key with the argued name and initial value.
+     *
+     * @param name The attribute name.
+     * @param initialValue The attribute's initial value.
      */
     public static <T> void forTransient(String name, T initialValue) {
         ALIASES.put(name, new AttributeKey<>(name, initialValue, false));
@@ -100,10 +95,10 @@ public final class AttributeKey<T> {
         checkArgument(!name.isEmpty(), "attribute name length <= 0");
 
         checkArgument(CharMatcher.whitespace().matchesNoneOf(name),
-            "attribute {" + name + "} has whitespace characters, use underscore characters instead");
+                "attribute {" + name + "} has whitespace characters, use underscore characters instead");
 
-        checkArgument(CharMatcher.javaUpperCase().matchesNoneOf(name),
-            "attribute {" + name + "} has uppercase characters, use lowercase characters instead");
+        checkArgument(CharMatcher.forPredicate(Character::isUpperCase).matchesNoneOf(name),
+                "attribute {" + name + "} has uppercase characters, use lowercase characters instead");
 
         this.name = name.intern();
         this.initialValue = initialValue;
@@ -114,9 +109,9 @@ public final class AttributeKey<T> {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).
-            add("name", name).
-            add("persistent", isPersistent).
-            add("type", typeName).toString();
+                add("name", name).
+                add("persistent", isPersistent).
+                add("type", typeName).toString();
     }
 
     /**

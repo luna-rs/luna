@@ -1,5 +1,7 @@
 package io.luna.game.model.mob;
 
+import io.luna.util.StringUtils;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -24,6 +26,11 @@ public enum PlayerRights {
     private final int serverValue;
 
     /**
+     * The formatted name. Lowercase and capitalized.
+     */
+    private final String formattedName;
+
+    /**
      * Creates a new {@link PlayerRights}.
      *
      * @param clientValue The protocol value.
@@ -34,38 +41,54 @@ public enum PlayerRights {
 
         this.clientValue = clientValue;
         this.serverValue = serverValue;
+        formattedName = StringUtils.capitalize(name().toLowerCase());
     }
 
     /**
-     * Determines if this authority level is greater than {@code other}.
+     * Determines if this rights level is greater than {@code other}.
+     *
+     * @param other The other rights level.
+     * @return {@code true} if this rights level is greater than {@code other}.
      */
     public boolean greater(PlayerRights other) {
         return serverValue > other.serverValue;
     }
 
     /**
-     * Determines if this authority level is equal to or greater than {@code other}.
+     * Determines if this rights level is equal to or greater than {@code other}.
+     *
+     * @param other The other rights level.
+     * @return {@code true} if this rights level is equal to or greater than {@code other}.
      */
     public boolean equalOrGreater(PlayerRights other) {
         return serverValue >= other.serverValue;
     }
 
     /**
-     * Determines if this authority level is less than {@code other}.
+     * Determines if this rights level is less than {@code other}.
+     *
+     * @param other The other rights level.
+     * @return {@code true} if this rights level is less than {@code other}.
      */
     public boolean less(PlayerRights other) {
         return serverValue < other.serverValue;
     }
 
     /**
-     * Determines if this authority level is equal to or less than {@code other}.
+     * Determines if this rights level is equal to or less than {@code other}.
+     *
+     * @param other The other rights level.
+     * @return {@code true} if this rights level is equal to or less than {@code other}.
      */
     public boolean equalOrLess(PlayerRights other) {
         return serverValue <= other.serverValue;
     }
 
     /**
-     * Determines if this authority level is equal to {@code other}.
+     * Determines if this rights level is equal to {@code other}.
+     *
+     * @param other The other rights level.
+     * @return {@code true} if this rights level is equal to {@code other}.
      */
     public boolean equal(PlayerRights other) {
         return serverValue == other.serverValue;
@@ -83,5 +106,12 @@ public enum PlayerRights {
      */
     public final int getServerValue() {
         return serverValue;
+    }
+
+    /**
+     * @return The formatted name. Lowercase and capitalized.
+     */
+    public String getFormattedName() {
+        return formattedName;
     }
 }

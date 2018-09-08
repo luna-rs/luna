@@ -4,8 +4,9 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.update.UpdateBlockSet;
-import io.luna.game.model.mob.update.UpdateState;
+import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
+import io.luna.game.model.mob.block.UpdateBlockSet;
+import io.luna.game.model.mob.block.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
@@ -23,7 +24,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
     /**
      * The player update block set.
      */
-    private final UpdateBlockSet<Player> blockSet = UpdateBlockSet.PLAYER_BLOCK_SET;
+    private final UpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
 
     // TODO (Possible?) Buffer resource leak needs to be fixed. Will do more debugging
     @Override
@@ -35,7 +36,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
             msg.startBitAccess();
 
             handleMovement(player, msg);
-            blockSet.encodeUpdateBlocks(player, blockMsg, UpdateState.UPDATE_SELF);
+            blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
 
             msg.putBits(8, player.getLocalPlayers().size());
             Iterator<Player> iterator = player.getLocalPlayers().iterator();
@@ -44,7 +45,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
 
                 if (other.isViewable(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
                     handleMovement(other, msg);
-                    blockSet.encodeUpdateBlocks(other, blockMsg, UpdateState.UPDATE_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
                     msg.putBit(true);
                     msg.putBits(2, 3);
@@ -55,7 +56,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
             RegionManager regions = player.getWorld().getRegions();
             int playersAdded = 0;
 
-            for (Player other : regions.getSurroundingPlayers(player)) {
+            for (Player other : regions.getViewablePlayers(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
@@ -65,7 +66,7 @@ public final class PlayerUpdateMessageWriter extends MessageWriter {
                 if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {
                     playersAdded++;
                     addPlayer(msg, player, other);
-                    blockSet.encodeUpdateBlocks(other, blockMsg, UpdateState.ADD_LOCAL);
+                    blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
                 }
             }
 

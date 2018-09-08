@@ -37,6 +37,11 @@ public final class ForcedMovement {
 
     /**
      * Creates a new {@link ForcedMovement} for movement across the x-axis.
+     *
+     * @param player The player.
+     * @param amount The amount to move.
+     * @param duration The duration.
+     * @return The forced movement instance.
      */
     public static ForcedMovement forceMoveX(Player player, int amount, int duration) {
         Position destination = player.getPosition().translate(amount, 0);
@@ -47,6 +52,11 @@ public final class ForcedMovement {
 
     /**
      * Creates a new {@link ForcedMovement} for movement across the y-axis.
+     *
+     * @param player The player.
+     * @param amount The amount to move.
+     * @param duration The duration.
+     * @return The forced movement instance.
      */
     public static ForcedMovement forceMoveY(Player player, int amount, int duration) {
         Position destination = player.getPosition().translate(0, amount);

@@ -14,15 +14,16 @@ import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 /**
- * A model representing a list of mobs.
+ * A model representing a repository that is used to keep track of all mobs in the world. Assigned indexes
+ * are cached in order to improve performance.
  *
  * @param <E> The type of mobs to contain.
  * @author lare96 <http://github.org/lare96>
@@ -51,32 +52,35 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         @Override
         public E next() {
-            skip(); /* If 'hasNext()' is not called, skip here. */
+            // If 'hasNext()' is not called, skip nulls here.
+            skip();
 
             if (curr >= capacity()) {
                 throw new NoSuchElementException("No elements left");
             }
 
-            E mob = element(curr);
+            E mob = get(curr);
             prev = curr++;
             return mob;
         }
 
         @Override
         public void remove() {
-            if (prev == -1) {
-                throw new IllegalStateException("remove() can only be called once after each call to next()");
-            }
-            MobList.this.remove(get(prev)); /* 'Moblist.this' needed to get around overloading conflicts. */
+            checkState(prev != -1, "remove() can only be called once after each call to next()");
+
+            MobList.this.remove(get(prev));
             prev = -1;
         }
 
         /**
-         * Iterates until a non-{@code null} element is found. Returns {@code true} if one was found.
+         * Iterates until a non-{@code null} element is found.
+         *
+         * @return {@code true} if a non-{@code null} element was found.
          */
         private boolean skip() {
+            // Stop at the end of the repository, or until 'get(curr)' is non-null.
             while (get(curr) == null) {
-                if (++curr >= capacity()) { /* Stop at end of list. */
+                if (++curr >= capacity()) {
                     return false;
                 }
             }
@@ -108,10 +112,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     public MobList(int capacity) {
         mobs = (E[]) new Mob[(capacity + 1)];
 
-         /* Initialize the index cache. */
-        for (int index = 1; index < mobs.length; index++) {
-            indexes.add(index);
-        }
+        // Initialize the index cache.
+        IntStream.range(1, mobs.length).forEach(indexes::add);
     }
 
     @Override
@@ -121,6 +123,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Finds the first element that matches {@code filter}.
+     *
+     * @param filter The predicate to test.
+     * @return The first element matching {@code filter}.
      */
     public Optional<E> findFirst(Predicate<? super E> filter) {
         for (E e : this) {
@@ -132,11 +137,14 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Finds the last element that matches {@code filter}.
+     * Finds the last element matching {@code filter}.
+     *
+     * @param filter The predicate to test.
+     * @return The last element matching {@code filter}.
      */
     public Optional<E> findLast(Predicate<? super E> filter) {
 
-        /* Can't use the iterator because we need to look backwards. */
+        // Iterator doesn't support reverse iteration.
         for (int index = capacity(); index > 1; index--) {
             E mob = mobs[index];
             if (mob == null) {
@@ -151,6 +159,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Finds all elements that match {@code filter}.
+     *
+     * @param filter The predicate to test.
+     * @return A list of matching elements.
      */
     public List<E> findAll(Predicate<? super E> filter) {
         List<E> list = new ArrayList<>();
@@ -169,26 +180,24 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Returns a {@code null}-free stream.
+     *
+     * @return The stream.
      */
     public Stream<E> stream() {
         return StreamSupport.stream(spliterator(), false).filter(Objects::nonNull);
     }
 
     /**
-     * Returns a {@code null}-free parallel stream.
-     */
-    public Stream<E> parallelStream() {
-        return StreamSupport.stream(spliterator(), true).filter(Objects::nonNull);
-    }
-
-    /**
      * Attempts to add {@code mob}.
+     *
+     * @param mob The mob to add.
      */
     public void add(E mob) {
         checkArgument(mob.getState() != EntityState.ACTIVE, "state == ACTIVE");
         checkState(!isFull(), "isFull() == true");
 
-        int index = indexes.remove(); /* No lookup, just retrieve from the index cache. */
+        // No lookup, just grab next free index.
+        int index = indexes.remove();
         mobs[index] = mob;
         mob.setIndex(index);
 
@@ -199,12 +208,15 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Attempts to remove {@code mob}.
+     *
+     * @param mob The mob to remove.
      */
     public void remove(E mob) {
         checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
         checkArgument(mob.getIndex() != -1, "index == -1");
 
-        indexes.add(mob.getIndex()); /* We're done with the index, add it back to the cache. */
+        // Put back index, so other mobs can use it.
+        indexes.add(mob.getIndex());
 
         mob.setState(EntityState.INACTIVE);
 
@@ -216,6 +228,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Retrieves the mob on {@code index}.
+     *
+     * @param index The index to retrieve.
+     * @return The mob.
      */
     public E get(int index) {
         return mobs[index];
@@ -224,41 +239,53 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     /**
      * Retrieves the mob on {@code index}. Identical to {@code get(int)} but throws an exception if no mob is
      * contained on the index.
+     *
+     * @param index The index to retrieve.
+     * @return The mob.
      */
-    public E element(int index) {
-        return requireNonNull(get(index));
+    public Optional<E> retrieve(int index) {
+        return Optional.of(get(index));
     }
 
     /**
      * Determines if {@code mob} is contained within this list.
+     *
+     * @param mob The mob to check for.
+     * @return {@code true} if the mob is contained.
      */
     public boolean contains(E mob) {
-        return get(mob.getIndex()) != null;
+        return retrieve(mob.getIndex()).filter(mob::equals).isPresent();
     }
 
     /**
-     * Returns {@code true} if this list is full.
+     * Determines if the current size is equal to the capacity.
+     *
+     * @return {@code true} if this list is full.
      */
     public boolean isFull() {
-        return size() == capacity();
+        return size == capacity();
     }
 
     /**
+     * Determines if the current size is 0.
+     *
      * Returns {@code true} if this list is empty.
      */
     public boolean isEmpty() {
-        return size() == 0;
+        return size == 0;
     }
 
     /**
-     * Returns the amount of taken indexes.
+     * @return The amount of taken indexes.
      */
     public int size() {
         return size;
     }
 
     /**
-     * Returns the amount of free indexes.
+     * Computes and returns the amount of free indexes.
+     *
+     * @return The remaining indexes.
      */
     public int remaining() {
         return capacity() - size();
@@ -266,6 +293,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Returns the total amount indexes (both free and taken).
+     *
+     * @return The amount of free and taken indexes.
      */
     public int capacity() {
         return mobs.length;
@@ -273,6 +302,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Creates a <strong>shallow copy</strong> of the backing array.
+     *
+     * @return A shallow copy of the backing array.
      */
     public E[] toArray() {
         return Arrays.copyOf(mobs, mobs.length);

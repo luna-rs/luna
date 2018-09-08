@@ -5,7 +5,6 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,9 +50,6 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
 
     @Override
     public void onReadComplete(List<ItemDefinition> readObjects) throws Exception {
-        ItemDefinition[] definitions = new ItemDefinition[7956];
-        readObjects.forEach(def -> definitions[def.getId()] = def);
-
-        ItemDefinition.set(definitions);
+        readObjects.forEach(ItemDefinition.DEFINITIONS::storeDefinition);
     }
 }

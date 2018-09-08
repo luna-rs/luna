@@ -9,7 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
+import static com.google.common.base.Predicates.in;
+import static com.google.common.base.Predicates.instanceOf;
+import static com.google.common.base.Predicates.not;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -17,7 +21,8 @@ import static java.util.Objects.requireNonNull;
  *
  * @author lare96 <http://github.com/lare96>
  */
-@Sharable public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
+@Sharable
+public final class LunaUpstreamHandler extends SimpleChannelInboundHandler<Object> {
 
     /**
      * The asynchronous logger.
@@ -25,21 +30,21 @@ import static java.util.Objects.requireNonNull;
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * A default access level constructor to discourage external instantiation outside of the
-     * {@code io.luna.net} package.
+     * A default access level constructor to discourage external instantiation.
      */
     LunaUpstreamHandler() {
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
-        boolean channelReadTimeout = e instanceof ReadTimeoutException;
+        Supplier<String> warnMsg = () ->
+                "Disconnecting " + getSession(ctx) + ", upstream exception thrown.";
 
-        if (!channelReadTimeout) {
-            Optional<String> msg = Optional.ofNullable(e.getMessage());
-            msg.filter(it -> !LunaNetworkConstants.IGNORED_EXCEPTIONS.contains(it))
-                .ifPresent(it -> LOGGER.catching(e));
-        }
+        Optional.of(e).filter(not(instanceOf(ReadTimeoutException.class))).
+                map(Throwable::getMessage).
+                filter(not(in(LunaNetworkConstants.IGNORED_EXCEPTIONS))).
+                ifPresent(it -> LOGGER.warn(warnMsg, e));
+
         ctx.channel().close();
     }
 

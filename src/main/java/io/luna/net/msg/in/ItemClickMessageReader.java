@@ -46,14 +46,14 @@ public final class ItemClickMessageReader extends MessageReader {
      * Returns {@code true} if the item clicked is valid.
      */
     private boolean validate(Player player, int id, int index, int interfaceId) {
-        checkState(Item.isIdWithinRange(id), "itemId out of range");
+        checkState(Item.VALID_IDS.contains(id), "itemId out of range");
         checkState(index >= 0, "index out of range");
         checkState(interfaceId > 0, "interfaceId out of range");
 
         switch (interfaceId) {
         case 3214:
             Inventory inventory = player.getInventory();
-            return inventory.computeIdForIndex(index).map(it -> it == id).orElse(false);
+            return inventory.getIdForIndex(index).map(it -> it == id).orElse(false);
         }
         return true;
     }

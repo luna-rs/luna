@@ -1,6 +1,8 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.LoginEvent;
@@ -12,13 +14,14 @@ import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.attr.AttributeValue;
-import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.MessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
+import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
@@ -33,7 +36,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -118,6 +120,12 @@ public final class Player extends Mob {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
+     * The tab interfaces.
+     */
+    private static final ImmutableList<Integer> TAB_INTERFACES =
+            ImmutableList.of(2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962);
+
+    /**
      * A set of local players.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>();
@@ -136,6 +144,8 @@ public final class Player extends Mob {
      * The credentials.
      */
     private final PlayerCredentials credentials;
+
+
 
     /**
      * The inventory.
@@ -161,6 +171,7 @@ public final class Player extends Mob {
     /**
      * The cached update block.
      */
+    // TODO Might have to be volatile?
     private ByteMessage cachedBlock;
 
     /**
@@ -184,6 +195,11 @@ public final class Player extends Mob {
     private boolean regionChanged;
 
     /**
+     * The serializer.
+     */
+    private final PlayerSerializer serializer;
+
+    /**
      * The running direction.
      */
     private Direction runningDirection = Direction.NONE;
@@ -199,16 +215,6 @@ public final class Player extends Mob {
     private Optional<ForcedMovement> forcedMovement = Optional.empty();
 
     /**
-     * The transformation identifier.
-     */
-    private OptionalInt transformId = OptionalInt.empty();
-
-    /**
-     * The currently open shop name.
-     */
-    private Optional<String> currentShop = Optional.empty();
-
-    /**
      * The prayer icon.
      */
     private PrayerIcon prayerIcon = PrayerIcon.NONE;
@@ -219,6 +225,11 @@ public final class Player extends Mob {
     private SkullIcon skullIcon = SkullIcon.NONE;
 
     /**
+     * The model animation.
+     */
+    private ModelAnimation modelAnimation = ModelAnimation.DEFAULT;
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context instance.
@@ -227,27 +238,9 @@ public final class Player extends Mob {
     public Player(LunaContext context, PlayerCredentials credentials) {
         super(context, EntityType.PLAYER);
         this.credentials = credentials;
+        serializer = new PlayerSerializer(this);
 
-        setPosition(LunaConstants.STARTING_POSITION);
 
-        if (credentials.getUsername().equals("lare96")) {
-            rights = PlayerRights.DEVELOPER;
-        }
-    }
-
-    @Override
-    public int size() {
-        return 1;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUsernameHash());
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this).add("username", getUsername()).add("rights", rights).toString();
     }
 
     @Override
@@ -257,13 +250,31 @@ public final class Player extends Mob {
         }
         if (obj instanceof Player) {
             Player other = (Player) obj;
-            return other.getUsernameHash() == getUsernameHash();
+            return getUsernameHash() == other.getUsernameHash();
         }
         return false;
     }
 
     @Override
-    public void onActive() {
+    public int hashCode() {
+        return Objects.hash(getUsernameHash());
+    }
+
+    @Override
+    public int size() {
+        return 1;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).
+                add("username", getUsername()).
+                add("index", getIndex()).
+                add("rights", rights).toString();
+    }
+
+    @Override
+    protected void onActive() {
         updateFlags.flag(UpdateFlag.APPEARANCE);
 
         queue(new AssignmentMessageWriter(true));
@@ -282,7 +293,8 @@ public final class Player extends Mob {
         queue(equipment.constructRefresh(EQUIPMENT_DISPLAY_ID));
         queue(bank.constructRefresh(BANK_DISPLAY_ID));
 
-        queue(new GameChatboxMessageWriter("Welcome to Luna!"));
+        sendMessage("Welcome to Luna.");
+        sendMessage("You currently have " + rights.getFormattedName() + " privileges.");
 
         plugins.post(new LoginEvent(this));
 
@@ -290,12 +302,9 @@ public final class Player extends Mob {
     }
 
     @Override
-    public void onInactive() {
+    protected void onInactive() {
         plugins.post(new LogoutEvent(this));
-
-        PlayerSerializer serializer = new PlayerSerializer(this);
-        serializer.asyncSave(service);
-
+        asyncSave();
         LOGGER.info("{} has logged out.", this);
     }
 
@@ -306,13 +315,51 @@ public final class Player extends Mob {
         regionChanged = false;
     }
 
+    @Override
+    public int getTotalHealth() {
+        return skill(Skill.HITPOINTS).getStaticLevel();
+    }
+
+    @Override
+    public void transform(int id) {
+        transformId = Optional.of(id);
+        updateFlags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    @Override
+    public void resetTransform() {
+        if (transformId.isPresent()) {
+            transformId = Optional.empty();
+            updateFlags.flag(UpdateFlag.APPEARANCE);
+        }
+    }
+
+    @Override
+    public int getCombatLevel() {
+        return skillSet.getCombatLevel();
+    }
+
+    /**
+     * Saves this player's data.
+     */
+    public void save() {
+        serializer.save();
+    }
+
+    /**
+     * Asynchronously saves this player's data.
+     */
+    public ListenableFuture<?> asyncSave() {
+        return serializer.asyncSave();
+    }
+
     /**
      * Displays the default tab interfaces.
      */
     public void displayTabInterfaces() {
-        int[] interfaces = {2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962};
-        for (int index = 0; index < interfaces.length; index++) {
-            queue(new TabInterfaceMessageWriter(index, interfaces[index]));
+        for (int index = 0; index < TAB_INTERFACES.size(); index++) {
+            int tabId = TAB_INTERFACES.get(index);
+            queue(new TabInterfaceMessageWriter(index, tabId));
         }
 
        /* interfaces.open(new TabInterface(2423, Tab.COMBAT));
@@ -331,6 +378,16 @@ public final class Player extends Mob {
     }
 
     /**
+     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet. It's used enough where this
+     * is warranted.
+     *
+     * @param msg The message to send.
+     */
+    public void sendMessage(String msg) {
+        queue(new GameChatboxMessageWriter(msg));
+    }
+
+    /**
      * Disconnects this player.
      */
     public void logout() {
@@ -342,6 +399,8 @@ public final class Player extends Mob {
 
     /**
      * Sends the {@code chat} message.
+     *
+     * @param chat The chat instance.
      */
     public void chat(Chat chat) {
         this.chat = Optional.of(chat);
@@ -350,39 +409,38 @@ public final class Player extends Mob {
 
     /**
      * Traverses the path in {@code forcedMovement}.
+     *
+     * @param forcedMovement The forced movement path.
      */
     public void forceMovement(ForcedMovement forcedMovement) {
         this.forcedMovement = Optional.of(forcedMovement);
-        updateFlags.flag(UpdateFlag.FORCE_MOVEMENT);
+        updateFlags.flag(UpdateFlag.FORCED_MOVEMENT);
     }
 
     /**
-     * Transforms this player into an npc with {@code id}.
-     */
-    public void transform(int id) {
-        transformId = OptionalInt.of(id);
-        updateFlags.flag(UpdateFlag.APPEARANCE);
-    }
-
-    /**
-     * Turns a transformed player back into a player.
-     */
-    public void untransform() { /* TODO better method name than 'untransform' ? */
-        if (transformId.isPresent()) {
-            transformId = OptionalInt.empty();
-            updateFlags.flag(UpdateFlag.APPEARANCE);
-        }
-    }
-
-    /**
-     * A shortcut function to {@code GameSession.queue(MessageWriter)}.
+     * A shortcut function to {@link GameSession#queue(MessageWriter)}.
+     *
+     * @param msg The message to queue in the buffer.
      */
     public void queue(MessageWriter msg) {
         session.queue(msg);
     }
 
     /**
+     * Sends a region update, if one is needed.
+     */
+    public void sendRegionUpdate() {
+        if (lastRegion == null || needsRegionUpdate()) {
+            regionChanged = true;
+            lastRegion = position;
+            queue(new RegionChangeMessageWriter());
+        }
+    }
+
+    /**
      * Determines if the player needs to send a region update message.
+     *
+     * @return {@code true} if the player needs a region update.
      */
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
@@ -393,6 +451,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the 'withdraw_as_note' attribute.
+     *
+     * @param withdrawAsNote The value to set to.
      */
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
@@ -402,7 +462,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Gets the 'withdraw_as_note' attribute.
+     * @return The 'withdraw_as_note' attribute.
      */
     public boolean isWithdrawAsNote() {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
@@ -411,6 +471,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the 'run_energy' attribute.
+     *
+     * @param runEnergy The value to set to.
      */
     public void setRunEnergy(double runEnergy) {
         if (runEnergy > 100.0) {
@@ -424,9 +486,11 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'run_energy' attribute.
+     * Changes the 'run_energy' attribute.
+     *
+     * @param runEnergy The value to change by.
      */
-    public void increaseRunEnergy(double runEnergy) {
+    public void changeRunEnergy(double runEnergy) {
         AttributeValue<Double> attr = attributes.get("run_energy");
         double newEnergy = attr.get() + runEnergy;
         if (newEnergy > 100.0) {
@@ -439,7 +503,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Gets the 'run_energy' attribute.
+     * @return The 'run_energy' attribute.
      */
     public double getRunEnergy() {
         AttributeValue<Double> attr = attributes.get("run_energy");
@@ -448,6 +512,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the 'unmute_date' attribute.
+     *
+     * @param unmuteDate The value to set to.
      */
     public void setUnmuteDate(String unmuteDate) {
         AttributeValue<String> attr = attributes.get("unmute_date");
@@ -455,7 +521,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Gets the 'unmute_date' attribute.
+     * @return The 'unmute_date' attribute.
      */
     public String getUnmuteDate() {
         AttributeValue<String> attr = attributes.get("unmute_date");
@@ -464,6 +530,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the 'unban_date' attribute.
+     *
+     * @param unbanDate The value to set to.
      */
     public void setUnbanDate(String unbanDate) {
         AttributeValue<String> attr = attributes.get("unban_date");
@@ -471,7 +539,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Gets the 'unban_date' attribute.
+     * @return The 'unban_date' attribute.
      */
     public String getUnbanDate() {
         AttributeValue<String> attr = attributes.get("unban_date");
@@ -480,6 +548,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the 'weight' attribute.
+     *
+     * @param weight The value to set to.
      */
     public void setWeight(double weight) {
         AttributeValue<Double> attr = attributes.get("weight");
@@ -489,7 +559,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Gets the 'weight' attribute.
+     * @return The 'weight' attribute.
      */
     public double getWeight() {
         AttributeValue<Double> attr = attributes.get("weight");
@@ -497,14 +567,14 @@ public final class Player extends Mob {
     }
 
     /**
-     * Returns {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
+     * @return {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
      */
     public boolean isMuted() {
         return !getUnmuteDate().equals("n/a");
     }
 
     /**
-     * Returns {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
+     * @return {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
      */
     public boolean isBanned() {
         return !getUnbanDate().equals("n/a");
@@ -519,6 +589,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the rights.
+     *
+     * @param rights The new rights.
      */
     public void setRights(PlayerRights rights) {
         this.rights = rights;
@@ -554,6 +626,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the game session.
+     *
+     * @param session The value to set to.
      */
     public void setSession(GameSession session) {
         checkState(this.session == null, "session already set!");
@@ -582,16 +656,25 @@ public final class Player extends Mob {
     }
 
     /**
+     * @return {@code true} if the player has a cached block.
+     */
+    public boolean hasCachedBlock() {
+        return cachedBlock != null;
+    }
+
+    /**
      * Sets the cached update block.
+     *
+     * @param newMsg The value to set to.
      */
     public void setCachedBlock(ByteMessage newMsg) {
 
-        /* Release reference to old cached block. */
+        // We have a cached block, release a reference to it.
         if (cachedBlock != null) {
             cachedBlock.release();
         }
 
-        /* Retain a reference to new cached block.. */
+        // Retain a reference to the new cached block.
         if (newMsg != null) {
             newMsg.retain();
         }
@@ -608,6 +691,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the last known region.
+     *
+     * @param lastRegion The value to set to.
      */
     public void setLastRegion(Position lastRegion) {
         this.lastRegion = lastRegion;
@@ -622,6 +707,8 @@ public final class Player extends Mob {
 
     /**
      * Sets if the region has changed.
+     *
+     * @param regionChanged The value to set to.
      */
     public void setRegionChanged(boolean regionChanged) {
         this.regionChanged = regionChanged;
@@ -636,6 +723,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the running direction.
+     *
+     * @param runningDirection The value to set to.
      */
     public void setRunningDirection(Direction runningDirection) {
         this.runningDirection = runningDirection;
@@ -665,7 +754,7 @@ public final class Player extends Mob {
     /**
      * @return The transformation identifier.
      */
-    public OptionalInt getTransformId() {
+    public Optional<Integer> getTransformId() {
         return transformId;
     }
 
@@ -691,20 +780,6 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return The currently open shop name.
-     */
-    public Optional<String> getCurrentShop() {
-        return currentShop;
-    }
-
-    /**
-     * Sets the currently open shop name.
-     */
-    public void setCurrentShop(String currentShop) {
-        this.currentShop = Optional.ofNullable(currentShop);
-    }
-
-    /**
      * @return The prayer icon.
      */
     public PrayerIcon getPrayerIcon() {
@@ -713,6 +788,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the prayer icon.
+     *
+     * @param prayerIcon The value to set to.
      */
     public void setPrayerIcon(PrayerIcon prayerIcon) {
         this.prayerIcon = prayerIcon;
@@ -728,6 +805,8 @@ public final class Player extends Mob {
 
     /**
      * Sets the skull icon.
+     *
+     * @param skullIcon The value to set to.
      */
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
@@ -739,5 +818,22 @@ public final class Player extends Mob {
      */
     public Map<Integer, String> getTextCache() {
         return textCache;
+    }
+
+    /**
+     * @return The model animation.
+     */
+    public ModelAnimation getModelAnimation() {
+        return modelAnimation;
+    }
+
+    /**
+     * Sets the model animation.
+     *
+     * @param modelAnimation The value to set to.
+     */
+    public void setModelAnimation(ModelAnimation modelAnimation) {
+        this.modelAnimation = modelAnimation;
+        updateFlags.flag(UpdateFlag.APPEARANCE);
     }
 }

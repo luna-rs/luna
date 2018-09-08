@@ -27,11 +27,12 @@ public final class EquipItemMessageReader extends MessageReader {
         checkState(interfaceId > 0, "interfaceId <= 0");
 
         Inventory inventory = player.getInventory();
-        if (inventory.computeIdForIndex(index).orElse(-1) != itemId) {
+        if (inventory.getIdForIndex(index).orElse(-1) != itemId) {
             return null;
         }
 
         player.interruptAction();
+        player.resetInteractingWith();
         player.getEquipment().equip(index);
         return null;
     }

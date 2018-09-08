@@ -60,7 +60,7 @@ public final class EquipmentChangeEvent extends PlayerEvent {
      * @return The old item identifier on the index.
      */
     public OptionalInt oldId() {
-        return oldItem.isPresent() ? OptionalInt.of(oldItem.get().getId()) : OptionalInt.empty();
+        return oldItem.map(item -> OptionalInt.of(item.getId())).orElseGet(OptionalInt::empty);
     }
 
     /**
@@ -74,6 +74,6 @@ public final class EquipmentChangeEvent extends PlayerEvent {
      * @return The new item identifier on the index.
      */
     public OptionalInt newId() {
-        return newItem.isPresent() ? OptionalInt.of(newItem.get().getId()) : OptionalInt.empty();
+        return newItem.map(item -> OptionalInt.of(item.getId())).orElseGet(OptionalInt::empty);
     }
 }

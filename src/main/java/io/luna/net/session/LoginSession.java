@@ -4,7 +4,9 @@ import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
+import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.PlayerSerializer;
+import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaNetworkConstants;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;
@@ -54,6 +56,11 @@ public final class LoginSession extends Session {
     }
 
     @Override
+    public String toString() {
+        return getChannel().toString();
+    }
+
+    @Override
     public void handleUpstreamMessage(Object msg) throws Exception {
         if (msg instanceof LoginCredentialsMessage) {
             LoginCredentialsMessage credentials = (LoginCredentialsMessage) msg;
@@ -65,7 +72,7 @@ public final class LoginSession extends Session {
      * Handles the received login credentials.
      */
     private void handleCredentials(LoginCredentialsMessage msg) throws Exception {
-        // TODO: Pretty ugly, find a nicer way of doing this?
+        // TODO: Ensure that this is thread safe.
 
         Channel channel = getChannel();
         World world = context.getWorld();
@@ -77,40 +84,49 @@ public final class LoginSession extends Session {
 
         checkState(username.matches("^[a-z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
 
-        Player player = new Player(context, new PlayerCredentials(username, password));
+        // TODO maybe create player in game thread?
+        try {
+            Player player = new Player(context, new PlayerCredentials(username, password));
 
-        if (world.getPlayers().isFull()) {
-            response = LoginResponse.WORLD_FULL;
-        }
+            if (LunaChannelFilter.WHITELIST.contains(getHostAddress())) {
+                player.setRights(PlayerRights.DEVELOPER);
+            }
 
-        if (world.getPlayer(player.getUsernameHash()).isPresent()) {
-            response = LoginResponse.ACCOUNT_ONLINE;
-        }
+            if (world.getPlayers().isFull()) {
+                response = LoginResponse.WORLD_FULL;
+            }
 
-        if (response == LoginResponse.NORMAL) {
-            PlayerSerializer deserializer = new PlayerSerializer(player);
+            if (world.getPlayer(player.getUsernameHash()).isPresent()) {
+                response = LoginResponse.ACCOUNT_ONLINE;
+            }
 
-            response = deserializer.load(password);
-            response = handlePunishments(player).orElse(response);
-        }
+            if (response == LoginResponse.NORMAL) {
+                PlayerSerializer deserializer = new PlayerSerializer(player);
 
-        ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response, player.getRights(), false));
-        if (response != LoginResponse.NORMAL) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        } else {
-            future.addListener(it -> {
-                pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(msg.getEncryptor()));
-                pipeline.replace("login-decoder", "game-decoder",
-                    new GameMessageDecoder(msg.getDecryptor(), messageRepository));
+                response = deserializer.load(password);
+                response = handlePunishments(player).orElse(response);
+            }
 
-                GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(),
-                    messageRepository);
+            ChannelFuture future = channel.writeAndFlush(new LoginResponseMessage(response, player.getRights(), false));
+            if (response != LoginResponse.NORMAL) {
+                future.addListener(ChannelFutureListener.CLOSE);
+            } else {
+                future.addListener(it -> {
+                    pipeline.replace("login-encoder", "game-encoder", new GameMessageEncoder(msg.getEncryptor()));
+                    pipeline.replace("login-decoder", "game-decoder",
+                            new GameMessageDecoder(msg.getDecryptor(), messageRepository));
 
-                channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
-                player.setSession(session);
+                    GameSession session = new GameSession(player, channel, msg.getEncryptor(), msg.getDecryptor(),
+                            messageRepository);
 
-                world.queueLogin(player);
-            });
+                    channel.attr(LunaNetworkConstants.SESSION_KEY).set(session);
+                    player.setSession(session);
+
+                    world.queueLogin(player);
+                });
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
     }
 

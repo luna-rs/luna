@@ -1,18 +1,17 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.Iterables;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.EquipmentDefinition;
-import io.luna.game.model.def.EquipmentDefinition.EquipmentRequirement;
+import io.luna.game.model.def.EquipmentDefinition.Requirement;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.GsonParser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link GsonParser} implementation that reads equipment definitions.
@@ -35,7 +34,7 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
         boolean twoHanded = reader.get("two_handed?").getAsBoolean();
         boolean fullBody = reader.get("full_body?").getAsBoolean();
         boolean fullHelmet = reader.get("full_helmet?").getAsBoolean();
-        EquipmentRequirement[] requirements = decodeReqs(reader.get("requirements"));
+        Set<Requirement> requirements = decodeReqs(reader.get("requirements"));
         int[] bonuses = GsonUtils.getAsType(reader.get("bonuses"), int[].class);
 
         return new EquipmentDefinition(id, index, twoHanded, fullBody, fullHelmet, requirements, bonuses);
@@ -43,26 +42,21 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
 
     @Override
     public void onReadComplete(List<EquipmentDefinition> readObjects) throws Exception {
-        LinkedHashMap<Integer, EquipmentDefinition> definitions = new LinkedHashMap<>();
-        readObjects.forEach(def -> definitions.put(def.getId(), def));
-
-        EquipmentDefinition.set(definitions);
+        readObjects.forEach(EquipmentDefinition.DEFINITIONS::storeDefinition);
+        EquipmentDefinition.DEFINITIONS.lock();
     }
 
     /**
      * Reads the requirements from the {@code element}.
      */
-    private EquipmentRequirement[] decodeReqs(JsonElement element) {
-        List<EquipmentRequirement> requirements = new ArrayList<>();
+    private Set<Requirement> decodeReqs(JsonElement jsonRequirements) {
+        Set<Requirement> requirementSet = new LinkedHashSet<>();
+        for (JsonElement element : jsonRequirements.getAsJsonArray()) {
+            Requirement newValue = new Requirement(element.getAsJsonObject());
 
-        for (JsonElement nextElement : element.getAsJsonArray()) {
-            JsonObject requirement = nextElement.getAsJsonObject();
-
-            String name = requirement.get("name").getAsString();
-            int level = requirement.get("level").getAsInt();
-
-            requirements.add(new EquipmentRequirement(name, level));
+            boolean noPreviousValue = requirementSet.add(newValue);
+            checkState(noPreviousValue, "Requirement already defined for skill " + newValue + ".");
         }
-        return Iterables.toArray(requirements, EquipmentRequirement.class);
+        return requirementSet;
     }
 }

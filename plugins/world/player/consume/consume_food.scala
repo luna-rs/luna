@@ -23,7 +23,7 @@ case class Food(heal: Int, delay: Long, ids: Int*) {
 
 /* An extension of 'Food' specific to purple sweets. */
 final class PurpleSweets extends Food(3, 1800, 4561) {
-  override def effect(plr: Player) = plr.increaseRunEnergy(10.0)
+  override def effect(plr: Player) = plr.changeRunEnergy(10.0)
 
   override def firstMessage(name: String) = "You eat the sweets."
 
@@ -186,7 +186,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
 
   plr.interruptAction()
 
-  val toConsume = inventory.getIdForIndex(index)
+  val toConsume = inventory.getIdForIndex(index).orElse(-1)
   if (toConsume != -1 && inventory.remove(new Item(toConsume), index)) {
     val consumeName = nameOfItem(toConsume)
 
@@ -201,7 +201,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
     food.effect(plr)
 
     if (skill.getLevel < skill.getStaticLevel) {
-      skill.increaseLevel(food.heal, skill.getStaticLevel)
+      skill.addLevels(food.heal, false)
       plr.sendMessage(food.secondMessage(consumeName))
     }
   }

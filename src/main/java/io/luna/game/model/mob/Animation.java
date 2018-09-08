@@ -28,13 +28,6 @@ public final class Animation {
         AnimationPriority(int value) {
             this.value = value;
         }
-
-        /**
-         * @return The priority.
-         */
-        public final int getValue() {
-            return value;
-        }
     }
 
     /**
@@ -90,10 +83,13 @@ public final class Animation {
     }
 
     /**
-     * Determines if this animation overrides {@code animation}.
+     * Determines if this animation overrides {@code other}.
+     *
+     * @param other The other animation.
+     * @return {@code true} if this animation overrides {@code other}.
      */
-    public final boolean overrides(Animation animation) {
-        return priority.value >= animation.priority.value;
+    public final boolean overrides(Animation other) {
+        return priority.value >= other.priority.value;
     }
 
     /**

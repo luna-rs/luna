@@ -84,7 +84,7 @@ public final class ObjectDefinition implements Definition {
      * @param isSolid If it is solid.
      * @param actions A list of actions.
      */
-    public ObjectDefinition(int id, String name, String examine,  int length,int width, boolean isImpenetrable,
+    public ObjectDefinition(int id, String name, String examine, int length, int width, boolean isImpenetrable,
                             boolean isInteractive, boolean isObstructive, boolean isSolid, String[] actions) {
         this.id = id;
         this.name = name;
@@ -141,9 +141,15 @@ public final class ObjectDefinition implements Definition {
         return width;
     }
 
+    /**
+     * Computes the size using {@link ObjectDefinition#length} * {@link ObjectDefinition#width}.
+     *
+     * @return The area of this object, in tiles.
+     */
     public int getSize() {
         return length * width;
     }
+
     /**
      * @return If the object is impenetrable.
      */

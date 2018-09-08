@@ -58,6 +58,9 @@ public final class ItemWeightListener implements ItemContainerListener {
 
     /**
      * Updates the weight for a single item set.
+     *
+     * @param oldItem The old item.
+     * @param newItem The new item.
      */
     private void updateWeight(Optional<Item> oldItem, Optional<Item> newItem) {
         player.setWeight(player.getWeight() + computeWeightDifference(oldItem, newItem));
@@ -65,6 +68,10 @@ public final class ItemWeightListener implements ItemContainerListener {
 
     /**
      * Computes the weight difference for a single item set.
+     *
+     * @param oldItem The old item.
+     * @param newItem The new item.
+     * @return The difference in weight between {@code oldItem} and {@code newItem}.
      */
     private double computeWeightDifference(Optional<Item> oldItem, Optional<Item> newItem) {
         double subtract = computeWeight(oldItem);
@@ -74,10 +81,13 @@ public final class ItemWeightListener implements ItemContainerListener {
 
     /**
      * Computes the weight of {@code item}.
+     *
+     * @param item The item to compute for.
+     * @return The weight.
      */
     private double computeWeight(Optional<Item> item) {
         return item.map(Item::getItemDef).
-            map(ItemDefinition::getWeight).
-            orElse(0.0);
+                map(ItemDefinition::getWeight).
+                orElse(0.0);
     }
 }

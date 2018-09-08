@@ -3,6 +3,8 @@ package io.luna;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.script.ScriptException;
+
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
  *
@@ -26,7 +28,8 @@ public final class Luna  {
             Thread.currentThread().setName("LunaInitializationThread");
 
             if (LunaConstants.ASYNCHRONOUS_LOGGING) {
-                System.setProperty("Log4jContextSelector", /* Enables asynchronous, garbage-free logging. */
+                // Enables asynchronous, garbage-free logging.
+                System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
             }
             LOGGER = LogManager.getLogger();

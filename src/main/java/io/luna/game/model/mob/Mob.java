@@ -8,13 +8,14 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.attr.AttributeMap;
-import io.luna.game.model.mob.update.UpdateFlagSet;
-import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.block.UpdateFlagSet;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
+import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static io.luna.game.model.mob.Skill.HITPOINTS;
 
 /**
  * A model representing an entity able to move around.
@@ -81,7 +82,7 @@ public abstract class Mob extends Entity {
     /**
      * The current message being forced.
      */
-    private Optional<String> forceChat = Optional.empty();
+    private Optional<String> forcedChat = Optional.empty();
 
     /**
      * The current graphic.
@@ -91,7 +92,7 @@ public abstract class Mob extends Entity {
     /**
      * The current interaction index.
      */
-    private OptionalInt interactionIndex = OptionalInt.empty();
+    private Optional<Integer> interactionIndex = Optional.empty();
 
     /**
      * The current primary hitsplat.
@@ -109,13 +110,37 @@ public abstract class Mob extends Entity {
     private Optional<Entity> interactingWith = Optional.empty();
 
     /**
+     * The transformation identifier.
+     */
+    Optional<Integer> transformId = Optional.empty();
+
+    /**
      * Creates a new {@link Mob}.
      *
      * @param context The context instance.
      */
     public Mob(LunaContext context, EntityType type) {
         super(context, type);
-        teleporting = true; /* Needed for initial placement. */
+
+        // Needed for initial placement.
+        teleporting = true;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Mob) {
+            Mob other = (Mob) obj;
+            return index == other.index && type == other.type;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(index, type);
     }
 
     /**
@@ -124,14 +149,63 @@ public abstract class Mob extends Entity {
     public abstract void reset();
 
     /**
-     * Shortcut to function {@code ActionSet.submit(Action<? extends Mob>)}.
+     * Transforms this mob into an npc with {@code id}.
+     *
+     * @param id The transformation id.
+     */
+    public abstract void transform(int id);
+
+    /**
+     * Turns a transformed mob back into its original form.
+     */
+    public abstract void resetTransform();
+
+    /**
+     * @return The combat level of this mob.
+     */
+    public abstract int getCombatLevel();
+
+    /**
+     * @return The total health of this mob.
+     */
+    public abstract int getTotalHealth();
+
+    /**
+     * @return The current health of this mob.
+     */
+    public final int getCurrentHealth() {
+        return skill(HITPOINTS).getLevel();
+    }
+
+    /**
+     * Sets the current health of this mob.
+     *
+     * @param health The new health.
+     */
+    public final void setCurrentHealth(int health) {
+        skill(HITPOINTS).setLevel(health);
+    }
+
+    /**
+     * Adds or subtracts {@code health} from the current health level.
+     *
+     * @param health The amount to add or subtract.
+     */
+    public final void changeCurrentHealth(int health) {
+        setCurrentHealth(getCurrentHealth() + health);
+    }
+
+    /**
+     * Shortcut to function {@link ActionSet#submit(Action)}.
+     *
+     * @param pending The action to submit.
      */
     public final void submitAction(Action<? extends Mob> pending) {
         actionSet.submit(pending);
     }
 
     /**
-     * Shortcut to function {@code ActionSet.interrupt()}.
+     * Shortcut to function {@link ActionSet#interrupt()}.
      */
     public final void interruptAction() {
         actionSet.interrupt();
@@ -139,30 +213,36 @@ public abstract class Mob extends Entity {
 
     /**
      * Teleports to {@code position}. Will also stop movement and interrupt the current action.
+     *
+     * @param position The position to teleport to.
      */
     public final void teleport(Position position) {
         setPosition(position);
         teleporting = true;
         walkingQueue.clear();
         actionSet.interrupt();
+        resetInteractingWith();
     }
 
     /**
      * Attempts to perform {@code newAnimation}.
+     *
+     * @param newAnimation The animation to perform.
      */
     public final void animation(Animation newAnimation) {
-        if (animation.isPresent()) {
-            Animation current = animation.get();
-            if (!newAnimation.overrides(current)) {
-                return;
-            }
+        Optional<Animation> set = animation.
+                filter(newAnimation::overrides).
+                map(it -> newAnimation);
+        if (set.isPresent()) {
+            animation = set;
+            updateFlags.flag(UpdateFlag.ANIMATION);
         }
-        animation = Optional.of(newAnimation);
-        updateFlags.flag(UpdateFlag.ANIMATION);
     }
 
     /**
      * Faces this mob to {@code position}.
+     *
+     * @param position The position.
      */
     public final void face(Position position) {
         facePosition = Optional.of(position);
@@ -171,51 +251,54 @@ public abstract class Mob extends Entity {
 
     /**
      * Faces this mob to {@code direction}.
+     *
+     * @param direction The direction to face.
      */
     public final void face(Direction direction) {
-        int currentX = position.getX();
-        int currentY = position.getY();
-
         switch (direction) {
-        case NONE:
-            throw new IllegalArgumentException("cannot use <NONE>");
-        case NORTH_WEST:
-            face(new Position(currentX - 1, currentY + 1));
-            break;
-        case NORTH:
-            face(new Position(currentX, currentY + 1));
-            break;
-        case NORTH_EAST:
-            face(new Position(currentX + 1, currentY + 1));
-            break;
-        case WEST:
-            face(new Position(currentX - 1, currentY));
-            break;
-        case EAST:
-            face(new Position(currentX + 1, currentY));
-            break;
-        case SOUTH_WEST:
-            face(new Position(currentX - 1, currentY - 1));
-            break;
-        case SOUTH:
-            face(new Position(currentX, currentY - 1));
-            break;
-        case SOUTH_EAST:
-            face(new Position(currentX + 1, currentY - 1));
-            break;
+            case NONE:
+                throw new IllegalArgumentException("cannot use <NONE>");
+            case NORTH_WEST:
+                face(position.translate(-1, 1));
+                break;
+            case NORTH:
+                face(position.translate(0, 1));
+                break;
+            case NORTH_EAST:
+                face(position.translate(1, 1));
+                break;
+            case WEST:
+                face(position.translate(-1, 0));
+                break;
+            case EAST:
+                face(position.translate(1, 0));
+                break;
+            case SOUTH_WEST:
+                face(position.translate(-1, -1));
+                break;
+            case SOUTH:
+                face(position.translate(0, -1));
+                break;
+            case SOUTH_EAST:
+                face(position.translate(1, -1));
+                break;
         }
     }
 
     /**
      * Forces {@code message} as chat.
+     *
+     * @param message The message to force.
      */
     public final void forceChat(String message) {
-        forceChat = Optional.of(message);
-        updateFlags.flag(UpdateFlag.FORCE_CHAT);
+        forcedChat = Optional.of(message);
+        updateFlags.flag(UpdateFlag.FORCED_CHAT);
     }
 
     /**
      * Performs {@code graphic}.
+     *
+     * @param newGraphic The graphic to perform.
      */
     public final void graphic(Graphic newGraphic) {
         graphic = Optional.of(newGraphic);
@@ -225,23 +308,38 @@ public abstract class Mob extends Entity {
     /**
      * Interacts with {@code entity}.
      */
-    // TODO Reset on movement, teleportation, etc.
     public final void interact(Entity entity) {
-        if (entity == null) { /* Reset the current interaction. */
-            interactionIndex = OptionalInt.of(65535);
+        if (entity == null) {
+            // Reset the current interaction.
+            interactionIndex = Optional.of(65535);
             updateFlags.flag(UpdateFlag.INTERACTION);
-        } else if (entity instanceof Mob) { /* Interact with player or npc. */
+        } else if (entity instanceof Mob) {
+            // Interact with player or npc.
             Mob mob = (Mob) entity;
-            interactionIndex = OptionalInt.of(mob.type == EntityType.PLAYER ? mob.index + 32768 : mob.index);
+            interactionIndex = mob.type == EntityType.PLAYER ?
+                    Optional.of(mob.index + 32768) : Optional.of(mob.index);
             updateFlags.flag(UpdateFlag.INTERACTION);
-        } else { /* Interact with a non-movable entity. */
+        } else {
+            // Interact with a non-movable entity.
             face(entity.getPosition());
         }
         interactingWith = Optional.ofNullable(entity);
     }
 
     /**
+     * Resets the current {@link Entity} we are interacting with.
+     */
+    public final void resetInteractingWith() {
+        // Only reset if we're currently interacting.
+        if (interactingWith.isPresent()) {
+            interact(null);
+        }
+    }
+
+    /**
      * Displays a primary hitsplat.
+     *
+     * @param hit The hit to display.
      */
     private void primaryHit(Hit hit) {
         primaryHit = Optional.of(hit);
@@ -250,6 +348,8 @@ public abstract class Mob extends Entity {
 
     /**
      * Displays a secondary hitsplat.
+     *
+     * @param hit The hit to display.
      */
     private void secondaryHit(Hit hit) {
         secondaryHit = Optional.of(hit);
@@ -264,7 +364,9 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Sets the value for {@link #index}.
+     * Sets the value for {@link #index}. Should only be set by the {@link MobList}.
+     *
+     * @param index The index to set.
      */
     public final void setIndex(int index) {
         if (index != -1) {
@@ -280,9 +382,9 @@ public abstract class Mob extends Entity {
         reset();
         teleporting = false;
         animation = Optional.empty();
-        forceChat = Optional.empty();
+        forcedChat = Optional.empty();
         facePosition = Optional.empty();
-        interactionIndex = OptionalInt.empty();
+        interactionIndex = Optional.empty();
         primaryHit = Optional.empty();
         secondaryHit = Optional.empty();
         updateFlags.clear();
@@ -290,6 +392,9 @@ public abstract class Mob extends Entity {
 
     /**
      * Retrieves the skill with {@code id}.
+     *
+     * @param id The identifier.
+     * @return The skill.
      */
     public Skill skill(int id) {
         return skillSet.getSkill(id);
@@ -318,6 +423,8 @@ public abstract class Mob extends Entity {
 
     /**
      * Sets the value for {@link #walkingDirection}.
+     *
+     * @param walkingDirection The new walking direction.
      */
     public final void setWalkingDirection(Direction walkingDirection) {
         this.walkingDirection = walkingDirection;
@@ -332,6 +439,8 @@ public abstract class Mob extends Entity {
 
     /**
      * Sets the value for {@link #runningDirection}.
+     *
+     * @param runningDirection The new running direction.
      */
     public void setRunningDirection(Direction runningDirection) {
         this.runningDirection = runningDirection;
@@ -361,8 +470,8 @@ public abstract class Mob extends Entity {
     /**
      * @return The current message being forced.
      */
-    public final Optional<String> getForceChat() {
-        return forceChat;
+    public final Optional<String> getForcedChat() {
+        return forcedChat;
     }
 
     /**
@@ -375,7 +484,7 @@ public abstract class Mob extends Entity {
     /**
      * @return The current interaction index.
      */
-    public final OptionalInt getInteractionIndex() {
+    public final Optional<Integer> getInteractionIndex() {
         return interactionIndex;
     }
 
@@ -396,28 +505,28 @@ public abstract class Mob extends Entity {
     /**
      * @return The walking queue.
      */
-    public WalkingQueue getWalkingQueue() {
+    public final WalkingQueue getWalkingQueue() {
         return walkingQueue;
     }
 
     /**
      * @return The skill set.
      */
-    public SkillSet getSkills() {
+    public final SkillSet getSkills() {
         return skillSet;
-    }
-
-    /**
-     * Returns the combat level.
-     */
-    public int getCombatLevel() {
-        return skillSet.getCombatLevel();
     }
 
     /**
      * @return The entity being interacted with.
      */
-    public Optional<Entity> getInteractingWith() {
+    public final Optional<Entity> getInteractingWith() {
         return interactingWith;
+    }
+
+    /**
+     * @return The transformation identifier.
+     */
+    public Optional<Integer> getTransformId() {
+        return transformId;
     }
 }

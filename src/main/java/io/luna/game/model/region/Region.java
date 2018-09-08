@@ -19,6 +19,9 @@ import java.util.function.Consumer;
  */
 public final class Region {
 
+    // TODO Only create the concurrent sets as needed, to save memory.
+    // TODO Might be better to declare four separate sets instead of trying to combine them in a map (RegionSet?)
+
     /**
      * The region coordinates.
      */
@@ -31,8 +34,10 @@ public final class Region {
 
     { // Initializes the repository by creating concurrent sets for each entity type.
         Map<EntityType, Set<Entity>> mutableEntities = new EnumMap<>(EntityType.class);
-        EntityType.VALUES.forEach(type ->
-                mutableEntities.put(type, Sets.newConcurrentHashSet()));
+
+        for(EntityType type : EntityType.ALL) {
+            mutableEntities.put(type, Sets.newConcurrentHashSet());
+        }
         entities = Maps.immutableEnumMap(mutableEntities);
     }
 
@@ -120,8 +125,6 @@ public final class Region {
      * be thrown.
      */
     public <E extends Entity> Set<E> getAll(EntityType type) {
-        /* Bad, but at least we know it'll be type safe since the
-        backing map is never exposed. */
         //noinspection unchecked
         return (Set<E>) entities.get(type);
     }

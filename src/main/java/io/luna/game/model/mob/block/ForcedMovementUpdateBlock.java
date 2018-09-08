@@ -1,38 +1,39 @@
-package io.luna.game.model.mob.update;
+package io.luna.game.model.mob.block;
 
 import io.luna.game.model.mob.ForcedMovement;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 
 /**
- * A {@link PlayerUpdateBlock} implementation for the {@code FORCE_MOVEMENT} update block.
+ * An {@link UpdateBlock} implementation for the {@code FORCED_MOVEMENT} update block.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PlayerForceMovementUpdateBlock extends PlayerUpdateBlock {
+public final class ForcedMovementUpdateBlock extends UpdateBlock {
 
     /**
-     * Creates a new {@link PlayerForceMovementUpdateBlock}.
+     * Creates a new {@link ForcedMovementUpdateBlock}.
      */
-    public PlayerForceMovementUpdateBlock() {
-        super(0x100, UpdateFlag.FORCE_MOVEMENT);
+    public ForcedMovementUpdateBlock() {
+        super(UpdateFlag.FORCED_MOVEMENT);
     }
 
     @Override
-    public void write(Player mob, ByteMessage msg) {
-        ForcedMovement movement = mob.getForcedMovement().get();
-
+    public void encodeForPlayer(Player player, ByteMessage msg) {
+        ForcedMovement movement = unwrap(player.getForcedMovement());
         msg.put(movement.getStartPosition().getX(), ByteTransform.A);
         msg.put(movement.getStartPosition().getY(), ByteTransform.C);
-
         msg.put(movement.getEndPosition().getX(), ByteTransform.S);
         msg.put(movement.getEndPosition().getY());
-
         msg.putShort(movement.getDurationX());
         msg.putShort(movement.getDurationY(), ByteTransform.A);
-
         msg.put(movement.getDirection().getId());
+    }
+
+    @Override
+    public int getPlayerMask() {
+        return 256;
     }
 }

@@ -7,11 +7,9 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
-import io.luna.game.model.mob.update.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
-import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * A model representing a non-player-controlled mob.
@@ -21,7 +19,7 @@ import java.util.OptionalInt;
 public final class Npc extends Mob {
 
     /**
-     * The identifier.
+     * The base identifier. The one the class was created with.
      */
     private final int id;
 
@@ -38,12 +36,7 @@ public final class Npc extends Mob {
     /**
      * The transformation identifier.
      */
-    private OptionalInt transformId = OptionalInt.empty();
-
-    /**
-     * The current hitpoint level.
-     */
-    private int currentHp;
+    private Optional<Integer> transformId = Optional.empty();
 
     /**
      * Creates a new {@link Npc}.
@@ -54,56 +47,27 @@ public final class Npc extends Mob {
      */
     public Npc(LunaContext context, int id, Position position) {
         super(context, EntityType.NPC);
-        this.id = id;
+        this.id = id; // Base identifier, for resetting transformations.
 
-        /* Set definition values. */
-        definition = NpcDefinition.get(id);
-        combatDefinition = Optional.ofNullable(NpcCombatDefinition.get(id));
+        // Set definition values.
+        definition = NpcDefinition.DEFINITIONS.retrieve(id);
+        combatDefinition = NpcCombatDefinition.DEFINITIONS.get(id);
 
-        combatDefinition.ifPresent(def -> {
-            /* Set the current hitpoint level. */
-            currentHp = def.getHitpoints();
+        // Set skill levels.
+        setSkills();
 
-            /* Set the attack, strength, defence, ranged, and magic levels. */
-            ImmutableList<Integer> skills = def.getSkills();
-            Skill attack = skill(Skill.ATTACK);
-            Skill strength = skill(Skill.STRENGTH);
-            Skill defence = skill(Skill.DEFENCE);
-            Skill ranged = skill(Skill.RANGED);
-            Skill magic = skill(Skill.MAGIC);
-
-            attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
-            strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
-            defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
-            ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
-            magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
-        });
-
-        /* Set the position. */
+        // Set position.
         setPosition(position);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(getIndex());
-    }
-
-    @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).add("name", definition.getName()).toString();
+        return MoreObjects.toStringHelper(this).
+                add("index", getIndex()).
+                add("name", definition.getName()).
+                add("id", getId()).toString();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof Npc) {
-            Npc other = (Npc) obj;
-            return getIndex() == other.getIndex();
-        }
-        return false;
-    }
 
     @Override
     public int size() {
@@ -112,7 +76,7 @@ public final class Npc extends Mob {
 
     @Override
     public void reset() {
-        transformId = OptionalInt.empty();
+        transformId = Optional.empty();
     }
 
     @Override
@@ -120,20 +84,53 @@ public final class Npc extends Mob {
         return combatDefinition.map(NpcCombatDefinition::getLevel).orElse(0);
     }
 
-    /**
-     * Transforms this npc into an npc with {@code id}.
-     */
+    @Override
+    public int getTotalHealth() {
+        return combatDefinition.map(NpcCombatDefinition::getHitpoints).orElse(0);
+    }
+
+    @Override
     public void transform(int id) {
-        transformId = OptionalInt.of(id);
-        definition = NpcDefinition.get(id);
+        definition = NpcDefinition.DEFINITIONS.retrieve(id);
+        combatDefinition = NpcCombatDefinition.DEFINITIONS.get(id);
+        transformId = Optional.of(id);
+        setSkills();
         updateFlags.flag(UpdateFlag.TRANSFORM);
+    }
+
+    @Override
+    public void resetTransform() {
+        transform(id);
+    }
+
+    /**
+     * Sets all the combat skill levels.
+     */
+    private void setSkills() {
+        // Set the attack, strength, defence, ranged, and magic levels.
+        combatDefinition.ifPresent(def -> {
+            ImmutableList<Integer> skills = def.getSkills();
+            Skill attack = skill(Skill.ATTACK);
+            Skill strength = skill(Skill.STRENGTH);
+            Skill defence = skill(Skill.DEFENCE);
+            Skill ranged = skill(Skill.RANGED);
+            Skill magic = skill(Skill.MAGIC);
+            Skill hitpoints = skill(Skill.HITPOINTS);
+
+            attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
+            strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
+            defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
+            ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
+            magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+            hitpoints.setLevel(def.getHitpoints());
+        });
     }
 
     /**
      * @return The identifier.
      */
     public int getId() {
-        return id;
+        return definition.getId();
     }
 
     /**
@@ -150,24 +147,4 @@ public final class Npc extends Mob {
         return combatDefinition;
     }
 
-    /**
-     * @return The transformation identifier.
-     */
-    public OptionalInt getTransformId() {
-        return transformId;
-    }
-
-    /**
-     * @return The current hitpoint level.
-     */
-    public int getCurrentHp() {
-        return currentHp;
-    }
-
-    /**
-     * Sets the current hitpoint level.
-     */
-    public void setCurrentHp(int currentHp) {
-        this.currentHp = currentHp;
-    }
 }
