@@ -1,15 +1,24 @@
 package io.luna.game.task;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing a cyclic unit of work.
+ * A model representing a cyclic unit of work carried out strictly on the game thread.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class Task {
+
+    /**
+     * The asynchronous logger.
+     */
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * If execution happens instantly upon being scheduled.
@@ -22,12 +31,12 @@ public abstract class Task {
     private int delay;
 
     /**
-     * If registration has taken place.
+     * If this task is running.
      */
     private boolean running = true;
 
     /**
-     * A counter that determines when execution should take place.
+     * An execution counter.
      */
     private int counter;
 
@@ -65,6 +74,8 @@ public abstract class Task {
 
     /**
      * Determines if execution should take place.
+     *
+     * @return {@code true} if this task executes on this tick.
      */
     final boolean canExecute() {
         if (++counter >= delay && running) {
@@ -72,6 +83,17 @@ public abstract class Task {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Runs this task once. This should only be called by the {@link TaskManager}.
+     */
+    final void runTask() {
+        try {
+            execute();
+        } catch (Exception e) {
+            onException(e);
+        }
     }
 
     /**
@@ -85,7 +107,7 @@ public abstract class Task {
     }
 
     /**
-     * A function executed when iterated over.
+     * A function executed when this task is iterated over.
      */
     protected void onLoop() {
 
@@ -106,16 +128,22 @@ public abstract class Task {
     }
 
     /**
-     * A function executed on thrown exceptions.
+     * A function executed on thrown exceptions. The default behaviour is to log the exception.
+     *
+     * @param failure The exception that was thrown.
      */
-    protected void onException(Exception e) {
-
+    protected void onException(Exception failure) {
+        LOGGER.error(failure);
     }
 
     /**
      * Attaches a new key.
+     *
+     * @param newKey The key to attach.
+     * @return This task instance, for chaining.
      */
     public Task attach(Object newKey) {
+        checkState(!key.isPresent(), "Task already has an attachment.");
         key = Optional.ofNullable(newKey);
         return this;
     }
@@ -136,13 +164,15 @@ public abstract class Task {
 
     /**
      * Sets the cyclic delay.
+     *
+     * @param delay The new value to set.
      */
     public void setDelay(int delay) {
         this.delay = delay;
     }
 
     /**
-     * @return {@code true} if registration has taken place.
+     * @return {@code true} if this task is running.
      */
     public boolean isRunning() {
         return running;

@@ -1,8 +1,5 @@
 package io.luna.game.task;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,74 +15,70 @@ import java.util.Queue;
 public final class TaskManager {
 
     /**
-     * The asynchronous logger.
-     */
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    /**
      * A list of tasks awaiting execution.
      */
-    private final List<Task> awaitingExecution = new LinkedList<>();
+    private final List<Task> awaitingList = new LinkedList<>();
 
     /**
      * A queue of tasks ready to be executed.
      */
-    private final Queue<Task> executionQueue = new ArrayDeque<>();
+    private final Queue<Task> readyQueue = new ArrayDeque<>();
 
     /**
      * Schedules a new task to be ran.
+     *
+     * @param t The task to schedule.
      */
     public void schedule(Task t) {
         t.onSchedule();
         if (t.isInstant()) {
-            try {
-                t.execute();
-            } catch (Exception e) {
-                t.onException(e);
-                LOGGER.catching(e);
-            }
+            t.runTask();
         }
-        awaitingExecution.add(t);
+        awaitingList.add(t);
     }
 
     /**
      * A function that runs an iteration of task processing.
      */
     public void runTaskIteration() {
-        Iterator<Task> iterator = awaitingExecution.iterator();
+
+        // Run through all tasks awaiting execution.
+        Iterator<Task> iterator = awaitingList.iterator();
         while (iterator.hasNext()) {
             Task it = iterator.next();
 
+            // Remove task if it was cancelled.
             if (!it.isRunning()) {
                 iterator.remove();
                 continue;
             }
+
             it.onLoop();
+
+            /* If it's ready to execute, add to execution queue. We pass task to different collection
+            to avoid ConcurrentModificationException when tasks are scheduled within tasks.  */
             if (it.canExecute()) {
-                executionQueue.add(it);
+                readyQueue.add(it);
             }
         }
 
+        // Poll execution queue and run all tasks.
         for (; ; ) {
-            Task it = executionQueue.poll();
+            Task it = readyQueue.poll();
             if (it == null) {
                 break;
             }
-
-            try {
-                it.execute();
-            } catch (Exception e) {
-                it.onException(e);
-                LOGGER.catching(e);
-            }
+            it.runTask();
         }
     }
 
     /**
      * Cancels active tasks with the argued attachment.
+     *
+     * @param attachment The attachment to cancel tasks with.
      */
     public void cancel(Object attachment) {
-        awaitingExecution.stream().filter(it -> Objects.equals(attachment, it.getAttachment().orElse(null)))
-            .forEach(Task::cancel);
+        awaitingList.stream().filter(it -> Objects.equals(attachment, it.getAttachment().orElse(null)))
+                .forEach(Task::cancel);
     }
 }
