@@ -40,9 +40,17 @@ import java.util.stream.Collectors;
  */
 public final class PluginBootstrap {
 
-    // TODO Script exception from Scala is useless, line number is (46?) lines off.
-
+    /**
+     * A {@link RuntimeException} implementation thrown when a script file cannot be loaded.
+     */
     private final class LoadScriptException extends RuntimeException {
+
+        /**
+         * Creates a new {@link LoadScriptException}.
+         *
+         * @param name The script name.
+         * @param e The reason for failure.
+         */
         public LoadScriptException(String name, IOException e) {
             super("Failed to read script " + name + ", its parent plugin will not be loaded.", e);
         }
@@ -115,6 +123,8 @@ public final class PluginBootstrap {
 
         /**
          * Loads the file with {@code fileName} into the backing map.
+         *
+         * @param fileName The file to load.
          */
         private void loadFileContents(String fileName) {
             try {
@@ -172,6 +182,9 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
+     * @throws ScriptException    If a script throws an error during evaluation.
+     * @throws IOException        If an I/O error occurs.
+     * @throws ExecutionException If the file loading executor fails to complete.
      */
     public P2<Integer, Integer> init(boolean displayGui) throws ScriptException,
             IOException, ExecutionException {
@@ -187,6 +200,8 @@ public final class PluginBootstrap {
 
     /**
      * Concurrently parses files in the plugin directory and caches their contents.
+     *
+     * @throws ExecutionException If the file loading executor fails to complete.
      */
     private void initFiles() throws ExecutionException {
         AsyncExecutor executor = AsyncExecutor.newSingletonExecutor(ThreadUtils.getCpuAmount());
@@ -197,13 +212,13 @@ public final class PluginBootstrap {
             if (Files.isDirectory(dir)) {
                 Path pluginMetadata = dir.resolve("plugin.toml");
                 if (Files.exists(pluginMetadata)) {
-                    // Submit -- but do not execute file tasks.
+                    // Submit file tasks.
                     executor.execute(new PluginLoader(dir, pluginMetadata));
                 }
             }
         }
 
-        // Run file tasks and await completion.
+        // Await completion.
         executor.await();
     }
 
@@ -213,6 +228,9 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
+     * @throws ScriptException    If a script throws an error during evaluation.
+     * @throws IOException        If an I/O error occurs.
+     * @throws ExecutionException If the GUI loading fails to complete.
      */
     private P2<Integer, Integer> initPlugins(boolean displayGui) throws ScriptException, IOException,
             ExecutionException {
@@ -250,6 +268,9 @@ public final class PluginBootstrap {
 
     /**
      * Evaluates a single plugin directory.
+     *
+     * @param plugin The plugin to load.
+     * @throws ScriptException If a script throws an error during evaluation.
      */
     private void loadPlugin(Plugin plugin) throws ScriptException {
         Map<String, String> pluginFiles = plugin.getFiles();
@@ -260,6 +281,8 @@ public final class PluginBootstrap {
 
     /**
      * Creates a new {@code Scala} script engine.
+     *
+     * @return The script engine.
      */
     private ScriptEngine createScriptEngine() {
         ClassLoader loader = ClassLoader.getSystemClassLoader();

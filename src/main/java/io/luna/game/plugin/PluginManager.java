@@ -5,13 +5,6 @@ import io.luna.game.event.Event;
 import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.event.EventListenerPipelineSet;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * A model that acts as a bridge between interpreted Scala code and compiled Java code.
  *
@@ -40,6 +33,8 @@ public final class PluginManager {
 
     /**
      * Traverses the event across its designated pipeline.
+     *
+     * @param msg The event to post.
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void post(Event msg) {

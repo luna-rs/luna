@@ -1,7 +1,7 @@
 [metadata]
 name = "Banking"
 description = "Handles input related to banking."
-hidden = true
+version = "1.0"
 dependencies = [ ]
 authors = [
   "lare96"

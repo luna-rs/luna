@@ -1,7 +1,7 @@
 [metadata]
 name = "Commands"
 description = "Handles command input for all players."
-hidden = true
+version = "1.0"
 dependencies = [ ]
 authors = [
   "lare96"

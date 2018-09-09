@@ -53,12 +53,6 @@ final class PluginGuiController {
     private TextArea descriptionArea;
 
     /**
-     * The show hidden menu item.
-     */
-    @FXML
-    private CheckMenuItem showHidden;
-
-    /**
      * The dark theme menu item.
      */
     @FXML
@@ -98,12 +92,7 @@ final class PluginGuiController {
         pluginTree.setCellFactory(cellFactory);
 
         // And add plugins to the tree.
-        gui.getPluginItems().forEach((k, v) -> {
-            if (!v.getMetadata().isHidden() ||
-                    gui.getSettings().isShowHidden()) {
-                rootItem.getChildren().add(v);
-            }
-        });
+        gui.getPluginItems().forEach((k, v) -> rootItem.getChildren().add(v));
 
         // Set the new root.
         pluginTree.setRoot(rootItem);
@@ -136,13 +125,6 @@ final class PluginGuiController {
      */
     TextArea getDescriptionArea() {
         return descriptionArea;
-    }
-
-    /**
-     * @return The show hidden menu item.
-     */
-    CheckMenuItem getShowHidden() {
-        return showHidden;
     }
 
     /**
@@ -218,16 +200,6 @@ final class PluginGuiController {
     private void onExport(ActionEvent evt) {
         gui.getFileManager().saveFile(file ->
                 gui.getSettings().save(file.toPath()));
-    }
-
-    /**
-     * Called when the "Show hidden" menu item is clicked.
-     */
-    @FXML
-    private void onShowHidden(ActionEvent evt) {
-        CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
-        gui.getSettings().setShowHidden(menuItem.isSelected());
-        buildPluginViewer();
     }
 
     /**

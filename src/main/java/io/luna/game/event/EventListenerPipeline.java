@@ -70,7 +70,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
             }
         } catch (PluginExecutionException e) {
             terminate();
-            LOGGER.warn(e);
+            LOGGER.error(e);
         } finally {
             msg.pipeline(null);
         }

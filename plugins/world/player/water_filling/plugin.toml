@@ -1,7 +1,7 @@
 [metadata]
 name = "Water filling"
 description = "Adds functionality for filling items with water."
-hidden = false
+version = "1.0"
 dependencies = [ ]
 authors = [
   "lare96"

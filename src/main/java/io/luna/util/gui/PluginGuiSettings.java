@@ -37,11 +37,6 @@ final class PluginGuiSettings {
     private boolean darkMode;
 
     /**
-     * If the GUI should show hidden plugins.
-     */
-    private boolean showHidden;
-
-    /**
      * If the GUI should save settings on exit.
      */
     private boolean saveOnExit;
@@ -65,7 +60,6 @@ final class PluginGuiSettings {
      */
     String toToml() {
         Map<String, Object> settings = new LinkedHashMap<>();
-        settings.put("show_hidden", showHidden);
         settings.put("dark_mode", darkMode);
         settings.put("save_on_exit", saveOnExit);
         settings.put("selected", selected.toArray());
@@ -124,9 +118,6 @@ final class PluginGuiSettings {
             scene.getStylesheets().remove("dark_theme.css");
         }
 
-        // Apply show hidden setting.
-        controller.getShowHidden().setSelected(showHidden);
-
         // Apply save on exit setting.
         controller.getSaveOnExit().setSelected(saveOnExit);
 
@@ -154,7 +145,6 @@ final class PluginGuiSettings {
      */
     void set(JsonObject settings) {
         darkMode = settings.get("dark_mode").getAsBoolean();
-        showHidden = settings.get("show_hidden").getAsBoolean();
         saveOnExit = settings.get("save_on_exit").getAsBoolean();
         settings.getAsJsonArray("selected").
                 forEach(e -> selected.add(e.getAsString()));
@@ -172,20 +162,6 @@ final class PluginGuiSettings {
      */
     boolean isDarkMode() {
         return darkMode;
-    }
-
-    /**
-     * Sets if the GUI should show hidden plugins.
-     */
-    void setShowHidden(boolean showHidden) {
-        this.showHidden = showHidden;
-    }
-
-    /**
-     * @return If the GUI should show hidden plugins.
-     */
-    boolean isShowHidden() {
-        return showHidden;
     }
 
     /**

@@ -1,7 +1,7 @@
 [metadata]
 name = "Announcements"
 description = "Sends server-wide announcements at specified intervals."
-hidden = false
+version = "1.0"
 dependencies = [ ]
 authors = [
   "lare96"

@@ -1,5 +1,9 @@
 package io.luna.game.plugin;
 
+import java.util.regex.Pattern;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * A class representing data that describes a single plugin.
  *
@@ -7,7 +11,10 @@ package io.luna.game.plugin;
  */
 public final class PluginMetadata {
 
-    // TODO Replace "hidden" with "version" value.
+    /**
+     * A regex pattern that validates the version string.
+     */
+    private static final Pattern VERSION = Pattern.compile("(?!\\.)(\\d+(\\.\\d+)+)(?![\\d.])$");
 
     /**
      * The name.
@@ -20,9 +27,9 @@ public final class PluginMetadata {
     private final String description;
 
     /**
-     * If displayed on the Plugin GUI.
+     * The version.
      */
-    private final boolean hidden;
+    private final String version;
 
     /**
      * The scripts to run first.
@@ -39,14 +46,15 @@ public final class PluginMetadata {
      *
      * @param name The name.
      * @param description The description.
-     * @param hidden If displayed on the Plugin GUI.
+     * @param version The version.
      * @param dependencies The scripts to run first.
      * @param authors The authors.
      */
-    public PluginMetadata(String name, String description, boolean hidden, String[] dependencies, String[] authors) {
+    public PluginMetadata(String name, String description, String version, String[] dependencies, String[] authors) {
+        checkArgument(VERSION.matcher(version).matches(), "Invalid version for plugin ["+ name+"].");
         this.name = name;
         this.description = description;
-        this.hidden = hidden;
+        this.version = version;
         this.dependencies = dependencies;
         this.authors = authors;
     }
@@ -66,10 +74,10 @@ public final class PluginMetadata {
     }
 
     /**
-     * @return If displayed on the Plugin GUI.
+     * @return The version.
      */
-    public boolean isHidden() {
-        return hidden;
+    public String getVersion() {
+        return version;
     }
 
     /**

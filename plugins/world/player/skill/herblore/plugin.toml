@@ -1,7 +1,7 @@
 [metadata]
 name = "Herblore"
 description = "Adds functionality for the Herblore skill."
-hidden = false
+version = "1.0"
 dependencies = [ ]
 authors = [
   "lare96"

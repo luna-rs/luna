@@ -32,8 +32,6 @@
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <CheckMenuItem fx:id="darkTheme" mnemonicParsing="false" onAction="#onDarkTheme" text="Dark theme" />
                         <SeparatorMenuItem mnemonicParsing="false" />
-                        <CheckMenuItem fx:id="showHidden" mnemonicParsing="false" onAction="#onShowHidden" text="Show hidden" />
-                        <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
                     </items>
                 </Menu>

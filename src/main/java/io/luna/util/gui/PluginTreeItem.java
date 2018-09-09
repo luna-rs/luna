@@ -47,6 +47,7 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
                 append(t).append(": ").append(u).append("\n\n");
 
         appendData.accept("Name", metadata.getName());
+        appendData.accept("Version", metadata.getVersion());
         appendData.accept("Description", metadata.getDescription());
 
         String dependencies = COMMA_JOINER.join(metadata.getDependencies());
