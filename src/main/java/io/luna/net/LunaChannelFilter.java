@@ -4,10 +4,8 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
-import io.luna.LunaConstants;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
-import io.luna.util.parser.NewLineParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -20,6 +18,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
+import static io.luna.LunaConstants.CONNECTION_LIMIT;
+
 /**
  * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active
  * connections they already have and whether or not they are blacklisted. A threshold is put on the amount of
@@ -30,25 +30,8 @@ import java.util.Set;
  *
  * @author lare96 <http://github.org/lare96>
  */
-@Sharable public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSocketAddress> {
-
-    /**
-     * A {@link NewLineParser} implementation that parses blacklisted addresses.
-     */
-    private final class BlacklistParser extends NewLineParser {
-
-        /**
-         * Creates a new {@link BlacklistParser}.
-         */
-        public BlacklistParser() {
-            super("./data/punishment/blacklist.txt");
-        }
-
-        @Override
-        public void readNextLine(String nextLine) throws Exception {
-            blacklist.add(nextLine);
-        }
-    }
+@Sharable
+public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSocketAddress> {
 
     /**
      * An immutable set containing whitelisted (filter bypassing) addresses.
@@ -61,7 +44,7 @@ import java.util.Set;
     private static final AttributeKey<LoginResponse> RESPONSE_KEY = AttributeKey.valueOf("channel.RESPONSE_KEY");
 
     /**
-     * A concurrent multiset containing active connections.
+     * A concurrent multiset containing active connection counts.
      */
     private final Multiset<String> connections = ConcurrentHashMultiset.create();
 
@@ -70,25 +53,22 @@ import java.util.Set;
      */
     private final Set<String> blacklist = Sets.newConcurrentHashSet();
 
-    { /* Initialize blacklisted addresses. */
-        NewLineParser parser = new BlacklistParser();
-        parser.run();
-    }
-
     @Override
     protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
-        String address = address(remoteAddress);
+        String address = ipAddress(remoteAddress);
 
-        if (WHITELIST.contains(address)) { // Bypass filter for whitelisted addresses.
+        if (WHITELIST.contains(address)) {
+
+            // Bypass filter for whitelisted addresses.
             return true;
-        }
+        } else if (connections.count(address) >= CONNECTION_LIMIT) {
 
-        int limit = LunaConstants.CONNECTION_LIMIT;
-        if (connections.count(address) >= limit) { // Reject if more than CONNECTION_LIMIT active connections.
+            // Reject if more than CONNECTION_LIMIT active connections.
             response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return false;
-        }
-        if (blacklist.contains(address)) { // Reject if blacklisted.
+        } else if (blacklist.contains(address)) {
+
+            // Reject if blacklisted (IP banned).
             response(ctx, LoginResponse.ACCOUNT_BANNED);
             return false;
         }
@@ -97,39 +77,58 @@ import java.util.Set;
 
     @Override
     protected void channelAccepted(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
-        String address = address(remoteAddress);
+        String address = ipAddress(remoteAddress);
 
-        ChannelFuture future = ctx.channel().closeFuture(); // Remove address once disconnected.
-        future.addListener(it -> connections.remove(address));
-
+        // Increment connection count by 1.
         connections.add(address);
+
+        // Remove address once disconnected.
+        ChannelFuture future = ctx.channel().closeFuture();
+        future.addListener(it -> connections.remove(address));
     }
 
     @Override
     protected ChannelFuture channelRejected(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
         Channel channel = ctx.channel();
 
-        LoginResponse response = channel.attr(RESPONSE_KEY).get(); // Retrieve the response message.
+        // Retrieve the response message.
+        LoginResponse response = channel.attr(RESPONSE_KEY).get();
         LoginResponseMessage message = new LoginResponseMessage(response);
 
-        ByteBuf initialMessage = ctx.alloc().buffer(8).writeLong(0); // Write initial message.
+        // Write initial message.
+        ByteBuf initialMessage = ctx.alloc().buffer(8).writeLong(0);
         channel.write(initialMessage, channel.voidPromise());
-        return channel.writeAndFlush(message); // Write response message.
+
+        // Write response message.
+        return channel.writeAndFlush(message);
     }
 
     /**
-     * Retrieves the host address name.
+     * Retrieves the IP address.
+     *
+     * @param remoteAddress The socket address.
+     * @return The IP address.
      */
-    private String address(InetSocketAddress remoteAddress) {
+    private String ipAddress(InetSocketAddress remoteAddress) {
         InetAddress inet = remoteAddress.getAddress();
         return inet.getHostAddress();
     }
 
     /**
      * Sets the {@code RESPONSE_KEY} attribute to the argued response.
+     *
+     * @param ctx The context containing the channel.
+     * @param response The login response to set.
      */
     private void response(ChannelHandlerContext ctx, LoginResponse response) {
         Channel channel = ctx.channel();
         channel.attr(RESPONSE_KEY).set(response);
+    }
+
+    /**
+     * @return A concurrent set containing blacklisted addresses.
+     */
+    public Set<String> getBlacklist() {
+        return blacklist;
     }
 }
