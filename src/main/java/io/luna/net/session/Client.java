@@ -68,9 +68,7 @@ public abstract class Client<I> {
 
     @Override
     public final String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("ip", ipAddress).
-                add("type", getClass().getSimpleName()).toString();
+        return MoreObjects.toStringHelper(this).add("ip", ipAddress).toString();
     }
 
     /**

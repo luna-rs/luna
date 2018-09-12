@@ -73,7 +73,7 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            MessageReader handler = repository.getHandler(msg.getOpcode());
+            MessageReader handler = repository.getReader(msg.getOpcode());
             handler.handleInboundMessage(player, msg);
         }
     }
