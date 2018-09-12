@@ -37,6 +37,7 @@ public abstract class Parser<T1, T2> implements Runnable {
      *
      * @param paths A list of files to parse.
      */
+    // TODO do this in abstract method
     public Parser(String... paths) {
         parseFiles = Arrays.stream(paths).map(Paths::get).collect(Collectors.toList());
     }

@@ -6,9 +6,11 @@ import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
+import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.MessageRepository;
 import io.luna.util.AsyncExecutor;
+import io.luna.util.parser.impl.BlacklistParser;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
 import io.luna.util.parser.impl.MessageRepositoryParser;
@@ -51,9 +53,14 @@ public final class LunaServer {
             AsyncExecutor.newSingletonExecutor(getCpuAmount(), nameThreadFactory("LunaInitializationThread"));
 
     /**
-     * A luna context instance.
+     * A Luna context instance.
      */
     private final LunaContext context = new LunaContext();
+
+    /**
+     * A channel handler that will filter channels.
+     */
+    private final LunaChannelFilter channelFilter = new LunaChannelFilter();
 
     /**
      * A message repository.
@@ -100,7 +107,7 @@ public final class LunaServer {
 
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
-        bootstrap.childHandler(new LunaChannelInitializer(context, messageRepository));
+        bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
         bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
     }
 
@@ -140,6 +147,7 @@ public final class LunaServer {
         executor.execute(new NpcCombatDefinitionParser());
         executor.execute(new NpcDefinitionParser());
         executor.execute(new ObjectDefinitionParser());
+        executor.execute(new BlacklistParser(channelFilter));
 
         int count = executor.size();
         LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));

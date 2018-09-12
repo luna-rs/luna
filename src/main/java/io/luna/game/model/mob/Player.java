@@ -26,7 +26,7 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
-import io.luna.net.session.GameSession;
+import io.luna.net.session.GameClient;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -145,8 +145,6 @@ public final class Player extends Mob {
      */
     private final PlayerCredentials credentials;
 
-
-
     /**
      * The inventory.
      */
@@ -180,9 +178,9 @@ public final class Player extends Mob {
     private PlayerRights rights = PlayerRights.PLAYER;
 
     /**
-     * The game session.
+     * The game client.
      */
-    private GameSession session;
+    private GameClient client;
 
     /**
      * The last known region.
@@ -239,8 +237,6 @@ public final class Player extends Mob {
         super(context, EntityType.PLAYER);
         this.credentials = credentials;
         serializer = new PlayerSerializer(this);
-
-
     }
 
     @Override
@@ -303,6 +299,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);
@@ -391,7 +388,7 @@ public final class Player extends Mob {
      * Disconnects this player.
      */
     public void logout() {
-        Channel channel = session.getChannel();
+        Channel channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
         }
@@ -418,12 +415,12 @@ public final class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameSession#queue(MessageWriter)}.
+     * A shortcut function to {@link GameClient#queue(MessageWriter)}.
      *
      * @param msg The message to queue in the buffer.
      */
     public void queue(MessageWriter msg) {
-        session.queue(msg);
+        client.queue(msg);
     }
 
     /**
@@ -618,20 +615,20 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return The game session.
+     * @return The game client.
      */
-    public GameSession getSession() {
-        return session;
+    public GameClient getClient() {
+        return client;
     }
 
     /**
-     * Sets the game session.
+     * Sets the game client.
      *
-     * @param session The value to set to.
+     * @param newClient The value to set to.
      */
-    public void setSession(GameSession session) {
-        checkState(this.session == null, "session already set!");
-        this.session = session;
+    public void setClient(GameClient newClient) {
+        checkState(client == null, "GameClient can only be set once.");
+        client = newClient;
     }
 
     /**

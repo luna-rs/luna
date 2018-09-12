@@ -41,7 +41,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     /**
      * An attribute describing the login response for rejected channels.
      */
-    private static final AttributeKey<LoginResponse> RESPONSE_KEY = AttributeKey.valueOf("channel.RESPONSE_KEY");
+    private static final AttributeKey<LoginResponse> KEY = AttributeKey.valueOf("LunaChannelFilter.KEY");
 
     /**
      * A concurrent multiset containing active connection counts.
@@ -92,7 +92,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         Channel channel = ctx.channel();
 
         // Retrieve the response message.
-        LoginResponse response = channel.attr(RESPONSE_KEY).get();
+        LoginResponse response = channel.attr(KEY).get();
         LoginResponseMessage message = new LoginResponseMessage(response);
 
         // Write initial message.
@@ -122,7 +122,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      */
     private void response(ChannelHandlerContext ctx, LoginResponse response) {
         Channel channel = ctx.channel();
-        channel.attr(RESPONSE_KEY).set(response);
+        channel.attr(KEY).set(response);
     }
 
     /**

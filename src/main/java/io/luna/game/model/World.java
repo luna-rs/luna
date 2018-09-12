@@ -209,7 +209,7 @@ public final class World {
             try {
                 player.getWalkingQueue().process();
                 player.sendRegionUpdate();
-                player.getSession().dequeueIncomingPackets();
+                player.getClient().handleDecodedMessages();
             } catch (Exception e) {
                 player.logout();
                 LOGGER.warn(player + " could not complete pre-synchronization.", e);
@@ -244,7 +244,7 @@ public final class World {
     private void postSynchronize() {
         for (Player player : playerList) {
             try {
-                player.getSession().flush();
+                player.getClient().flush();
                 player.resetFlags();
                 player.setCachedBlock(null);
             } catch (Exception e) {

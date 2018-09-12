@@ -5,6 +5,7 @@ import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;
 import io.luna.net.msg.MessageRepository;
 import io.luna.net.session.Client;
+import io.luna.net.session.IdleClient;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
@@ -46,20 +47,26 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     private final ChannelHandler loginDecoder;
 
     /**
+     * The message repository.
+     */
+    private final MessageRepository msgRepository;
+
+    /**
      * Creates a new {@link LunaChannelInitializer}.
      *
      * @param context The context instance.
      * @param channelFilter A channel handler that will filter channels.
-     * @param messages The message repository.
+     * @param msgRepository The message repository.
      */
-    public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter, MessageRepository messages) {
+    public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter, MessageRepository msgRepository) {
         this.channelFilter = channelFilter;
-        loginDecoder = new LoginDecoder(context, messages);
+        this.msgRepository = msgRepository;
+        loginDecoder = new LoginDecoder(context, msgRepository);
     }
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
-        ch.attr(Client.KEY).setIfAbsent(new Client(ch));
+        ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
 
         ch.pipeline().addLast("read-timeout", readTimeout);
         ch.pipeline().addLast("channel-filter", channelFilter);

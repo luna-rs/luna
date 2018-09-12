@@ -4,8 +4,8 @@ import io.luna.LunaContext;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.msg.MessageRepository;
-import io.luna.net.session.LoginSession;
-import io.luna.net.session.Session;
+import io.luna.net.session.Client;
+import io.luna.net.session.LoginClient;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -19,7 +19,6 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkState;
 import static io.luna.LunaConstants.RSA_EXPONENT;
 import static io.luna.LunaConstants.RSA_MODULUS;
-import static io.luna.net.LunaNetworkConstants.SESSION_KEY;
 
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes the login protocol.
@@ -67,20 +66,20 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         switch (state) {
-        case HANDSHAKE:
-            Attribute<Session> attribute = ctx.channel().attr(SESSION_KEY);
-            attribute.set(new LoginSession(context, ctx.channel(), messageRepository));
+            case HANDSHAKE:
+                Attribute<Client<?>> attribute = ctx.channel().attr(Client.KEY);
+                attribute.set(new LoginClient(ctx.channel(), context, messageRepository));
 
-            decodeHandshake(ctx, in, out);
-            state = State.LOGIN_TYPE;
-            break;
-        case LOGIN_TYPE:
-            decodeLoginType(ctx, in, out);
-            state = State.RSA_BLOCK;
-            break;
-        case RSA_BLOCK:
-            decodeRsaBlock(ctx, in, out);
-            break;
+                decodeHandshake(ctx, in, out);
+                state = State.LOGIN_TYPE;
+                break;
+            case LOGIN_TYPE:
+                decodeLoginType(ctx, in, out);
+                state = State.RSA_BLOCK;
+                break;
+            case RSA_BLOCK:
+                decodeRsaBlock(ctx, in, out);
+                break;
         }
     }
 
@@ -148,8 +147,8 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             long clientHalf = rsaBuffer.readLong();
             long serverHalf = rsaBuffer.readLong();
 
-            int[] isaacSeed = { (int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
-                (int) serverHalf };
+            int[] isaacSeed = {(int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
+                    (int) serverHalf};
 
             IsaacCipher decryptor = new IsaacCipher(isaacSeed);
             for (int i = 0; i < isaacSeed.length; i++) {
