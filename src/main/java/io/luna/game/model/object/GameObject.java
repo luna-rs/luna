@@ -53,8 +53,10 @@ public final class GameObject extends Entity {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).
-                add("x", position.getX()).add("y", position.getY()).
+        return MoreObjects.toStringHelper(this).
+                add("id", id).
+                add("x", position.getX()).
+                add("y", position.getY()).
                 add("z", position.getZ()).toString();
     }
 
