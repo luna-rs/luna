@@ -47,20 +47,15 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     private final ChannelHandler loginDecoder;
 
     /**
-     * The message repository.
-     */
-    private final MessageRepository msgRepository;
-
-    /**
      * Creates a new {@link LunaChannelInitializer}.
      *
      * @param context The context instance.
      * @param channelFilter A channel handler that will filter channels.
      * @param msgRepository The message repository.
      */
-    public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter, MessageRepository msgRepository) {
+    public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter,
+                                  MessageRepository msgRepository) {
         this.channelFilter = channelFilter;
-        this.msgRepository = msgRepository;
         loginDecoder = new LoginDecoder(context, msgRepository);
     }
 

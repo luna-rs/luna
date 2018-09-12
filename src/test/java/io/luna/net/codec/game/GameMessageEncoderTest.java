@@ -1,9 +1,8 @@
-package io.luna.codec.game;
+package io.luna.net.codec.game;
 
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.MessageType;
-import io.luna.net.codec.game.GameMessageEncoder;
 import io.luna.net.msg.GameMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
