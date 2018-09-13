@@ -6,16 +6,16 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent on interface item clicks.
+ * A {@link GameMessageReader} implementation that intercepts data sent on interface item clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class InterfaceItemClickMessageReader extends MessageReader {
+public final class InterfaceItemClickMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -39,6 +39,9 @@ public final class InterfaceItemClickMessageReader extends MessageReader {
 
     /**
      * The first index click.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void firstIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(ByteTransform.A);
@@ -76,6 +79,9 @@ public final class InterfaceItemClickMessageReader extends MessageReader {
 
     /**
      * The second index click.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void secondIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
@@ -110,6 +116,9 @@ public final class InterfaceItemClickMessageReader extends MessageReader {
 
     /**
      * The third index click.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void thirdIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(ByteOrder.LITTLE);
@@ -144,6 +153,9 @@ public final class InterfaceItemClickMessageReader extends MessageReader {
 
     /**
      * The fourth index click.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void fourthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteTransform.A);

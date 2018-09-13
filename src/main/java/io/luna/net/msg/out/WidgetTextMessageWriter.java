@@ -5,17 +5,14 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.MessageWriter;
-
-import java.util.HashMap;
-import java.util.Map;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays text on a widget.
+ * A {@link GameMessageWriter} implementation that displays text on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetTextMessageWriter extends MessageWriter {
+public final class WidgetTextMessageWriter extends GameMessageWriter {
 
     /**
      * The text.

@@ -13,16 +13,16 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent on item clicks.
+ * A {@link GameMessageReader} implementation that intercepts data sent on item clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemClickMessageReader extends MessageReader {
+public final class ItemClickMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -43,7 +43,13 @@ public final class ItemClickMessageReader extends MessageReader {
     }
 
     /**
-     * Returns {@code true} if the item clicked is valid.
+     * Validates the read data.
+     *
+     * @param player The player.
+     * @param id The item identifier.
+     * @param index The index.
+     * @param interfaceId The interface identifier.
+     * @return {@code true} if the item clicked is valid.
      */
     private boolean validate(Player player, int id, int index, int interfaceId) {
         checkState(Item.VALID_IDS.contains(id), "itemId out of range");
@@ -60,6 +66,10 @@ public final class ItemClickMessageReader extends MessageReader {
 
     /**
      * Click the first index of an object.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     * @return The event to post.
      */
     private Event firstIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
@@ -74,6 +84,10 @@ public final class ItemClickMessageReader extends MessageReader {
 
     /**
      * Click the second index of an object.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     * @return The event to post.
      */
     private Event secondIndex(Player player, ByteMessage msg) {
         int id = msg.getShort(false);
@@ -88,6 +102,10 @@ public final class ItemClickMessageReader extends MessageReader {
 
     /**
      * Click the third index of an object.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     * @return The event to post.
      */
     private Event thirdIndex(Player player, ByteMessage msg) {
         int id = msg.getShort(false, ByteTransform.A);
@@ -102,6 +120,10 @@ public final class ItemClickMessageReader extends MessageReader {
 
     /**
      * Click the fourth index of an object.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     * @return The event to post.
      */
     private Event fourthIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
@@ -116,6 +138,10 @@ public final class ItemClickMessageReader extends MessageReader {
 
     /**
      * Click the fifth index of an object.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     * @return The event to post.
      */
     private Event fifthIndex(Player player, ByteMessage msg) {
         int id = msg.getShort(false, ByteTransform.A);

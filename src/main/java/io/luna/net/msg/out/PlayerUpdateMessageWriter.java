@@ -10,16 +10,16 @@ import io.luna.game.model.mob.block.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Iterator;
 
 /**
- * A {@link MessageWriter} implementation that sends a player update message.
+ * A {@link GameMessageWriter} implementation that sends a player update message.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PlayerUpdateMessageWriter extends MessageWriter {
+public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
     /**
      * The player update block set.

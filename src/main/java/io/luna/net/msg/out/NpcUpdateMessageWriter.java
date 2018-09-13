@@ -9,16 +9,16 @@ import io.luna.game.model.mob.block.UpdateState;
 import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Iterator;
 
 /**
- * A {@link MessageWriter} implementation that sends an NPC update message.
+ * A {@link GameMessageWriter} implementation that sends an NPC update message.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcUpdateMessageWriter extends MessageWriter {
+public final class NpcUpdateMessageWriter extends GameMessageWriter {
 
     /**
      * The NPC update block set.

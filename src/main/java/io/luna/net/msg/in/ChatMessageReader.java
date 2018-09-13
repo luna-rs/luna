@@ -6,16 +6,16 @@ import io.luna.game.model.mob.Chat;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent on manual chat.
+ * A {@link GameMessageReader} implementation that intercepts data sent on manual chat.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ChatMessageReader extends MessageReader {
+public final class ChatMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -28,7 +28,7 @@ public final class ChatMessageReader extends MessageReader {
         checkState(color >= 0, "invalid color value");
         checkState(size > 0, "invalid size, not large enough");
 
-        if (player.isMuted()) { /* Muted, don't construct an event. */
+        if (player.isMuted()) {
             return null;
         }
 

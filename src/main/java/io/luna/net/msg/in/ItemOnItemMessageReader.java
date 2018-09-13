@@ -8,16 +8,16 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent when an item is used on another item.
+ * A {@link GameMessageReader} implementation that intercepts data sent when an item is used on another item.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemOnItemMessageReader extends MessageReader {
+public final class ItemOnItemMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -34,14 +34,23 @@ public final class ItemOnItemMessageReader extends MessageReader {
             return null;
         }
         return new ItemOnItemEvent(player, usedId, targetId, usedIndex, targetIndex, usedInterfaceId,
-            targetInterfaceId);
+                targetInterfaceId);
     }
 
     /**
-     * Returns {@code true} if the decoded data is valid.
+     * Validates the read data.
+     *
+     * @param player The player.
+     * @param usedId The used item identifier.
+     * @param targetId The target item identifier.
+     * @param usedIndex The used item index.
+     * @param targetIndex The target item index.
+     * @param usedInterfaceId The used interface identifier.
+     * @param targetInterfaceId The target interface identifier.
+     * @return {@code true} if the decoded data is valid.
      */
     private boolean validate(Player player, int usedId, int targetId, int usedIndex, int targetIndex,
-        int usedInterfaceId, int targetInterfaceId) {
+                             int usedInterfaceId, int targetInterfaceId) {
 
         checkState(targetIndex >= 0, "targetIndex is out of range");
         checkState(usedIndex >= 0, "usedIndex is out of range");
@@ -52,15 +61,15 @@ public final class ItemOnItemMessageReader extends MessageReader {
 
         // TODO remove boilerplate
         switch (usedInterfaceId) {
-        case 3214:
-            Inventory inventory = player.getInventory();
-            return inventory.getIdForIndex(usedIndex).map(it -> it == usedId).orElse(false);
+            case 3214:
+                Inventory inventory = player.getInventory();
+                return inventory.getIdForIndex(usedIndex).map(it -> it == usedId).orElse(false);
         }
 
         switch (targetInterfaceId) {
-        case 3214:
-            Inventory inventory = player.getInventory();
-            return inventory.getIdForIndex(targetIndex).map(it -> it == targetId).orElse(false);
+            case 3214:
+                Inventory inventory = player.getInventory();
+                return inventory.getIdForIndex(targetIndex).map(it -> it == targetId).orElse(false);
         }
         return false;
     }

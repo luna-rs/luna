@@ -12,16 +12,16 @@ import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent when an item is used on an object.
+ * A {@link GameMessageReader} implementation that intercepts data sent when an item is used on an object.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemOnObjectMessageReader extends MessageReader {
+public final class ItemOnObjectMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -44,8 +44,18 @@ public final class ItemOnObjectMessageReader extends MessageReader {
         return null;
     }
 
+
     /**
-     * Returns {@code true} if the data decoded is valid.
+     * Validates the read data.
+     *
+     * @param player The player.
+     * @param itemId The used item identifier.
+     * @param itemIndex The used item index.
+     * @param itemInterfaceId The used item interface identifier.
+     * @param objectId The used with object.
+     * @param objectX The used with object X.
+     * @param objectY The used with object Y.
+     * @return {@code true} if the decoded data is valid.
      */
     private boolean validate(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId,
                              int objectX, int objectY) {

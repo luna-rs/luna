@@ -13,16 +13,16 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent object clicks.
+ * A {@link GameMessageReader} implementation that intercepts data sent object clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ObjectClickMessageReader extends MessageReader {
+public final class ObjectClickMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -43,6 +43,9 @@ public final class ObjectClickMessageReader extends MessageReader {
 
     /**
      * Handle an object click for any index.
+     *
+     * @param player The player.
+     * @param evt The interaction event.
      */
     private void handleClick(Player player, ObjectClickEvent evt) {
         checkState(evt.x() >= 0, "x coordinate out of range");

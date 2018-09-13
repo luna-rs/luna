@@ -6,18 +6,18 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent when rearranging items.
+ * A {@link GameMessageReader} implementation that intercepts data sent when rearranging items.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SwapItemsMessageReader extends MessageReader {
+public final class SwapItemsMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

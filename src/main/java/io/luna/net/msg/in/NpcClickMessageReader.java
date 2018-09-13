@@ -15,18 +15,18 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent on NPC clicks.
+ * A {@link GameMessageReader} implementation that intercepts data sent on NPC clicks.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcClickMessageReader extends MessageReader {
+public final class NpcClickMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -53,6 +53,10 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Handles any npc click index.
+     *
+     * @param player The player.
+     * @param index The npc index.
+     * @param evt The interaction event.
      */
     private void handleClick(Player player, int index, BiFunction<Player, Npc, NpcClickEvent> evt) {
         World world = player.getWorld();
@@ -64,6 +68,9 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Click the first index of an npc.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void firstIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteOrder.LITTLE);
@@ -72,6 +79,9 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Click the second index of an npc.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void secondIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteTransform.A, ByteOrder.LITTLE);
@@ -80,6 +90,9 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Click the third index of an npc.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void thirdIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteTransform.A);
@@ -88,6 +101,9 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Click the fourth index of an npc.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void fourthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(false);
@@ -96,6 +112,9 @@ public final class NpcClickMessageReader extends MessageReader {
 
     /**
      * Click the fifth index of an npc.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
      */
     private void fifthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(false, ByteOrder.LITTLE);

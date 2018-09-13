@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} that sends a game message.
+ * A {@link GameMessageWriter} that sends a game message.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class GameChatboxMessageWriter extends MessageWriter {
+public final class GameChatboxMessageWriter extends GameMessageWriter {
 
     /**
      * The message.

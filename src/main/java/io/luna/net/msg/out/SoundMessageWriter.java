@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that plays a sound.
+ * A {@link GameMessageWriter} implementation that plays a sound.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SoundMessageWriter extends MessageWriter {
+public final class SoundMessageWriter extends GameMessageWriter {
 
     /**
      * The sound identifier.

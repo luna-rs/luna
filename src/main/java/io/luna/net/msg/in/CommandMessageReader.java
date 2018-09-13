@@ -7,7 +7,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,11 +18,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
- * A {@link MessageReader} implementation that decodes data sent when a {@link Player} tries to activate a command.
+ * A {@link GameMessageReader} implementation that decodes data sent when a {@link Player} tries to
+ * activate a command.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class CommandMessageReader extends MessageReader {
+public final class CommandMessageReader extends GameMessageReader {
 
     /**
      * The asynchronous logger.
@@ -53,6 +54,8 @@ public final class CommandMessageReader extends MessageReader {
 
     /**
      * Constructs and loads another bootstrap instance.
+     *
+     * @param player The player.
      */
     private void startHotfix(Player player) {
         LunaContext ctx = player.getContext();

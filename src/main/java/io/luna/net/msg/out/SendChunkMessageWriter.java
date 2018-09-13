@@ -4,14 +4,14 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that sends the current chunk coordinates.
+ * A {@link GameMessageWriter} implementation that sends the current chunk coordinates.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class SendChunkMessageWriter extends MessageWriter {
+public final class SendChunkMessageWriter extends GameMessageWriter {
 
     /**
      * The current position.

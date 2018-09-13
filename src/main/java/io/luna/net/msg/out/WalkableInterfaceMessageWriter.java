@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays a walkable interface.
+ * A {@link GameMessageWriter} implementation that displays a walkable interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class WalkableInterfaceMessageWriter extends MessageWriter {
+public class WalkableInterfaceMessageWriter extends GameMessageWriter {
 
     /**
      * The interface identifier.

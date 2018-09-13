@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays an item model on a widget.
+ * A {@link GameMessageWriter} implementation that displays an item model on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class WidgetItemModelMessageWriter extends MessageWriter {
+public class WidgetItemModelMessageWriter extends GameMessageWriter {
 
     /**
      * The widget identifier.

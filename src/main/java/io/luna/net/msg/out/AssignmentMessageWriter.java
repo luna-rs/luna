@@ -4,14 +4,14 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that assigns a client-sided index and members status.
+ * A {@link GameMessageWriter} implementation that assigns a client-sided index and members status.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AssignmentMessageWriter extends MessageWriter {
+public final class AssignmentMessageWriter extends GameMessageWriter {
 
     /**
      * If assigning members or free-to-play status.

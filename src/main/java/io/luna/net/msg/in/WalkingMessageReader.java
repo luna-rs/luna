@@ -9,14 +9,14 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 /**
- * A {@link MessageReader} implementation that intercepts player movement data.
+ * A {@link GameMessageReader} implementation that intercepts player movement data.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WalkingMessageReader extends MessageReader {
+public final class WalkingMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

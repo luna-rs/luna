@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} that forces a certain tab to open.
+ * A {@link GameMessageWriter} that forces a certain tab to open.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ForceTabMessageWriter extends MessageWriter {
+public final class ForceTabMessageWriter extends GameMessageWriter {
 
     /**
      * The identifier of the game tab to open.

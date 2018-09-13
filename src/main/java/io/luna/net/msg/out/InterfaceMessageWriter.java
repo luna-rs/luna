@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} that opens an interface.
+ * A {@link GameMessageWriter} that opens an interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class InterfaceMessageWriter extends MessageWriter {
+public final class InterfaceMessageWriter extends GameMessageWriter {
 
     /**
      * The interface identifier.

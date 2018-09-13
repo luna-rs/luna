@@ -3,14 +3,14 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that handles configuration.
+ * A {@link GameMessageWriter} implementation that handles configuration.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ConfigMessageWriter extends MessageWriter {
+public final class ConfigMessageWriter extends GameMessageWriter {
 
     /**
      * The identifier.

@@ -4,18 +4,18 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
+import io.luna.net.msg.GameMessageReader;
 
 import static com.google.common.base.Preconditions.checkState;
 import static io.netty.util.internal.StringUtil.simpleClassName;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A {@link MessageReader} implementation that intercepts data sent when a widget is clicked.
+ * A {@link GameMessageReader} implementation that intercepts data sent when a widget is clicked.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ButtonClickMessageReader extends MessageReader {
+public final class ButtonClickMessageReader extends GameMessageReader {
 
     // TODO: Ensure that 'buttonId' is a valid widget on the interface currently open (if one is open)
 

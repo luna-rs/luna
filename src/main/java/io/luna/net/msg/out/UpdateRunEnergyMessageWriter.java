@@ -2,14 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays the run energy value.
+ * A {@link GameMessageWriter} implementation that displays the run energy value.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class UpdateRunEnergyMessageWriter extends MessageWriter {
+public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
 
     /**
      * The run energy.

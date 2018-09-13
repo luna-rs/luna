@@ -4,14 +4,14 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link MessageWriter} implementation that displays the skill level and experience.
+ * A {@link GameMessageWriter} implementation that displays the skill level and experience.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class SkillUpdateMessageWriter extends MessageWriter {
+public final class SkillUpdateMessageWriter extends GameMessageWriter {
 
     /**
      * The skill identifier.
