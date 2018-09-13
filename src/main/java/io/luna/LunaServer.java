@@ -8,7 +8,7 @@ import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
-import io.luna.net.msg.MessageRepository;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.parser.impl.BlacklistParser;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
@@ -65,7 +65,7 @@ public final class LunaServer {
     /**
      * A message repository.
      */
-    private final MessageRepository messageRepository = new MessageRepository();
+    private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
      * A package-private constructor.
