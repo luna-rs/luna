@@ -7,7 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A model representing an incoming or outgoing packet.
+ * A model representing an incoming or outgoing packet of data.
  *
  * @author lare96 <http://github.org/lare96>
  */
