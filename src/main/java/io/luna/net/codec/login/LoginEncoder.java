@@ -18,7 +18,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
         if (msg.getResponse() == LoginResponse.NORMAL) {
             out.writeByte(msg.getRights().getClientValue());
-            out.writeBoolean(msg.isFlagged());
+            out.writeBoolean(msg.isSuspectedBot());
         }
     }
 }

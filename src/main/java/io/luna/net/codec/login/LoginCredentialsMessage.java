@@ -4,7 +4,7 @@ import io.luna.net.codec.IsaacCipher;
 import io.netty.channel.ChannelPipeline;
 
 /**
- * A model representing decoded login protocol data.
+ * An immutable model representing data that will be used to prepare the Player for gameplay.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -42,6 +42,7 @@ public final class LoginCredentialsMessage {
      * @param password The password.
      * @param encryptor The encryptor.
      * @param decryptor The decryptor.
+     * @param pipeline The channel pipeline.
      */
     public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
         ChannelPipeline pipeline) {

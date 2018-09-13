@@ -3,32 +3,30 @@ package io.luna.net.codec.game;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.MessageType;
+import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageRepository;
+import io.luna.net.msg.GameMessageRepository;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.List;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes game messages.
+ * A {@link ProgressiveMessageDecoder} implementation that decodes game messages.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class GameMessageDecoder extends ByteToMessageDecoder {
+public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMessageDecoder.DecodeState> {
 
     /**
-     * The asynchronous logger.
+     * An enumerated type representing game message decoding states.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    enum DecodeState {
+        OPCODE,
+        SIZE,
+        PAYLOAD
+    }
 
     /**
      * The decryptor.
@@ -38,12 +36,7 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     /**
      * The message repository.
      */
-    private final MessageRepository messageRepository;
-
-    /**
-     * The current state.
-     */
-    private State state = State.OPCODE;
+    private final GameMessageRepository repository;
 
     /**
      * The current opcode.
@@ -61,130 +54,131 @@ public final class GameMessageDecoder extends ByteToMessageDecoder {
     private MessageType type = MessageType.RAW;
 
     /**
-     * The decoded message.
-     */
-    private Optional<GameMessage> currentMessage = Optional.empty();
-
-    /**
      * Creates a new {@link GameMessageDecoder}.
      *
      * @param decryptor The decryptor.
-     * @param messageRepository The message repository.
+     * @param repository The message repository.
      */
-    public GameMessageDecoder(IsaacCipher decryptor, MessageRepository messageRepository) {
+    public GameMessageDecoder(IsaacCipher decryptor, GameMessageRepository repository) {
+        super(DecodeState.OPCODE);
         this.decryptor = decryptor;
-        this.messageRepository = messageRepository;
+        this.repository = repository;
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected Object decodeMsg(ChannelHandlerContext ctx, ByteBuf in, DecodeState state) {
         switch (state) {
             case OPCODE:
-                opcode(in);
-                break;
+                return opcode(in);
             case SIZE:
                 size(in);
                 break;
             case PAYLOAD:
-                payload(in);
-                break;
+                return payload(in);
         }
-        currentMessage.ifPresent(msg -> {
-            out.add(msg);
-            currentMessage = Optional.empty();
-        });
+        return null;
+    }
+
+    @Override
+    protected void resetState() {
+        opcode = -1;
+        size = -1;
+        type = MessageType.RAW;
     }
 
     /**
      * Decodes the opcode.
+     *
+     * @param in The buffer to read from.
+     * @return The decoded game message.
      */
-    private void opcode(ByteBuf in) {
+    private Object opcode(ByteBuf in) {
         if (in.isReadable()) {
+
+            // Decode the message opcode.
             opcode = in.readUnsignedByte();
             opcode = (opcode - decryptor.nextInt()) & 0xFF;
-            size = messageRepository.getSize(opcode);
 
-            if (size == -1) {
-                type = MessageType.VAR;
-            } else if (size == -2) {
-                type = MessageType.VAR_SHORT;
-            } else {
-                type = MessageType.FIXED;
+            // Handle the message size.
+            size = repository.getSize(opcode);
+            switch (size) {
+
+                // No size, don't have to decode size or payload.
+                case 0:
+                    type = MessageType.FIXED;
+                    return createDecodedMessage(Unpooled.EMPTY_BUFFER);
+
+                // Variable sized packet.
+                case -1:
+                    type = MessageType.VAR;
+                    break;
+
+                // Variable short sized packet.
+                case -2:
+                    type = MessageType.VAR_SHORT;
+                    break;
+
+                // Fixed size packet, only need to decode payload.
+                default:
+                    type = MessageType.FIXED;
+                    break;
             }
 
-            if (size == 0) {
-                queueMsg(Unpooled.EMPTY_BUFFER);
-                return;
-            }
-            state = size == -1 || size == -2 ? State.SIZE : State.PAYLOAD;
+            // Set the new checkpoint state.
+            checkpoint(type == MessageType.FIXED ?
+                    DecodeState.PAYLOAD : DecodeState.SIZE);
         }
+        return null;
     }
 
     /**
      * Decodes the size.
+     *
+     * @param in The buffer to read from.
      */
     private void size(ByteBuf in) {
         int bytes = size == -1 ? Byte.BYTES : Short.BYTES;
-
         if (in.isReadable(bytes)) {
-            size = 0;
 
+            // Decode size based on amount of bytes to read.
+            size = 0;
             for (int i = 0; i < bytes; i++) {
                 size |= in.readUnsignedByte() << 8 * (bytes - 1 - i);
             }
 
-            state = State.PAYLOAD;
+            // Set the new checkpoint state.
+            checkpoint(DecodeState.PAYLOAD);
         }
     }
 
     /**
      * Decodes the payload.
+     *
+     * @param in The buffer to read from.
+     * @return The decoded game message.
      */
-    private void payload(ByteBuf in) {
+    private Object payload(ByteBuf in) {
         if (in.isReadable(size)) {
+
+            // Create payload using decoded size.
             ByteBuf newBuffer = in.readBytes(size);
-            queueMsg(newBuffer);
+            return createDecodedMessage(newBuffer);
         }
+        return null;
     }
 
     /**
-     * Prepares a packet to be queued upstream.
+     * Creates a new game message Object from the decoded opcode, size, and payload.
+     *
+     * @param payload The data to wrap in a {@link ByteMessage}.
+     * @return The decoded game message.
      */
-    private void queueMsg(ByteBuf payload) {
-        checkState(opcode >= 0, "opcode < 0");
-        checkState(size >= 0, "size < 0");
-        checkState(type != MessageType.RAW, "type == MessageType.RAW");
-        checkState(!currentMessage.isPresent(), "message already in queue");
-
+    private GameMessage createDecodedMessage(ByteBuf payload) {
         try {
-            if (messageRepository.getHandler(opcode) == null) {
-                LOGGER.debug("No InboundGameMessage assigned to [opcode={}]", box(opcode));
-                currentMessage = Optional.empty();
-                payload.release();
-                return;
-            }
-
-            currentMessage = Optional.of(new GameMessage(opcode, type, ByteMessage.wrap(payload)));
+            checkState(type != MessageType.RAW, "Opcode was never decoded properly.");
+            return new GameMessage(opcode, type, ByteMessage.wrap(payload));
         } finally {
             resetState();
         }
-    }
-
-    /**
-     * Resets the decoder's state.
-     */
-    private void resetState() {
-        opcode = -1;
-        size = -1;
-        state = State.OPCODE;
-    }
-
-    /**
-     * An enum representing decoder states.
-     */
-    private enum State {
-        OPCODE,
-        SIZE,
-        PAYLOAD
     }
 }

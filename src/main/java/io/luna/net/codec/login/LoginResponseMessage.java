@@ -1,9 +1,10 @@
 package io.luna.net.codec.login;
 
 import io.luna.game.model.mob.PlayerRights;
+import io.luna.net.session.Client;
 
 /**
- * A model representing login response data.
+ * An immutable model representing login response data.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -20,21 +21,21 @@ public final class LoginResponseMessage {
     private final PlayerRights rights;
 
     /**
-     * If flagged.
+     * If the server suspects the {@link Client} is a bot.
      */
-    private final boolean flagged;
+    private final boolean suspectedBot;
 
     /**
      * Creates a new {@link LoginResponseMessage}.
      *
      * @param response The login response.
      * @param rights The authority level.
-     * @param flagged If flagged.
+     * @param suspectedBot If the server suspects the {@link Client} is a bot.
      */
-    public LoginResponseMessage(LoginResponse response, PlayerRights rights, boolean flagged) {
+    public LoginResponseMessage(LoginResponse response, PlayerRights rights, boolean suspectedBot) {
         this.response = response;
         this.rights = rights;
-        this.flagged = flagged;
+        this.suspectedBot = suspectedBot;
     }
 
     /**
@@ -62,9 +63,9 @@ public final class LoginResponseMessage {
     }
 
     /**
-     * @return {@code true} if flagged.
+     * @return {@code true} if the server suspects the {@link Client} is a bot.
      */
-    public boolean isFlagged() {
-        return flagged;
+    public boolean isSuspectedBot() {
+        return suspectedBot;
     }
 }

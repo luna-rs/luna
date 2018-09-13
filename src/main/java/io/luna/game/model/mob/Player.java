@@ -16,7 +16,7 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
@@ -415,11 +415,11 @@ public final class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(MessageWriter)}.
+     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
      *
      * @param msg The message to queue in the buffer.
      */
-    public void queue(MessageWriter msg) {
+    public void queue(GameMessageWriter msg) {
         client.queue(msg);
     }
 

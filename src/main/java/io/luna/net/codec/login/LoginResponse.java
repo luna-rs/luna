@@ -1,7 +1,10 @@
 package io.luna.net.codec.login;
 
+import io.luna.net.session.Client;
+
 /**
- * An enum representing login responses.
+ * An enumerated type whose values represent login responses. Any response other than {@link #NORMAL} will
+ * cause the {@link Client} to disconnect.
  *
  * @author lare96 <http://github.com/lare96>
  */

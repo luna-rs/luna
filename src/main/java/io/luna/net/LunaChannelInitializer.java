@@ -3,7 +3,7 @@ package io.luna.net;
 import io.luna.LunaContext;
 import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;
-import io.luna.net.msg.MessageRepository;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.session.Client;
 import io.luna.net.session.IdleClient;
 import io.netty.channel.ChannelHandler;
@@ -54,7 +54,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
      * @param msgRepository The message repository.
      */
     public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter,
-                                  MessageRepository msgRepository) {
+                                  GameMessageRepository msgRepository) {
         this.channelFilter = channelFilter;
         loginDecoder = new LoginDecoder(context, msgRepository);
     }

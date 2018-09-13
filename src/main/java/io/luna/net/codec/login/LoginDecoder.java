@@ -3,7 +3,8 @@ package io.luna.net.codec.login;
 import io.luna.LunaContext;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
-import io.luna.net.msg.MessageRepository;
+import io.luna.net.codec.ProgressiveMessageDecoder;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.session.Client;
 import io.luna.net.session.LoginClient;
 import io.netty.buffer.ByteBuf;
@@ -13,7 +14,6 @@ import io.netty.util.Attribute;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -21,21 +21,27 @@ import static io.luna.LunaConstants.RSA_EXPONENT;
 import static io.luna.LunaConstants.RSA_MODULUS;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes the login protocol.
+ * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginCredentialsMessage}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class LoginDecoder extends ByteToMessageDecoder {
+public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
+
+    // TODO Protocol documentation.
+
+    /**
+     * An enumerated type representing login decoder states.
+     */
+    enum DecodeState {
+        HANDSHAKE,
+        LOGIN_TYPE,
+        RSA_BLOCK
+    }
 
     /**
      * A cryptographically secure RNG.
      */
     private static final Random RANDOM = new SecureRandom();
-
-    /**
-     * The current state.
-     */
-    private State state = State.HANDSHAKE;
 
     /**
      * The size of the RSA block.
@@ -50,76 +56,96 @@ public final class LoginDecoder extends ByteToMessageDecoder {
     /**
      * The message repository.
      */
-    private final MessageRepository messageRepository;
+    private final GameMessageRepository repository;
 
     /**
      * Creates a new {@link LoginDecoder}.
      *
      * @param context The context instance.
-     * @param messageRepository The message repository.
+     * @param repository The message repository.
      */
-    public LoginDecoder(LunaContext context, MessageRepository messageRepository) {
+    public LoginDecoder(LunaContext context, GameMessageRepository repository) {
+        super(DecodeState.HANDSHAKE);
         this.context = context;
-        this.messageRepository = messageRepository;
+        this.repository = repository;
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    protected Object decodeMsg(ChannelHandlerContext ctx, ByteBuf in, DecodeState state) {
         switch (state) {
             case HANDSHAKE:
                 Attribute<Client<?>> attribute = ctx.channel().attr(Client.KEY);
-                attribute.set(new LoginClient(ctx.channel(), context, messageRepository));
+                attribute.set(new LoginClient(ctx.channel(), context, repository));
 
-                decodeHandshake(ctx, in, out);
-                state = State.LOGIN_TYPE;
+                decodeHandshake(ctx, in);
                 break;
             case LOGIN_TYPE:
-                decodeLoginType(ctx, in, out);
-                state = State.RSA_BLOCK;
+                decodeLoginType(ctx, in);
                 break;
             case RSA_BLOCK:
-                decodeRsaBlock(ctx, in, out);
-                break;
+                return decodeRsaBlock(ctx, in);
+
         }
+        return null;
+    }
+
+    @Override
+    protected void resetState() {
+        rsaBlockSize = 0;
     }
 
     /**
      * Decodes the handshake.
+     *
+     * @param ctx The channel handler context.
+     * @param in The buffer to read data from.
      */
-    private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= 2) {
             int opcode = in.readUnsignedByte(); // TODO Ondemand?
 
             @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
-            checkState(opcode == 14, "id != 14");
+            checkState(opcode == 14, "opcode != 14");
 
             ByteBuf buf = ctx.alloc().buffer(17);
             buf.writeLong(0);
             buf.writeByte(0);
             buf.writeLong(RANDOM.nextLong());
             ctx.writeAndFlush(buf);
+
+            checkpoint(DecodeState.LOGIN_TYPE);
         }
     }
 
     /**
      * Decodes the login type and RSA block size.
+     *
+     * @param ctx The channel handler context.
+     * @param in The buffer to read data from.
      */
-    private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+    private void decodeLoginType(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= 2) {
             int loginType = in.readUnsignedByte();
             checkState(loginType == 16 || loginType == 18, "loginType != 16 or 18");
 
             rsaBlockSize = in.readUnsignedByte();
             checkState((rsaBlockSize - 40) > 0, "(rsaBlockSize - 40) <= 0");
+
+            checkpoint(DecodeState.RSA_BLOCK);
         }
     }
 
     /**
      * Decodes the RSA block.
+     *
+     * @param ctx The channel handler context.
+     * @param in The buffer to read data from.
+     * @return The decoded login response message.
      */
-    private void decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+    private Object decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= rsaBlockSize) {
+
             int magicId = in.readUnsignedByte();
             checkState(magicId == 255, "magicId != 255");
 
@@ -133,47 +159,44 @@ public final class LoginDecoder extends ByteToMessageDecoder {
             }
 
             int expectedSize = in.readUnsignedByte();
-            checkState(expectedSize == (rsaBlockSize - 41), "expectedSize != (rsaBlockSize - 41)");
+            rsaBlockSize -= 41;
+            checkState(expectedSize == rsaBlockSize, "expectedSize != rsaBlockSize");
 
-            byte[] rsaBytes = new byte[rsaBlockSize - 41];
+            byte[] rsaBytes = new byte[rsaBlockSize];
             in.readBytes(rsaBytes);
 
             ByteBuf rsaBuffer = ctx.alloc().buffer();
-            rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXPONENT, RSA_MODULUS).toByteArray());
+            try {
+                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXPONENT, RSA_MODULUS).toByteArray());
 
-            int rsaOpcode = rsaBuffer.readUnsignedByte();
-            checkState(rsaOpcode == 10, "rsaOpcode != 10");
+                int rsaOpcode = rsaBuffer.readUnsignedByte();
+                checkState(rsaOpcode == 10, "rsaOpcode != 10");
 
-            long clientHalf = rsaBuffer.readLong();
-            long serverHalf = rsaBuffer.readLong();
+                long clientHalf = rsaBuffer.readLong();
+                long serverHalf = rsaBuffer.readLong();
 
-            int[] isaacSeed = {(int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
-                    (int) serverHalf};
+                int[] isaacSeed = {(int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
+                        (int) serverHalf};
 
-            IsaacCipher decryptor = new IsaacCipher(isaacSeed);
-            for (int i = 0; i < isaacSeed.length; i++) {
-                isaacSeed[i] += 50;
+                IsaacCipher decryptor = new IsaacCipher(isaacSeed);
+                for (int i = 0; i < isaacSeed.length; i++) {
+                    isaacSeed[i] += 50;
+                }
+                IsaacCipher encryptor = new IsaacCipher(isaacSeed);
+
+                @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
+
+                ByteMessage msg = ByteMessage.wrap(rsaBuffer);
+                String username = msg.getString().toLowerCase();
+                String password = msg.getString().toLowerCase();
+
+                return new LoginCredentialsMessage(username,
+                        password, encryptor, decryptor, ctx.channel().pipeline());
+            } finally {
+                rsaBuffer.release();
             }
-            IsaacCipher encryptor = new IsaacCipher(isaacSeed);
-
-            @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
-
-            ByteMessage msg = ByteMessage.wrap(rsaBuffer);
-            String username = msg.getString().toLowerCase();
-            String password = msg.getString().toLowerCase();
-
-            rsaBuffer.release();
-
-            out.add(new LoginCredentialsMessage(username, password, encryptor, decryptor, ctx.channel().pipeline()));
         }
+        return null;
     }
 
-    /**
-     * An enum representing login decoder states.
-     */
-    private enum State {
-        HANDSHAKE,
-        LOGIN_TYPE,
-        RSA_BLOCK
-    }
 }
