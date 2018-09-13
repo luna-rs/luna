@@ -12,7 +12,7 @@ import io.luna.net.codec.game.GameMessageEncoder;
 import io.luna.net.codec.login.LoginCredentialsMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
-import io.luna.net.msg.MessageRepository;
+import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPipeline;
@@ -89,7 +89,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
     /**
      * The message repository.
      */
-    private final MessageRepository repository;
+    private final GameMessageRepository repository;
 
     /**
      * The world.
@@ -102,7 +102,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
      * @param channel The client's channel.
      * @param repository The message repository.
      */
-    public LoginClient(Channel channel, LunaContext context, MessageRepository repository) {
+    public LoginClient(Channel channel, LunaContext context, GameMessageRepository repository) {
         super(channel);
         this.context = context;
         this.repository = repository;
@@ -157,6 +157,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
      * @return The login response, wrapped in an optional.
      */
     private Optional<LoginResponse> handlePunishments(Player player) {
+        // TODO rewrite
         LocalDate now = LocalDate.now();
         Function<String, LocalDate> liftFunc =
                 it -> it.equals("never") ? now.plusYears(1) : LocalDate.parse(it);

@@ -3,14 +3,13 @@ package io.luna.net.session;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.MessageReader;
-import io.luna.net.msg.MessageRepository;
-import io.luna.net.msg.MessageWriter;
+import io.luna.net.msg.GameMessageReader;
+import io.luna.net.msg.GameMessageRepository;
+import io.luna.net.msg.GameMessageWriter;
 import io.netty.channel.Channel;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.function.Consumer;
 
 /**
  * A {@link Client} implementation model representing post-login I/O communications.
@@ -20,11 +19,6 @@ import java.util.function.Consumer;
 public class GameClient extends Client<GameMessage> {
 
     /**
-     * The maximum amount of incoming packets handled per cycle.
-     */
-    private static final int MAX_MESSAGES = 15;
-
-    /**
      * The player.
      */
     private final Player player;
@@ -32,12 +26,12 @@ public class GameClient extends Client<GameMessage> {
     /**
      * The decoded packets.
      */
-    private final Queue<GameMessage> decodedMessages = new ArrayBlockingQueue<>(MAX_MESSAGES);
+    private final Queue<GameMessage> decodedMessages = new ArrayBlockingQueue<>(15);
 
     /**
      * The message repository.
      */
-    private final MessageRepository repository;
+    private final GameMessageRepository repository;
 
     /**
      * Creates a new {@link GameClient}.
@@ -46,7 +40,7 @@ public class GameClient extends Client<GameMessage> {
      * @param player The player.
      * @param repository The message repository.
      */
-    public GameClient(Channel channel, Player player, MessageRepository repository) {
+    public GameClient(Channel channel, Player player, GameMessageRepository repository) {
         super(channel);
         this.player = player;
         this.repository = repository;
@@ -73,8 +67,8 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            MessageReader handler = repository.getReader(msg.getOpcode());
-            handler.handleInboundMessage(player, msg);
+            GameMessageReader reader = repository.getReader(msg.getOpcode());
+            reader.postEvent(player, msg);
         }
     }
 
@@ -84,19 +78,17 @@ public class GameClient extends Client<GameMessage> {
      *
      * @param msg The message to queue.
      */
-    public void queue(MessageWriter msg) {
+    public void queue(GameMessageWriter msg) {
         Channel channel = getChannel();
 
         if (channel.isActive()) {
-            Consumer<GameMessage> writeMsg = it -> channel.write(it, channel.voidPromise());
-            msg.handleOutboundMessage(player).ifPresent(writeMsg);
+            channel.write(msg.toGameMsg(player), channel.voidPromise());
         }
     }
 
     /**
      * Flushes the underlying channel. This will send all messages to the client queued using
-     * {@link #queue(MessageWriter)}. Calls to this method are expensive and should be done sparingly (at
-     * most once or twice per game cycle).
+     * {@link #queue(GameMessageWriter)}. Calls to this method are expensive and should be done sparingly.
      */
     public void flush() {
         Channel channel = getChannel();
