@@ -1,100 +1,17 @@
 package io.luna.net.msg;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Iterable} implementation containing mappings of {@link GameMessageListener}s to their opcode
- * identifiers, and functions to retrieve said message listeners.
+ * An {@link Iterable} implementation containing mappings of {@link GameMessageReader}s to their opcode
+ * identifiers, and functions to retrieve said message readers.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class GameMessageRepository implements Iterable<GameMessageRepository.GameMessageListener> {
-
-    /**
-     * A listener containing data describing and functions to handle decoded game messages.
-     *
-     * @author lare96 <http://github.com/lare96>
-     */
-    public static final class GameMessageListener {
-
-        /**
-         * The opcode.
-         */
-        private final int opcode;
-
-        /**
-         * The expected size.
-         */
-        private final int size;
-
-        /**
-         * The message reader.
-         */
-        private final GameMessageReader reader;
-
-        /**
-         * Creates a new {@link GameMessageListener}.
-         *
-         * @param opcode The opcode.
-         * @param size The expected size.
-         * @param reader The message reader.
-         */
-        public GameMessageListener(int opcode, int size, GameMessageReader reader) {
-            this.opcode = opcode;
-            this.size = size;
-            this.reader = reader;
-        }
-
-        @Override
-        public final boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof GameMessageListener) {
-                GameMessageListener other = (GameMessageListener) obj;
-                return opcode == other.opcode;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(opcode);
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this).add("opcode", opcode).add("size", size).toString();
-        }
-
-        /**
-         * @return The opcode.
-         */
-        public int getOpcode() {
-            return opcode;
-        }
-
-        /**
-         * @return The size.
-         */
-        public int getSize() {
-            return size;
-        }
-
-        /**
-         * @return The message reader.
-         */
-        public GameMessageReader getReader() {
-            return reader;
-        }
-    }
+public final class GameMessageRepository implements Iterable<GameMessageReader> {
 
     /**
      * If this repository is locked.
@@ -102,53 +19,43 @@ public final class GameMessageRepository implements Iterable<GameMessageReposito
     private volatile boolean locked;
 
     /**
-     * An array of message listeners. This array is effectively immutable since it is never exposed
+     * An array of message readers. This array is effectively immutable since it is never exposed
      * outside of this class.
      */
-    private final GameMessageListener[] listeners = new GameMessageListener[257];
+    private final GameMessageReader[] readers = new GameMessageReader[257];
 
     /**
-     * Adds a listener to this repository.
+     * Adds a reader to this repository.
      *
-     * @param listener The listener to add.
+     * @param messageReader The reader to add.
      * @throws IllegalStateException If this repository is locked.
      */
-    public void put(GameMessageListener listener) throws IllegalStateException {
+    public void put(GameMessageReader messageReader) throws IllegalStateException {
         checkState(!locked, "This repository is locked.");
 
-        int opcode = listener.getOpcode();
-        checkState(get(opcode) == null, "Listener already exists for opcode [" + opcode + "].");
-        listeners[opcode] = listener;
+        int opcode = messageReader.getOpcode();
+        checkState(get(opcode) == null, "Reader already exists for opcode [" + opcode + "].");
+        readers[opcode] = messageReader;
     }
 
     /**
-     * Retrieves a listener from this repository.
+     * Retrieves a reader from this repository.
      *
-     * @param opcode The opcode of the listener to retrieve.
-     * @return The listener.
+     * @param opcode The opcode of the reader to retrieve.
+     * @return The reader.
      */
-    public GameMessageListener get(int opcode) {
-        return listeners[opcode];
+    public GameMessageReader get(int opcode) {
+        return readers[opcode];
     }
 
     /**
-     * Retrieves the size of a message.
+     * Retrieves the size from a message reader.
      *
      * @param opcode The opcode of the size to retrieve.
-     * @return The size of the message.
+     * @return The size of a message.
      */
     public int getSize(int opcode) {
         return get(opcode).getSize();
-    }
-
-    /**
-     * Retrieves the game message reader.
-     *
-     * @param opcode The opcode of the reader to retrieve.
-     * @return The game message reader.
-     */
-    public GameMessageReader getReader(int opcode) {
-        return get(opcode).getReader();
     }
 
     /**
@@ -158,9 +65,8 @@ public final class GameMessageRepository implements Iterable<GameMessageReposito
         locked = true;
     }
 
-    @NotNull
     @Override
-    public UnmodifiableIterator<GameMessageListener> iterator() {
-        return Iterators.forArray(listeners);
+    public UnmodifiableIterator<GameMessageReader> iterator() {
+        return Iterators.forArray(readers);
     }
 }
