@@ -1,4 +1,4 @@
-package io.luna.net.session;
+package io.luna.net.client;
 
 import io.luna.LunaContext;
 import io.luna.game.model.World;

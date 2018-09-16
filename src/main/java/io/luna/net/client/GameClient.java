@@ -1,4 +1,4 @@
-package io.luna.net.session;
+package io.luna.net.client;
 
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -67,7 +67,7 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            GameMessageReader reader = repository.getReader(msg.getOpcode());
+            GameMessageReader reader = repository.get(msg.getOpcode());
             reader.postEvent(player, msg);
         }
     }

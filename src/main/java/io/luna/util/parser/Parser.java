@@ -1,23 +1,22 @@
 package io.luna.util.parser;
 
-import org.apache.logging.log4j.Level;
+import com.google.common.collect.ImmutableList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * An abstraction model providing functionality for asynchronous parsing of various types of files.[
+ * An abstraction model providing functionality for parsing of various types of files.
  *
  * @param <T1> The reader that will be parsing the file.
- * @param <T2> The {@code Object} being parsed.
+ * @param <T2> The type of Object to create from parsing.
  * @author lare96 <http://github.org/lare96>
  */
 public abstract class Parser<T1, T2> implements Runnable {
@@ -27,24 +26,11 @@ public abstract class Parser<T1, T2> implements Runnable {
      */
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /**
-     * A list of files to parse.
-     */
-    private final List<Path> parseFiles;
-
-    /**
-     * Creates a new {@link Parser}.
-     *
-     * @param paths A list of files to parse.
-     */
-    // TODO do this in abstract method
-    public Parser(String... paths) {
-        parseFiles = Arrays.stream(paths).map(Paths::get).collect(Collectors.toList());
-    }
-
     @Override
     public final void run() {
-        for (Path path : parseFiles) {
+        for (String pathString : forFiles()) {
+            Path path = Paths.get(pathString);
+
             try (BufferedReader in = Files.newBufferedReader(path)) {
                 List<T2> readObjects = new ArrayList<>();
                 T1 reader = getReader(in);
@@ -54,7 +40,7 @@ public abstract class Parser<T1, T2> implements Runnable {
                 }
                 onReadComplete(readObjects);
             } catch (Exception e) {
-                LOGGER.catching(Level.FATAL, e);
+                LOGGER.error(new ParameterizedMessage("Error while reading file [{}]", path, e));
             }
         }
     }
@@ -89,8 +75,15 @@ public abstract class Parser<T1, T2> implements Runnable {
     /**
      * Invoked when this parser finishes parsing all {@code Object}s.
      *
-     * @param readObjects The list of {@code Object}s that were parsed, possibly at a size of {@code 0}.
+     * @param readObjects The list of {@code Object}s that were parsed, possibly with a size of {@code 0}.
      * @throws Exception If any errors occur while executing completion logic.
      */
     public abstract void onReadComplete(List<T2> readObjects) throws Exception;
+
+    /**
+     * Retrieves an immutable list of files to parse.
+     *
+     * @return The files to parse.
+     */
+    public abstract ImmutableList<String> forFiles();
 }

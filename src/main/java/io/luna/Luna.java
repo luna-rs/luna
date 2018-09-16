@@ -3,8 +3,6 @@ package io.luna;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.script.ScriptException;
-
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
  *

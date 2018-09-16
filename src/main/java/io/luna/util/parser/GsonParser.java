@@ -20,15 +20,6 @@ public abstract class GsonParser<T> extends Parser<JsonArray, T> {
      */
     private int currentIndex = -1;
 
-    /**
-     * Creates a new {@link GsonParser}.
-     *
-     * @param paths The paths to the files being parsed.
-     */
-    public GsonParser(String... paths) {
-        super(paths);
-    }
-
     @Override
     public T doRead(JsonArray reader) throws Exception {
         JsonElement current = reader.get(currentIndex);
@@ -37,8 +28,8 @@ public abstract class GsonParser<T> extends Parser<JsonArray, T> {
 
     @Override
     public JsonArray getReader(BufferedReader in) throws Exception {
-        JsonElement jsonRead = new JsonParser().parse(in);
-        return jsonRead.getAsJsonArray();
+        JsonElement jsonReader = new JsonParser().parse(in);
+        return jsonReader.getAsJsonArray();
     }
 
     @Override

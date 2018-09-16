@@ -3,6 +3,8 @@ package io.luna.game;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
@@ -15,10 +17,10 @@ import org.apache.logging.log4j.Logger;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-
-import static io.luna.util.ThreadUtils.nameThreadFactory;
-import static io.luna.util.ThreadUtils.newCachedThreadPool;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -51,7 +53,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * A thread pool for low-priority tasks.
      */
-    private final ListeningExecutorService threadPool = newCachedThreadPool(nameThreadFactory("LunaWorkerThread"));
+    private final ListeningExecutorService threadPool;
 
     /**
      * Creates a new {@link GameService}.
@@ -61,6 +63,13 @@ public final class GameService extends AbstractScheduledService {
     public GameService(LunaContext context) {
         this.context = context;
         world = context.getWorld();
+    }
+
+    { // Initialize low-priority cached thread pool.
+        ThreadFactory tf = new ThreadFactoryBuilder().
+                setNameFormat("LunaWorkerThread").build();
+        ExecutorService delegate = Executors.newCachedThreadPool(tf);
+        threadPool = MoreExecutors.listeningDecorator(delegate);
     }
 
     @Override

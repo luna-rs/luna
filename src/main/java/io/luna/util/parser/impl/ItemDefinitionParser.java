@@ -1,5 +1,6 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.util.GsonUtils;
@@ -17,14 +18,8 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
     /**
      * A String array of empty inventory and ground actions.
      */
+    // Do this in def class as the array is copied anyway
     private final String[] empty = new String[]{"null", "null", "null", "null", "null"};
-
-    /**
-     * Creates a new {@link ItemDefinitionParser}.
-     */
-    public ItemDefinitionParser() {
-        super("./data/items/item_defs.json");
-    }
 
     @Override
     public ItemDefinition readObject(JsonObject reader) throws Exception {
@@ -51,5 +46,10 @@ public final class ItemDefinitionParser extends GsonParser<ItemDefinition> {
     @Override
     public void onReadComplete(List<ItemDefinition> readObjects) throws Exception {
         readObjects.forEach(ItemDefinition.ALL::storeDefinition);
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/items/item_defs.json");
     }
 }

@@ -14,7 +14,7 @@ import static java.util.Objects.requireNonNull;
 public abstract class NewLineParser extends Parser<Scanner, String> {
 
     /**
-     * An enum representing empty line policies.
+     * An enumerated type whose elements represent empty line policies.
      */
     public enum EmptyLinePolicy {
 
@@ -33,15 +33,6 @@ public abstract class NewLineParser extends Parser<Scanner, String> {
          * Skip the line completely without any warning or thrown exception.
          */
         SKIP
-    }
-
-    /**
-     * Creates a new {@link NewLineParser}.
-     *
-     * @param paths The paths to the files being parsed.
-     */
-    public NewLineParser(String... paths) {
-        super(paths);
     }
 
     @Override
@@ -63,7 +54,7 @@ public abstract class NewLineParser extends Parser<Scanner, String> {
     public void onReadComplete(List<String> readObjects) throws Exception {
         for (String nextLine : readObjects) {
             if (nextLine.isEmpty()) {
-                EmptyLinePolicy linePolicy = requireNonNull(emptyLinePolicy(), "emptyLinePolicy == null");
+                EmptyLinePolicy linePolicy = requireNonNull(emptyLinePolicy());
                 if (linePolicy == EmptyLinePolicy.SKIP) {
                     continue;
                 } else if (linePolicy == EmptyLinePolicy.EXCEPTION) {

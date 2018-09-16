@@ -1,5 +1,6 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.InetAddresses;
 import io.luna.net.LunaChannelFilter;
 import io.luna.util.parser.NewLineParser;
@@ -22,7 +23,6 @@ public final class BlacklistParser extends NewLineParser {
      * Creates a new {@link BlacklistParser}.
      */
     public BlacklistParser(LunaChannelFilter channelFilter) {
-        super("./data/punishment/blacklist.txt");
         this.channelFilter = channelFilter;
     }
 
@@ -30,5 +30,10 @@ public final class BlacklistParser extends NewLineParser {
     public void readNextLine(String nextLine) throws Exception {
         checkArgument(InetAddresses.isInetAddress(nextLine), "Invalid IP address [" + nextLine + "]");
         channelFilter.getBlacklist().add(nextLine);
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/punishment/blacklist.txt");
     }
 }

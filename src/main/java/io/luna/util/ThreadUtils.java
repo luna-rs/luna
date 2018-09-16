@@ -1,14 +1,7 @@
 package io.luna.util;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
-import static com.google.common.base.Preconditions.checkState;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A static-utility class that contains functions for manipulating threads.
@@ -18,31 +11,45 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ThreadUtils {
 
     /**
-     * Throws an {@link IllegalStateException} if the current thread is not an initialization thread.
+     * Shortcut function to {@link Runtime#availableProcessors()}.
      */
-    public static void ensureInitThread() {
-        Thread currentThread = Thread.currentThread();
-        boolean isInitThread = currentThread.getName().equals("LunaInitializationThread");
-        checkState(isInitThread, String.format("thread[%s] not an initialization thread", currentThread));
-    }
-
-    public static ThreadFactory nameThreadFactory(String threadName) {
-        return new ThreadFactoryBuilder().setNameFormat(threadName).build();
-    }
-    public static int getCpuAmount() {
+    public static int cpuCount() {
         return Runtime.getRuntime().availableProcessors();
     }
+
     /**
-     * Returns a new fixed thread pool containing] {@code Runtime.getRuntime().cpuCount()}
-     * threads.
+     * Awaits termination of {@code service} without interruption.
+     *
+     * @param service The executor to wait for.
      */
-    public static ListeningExecutorService newFixedThreadPool(ThreadFactory threadFactory, int nThreads) {
-       ExecutorService delegate = Executors.newFixedThreadPool(nThreads, threadFactory);
-       return MoreExecutors.listeningDecorator(delegate);
+    public static void awaitTerminationUninterruptibly(ExecutorService service) {
+        awaitTerminationUninterruptibly(service, Long.MAX_VALUE, TimeUnit.DAYS);
     }
 
-    public static ListeningExecutorService newCachedThreadPool(ThreadFactory threadFactory) {
-        ExecutorService delegate = Executors.newCachedThreadPool(threadFactory);
-        return MoreExecutors.listeningDecorator(delegate);
+    /**
+     * Awaits termination of {@code service} for the designated time without interruption.
+     *
+     * @param service The executor to wait for.
+     * @param timeout The time to wait for.
+     * @param unit The time unit.
+     */
+    public static void awaitTerminationUninterruptibly(ExecutorService service, long timeout, TimeUnit unit) {
+
+        // Taken from Google Guava, thanks Anthony.
+        boolean interrupted = false;
+        try {
+            while (true) {
+                try {
+                    service.awaitTermination(timeout, unit);
+                    break;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

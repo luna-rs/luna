@@ -27,14 +27,14 @@ public final class TaskManager {
     /**
      * Schedules a new task to be ran.
      *
-     * @param t The task to schedule.
+     * @param task The task to schedule.
      */
-    public void schedule(Task t) {
-        t.onSchedule();
-        if (t.isInstant()) {
-            t.runTask();
+    public void schedule(Task task) {
+        task.onSchedule();
+        if (task.isInstant()) {
+            task.runTask();
         }
-        awaitingList.add(t);
+        awaitingList.add(task);
     }
 
     /**
@@ -45,30 +45,30 @@ public final class TaskManager {
         // Run through all tasks awaiting execution.
         Iterator<Task> iterator = awaitingList.iterator();
         while (iterator.hasNext()) {
-            Task it = iterator.next();
+            Task task = iterator.next();
 
             // Remove task if it was cancelled.
-            if (!it.isRunning()) {
+            if (!task.isRunning()) {
                 iterator.remove();
                 continue;
             }
 
-            it.onLoop();
+            task.onLoop();
 
-            /* If it's ready to execute, add to execution queue. We pass task to different collection
-            to avoid ConcurrentModificationException when tasks are scheduled within tasks.  */
-            if (it.canExecute()) {
-                readyQueue.add(it);
+            /* If it's ready to execute, add to execution queue. We pass tasks to a different collection
+            to avoid a ConcurrentModificationException when tasks are scheduled within tasks.  */
+            if (task.canExecute()) {
+                readyQueue.add(task);
             }
         }
 
         // Poll execution queue and run all tasks.
         for (; ; ) {
-            Task it = readyQueue.poll();
-            if (it == null) {
+            Task task = readyQueue.poll();
+            if (task == null) {
                 break;
             }
-            it.runTask();
+            task.runTask();
         }
     }
 
@@ -78,6 +78,7 @@ public final class TaskManager {
      * @param attachment The attachment to cancel tasks with.
      */
     public void cancel(Object attachment) {
+        // TODO rewrite
         awaitingList.stream().filter(it -> Objects.equals(attachment, it.getAttachment().orElse(null)))
                 .forEach(Task::cancel);
     }

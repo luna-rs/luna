@@ -26,6 +26,9 @@ public final class RandomUtils {
     /**
      * Returns a pseudo-random {@code int} value between inclusive {@code min} and inclusive {@code max}.
      *
+     * @param min The lower bound.
+     * @param max The upper bound.
+     * @return The generated number.
      * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
      */
     public static int inclusive(int min, int max) {
@@ -36,6 +39,8 @@ public final class RandomUtils {
     /**
      * Returns a pseudo-random {@code int} value between inclusive {@code 0} and inclusive {@code range}.
      *
+     * @param range The upper bound.
+     * @return The generated number.
      * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
      */
     public static int inclusive(int range) {
@@ -44,6 +49,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves an element from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static <T> T random(T[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -51,6 +59,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code int} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static int random(int[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -58,6 +69,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code long} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static long random(long[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -65,6 +79,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code double} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static double random(double[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -72,6 +89,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code short} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static short random(short[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -79,6 +99,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code byte} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static byte random(byte[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -86,6 +109,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code float} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static float random(float[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -93,6 +119,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code boolean} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static boolean random(boolean[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -100,6 +129,9 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a {@code char} from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
      */
     public static char random(char[] array) {
         return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
@@ -107,13 +139,20 @@ public final class RandomUtils {
 
     /**
      * Pseudo-randomly retrieves a element from {@code list}.
+     *
+     * @param list The list.
+     * @return The random value.
      */
     public static <T> T random(List<T> list) {
+        // TODO Separate LinkedList implementation.
         return list.get((int) (ThreadLocalRandom.current().nextDouble() * list.size()));
     }
 
     /**
      * Retrieves a random value from an {@code int} range.
+     *
+     * @param range The range.
+     * @return The random value.
      */
     public static int random(Range<Integer> range) {
         int low = range.hasLowerBound() ? range.lowerEndpoint() : Integer.MIN_VALUE;
@@ -132,6 +171,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code Object} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static <T> T[] shuffle(T[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -145,6 +187,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code int} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static int[] shuffle(int[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -158,6 +203,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code long} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static long[] shuffle(long[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -171,6 +219,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code double} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static double[] shuffle(double[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -184,6 +235,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code short} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static short[] shuffle(short[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -197,6 +251,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code byte} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static byte[] shuffle(byte[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -210,6 +267,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code float} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static float[] shuffle(float[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -223,6 +283,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code boolean} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.
      */
     public static boolean[] shuffle(boolean[] array) {
         for (int i = array.length - 1; i > 0; i--) {
@@ -236,6 +299,9 @@ public final class RandomUtils {
 
     /**
      * Shuffles the elements of a {@code char} array.
+     *
+     * @param array The array to shuffle.
+     * @return The shuffled array.x
      */
     public static char[] shuffle(char[] array) {
         for (int i = array.length - 1; i > 0; i--) {

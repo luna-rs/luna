@@ -10,6 +10,7 @@ import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
+import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.BlacklistParser;
 import io.luna.util.parser.impl.EquipmentDefinitionParser;
 import io.luna.util.parser.impl.ItemDefinitionParser;
@@ -30,8 +31,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static io.luna.util.ThreadUtils.getCpuAmount;
-import static io.luna.util.ThreadUtils.nameThreadFactory;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -45,12 +44,6 @@ public final class LunaServer {
      * The asynchronous logger.
      */
     private static final Logger LOGGER = LogManager.getLogger();
-
-    /**
-     * An executor that will load launch tasks.
-     */
-    private final AsyncExecutor executor =
-            AsyncExecutor.newSingletonExecutor(getCpuAmount(), nameThreadFactory("LunaInitializationThread"));
 
     /**
      * A Luna context instance.
@@ -141,6 +134,7 @@ public final class LunaServer {
      * @throws ExecutionException If asynchronous tasks cannot be computed.
      */
     private void initLaunchTasks() throws ExecutionException {
+        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
         executor.execute(new MessageRepositoryParser(messageRepository));
         executor.execute(new EquipmentDefinitionParser());
         executor.execute(new ItemDefinitionParser());
@@ -150,7 +144,10 @@ public final class LunaServer {
         executor.execute(new BlacklistParser(channelFilter));
 
         int count = executor.size();
-        LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
-        executor.await();
+        if(count > 0) {
+            LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
+            executor.await(true);
+        }
+
     }
 }

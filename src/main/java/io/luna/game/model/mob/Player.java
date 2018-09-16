@@ -26,7 +26,7 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
-import io.luna.net.session.GameClient;
+import io.luna.net.client.GameClient;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

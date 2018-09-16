@@ -1,7 +1,7 @@
 package io.luna.net;
 
 import com.google.common.collect.ImmutableSet;
-import io.luna.net.session.Client;
+import io.luna.net.client.Client;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

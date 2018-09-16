@@ -1,5 +1,6 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.util.GsonUtils;
@@ -17,14 +18,8 @@ public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
     /**
      * A String array of empty NPC actions.
      */
+    // Do this in def class as the array is copied anyway
     private final String[] empty = new String[]{"null", "null", "null", "null", "null"};
-
-    /**
-     * Creates a new {@link NpcDefinitionParser}.
-     */
-    public NpcDefinitionParser() {
-        super("./data/npcs/npc_defs.json");
-    }
 
     @Override
     public NpcDefinition readObject(JsonObject reader) throws Exception {
@@ -47,5 +42,10 @@ public final class NpcDefinitionParser extends GsonParser<NpcDefinition> {
     @Override
     public void onReadComplete(List<NpcDefinition> readObjects) throws Exception {
         readObjects.forEach(NpcDefinition.ALL::storeDefinition);
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/npcs/npc_defs.json");
     }
 }

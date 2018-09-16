@@ -23,7 +23,7 @@ public final class Rational extends Number {
     public static final Rational VERY_COMMON = new Rational(1, 2);
 
     /**
-     * A rational number describing an {@code COMMON} chance (25%, 1 in 4 chance).
+     * A rational number describing a {@code COMMON} chance (25%, 1 in 4 chance).
      */
     public static final Rational COMMON = new Rational(1, 4);
 
@@ -33,12 +33,12 @@ public final class Rational extends Number {
     public static final Rational UNCOMMON = new Rational(1, 10);
 
     /**
-     * A rational number describing an {@code VERY_UNCOMMON} chance (2.5%, 5 in 200 chance).
+     * A rational number describing a {@code VERY_UNCOMMON} chance (2.5%, 1 in 40 chance).
      */
-    public static final Rational VERY_UNCOMMON = new Rational(5, 200);
+    public static final Rational VERY_UNCOMMON = new Rational(1, 40);
 
     /**
-     * A rational number describing an {@code RARE} chance (0.7%, 1 in 150 chance).
+     * A rational number describing a {@code RARE} chance (0.7%, 1 in 150 chance).
      */
     public static final Rational RARE = new Rational(1, 150);
 
@@ -60,7 +60,7 @@ public final class Rational extends Number {
     /**
      * Create a {@link Rational}.
      *
-     * @param numerator   The numerator.
+     * @param numerator The numerator.
      * @param denominator The denominator.
      */
     public Rational(int numerator, int denominator) {
@@ -114,16 +114,22 @@ public final class Rational extends Number {
 
     /**
      * Determines if this rational is greater than another.
+     *
+     * @param other The other rational.
+     * @return {@code true} If this number is greater.
      */
-    public boolean greaterThan(Rational rational) {
-        return doubleValue() > rational.doubleValue();
+    public boolean greaterThan(Rational other) {
+        return doubleValue() > other.doubleValue();
     }
 
     /**
      * Determines if this rational is less than another.
+     *
+     * @param other The other rational.
+     * @return {@code true} If this number is lesser.
      */
-    public boolean lessThan(Rational rational) {
-        return doubleValue() < rational.doubleValue();
+    public boolean lessThan(Rational other) {
+        return doubleValue() < other.doubleValue();
     }
 
     @Override
@@ -147,55 +153,72 @@ public final class Rational extends Number {
     }
 
     /**
-     * Returns the reciprocal of this rational.
+     * Returns the reciprocal of this rational (flips the numerator and denominator).
+     *
+     * @return The reciprocal.
      */
     public Rational reciprocal() {
         return new Rational(denominator, numerator);
     }
 
     /**
-     * Adds to this rational.
+     * Adds {@code other} with this rational. Returns a new Rational instance.
+     *
+     * @param other The rational number to add.
+     * @return The new rational.
      */
-    public Rational add(Rational rational) {
-        int commonDenominator = denominator * rational.denominator;
-        int numeratorOne = numerator * rational.denominator;
-        int numeratorTwo = rational.numerator * denominator;
+    public Rational add(Rational other) {
+        int commonDenominator = denominator * other.denominator;
+        int numeratorOne = numerator * other.denominator;
+        int numeratorTwo = other.numerator * denominator;
         int numeratorSum = numeratorOne + numeratorTwo;
 
         return new Rational(numeratorSum, commonDenominator);
     }
 
     /**
-     * Subtracts from this rational.
+     * Subtracts {@code other} from this rational. Returns a new Rational instance.
+     *
+     * @param other The rational number to subtract.
+     * @return The new rational.
      */
-    public Rational subtract(Rational rational) {
-        int commonDenominator = denominator * rational.denominator;
-        int numeratorOne = numerator * rational.denominator;
-        int numeratorTwo = rational.numerator * denominator;
+    public Rational subtract(Rational other) {
+        int commonDenominator = denominator * other.denominator;
+        int numeratorOne = numerator * other.denominator;
+        int numeratorTwo = other.numerator * denominator;
         int numeratorDifference = numeratorOne - numeratorTwo;
 
         return new Rational(numeratorDifference, commonDenominator);
     }
 
     /**
-     * Multiplies this rational.
+     * Multiplies this rational with {@code other}. Returns a new Rational instance.
+     *
+     * @param other The rational number to multiply.
+     * @return The new rational.
      */
-    public Rational multiply(Rational rational) {
-        int n = numerator * rational.numerator;
-        int d = denominator * rational.denominator;
+    public Rational multiply(Rational other) {
+        int n = numerator * other.numerator;
+        int d = denominator * other.denominator;
 
         return new Rational(n, d);
     }
 
     /**
-     * Divides this rational.
+     * Divides this rational with {@code other}. Returns a new Rational instance.
+     *
+     * @param other The rational number to divide.
+     * @return The new rational.
      */
-    public Rational divide(Rational rational) {
-        return multiply(rational.reciprocal());
+    public Rational divide(Rational other) {
+        return multiply(other.reciprocal());
     }
 
     /**
      * Determines the greatest common denominator.
+     *
+     * @param numeratorOne The first numerator.
+     * @param numeratorTwo The second numerator.
      */
     private int gcd(int numeratorOne, int numeratorTwo) {
         BigInteger numOne = BigInteger.valueOf(numeratorOne);

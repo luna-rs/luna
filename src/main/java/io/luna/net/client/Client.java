@@ -1,4 +1,4 @@
-package io.luna.net.session;
+package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
 import io.luna.util.NetworkUtils;

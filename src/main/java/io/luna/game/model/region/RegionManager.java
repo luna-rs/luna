@@ -7,8 +7,8 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,7 +112,7 @@ public final class RegionManager {
         boolean isNorthViewable = localY + VIEWING_DISTANCE >= 63; // Is northern region viewable?
         boolean isSouthViewable = localY - VIEWING_DISTANCE <= 0; // Is southern region viewable?
 
-        List<Region> regions = new LinkedList<>(); // A list to store viewable regions.
+        List<Region> regions = new ArrayList<>(4); // A list to store viewable regions.
         Consumer<RegionCoordinates> addRegion = c -> regions.add(getRegion(c)); // Store a new region.
 
         addRegion.accept(coords); // Store current region.

@@ -1,11 +1,15 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
-import fj.P;
-import fj.P3;
-import io.luna.net.msg.MessageRepository;
+import io.luna.game.event.Event;
+import io.luna.game.model.mob.Player;
+import io.luna.net.msg.GameMessage;
+import io.luna.net.msg.GameMessageReader;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.parser.GsonParser;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -13,35 +17,72 @@ import java.util.List;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageRepositoryParser extends GsonParser<P3<Integer, Integer, String>> {
+public final class MessageRepositoryParser extends GsonParser<GameMessageReader> {
+
+    private static final class DefaultMessageReader extends GameMessageReader {
+
+        @Override
+        public Event read(Player player, GameMessage msg) throws Exception {
+            return null;
+        }
+    }
+
+    private static final String DIR = "io.luna.net.msg.in.";
 
     /**
      * The message repository.
      */
-    private final MessageRepository messageRepository;
+    private final GameMessageRepository repository;
 
     /**
      * Creates a new {@link MessageRepositoryParser}.
      *
-     * @param messageRepository The message repository.
+     * @param repository The message repository.
      */
-    public MessageRepositoryParser(MessageRepository messageRepository) {
-        super("./data/io/message_repo.json");
-        this.messageRepository = messageRepository;
+    public MessageRepositoryParser(GameMessageRepository repository) {
+        this.repository = repository;
     }
 
     @Override
-    public P3<Integer, Integer, String> readObject(JsonObject reader) throws Exception {
+    public GameMessageReader readObject(JsonObject reader) throws Exception {
         int opcode = reader.get("opcode").getAsInt();
         int size = reader.get("size").getAsInt();
-        String payload = reader.has("payload") ? reader.get("payload").getAsString() : null;
-        return P.p(opcode, size, payload);
+        String className = reader.has("payload") ? reader.get("payload").getAsString() : null;
+        return createReader(opcode, size, className);
     }
 
     @Override
-    public void onReadComplete(List<P3<Integer, Integer, String>> readObjects) throws Exception {
-        for (P3<Integer, Integer, String> it : readObjects) {
-            messageRepository.addHandler(it._1(), it._2(), it._3());
+    public void onReadComplete(List<GameMessageReader> readObjects) throws Exception {
+        for (GameMessageReader messageReader : readObjects) {
+            repository.put(messageReader);
         }
+        repository.lock();
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/io/message_repo.json");
+    }
+
+    private GameMessageReader createReader(int opcode, int size, String className) throws ReflectiveOperationException {
+
+        // Create class and instance from qualified name.
+        Object readerInstance = className != null ?
+                Class.forName(DIR + className).newInstance() : new DefaultMessageReader();
+
+        // Retrieve opcode and size fields.
+        Class<?> readerClass = readerInstance.getClass().getSuperclass();
+        Field opcodeField = readerClass.getDeclaredField("opcode");
+        Field sizeField = readerClass.getDeclaredField("size");
+
+        // Make them accessible.
+        opcodeField.setAccessible(true);
+        sizeField.setAccessible(true);
+
+        // Reflectively set the values.
+        opcodeField.setInt(readerInstance, opcode);
+        sizeField.setInt(readerInstance, size);
+
+        return (GameMessageReader) readerInstance;
     }
 }

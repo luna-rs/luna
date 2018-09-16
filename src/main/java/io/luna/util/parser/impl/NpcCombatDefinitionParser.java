@@ -1,5 +1,6 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
@@ -13,13 +14,6 @@ import java.util.List;
  * @author lare96 <http://github.org/lare96>
  */
 public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
-
-    /**
-     * Creates a new {@link NpcCombatDefinitionParser}.
-     */
-    public NpcCombatDefinitionParser() {
-        super("./data/npcs/npc_combat_defs.json");
-    }
 
     @Override
     public NpcCombatDefinition readObject(JsonObject reader) throws Exception {
@@ -44,5 +38,10 @@ public class NpcCombatDefinitionParser extends GsonParser<NpcCombatDefinition> {
     @Override
     public void onReadComplete(List<NpcCombatDefinition> readObjects) throws Exception {
         readObjects.forEach(NpcCombatDefinition.ALL::storeDefinition);
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/npcs/npc_combat_defs.json");
     }
 }

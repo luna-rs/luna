@@ -1,5 +1,7 @@
 package io.luna.game.model;
 
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.model.mob.MobList;
@@ -10,18 +12,18 @@ import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
+import io.luna.util.ThreadUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
-
-import static io.luna.util.ThreadUtils.getCpuAmount;
-import static io.luna.util.ThreadUtils.nameThreadFactory;
-import static io.luna.util.ThreadUtils.newFixedThreadPool;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * A model that performs world processing and synchronization for mobs.
@@ -56,7 +58,7 @@ public final class World {
                     player.queue(new NpcUpdateMessageWriter());
                     player.queue(new PlayerUpdateMessageWriter());
                 } catch (Exception e) {
-                    LOGGER.warn(player + " could not complete synchronization.", e);
+                    LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
                 } finally {
                     barrier.arriveAndDeregister();
@@ -113,8 +115,7 @@ public final class World {
     /**
      * A thread pool for parallel updating.
      */
-    private final ExecutorService service =
-            newFixedThreadPool(nameThreadFactory("WorldSynchronizationThread"), getCpuAmount());
+    private final ExecutorService service;
 
     /**
      * Creates a new {@link World}.
@@ -123,6 +124,13 @@ public final class World {
      */
     public World(LunaContext context) {
         this.context = context;
+    }
+
+    { // Initialize synchronization thread pool.
+        ThreadFactory tf = new ThreadFactoryBuilder().
+                setNameFormat("WorldSynchronizationThread").build();
+        ExecutorService delegate = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+        service = MoreExecutors.listeningDecorator(delegate);
     }
 
     /**
@@ -188,17 +196,19 @@ public final class World {
      */
     public void loop() {
 
-        // Handle logins and logouts.
+        // Handle logins.
         dequeueLogins();
-        dequeueLogouts();
+
+        // Process all tasks.
+        tasks.runTaskIteration();
 
         // Handle world synchronization.
         preSynchronize();
         synchronize();
         postSynchronize();
 
-        // Process all tasks.
-        tasks.runTaskIteration();
+        // Handle logouts.
+        dequeueLogouts();
     }
 
     /**
@@ -212,7 +222,7 @@ public final class World {
                 player.getClient().handleDecodedMessages();
             } catch (Exception e) {
                 player.logout();
-                LOGGER.warn(player + " could not complete pre-synchronization.", e);
+                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
@@ -221,7 +231,7 @@ public final class World {
                 npc.getWalkingQueue().process();
             } catch (Exception e) {
                 npcList.remove(npc);
-                LOGGER.warn(npc + " could not complete pre-synchronization.", e);
+                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
     }

@@ -59,7 +59,7 @@ public final class PluginBootstrap {
     /**
      * A task that will load a single plugin directory.
      */
-    private final class PluginLoader implements Runnable {
+    private final class PluginDirLoader implements Runnable {
 
         /**
          * All plugin files and their contents.
@@ -77,12 +77,12 @@ public final class PluginBootstrap {
         private final Path pluginMetadata;
 
         /**
-         * Creates a new {@link PluginLoader}.
+         * Creates a new {@link PluginDirLoader}.
          *
          * @param dir The plugin directory.
          * @param pluginMetadata The plugin metadata file directory.
          */
-        public PluginLoader(Path dir, Path pluginMetadata) {
+        public PluginDirLoader(Path dir, Path pluginMetadata) {
             this.dir = dir;
             this.pluginMetadata = pluginMetadata;
         }
@@ -204,7 +204,7 @@ public final class PluginBootstrap {
      * @throws ExecutionException If the file loading executor fails to complete.
      */
     private void initFiles() throws ExecutionException {
-        AsyncExecutor executor = AsyncExecutor.newSingletonExecutor(ThreadUtils.getCpuAmount());
+        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "PluginDirInitThread");
 
         // Traverse all paths and sub-paths.
         Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
@@ -213,13 +213,13 @@ public final class PluginBootstrap {
                 Path pluginMetadata = dir.resolve("plugin.toml");
                 if (Files.exists(pluginMetadata)) {
                     // Submit file tasks.
-                    executor.execute(new PluginLoader(dir, pluginMetadata));
+                    executor.execute(new PluginDirLoader(dir, pluginMetadata));
                 }
             }
         }
 
         // Await completion.
-        executor.await();
+        executor.await(true);
     }
 
     /**

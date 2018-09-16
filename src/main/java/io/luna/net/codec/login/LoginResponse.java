@@ -1,6 +1,6 @@
 package io.luna.net.codec.login;
 
-import io.luna.net.session.Client;
+import io.luna.net.client.Client;
 
 /**
  * An enumerated type whose values represent login responses. Any response other than {@link #NORMAL} will

@@ -1,5 +1,6 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.EquipmentDefinition;
@@ -20,13 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinition> {
 
-    /**
-     * Creates a new {@link EquipmentDefinitionParser}.
-     */
-    public EquipmentDefinitionParser() {
-        super("./data/items/equipment_defs.json");
-    }
-
     @Override
     public EquipmentDefinition readObject(JsonObject reader) throws Exception {
         int id = reader.get("id").getAsInt();
@@ -44,6 +38,11 @@ public final class EquipmentDefinitionParser extends GsonParser<EquipmentDefinit
     public void onReadComplete(List<EquipmentDefinition> readObjects) throws Exception {
         readObjects.forEach(EquipmentDefinition.ALL::storeDefinition);
         EquipmentDefinition.ALL.lock();
+    }
+
+    @Override
+    public ImmutableList<String> forFiles() {
+        return ImmutableList.of("./data/items/equipment_defs.json");
     }
 
     /**

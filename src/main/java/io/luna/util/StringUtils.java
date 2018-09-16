@@ -29,6 +29,9 @@ public final class StringUtils {
 
     /**
      * Computes the indefinite article of {@code thing}.
+     *
+     * @param thing The thing to compute for.
+     * @return The article.
      */
     public static String computeArticle(Object thing) {
         char first = thing.toString().toLowerCase().charAt(0);
@@ -38,6 +41,9 @@ public final class StringUtils {
 
     /**
      * Appends the indefinite article of {@code thing} to {@code thing}.
+     *
+     * @param thing The thing to compute for and append.
+     * @return The appended article.
      */
     public static String addArticle(Object thing) {
         String asString = thing.toString();
@@ -46,6 +52,9 @@ public final class StringUtils {
 
     /**
      * Encodes {@code s} to a base-37 {@code long}.
+     *
+     * @param s The string to encode.
+     * @return The encoded string.
      */
     public static long encodeToBase37(String s) {
         long l = 0L;
@@ -67,20 +76,11 @@ public final class StringUtils {
     }
 
     /**
-     * Decodes {@code l} into a {@link String}.
+     * Capitalizes a String value.
+     *
+     * @param s The String to capitalize.
+     * @return The capitalized String.
      */
-    public static String decodeFromBase37(long l) {
-        int i = 0;
-        char ac[] = new char[12];
-        while (l != 0L) {
-            long l1 = l;
-            l /= 37L;
-            ac[11 - i++] = VALID_CHARACTERS[(int) (l1 - l * 37L)];
-        }
-        return new String(ac, 12 - i, i);
-    }
-
-
     public static String capitalize(String s) {
         if (!s.isEmpty()) {
             String capital = s.substring(0, 1).toUpperCase();
