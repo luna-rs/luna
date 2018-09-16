@@ -1,104 +1,159 @@
 package io.luna.util;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@code Executor} that runs a sequence of tasks and waits until they're completed to continue.
+ * An {@link Executor} implementation that asynchronously executes a series of user-defined tasks, and
+ * provides functionality to wait until they're completed.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class AsyncExecutor implements Executor {
 
-    private static final ThreadFactory DEFAULT_THREAD_FACTORY =
-            ThreadUtils.nameThreadFactory("AsyncExecutorWorkerThread");
+    /**
+     * Supplies the default thread factories used to create workers.
+     */
+    private static final ThreadFactoryBuilder DEFAULT_TF_BUILDER =
+            new ThreadFactoryBuilder().setNameFormat("AsyncExecutorWorkerThread");
 
     /**
-     * The tasks.
+     * A queue of pending tasks.
      */
-    private final Queue<Future<?>> pendingTasks = new ConcurrentLinkedQueue<>();
+    private final Queue<Future<?>> pendingTasks = new LinkedBlockingQueue<>();
 
     /**
-     * The delegate executor.
+     * The thread pool worker count.
      */
-    private final ExecutorService delegate;
+    private final int threadCount;
 
-    private final boolean isSingleton;
+    /**
+     * The thread factory to create workers with.
+     */
+    private final ThreadFactory threadFactory;
+
+    /**
+     * The backing thread pool containing workers that execute tasks.
+     */
+    private final ExecutorService threadPool;
 
 
-    public static AsyncExecutor newSingletonExecutor(int nThreads) {
-        return new AsyncExecutor(nThreads, DEFAULT_THREAD_FACTORY, true);
+    /**
+     * Creates a new {@link AsyncExecutor}.
+     *
+     * @param threadCount The thread pool worker count.
+     * @param threadFactory The thread factory to create workers with.
+     */
+    public AsyncExecutor(int threadCount, ThreadFactory threadFactory) {
+        this.threadCount = threadCount;
+        this.threadFactory = threadFactory;
+        threadPool = Executors.newFixedThreadPool(threadCount, threadFactory);
     }
 
-    public static AsyncExecutor newSingletonExecutor(int nThreads, ThreadFactory threadFactory) {
-        return new AsyncExecutor(nThreads, threadFactory, true);
+    /**
+     * Creates a new {@link AsyncExecutor} using a named thread factory.
+     *
+     * @param threadCount The thread pool worker count.
+     * @param threadName The name of worker threads.
+     */
+    public AsyncExecutor(int threadCount, String threadName) {
+        this(threadCount, new ThreadFactoryBuilder().setNameFormat(threadName).build());
     }
 
-    public static AsyncExecutor newExecutor(int nThreads) {
-        return new AsyncExecutor(nThreads, DEFAULT_THREAD_FACTORY, false);
+    /**
+     * Creates a new {@link AsyncExecutor} using the default thread factory.
+     *
+     * @param threadCount The thread pool worker count.
+     */
+    public AsyncExecutor(int threadCount) {
+        this(threadCount, DEFAULT_TF_BUILDER.build());
     }
-
-    public static AsyncExecutor newExecutor(int nThreads, ThreadFactory threadFactory) {
-        return new AsyncExecutor(nThreads, threadFactory, false);
-    }
-
-    private AsyncExecutor(int nThreads, ThreadFactory threadFactory, boolean isSingleton) {
-        this.isSingleton = isSingleton;
-        delegate = Executors.newFixedThreadPool(nThreads, threadFactory);
-    }
-
 
     @Override
     public void execute(Runnable command) {
-        pendingTasks.add(delegate.submit(command));
+        checkState(isRunning(), "No workers available to run tasks.");
+
+        Future<?> pending = threadPool.submit(command);
+        pendingTasks.offer(pending);
     }
 
     /**
-     * Runs tasks and waits for them to complete.
+     * Waits as long as necessary for all pending tasks to complete, performing shutdown operations if
+     * necessary. When this method returns successfully, {@link #size()} {@code == 0}.
+     *
+     * @param terminate If the backing thread pool should be terminated once all tasks finish.
+     * @throws ExecutionException If a pending task throws an exception.
      */
-    public void await(long timeout, TimeUnit unit) throws ExecutionException {
-        if (isDone()) {
-            pendingTasks.clear();
-        } else {
-            for (; ; ) {
-                Future<?> pending = pendingTasks.poll();
-                if (pending == null) {
-                    break;
-                }
-                // TODO handle cancellation exception?
-                Uninterruptibles.getUninterruptibly(pending);
+    public void await(boolean terminate) throws ExecutionException {
+        checkState(isRunning(), "Backing thread pool has already been terminated.");
+
+        for (; ; ) {
+            Future<?> pending = pendingTasks.poll();
+            if (pending == null) {
+                break;
             }
+            Uninterruptibles.getUninterruptibly(pending);
         }
 
-        if (isSingleton) {
-            delegate.shutdown();
-
-            try {
-                delegate.awaitTermination(timeout, unit);
-            } catch (InterruptedException e) {
-                // Ignore thread interruption.
-            }
+        if (terminate) {
+            threadPool.shutdown();
+            ThreadUtils.awaitTerminationUninterruptibly(threadPool);
         }
     }
 
+    /**
+     * Returns the current amount of pending tasks. The returned amount is guaranteed to not include
+     * tasks that have already completed.
+     *
+     * @return The amount of pending tasks.
+     */
     public int size() {
+        pendingTasks.removeIf(Future::isDone);
         return pendingTasks.size();
     }
 
-    public void await() throws ExecutionException {
-        await(Long.MAX_VALUE, TimeUnit.DAYS);
+
+    /**
+     * Returns if all tasks have completed their execution.
+     *
+     * @return {@code true} if all pending tasks are done.
+     */
+    public boolean isDone() {
+        return size() == 0;
     }
 
-    public boolean isDone() {
-        return pendingTasks.stream().allMatch(Future::isDone);
+    /**
+     * Returns if this executor is running. If {@code false} new tasks cannot be added and
+     * {@link #size()} {@code == 0}.
+     *
+     * @return {@code true} if the backing thread pool isn't shutdown.
+     */
+    public boolean isRunning() {
+        return !threadPool.isShutdown();
+    }
+
+    /**
+     * @return The thread pool worker count.
+     */
+    public int getThreadCount() {
+        return threadCount;
+    }
+
+    /**
+     * @return The thread factory to create workers with.
+     */
+    public ThreadFactory getThreadFactory() {
+        return threadFactory;
     }
 }
