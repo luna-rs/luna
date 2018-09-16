@@ -8,7 +8,6 @@ import com.google.gson.JsonElement;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * A static-utility class that contains functions for Google GSON.
@@ -46,7 +45,8 @@ public final class GsonUtils {
         }
     }
 
-    public static void writeJson(JsonElement element, Path path) throws IOException {
-        writeJson(element, path.toFile());
-    }
+    /**
+     * A private constructor to discourage external instantiation.
+     */
+    private GsonUtils() {}
 }
