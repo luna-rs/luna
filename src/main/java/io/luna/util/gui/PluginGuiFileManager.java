@@ -45,16 +45,20 @@ final class PluginGuiFileManager {
 
     /**
      * Displays a "save file" interface and applies the consumer to the saved file.
+     *
+     * @param action The function to apply to the saved file.
      */
-    void saveFile(Consumer<File> fileAction) {
+    void saveFile(Consumer<File> action) {
         File file = getFileChooser("Save File").showSaveDialog(gui.getWindow());
         if (file != null) {
-            fileAction.accept(file);
+            action.accept(file);
         }
     }
 
     /**
      * Displays an "open file" interface and applies the consumer to the opened file.
+     *
+     * @param action The function to apply to the opened file.
      */
     void openFile(Consumer<File> action) {
         File file = getFileChooser("Open File").showOpenDialog(gui.getWindow());
@@ -65,17 +69,24 @@ final class PluginGuiFileManager {
 
     /**
      * Returns a file chooser instance with a title.
+     *
+     * @param title The window title.
+     * @return The file chooser instance.
      */
     private FileChooser getFileChooser(String title) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         fileChooser.setInitialDirectory(new File("./data/"));
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Luna Settings File", "*.toml"));
+        fileChooser.getExtensionFilters().
+                add(new FileChooser.ExtensionFilter("Luna Settings File", "*.toml"));
         return fileChooser;
     }
 
     /**
      * Loads the contents of a file and returns it as a String.
+     *
+     * @param name The name of the file to load.
+     * @return The contents of the file.
      */
     private String loadFile(String name) {
         Path filePath = Paths.get("./data/gui/").resolve(name);

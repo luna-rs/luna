@@ -1,5 +1,6 @@
 package io.luna.util.gui;
 
+import io.luna.game.plugin.Plugin;
 import io.luna.game.plugin.PluginMetadata;
 import javafx.scene.control.CheckBoxTreeItem;
 
@@ -8,17 +9,17 @@ import java.util.function.BiConsumer;
 import static io.luna.util.StringUtils.COMMA_JOINER;
 
 /**
- * A model representing a {@code CheckBoxTreeItem<String>} plugin within a plugin tree. This class provides
- * additional functions that allow access to plugin metadata and the GUI description text area.
+ * A model representing a {@link CheckBoxTreeItem} plugin within a plugin tree. This class provides additional
+ * functions that allow access to plugin metadata and the GUI description text area.
  *
  * @author lare96 <http://github.com/lare96>
  */
 final class PluginTreeItem extends CheckBoxTreeItem<String> {
 
     /**
-     * The plugin metadata.
+     * The plugin instance.
      */
-    private final PluginMetadata metadata;
+    private final Plugin plugin;
 
     /**
      * The plugin controller.
@@ -28,13 +29,22 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
     /**
      * Creates a new {@link PluginTreeItem}.
      *
-     * @param metadata The plugin metadata.
+     * @param plugin The plugin instance.
      * @param controller The plugin controller.
      */
-    PluginTreeItem(PluginMetadata metadata, PluginGuiController controller) {
-        super(metadata.getName());
-        this.metadata = metadata;
+    PluginTreeItem(Plugin plugin, PluginGuiController controller) {
+        super(plugin.getMetadata().getName());
+        this.plugin = plugin;
         this.controller = controller;
+    }
+
+    /**
+     * Adds all scripts as leaf child nodes.
+     */
+    void addScriptChildren() {
+        for (String script : plugin.getFiles().keySet()) {
+            getChildren().add(new CheckBoxTreeItem<>(script));
+        }
     }
 
     /**
@@ -46,23 +56,30 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
         BiConsumer<String, Object> appendData = (t, u) -> description.
                 append(t).append(": ").append(u).append("\n\n");
 
-        appendData.accept("Name", metadata.getName());
-        appendData.accept("Version", metadata.getVersion());
-        appendData.accept("Description", metadata.getDescription());
+        appendData.accept("Name", getMetadata().getName());
+        appendData.accept("Version", getMetadata().getVersion());
+        appendData.accept("Description", getMetadata().getDescription());
 
-        String dependencies = COMMA_JOINER.join(metadata.getDependencies());
+        String dependencies = COMMA_JOINER.join(getMetadata().getDependencies());
         appendData.accept("Dependencies", dependencies.isEmpty() ? none : dependencies);
 
-        String authors = COMMA_JOINER.join(metadata.getAuthors());
+        String authors = COMMA_JOINER.join(getMetadata().getAuthors());
         appendData.accept("Authors", authors.isEmpty() ? none : authors);
 
         controller.getDescriptionArea().setText(description.toString());
     }
 
     /**
+     * @return The plugin instance.
+     */
+    Plugin getPlugin() {
+        return plugin;
+    }
+
+    /**
      * @return The plugin metadata.
      */
     PluginMetadata getMetadata() {
-        return metadata;
+        return plugin.getMetadata();
     }
 }

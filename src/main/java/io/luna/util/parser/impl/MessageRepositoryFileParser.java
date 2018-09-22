@@ -7,18 +7,20 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.parser.GsonParser;
+import io.luna.util.parser.JsonFileParser;
 
 import java.lang.reflect.Field;
-import java.util.List;
 
 /**
- * A {@link GsonParser} implementation that parses incoming packet data.
+ * A {@link JsonFileParser} implementation that parses incoming message listener metadata.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageRepositoryParser extends GsonParser<GameMessageReader> {
+public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader> {
 
+    /**
+     * A default implementation of a {@link GameMessageReader}. It does nothing.
+     */
     private static final class DefaultMessageReader extends GameMessageReader {
 
         @Override
@@ -27,6 +29,9 @@ public final class MessageRepositoryParser extends GsonParser<GameMessageReader>
         }
     }
 
+    /**
+     * The directory of incoming message listeners.
+     */
     private static final String DIR = "io.luna.net.msg.in.";
 
     /**
@@ -35,36 +40,40 @@ public final class MessageRepositoryParser extends GsonParser<GameMessageReader>
     private final GameMessageRepository repository;
 
     /**
-     * Creates a new {@link MessageRepositoryParser}.
+     * Creates a new {@link MessageRepositoryFileParser}.
      *
      * @param repository The message repository.
      */
-    public MessageRepositoryParser(GameMessageRepository repository) {
+    public MessageRepositoryFileParser(GameMessageRepository repository) {
+        super("./data/io/message_repo.json");
         this.repository = repository;
     }
 
     @Override
-    public GameMessageReader readObject(JsonObject reader) throws Exception {
-        int opcode = reader.get("opcode").getAsInt();
-        int size = reader.get("size").getAsInt();
-        String className = reader.has("payload") ? reader.get("payload").getAsString() : null;
+    public GameMessageReader convert(JsonObject token) throws Exception {
+        int opcode = token.get("opcode").getAsInt();
+        int size = token.get("size").getAsInt();
+        String className = token.has("payload") ? token.get("payload").getAsString() : null;
         return createReader(opcode, size, className);
     }
 
     @Override
-    public void onReadComplete(List<GameMessageReader> readObjects) throws Exception {
-        for (GameMessageReader messageReader : readObjects) {
-            repository.put(messageReader);
-        }
+    public void onCompleted(ImmutableList<GameMessageReader> tokenObjects) throws Exception {
+        tokenObjects.forEach(repository::put);
         repository.lock();
     }
 
-    @Override
-    public ImmutableList<String> forFiles() {
-        return ImmutableList.of("./data/io/message_repo.json");
-    }
-
-    private GameMessageReader createReader(int opcode, int size, String className) throws ReflectiveOperationException {
+    /**
+     * Creates a new {@link GameMessageReader} using reflection.
+     *
+     * @param opcode The opcode.
+     * @param size The size.
+     * @param className The simple class name.
+     * @return The message listener instance.
+     * @throws ReflectiveOperationException If any errors occur while creating the listener instance.
+     */
+    private GameMessageReader createReader(int opcode, int size, String className)
+            throws ReflectiveOperationException {
 
         // Create class and instance from qualified name.
         Object readerInstance = className != null ?

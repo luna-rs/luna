@@ -37,23 +37,24 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
     public void handle(TreeModificationEvent<String> evt) {
         CheckBoxTreeItem<String> treeItem = evt.getTreeItem();
         if (firingEvents && treeItem instanceof PluginTreeItem) {
-            PluginTreeItem pluginItem = (PluginTreeItem) evt.getTreeItem();
-            if (pluginItem == null) {
-                return;
-            }
-            handleSelectionChange(evt, pluginItem);
+            handleSelectionChange(evt, (PluginTreeItem) evt.getTreeItem());
         }
     }
 
     /**
      * Sets whether or not to record selection events.
+     *
+     * @param newValue The new value to set.
      */
-   synchronized void setFiringEvents(boolean firingEvents) {
-        this.firingEvents = firingEvents;
+    void setFiringEvents(boolean newValue) {
+        firingEvents = newValue;
     }
 
     /**
      * Determines which change happened and updates the selected plugin set.
+     *
+     * @param evt The modification event.
+     * @param item The plugin item to handle selection changes for.
      */
     private void handleSelectionChange(TreeModificationEvent<String> evt, PluginTreeItem item) {
         String name = item.getValue();
@@ -64,9 +65,9 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
                 selectedPlugins.remove(name);
             }
         } else if (evt.wasIndeterminateChanged()) {
-            if(item.isIndeterminate() || !item.isSelected()) {
+            if (item.isIndeterminate() || !item.isSelected()) {
                 selectedPlugins.remove(name);
-            } else if(item.isSelected()) {
+            } else if (item.isSelected()) {
                 selectedPlugins.add(name);
             }
         }

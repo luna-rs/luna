@@ -1,15 +1,18 @@
 package io.luna.util;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -31,7 +34,7 @@ public final class AsyncExecutor implements Executor {
     /**
      * A queue of pending tasks.
      */
-    private final Queue<Future<?>> pendingTasks = new LinkedBlockingQueue<>();
+    private final Queue<ListenableFuture<?>> pendingTasks = new ConcurrentLinkedQueue<>();
 
     /**
      * The thread pool worker count.
@@ -46,8 +49,7 @@ public final class AsyncExecutor implements Executor {
     /**
      * The backing thread pool containing workers that execute tasks.
      */
-    private final ExecutorService threadPool;
-
+    private final ListeningExecutorService threadPool;
 
     /**
      * Creates a new {@link AsyncExecutor}.
@@ -58,7 +60,10 @@ public final class AsyncExecutor implements Executor {
     public AsyncExecutor(int threadCount, ThreadFactory threadFactory) {
         this.threadCount = threadCount;
         this.threadFactory = threadFactory;
-        threadPool = Executors.newFixedThreadPool(threadCount, threadFactory);
+
+        // Create thread pool.
+        ExecutorService delegate = Executors.newFixedThreadPool(threadCount, threadFactory);
+        threadPool = MoreExecutors.listeningDecorator(delegate);
     }
 
     /**
@@ -84,7 +89,7 @@ public final class AsyncExecutor implements Executor {
     public void execute(Runnable command) {
         checkState(isRunning(), "No workers available to run tasks.");
 
-        Future<?> pending = threadPool.submit(command);
+        ListenableFuture<?> pending = threadPool.submit(command);
         pendingTasks.offer(pending);
     }
 

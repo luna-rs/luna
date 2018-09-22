@@ -10,12 +10,39 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A callback model that will create cells for every item on the plugin tree. This allows for each plugin
- * item to display a description on the GUI when its cell is clicked.
+ * A callback listener model that will create cells for every item on the plugin tree. This allows for each
+ * plugin item to display a description on the GUI when its cell is clicked.
  *
  * @author lare96 <http://github.com/lare96>
  */
 final class PluginTreeCellCallback implements Callback<TreeView<String>, TreeCell<String>> {
+
+    /**
+     * A {@link CheckBoxTreeCell} implementation representing the cell of a plugin tree item.
+     */
+    private final class PluginTreeCell extends CheckBoxTreeCell<String> {
+
+        @Override
+        public void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (item != null) {
+                TreeItem<String> value = treeItemProperty().getValue();
+                disableProperty().unbind();
+                disableProperty().bind(value.leafProperty());
+            }
+        }
+
+        /**
+         * Sets the mouse clicked listener to display the plugin description.
+         */
+        private void setMouseClickedListener() {
+            setOnMouseClicked(evt -> Optional.ofNullable(getTreeItem()).
+                    map(TreeItem::getValue).
+                    map(pluginItems::get).
+                    ifPresent(PluginTreeItem::displayGuiDescription));
+        }
+    }
 
     /**
      * The plugin items.
@@ -33,41 +60,8 @@ final class PluginTreeCellCallback implements Callback<TreeView<String>, TreeCel
 
     @Override
     public TreeCell<String> call(TreeView<String> pluginTree) {
-        CheckBoxTreeCell<String> newCell = createTreeCell();
-        newCell.setOnMouseClicked(evt ->
-                getPluginItem(newCell).ifPresent(PluginTreeItem::displayGuiDescription));
+        PluginTreeCell newCell = new PluginTreeCell();
+        newCell.setMouseClickedListener();
         return newCell;
-    }
-
-    /**
-     * Creates and returns a new cell for the plugin tree.
-     */
-    private CheckBoxTreeCell<String> createTreeCell() {
-        return new CheckBoxTreeCell<String>() {
-            @Override
-            public void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                // TODO is this even needed?
-                if (item != null) {
-                    TreeItem<String> value = treeItemProperty().getValue();
-                    disableProperty().unbind();
-                    disableProperty().bind(value.leafProperty());
-                }
-            }
-        };
-    }
-
-    /**
-     * Returns an optional containing the plugin tree item on the argued cell.
-     */
-    private Optional<PluginTreeItem> getPluginItem(TreeCell<String> cell) {
-        TreeItem<String> cellItem = cell.getTreeItem();
-        if (cell.isEmpty() || cellItem == null) {
-            return Optional.empty(); // There's nothing on the cell.
-        }
-
-        PluginTreeItem pluginItem = pluginItems.get(cellItem.getValue());
-        return Optional.ofNullable(pluginItem);
     }
 }

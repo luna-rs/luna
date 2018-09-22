@@ -11,13 +11,13 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.BlacklistParser;
-import io.luna.util.parser.impl.EquipmentDefinitionParser;
-import io.luna.util.parser.impl.ItemDefinitionParser;
-import io.luna.util.parser.impl.MessageRepositoryParser;
-import io.luna.util.parser.impl.NpcCombatDefinitionParser;
-import io.luna.util.parser.impl.NpcDefinitionParser;
-import io.luna.util.parser.impl.ObjectDefinitionParser;
+import io.luna.util.parser.impl.BlacklistFileParser;
+import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
+import io.luna.util.parser.impl.ItemDefinitionFileParser;
+import io.luna.util.parser.impl.MessageRepositoryFileParser;
+import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
+import io.luna.util.parser.impl.NpcDefinitionFileParser;
+import io.luna.util.parser.impl.ObjectDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -135,19 +135,18 @@ public final class LunaServer {
      */
     private void initLaunchTasks() throws ExecutionException {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
-        executor.execute(new MessageRepositoryParser(messageRepository));
-        executor.execute(new EquipmentDefinitionParser());
-        executor.execute(new ItemDefinitionParser());
-        executor.execute(new NpcCombatDefinitionParser());
-        executor.execute(new NpcDefinitionParser());
-        executor.execute(new ObjectDefinitionParser());
-        executor.execute(new BlacklistParser(channelFilter));
+        executor.execute(new MessageRepositoryFileParser(messageRepository));
+        executor.execute(new EquipmentDefinitionFileParser());
+        executor.execute(new ItemDefinitionFileParser());
+        executor.execute(new NpcCombatDefinitionFileParser());
+        executor.execute(new NpcDefinitionFileParser());
+        executor.execute(new ObjectDefinitionFileParser());
+        executor.execute(new BlacklistFileParser(channelFilter));
 
         int count = executor.size();
         if(count > 0) {
             LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
             executor.await(true);
         }
-
     }
 }

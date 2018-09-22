@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * A model that builds and controls Javafx components. This class is linked with the "plugin_manager.fxml"
  * resource.
@@ -74,14 +76,10 @@ final class PluginGuiController {
     }
 
     /**
-     * Builds the tree within the plugin viewer.
+     * Builds the tree within the plugin viewer. Should only be called once.
      */
     void buildPluginViewer() {
-        // TODO caching so that we don't have to redo this entire process every update?
-
-        // Reset root and cell factory.
-        pluginTree.setRoot(null);
-        pluginTree.setCellFactory(null);
+        checkState(pluginTree.getRoot() == null, "Plugin viewer already constructed.");
 
         // Create root and event listener for root.
         CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("All plugins");
@@ -100,6 +98,8 @@ final class PluginGuiController {
 
     /**
      * Opens a URL with the default browser.
+     *
+     * @param url The URL to open.
      */
     private void openUrl(String url) {
         try {
@@ -143,6 +143,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Dark theme" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onDarkTheme(ActionEvent evt) {
@@ -158,6 +160,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Report a bug..." menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onReportABug(ActionEvent evt) {
@@ -166,6 +170,8 @@ final class PluginGuiController {
 
     /**
      * Saves the current settings.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onSave(ActionEvent evt) {
@@ -180,6 +186,8 @@ final class PluginGuiController {
 
     /**
      * Imports a compatible settings file.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onImport(ActionEvent evt) {
@@ -195,6 +203,8 @@ final class PluginGuiController {
 
     /**
      * Exports the current settings.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onExport(ActionEvent evt) {
@@ -204,6 +214,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Info" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onInfo(ActionEvent evt) {
@@ -218,6 +230,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "License" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onLicense(ActionEvent evt) {
@@ -232,6 +246,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Github page..." menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onGithubPage(ActionEvent evt) {
@@ -252,6 +268,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Finished" button is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onFinished(ActionEvent evt) {
@@ -269,6 +287,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Select all" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onSelectAll(ActionEvent evt) {
@@ -282,6 +302,8 @@ final class PluginGuiController {
 
     /**
      * Called when the "Deselect all" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onDeselectAll(ActionEvent evt) {

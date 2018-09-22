@@ -57,6 +57,8 @@ final class PluginGuiSettings {
 
     /**
      * Returns a TOML String representation of the settings.
+     *
+     * @return These settings, in TOML.
      */
     String toToml() {
         Map<String, Object> settings = new LinkedHashMap<>();
@@ -68,6 +70,9 @@ final class PluginGuiSettings {
 
     /**
      * Saves the current settings.
+     *
+     * @param path The path to save to.
+     * @return {@code true} if the save was successful.
      */
     boolean save(Path path) {
         try {
@@ -81,6 +86,8 @@ final class PluginGuiSettings {
 
     /**
      * Saves the current settings to {@code SETTINGS_DIR}.
+     *
+     * @return {@code true} if the save was successful.
      */
     boolean save() {
         return save(SETTINGS_DIR);
@@ -88,6 +95,8 @@ final class PluginGuiSettings {
 
     /**
      * Loads a settings file.
+     *
+     * @param path The path to load from.
      */
     void load(Path path) throws IllegalStateException {
         Toml tomlReader = new Toml().read(path.toFile());
@@ -142,6 +151,8 @@ final class PluginGuiSettings {
 
     /**
      * Sets the backing fields to {@code settings}.
+     *
+     * @param settings The settings to set.
      */
     void set(JsonObject settings) {
         darkMode = settings.get("dark_mode").getAsBoolean();
@@ -152,6 +163,8 @@ final class PluginGuiSettings {
 
     /**
      * Sets if the GUI is in dark mode.
+     *
+     * @param darkMode The new value.
      */
     void setDarkMode(boolean darkMode) {
         this.darkMode = darkMode;
@@ -166,6 +179,8 @@ final class PluginGuiSettings {
 
     /**
      * Sets if the GUI should save settings on exit.
+     *
+     * @param saveOnExit The new value.
      */
     void setSaveOnExit(boolean saveOnExit) {
         this.saveOnExit = saveOnExit;

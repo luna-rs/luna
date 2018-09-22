@@ -12,7 +12,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.DialogPane;
 import javafx.stage.Window;
 
@@ -36,8 +35,8 @@ import java.util.concurrent.FutureTask;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A Java representation of the plugin GUI. This model uses a hybrid of Swing and Javafx to display
- * various useful functions pertaining to managing plugins.
+ * A Java representation of the plugin GUI. This model uses a hybrid of Swing and Javafx to display various
+ * useful functions pertaining to managing plugins.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -47,6 +46,7 @@ public final class PluginGui {
      * An asynchronous Javafx task that initializes the scene.
      */
     private final class InitializeScene implements Runnable {
+
         @Override
         public void run() {
             try {
@@ -71,6 +71,7 @@ public final class PluginGui {
      * A window listener that will dispose the GUI on exit.
      */
     private final class WindowCloseListener extends WindowAdapter {
+
         @Override
         public void windowClosing(WindowEvent e) {
             close();
@@ -98,7 +99,7 @@ public final class PluginGui {
     private final JFXPanel mainPanel = new JFXPanel();
 
     /**
-     * The Jframe that will hold {@code mainPanel}.
+     * The JFrame that will hold the main panel.
      */
     private final JFrame mainFrame = new JFrame("Plugin Manager");
 
@@ -127,7 +128,12 @@ public final class PluginGui {
     }
 
     /**
-     * Launches this GUI and blocks until user input is received.
+     * Launches this GUI. This method won't return until user input is received or until the
+     * application is terminated.
+     *
+     * @return The selected plugins.
+     * @throws IOException        If any I/O errors occur.
+     * @throws ExecutionException If the Scene initialization task fails.
      */
     public Set<String> launch() throws IOException, ExecutionException {
         checkState(!Platform.isFxApplicationThread(), "Cannot be called from Javafx thread.");
@@ -141,28 +147,32 @@ public final class PluginGui {
 
         // Wait here until user input is received.
         Uninterruptibles.awaitUninterruptibly(barrier);
-
         return settings.getSelected();
     }
 
 
     /**
-     * Returns a map of plugin names -> tree items.
+     * Takes the map of all plugins in the plugin directory and returns an immutable map of
+     * those plugins as tree items.
+     *
+     * @param plugins The plugins in the plugin dir.
+     * @return The immutable map of tree items.
      */
     private ImmutableMap<String, PluginTreeItem> buildPluginItems(Map<String, Plugin> plugins) {
-        Map<String, PluginTreeItem> map = new LinkedHashMap<>();
-        plugins.forEach((k, v) -> {
-            PluginTreeItem item = new PluginTreeItem(v.getMetadata(), controller);
-            for (String name : v.getFiles().keySet()) { // Add script leaves.
-                item.getChildren().add(new CheckBoxTreeItem<>(name));
-            }
-            map.put(k, item);
-        });
-        return ImmutableMap.copyOf(map);
+        Map<String, PluginTreeItem> treeItems = new LinkedHashMap<>();
+        for (Plugin plugin : plugins.values()) {
+            PluginTreeItem item = new PluginTreeItem(plugin, controller);
+            item.addScriptChildren();
+
+            treeItems.put(item.getValue(), item);
+        }
+        return ImmutableMap.copyOf(treeItems);
     }
 
     /**
      * Loads the main JFrame.
+     *
+     * @throws IOException If an error occurs while loading the GUI icon.
      */
     private void loadMainFrame() throws IOException {
         BufferedImage iconImage = ImageIO.read(Resources.getResource("plugin_icon.png"));
@@ -177,6 +187,8 @@ public final class PluginGui {
 
     /**
      * Loads the Javafx components.
+     *
+     * @throws ExecutionException If the Scene fails to load.
      */
     private void loadScene() throws ExecutionException {
         FutureTask<Boolean> delegateTask = new FutureTask<>(new InitializeScene(), true);
@@ -186,6 +198,10 @@ public final class PluginGui {
 
     /**
      * Creates an alert instance.
+     *
+     * @param alertType The type of alert.
+     * @param buttons The buttons to include on the alert.
+     * @return The alert instance.
      */
     Alert createAlert(AlertType alertType, ButtonType... buttons) {
         Alert alert = new Alert(alertType, "", buttons);
@@ -198,6 +214,9 @@ public final class PluginGui {
 
     /**
      * Opens an error alert window.
+     *
+     * @param error The error that was thrown.
+     * @return The clicked button, wrapped in an optional.
      */
     Optional<ButtonType> openErrorAlert(Throwable error) {
         error.printStackTrace();
@@ -208,7 +227,11 @@ public final class PluginGui {
     }
 
     /**
-     * Opens a confirmation alert window.
+     * Opens a confirmation alert window. Blocks until user input is received.
+     *
+     * @param content The text to display on the alert.
+     * @param buttons The buttons to display on the alert.
+     * @return An optional representing the user input.
      */
     Optional<ButtonType> openConfirmAlert(String content, ButtonType... buttons) {
         Alert optionAlert = createAlert(AlertType.CONFIRMATION, buttons);
