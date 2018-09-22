@@ -1,6 +1,5 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 import java.util.Optional;
@@ -75,12 +74,12 @@ public final class ItemDefinition implements Definition {
     /**
      * A list of inventory actions.
      */
-    private final ImmutableList<String> inventoryActions;
+    private final ContextMenu inventoryActions;
 
     /**
      * A list of ground actions.
      */
-    private final ImmutableList<String> groundActions;
+    private final ContextMenu groundActions;
 
     /**
      * Creates a new {@link ItemDefinition}.
@@ -99,8 +98,8 @@ public final class ItemDefinition implements Definition {
      * @param groundActions A list of ground actions.
      */
     public ItemDefinition(int id, String name, String examine, boolean stackable, int value, int notedId,
-                          int unnotedId, boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
-                          String[] groundActions) {
+                          int unnotedId, boolean membersOnly, double weight, boolean tradeable,
+                          String[] inventoryActions, String[] groundActions) {
         this.id = id;
         this.name = name;
         this.examine = examine;
@@ -111,22 +110,8 @@ public final class ItemDefinition implements Definition {
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
-        this.inventoryActions = ImmutableList.copyOf(inventoryActions);
-        this.groundActions = ImmutableList.copyOf(groundActions);
-    }
-
-    /**
-     * Determines if {@code action} is an inventory action.
-     */
-    public boolean hasInventoryAction(String action) {
-        return inventoryActions.contains(action);
-    }
-
-    /**
-     * Determines if {@code action} is a ground action.
-     */
-    public boolean hasGroundAction(String action) {
-        return groundActions.contains(action);
+        this.inventoryActions = new ContextMenu(inventoryActions);
+        this.groundActions = new ContextMenu(groundActions);
     }
 
     /**
@@ -217,14 +202,14 @@ public final class ItemDefinition implements Definition {
     /**
      * @return A list of inventory actions.
      */
-    public ImmutableList<String> getInventoryActions() {
+    public ContextMenu getInventoryActions() {
         return inventoryActions;
     }
 
     /**
      * @return A list of ground actions.
      */
-    public ImmutableList<String> getGroundActions() {
+    public ContextMenu getGroundActions() {
         return groundActions;
     }
 }

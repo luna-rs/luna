@@ -1,6 +1,5 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
@@ -48,7 +47,7 @@ public final class ObjectDefinition implements Definition {
     /**
      * A list of actions.
      */
-    private final ImmutableList<String> actions;
+    private final ContextMenu actions;
 
     /**
      * If the object is impenetrable.
@@ -95,17 +94,7 @@ public final class ObjectDefinition implements Definition {
         this.isInteractive = isInteractive;
         this.isObstructive = isObstructive;
         this.isSolid = isSolid;
-        this.actions = ImmutableList.copyOf(actions);
-    }
-
-    /**
-     * Determines if the backing action list contains {@code action}.
-     *
-     * @param action The action to look for.
-     * @return {@code true} if {@code action} is contained in the backing action list.
-     */
-    public boolean hasAction(String action) {
-        return actions.contains(action);
+        this.actions = new ContextMenu(actions);
     }
 
     @Override
@@ -181,7 +170,7 @@ public final class ObjectDefinition implements Definition {
     /**
      * @return A list of actions.
      */
-    public ImmutableList<String> getActions() {
+    public ContextMenu getActions() {
         return actions;
     }
 }

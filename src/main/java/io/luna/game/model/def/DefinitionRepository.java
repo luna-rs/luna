@@ -3,6 +3,7 @@ package io.luna.game.model.def;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -158,6 +159,16 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
 
         put(id, definition);
         size++;
+    }
+
+    /**
+     * Attempts to store all {@code definitions}, and locks the repository afterwards.
+     *
+     * @param definitions The definitions to store.
+     */
+    public final void storeAndLock(Collection<? extends T> definitions) {
+        definitions.forEach(this::storeDefinition);
+        lock();
     }
 
     /**

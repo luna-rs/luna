@@ -2,7 +2,6 @@ package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
@@ -10,7 +9,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static com.google.common.base.Predicates.not;
 import static io.luna.util.StringUtils.addArticle;
@@ -28,29 +26,35 @@ public final class EquipmentDefinition implements Definition {
     public static final class Requirement {
 
         /**
+         * The requirement skill name.
+         */
+        private final String name;
+
+        /**
          * The requirement skill identifier.
          */
         private final int id;
 
         /**
-         * The requirement level.
+         * The requirement skill level.
          */
         private final int level;
 
         /**
          * Creates a new {@link Requirement}.
          *
-         * @param object The JSON object structure.
+         * @param jsonReq The requirement data, in JSON.
          */
-        public Requirement(JsonObject object) {
-            id = Skill.getId(object.get("name").getAsString());
-            level = object.get("level").getAsInt();
+        public Requirement(JsonObject jsonReq) {
+            name = jsonReq.get("name").getAsString();
+            id = Skill.getId(name);
+            level = jsonReq.get("level").getAsInt();
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this).
-                    add("name", Skill.getName(id)).
+                    add("name", name).
                     add("id", id).
                     add("level", level).toString();
         }
@@ -71,11 +75,21 @@ public final class EquipmentDefinition implements Definition {
          * @param player The player to send the message to.
          */
         public void sendFailureMessage(Player player) {
-            String article = addArticle(player.skill(id));
+            Skill skill = player.skill(id);
+            String article = addArticle(skill);
             player.sendMessage("You need " + article + " level of " + level + " to equip this.");
         }
 
         /**
+         * @return The requirement skill name.
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Retrieves and returns the skill identifier.
+         *
          * @return The requirement skill identifier.
          */
         public int getId() {
@@ -83,7 +97,7 @@ public final class EquipmentDefinition implements Definition {
         }
 
         /**
-         * @return The requirement level.
+         * @return The requirement skill level.
          */
         public int getLevel() {
             return level;
@@ -121,9 +135,9 @@ public final class EquipmentDefinition implements Definition {
     private final boolean fullHelmet;
 
     /**
-     * A set of equipment requirements.
+     * A list of equipment requirements.
      */
-    private final ImmutableSet<Requirement> requirements;
+    private final ImmutableList<Requirement> requirements;
 
     /**
      * A list of equipment bonuses.
@@ -142,13 +156,13 @@ public final class EquipmentDefinition implements Definition {
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                               Set<Requirement> requirements, int[] bonuses) {
+                              Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = ImmutableSet.copyOf(requirements);
+        this.requirements = ImmutableList.copyOf(requirements);
         this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
     }
 
@@ -209,7 +223,7 @@ public final class EquipmentDefinition implements Definition {
     /**
      * @return A set of the requirements.
      */
-    public ImmutableSet<Requirement> getRequirements() {
+    public ImmutableList<Requirement> getRequirements() {
         return requirements;
     }
 

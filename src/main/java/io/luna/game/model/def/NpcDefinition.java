@@ -1,6 +1,5 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
@@ -8,7 +7,7 @@ import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcDefinition implements Definition{
+public final class NpcDefinition implements Definition {
 
     /**
      * The definition count.
@@ -63,7 +62,7 @@ public final class NpcDefinition implements Definition{
     /**
      * A list of actions.
      */
-    private final ImmutableList<String> actions;
+    private final ContextMenu actions;
 
     /**
      * Creates a new {@link NpcDefinition}.
@@ -79,7 +78,7 @@ public final class NpcDefinition implements Definition{
      * @param actions A list of actions.
      */
     public NpcDefinition(int id, String name, String examine, int size, int walkAnimation, int walkBackAnimation,
-        int walkLeftAnimation, int walkRightAnimation, String[] actions) {
+                         int walkLeftAnimation, int walkRightAnimation, String[] actions) {
         this.id = id;
         this.name = name;
         this.examine = examine;
@@ -88,14 +87,7 @@ public final class NpcDefinition implements Definition{
         this.walkBackAnimation = walkBackAnimation;
         this.walkLeftAnimation = walkLeftAnimation;
         this.walkRightAnimation = walkRightAnimation;
-        this.actions = ImmutableList.copyOf(actions);
-    }
-
-    /**
-     * Determines if {@code action} is an action.
-     */
-    public boolean hasAction(String action) {
-        return actions.contains(action);
+        this.actions = new ContextMenu(actions);
     }
 
     /**
@@ -157,7 +149,7 @@ public final class NpcDefinition implements Definition{
     /**
      * @return A list of actions.
      */
-    public ImmutableList<String> getActions() {
+    public ContextMenu getActions() {
         return actions;
     }
 }
