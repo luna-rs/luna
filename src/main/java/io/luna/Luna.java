@@ -1,6 +1,5 @@
 package io.luna;
 
-import io.luna.game.model.def.EquipmentDefinition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,10 +45,6 @@ public final class Luna  {
         try {
             LunaServer luna = new LunaServer();
             luna.init();
-
-            for(EquipmentDefinition def : EquipmentDefinition.ALL) {
-              def.getRequirements().forEach(System.out::println);
-            }
         } catch (Exception e) {
             LOGGER.fatal("Luna could not be started.", e);
             System.exit(0);

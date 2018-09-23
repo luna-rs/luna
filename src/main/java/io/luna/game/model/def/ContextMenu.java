@@ -1,9 +1,11 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -34,9 +36,9 @@ public final class ContextMenu implements Iterable<String> {
     }
 
     /**
-     * An immutable list of menu actions.
+     * A list of menu actions.
      */
-    private final ImmutableList<String> actions;
+    private final String[] actions;
 
     /**
      * Creates a new {@link ContextMenu}.
@@ -46,17 +48,16 @@ public final class ContextMenu implements Iterable<String> {
     public ContextMenu(String[] actionStrings) {
         int length = actionStrings.length;
         if (length == 0) {
-            actions = ImmutableList.of();
+            actions = new String[length];
         } else {
-            String[] newActions = buildMenuActions(length, actionStrings);
-            actions = ImmutableList.copyOf(newActions);
+            actions = buildMenuActions(length, actionStrings);
         }
     }
 
     @NotNull
     @Override
     public UnmodifiableIterator<String> iterator() {
-        return actions.iterator();
+        return Iterators.forArray(actions);
     }
 
     /**
@@ -66,7 +67,7 @@ public final class ContextMenu implements Iterable<String> {
      * @return {@code true} if the index is out of bounds.
      */
     private boolean isIndexOutOfBounds(int index) {
-        return index < 0 || index >= actions.size();
+        return index < 0 || index >= actions.length;
     }
 
     /**
@@ -92,7 +93,7 @@ public final class ContextMenu implements Iterable<String> {
         if (isIndexOutOfBounds(index)) {
             return Optional.empty();
         }
-        String action = actions.get(index);
+        String action = actions[index];
         return Optional.ofNullable(action);
     }
 
@@ -117,13 +118,15 @@ public final class ContextMenu implements Iterable<String> {
      * @return {@code true} if this context menu has the action.
      */
     public boolean has(String action) {
-        return actions.stream().anyMatch(action::equals);
+        return Arrays.stream(actions).anyMatch(action::equals);
     }
 
     /**
-     * @return An immutable list of menu actions.
+     * Returns an immutable view of the actions.
+     *
+     * @return The list of actions.
      */
-    public ImmutableList<String> getActions() {
-        return actions;
+    public ImmutableList<String> toList() {
+        return ImmutableList.copyOf(actions);
     }
 }
