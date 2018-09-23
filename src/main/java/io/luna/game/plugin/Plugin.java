@@ -9,7 +9,7 @@ import java.util.Map;
  * up specific pieces of content. They adhere to a set of rules
  * <ul>
  * <li>Different plugins cannot share the same name
- * <li>Plugins cannot be placed in same directory as the bootstrap
+ * <li>Plugins cannot be placed in same directory as the API
  * <li>A plugin cannot have another plugin in itself
  * </ul>
  * Plugin instances are <strong>always</strong> immutable, and therefore safe to access across multiple

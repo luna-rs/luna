@@ -234,7 +234,7 @@ public final class PluginBootstrap {
      */
     private P2<Integer, Integer> initPlugins(boolean displayGui) throws ScriptException, IOException,
             ExecutionException {
-        Plugin bootstrap = plugins.remove("Bootstrap"); // Bootstrap not counted as a plugin.
+        Plugin api = plugins.remove("Plugin API"); // API not counted as a plugin.
         int totalCount = plugins.size();
 
         // Determine selected plugins and launch the GUI.
@@ -254,8 +254,8 @@ public final class PluginBootstrap {
         engine.put("$logger$", LOGGER);
         engine.put("$pipelines$", pipelines);
 
-        // Run the Scala bootstrap first.
-        loadPlugin(bootstrap);
+        // Run the Plugin API first.
+        loadPlugin(api);
 
         // Then run other plugins.
         for (Plugin other : plugins.values()) {
