@@ -3,7 +3,6 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -54,7 +53,6 @@ public final class ContextMenu implements Iterable<String> {
         }
     }
 
-    @NotNull
     @Override
     public UnmodifiableIterator<String> iterator() {
         return Iterators.forArray(actions);
