@@ -24,7 +24,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
      * Creates a new {@link EquipmentDefinitionFileParser}.
      */
     public EquipmentDefinitionFileParser() {
-        super("./data/items/equipment_defs.json");
+        super("./data/def/items/equipment_defs.json");
     }
 
     @Override

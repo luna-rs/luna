@@ -17,7 +17,7 @@ public final class ItemDefinitionFileParser extends JsonFileParser<ItemDefinitio
      * Creates a new {@link ItemDefinitionFileParser}.
      */
     public ItemDefinitionFileParser() {
-        super("./data/items/item_defs.json");
+        super("./data/def/items/item_defs.json");
     }
 
     @Override

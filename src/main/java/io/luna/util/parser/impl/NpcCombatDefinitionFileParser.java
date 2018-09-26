@@ -17,7 +17,7 @@ public class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefin
      * Creates a new {@link NpcCombatDefinitionFileParser}.
      */
     public NpcCombatDefinitionFileParser() {
-        super("./data/npcs/npc_combat_defs.json");
+        super("./data/def/npcs/npc_combat_defs.json");
     }
 
     @Override

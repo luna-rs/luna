@@ -17,7 +17,7 @@ public final class ObjectDefinitionFileParser extends JsonFileParser<ObjectDefin
      * Creates a new {@link ObjectDefinitionFileParser}.
      */
     public ObjectDefinitionFileParser() {
-        super("./data/objects/obj_defs.json");
+        super("./data/def/objects/obj_defs.json");
     }
 
     @Override

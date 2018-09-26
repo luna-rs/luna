@@ -17,7 +17,7 @@ public final class NpcDefinitionFileParser extends JsonFileParser<NpcDefinition>
      * Creates a new {@link NpcDefinitionFileParser}.
      */
     public NpcDefinitionFileParser() {
-        super("./data/npcs/npc_defs.json");
+        super("./data/def/npcs/npc_defs.json");
     }
 
     @Override
