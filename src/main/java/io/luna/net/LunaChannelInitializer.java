@@ -32,9 +32,9 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     private final ChannelHandler loginEncoder = new LoginEncoder();
 
     /**
-     * The read timeout handler.
+     * The context instance.
      */
-    private final ChannelHandler readTimeout = new ReadTimeoutHandler(5);
+    private final LunaContext context;
 
     /**
      * A channel handler that will filter channels.
@@ -42,9 +42,9 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     private final LunaChannelFilter channelFilter;
 
     /**
-     * Decodes the login protocol.
+     * The message repository.
      */
-    private final ChannelHandler loginDecoder;
+    private final GameMessageRepository msgRepository;
 
     /**
      * Creates a new {@link LunaChannelInitializer}.
@@ -55,17 +55,18 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
      */
     public LunaChannelInitializer(LunaContext context, LunaChannelFilter channelFilter,
                                   GameMessageRepository msgRepository) {
+        this.context = context;
         this.channelFilter = channelFilter;
-        loginDecoder = new LoginDecoder(context, msgRepository);
+        this.msgRepository = msgRepository;
     }
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
 
-        ch.pipeline().addLast("read-timeout", readTimeout);
+        ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
         ch.pipeline().addLast("channel-filter", channelFilter);
-        ch.pipeline().addLast("login-decoder", loginDecoder);
+        ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository));
         ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("upstream-handler", upstreamHandler);
     }

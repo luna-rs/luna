@@ -174,11 +174,7 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
      * @return The decoded game message.
      */
     private GameMessage createDecodedMessage(ByteBuf payload) {
-        try {
-            checkState(type != MessageType.RAW, "Opcode was never decoded properly.");
-            return new GameMessage(opcode, type, ByteMessage.wrap(payload));
-        } finally {
-            resetState();
-        }
+        checkState(type != MessageType.RAW, "Opcode was never decoded properly.");
+        return new GameMessage(opcode, type, ByteMessage.wrap(payload));
     }
 }

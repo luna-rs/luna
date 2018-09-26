@@ -41,8 +41,10 @@ public abstract class ProgressiveMessageDecoder<E extends Enum<E>> extends ByteT
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         Object decodedMessage = decodeMsg(ctx, in, state);
         if (decodedMessage != null) {
+
             // Message will be received by the LunaUpstreamHandler.
             out.add(decodedMessage);
+            reset();
         }
     }
 

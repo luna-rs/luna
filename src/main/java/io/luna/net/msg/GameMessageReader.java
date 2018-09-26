@@ -3,6 +3,7 @@ package io.luna.net.msg;
 import io.luna.game.event.Event;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -24,12 +25,12 @@ public abstract class GameMessageReader {
     /**
      * The opcode.
      */
-    private final int opcode;
+    protected final int opcode;
 
     /**
      * The size.
      */
-    private final int size;
+    protected final int size;
 
     /**
      * Creates a new {@link GameMessageReader}.
@@ -73,13 +74,13 @@ public abstract class GameMessageReader {
 
             // Release pooled buffer.
             ByteMessage payload = msg.getPayload();
-            payload.release();
+            boolean isPooled = Unpooled.EMPTY_BUFFER != payload.getBuffer();
+            if(isPooled && !payload.release()) {
 
-            // Netty has shown at (seemingly random) times that there is a buffer leak occurring here.
-            // I'm not sure how that's possible yet, so hopefully this debug message will help determine if there
-            // is and where it's coming from.
-            int refCount = payload.refCnt();
-            if (refCount >= 1) {
+                // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
+                // section of the code means that a buffer was not released (or retained) when it was supposed to
+                // be, so we log a warning.
+                int refCount = payload.refCnt();
                 LOGGER.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
                         box(msg.getOpcode()), box(refCount));
                 payload.release(refCount);
