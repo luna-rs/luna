@@ -7,7 +7,6 @@ import io.luna.game.model.region.RegionUpdateComparator;
 import io.netty.util.ResourceLeakDetector.Level;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.TreeSet;
 
@@ -26,8 +25,6 @@ public final class LunaConstants {
 
             JsonObject networkConstants = tomlReader.getTable("network").to(JsonObject.class);
             PORT = networkConstants.get("port").getAsInt();
-            RSA_MODULUS = new BigInteger(networkConstants.get("rsa_modulus").getAsString());
-            RSA_EXPONENT = new BigInteger(networkConstants.get("rsa_exponent").getAsString());
             RESOURCE_LEAK_DETECTION = Level.valueOf(networkConstants.get("resource_leak_detection").getAsString());
             CONNECTION_LIMIT = networkConstants.get("connection_threshold").getAsInt();
 
@@ -65,16 +62,6 @@ public final class LunaConstants {
      * The port that the server will be bound on.
      */
     public static final int PORT;
-
-    /**
-     * The public RSA modulus value.
-     */
-    public static final BigInteger RSA_MODULUS;
-
-    /**
-     * The private RSA exponent value.
-     */
-    public static final BigInteger RSA_EXPONENT;
 
     /**
      * The maximum amount of connections allowed per channel. This restricts how many accounts can be logged in
