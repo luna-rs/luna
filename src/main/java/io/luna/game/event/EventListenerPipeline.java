@@ -2,7 +2,7 @@ package io.luna.game.event;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-import io.luna.game.plugin.PluginExecutionException;
+import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -68,7 +68,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
                 }
                 listener.apply(msg);
             }
-        } catch (PluginExecutionException e) {
+        } catch (ScriptExecutionException e) {
             terminate();
             LOGGER.error(e);
         } finally {

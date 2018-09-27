@@ -2,6 +2,7 @@ package io.luna.util.gui;
 
 import io.luna.game.plugin.Plugin;
 import io.luna.game.plugin.PluginMetadata;
+import io.luna.game.plugin.Script;
 import javafx.scene.control.CheckBoxTreeItem;
 
 import java.util.function.BiConsumer;
@@ -42,8 +43,8 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
      * Adds all scripts as leaf child nodes.
      */
     void addScriptChildren() {
-        for (String script : plugin.getFiles().keySet()) {
-            getChildren().add(new CheckBoxTreeItem<>(script));
+        for (Script script : plugin.getScripts()) {
+            getChildren().add(new CheckBoxTreeItem<>(script.getName()));
         }
     }
 

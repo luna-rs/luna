@@ -6,6 +6,7 @@ import fj.P;
 import fj.P2;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
@@ -22,9 +23,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,9 +64,9 @@ public final class PluginBootstrap {
     private final class PluginDirLoader implements Runnable {
 
         /**
-         * All plugin files and their contents.
+         * All scripts for the plugin.
          */
-        private final LinkedHashMap<String, String> fileMap = new LinkedHashMap<>();
+        private final Set<Script> scripts = new LinkedHashSet<>();
 
         /**
          * The plugin directory.
@@ -118,7 +120,7 @@ public final class PluginBootstrap {
                 LOGGER.catching(Level.WARN, e);
                 return;
             }
-            plugins.put(pluginName, new Plugin(metadata, fileMap));
+            plugins.put(pluginName, new Plugin(metadata, scripts));
         }
 
         /**
@@ -129,7 +131,7 @@ public final class PluginBootstrap {
         private void loadFileContents(String fileName) {
             try {
                 byte[] sourceBytes = Files.readAllBytes(dir.resolve(fileName));
-                fileMap.put(fileName, new String(sourceBytes));
+                scripts.add(new Script(fileName, new String(sourceBytes)));
             } catch (IOException e) {
                 throw new LoadScriptException(fileName, e);
             }
@@ -182,12 +184,10 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
-     * @throws ScriptException    If a script throws an error during evaluation.
-     * @throws IOException        If an I/O error occurs.
-     * @throws ExecutionException If the file loading executor fails to complete.
+     * @throws IOException                  If an I/O error occurs.
+     * @throws ExecutionException           If the file loading or GUI executor fails to complete.
      */
-    public P2<Integer, Integer> init(boolean displayGui) throws ScriptException,
-            IOException, ExecutionException {
+    public P2<Integer, Integer> init(boolean displayGui) throws IOException, ExecutionException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
@@ -228,12 +228,10 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
-     * @throws ScriptException    If a script throws an error during evaluation.
-     * @throws IOException        If an I/O error occurs.
-     * @throws ExecutionException If the GUI loading fails to complete.
+     * @throws IOException                  If an I/O error occurs.
+     * @throws ExecutionException           If the GUI loading fails to complete.
      */
-    private P2<Integer, Integer> initPlugins(boolean displayGui) throws ScriptException, IOException,
-            ExecutionException {
+    private P2<Integer, Integer> initPlugins(boolean displayGui) throws IOException, ExecutionException {
         Plugin api = plugins.remove("Plugin API"); // API not counted as a plugin.
         int totalCount = plugins.size();
 
@@ -250,16 +248,17 @@ public final class PluginBootstrap {
         plugins.keySet().retainAll(selectedPlugins);
 
         // Inject context state.
+        List<EventListener<?>> scriptListeners = new ArrayList<>();
         engine.put("$context$", context);
         engine.put("$logger$", LOGGER);
-        engine.put("$pipelines$", pipelines);
+        engine.put("$scriptListeners$", scriptListeners);
 
         // Run the Plugin API first.
-        loadPlugin(api);
+        loadPlugin(api, scriptListeners);
 
         // Then run other plugins.
         for (Plugin other : plugins.values()) {
-            loadPlugin(other);
+            loadPlugin(other, scriptListeners);
         }
 
         int selectedCount = plugins.size();
@@ -270,12 +269,24 @@ public final class PluginBootstrap {
      * Evaluates a single plugin directory.
      *
      * @param plugin The plugin to load.
-     * @throws ScriptException If a script throws an error during evaluation.
+     * @param listeners A list of event listeners within a script.
      */
-    private void loadPlugin(Plugin plugin) throws ScriptException {
-        Map<String, String> pluginFiles = plugin.getFiles();
-        for (String file : pluginFiles.values()) {
-            engine.eval(file);
+    private void loadPlugin(Plugin plugin, List<EventListener<?>> listeners) {
+        for (Script script : plugin.getScripts()) {
+
+            // Load the script.
+            try {
+                engine.eval(script.getContents());
+            } catch (ScriptException e) {
+                throw new ScriptInterpretException(script, e);
+            }
+
+            // Add all of its listeners, reflectively set the listener script name.
+            for (EventListener<?> evtListener : listeners) {
+                evtListener.setScriptName(script.getName());
+                pipelines.add(evtListener.getEventType(), evtListener);
+            }
+            listeners.clear();
         }
     }
 

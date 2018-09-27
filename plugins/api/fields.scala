@@ -4,7 +4,7 @@
 */
 
 import io.luna.LunaContext
-import io.luna.game.event.EventListenerPipelineSet
+import io.luna.game.event.EventListener
 import io.luna.game.model.EntityType
 import io.luna.game.model.mob.{PlayerRights, Skill}
 import io.luna.util.Rational
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger
 /* The injected state. */
 val ctx = $context$.asInstanceOf[LunaContext]
 val logger = $logger$.asInstanceOf[Logger]
-val pipelines = $pipelines$.asInstanceOf[EventListenerPipelineSet]
+val scriptListeners = $scriptListeners$.asInstanceOf[java.util.ArrayList[EventListener[_]]]
 
 
 /* Aliases for 'LunaContext'. */

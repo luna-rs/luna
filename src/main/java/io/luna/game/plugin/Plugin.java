@@ -1,11 +1,11 @@
 package io.luna.game.plugin;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
- * A model representing a single plugin. Plugins are a collection of Scala scripts and metadata that make
+ * A model representing a single plugin. Plugins are a collection of {@link Script}s that make
  * up specific pieces of content. They adhere to a set of rules
  * <ul>
  * <li>Different plugins cannot share the same name
@@ -25,19 +25,19 @@ public final class Plugin {
     private final PluginMetadata metadata;
 
     /**
-     * A map of script names to their contents.
+     * A set of scripts.
      */
-    private final ImmutableMap<String, String> files;
+    private final ImmutableSet<Script> scripts;
 
     /**
      * Creates a new {@link Plugin}.
      *
      * @param metadata The metadata describing this plugin.
-     * @param files A map of script names to their contents.
+     * @param scripts A set of scripts.
      */
-    public Plugin(PluginMetadata metadata, Map<String, String> files) {
+    public Plugin(PluginMetadata metadata, Set<Script> scripts) {
         this.metadata = metadata;
-        this.files = ImmutableMap.copyOf(files);
+        this.scripts = ImmutableSet.copyOf(scripts);
     }
 
     /**
@@ -48,9 +48,9 @@ public final class Plugin {
     }
 
     /**
-     * @return A map of script names to their contents.
+     * @return A set of scripts.
      */
-    public ImmutableMap<String, String> getFiles() {
-        return files;
+    public ImmutableSet<Script> getScripts() {
+        return scripts;
     }
 }

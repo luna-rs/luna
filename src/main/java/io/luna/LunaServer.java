@@ -26,7 +26,6 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -69,11 +68,11 @@ public final class LunaServer {
     /**
      * Runs the individual tasks that start Luna.
      *
-     * @throws ExecutionException If asynchronous tasks cannot be computed.
-     * @throws ScriptException    If evaluation for a plugin script fails.
-     * @throws IOException        If any I/O errors occur.
+     * @throws ExecutionException           If asynchronous tasks cannot be computed.
+     * @throws IOException                  If any I/O errors occur.
+     * @throws ReflectiveOperationException If script names cannot be set reflectively.
      */
-    public void init() throws ExecutionException, ScriptException, IOException {
+    public void init() throws ExecutionException, IOException, ReflectiveOperationException {
         Stopwatch launchTimer = Stopwatch.createStarted();
 
         initLaunchTasks();
@@ -116,11 +115,11 @@ public final class LunaServer {
     /**
      * Initializes the {@link PluginBootstrap}.
      *
-     * @throws ExecutionException If asynchronous tasks cannot be computed.
-     * @throws ScriptException    If evaluation for a plugin script fails.
-     * @throws IOException        If any I/O errors occur.
+     * @throws IOException                  If any I/O errors occur.
+     * @throws ExecutionException           If asynchronous tasks cannot be computed.
+     * @throws ReflectiveOperationException If script names cannot be set reflectively.
      */
-    private void initPlugins() throws IOException, ExecutionException, ScriptException {
+    private void initPlugins() throws IOException, ExecutionException, ReflectiveOperationException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
         P2<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
@@ -144,7 +143,7 @@ public final class LunaServer {
         executor.execute(new BlacklistFileParser(channelFilter));
 
         int count = executor.size();
-        if(count > 0) {
+        if (count > 0) {
             LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
             executor.await(true);
         }

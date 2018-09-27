@@ -12,9 +12,6 @@ import io.luna.net.msg.out.GameChatboxMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.script.ScriptException;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -68,7 +65,7 @@ public final class CommandMessageReader extends GameMessageReader {
                 PluginBootstrap bootstrap = new PluginBootstrap(ctx);
                 bootstrap.init(false);
                 sendMessage.accept("Hotfix request finished successfully.");
-            } catch (ScriptException | ExecutionException | IOException e) {
+            } catch (Exception e) {
                 sendMessage.accept("Hotfix request failed. Please check console for error message.");
                 LOGGER.catching(e);
             }

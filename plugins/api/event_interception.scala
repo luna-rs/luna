@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
 /* Normal event interception function. No matching happens here. */
 def on[E <: Event](eventListener: E => Unit)
                   (implicit tag: ClassTag[E]): Unit =
-pipelines.add(tag.runtimeClass, new EventListener(tag.runtimeClass, EventArguments.NO_ARGS, eventListener))
+scriptListeners.add(new EventListener(tag.runtimeClass, EventArguments.NO_ARGS, eventListener))
 
 /*
  Event interception function, with matching on parameters. This method requires that at least one argument
@@ -28,5 +28,5 @@ def onargs[E <: Event](arg1: Any, argOther: Any*)
     (List(arg1) ++ List(argOther).flatten).map(_.asInstanceOf[AnyRef]).toArray)
 
   val eventClass = tag.runtimeClass
-  pipelines.add(eventClass, new EventListener(eventClass, eventArgs, eventListener))
+  scriptListeners.add(new EventListener(eventClass, eventArgs, eventListener))
 }
