@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -133,9 +134,8 @@ public final class PluginGui {
      *
      * @return The selected plugins.
      * @throws IOException        If any I/O errors occur.
-     * @throws ExecutionException If the Scene initialization task fails.
      */
-    public Set<String> launch() throws IOException, ExecutionException {
+    public Set<String> launch() throws IOException {
         checkState(!Platform.isFxApplicationThread(), "Cannot be called from Javafx thread.");
 
         // Load application.
@@ -187,13 +187,15 @@ public final class PluginGui {
 
     /**
      * Loads the Javafx components.
-     *
-     * @throws ExecutionException If the Scene fails to load.
      */
-    private void loadScene() throws ExecutionException {
-        FutureTask<Boolean> delegateTask = new FutureTask<>(new InitializeScene(), true);
-        Platform.runLater(delegateTask);
-        Uninterruptibles.getUninterruptibly(delegateTask); // Wait for task to complete before continuing.
+    private void loadScene() {
+        try {
+            FutureTask<Boolean> delegateTask = new FutureTask<>(new InitializeScene(), true);
+            Platform.runLater(delegateTask);
+            Uninterruptibles.getUninterruptibly(delegateTask); // Wait for task to complete before continuing.
+        } catch (ExecutionException e) {
+            throw new CompletionException(e);
+        }
     }
 
     /**

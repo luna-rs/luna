@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -184,10 +185,9 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
-     * @throws IOException                  If an I/O error occurs.
-     * @throws ExecutionException           If the file loading or GUI executor fails to complete.
+     * @throws IOException        If an I/O error occurs.
      */
-    public P2<Integer, Integer> init(boolean displayGui) throws IOException, ExecutionException {
+    public P2<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
@@ -200,10 +200,8 @@ public final class PluginBootstrap {
 
     /**
      * Concurrently parses files in the plugin directory and caches their contents.
-     *
-     * @throws ExecutionException If the file loading executor fails to complete.
      */
-    private void initFiles() throws ExecutionException {
+    private void initFiles() {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "PluginDirInitThread");
 
         // Traverse all paths and sub-paths.
@@ -219,7 +217,11 @@ public final class PluginBootstrap {
         }
 
         // Await completion.
-        executor.await(true);
+        try {
+            executor.await(true);
+        } catch (ExecutionException e) {
+            throw new CompletionException(e);
+        }
     }
 
     /**
@@ -228,10 +230,9 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
-     * @throws IOException                  If an I/O error occurs.
-     * @throws ExecutionException           If the GUI loading fails to complete.
+     * @throws IOException If an I/O error occurs.
      */
-    private P2<Integer, Integer> initPlugins(boolean displayGui) throws IOException, ExecutionException {
+    private P2<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
         Plugin api = plugins.remove("Plugin API"); // API not counted as a plugin.
         int totalCount = plugins.size();
 

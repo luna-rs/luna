@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -68,11 +69,9 @@ public final class LunaServer {
     /**
      * Runs the individual tasks that start Luna.
      *
-     * @throws ExecutionException           If asynchronous tasks cannot be computed.
-     * @throws IOException                  If any I/O errors occur.
-     * @throws ReflectiveOperationException If script names cannot be set reflectively.
+     * @throws IOException If any I/O errors occur.
      */
-    public void init() throws ExecutionException, IOException, ReflectiveOperationException {
+    public void init() throws IOException {
         Stopwatch launchTimer = Stopwatch.createStarted();
 
         initLaunchTasks();
@@ -115,11 +114,9 @@ public final class LunaServer {
     /**
      * Initializes the {@link PluginBootstrap}.
      *
-     * @throws IOException                  If any I/O errors occur.
-     * @throws ExecutionException           If asynchronous tasks cannot be computed.
-     * @throws ReflectiveOperationException If script names cannot be set reflectively.
+     * @throws IOException If any I/O errors occur.
      */
-    private void initPlugins() throws IOException, ExecutionException, ReflectiveOperationException {
+    private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
         P2<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
@@ -129,10 +126,8 @@ public final class LunaServer {
 
     /**
      * Initializes misc. startup tasks.
-     *
-     * @throws ExecutionException If asynchronous tasks cannot be computed.
-     */
-    private void initLaunchTasks() throws ExecutionException {
+     **/
+    private void initLaunchTasks() {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
@@ -142,10 +137,14 @@ public final class LunaServer {
         executor.execute(new ObjectDefinitionFileParser());
         executor.execute(new BlacklistFileParser(channelFilter));
 
-        int count = executor.size();
-        if (count > 0) {
-            LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
-            executor.await(true);
+        try {
+            int count = executor.size();
+            if (count > 0) {
+                LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
+                executor.await(true);
+            }
+        } catch (ExecutionException e) {
+            throw new CompletionException(e.getCause());
         }
     }
 }
