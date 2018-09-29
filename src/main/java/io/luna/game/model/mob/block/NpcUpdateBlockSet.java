@@ -34,14 +34,7 @@ public class NpcUpdateBlockSet extends UpdateBlockSet<Npc> {
 
     @Override
     public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
-        ByteMessage blockMsg = ByteMessage.message();
-        try {
-            // Encode the block set and add it to the main update buffer.
-            encodeBlockSet(npc, blockMsg, state);
-            msg.putBytes(blockMsg);
-        } finally {
-            blockMsg.release();
-        }
+        encodeBlockSet(npc, msg, state);
     }
 
     @Override

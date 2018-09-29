@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.block;
 
 import com.google.common.collect.ImmutableList;
+import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
@@ -67,16 +68,19 @@ public abstract class UpdateBlockSet<E extends Mob> {
         for (UpdateBlock block : updateBlocks) {
             UpdateFlag updateFlag = block.getFlag();
 
-            // We are adding local mobs, so we need to force the appearance block.
-            if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
-                mask |= block.getMask(mob);
-                encodeBlocks.add(block);
-                continue;
-            }
+            if(mob.getType() == EntityType.PLAYER) {
 
-            // We are updating ourselves, ignore our own chat block.
-            if (state == UPDATE_SELF && updateFlag == CHAT) {
-                continue;
+                // We are adding local players, so we need to force the appearance block.
+                if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
+                    mask |= block.getMask(mob);
+                    encodeBlocks.add(block);
+                    continue;
+                }
+
+                // We are updating ourselves, ignore our own chat block.
+                if (state == UPDATE_SELF && updateFlag == CHAT) {
+                    continue;
+                }
             }
 
             // Add the update block to the cache, if its flagged.
