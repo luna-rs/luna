@@ -157,21 +157,23 @@ public abstract class Entity {
      * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
-        RegionCoordinates next = newPosition.getRegionCoordinates();
-
-        if (position != null) {
-            if (currentRegion.getCoordinates().equals(next)) {
-                plugins.post(new PositionChangeEvent(this, position, newPosition));
-                position = newPosition;
-                return;
+        if (!newPosition.equals(position)) {
+            RegionCoordinates next = newPosition.getRegionCoordinates();
+            if (position != null) {
+                if (currentRegion.getCoordinates().equals(next)) {
+                    plugins.post(new PositionChangeEvent(this, position, newPosition));
+                    position = newPosition;
+                    return;
+                }
+                currentRegion.remove(this);
             }
-            currentRegion.remove(this);
-        }
-        currentRegion = world.getRegions().getRegion(next);
-        currentRegion.add(this);
+            currentRegion = world.getRegions().getRegion(next);
+            currentRegion.add(this);
 
-        plugins.post(new PositionChangeEvent(this, position, newPosition));
-        position = newPosition;
+            plugins.post(new PositionChangeEvent(this, position, newPosition));
+            position = newPosition;
+        }
+
     }
 
     /**
