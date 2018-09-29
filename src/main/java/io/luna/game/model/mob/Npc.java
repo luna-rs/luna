@@ -86,7 +86,7 @@ public final class Npc extends Mob {
 
     @Override
     public int getTotalHealth() {
-        return combatDefinition.map(NpcCombatDefinition::getHitpoints).orElse(0);
+        return combatDefinition.map(NpcCombatDefinition::getHitpoints).orElse(-1);
     }
 
     @Override
