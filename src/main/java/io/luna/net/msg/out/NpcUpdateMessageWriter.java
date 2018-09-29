@@ -58,8 +58,8 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                 if (other.isViewable(player) && player.getLocalNpcs().add(other)) {
                     addNpc(player, other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
+                    npcsAdded++;
                 }
-                npcsAdded++;
             }
 
             if (blockMsg.getBuffer().writerIndex() > 0) {
@@ -71,7 +71,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             }
         } catch (Exception e) {
             msg.release();
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             blockMsg.release();
         }
