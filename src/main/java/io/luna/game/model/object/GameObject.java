@@ -46,7 +46,7 @@ public final class GameObject extends Entity {
         }
         if (obj instanceof GameObject) {
             GameObject other = (GameObject) obj;
-            return id == other.id && position.equals(other.position);
+            return id == other.id && Objects.equals(position, other.position);
         }
         return false;
     }
