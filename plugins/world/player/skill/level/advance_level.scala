@@ -12,6 +12,7 @@
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.block.UpdateFlagSet
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.inter.DialogueInterface
 import io.luna.game.model.mob.{Graphic, Player, Skill}
 import io.luna.util.StringUtils
 
@@ -61,7 +62,7 @@ private def advanceLevel(plr: Player, id: Int, oldLevel: Int) = {
     plr.sendMessage(message)
     plr.sendWidgetText(message, firstLineId)
     plr.sendWidgetText(s"Your $name level is now $newLevel.", secondLineId)
-    plr.sendChatboxInterface(interfaceId)
+    plr.interfaces.open(new DialogueInterface(interfaceId))
 
     plr.graphic(GRAPHIC)
 

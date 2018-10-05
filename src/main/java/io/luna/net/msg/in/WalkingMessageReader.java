@@ -39,6 +39,7 @@ public final class WalkingMessageReader extends GameMessageReader {
         } else if (opcode == 98) { // Red <x> click.
             // impl
         }
+        player.getInterfaces().applyActionClose();
 
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];

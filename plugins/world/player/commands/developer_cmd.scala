@@ -6,17 +6,13 @@
 */
 
 import com.google.common.primitives.{Doubles, Ints}
-import io.luna.LunaContext
-import io.luna.game.GameService
 import io.luna.game.event.impl.CommandEvent
-import io.luna.game.model.{Area, Position}
+import io.luna.game.model.Position
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob._
-import io.luna.net.msg.out.{AddGroundItemMessageWriter, SendChunkMessageWriter, SystemUpdateMessageWriter}
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.net.msg.out._
 
 
 /* A command that allows for attributes to be dynamically retrieved or set. */
@@ -45,7 +41,9 @@ onargs[CommandEvent]("attr", RIGHTS_DEV) { msg =>
 }
 
 /* A command that sends a message depicting the player's current position. */
-onargs[CommandEvent]("mypos", RIGHTS_DEV) { msg => msg.plr.sendMessage(s"Your current position is ${msg.plr.position}.") }
+onargs[CommandEvent]("mypos", RIGHTS_DEV) { msg =>
+  msg.plr.sendMessage(s"Your current position is ${msg.plr.position}.")
+}
 
 /* A command that moves a player to a different position. */
 onargs[CommandEvent]("move", RIGHTS_DEV) { msg =>
@@ -124,10 +122,10 @@ onargs[CommandEvent]("music", RIGHTS_DEV) { msg =>
 
 /* A command that opens an interface. */
 onargs[CommandEvent]("interface", RIGHTS_DEV) { msg =>
-  msg.plr.sendInterface(msg.args(0).toInt)
+  msg.plr.interfaces.open(new StandardInterface(msg.args(0).toInt))
 }
 
-/* A command that plays a sound. */
+/* A command that plays a souend. */
 onargs[CommandEvent]("sound", RIGHTS_DEV) { msg =>
   msg.plr.sendSound(msg.args(0).toInt, 0, 0)
 }

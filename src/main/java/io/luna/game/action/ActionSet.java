@@ -20,6 +20,8 @@ public final class ActionSet {
      * @param pending The action to submit.
      */
     public void submit(Action<?> pending) {
+        pending.getMob().onSubmitAction(pending);
+
         if (currentAction.isPresent()) {
             Action<?> current = currentAction.get();
 

@@ -1,12 +1,14 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that opens an interface and overlays the inventory with an interface.
+ * A {@link GameMessageWriter} implementation that opens an interface and overlays the inventory with
+ * an interface. Use {@link InventoryOverlayInterface} instead of using this packet directly.
  *
  * @author lare96 <http://github.org/lare96>
  */

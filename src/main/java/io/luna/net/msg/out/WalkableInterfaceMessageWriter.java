@@ -1,12 +1,14 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.WalkableInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays a walkable interface.
+ * A {@link GameMessageWriter} implementation that displays a walkable interface. Use {@link WalkableInterface}
+ * instead of using this packet directly.
  *
  * @author lare96 <http://github.org/lare96>
  */

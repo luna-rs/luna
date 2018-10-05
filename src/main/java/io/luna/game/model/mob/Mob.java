@@ -171,6 +171,15 @@ public abstract class Mob extends Entity {
     public abstract int getTotalHealth();
 
     /**
+     * Invoked when this mob submits an action.
+     *
+     * @param action The action that was submitted.
+     */
+    public void onSubmitAction(Action action) {
+
+    }
+
+    /**
      * @return The current health of this mob.
      */
     public final int getCurrentHealth() {

@@ -1,10 +1,10 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaConstants;
 import io.luna.LunaContext;
+import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
@@ -15,6 +15,9 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.inter.AbstractInterfaceSet;
+import io.luna.game.model.mob.inter.GameTabSet;
+import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
@@ -23,10 +26,8 @@ import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
-import io.luna.net.msg.out.TabInterfaceMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
-import io.luna.net.client.GameClient;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -120,12 +121,6 @@ public final class Player extends Mob {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The tab interfaces.
-     */
-    private static final ImmutableList<Integer> TAB_INTERFACES =
-            ImmutableList.of(2423, 3917, 638, 3213, 1644, 5608, 1151, -1, 5065, 5715, 2449, 904, 147, 962);
-
-    /**
      * A set of local players.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>();
@@ -159,6 +154,16 @@ public final class Player extends Mob {
      * The bank.
      */
     private final Bank bank = new Bank(this);
+
+    /**
+     * The interface set.
+     */
+    private final AbstractInterfaceSet interfaces = new AbstractInterfaceSet(this);
+
+    /**
+     * The game tab set.
+     */
+    private final GameTabSet tabs = new GameTabSet(this);
 
     /**
      * The text cache.
@@ -275,7 +280,7 @@ public final class Player extends Mob {
 
         queue(new AssignmentMessageWriter(true));
 
-        displayTabInterfaces();
+        tabs.resetAll();
 
         int size = SkillSet.size();
         for (int index = 0; index < size; index++) {
@@ -336,8 +341,14 @@ public final class Player extends Mob {
         return skillSet.getCombatLevel();
     }
 
+    @Override
+    public void onSubmitAction(Action action) {
+        interfaces.applyActionClose();
+    }
+
     /**
-     * Saves this player's data.
+     * Saves this player's data. <strong>Warning: It is more preferable to use {@link #asyncSave()} in
+     * general-use cases.</strong>
      */
     public void save() {
         serializer.save();
@@ -348,30 +359,6 @@ public final class Player extends Mob {
      */
     public ListenableFuture<?> asyncSave() {
         return serializer.asyncSave();
-    }
-
-    /**
-     * Displays the default tab interfaces.
-     */
-    public void displayTabInterfaces() {
-        for (int index = 0; index < TAB_INTERFACES.size(); index++) {
-            int tabId = TAB_INTERFACES.get(index);
-            queue(new TabInterfaceMessageWriter(index, tabId));
-        }
-
-       /* interfaces.open(new TabInterface(2423, Tab.COMBAT));
-        interfaces.open(new TabInterface(3917, Tab.SKILL));
-        interfaces.open(new TabInterface(638, Tab.QUEST));
-        interfaces.open(new TabInterface(3213, Tab.INVENTORY));
-        interfaces.open(new TabInterface(1644, Tab.EQUIPMENT));
-        interfaces.open(new TabInterface(5608, Tab.PRAYER));
-        interfaces.open(new TabInterface(1151, Tab.MAGIC)); TODO ancient magicks support
-        interfaces.open(new TabInterface(5065, Tab.FRIENDS));
-        interfaces.open(new TabInterface(5715, Tab.IGNORES));
-        interfaces.open(new TabInterface(2449, Tab.LOGOUT));
-        interfaces.open(new TabInterface(904, Tab.SETTINGS));
-        interfaces.open(new TabInterface(147, Tab.EMOTE));
-        interfaces.open(new TabInterface(962, Tab.MUSIC)); */
     }
 
     /**
@@ -832,5 +819,19 @@ public final class Player extends Mob {
     public void setModelAnimation(ModelAnimation modelAnimation) {
         this.modelAnimation = modelAnimation;
         updateFlags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * @return The interface set.
+     */
+    public AbstractInterfaceSet getInterfaces() {
+        return interfaces;
+    }
+
+    /**
+     * @return The game tab set.
+     */
+    public GameTabSet getTabs() {
+        return tabs;
     }
 }

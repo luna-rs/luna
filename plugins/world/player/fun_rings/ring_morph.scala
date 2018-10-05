@@ -12,6 +12,7 @@ import io.luna.game.event.Event
 import io.luna.game.event.impl.{ButtonClickEvent, EquipmentChangeEvent}
 import io.luna.game.model.item.Equipment.RING
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.inter.GameTabSet.TabIndex
 
 
 /* The ring of stone identifier. */
@@ -29,9 +30,9 @@ private val EGGS_MORPH = Vector(3689, 3690, 3691, 3692, 3693, 3694)
 
 /* Morphs the player into something. */
 private def morph(plr: Player, msg: Event, to: Int) = {
-  (0 to 13).filterNot(_ == 3).foreach(plr.sendTabInterface(_, -1))
+  plr.tabs.clearAll()
+  plr.tabs.set(TabIndex.INVENTORY, 6014)
   plr.sendForceTab(3)
-  plr.sendTabInterface(3, 6014)
 
   plr.lockMovement
   plr.transform(to)
@@ -43,7 +44,7 @@ private def unmorph(plr: Player) = {
   if (plr.inventory.computeRemainingSize > 1) {
     plr.equipment.unequip(RING)
 
-    plr.displayTabInterfaces()
+    plr.tabs.resetAll()
 
     plr.unlockMovement
     plr.resetTransform()

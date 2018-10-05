@@ -1,12 +1,14 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays an interface on the chatbox area of the gameframe.
+ * A {@link GameMessageWriter} implementation that displays an interface on the chatbox area of the
+ * gameframe. Use {@link DialogueInterface} instead of using this packet directly.
  *
  * @author lare96 <http://github.org/lare96>
  */

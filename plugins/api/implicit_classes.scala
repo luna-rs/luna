@@ -9,6 +9,7 @@ import io.luna.game.model.item.{Item, ItemContainer}
 import io.luna.game.model.mob.attr.AttributeValue
 import io.luna.game.model.mob.{Mob, Npc, Player, PlayerRights}
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
+import io.luna.game.model.mob.inter.AbstractInterface
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 import io.luna.util.Rational
@@ -28,6 +29,10 @@ implicit class RichPlayer(plr: Player) {
 
   def bank = plr.getBank
 
+  def interfaces = plr.getInterfaces
+
+  def tabs = plr.getTabs
+
   def inventory = plr.getInventory
 
   def equipment = plr.getEquipment
@@ -36,23 +41,17 @@ implicit class RichPlayer(plr: Player) {
 
   def sendForceTab(id: Int) = plr.queue(new ForceTabMessageWriter(id))
 
-  def sendChatboxInterface(id: Int) = plr.queue(new DialogueInterfaceMessageWriter(id))
-
   def sendSkillUpdate(id: Int) = plr.queue(new SkillUpdateMessageWriter(id))
 
   def sendMusic(id: Int) = plr.queue(new MusicMessageWriter(id))
 
   def sendSound(id: Int, loops: Int = 0, delay: Int = 0) = plr.queue(new SoundMessageWriter(id, loops, delay))
 
-  def sendInterface(id: Int) = plr.queue(new InterfaceMessageWriter(id))
-
   def sendConfig(id: Int, value: Int) = plr.queue(new ConfigMessageWriter(id, value))
 
   def sendColor(id: Int, color: Int) = plr.queue(new ColorChangeMessageWriter(id, color))
 
   def sendItemModel(id: Int, scale: Int, item: Int) = plr.queue(new WidgetItemModelMessageWriter(id, scale, item))
-
-  def sendTabInterface(tab: Int, interface: Int) = plr.queue(new TabInterfaceMessageWriter(tab, interface))
 
   def flag(updateFlag: UpdateFlag) = plr.getUpdateFlags.flag(updateFlag)
 
