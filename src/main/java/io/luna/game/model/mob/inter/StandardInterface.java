@@ -16,7 +16,12 @@ public class StandardInterface extends AbstractInterface {
      * @param id The interface identifier.
      */
     public StandardInterface(int id) {
-        super(id);
+        super(id, InterfaceType.STANDARD);
+    }
+
+    @Override
+    public boolean isAutoClose(Player player) {
+        return true;
     }
 
     @Override

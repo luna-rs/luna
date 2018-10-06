@@ -16,17 +16,17 @@ public class WalkableInterface extends AbstractInterface {
      * @param id The interface identifier.
      */
     public WalkableInterface(int id) {
-        super(id);
+        super(id, InterfaceType.WALKABLE);
     }
 
     @Override
-    public void open(Player player) {
+    public final void open(Player player) {
         int id = unsafeGetId();
         player.queue(new WalkableInterfaceMessageWriter(id));
     }
 
     @Override
-    public final boolean isCloseOnAction(Player player) {
+    public final boolean isAutoClose(Player player) {
         return false;
     }
 }

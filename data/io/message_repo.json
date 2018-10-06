@@ -556,7 +556,8 @@
   },
   {
     "opcode": 135,
-    "size": 6
+    "size": 6,
+    "payload": "InterfaceItemClickMessageReader"
   },
   {
     "opcode": 136,
@@ -853,7 +854,8 @@
   },
   {
     "opcode": 208,
-    "size": 4
+    "size": 4,
+    "payload": "AmountInputMessageReader"
   },
   {
     "opcode": 209,

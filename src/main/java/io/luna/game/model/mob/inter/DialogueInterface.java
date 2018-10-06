@@ -20,7 +20,7 @@ public class DialogueInterface extends StandardInterface {
     }
 
     @Override
-    public void open(Player player) {
+    public final void open(Player player) {
         int id = unsafeGetId();
         player.queue(new DialogueInterfaceMessageWriter(id));
     }

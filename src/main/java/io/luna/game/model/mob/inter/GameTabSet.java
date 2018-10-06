@@ -68,7 +68,7 @@ public final class GameTabSet {
 
     // Initialize map of default tabs.
     static {
-        EnumMap<TabIndex, Integer> defaultTabs = new EnumMap<>(TabIndex.class);
+        Map<TabIndex, Integer> defaultTabs = new EnumMap<>(TabIndex.class);
         defaultTabs.put(TabIndex.COMBAT, 2423);
         defaultTabs.put(TabIndex.SKILL, 3917);
         defaultTabs.put(TabIndex.QUEST, 638);

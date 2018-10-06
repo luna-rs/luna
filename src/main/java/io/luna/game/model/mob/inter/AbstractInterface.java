@@ -1,9 +1,7 @@
 package io.luna.game.model.mob.inter;
 
-import io.luna.game.action.Action;
 import io.luna.game.model.mob.Player;
 
-import java.util.Optional;
 import java.util.OptionalInt;
 
 /**
@@ -19,29 +17,47 @@ public abstract class AbstractInterface {
     final OptionalInt id;
 
     /**
+     * The interface type.
+     */
+    final InterfaceType type;
+
+    /**
      * Creates a new {@link AbstractInterface}.
      *
      * @param id The interface identifier.
+     * @param type The interface type.
      */
-    private AbstractInterface(OptionalInt id) {
+    private AbstractInterface(OptionalInt id, InterfaceType type) {
         this.id = id;
+        this.type = type;
     }
 
     /**
      * Creates a new {@link AbstractInterface} with {@code id} wrapped in an optional.
      *
      * @param id The interface identifier.
+     * @param type The interface type.
      */
-    AbstractInterface(int id) {
-        this(OptionalInt.of(id));
+    AbstractInterface(int id, InterfaceType type) {
+        this(OptionalInt.of(id), type);
     }
 
     /**
      * Creates a new {@link AbstractInterface} with no interface identifier.
+     *
+     * @param type The interface type.
      */
-    AbstractInterface() {
-        this(OptionalInt.empty());
+    AbstractInterface(InterfaceType type) {
+        this(OptionalInt.empty(), type);
     }
+
+    /**
+     * Determines if this interface closes upon action initialization and movement.
+     *
+     * @param player The player.
+     * @return {@code true} if this interface auto-closes.
+     */
+    public abstract boolean isAutoClose(Player player);
 
     /**
      * Opens this interface.
@@ -59,22 +75,12 @@ public abstract class AbstractInterface {
     }
 
     /**
-     * Determines if this interface should be closed on movement or action initialization.
-     *
-     * @param player The player to determine for.
-     * @return {@code true} if starting an {@link Action} or movement closes this interface.
-     */
-    public boolean isCloseOnAction(Player player) {
-        return true;
-    }
-
-    /**
      * Determines if this interface is walkable.
      *
      * @return {@code true} if this interface is walkable.
      */
     public final boolean isWalkable() {
-        return this instanceof WalkableInterface;
+        return type == InterfaceType.WALKABLE;
     }
 
     /**
@@ -83,7 +89,7 @@ public abstract class AbstractInterface {
      * @return {@code true} if this interface is input.
      */
     public final boolean isInput() {
-        return this instanceof InputInterface;
+        return type == InterfaceType.INPUT;
     }
 
     /**
@@ -92,43 +98,7 @@ public abstract class AbstractInterface {
      * @return {@code true} if this interface is standard.
      */
     public final boolean isStandard() {
-        return this instanceof StandardInterface;
-    }
-
-    /**
-     * Retrieves this interface as walkable.
-     *
-     * @return This interface, as walkable.
-     */
-    public final Optional<WalkableInterface> getAsWalkable() {
-        if (isWalkable()) {
-            return Optional.of((WalkableInterface) this);
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Retrieves this interface as input.
-     *
-     * @return This interface, as input.
-     */
-    public final Optional<InputInterface> getAsInput() {
-        if (isInput()) {
-            return Optional.of((InputInterface) this);
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Retrieves this interface as standard.
-     *
-     * @return This interface, as standard.
-     */
-    public final Optional<StandardInterface> getAsStandard() {
-        if (isStandard()) {
-            return Optional.of((StandardInterface) this);
-        }
-        return Optional.empty();
+        return type == InterfaceType.STANDARD;
     }
 
     /**
@@ -145,5 +115,12 @@ public abstract class AbstractInterface {
      */
     public final OptionalInt getId() {
         return id;
+    }
+
+    /**
+     * @return The interface type.
+     */
+    public InterfaceType getType() {
+        return type;
     }
 }

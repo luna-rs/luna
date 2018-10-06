@@ -93,12 +93,12 @@ public final class AbstractInterfaceSet {
     public void applyActionClose() {
 
         // Close standard and input interfaces if needed.
-        if (needsToClose(currentStandard) || needsToClose(currentInput)) {
+        if (isAutoClose(currentStandard) || isAutoClose(currentInput)) {
             close();
         }
 
         // Close walkable interfaces if needed.
-        if (needsToClose(currentWalkable)) {
+        if (isAutoClose(currentWalkable)) {
             closeWalkable();
         }
     }
@@ -109,8 +109,8 @@ public final class AbstractInterfaceSet {
      * @param optional The interface optional.
      * @return {@code true} if the interface needs to close.
      */
-    private boolean needsToClose(Optional<? extends AbstractInterface> optional) {
-        return optional.filter(inter -> inter.isCloseOnAction(player)).isPresent();
+    private boolean isAutoClose(Optional<? extends AbstractInterface> optional) {
+        return optional.filter(inter -> inter.isAutoClose(player)).isPresent();
     }
 
     /**
@@ -155,6 +155,13 @@ public final class AbstractInterfaceSet {
      */
     public Optional<StandardInterface> getCurrentStandard() {
         return currentStandard;
+    }
+
+    /**
+     * Resets the current input interface.
+     */
+    public void resetCurrentInput() {
+        setCurrentInput(null);
     }
 
     /**

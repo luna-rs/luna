@@ -1,54 +1,35 @@
 package io.luna.game.model.mob.inter;
 
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.AmountInputMessageWriter;
-import io.luna.net.msg.out.NameInputMessageWriter;
+
+import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
- * An {@link AbstractInterface} implementation that opens an "Enter amount" interface.
+ * An {@link AbstractInterface} implementation that opens an input interface.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class InputInterface extends AbstractInterface {
-
-    /**
-     * An enumerated type representing different input types.
-     */
-    public enum InputType {
-        NAME,
-        AMOUNT
-    }
-
-    /**
-     *  The input type.
-     */
-    private final InputType inputType;
+public abstract class InputInterface extends AbstractInterface {
 
     /**
      * Creates a new {@link InputInterface}.
-     *
-     * @param inputType The input type.
      */
-    public InputInterface(InputType inputType) {
-        this.inputType = inputType;
+    InputInterface() {
+        super(InterfaceType.INPUT);
     }
 
     @Override
-    public void open(Player player) {
-        switch (inputType) {
-            case NAME:
-                player.queue(new NameInputMessageWriter());
-                break;
-            case AMOUNT:
-                player.queue(new AmountInputMessageWriter());
-                break;
-        }
+    public final boolean isAutoClose(Player player) {
+        return true;
     }
 
     /**
-     * @return The input type.
+     * A function invoked when the Player inputs a value on the interface.
+     *
+     * @param player The player.
+     * @param number The number entered.
+     * @param string The string entered.
      */
-    public InputType getInputType() {
-        return inputType;
-    }
+    public abstract void applyInput(Player player, OptionalInt number, Optional<String> string);
 }

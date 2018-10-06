@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.NumberInputInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -21,18 +22,21 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         switch (opcode) {
-        case 145:
-            firstIndex(player, msg.getPayload());
-            break;
-        case 117:
-            secondIndex(player, msg.getPayload());
-            break;
-        case 43:
-            thirdIndex(player, msg.getPayload());
-            break;
-        case 129:
-            fourthIndex(player, msg.getPayload());
-            break;
+            case 145:
+                firstIndex(player, msg.getPayload());
+                break;
+            case 117:
+                secondIndex(player, msg.getPayload());
+                break;
+            case 43:
+                thirdIndex(player, msg.getPayload());
+                break;
+            case 129:
+                fourthIndex(player, msg.getPayload());
+                break;
+            case 135:
+                fifthIndex(player, msg.getPayload());
+                break;
         }
         return null;
     }
@@ -53,27 +57,27 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
         checkState(itemId > 0, "itemId <= 0");
 
         switch (interfaceId) {
-        case 1688:
-            player.getEquipment().unequip(index);
-            break;
-        case 5064:
-            player.getBank().deposit(index, 1);
-            break;
-        case 5382:
-            player.getBank().withdraw(index, 1);
-            break;
-        case 3900:
-            //Shop will sell for <x>
-            break;
-        case 3823:
-            //Shop will buy for <x>
-            break;
-        case 3322:
-            // Offer 1 item on trade screen
-            break;
-        case 3415:
-            // Remove 1 item from trade screen
-            break;
+            case 1688:
+                player.getEquipment().unequip(index);
+                break;
+            case 5064:
+                player.getBank().deposit(index, 1);
+                break;
+            case 5382:
+                player.getBank().withdraw(index, 1);
+                break;
+            case 3900:
+                //Shop will sell for <x>
+                break;
+            case 3823:
+                //Shop will buy for <x>
+                break;
+            case 3322:
+                // Offer 1 item on trade screen
+                break;
+            case 3415:
+                // Remove 1 item from trade screen
+                break;
         }
     }
 
@@ -93,24 +97,24 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
         checkState(itemId > 0, "itemId <= 0");
 
         switch (interfaceId) {
-        case 5064:
-            player.getBank().deposit(index, 5);
-            break;
-        case 5382:
-            player.getBank().withdraw(index, 5);
-            break;
-        case 3900:
-            // Buy 1 of <item> from shop
-            break;
-        case 3823:
-            // Sell 1 of <item> to shop
-            break;
-        case 3322:
-            // Add 5 of <item> on trade screen
-            break;
-        case 3415:
-            // Remove 5 of <item> from trade screen
-            break;
+            case 5064:
+                player.getBank().deposit(index, 5);
+                break;
+            case 5382:
+                player.getBank().withdraw(index, 5);
+                break;
+            case 3900:
+                // Buy 1 of <item> from shop
+                break;
+            case 3823:
+                // Sell 1 of <item> to shop
+                break;
+            case 3322:
+                // Add 5 of <item> on trade screen
+                break;
+            case 3415:
+                // Remove 5 of <item> from trade screen
+                break;
         }
     }
 
@@ -130,24 +134,24 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
         checkState(itemId > 0, "itemId <= 0");
 
         switch (interfaceId) {
-        case 5064:
-            player.getBank().deposit(index, 10);
-            break;
-        case 5382:
-            player.getBank().withdraw(index, 10);
-            break;
-        case 3900:
-            // Buy 5 of <item> from shop
-            break;
-        case 3823:
-            // Sell 5 of <item> to shop
-            break;
-        case 3322:
-            // Add 10 of <item> on trade screen
-            break;
-        case 3415:
-            // Remove 10 of <item> from trade screen
-            break;
+            case 5064:
+                player.getBank().deposit(index, 10);
+                break;
+            case 5382:
+                player.getBank().withdraw(index, 10);
+                break;
+            case 3900:
+                // Buy 5 of <item> from shop
+                break;
+            case 3823:
+                // Sell 5 of <item> to shop
+                break;
+            case 3322:
+                // Add 10 of <item> on trade screen
+                break;
+            case 3415:
+                // Remove 10 of <item> from trade screen
+                break;
         }
     }
 
@@ -167,24 +171,59 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
         checkState(itemId > 0, "itemId <= 0");
 
         switch (interfaceId) {
-        case 5064:
-            player.getBank().deposit(index, player.getInventory().computeAmountForId(itemId));
-            break;
-        case 5382:
-            player.getBank().withdraw(index, player.getBank().computeAmountForId(itemId));
-            break;
-        case 3900:
-            // Buy 10 of <item> from shop
-            break;
-        case 3823:
-            // Sell 10 of <item> to shop
-            break;
-        case 3322:
-            // Add all of <item> on trade screen
-            break;
-        case 3415:
-            // Remove all of <item> from trade screen
-            break;
+            case 5064:
+                player.getBank().deposit(index, player.getInventory().computeAmountForId(itemId));
+                break;
+            case 5382:
+                player.getBank().withdraw(index, player.getBank().computeAmountForId(itemId));
+                break;
+            case 3900:
+                // Buy 10 of <item> from shop
+                break;
+            case 3823:
+                // Sell 10 of <item> to shop
+                break;
+            case 3322:
+                // Add all of <item> on trade screen
+                break;
+            case 3415:
+                // Remove all of <item> from trade screen
+                break;
+        }
+    }
+
+    /**
+     * The fifth index click.
+     *
+     * @param player The player.
+     * @param msg The buffer to read from.
+     */
+    private void fifthIndex(Player player, ByteMessage msg) {
+        int index = msg.getShort(ByteOrder.LITTLE);
+        int interfaceId = msg.getShort(false, ByteTransform.A);
+        int itemId = msg.getShort(ByteOrder.LITTLE);
+
+        checkState(interfaceId > 0, "interfaceId <= 0");
+        checkState(index >= 0, "index < 0");
+        checkState(itemId > 0, "itemId <= 0");
+
+        switch (interfaceId) {
+            case 5064:
+                player.getInterfaces().open(new NumberInputInterface() {
+                    @Override
+                    public void onNumberInput(Player player, int number) {
+                        player.getBank().deposit(index, number);
+                    }
+                });
+                break;
+            case 5382:
+                player.getInterfaces().open(new NumberInputInterface() {
+                    @Override
+                    public void onNumberInput(Player player, int number) {
+                        player.getBank().withdraw(index, number);
+                    }
+                });
+                break;
         }
     }
 }
