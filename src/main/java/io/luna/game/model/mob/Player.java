@@ -31,15 +31,16 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.netty.channel.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.item.Bank.BANK_DISPLAY_ID;
@@ -331,14 +332,14 @@ public final class Player extends Mob {
 
     @Override
     public void transform(int id) {
-        transformId = Optional.of(id);
+        transformId = OptionalInt.of(id);
         updateFlags.flag(UpdateFlag.APPEARANCE);
     }
 
     @Override
     public void resetTransform() {
         if (transformId.isPresent()) {
-            transformId = Optional.empty();
+            transformId = OptionalInt.empty();
             updateFlags.flag(UpdateFlag.APPEARANCE);
         }
     }
@@ -754,7 +755,7 @@ public final class Player extends Mob {
     /**
      * @return The transformation identifier.
      */
-    public Optional<Integer> getTransformId() {
+    public OptionalInt getTransformId() {
         return transformId;
     }
 

@@ -3,8 +3,7 @@ package io.luna.game.model.item;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
-
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * An item container model representing a player's bank.
@@ -125,7 +124,7 @@ public final class Bank extends ItemContainer {
         Item depositItem = inventoryItem.withId(def.getUnnotedId().orElse(inventoryItem.getId()));
 
         int remaining = computeRemainingSize();
-        Optional<Integer> depositIndex = computeIndexForId(depositItem.getId());
+        OptionalInt depositIndex = computeIndexForId(depositItem.getId());
         if (remaining < 1 && !depositIndex.isPresent()) {
             fireCapacityExceededEvent();
             return false;
@@ -158,7 +157,7 @@ public final class Bank extends ItemContainer {
             amount = existingAmount;
         }
 
-        Optional<Integer> newId = Optional.empty();
+        OptionalInt newId = OptionalInt.empty();
         if (player.isWithdrawAsNote()) {
             ItemDefinition def = bankItem.getItemDef();
             if (def.isNoteable()) {
