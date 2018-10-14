@@ -42,7 +42,7 @@ public final class PluginManager {
         if (pipeline == null) {
             return;
         }
-        pipeline.traverse(msg);
+        pipeline.post(msg);
     }
 
     /**

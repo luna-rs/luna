@@ -1,6 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.EventArguments;
+import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -8,7 +9,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ButtonClickEvent extends PlayerEvent {
+public final class ButtonClickEvent extends PlayerEvent implements IdBasedEvent {
 
     /**
      * The clicked button.
@@ -22,7 +23,7 @@ public final class ButtonClickEvent extends PlayerEvent {
      * @param id The clicked button.
      */
     public ButtonClickEvent(Player player, int id) {
-        super(player);
+        super(player, id);
         this.id = id;
     }
 

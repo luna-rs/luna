@@ -88,7 +88,6 @@ public final class EventListener<E extends Event> {
         ReflectionUtils.setField(this, "scriptName", name);
     }
 
-
     /**
      * @return The encompassing script name.
      */

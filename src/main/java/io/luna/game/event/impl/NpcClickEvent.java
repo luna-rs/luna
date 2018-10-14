@@ -1,6 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.EventArguments;
+import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 
@@ -9,9 +10,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class NpcClickEvent extends PlayerEvent {
-
-    /* Needs to be public so inner classes are visible. */
+public class NpcClickEvent extends PlayerEvent implements IdBasedEvent {
 
     /**
      * An event sent when a player clicks an npc's first index.
@@ -100,7 +99,7 @@ public class NpcClickEvent extends PlayerEvent {
      * @param npc The non-player character.
      */
     private NpcClickEvent(Player player, Npc npc) {
-        super(player);
+        super(player, npc.getId());
         this.npc = npc;
     }
 

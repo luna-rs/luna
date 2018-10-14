@@ -25,6 +25,17 @@ class PlayerEvent extends Event {
     }
 
     /**
+     * Creates a new {@link PlayerEvent}.
+     *
+     * @param player The player.
+     * @param mapId The identifier for this event.
+     */
+    public PlayerEvent(Player player, int mapId) {
+        super(mapId);
+        this.player = player;
+    }
+
+    /**
      * @return The player.
      */
     public Player plr() {

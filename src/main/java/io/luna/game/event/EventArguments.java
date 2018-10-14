@@ -1,6 +1,7 @@
 package io.luna.game.event;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
 import java.util.Objects;
@@ -29,6 +30,11 @@ public final class EventArguments implements Iterable<Object> {
      */
     public EventArguments(Object[] withArgs) {
         args = ImmutableList.copyOf(withArgs);
+    }
+
+    @Override
+    public String toString() {
+        return Iterators.toString(args.iterator());
     }
 
     @Override
