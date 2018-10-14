@@ -1,0 +1,8 @@
+[metadata]
+name = "Toggle run"
+description = "Adds functionality for toggling between running and walking."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

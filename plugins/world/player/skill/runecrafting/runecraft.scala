@@ -1,12 +1,3 @@
-/*
- Adds functionality for crafting normal runes.
-
- SUPPORTS:
-  -> Differentiating between rune essence and pure essence
-  -> All runes on all altars
-  -> Level multipliers (double cosmics, double nats, etc)
-*/
-
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.{Animation, Graphic, Player}
@@ -155,7 +146,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
   }
 
   if (essenceCount <= 0) { /* Do we have essence? */
-    plr.sendMessage(s"You need some proper essence in order to craft these runes.")
+    plr.sendMessage("You need some proper essence in order to craft these runes.")
     return
   }
 

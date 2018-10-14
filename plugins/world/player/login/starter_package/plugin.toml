@@ -1,0 +1,8 @@
+[metadata]
+name = "Starter package"
+description = "Gives players a starter package on their first login."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

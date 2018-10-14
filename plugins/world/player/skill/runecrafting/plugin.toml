@@ -1,6 +1,16 @@
 [metadata]
 name = "Runecrafting"
-description = "Adds functionality for the Runecrafting skill."
+description = "Adds functionality for the Runecrafting skill.
+
+SUPPORTS:
+ -> Entering by using talismans on altar objects.
+ -> Entering by first click while wearing tiaras.
+ -> Exiting by using the portal within the altar room.
+ -> Differentiating between rune essence and pure essence.
+ -> All runes on all altars.
+ -> Level multipliers (double cosmics, double nats, etc).
+ -> Sending all the correct tiara config values.
+ -> Only sends the '0' config value on login or when a tiara is unequipped."
 version = "1.0"
 dependencies = [ ]
 authors = [

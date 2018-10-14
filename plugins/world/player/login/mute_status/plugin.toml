@@ -1,0 +1,8 @@
+[metadata]
+name = "Check mute status"
+description = "Checks if the player is currently muted."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

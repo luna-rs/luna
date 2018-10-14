@@ -64,6 +64,7 @@ public final class AbstractInterfaceSet {
     public void close() {
         if (isStandardOpen() || isInputOpen()) {
             player.queue(new CloseWindowsMessageWriter());
+            player.resetDialogues();
             setCurrentStandard(null);
             setCurrentInput(null);
         }
@@ -101,6 +102,9 @@ public final class AbstractInterfaceSet {
         if (isAutoClose(currentWalkable)) {
             closeWalkable();
         }
+
+        // Reset dialogues.
+        player.resetDialogues();
     }
 
     /**

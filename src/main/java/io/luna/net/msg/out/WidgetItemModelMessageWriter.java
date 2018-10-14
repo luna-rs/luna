@@ -10,12 +10,12 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class WidgetItemModelMessageWriter extends GameMessageWriter {
+public final class WidgetItemModelMessageWriter extends GameMessageWriter {
 
     /**
      * The widget identifier.
      */
-    private final int id;
+    private final int widgetId;
 
     /**
      * The item's scale.
@@ -25,27 +25,27 @@ public class WidgetItemModelMessageWriter extends GameMessageWriter {
     /**
      * The item.
      */
-    private final int item;
+    private final int itemId;
 
     /**
      * Creates a new {@link WidgetItemModelMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param widgetId The widget identifier.
      * @param scale The item's scale.
-     * @param item The item.
+     * @param itemId The item.
      */
-    public WidgetItemModelMessageWriter(int id, int scale, int item) {
-        this.id = id;
+    public WidgetItemModelMessageWriter(int widgetId, int scale, int itemId) {
+        this.widgetId = widgetId;
         this.scale = scale;
-        this.item = item;
+        this.itemId = itemId;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(246);
-        msg.putShort(id, ByteOrder.LITTLE);
+        msg.putShort(widgetId, ByteOrder.LITTLE);
         msg.putShort(scale);
-        msg.putShort(item);
+        msg.putShort(itemId);
         return msg;
     }
 }

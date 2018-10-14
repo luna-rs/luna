@@ -1,17 +1,10 @@
-/*
- Adds functionality for making unfinished potions.
-
- SUPPORTS:
-  -> Making unfinished potions from all herbs.
-*/
-
 import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Mob, Player}
+import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.{Animation, Player}
 
-// TODO Use dialogues once completed
 
 /* Class representing unfinished potions in the 'UNF_POTION_TABLE'. */
 private case class UnfPotion(herb: Int, unf: Int, level: Int)
@@ -95,7 +88,9 @@ private val IDENTIFIED_TO_UNF = UNF_POTION_TABLE.values.map(unf => unf.herb -> u
 
 
 /* An Action that will be used to make unfinished potions. */
-private final class MakeUnfAction(val plr: Player, val unfPotion: UnfPotion) extends ProducingAction(plr, true, 2) {
+private final class MakeUnfAction(val plr: Player,
+                                  val unfPotion: UnfPotion,
+                                  var amount: Int) extends ProducingAction(plr, true, 2) {
 
   override def canInit = {
     val levelRequired = unfPotion.level
@@ -126,11 +121,18 @@ private final class MakeUnfAction(val plr: Player, val unfPotion: UnfPotion) ext
   }
 }
 
+/* A dialogue that displays the item to grind. */
+private final class UnfPotionDialogue(val unfPotion: UnfPotion) extends MakeItemDialogueInterface(unfPotion.unf) {
+  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+    player.submitAction(new MakeUnfAction(player, unfPotion, forAmount))
+  }
+}
+
 
 /* Perform a lookup for the identifier and start the MakeUnfAction if successful. */
 private def makeUnf(plr: Player, msg: Event, herb: Int) = {
   IDENTIFIED_TO_UNF.get(herb).foreach { it =>
-    plr.submitAction(new MakeUnfAction(plr, it))
+    plr.interfaces.open(new UnfPotionDialogue(it))
     msg.terminate
   }
 }

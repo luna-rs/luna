@@ -120,7 +120,7 @@ public abstract class AbstractInterface {
     /**
      * @return The interface type.
      */
-    public InterfaceType getType() {
+    public final InterfaceType getType() {
         return type;
     }
 }

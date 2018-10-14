@@ -1,8 +1,0 @@
-[metadata]
-name = "Fun rings"
-description = "Adds functionality for fun rings such as the Ring of Stone, Easter ring, etc."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

@@ -1,0 +1,15 @@
+[metadata]
+name = "Punishment commands"
+description = "Handles punishment command input.
+
+SUPPORTS:
+ -> Internet protocol address ban.
+ -> Permanent ban/mute.
+ -> Temporary ban/mute.
+ -> Specific punishment lift dates.
+ -> Kicking (forced disconnect)."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

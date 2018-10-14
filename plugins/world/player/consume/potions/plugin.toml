@@ -1,0 +1,12 @@
+[metadata]
+name = "Consume potions"
+description = "Allows players to consume potions.
+
+SUPPORTS:
+ -> Drinking a variety of potions.
+ -> Potion status and level effects."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

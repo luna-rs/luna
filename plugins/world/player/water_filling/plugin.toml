@@ -1,8 +1,0 @@
-[metadata]
-name = "Water filling"
-description = "Adds functionality for filling items with water."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

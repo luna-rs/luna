@@ -1,16 +1,10 @@
-/*
- Adds functionality for making unfinished potions.
-
- SUPPORTS:
-  -> Making unfinished potions from all herbs.
-*/
-
 import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 import io.luna.game.model.mob.{Animation, Mob, Player}
 
-// TODO Use dialogues once completed
+
 /* Class representing potions in the 'POTION_TABLE'. */
 private case class Potion(id: Int, unf: Int, secondary: Int, level: Int, exp: Double)
 
@@ -167,7 +161,9 @@ private val INGREDIENTS_TO_POTION =
 
 
 /* An Action that will be used to make finished potions. */
-private final class MakePotionAction(val plr: Player, val potion: Potion) extends ProducingAction(plr, true, 2) {
+private final class MakePotionAction(val plr: Player,
+                                     val potion: Potion,
+                                     var amount: Int) extends ProducingAction(plr, true, 2) {
 
   private val skill = plr.skill(SKILL_HERBLORE)
 
@@ -201,14 +197,22 @@ private final class MakePotionAction(val plr: Player, val potion: Potion) extend
   }
 }
 
+/* A dialogue that displays the item to grind. */
+private final class PotionDialogue(val potion: Potion) extends MakeItemDialogueInterface(potion.id) {
+  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+    player.submitAction(new MakePotionAction(player, potion, forAmount))
+  }
+}
+
 
 /* Make finished potions if the required items are present. */
 on[ItemOnItemEvent] { msg =>
   val potionOption = INGREDIENTS_TO_POTION.get(msg.targetId -> msg.usedId).
     orElse(INGREDIENTS_TO_POTION.get(msg.usedId -> msg.targetId))
 
-  potionOption.foreach { potion => /* Perform action for either the first or second lookup, or none. */
-    msg.plr.submitAction(new MakePotionAction(msg.plr, potion))
+  // Perform action for either the first or second lookup, or none.
+  potionOption.foreach { potion =>
+    msg.plr.interfaces.open(new PotionDialogue(potion))
     msg.terminate
   }
 }

@@ -1,16 +1,4 @@
-/*
- Adds functionality for advancing skill levels.
-
- SUPPORTS:
-   -> Fireworks, congratulations interface, etc.
-   -> Recalculation of combat level when combat skills change.
-   -> Queuing messages for level and experience changes.
-
- AUTHOR: lare96
-*/
-
 import io.luna.game.event.impl.SkillChangeEvent
-import io.luna.game.model.mob.block.UpdateFlagSet
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mob.inter.DialogueInterface
 import io.luna.game.model.mob.{Graphic, Player, Skill}

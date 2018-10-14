@@ -165,7 +165,8 @@
   },
   {
     "opcode": 40,
-    "size": 2
+    "size": 2,
+    "payload": "ContinueDialogueMessageReader"
   },
   {
     "opcode": 41,
@@ -357,7 +358,8 @@
   },
   {
     "opcode": 87,
-    "size": 6
+    "size": 6,
+    "payload": "DropItemMessageReader"
   },
   {
     "opcode": 88,

@@ -1,12 +1,3 @@
-/*
- A plugin for the Fishing skill that adds functionality for moving fishing spots.
-
- SUPPORTS:
-  -> Moving fishing spots around at random intervals.
-  -> Two possible positions for a fishing spots to be in.
-  -> Moving different fishing spots at different times.
-*/
-
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc

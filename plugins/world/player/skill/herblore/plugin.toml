@@ -1,6 +1,13 @@
 [metadata]
 name = "Herblore"
-description = "Adds functionality for the Herblore skill."
+description = "Adds functionality for the Herblore skill.
+
+SUPPORTS:
+ -> Grinding all secondary potion ingredients.
+ -> Grinding all ingredients in the inventory.
+ -> Identifying all herbs.
+ -> Making unfinished potions from all herbs.
+ -> Completing potions from all unfinished potions."
 version = "1.0"
 dependencies = [ ]
 authors = [

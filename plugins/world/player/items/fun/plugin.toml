@@ -1,0 +1,12 @@
+[metadata]
+name = "Fun items"
+description = "Transforms the player when wearing special equipment.
+
+SUPPORTS:
+ -> Ring of stone.
+ -> Easter ring."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

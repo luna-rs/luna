@@ -1,6 +1,11 @@
 [metadata]
 name = "Advance level"
-description = "Adds functionality for advancing skill levels."
+description = "Adds functionality for advancing skill levels.
+
+SUPPORTS:
+ -> Fireworks, congratulations interface, etc.
+ -> Recalculation of combat level when combat skills change.
+ -> Queuing messages for level and experience changes."
 version = "1.0"
 dependencies = [ ]
 authors = [

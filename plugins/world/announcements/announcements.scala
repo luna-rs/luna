@@ -1,14 +1,5 @@
-/*
- A plugin that adds functionality for sending 'world' announcements.
-
- SUPPORTS:
-  -> Random message selection at fixed interval.
-  -> Filtering certain players from the announcements.
-*/
-
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.mob.Player
-
 
 /* Announcement broadcast interval. */
 private val TICK_INTERVAL = 1500 // 15 mins

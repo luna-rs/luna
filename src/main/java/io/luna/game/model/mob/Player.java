@@ -15,6 +15,8 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.dialogue.DialogueQueue;
+import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
 import io.luna.net.client.GameClient;
@@ -233,6 +235,11 @@ public final class Player extends Mob {
     private ModelAnimation modelAnimation = ModelAnimation.DEFAULT;
 
     /**
+     * The dialogue queue.
+     */
+    private Optional<DialogueQueue> dialogues = Optional.empty();
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context instance.
@@ -431,6 +438,15 @@ public final class Player extends Mob {
         int deltaY = position.getLocalY(lastRegion);
 
         return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88;
+    }
+
+    /**
+     * Returns a new builder that will be used to create dialogues.
+     *
+     * @return The dialogue builder.
+     */
+    public DialogueQueueBuilder newDialogue() {
+        return new DialogueQueueBuilder(this, 6);
     }
 
     /**
@@ -833,5 +849,35 @@ public final class Player extends Mob {
      */
     public GameTabSet getTabs() {
         return tabs;
+    }
+
+    /**
+     * Resets the current dialogue queue.
+     */
+    public void resetDialogues() {
+        setDialogues(null);
+    }
+
+    /**
+     * Advances the current dialogue queue.
+     */
+    public void advanceDialogues() {
+        dialogues.ifPresent(DialogueQueue::advance);
+    }
+
+    /**
+     * Sets the dialouge queue.
+     *
+     * @param dialogues The new value.
+     */
+    public void setDialogues(DialogueQueue dialogues) {
+        this.dialogues = Optional.ofNullable(dialogues);
+    }
+
+    /**
+     * @return The dialogue queue.
+     */
+    public Optional<DialogueQueue> getDialogues() {
+        return dialogues;
     }
 }

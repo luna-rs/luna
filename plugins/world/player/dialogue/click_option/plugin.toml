@@ -1,0 +1,8 @@
+[metadata]
+name = "Click option"
+description = "Enables the use of the 'Select an option' interfaces."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

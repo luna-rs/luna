@@ -5,6 +5,7 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 
 /**
  * An entity-based event. Not intended for interception.
@@ -27,7 +28,7 @@ class EntityEvent extends Event {
         this.entity = entity;
     }
 
-    /* TODO: add item and object methods, once they're implemented. */
+    /* TODO: add item method, once they're implemented. */
 
     /**
      * @return The entity.
@@ -39,21 +40,28 @@ class EntityEvent extends Event {
     /**
      * Returns the entity as a mob.
      */
-    public Mob mob() {
+    public Mob asMob() {
         return (Mob) entity;
     }
 
     /**
      * Returns the entity as a non-player.
      */
-    public Npc npc() {
+    public Npc asNpc() {
         return (Npc) entity;
     }
 
     /**
      * Returns the entity as a player.
      */
-    public Player plr() {
+    public Player asPlr() {
         return (Player) entity;
+    }
+
+    /**
+     * Returns the entity as an object.
+     */
+    public GameObject asObject() {
+        return (GameObject) entity;
     }
 }

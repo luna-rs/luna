@@ -1,12 +1,3 @@
-/*
- Adds functionality for entering and exiting altars.
-
- SUPPORTS:
-  -> Entering by using talismans on altar objects.
-  -> Entering by first click while wearing tiaras.
-  -> Exiting by using the portal within the altar room.
-*/
-
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent

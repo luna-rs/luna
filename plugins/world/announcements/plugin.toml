@@ -1,6 +1,10 @@
 [metadata]
 name = "Announcements"
-description = "Sends server-wide announcements at specified intervals."
+description = "Sends server-wide announcements at specified intervals.
+
+SUPPORTS:
+ -> Random message selection at fixed interval.
+ -> Filtering certain players from the announcements."
 version = "1.0"
 dependencies = [ ]
 authors = [

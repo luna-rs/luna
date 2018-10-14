@@ -1,11 +1,3 @@
-/*
- Adds functionality for sending client configs when wearing tiaras.
-
- SUPPORTS:
-  -> Sending all the correct tiara config values.
-  -> Only sends the '0' config value on login or when a tiara is unequipped.
-*/
-
 import io.luna.game.event.impl.{EquipmentChangeEvent, LoginEvent}
 import io.luna.game.model.item.Equipment.HEAD
 import io.luna.game.model.item.Item

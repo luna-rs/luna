@@ -1,17 +1,9 @@
-/*
- Adds functionality for grinding potion ingredients.
-
- SUPPORTS:
-  -> Grinding all secondary potion ingredients.
-  -> Grinding all ingredients in the inventory.
-*/
-
 import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.{Animation, Mob, Player}
+import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.{Animation, Player}
 
-// TODO Use dialogues once completed
 
 /* Pestle and mortar item identifier. */
 private val PESTLE_AND_MORTAR = 233
@@ -30,16 +22,22 @@ private val INGREDIENTS = Map(
 
 /* An Action that will grind all ingredients in an inventory. */
 private final class GrindAction(val plr: Player, val oldId: Int,
-                                val newId: Int) extends ProducingAction(plr, true, 2) {
+                                val newId: Int, var amount: Int) extends ProducingAction(plr, true, 2) {
 
   override def onProduce() = {
     val nextWord = if (newId == 6693) "a" else "some"
-    plr.sendMessage(s"You grind the ${ nameOfItem(oldId) } into $nextWord ${ nameOfItem(newId) }.")
+    plr.sendMessage(s"You grind the ${nameOfItem(oldId)} into $nextWord ${nameOfItem(newId)}.")
 
     plr.animation(ANIMATION)
+    amount -= 1
+
+    if (amount == 0) {
+      interrupt()
+    }
   }
 
   override def remove = Array(new Item(oldId))
+
   override def add = Array(new Item(newId))
 
   override def isEqual(other: Action[_]) = {
@@ -50,11 +48,18 @@ private final class GrindAction(val plr: Player, val oldId: Int,
   }
 }
 
+/* A dialogue that displays the item to grind. */
+private final class GrindDialogue(val oldId: Int, val newId: Int) extends MakeItemDialogueInterface(newId) {
+  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+    player.submitAction(new GrindAction(player, oldId, id, forAmount))
+  }
+}
+
 
 /* Perform a lookup and submit the 'GrindAction' if successful. */
 private def grind(plr: Player, id: Int, evt: ItemOnItemEvent) = {
   INGREDIENTS.get(id).foreach { it =>
-    plr.submitAction(new GrindAction(plr, id, it))
+    plr.interfaces.open(new GrindDialogue(id, it))
     evt.terminate
   }
 }

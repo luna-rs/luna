@@ -1,11 +1,3 @@
-/*
- A plugin for the Fishing skill that adds functionality for catching fish.
-
- SUPPORTS:
-  -> Catching fish with the proper tools and bait.
-  -> Big net fishing catching 1-3 fish, instead of 1.
-*/
-
 import io.luna.game.action.{Action, HarvestingAction}
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.{NpcFirstClickEvent, NpcSecondClickEvent}

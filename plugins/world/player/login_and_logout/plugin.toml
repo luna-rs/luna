@@ -1,8 +1,0 @@
-[metadata]
-name = "Login/logout"
-description = "Adds special functionality for logging in and out."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

@@ -25,7 +25,9 @@ public abstract class InputInterface extends AbstractInterface {
     }
 
     /**
-     * A function invoked when the Player inputs a value on the interface.
+     * A function invoked when the Player inputs a value on the interface. <strong>Warning: This function
+     * should always validate the number and string values for their specific use cases.</strong> Failure
+     * to properly validate the values can result in unexpected behaviour (ie. bug abuse, errors).
      *
      * @param player The player.
      * @param number The number entered.
