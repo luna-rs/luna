@@ -1,5 +1,6 @@
 package io.luna.game.event;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.plugin.ScriptExecutionException;
@@ -43,7 +44,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * The map of listeners.
      */
-    private final Map<Integer, EventListener<E>> listenerMap = new HashMap<>();
+    private final Map<Integer, EventListener<E>> listenerMap;
 
     /**
      * A flag determining if a traversal terminated.
@@ -57,6 +58,8 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     public EventListenerPipeline(Class<?> eventType) {
         this.eventType = eventType;
+        listenerMap = IdBasedEvent.class.isAssignableFrom(eventType) ?
+                new HashMap<>() : ImmutableMap.of();
     }
 
     @Override
@@ -140,13 +143,12 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     @SuppressWarnings("unchecked")
     public void add(EventListener<?> listener) {
-        boolean isIdBased = IdBasedEvent.class.isAssignableFrom(eventType) &&
-                listener.getArgs().size() > 0;
         EventListener<E> toAdd = (EventListener<E>) listener;
-        if (isIdBased) {
-            addToMap(toAdd);
-        } else {
+        if(listenerMap instanceof ImmutableMap ||
+                listener.getArgs().size() == 0) {
             addToList(toAdd);
+        } else {
+            addToMap(toAdd);
         }
     }
 
