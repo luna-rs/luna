@@ -249,10 +249,11 @@ public final class DialogueQueueBuilder {
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder openAction(Consumer<Player> action) {
+        checkLocked();
+
         DialogueInterface lastDialogue = dialogues.peekLast();
 
         checkState(lastDialogue != null, "No past dialogue to attach action to.");
-
         lastDialogue. setOpenAction(action);
         return this;
     }
