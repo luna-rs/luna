@@ -2,10 +2,10 @@ package io.luna.util;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
-
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -33,7 +33,7 @@ public final class RandomUtils {
      */
     public static int inclusive(int min, int max) {
         checkArgument(max >= min, "max < min");
-        return ThreadLocalRandom.current().nextInt((max - min) + 1) + min;
+        return ThreadLocalRandom.current().nextInt(min, max + 1);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static <T> T random(T[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -64,7 +64,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static int random(int[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -74,7 +74,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static long random(long[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -84,7 +84,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static double random(double[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -94,7 +94,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static short random(short[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -104,7 +104,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static byte random(byte[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -114,7 +114,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static float random(float[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -124,7 +124,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static boolean random(boolean[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -134,7 +134,7 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static char random(char[] array) {
-        return array[(int) (ThreadLocalRandom.current().nextDouble() * array.length)];
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
@@ -145,7 +145,7 @@ public final class RandomUtils {
      */
     public static <T> T random(List<T> list) {
         // TODO Separate LinkedList implementation.
-        return list.get((int) (ThreadLocalRandom.current().nextDouble() * list.size()));
+        return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
     /**
