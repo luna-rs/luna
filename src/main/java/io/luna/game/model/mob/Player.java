@@ -312,7 +312,6 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
-
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);
@@ -555,7 +554,6 @@ public final class Player extends Mob {
     public void setWeight(double weight) {
         AttributeValue<Double> attr = attributes.get("weight");
         attr.set(weight);
-
         queue(new UpdateWeightMessageWriter((int) weight));
     }
 
@@ -669,7 +667,6 @@ public final class Player extends Mob {
      * @param newMsg The value to set to.
      */
     public void setCachedBlock(ByteMessage newMsg) {
-
         // We have a cached block, release a reference to it.
         if (cachedBlock != null) {
             cachedBlock.release();

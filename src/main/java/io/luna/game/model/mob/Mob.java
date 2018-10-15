@@ -240,7 +240,7 @@ public abstract class Mob extends Entity {
      * @param newAnimation The animation to perform.
      */
     public final void animation(Animation newAnimation) {
-        if(!animation.isPresent() ||
+        if (!animation.isPresent() ||
                 animation.filter(newAnimation::overrides).isPresent()) {
             animation = Optional.of(newAnimation);
             updateFlags.flag(UpdateFlag.ANIMATION);

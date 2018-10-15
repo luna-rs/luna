@@ -307,7 +307,6 @@ public final class Equipment extends ItemContainer {
      * Returns {@code true} if successful.
      */
     public boolean equip(int inventoryIndex) {
-
         // Validate index.
         Item inventoryItem = inventory.get(inventoryIndex);
         if (inventoryItem == null) {
@@ -362,7 +361,6 @@ public final class Equipment extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean unequip(int equipmentIndex) {
-
         // Validate index.
         Item equipmentItem = get(equipmentIndex);
         if (equipmentItem == null) {

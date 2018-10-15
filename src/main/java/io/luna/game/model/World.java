@@ -13,10 +13,6 @@ import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
-
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -24,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 /**
  * A model that performs world processing and synchronization for mobs.
@@ -149,7 +148,7 @@ public final class World {
      */
     public void queueLogin(Player player) {
         if (player.getState() == EntityState.NEW && !logins.contains(player)) {
-            logins.add(player);
+            logins.offer(player);
         }
     }
 
@@ -158,8 +157,8 @@ public final class World {
      */
     public void dequeueLogins() {
         for (int amount = 0; amount < EntityConstants.LOGIN_THRESHOLD; amount++) {
-            Player player = logins.poll();
-            if (player == null) {
+            Player player;
+            if ((player = logins.poll()) == null) {
                 break;
             }
             playerList.add(player);
@@ -173,7 +172,7 @@ public final class World {
      */
     public void queueLogout(Player player) {
         if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
-            logouts.add(player);
+            logouts.offer(player);
         }
     }
 
@@ -182,8 +181,8 @@ public final class World {
      */
     public void dequeueLogouts() {
         for (int amount = 0; amount < EntityConstants.LOGOUT_THRESHOLD; amount++) {
-            Player player = logouts.poll();
-            if (player == null) {
+            Player player;
+            if ((player = logouts.poll()) == null) {
                 break;
             }
             playerList.remove(player);
@@ -195,7 +194,6 @@ public final class World {
      * by anything other than the {@link GameService}.
      */
     public void loop() {
-
         // Handle logins.
         dequeueLogins();
 
