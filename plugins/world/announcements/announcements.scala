@@ -7,9 +7,9 @@ private val TICK_INTERVAL = 1500 // 15 mins
 /* Messages that will be randomly announced. */
 private val MESSAGES = Vector(
   "Luna is a Runescape private server for the #317 protocol.",
-  "Contribute to Luna at github.org/lare96/luna",
-  "Change these messages in /plugins/world/announcement.scala",
-  "Any bugs found using Luna should be reported to the github page."
+  "Luna can be found on GitHub under luna-rs/luna",
+  "Change these messages in /plugins/world/announcements/announcements.scala",
+  "Any bugs found using Luna should be reported to the GitHub page."
 )
 
 /* A filter for players that will receive the announcement. */
