@@ -53,6 +53,8 @@ import static io.luna.game.model.item.Inventory.INVENTORY_DISPLAY_ID;
  */
 public final class Player extends Mob {
 
+    // TODO second login message is misspelled
+
     /**
      * An enum representing prayer icons.
      */
@@ -238,6 +240,21 @@ public final class Player extends Mob {
      * The dialogue queue.
      */
     private Optional<DialogueQueue> dialogues = Optional.empty();
+
+    /**
+     * The private message counter.
+     */
+    private int privateMsgCounter = 1;
+
+    /**
+     * The friend list.
+     */
+    private final Set<Long> friends = new LinkedHashSet<>();
+
+    /**
+     * The ignore list.
+     */
+    private final Set<Long> ignores = new LinkedHashSet<>();
 
     /**
      * Creates a new {@link Player}.
@@ -879,5 +896,52 @@ public final class Player extends Mob {
      */
     public Optional<DialogueQueue> getDialogues() {
         return dialogues;
+    }
+
+    /**
+     * Returns the private message identifier and subsequently increments it by {@code 1}.
+     *
+     * @return The private message identifier.
+     */
+    public int newPrivateMessageId() {
+        return privateMsgCounter++;
+    }
+
+    /**
+     * Sets the backing set of friends.
+     *
+     * @param newFriends The new value.
+     */
+    public void setFriends(long[] newFriends) {
+        friends.clear();
+        for (long name : newFriends) {
+            friends.add(name);
+        }
+    }
+
+    /**
+     * @return The friend list.
+     */
+    public Set<Long> getFriends() {
+        return friends;
+    }
+
+    /**
+     * Sets the backing set of ignores.
+     *
+     * @param newIgnores The new value.
+     */
+    public void setIgnores(long[] newIgnores) {
+        ignores.clear();
+        for (long name : newIgnores) {
+            ignores.add(name);
+        }
+    }
+
+    /**
+     * @return The ignore list.
+     */
+    public Set<Long> getIgnores() {
+        return ignores;
     }
 }

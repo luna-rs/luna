@@ -114,6 +114,8 @@ public final class PlayerSerializer {
         tokens.add("bank", toJsonTree(player.getBank().toIndexedArray()));
         tokens.add("equipment", toJsonTree(player.getEquipment().toIndexedArray()));
         tokens.add("skills", toJsonTree(player.getSkills().toArray()));
+        tokens.add("friends", toJsonTree(player.getFriends().toArray()));
+        tokens.add("ignores", toJsonTree(player.getIgnores().toArray()));
 
         // Save all player attributes.
         JsonObject attributeTokens = new JsonObject();
@@ -192,6 +194,12 @@ public final class PlayerSerializer {
 
             Skill[] skills = getAsType(jsonReader.get("skills"), Skill[].class);
             player.getSkills().setSkills(skills);
+            
+            long[] friends = getAsType(jsonReader.get("friends"), long[].class);
+            player.setFriends(friends);
+
+            long[] ignores = getAsType(jsonReader.get("ignores"), long[].class);
+            player.setIgnores(ignores);
 
             JsonObject attr = jsonReader.get("attributes").getAsJsonObject();
             for (Entry<String, JsonElement> it : attr.entrySet()) {
