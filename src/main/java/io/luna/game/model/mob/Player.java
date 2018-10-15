@@ -53,8 +53,6 @@ import static io.luna.game.model.item.Inventory.INVENTORY_DISPLAY_ID;
  */
 public final class Player extends Mob {
 
-    // TODO second login message is misspelled
-
     /**
      * An enum representing prayer icons.
      */
