@@ -10,6 +10,7 @@ import io.luna.game.plugin.PluginManager;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 /**
@@ -324,22 +325,22 @@ public final class Equipment extends ItemContainer {
         }
 
         // Unequip something if we have to.
-        Optional<Integer> unequipIndex = Optional.empty();
+        OptionalInt unequipIndex = OptionalInt.empty();
         if (toIndex == WEAPON) {
             // Equipping 2h weapon, so unequip shield.
-            unequipIndex = equipDef.isTwoHanded() ? Optional.of(SHIELD) : Optional.empty();
+            unequipIndex = equipDef.isTwoHanded() ? OptionalInt.of(SHIELD) : OptionalInt.empty();
         } else if (toIndex == Equipment.SHIELD) {
             // Equipping shield, so unequip 2h weapon.
             boolean weaponTwoHanded = getIdForIndex(WEAPON).
                     flatMap(EquipmentDefinition.ALL::get).
                     map(EquipmentDefinition::isTwoHanded).
                     orElse(false);
-            unequipIndex = weaponTwoHanded ? Optional.of(WEAPON) : Optional.empty();
+            unequipIndex = weaponTwoHanded ? OptionalInt.of(WEAPON) : OptionalInt.empty();
         }
 
         if (unequipIndex.isPresent()) {
             int remaining = inventory.computeRemainingSize();
-            if (remaining == 0 && allOccupied(unequipIndex.get(), toIndex)) {
+            if (remaining == 0 && allOccupied(unequipIndex.getAsInt(), toIndex)) {
                 player.sendMessage("You do not have enough space in your inventory.");
                 return false;
             }

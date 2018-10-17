@@ -8,6 +8,7 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A model representing an update block within an update block set. Implementations <strong>must be
@@ -89,6 +90,18 @@ public abstract class UpdateBlock {
      * @throws NoBlockValueException If the value doesn't exist.
      */
     public final <T> T unwrap(Optional<T> optional) throws NoBlockValueException {
+        return optional.orElseThrow(() -> new NoBlockValueException(flag));
+    }
+
+    /**
+     * Unwraps an optional {@code int} value, throwing an {@link NoBlockValueException} if the
+     * value doesn't exist.
+     *
+     * @param optional The optional to unwrap.
+     * @return The unwrapped value.
+     * @throws NoBlockValueException If the value doesn't exist.
+     */
+    public final int unwrap(OptionalInt optional) throws NoBlockValueException {
         return optional.orElseThrow(() -> new NoBlockValueException(flag));
     }
 

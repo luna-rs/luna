@@ -2,7 +2,7 @@ package io.luna.game.model.def;
 
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A definition model describing an item.
@@ -49,12 +49,12 @@ public final class ItemDefinition implements Definition {
     /**
      * The noted identifier.
      */
-    private final Optional<Integer> notedId;
+    private final OptionalInt notedId;
 
     /**
      * The unnoted identifier.
      */
-    private final Optional<Integer> unnotedId;
+    private final OptionalInt unnotedId;
 
     /**
      * If this item is members only.
@@ -105,8 +105,8 @@ public final class ItemDefinition implements Definition {
         this.examine = examine;
         this.stackable = stackable;
         this.value = value;
-        this.notedId = notedId == -1 ? Optional.empty() : Optional.of(notedId);
-        this.unnotedId = unnotedId == -1 ? Optional.empty() : Optional.of(unnotedId);
+        this.notedId = notedId == -1 ? OptionalInt.empty() : OptionalInt.of(notedId);
+        this.unnotedId = unnotedId == -1 ? OptionalInt.empty() : OptionalInt.of(unnotedId);
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
@@ -167,14 +167,14 @@ public final class ItemDefinition implements Definition {
     /**
      * @return The noted identifier.
      */
-    public Optional<Integer> getNotedId() {
+    public OptionalInt getNotedId() {
         return notedId;
     }
 
     /**
      * @return The unnoted identifier.
      */
-    public Optional<Integer> getUnnotedId() {
+    public OptionalInt getUnnotedId() {
         return unnotedId;
     }
 

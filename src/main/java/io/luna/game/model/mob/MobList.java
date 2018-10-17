@@ -14,6 +14,7 @@ import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -67,7 +68,6 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         @Override
         public void remove() {
             checkState(prev != -1, "remove() can only be called once after each call to next()");
-
             MobList.this.remove(get(prev));
             prev = -1;
         }
@@ -96,7 +96,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     /**
      * The index cache.
      */
-    private final Queue<Integer> indexes = new ArrayDeque<>();
+    private final Queue<Integer> indexes;
 
     /**
      * The size.
@@ -110,10 +110,12 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      */
     @SuppressWarnings("unchecked")
     public MobList(int capacity) {
-        mobs = (E[]) new Mob[(capacity + 1)];
+        mobs = (E[]) new Mob[capacity + 1];
 
         // Initialize the index cache.
-        IntStream.range(1, mobs.length).forEach(indexes::add);
+        indexes = IntStream.rangeClosed(1, capacity)
+                           .boxed()
+                           .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
     }
 
     @Override
@@ -143,7 +145,6 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @return The last element matching {@code filter}.
      */
     public Optional<E> findLast(Predicate<? super E> filter) {
-
         // Iterator doesn't support reverse iteration.
         for (int index = capacity(); index > 1; index--) {
             E mob = mobs[index];

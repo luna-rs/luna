@@ -10,6 +10,7 @@ import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A model representing a non-player-controlled mob.
@@ -36,7 +37,7 @@ public final class Npc extends Mob {
     /**
      * The transformation identifier.
      */
-    private Optional<Integer> transformId = Optional.empty();
+    private OptionalInt transformId = OptionalInt.empty();
 
     /**
      * Creates a new {@link Npc}.
@@ -76,7 +77,7 @@ public final class Npc extends Mob {
 
     @Override
     public void reset() {
-        transformId = Optional.empty();
+        transformId = OptionalInt.empty();
     }
 
     @Override
@@ -93,7 +94,7 @@ public final class Npc extends Mob {
     public void transform(int id) {
         definition = NpcDefinition.ALL.retrieve(id);
         combatDefinition = NpcCombatDefinition.ALL.get(id);
-        transformId = Optional.of(id);
+        transformId = OptionalInt.of(id);
         setSkills();
         updateFlags.flag(UpdateFlag.TRANSFORM);
     }
