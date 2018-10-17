@@ -3,8 +3,8 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.game.model.region.RegionCoordinates;
-import java.util.Objects;
 
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -151,7 +151,7 @@ public final class Position {
      * @return The top-left chunk x.
      */
     public int getChunkX() {
-        return (x >> 3) - 6;
+        return (x / 8) - 6;
     }
 
     /**
@@ -160,7 +160,7 @@ public final class Position {
      * @return The top-left chunk y.
      */
     public int getChunkY() {
-        return (y >> 3) - 6;
+        return (y / 8) - 6;
     }
 
     /**
@@ -169,7 +169,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalX(Position base) {
-        return x - (base.getChunkX() << 3);
+        return x - (base.getChunkX() * 8);
     }
 
     /**
@@ -178,7 +178,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalY(Position base) {
-        return y - (base.getChunkY() << 3);
+        return y - (base.getChunkY() * 8);
     }
 
     /**

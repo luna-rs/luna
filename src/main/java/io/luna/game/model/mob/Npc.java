@@ -8,6 +8,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+
 import java.util.Optional;
 import java.util.OptionalInt;
 

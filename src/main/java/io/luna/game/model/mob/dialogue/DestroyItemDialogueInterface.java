@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
+
 import java.util.OptionalInt;
 
 /**

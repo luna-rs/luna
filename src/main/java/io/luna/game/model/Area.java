@@ -5,11 +5,11 @@ import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
 import io.luna.util.RandomUtils;
 import io.luna.util.RangeIterator;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.luna.game.model.Position.HEIGHT_LEVELS;
@@ -195,7 +195,7 @@ public final class Area {
      * @return The center position.
      */
     public Position center() {
-        int halfWidth = width() >> 1;
+        int halfWidth = width() / 2;
         int centerX = southWestX + halfWidth;
         int centerY = southWestY + halfWidth;
         return new Position(centerX, centerY);

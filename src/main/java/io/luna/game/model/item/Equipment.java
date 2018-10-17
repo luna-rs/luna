@@ -8,6 +8,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
+
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
