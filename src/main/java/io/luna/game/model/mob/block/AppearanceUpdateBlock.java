@@ -10,7 +10,7 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteTransform;
 
-import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
 /**
@@ -36,10 +36,10 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.put(player.getSkullIcon().getId()); // Skull icon.
 
             // Transform the player if needed.
-            Optional<Integer> transformId = player.getTransformId();
+            OptionalInt transformId = player.getTransformId();
             if (transformId.isPresent()) {
                 buf.putShort(-1);
-                buf.putShort(transformId.get());
+                buf.putShort(transformId.getAsInt());
             } else {
                 // Otherwise encode equipment.
                 encodeEquipment(buf, player);

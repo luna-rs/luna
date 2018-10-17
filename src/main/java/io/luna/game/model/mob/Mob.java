@@ -13,6 +13,7 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.luna.game.model.mob.Skill.HITPOINTS;
@@ -92,7 +93,7 @@ public abstract class Mob extends Entity {
     /**
      * The current interaction index.
      */
-    private Optional<Integer> interactionIndex = Optional.empty();
+    private OptionalInt interactionIndex = OptionalInt.empty();
 
     /**
      * The current primary hitsplat.
@@ -112,7 +113,7 @@ public abstract class Mob extends Entity {
     /**
      * The transformation identifier.
      */
-    Optional<Integer> transformId = Optional.empty();
+    OptionalInt transformId = OptionalInt.empty();
 
     /**
      * Creates a new {@link Mob}.
@@ -318,13 +319,13 @@ public abstract class Mob extends Entity {
     public final void interact(Entity entity) {
         if (entity == null) {
             // Reset the current interaction.
-            interactionIndex = Optional.of(65535);
+            interactionIndex = OptionalInt.of(65535);
             updateFlags.flag(UpdateFlag.INTERACTION);
         } else if (entity instanceof Mob) {
             // Interact with player or npc.
             Mob mob = (Mob) entity;
             interactionIndex = mob.type == EntityType.PLAYER ?
-                    Optional.of(mob.index + 32768) : Optional.of(mob.index);
+                    OptionalInt.of(mob.index + 32768) : OptionalInt.of(mob.index);
             updateFlags.flag(UpdateFlag.INTERACTION);
         } else {
             // Interact with a non-movable entity.
@@ -391,7 +392,7 @@ public abstract class Mob extends Entity {
         animation = Optional.empty();
         forcedChat = Optional.empty();
         facePosition = Optional.empty();
-        interactionIndex = Optional.empty();
+        interactionIndex = OptionalInt.empty();
         primaryHit = Optional.empty();
         secondaryHit = Optional.empty();
         updateFlags.clear();
@@ -491,7 +492,7 @@ public abstract class Mob extends Entity {
     /**
      * @return The current interaction index.
      */
-    public final Optional<Integer> getInteractionIndex() {
+    public final OptionalInt getInteractionIndex() {
         return interactionIndex;
     }
 
@@ -533,7 +534,7 @@ public abstract class Mob extends Entity {
     /**
      * @return The transformation identifier.
      */
-    public Optional<Integer> getTransformId() {
+    public OptionalInt getTransformId() {
         return transformId;
     }
 }

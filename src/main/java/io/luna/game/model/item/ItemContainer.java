@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
@@ -393,13 +394,13 @@ public class ItemContainer implements Iterable<Item> {
      *
      * @return The next free index, wrapped in an optional.
      */
-    public final Optional<Integer> nextFreeIndex() {
+    public final OptionalInt nextFreeIndex() {
         for (int index = 0; index < capacity; index++) {
             if (items[index] == null) {
-                return Optional.of(index);
+                return OptionalInt.of(index);
             }
         }
-        return Optional.empty();
+        return OptionalInt.empty();
     }
 
     /**
@@ -408,14 +409,14 @@ public class ItemContainer implements Iterable<Item> {
      * @param id The identifier to search for.
      * @return The index of {@code id}, wrapped in an optional.
      */
-    public final Optional<Integer> computeIndexForId(int id) {
+    public final OptionalInt computeIndexForId(int id) {
         for (int index = 0; index < capacity; index++) {
             Item item = items[index];
             if (item != null && item.getId() == id) {
-                return Optional.of(index);
+                return OptionalInt.of(index);
             }
         }
-        return Optional.empty();
+        return OptionalInt.empty();
     }
 
     /**
@@ -499,11 +500,11 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if successful.
      */
     public final boolean replace(int oldId, int newId) {
-        Optional<Integer> oldIndex = computeIndexForId(oldId);
+        OptionalInt oldIndex = computeIndexForId(oldId);
         if (!oldIndex.isPresent()) {
             return false;
         }
-        int index = oldIndex.get();
+        int index = oldIndex.getAsInt();
 
         Item oldItem = items[index];
         Item newItem = new Item(newId);

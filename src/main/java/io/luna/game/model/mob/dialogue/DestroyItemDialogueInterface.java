@@ -51,10 +51,8 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
 
     @Override
     public boolean init(Player player) {
-
         // Send packets that build the interface.
         player.queue(new WidgetItemMessageWriter(14171, 0, new Item(itemId)));
-
         player.queue(new WidgetTextMessageWriter("Are you sure you want to destroy this item?", 14174));
         player.queue(new WidgetTextMessageWriter("Yes", 14175));
         player.queue(new WidgetTextMessageWriter("No", 14176));

@@ -195,7 +195,6 @@ public final class World {
      * by anything other than the {@link GameService}.
      */
     public void loop() {
-
         // Handle logins.
         dequeueLogins();
 
