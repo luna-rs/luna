@@ -3,7 +3,6 @@ package io.luna.game.model.item;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Ints;
 import io.luna.net.msg.out.WidgetItemGroupMessageWriter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -17,6 +16,7 @@ import java.util.Spliterators;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;

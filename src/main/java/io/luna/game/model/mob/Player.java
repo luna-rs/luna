@@ -31,9 +31,6 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.netty.channel.Channel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -41,6 +38,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.item.Bank.BANK_DISPLAY_ID;
@@ -312,7 +312,6 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
-
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);
@@ -555,7 +554,6 @@ public final class Player extends Mob {
     public void setWeight(double weight) {
         AttributeValue<Double> attr = attributes.get("weight");
         attr.set(weight);
-
         queue(new UpdateWeightMessageWriter((int) weight));
     }
 
@@ -669,7 +667,6 @@ public final class Player extends Mob {
      * @param newMsg The value to set to.
      */
     public void setCachedBlock(ByteMessage newMsg) {
-
         // We have a cached block, release a reference to it.
         if (cachedBlock != null) {
             cachedBlock.release();

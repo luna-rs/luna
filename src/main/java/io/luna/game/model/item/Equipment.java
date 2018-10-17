@@ -8,7 +8,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
-
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -308,7 +307,6 @@ public final class Equipment extends ItemContainer {
      * Returns {@code true} if successful.
      */
     public boolean equip(int inventoryIndex) {
-
         // Validate index.
         Item inventoryItem = inventory.get(inventoryIndex);
         if (inventoryItem == null) {
@@ -363,7 +361,6 @@ public final class Equipment extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean unequip(int equipmentIndex) {
-
         // Validate index.
         Item equipmentItem = get(equipmentIndex);
         if (equipmentItem == null) {
