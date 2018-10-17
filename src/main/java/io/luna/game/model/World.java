@@ -149,7 +149,7 @@ public final class World {
      */
     public void queueLogin(Player player) {
         if (player.getState() == EntityState.NEW && !logins.contains(player)) {
-            logins.offer(player);
+            logins.add(player);
         }
     }
 
@@ -173,7 +173,7 @@ public final class World {
      */
     public void queueLogout(Player player) {
         if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
-            logouts.offer(player);
+            logouts.add(player);
         }
     }
 

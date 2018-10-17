@@ -217,7 +217,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         checkArgument(mob.getIndex() != -1, "index == -1");
 
         // Put back index, so other mobs can use it.
-        indexes.offer(mob.getIndex());
+        indexes.add(mob.getIndex());
 
         mob.setState(EntityState.INACTIVE);
 
