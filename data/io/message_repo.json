@@ -539,7 +539,8 @@
   },
   {
     "opcode": 130,
-    "size": 0
+    "size": 0,
+    "payload": "CloseWindowMessageReader"
   },
   {
     "opcode": 131,
