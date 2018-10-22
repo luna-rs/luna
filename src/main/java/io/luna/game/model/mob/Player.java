@@ -43,9 +43,6 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
-import static io.luna.game.model.item.Bank.BANK_DISPLAY_ID;
-import static io.luna.game.model.item.Equipment.EQUIPMENT_DISPLAY_ID;
-import static io.luna.game.model.item.Inventory.INVENTORY_DISPLAY_ID;
 
 /**
  * A model representing a player-controlled mob.
@@ -300,29 +297,23 @@ public final class Player extends Mob {
     @Override
     protected void onActive() {
         updateFlags.flag(UpdateFlag.APPEARANCE);
-
-        queue(new AssignmentMessageWriter(true));
-
         tabs.resetAll();
+        inventory.refreshPrimary(this);
+        equipment.refreshPrimary(this);
+
+        queue(new UpdateRunEnergyMessageWriter());
+        queue(new AssignmentMessageWriter(true));
 
         int size = SkillSet.size();
         for (int index = 0; index < size; index++) {
             queue(new SkillUpdateMessageWriter(index));
         }
 
-        int runEnergy = (int) getRunEnergy();
-        queue(new UpdateRunEnergyMessageWriter(runEnergy));
-
-        queue(inventory.constructRefresh(INVENTORY_DISPLAY_ID));
-        queue(equipment.constructRefresh(EQUIPMENT_DISPLAY_ID));
-        queue(bank.constructRefresh(BANK_DISPLAY_ID));
-
         sendMessage("Welcome to Luna.");
         sendMessage("You currently have " + rights.getFormattedName() + " privileges.");
 
-        plugins.post(new LoginEvent(this));
-
         LOGGER.info("{} has logged in.", this);
+        plugins.post(new LoginEvent(this));
     }
 
     @Override
@@ -471,9 +462,10 @@ public final class Player extends Mob {
      */
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        attr.set(withdrawAsNote);
-
-        queue(new ConfigMessageWriter(Bank.WITHDRAW_MODE_STATE_ID, withdrawAsNote ? 1 : 0));
+        if (attr.get() != withdrawAsNote) {
+            attr.set(withdrawAsNote);
+            queue(new ConfigMessageWriter(115, withdrawAsNote ? 1 : 0));
+        }
     }
 
     /**
@@ -495,9 +487,10 @@ public final class Player extends Mob {
         }
 
         AttributeValue<Double> attr = attributes.get("run_energy");
-        attr.set(runEnergy);
-
-        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+        if (attr.get() != runEnergy) {
+            attr.set(runEnergy);
+            queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+        }
     }
 
     /**
@@ -506,6 +499,10 @@ public final class Player extends Mob {
      * @param runEnergy The value to change by.
      */
     public void changeRunEnergy(double runEnergy) {
+        if(runEnergy <= 0.0) {
+            return;
+        }
+
         AttributeValue<Double> attr = attributes.get("run_energy");
         double newEnergy = attr.get() + runEnergy;
         if (newEnergy > 100.0) {

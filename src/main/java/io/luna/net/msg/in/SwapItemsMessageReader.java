@@ -34,7 +34,6 @@ public final class SwapItemsMessageReader extends GameMessageReader {
         boolean insertMode = (insertionMode == 1); // 0 = swap, 1 = insert
         Optional<ItemContainer> itemContainer = Optional.empty();
 
-        player.getInterfaces().close();
         switch (interfaceId) {
         case 3214:
             itemContainer = Optional.of(player.getInventory());

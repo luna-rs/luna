@@ -101,7 +101,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Legs model.
         if (equipment.occupied(Equipment.LEGS)) {
-            buf.putShort(512 + equipment.getIdForIndex(Equipment.LEGS).get());
+            buf.putShort(512 + equipment.getIdForIndex(Equipment.LEGS).getAsInt());
         } else {
             buf.putShort(256 + appearance.get(PlayerAppearance.LEGS));
         }
@@ -116,14 +116,14 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Hands model.
         if (equipment.occupied(Equipment.HANDS)) {
-            buf.putShort(512 + equipment.getIdForIndex(Equipment.HANDS).get());
+            buf.putShort(512 + equipment.getIdForIndex(Equipment.HANDS).getAsInt());
         } else {
             buf.putShort(256 + appearance.get(PlayerAppearance.HANDS));
         }
 
         // Feet model.
         if (equipment.occupied(Equipment.FEET)) {
-            buf.putShort(512 + equipment.getIdForIndex(Equipment.FEET).get());
+            buf.putShort(512 + equipment.getIdForIndex(Equipment.FEET).getAsInt());
         } else {
             buf.putShort(256 + appearance.get(PlayerAppearance.FEET));
         }

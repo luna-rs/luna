@@ -8,9 +8,6 @@ import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.util.Arrays;
-import java.util.Collection;
-
 /**
  * A {@link GameMessageWriter} implementation that displays a group of items on a widget.
  *
@@ -26,18 +23,7 @@ public final class WidgetItemGroupMessageWriter extends GameMessageWriter {
     /**
      * The items.
      */
-    private final Collection<? extends Item> items;
-
-    /**
-     * Creates a new {@link WidgetItemGroupMessageWriter}.
-     *
-     * @param id The widget identifier.
-     * @param items The items.
-     */
-    public WidgetItemGroupMessageWriter(int id, Collection<? extends Item> items) {
-        this.id = id;
-        this.items = items;
-    }
+    private final Item[] items;
 
     /**
      * Creates a new {@link WidgetItemGroupMessageWriter}.
@@ -46,14 +32,15 @@ public final class WidgetItemGroupMessageWriter extends GameMessageWriter {
      * @param items The items.
      */
     public WidgetItemGroupMessageWriter(int id, Item[] items) {
-        this(id, Arrays.asList(items));
+        this.id = id;
+        this.items = items;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
         msg.putShort(id);
-        msg.putShort(items.size());
+        msg.putShort(items.length);
 
         for (Item item : items) {
             if (item == null) {

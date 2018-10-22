@@ -1,8 +1,11 @@
 import io.luna.game.event.impl.LoginEvent
 
+private val RUN_BUTTON = 173
+
+
 /* Configure interface states. */
 on[LoginEvent] { msg =>
   val plr = msg.plr
 
-  plr.sendConfig(173, if (plr.walking.isRunning) 1 else 0)
+  plr.sendConfig(RUN_BUTTON, if (plr.walking.isRunning) 1 else 0)
 }

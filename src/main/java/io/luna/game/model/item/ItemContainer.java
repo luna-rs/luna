@@ -1,13 +1,14 @@
 package io.luna.game.model.item;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Ints;
+import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetItemGroupMessageWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,6 +31,14 @@ import static java.util.Objects.requireNonNull;
  * @author lare96 <http://github.com/lare96>
  */
 public class ItemContainer implements Iterable<Item> {
+
+    public void setSecondaryRefresh(int i) {
+        secondaryRefreshId = OptionalInt.of(i);
+    }
+
+    public void resetSecondaryRefresh() {
+        secondaryRefreshId = OptionalInt.empty();
+    }
 
     /**
      * A fail-safe iterator for items within this container.
@@ -57,19 +66,14 @@ public class ItemContainer implements Iterable<Item> {
 
             lastIndex = index;
             index++;
-            return items[lastIndex];
+            return get(lastIndex);
         }
 
         @Override
         public void remove() {
             checkState(lastIndex != -1, "can only be called once after 'next()'");
 
-            Item oldItem = items[lastIndex];
-
-            items[lastIndex] = null;
-            size--;
-
-            fireUpdateEvent(oldItem, null, lastIndex);
+            set(lastIndex, null);
 
             index = lastIndex;
             lastIndex = -1;
@@ -100,17 +104,17 @@ public class ItemContainer implements Iterable<Item> {
     /**
      * A list of listeners.
      */
-    private final List<ItemContainerListener> listeners = new ArrayList<>();
+    private ImmutableList<ItemContainerListener> listeners = ImmutableList.of();
 
     /**
      * The capacity.
      */
-    private final int capacity;
+    final int capacity;
 
     /**
      * The stack policy.
      */
-    private final StackPolicy policy;
+    final StackPolicy policy;
 
     /**
      * The items.
@@ -120,17 +124,20 @@ public class ItemContainer implements Iterable<Item> {
     /**
      * The size.
      */
-    private int size;
+    int size;
+
+    final int primaryRefreshId;
+    OptionalInt secondaryRefreshId = OptionalInt.empty();
 
     /**
      * If events are being fired.
      */
-    private boolean firingEvents = true;
+    boolean firingEvents = true;
 
     /**
      * If a bulk operation is in progress.
      */
-    private boolean bulkOperation;
+    boolean bulkOperation;
 
     /**
      * Creates a new {@link ItemContainer}.
@@ -138,9 +145,10 @@ public class ItemContainer implements Iterable<Item> {
      * @param capacity The capacity.
      * @param policy The stack policy.
      */
-    public ItemContainer(int capacity, StackPolicy policy) {
+    public ItemContainer(int capacity, StackPolicy policy, int primaryRefreshId) {
         this.capacity = capacity;
         this.policy = policy;
+        this.primaryRefreshId = primaryRefreshId;
         items = new Item[capacity];
     }
 
@@ -151,7 +159,7 @@ public class ItemContainer implements Iterable<Item> {
     public final void forEach(Consumer<? super Item> action) {
         requireNonNull(action);
         for (int index = 0; index < capacity; index++) {
-            Item item = items[index];
+            Item item = get(index);
             if (item == null) {
                 continue;
             }
@@ -187,54 +195,51 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if successful.
      */
     public boolean add(Item item, int preferredIndex) {
-        checkArgument(preferredIndex >= -1, "invalid index");
+        checkArgument(preferredIndex >= -1, "Preferred index must be above or equal to -1.");
 
-        // Determine best index to add on.
-        boolean stacks = isStackable(item);
-        if (stacks) {
-            preferredIndex = computeIndexForId(item.getId()).orElse(-1);
-        } else if (preferredIndex != -1) {
-            preferredIndex = items[preferredIndex] != null ? -1 : preferredIndex;
-        }
-
-        if (preferredIndex == -1) {
-            preferredIndex = nextFreeIndex().orElse(-1);
-        }
-
-        // Not enough space.
-        if (preferredIndex == -1) {
+        // Determine best index to place on.
+        int addIndex = computeAddIndex(item, preferredIndex);
+        if (addIndex == -1) {
+            // Not enough space.
             fireCapacityExceededEvent();
             return false;
         }
 
-        if (stacks) {
+        if (isStackable(item)) {
             // Add stackable item.
-            Item current = items[preferredIndex];
-
-            if (current == null) {
-                items[preferredIndex] = item;
-                size++;
+            Item current = get(addIndex);
+            if (!occupied(addIndex)) {
+                // Space is empty, set item here.
+                set(addIndex, item);
+            } else if ((item.getAmount() + current.getAmount()) < 0) {
+                // Item amount exceeds 2147M.
+                fireCapacityExceededEvent();
+                return false;
             } else {
-                items[preferredIndex] = current.changeAmount(item.getAmount());
+                // Increase amount on current spot.
+                int amount = item.getAmount();
+                set(addIndex, current.changeAmount(amount));
             }
-
-            fireUpdateEvent(current, items[preferredIndex], preferredIndex);
         } else {
             // Add non-stackable item.
             int remaining = computeRemainingSize();
-            int until = (remaining > item.getAmount()) ? item.getAmount() : remaining;
+            int until = remaining > item.getAmount() ? item.getAmount() : remaining;
 
-            for (int index = 0; index < until; index++) {
+            bulkOperation = true;
+            try {
+                for (int added = 0; added < until; added++) {
+                    if (occupied(addIndex)) {
+                        // Calculate next free index if needed.
+                        addIndex = nextFreeIndex().orElseThrow(() ->
+                                new IllegalStateException("The 'size' field is inaccurate."));
+                    }
 
-                if (items[preferredIndex] != null) {
-                    preferredIndex = nextFreeIndex().orElseThrow(IllegalStateException::new);
+                    // Set non-stackable item.
+                    set(addIndex++, item.withAmount(1));
                 }
-
-                Item newItem = new Item(item.getId());
-                items[preferredIndex] = newItem;
-                size++;
-
-                fireUpdateEvent(null, newItem, preferredIndex++);
+            } finally {
+                bulkOperation = false;
+                fireUpdateCompletedEvent();
             }
         }
         return true;
@@ -267,12 +272,13 @@ public class ItemContainer implements Iterable<Item> {
                 if (add(item)) {
                     added = true;
                 }
+                // Bulk operation gets set to false in add.
+                bulkOperation = true;
             }
         } finally {
             bulkOperation = false;
+            fireUpdateCompletedEvent();
         }
-
-        fireUpdateCompletedEvent();
         return added;
     }
 
@@ -294,50 +300,51 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if successful.
      */
     public boolean remove(Item item, int preferredIndex) {
-        checkArgument(preferredIndex >= -1, "invalid index identifier");
+        checkArgument(preferredIndex >= -1, "Preferred index must be above or equal to -1.");
 
         // Determine best index to remove from.
-        boolean stacks = isStackable(item);
-        if (stacks) {
-            preferredIndex = computeIndexForId(item.getId()).orElse(-1);
-        } else {
-            preferredIndex = preferredIndex == -1 ? computeIndexForId(item.getId()).orElse(-1) : preferredIndex;
-
-            if (preferredIndex != -1 && items[preferredIndex] == null) {
-                preferredIndex = -1;
-            }
-        }
-
-        // Item doesn't exist.
-        if (preferredIndex == -1) {
+        int removeIndex = computeRemoveIndex(item, preferredIndex);
+        if (removeIndex == -1) {
+            // Item doesn't exist.
             return false;
         }
 
-        if (stacks) {
+        if (isStackable(item)) {
             // Remove stackable item.
-            Item current = items[preferredIndex];
-            if (current.getAmount() > item.getAmount()) {
-                items[preferredIndex] = current.changeAmount(-item.getAmount());
+            Item current = get(removeIndex);
+            if (item.encompasses(current)) {
+                // Remove item.
+                set(removeIndex, null);
             } else {
-                items[preferredIndex] = null;
-                size--;
+                // Change item amount.
+                int amount = item.getAmount();
+                set(removeIndex, current.changeAmount(-amount));
             }
-
-            fireUpdateEvent(current, items[preferredIndex], preferredIndex);
         } else {
             // Remove non-stackable item.
             int until = computeAmountForId(item.getId());
-            until = (item.getAmount() > until) ? until : item.getAmount();
+            until = item.getAmount() > until ? until : item.getAmount();
 
-            for (int index = 0; index < until; index++) {
-                preferredIndex = (items[preferredIndex] != null && items[preferredIndex].getId() == item.getId()) ?
-                        preferredIndex : computeIndexForId(item.getId()).orElse(-1);
+            bulkOperation = true;
+            try {
+                for (int removed = 0; removed < until; removed++) {
 
-                Item oldItem = items[preferredIndex];
-                items[preferredIndex] = null;
-                size--;
+                    // Calculate next free index if needed.
+                    boolean isItemPresent = getIdForIndex(removeIndex).
+                            filter(id -> id == item.getId()).isPresent();
+                    removeIndex = isItemPresent ? removeIndex : computeIndexForId(removeIndex).orElse(-1);
 
-                fireUpdateEvent(oldItem, null, preferredIndex++);
+                    // Can't remove anymore.
+                    if (removeIndex == -1) {
+                        return true;
+                    }
+
+                    // Remove item.
+                    set(removeIndex++, null);
+                }
+            } finally {
+                bulkOperation = false;
+                fireUpdateCompletedEvent();
             }
         }
         return true;
@@ -370,12 +377,13 @@ public class ItemContainer implements Iterable<Item> {
                 if (remove(item)) {
                     removed = true;
                 }
+                // Bulk operation gets set to false in remove.
+                bulkOperation = true;
             }
         } finally {
             bulkOperation = false;
+            fireUpdateCompletedEvent();
         }
-
-        fireUpdateCompletedEvent();
         return removed;
     }
 
@@ -389,18 +397,40 @@ public class ItemContainer implements Iterable<Item> {
         return removeAll(Arrays.asList(items));
     }
 
+    private int computeAddIndex(Item item, int preferredIndex) {
+        int index = preferredIndex;
+        if (isStackable(item)) {
+            index = computeIndexForId(item.getId()).orElse(-1);
+        } else if (index != -1) {
+            index = occupied(index) ? -1 : index;
+        }
+
+        if (index == -1) {
+            return nextFreeIndex().orElse(-1);
+        }
+        return index;
+    }
+
+    private int computeRemoveIndex(Item item, int index) {
+        if (index == -1 || !occupied(index) ||
+                get(index).getId() != item.getId() || isStackable(item)) {
+            return computeIndexForId(item.getId()).orElse(-1);
+        }
+        return -1;
+    }
+
     /**
      * Computes the next free index.
      *
      * @return The next free index, wrapped in an optional.
      */
-    public final OptionalInt nextFreeIndex() {
+    public final Optional<Integer> nextFreeIndex() {
         for (int index = 0; index < capacity; index++) {
-            if (items[index] == null) {
-                return OptionalInt.of(index);
+            if (!occupied(index)) {
+                return Optional.of(index);
             }
         }
-        return OptionalInt.empty();
+        return Optional.empty();
     }
 
     /**
@@ -409,14 +439,13 @@ public class ItemContainer implements Iterable<Item> {
      * @param id The identifier to search for.
      * @return The index of {@code id}, wrapped in an optional.
      */
-    public final OptionalInt computeIndexForId(int id) {
+    public final Optional<Integer> computeIndexForId(int id) {
         for (int index = 0; index < capacity; index++) {
-            Item item = items[index];
-            if (item != null && item.getId() == id) {
-                return OptionalInt.of(index);
+            if (nonNullGet(index).filter(it -> it.getId() == id).isPresent()) {
+                return Optional.of(index);
             }
         }
-        return OptionalInt.empty();
+        return Optional.empty();
     }
 
     /**
@@ -426,6 +455,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The total amount of items with {@code id}.
      */
     public final int computeAmountForId(int id) {
+        // TODO optimize for stackable items.
         int amount = 0;
         for (Item item : items) {
             if (item != null && item.getId() == id) {
@@ -442,7 +472,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The identifier at {@code index}, wrapped in an optional.
      */
     public final Optional<Integer> getIdForIndex(int index) {
-       return nonNullGet(index).map(Item::getId);
+        return nonNullGet(index).map(Item::getId);
     }
 
     /**
@@ -453,34 +483,6 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final int computeAmountForIndex(int index) {
         return nonNullGet(index).map(Item::getAmount).orElse(0);
-    }
-
-    /**
-     * Computes the amount of indexes required to hold {@code forItems}.
-     *
-     * @param forItems The items to compute for.
-     * @return The amount of indexes taken.
-     */
-    public final int computeSize(Item... forItems) {
-        int size = 0;
-        for (Item item : forItems) {
-            boolean stacks = isStackable(item);
-            if (stacks) {
-                int index = computeIndexForId(item.getId()).orElse(-1);
-                if (index == -1) {
-                    size++;
-                    continue;
-                }
-
-                Item existing = items[index];
-                if ((existing.getAmount() + item.getAmount()) <= 0) {
-                    size++;
-                }
-            } else {
-                size += item.getAmount();
-            }
-        }
-        return size;
     }
 
     /**
@@ -500,21 +502,16 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if successful.
      */
     public final boolean replace(int oldId, int newId) {
-        OptionalInt oldIndex = computeIndexForId(oldId);
-        if (!oldIndex.isPresent()) {
-            return false;
+        Optional<Integer> index = computeIndexForId(oldId);
+        if (index.isPresent()) {
+            Item oldItem = get(index.get());
+            Item newItem = new Item(newId);
+            checkState(!isStackable(oldItem) && !isStackable(newItem), "Stackable items cannot be replaced.");
+
+            set(index.get(), new Item(newId));
+            return true;
         }
-        int index = oldIndex.getAsInt();
-
-        Item oldItem = items[index];
-        Item newItem = new Item(newId);
-
-        checkState(!isStackable(oldItem) && !isStackable(newItem), "use add(Item) and remove(Item) instead");
-
-        items[index] = null;
-        items[index] = newItem;
-        fireUpdateEvent(oldItem, newItem, index);
-        return true;
+        return false;
     }
 
     /**
@@ -534,20 +531,41 @@ public class ItemContainer implements Iterable<Item> {
             }
         } finally {
             bulkOperation = false;
+            fireUpdateCompletedEvent();
         }
-        fireUpdateCompletedEvent();
         return replaced;
     }
 
     /**
      * Determines if there is enough space for {@code items} to be added.
      *
-     * @param items The items to determine for.
+     * @param items The items.
      * @return {@code true} if there's enough space for {@code items}.
      */
-    public final boolean hasCapacityFor(Item... items) {
-        int expectedSize = computeSize(items);
-        return computeRemainingSize() >= expectedSize;
+    public final boolean hasSpaceFor(Item... items) {
+        int count = 0;
+        for (Item item : items) {
+            if (isStackable(item)) {
+                // See if there's an index for the item.
+                int index = computeIndexForId(item.getId()).orElse(-1);
+                if (index == -1) {
+                    // There isn't, we require a space.
+                    count++;
+                } else if (get(index).getAmount() + item.getAmount() < 0) {
+                    // There is, and trying to add onto it will result in an overflow.
+                    return false;
+                }
+            } else {
+                // Non-stackable items are equal to the amount.
+                count += item.getAmount();
+            }
+
+            // Can't fit, no point in checking other items.
+            if (count > computeRemainingSize()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -681,14 +699,24 @@ public class ItemContainer implements Iterable<Item> {
         return policy == STANDARD && item.getItemDef().isStackable() || policy == ALWAYS;
     }
 
+    public final void refresh(Player player) {
+        refreshPrimary(player);
+        refreshSecondary(player);
+    }
+
     /**
      * Creates and returns a message that will display these items on {@code widget}.
      *
-     * @param widget The widget identifier.
      * @return A message that will display these items.
      */
-    public final WidgetItemGroupMessageWriter constructRefresh(int widget) {
-        return new WidgetItemGroupMessageWriter(widget, items);
+    public final void refreshPrimary(Player player) {
+        player.queue(new WidgetItemGroupMessageWriter(primaryRefreshId, items));
+    }
+
+    public final void refreshSecondary(Player player) {
+        if (secondaryRefreshId.isPresent()) {
+            player.queue(new WidgetItemGroupMessageWriter(secondaryRefreshId.getAsInt(), items));
+        }
     }
 
     /**
@@ -703,8 +731,8 @@ public class ItemContainer implements Iterable<Item> {
             swapOperation(firstIndex, secondIndex);
         } finally {
             bulkOperation = false;
+            fireUpdateCompletedEvent();
         }
-        fireUpdateCompletedEvent();
     }
 
     /**
@@ -728,8 +756,8 @@ public class ItemContainer implements Iterable<Item> {
             }
         } finally {
             bulkOperation = false;
+            fireUpdateCompletedEvent();
         }
-        fireUpdateCompletedEvent();
     }
 
     /**
@@ -739,17 +767,16 @@ public class ItemContainer implements Iterable<Item> {
      * @param secondIndex The new index.
      */
     private void swapOperation(int firstIndex, int secondIndex) {
-        checkArgument(firstIndex >= 0 && firstIndex < capacity, "firstIndex out of range");
-        checkArgument(secondIndex >= 0 && secondIndex < capacity, "secondIndex out of range");
+        checkArgument(firstIndex >= 0 && firstIndex < capacity,
+                "firstIndex must be above or equal to 0 and below the capacity.");
+        checkArgument(secondIndex >= 0 && secondIndex < capacity,
+                "secondIndex must be above or equal to 0 and below the capacity.");
 
-        Item itemOld = items[firstIndex];
-        Item itemNew = items[secondIndex];
+        Item oldItem = get(firstIndex);
+        Item newItem = get(secondIndex);
 
-        items[firstIndex] = itemNew;
-        items[secondIndex] = itemOld;
-
-        fireUpdateEvent(itemOld, items[firstIndex], firstIndex);
-        fireUpdateEvent(itemNew, items[secondIndex], secondIndex);
+        set(firstIndex, newItem);
+        set(secondIndex, oldItem);
     }
 
     /**
@@ -780,13 +807,14 @@ public class ItemContainer implements Iterable<Item> {
      * @return The backing array, as indexed items.
      */
     public final IndexedItem[] toIndexedArray() {
-        List<IndexedItem> indexedItems = new LinkedList<>();
+        List<IndexedItem> indexedItems = new ArrayList<>(size);
         for (int index = 0; index < capacity; index++) {
-            Item item = items[index];
+            Item item = get(index);
             if (item == null) {
                 continue;
             }
-            indexedItems.add(new IndexedItem(index, item.getId(), item.getAmount()));
+            IndexedItem indexedItem = new IndexedItem(index, item.getId(), item.getAmount());
+            indexedItems.add(indexedItem);
         }
         return Iterables.toArray(indexedItems, IndexedItem.class);
     }
@@ -798,19 +826,18 @@ public class ItemContainer implements Iterable<Item> {
      * @param item The item to set.
      */
     public final void set(int index, Item item) {
-        boolean indexFree = items[index] == null;
         boolean removingItem = item == null;
 
-        if (indexFree && !removingItem) {
+        if (!occupied(index) && !removingItem) {
             size++;
-        } else if (!indexFree && removingItem) {
+        } else if (occupied(index) && removingItem) {
             size--;
         }
 
-        Item oldItem = items[index];
+        Item oldItem = get(index);
         items[index] = item;
 
-        fireUpdateEvent(oldItem, items[index], index);
+        fireUpdateEvent(oldItem, item, index);
     }
 
     /**
@@ -820,9 +847,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The item, wrapped in an optional.
      */
     public final Optional<Item> nonNullGet(int index) {
-        if (index == -1 || index >= items.length)
-            return Optional.empty();
-        return Optional.ofNullable(items[index]);
+        return Optional.ofNullable(get(index));
     }
 
     /**
@@ -831,7 +856,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The item on index, possibly {@code null}.
      */
     public final Item get(int index) {
-        return nonNullGet(index).orElse(null);
+        return items[index];
     }
 
     /**
@@ -881,24 +906,19 @@ public class ItemContainer implements Iterable<Item> {
         bulkOperation = true;
         try {
             for (int index = 0; index < capacity; index++) {
-                Item old = items[index];
-                items[index] = null;
-
-                fireUpdateEvent(old, null, index);
-                size--;
+                set(index, null);
             }
         } finally {
             bulkOperation = false;
-
+            fireUpdateCompletedEvent();
         }
-        fireUpdateCompletedEvent();
     }
 
     /**
      * Adds a listener.
      */
-    public final void addListener(ItemContainerListener listener) {
-        listeners.add(listener);
+    public final void setListeners(ItemContainerListener... newListeners) {
+        listeners = ImmutableList.copyOf(newListeners);
     }
 
     /**
@@ -915,9 +935,9 @@ public class ItemContainer implements Iterable<Item> {
         if (firingEvents && !oldOptional.equals(newOptional)) {
             for (ItemContainerListener listener : listeners) {
                 if (bulkOperation) {
-                    listener.onBulkUpdate(this, oldOptional, newOptional, index);
+                    listener.onBulkUpdate(index, oldOptional, newOptional, this);
                 } else {
-                    listener.onSingleUpdate(this, oldOptional, newOptional, index);
+                    listener.onSingleUpdate(index, this, oldOptional, newOptional);
                 }
             }
         }

@@ -63,13 +63,13 @@ public final class ItemOnItemMessageReader extends GameMessageReader {
         switch (usedInterfaceId) {
             case 3214:
                 Inventory inventory = player.getInventory();
-                return inventory.getIdForIndex(usedIndex).map(it -> it == usedId).orElse(false);
+                return inventory.getIdForIndex(usedIndex).orElse(-1) == usedId;
         }
 
         switch (targetInterfaceId) {
             case 3214:
                 Inventory inventory = player.getInventory();
-                return inventory.getIdForIndex(targetIndex).map(it -> it == targetId).orElse(false);
+                return inventory.getIdForIndex(targetIndex).orElse(-1) == targetId;
         }
         return false;
     }

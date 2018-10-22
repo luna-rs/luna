@@ -4,7 +4,9 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 
+import java.util.ArrayDeque;
 import java.util.OptionalInt;
+import java.util.Queue;
 
 /**
  * An item container model representing a player's bank.
@@ -12,59 +14,6 @@ import java.util.OptionalInt;
  * @author lare96 <http://github.com/lare96>
  */
 public final class Bank extends ItemContainer {
-
-    /**
-     * An adapter listening for bank changes.
-     */
-    private final class BankListener extends ItemContainerAdapter {
-
-        /**
-         * Creates a new {@link BankListener}.
-         */
-        public BankListener() {
-            super(player);
-        }
-
-        @Override
-        public int getWidgetId() {
-            return BANK_DISPLAY_ID;
-        }
-
-        @Override
-        public String getCapacityExceededMsg() {
-            return "You do not have enough bank space to deposit that.";
-        }
-    }
-
-    /**
-     * The size.
-     */
-    public static final int SIZE = 352;
-
-    /**
-     * The main interface.
-     */
-    private static final int INTERFACE_ID = 5292;
-
-    /**
-     * The inventory overlay.
-     */
-    private static final int INVENTORY_OVERLAY_ID = 5063;
-
-    /**
-     * The bank item display.
-     */
-    public static final int BANK_DISPLAY_ID = 5382;
-
-    /**
-     * The inventory item display.
-     */
-    private static final int INVENTORY_DISPLAY_ID = 5064;
-
-    /**
-     * The withdraw mode state.
-     */
-    public static final int WITHDRAW_MODE_STATE_ID = 115;
 
     /**
      * The player.
@@ -82,23 +31,30 @@ public final class Bank extends ItemContainer {
      * @param player The player.
      */
     public Bank(Player player) {
-        super(SIZE, StackPolicy.ALWAYS);
+        super(352, StackPolicy.ALWAYS, 5382);
         this.player = player;
         inventory = player.getInventory();
 
-        addListener(new BankListener());
+        setListeners(new RefreshListener(player, "You do not have enough bank space to deposit that."));
     }
 
     /**
      * Opens the banking interface.
      */
     public void open() {
-        shift();
-
-        player.getInterfaces().open(new InventoryOverlayInterface(INTERFACE_ID, INVENTORY_OVERLAY_ID));
         player.setWithdrawAsNote(false);
+        clearSpaces();
 
-        refresh();
+        inventory.setSecondaryRefresh(5064);
+        player.getInterfaces().open(new InventoryOverlayInterface(5292, 5063) {
+            @Override
+            public void onClose(Player player) {
+                inventory.resetSecondaryRefresh();
+            }
+        });
+
+        inventory.refreshSecondary(player);
+        refreshPrimary(player);
     }
 
     /**
@@ -109,32 +65,28 @@ public final class Bank extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean deposit(int inventoryIndex, int amount) {
-        Item inventoryItem = inventory.get(inventoryIndex);
 
-        if (inventoryItem == null || amount < 1) {
+        // Return if item doesn't exist or invalid amount.
+        Item item = inventory.get(inventoryIndex);
+        if (item == null || amount < 1) {
             return false;
         }
 
-        int existingAmount = inventory.computeAmountForId(inventoryItem.getId());
-        if (amount > existingAmount) {
-            amount = existingAmount;
-        }
-        inventoryItem = inventoryItem.withAmount(amount);
+        // Get correct item identifier and amount to deposit.
+        int id = item.getItemDef().getUnnotedId().orElse(item.getId());
+        int existingAmount = inventory.computeAmountForId(item.getId());
+        amount = amount > existingAmount ? existingAmount : amount;
 
-        ItemDefinition def = inventoryItem.getItemDef();
-        Item depositItem = inventoryItem.withId(def.getUnnotedId().orElse(inventoryItem.getId()));
-
-        int remaining = computeRemainingSize();
-        OptionalInt depositIndex = computeIndexForId(depositItem.getId());
-        if (remaining < 1 && !depositIndex.isPresent()) {
+        // Determine if enough space in bank.
+        Item depositItem = new Item(id, amount);
+        if (!hasSpaceFor(depositItem)) {
             fireCapacityExceededEvent();
             return false;
         }
 
-        if (inventory.remove(inventoryItem)) {
-            add(depositItem);
-            refresh();
-            return true;
+        // Deposit item.
+        if (inventory.remove(depositItem)) {
+            return add(depositItem);
         }
         return false;
     }
@@ -147,70 +99,78 @@ public final class Bank extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean withdraw(int bankIndex, int amount) {
-        Item bankItem = get(bankIndex);
 
-        if (bankItem == null || amount < 1) {
+        // Return if item doesn't exist or invalid amount.
+        Item item = get(bankIndex);
+        if (item == null || amount < 1) {
             return false;
         }
 
-        int existingAmount = bankItem.getAmount();
-        if (amount > existingAmount) {
-            amount = existingAmount;
-        }
-
-        OptionalInt newId = OptionalInt.empty();
-        if (player.isWithdrawAsNote()) {
-            ItemDefinition def = bankItem.getItemDef();
-            if (def.isNoteable()) {
-                newId = def.getNotedId();
-            } else {
-                player.sendMessage("This item cannot be withdrawn as a note.");
-            }
-        }
-        Item withdrawItem = bankItem.withId(newId.orElse(bankItem.getId()));
-        ItemDefinition newDef = withdrawItem.getItemDef();
-
+        // No free spaces in inventory.
         int remaining = inventory.computeRemainingSize();
         if (remaining < 1) {
             inventory.fireCapacityExceededEvent();
             return false;
         }
 
-        if (amount > remaining && !newDef.isStackable()) {
-            amount = remaining;
-        }
-        bankItem = bankItem.withAmount(amount);
-        withdrawItem = withdrawItem.withAmount(amount);
+        // Get correct item identifier and amount to withdraw.
+        int id = item.getId();
+        int existingAmount = item.getAmount();
+        amount = amount > existingAmount ? existingAmount : amount;
 
-        if (remove(bankItem)) {
-            inventory.add(withdrawItem);
-            refresh();
-            return true;
+        if (player.isWithdrawAsNote()) {
+            OptionalInt notedId = item.getItemDef().getNotedId();
+            if (notedId.isPresent()) {
+                id = notedId.getAsInt();
+            } else {
+                player.sendMessage("This item cannot be withdrawn as a note.");
+            }
+        }
+
+        // For non-stackable items, make the amount equal to free slots left if necessary.
+        ItemDefinition withdrawItemDef = ItemDefinition.ALL.retrieve(id);
+        if (!withdrawItemDef.isStackable()) {
+            amount = amount > remaining ? remaining : amount;
+        }
+
+        // Withdraw the item.
+        Item withdrawItem = new Item(id, amount);
+        if (remove(withdrawItem)) {
+            return inventory.add(withdrawItem);
         }
         return false;
     }
 
     /**
-     * Shifts all items to the left.
+     * Shifts all items to the left, clearing all {@code null} elements in between {@code non-null} elements. Does
+     * not fire any events.
      */
-    private void shift() {
-        Item[] newItems = new Item[getCapacity()];
-        int newIndex = 0;
+    public void clearSpaces() {
+        if (size > 0) {
+            // Create queue of pending indexes and cache this container's size.
+            Queue<Integer> indexes = new ArrayDeque<>(8);
+            int shiftAmount = size;
 
-        for (Item item : this) {
-            if (item == null) {
-                continue;
+            for (int index = 0; index < capacity; index++) {
+                if (shiftAmount == 0) {
+                    // No more items left to shift.
+                    break;
+                } else if (occupied(index)) {
+                    // Item is present on this index.
+                    Integer newIndex = indexes.poll();
+                    if (newIndex != null) {
+                        // Shift it to the left, if needed.
+                        items[newIndex] = items[index];
+                        items[index] = null;
+                        indexes.add(index);
+                    }
+                    // We've encountered an item, decrement counter.
+                    shiftAmount--;
+                } else {
+                    // No item on this index, add it to pending queue.
+                    indexes.add(index);
+                }
             }
-            newItems[newIndex++] = item;
         }
-        System.arraycopy(newItems, 0, items, 0, getCapacity());
-    }
-
-    /**
-     * Refreshes the bank and inventory.
-     */
-    private void refresh() {
-        player.queue(constructRefresh(BANK_DISPLAY_ID));
-        player.queue(inventory.constructRefresh(INVENTORY_DISPLAY_ID));
     }
 }
