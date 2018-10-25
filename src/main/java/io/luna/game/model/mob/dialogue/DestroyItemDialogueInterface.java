@@ -1,10 +1,11 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
-import io.luna.net.msg.out.WidgetItemModelMessageWriter;
+import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.OptionalInt;
@@ -52,8 +53,8 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
     public boolean init(Player player) {
 
         // Send packets that build the interface.
-    //    player.queue(new WidgetIndexedItemGroupMessageWriter(14171, 0, new Item(itemId)));
-        player.queue(new WidgetItemModelMessageWriter(14171, 200, itemId));
+        IndexedItem item = new IndexedItem(0, itemId, 1);
+        player.queue(new WidgetIndexedItemsMessageWriter(14171, item));
 
         player.queue(new WidgetTextMessageWriter("Are you sure you want to destroy this item?", 14174));
         player.queue(new WidgetTextMessageWriter("Yes", 14175));
@@ -73,12 +74,12 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
         Inventory inventory = player.getInventory();
 
         int destroyIndex = index.orElse(inventory.computeIndexForId(itemId).orElse(-1));
-        if(destroyIndex == -1 || inventory.get(destroyIndex).getId() != itemId) {
+        if (destroyIndex == -1 || inventory.get(destroyIndex).getId() != itemId) {
             player.getInterfaces().close();
             return;
         }
 
-        inventory.remove(inventory.get(destroyIndex), destroyIndex);
+        inventory.remove(destroyIndex, inventory.get(destroyIndex));
         player.sendMessage("You destroy the " + getDestroyItemName() + ".");
         player.getInterfaces().close();
     }
