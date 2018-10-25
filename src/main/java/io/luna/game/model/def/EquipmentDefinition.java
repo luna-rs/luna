@@ -10,7 +10,6 @@ import io.luna.game.model.mob.Skill;
 
 import java.util.Optional;
 
-import static com.google.common.base.Predicates.not;
 import static io.luna.util.StringUtils.addArticle;
 
 /**
@@ -174,7 +173,12 @@ public final class EquipmentDefinition implements Definition {
      * meets all requirements.
      */
     public Optional<Requirement> getFailedRequirement(Player player) {
-        return requirements.stream().filter(not(requirement -> requirement.meets(player))).findFirst();
+        for(Requirement req : requirements) {
+            if(!req.meets(player)) {
+                return Optional.of(req);
+            }
+        }
+        return Optional.empty();
     }
 
     /**

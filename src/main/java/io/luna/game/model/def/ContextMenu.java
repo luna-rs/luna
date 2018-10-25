@@ -3,6 +3,7 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+import io.luna.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public final class ContextMenu implements Iterable<String> {
     public ContextMenu(String[] actionStrings) {
         int length = actionStrings.length;
         if (length == 0) {
-            actions = new String[length];
+            actions = StringUtils.EMPTY_ARRAY;
         } else {
             actions = buildMenuActions(length, actionStrings);
         }

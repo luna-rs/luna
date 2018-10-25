@@ -13,7 +13,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetItemGroupMessageWriter extends GameMessageWriter {
+public final class WidgetItemsMessageWriter extends GameMessageWriter {
 
     /**
      * The widget identifier.
@@ -26,12 +26,12 @@ public final class WidgetItemGroupMessageWriter extends GameMessageWriter {
     private final Item[] items;
 
     /**
-     * Creates a new {@link WidgetItemGroupMessageWriter}.
+     * Creates a new {@link WidgetItemsMessageWriter}.
      *
      * @param id The widget identifier.
      * @param items The items.
      */
-    public WidgetItemGroupMessageWriter(int id, Item[] items) {
+    public WidgetItemsMessageWriter(int id, Item[] items) {
         this.id = id;
         this.items = items;
     }

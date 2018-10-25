@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -7,40 +8,55 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * A {@link GameMessageWriter} implementation that displays an item on a widget.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class WidgetIndexedItemGroupMessageWriter extends GameMessageWriter {
+public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
 
     /**
      * The widget identifier.
      */
     private final int id;
 
-    public final Iterable<? extends IndexedItem> items;
+    /**
+     * The items to display.
+     */
+    private final Collection<IndexedItem> items;
 
     /**
-     * Creates a new {@link WidgetIndexedItemGroupMessageWriter}.
+     * Creates a new {@link WidgetIndexedItemsMessageWriter}.
      *
      * @param id The widget identifier.
-     * @param items The items.
+     * @param items The items to display.
      */
-    public WidgetIndexedItemGroupMessageWriter(int id, IndexedItem... items) {
-        this(id, Arrays.asList(items));
-    }
-    /**
-     * Creates a new {@link WidgetIndexedItemGroupMessageWriter}.
-     *
-     * @param id The widget identifier.
-     * @param items The items.
-     */
-    public WidgetIndexedItemGroupMessageWriter(int id, Iterable<? extends IndexedItem> items) {
+        public WidgetIndexedItemsMessageWriter(int id, Collection<IndexedItem> items) {
         this.id = id;
         this.items = items;
     }
+
+    /**
+     * Creates a new {@link WidgetIndexedItemsMessageWriter}.
+     *
+     * @param id The widget identifier.
+     * @param items The items to display.
+     */
+    public WidgetIndexedItemsMessageWriter(int id, IndexedItem... items) {
+        this.id = id;
+
+        if(items.length == 0) {
+            this.items = ImmutableList.of();
+        } else if(items.length == 1) {
+            this.items = ImmutableList.of(items[0]);
+        } else {
+            // Arrays.asList is faster here, doesn't make a copy of the array.
+            this.items = Arrays.asList(items);
+        }
+    }
+
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(34, MessageType.VAR_SHORT);

@@ -4,9 +4,7 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 
-import java.util.ArrayDeque;
 import java.util.OptionalInt;
-import java.util.Queue;
 
 /**
  * An item container model representing a player's bank.
@@ -14,6 +12,25 @@ import java.util.Queue;
  * @author lare96 <http://github.com/lare96>
  */
 public final class Bank extends ItemContainer {
+
+    /**
+     * The interface that will be displayed when the bank opens.
+     */
+    private final class BankInterface extends InventoryOverlayInterface {
+
+        /**
+         * Creates a new {@link BankInterface}.
+         */
+        public BankInterface() {
+            super(5292, 5063);
+        }
+
+        @Override
+        public void onClose(Player player) {
+            inventory.resetSecondaryRefresh();
+            bankInterface = new BankInterface();
+        }
+    }
 
     /**
      * The player.
@@ -26,6 +43,11 @@ public final class Bank extends ItemContainer {
     private final Inventory inventory;
 
     /**
+     * The banking interface.
+     */
+    private BankInterface bankInterface;
+
+    /**
      * Creates a new {@link Bank}.
      *
      * @param player The player.
@@ -34,6 +56,7 @@ public final class Bank extends ItemContainer {
         super(352, StackPolicy.ALWAYS, 5382);
         this.player = player;
         inventory = player.getInventory();
+        bankInterface = new BankInterface();
 
         setListeners(new RefreshListener(player, "You do not have enough bank space to deposit that."));
     }
@@ -42,19 +65,21 @@ public final class Bank extends ItemContainer {
      * Opens the banking interface.
      */
     public void open() {
-        player.setWithdrawAsNote(false);
-        clearSpaces();
+        disableEvents();
+        try {
+            player.setWithdrawAsNote(false);
 
-        inventory.setSecondaryRefresh(5064);
-        player.getInterfaces().open(new InventoryOverlayInterface(5292, 5063) {
-            @Override
-            public void onClose(Player player) {
-                inventory.resetSecondaryRefresh();
-            }
-        });
+            // Display items on interface.
+            clearSpaces();
+            inventory.setSecondaryRefresh(5064);
+            inventory.refreshSecondary(player); // Refresh inventory onto bank.
+            refreshPrimary(player); // Refresh bank.
 
-        inventory.refreshSecondary(player);
-        refreshPrimary(player);
+            // Open interface.
+            player.getInterfaces().open(bankInterface);
+        } finally {
+            enableEvents();
+        }
     }
 
     /**
@@ -76,6 +101,7 @@ public final class Bank extends ItemContainer {
         int id = item.getItemDef().getUnnotedId().orElse(item.getId());
         int existingAmount = inventory.computeAmountForId(item.getId());
         amount = amount > existingAmount ? existingAmount : amount;
+        item = item.withAmount(amount);
 
         // Determine if enough space in bank.
         Item depositItem = new Item(id, amount);
@@ -85,7 +111,7 @@ public final class Bank extends ItemContainer {
         }
 
         // Deposit item.
-        if (inventory.remove(depositItem)) {
+        if (inventory.remove(item)) {
             return add(depositItem);
         }
         return false;
@@ -134,43 +160,20 @@ public final class Bank extends ItemContainer {
         }
 
         // Withdraw the item.
-        Item withdrawItem = new Item(id, amount);
-        if (remove(withdrawItem)) {
+        item = item.withAmount(amount);
+        if (remove(item)) {
+            Item withdrawItem = new Item(id, amount);
             return inventory.add(withdrawItem);
         }
         return false;
     }
 
     /**
-     * Shifts all items to the left, clearing all {@code null} elements in between {@code non-null} elements. Does
-     * not fire any events.
+     * Determines if the {@link BankInterface} is open.
+     *
+     * @return {@code true} if the banking interface is open.
      */
-    public void clearSpaces() {
-        if (size > 0) {
-            // Create queue of pending indexes and cache this container's size.
-            Queue<Integer> indexes = new ArrayDeque<>(8);
-            int shiftAmount = size;
-
-            for (int index = 0; index < capacity; index++) {
-                if (shiftAmount == 0) {
-                    // No more items left to shift.
-                    break;
-                } else if (occupied(index)) {
-                    // Item is present on this index.
-                    Integer newIndex = indexes.poll();
-                    if (newIndex != null) {
-                        // Shift it to the left, if needed.
-                        items[newIndex] = items[index];
-                        items[index] = null;
-                        indexes.add(index);
-                    }
-                    // We've encountered an item, decrement counter.
-                    shiftAmount--;
-                } else {
-                    // No item on this index, add it to pending queue.
-                    indexes.add(index);
-                }
-            }
-        }
+    public boolean isOpen() {
+        return player.getInterfaces().isOpen(bankInterface);
     }
 }

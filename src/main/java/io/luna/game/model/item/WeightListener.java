@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * A listener that will update a player's weight.
+ * A listener that updates a Player's weight.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -40,7 +40,7 @@ public final class WeightListener implements ItemContainerListener {
     }
 
     @Override
-    public void onBulkUpdate(int index, Optional<Item> oldItem, Optional<Item> newItem, ItemContainer items) {
+    public void onBulkUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
         weightChanges.add(computeWeightDifference(oldItem, newItem));
     }
 

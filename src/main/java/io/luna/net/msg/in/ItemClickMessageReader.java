@@ -59,7 +59,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         switch (interfaceId) {
         case 3214:
             Inventory inventory = player.getInventory();
-            return inventory.getIdForIndex(index).orElse(-1) == id;
+            return inventory.computeIdForIndex(index).orElse(-1) == id;
         }
         return true;
     }

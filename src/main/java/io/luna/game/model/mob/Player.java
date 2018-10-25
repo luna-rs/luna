@@ -298,6 +298,11 @@ public final class Player extends Mob {
     protected void onActive() {
         updateFlags.flag(UpdateFlag.APPEARANCE);
         tabs.resetAll();
+
+        // Temporary, until "init" for containers is moved here. That will happen
+        // when login synchronization is being fixed.
+        equipment.loadBonuses();
+
         inventory.refreshPrimary(this);
         equipment.refreshPrimary(this);
 
@@ -443,7 +448,7 @@ public final class Player extends Mob {
         int deltaX = position.getLocalX(lastRegion);
         int deltaY = position.getLocalY(lastRegion);
 
-        return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88;
+        return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88; // TODO does last y need >= ?
     }
 
     /**
@@ -452,7 +457,7 @@ public final class Player extends Mob {
      * @return The dialogue builder.
      */
     public DialogueQueueBuilder newDialogue() {
-        return new DialogueQueueBuilder(this, 6);
+        return new DialogueQueueBuilder(this, 10);
     }
 
     /**

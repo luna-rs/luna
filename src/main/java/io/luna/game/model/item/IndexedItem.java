@@ -41,7 +41,7 @@ public final class IndexedItem {
      * Creates a new {@link IndexedItem}.
      *
      * @param index The index.
-     * @param item
+     * @param item The item.
      */
     public IndexedItem(int index, Item item) {
         this(index, item.getId(), item.getAmount());

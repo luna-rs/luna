@@ -3,7 +3,6 @@ package io.luna.game.model.item;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
-import io.luna.game.model.def.EquipmentDefinition.Requirement;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
@@ -11,6 +10,12 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.BitSet;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
+
+import static io.luna.util.OptionalUtils.ifPresent;
+import static io.luna.util.OptionalUtils.mapToInt;
+import static io.luna.util.OptionalUtils.matches;
 
 /**
  * An item container model representing a player's equipment.
@@ -28,7 +33,11 @@ public final class Equipment extends ItemContainer {
          * The player.
          */
         private final Player player;
-        private final BitSet indexes = new BitSet(12);
+
+        /**
+         * A bit set that keeps track of which bonuses need to be updated.
+         */
+        private final BitSet writeBonuses = new BitSet(12);
 
         /**
          * Creates a new {@link EquipmentListener}.
@@ -44,14 +53,16 @@ public final class Equipment extends ItemContainer {
             if (isIdUnequal(oldItem, newItem)) {
                 updateBonus(oldItem, newItem);
                 writeBonuses();
+                flagAppearance(index);
             }
             sendEvent(index, oldItem, newItem);
         }
 
         @Override
-        public void onBulkUpdate(int index, Optional<Item> oldItem, Optional<Item> newItem, ItemContainer items) {
+        public void onBulkUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
             if (isIdUnequal(oldItem, newItem)) {
                 updateBonus(oldItem, newItem);
+                flagAppearance(index);
             }
             sendEvent(index, oldItem, newItem);
         }
@@ -64,24 +75,37 @@ public final class Equipment extends ItemContainer {
         /**
          * Posts an equipment change event.
          *
-         * @param index The index the change occurred on.
-         * @param oldItem The old item on the index.
-         * @param newItem The new item on the index.
+         * @param index The index of the change.
+         * @param oldItem The old item.
+         * @param newItem The new item.
          */
         private void sendEvent(int index, Optional<Item> oldItem, Optional<Item> newItem) {
             PluginManager plugins = player.getPlugins();
             plugins.post(new EquipmentChangeEvent(player, index, oldItem, newItem));
         }
 
+        /**
+         * Determines if the identifiers are unequal.
+         *
+         * @param oldItem The old item.
+         * @param newItem The new item.
+         * @return {@code true} if the identifiers are unequal.
+         */
         private boolean isIdUnequal(Optional<Item> oldItem, Optional<Item> newItem) {
-            Optional<Integer> oldId = oldItem.map(Item::getId);
-            Optional<Integer> newId = newItem.map(Item::getId);
+            OptionalInt oldId = mapToInt(oldItem, Item::getId);
+            OptionalInt newId = mapToInt(newItem, Item::getId);
             return !oldId.equals(newId);
         }
 
+        /**
+         * Gets the bonuses of {@code item}.
+         *
+         * @param item The item to get the bonuses of.
+         * @return The item's bonuses.
+         */
         private ImmutableList<Integer> getBonuses(Optional<Item> item) {
             return item.map(Item::getEquipDef).
-                    map(EquipmentDefinition::getBonuses).orElseThrow(IllegalStateException::new);
+                    map(EquipmentDefinition::getBonuses).orElse(EMPTY_BONUSES);
         }
 
         /**
@@ -91,43 +115,57 @@ public final class Equipment extends ItemContainer {
          * @param newItem The new item.
          */
         private void updateBonus(Optional<Item> oldItem, Optional<Item> newItem) {
+
+            // Retrieve old and new bonuses.
             ImmutableList<Integer> oldBonuses = getBonuses(oldItem);
             ImmutableList<Integer> newBonuses = getBonuses(newItem);
-
             for (int index = 0; index < bonuses.length; index++) {
                 int old = oldBonuses.get(index);
                 int replace = newBonuses.get(index);
+
+                // Bonus(es) nonzero, this index needs updating.
                 if (old != 0 || replace != 0) {
-                    indexes.set(index);
+                    writeBonuses.set(index);
                 }
+
+                // Apply old (-) and new (+) bonuses.
                 bonuses[index] -= old;
                 bonuses[index] += replace;
             }
         }
 
         /**
-         * Writes the bonuses to the equipment interface.
+         * Does a smart write of the bonuses to the equipment interface.
          */
         private void writeBonuses() {
             StringBuilder sb = new StringBuilder();
             for (int index = 0; index < bonuses.length; index++) {
-                if (indexes.get(index)) {
+                // Smart write, only write bonuses if they've changed.
+                if (writeBonuses.get(index)) {
                     String name = BONUS_NAMES.get(index);
                     int value = bonuses[index];
                     boolean positive = value >= 0;
                     int widget = 1675 + index + (index == 10 || index == 11 ? 1 : 0);
 
+                    // Append the bonus string.
                     sb.append(name).append(": ").
                             append(positive ? "+" : "").
                             append(value);
 
+                    // Queue the packet to display it.
                     player.queue(new WidgetTextMessageWriter(sb.toString(), widget));
                     sb.setLength(0);
                 }
             }
-            indexes.clear();
+            writeBonuses.clear();
         }
     }
+
+    /**
+     * An array of bonuses, all of which are {@code 0}.
+     */
+    private static final ImmutableList<Integer> EMPTY_BONUSES = IntStream.range(0, 12).boxed().
+            map(index -> 0).collect(ImmutableList.toImmutableList());
 
     /**
      * The head index.
@@ -251,14 +289,9 @@ public final class Equipment extends ItemContainer {
             "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range", "Strength", "Prayer");
 
     /**
-     * The size.
-     */
-    public static final int SIZE = 14;
-
-    /**
      * An error message.
      */
-    private static final String ERROR_MSG = "Use { set(index, Item) or add(Item) or remove(Item) } instead";
+    private static final String ERROR_MSG = "Use set(index, Item) or add(Item) or remove(Item) instead.";
 
     /**
      * The player.
@@ -271,6 +304,11 @@ public final class Equipment extends ItemContainer {
     private final Inventory inventory;
 
     /**
+     * The equipment listener.
+     */
+    private final EquipmentListener equipmentListener;
+
+    /**
      * An array of equipment bonuses.
      */
     private final int[] bonuses = new int[12];
@@ -281,47 +319,52 @@ public final class Equipment extends ItemContainer {
      * @param player The player.
      */
     public Equipment(Player player) {
-        super(SIZE, StackPolicy.STANDARD, 1688);
+        super(14, StackPolicy.STANDARD, 1688);
         this.player = player;
         inventory = player.getInventory();
 
+        EquipmentListener equipmentListener = new EquipmentListener(player);
+        this.equipmentListener = equipmentListener;
+
         setListeners(new RefreshListener(player, ERROR_MSG),
-                new EquipmentListener(player),
+                equipmentListener,
                 new WeightListener(player));
     }
 
     @Override
     public boolean add(Item item) {
         int index = item.getEquipDef().getIndex();
-        Optional<Integer> currentId = getIdForIndex(index).filter(id -> id == item.getId());
+        int amount = item.getAmount();
 
-        if (item.getItemDef().isStackable() && currentId.isPresent()) {
-            int oldAmount = computeAmountForIndex(index);
-            int newAmount = oldAmount + item.getAmount();
-
-            set(index, item.withAmount(newAmount));
-        } else {
-            set(index, item);
+        // Increase amount for stackable items.
+        if (item.getItemDef().isStackable() &&
+                matches(computeIdForIndex(index), item::getId)) {
+            amount += computeAmountForIndex(index);
         }
+
+        // Equip the item.
+        Item newItem = item.withAmount(amount);
+        set(index, newItem);
         return true;
     }
 
     @Override
     public boolean remove(Item item) {
         int index = item.getEquipDef().getIndex();
-        Optional<Integer> currentId = getIdForIndex(index).filter(id -> id == item.getId());
 
-        if (!currentId.isPresent()) {
+        // Item does not exist.
+        if (!matches(computeIdForIndex(index), item::getId)) {
             return false;
         }
 
-        if (item.getItemDef().isStackable()) {
-            int oldAmount = computeAmountForIndex(index);
-            int newAmount = oldAmount - item.getAmount();
-
-            set(index, newAmount > 0 ? item.withAmount(newAmount) : null);
-        } else {
+        // Calculate new item amount after removal.
+        int newAmount = computeAmountForIndex(index) - item.getAmount();
+        if (newAmount <= 0) {
+            // If it's below or equal to 0, remove the item.
             set(index, null);
+        } else {
+            // Otherwise set the new amount.
+            set(index, item.withAmount(newAmount));
         }
         return true;
     }
@@ -332,7 +375,7 @@ public final class Equipment extends ItemContainer {
      */
     @Deprecated
     @Override
-    public boolean add(Item item, int preferredIndex) {
+    public boolean add(int preferredIndex, Item item) {
         throw new UnsupportedOperationException(ERROR_MSG);
     }
 
@@ -342,7 +385,7 @@ public final class Equipment extends ItemContainer {
      */
     @Deprecated
     @Override
-    public boolean remove(Item item, int preferredIndex) {
+    public boolean remove(int preferredIndex, Item item) {
         throw new UnsupportedOperationException(ERROR_MSG);
     }
 
@@ -360,44 +403,46 @@ public final class Equipment extends ItemContainer {
             return false;
         }
         EquipmentDefinition equipDef = inventoryItem.getEquipDef();
-        int toIndex = equipDef.getIndex();
+        int equipIndex = equipDef.getIndex();
 
         // Check equipment requirements.
-        Optional<Requirement> didNotMeet = equipDef.getFailedRequirement(player);
-        if (didNotMeet.isPresent()) {
-            didNotMeet.get().sendFailureMessage(player);
+        boolean failedToMeet = ifPresent(equipDef.getFailedRequirement(player),
+                req -> req.sendFailureMessage(player));
+        if (failedToMeet) {
             return false;
         }
 
         // Unequip something if we have to.
-        Optional<Integer> unequipIndex = Optional.empty();
-        if (toIndex == WEAPON) {
+        OptionalInt unequipIndex = OptionalInt.empty();
+        if (equipIndex == WEAPON && equipDef.isTwoHanded()) {
+
             // Equipping 2h weapon, so unequip shield.
-            unequipIndex = equipDef.isTwoHanded() ? Optional.of(SHIELD) : Optional.empty();
-        } else if (toIndex == Equipment.SHIELD) {
+            unequipIndex = OptionalInt.of(SHIELD);
+        } else if (equipIndex == Equipment.SHIELD &&
+                occupied(WEAPON) &&
+                get(WEAPON).getEquipDef().isTwoHanded()) {
+
             // Equipping shield, so unequip 2h weapon.
-            boolean weaponTwoHanded = getIdForIndex(WEAPON).
-                    flatMap(EquipmentDefinition.ALL::get).
-                    map(EquipmentDefinition::isTwoHanded).
-                    orElse(false);
-            unequipIndex = weaponTwoHanded ? Optional.of(WEAPON) : Optional.empty();
+            unequipIndex = OptionalInt.of(WEAPON);
         }
 
+        // Check if inventory has enough space.
         if (unequipIndex.isPresent()) {
             int remaining = inventory.computeRemainingSize();
-            if (remaining == 0 && allOccupied(unequipIndex.get(), toIndex)) {
-                player.sendMessage("You do not have enough space in your inventory.");
+            if (remaining == 0 && occupied(unequipIndex.getAsInt()) && occupied(equipIndex)) {
+                inventory.fireCapacityExceededEvent();
                 return false;
             }
         }
 
         // Equip item.
         inventory.set(inventoryIndex, null);
-        unequip(toIndex);
         unequipIndex.ifPresent(this::unequip);
-        set(toIndex, inventoryItem);
 
-        flagAppearance(toIndex);
+        Item equipItem = get(equipIndex);
+        if (equipItem == null || inventory.add(equipItem)) {
+            set(equipIndex, inventoryItem);
+        }
         return true;
     }
 
@@ -416,25 +461,38 @@ public final class Equipment extends ItemContainer {
         }
 
         // Unequip item.
-        Inventory inventory = player.getInventory();
-        if (inventory.add(equipmentItem)) {
+        if (player.getInventory().add(equipmentItem)) {
             set(equipmentIndex, null);
-            flagAppearance(equipmentIndex);
             return true;
         }
-        player.sendMessage("You do not have enough space in your inventory.");
         return false;
     }
 
     /**
      * Flags the appearance block if required.
      *
-     * @param index The index we're flagging for.
+     * @param index The index to flag.
      */
     private void flagAppearance(int index) {
         if (index != RING && index != AMMUNITION) {
             player.getUpdateFlags().flag(UpdateFlag.APPEARANCE);
         }
+    }
+
+    /**
+     * Loads equipment bonuses for the Player by updating and displaying them.
+     */
+    public void loadBonuses() {
+        for (Item item : this) {
+            if (item == null) {
+                continue;
+            }
+            // Update bonuses.
+            equipmentListener.updateBonus(Optional.empty(), Optional.of(item));
+        }
+        // Write them all.
+        equipmentListener.writeBonuses.set(0, 12);
+        equipmentListener.writeBonuses();
     }
 
     /**

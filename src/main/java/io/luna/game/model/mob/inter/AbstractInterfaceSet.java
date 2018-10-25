@@ -6,6 +6,8 @@ import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 
 import java.util.Optional;
 
+import static io.luna.util.OptionalUtils.matches;
+
 /**
  * A collection of {@link AbstractInterface}s that are displayed on the Player's game screen.
  *
@@ -105,6 +107,24 @@ public final class AbstractInterfaceSet {
 
         // Reset dialogues.
         player.resetDialogues();
+    }
+
+    /**
+     * Determines if {@code inter} is open.
+     *
+     * @param inter The interface.
+     * @return {@code true} if the interface is open.
+     */
+    public boolean isOpen(AbstractInterface inter) {
+        switch (inter.getType()) {
+            case STANDARD:
+                return matches(currentStandard, inter);
+            case WALKABLE:
+                return matches(currentWalkable, inter);
+            case INPUT:
+                return matches(currentInput, inter);
+        }
+        return false;
     }
 
     /**

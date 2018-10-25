@@ -184,13 +184,13 @@ public final class PlayerSerializer {
             player.getAppearance().setValues(appearance);
 
             IndexedItem[] inventory = getAsType(jsonReader.get("inventory"), IndexedItem[].class);
-            player.getInventory().setItems(inventory);
+            player.getInventory().init(inventory);
 
             IndexedItem[] bank = getAsType(jsonReader.get("bank"), IndexedItem[].class);
-            player.getBank().setItems(bank);
+            player.getBank().init(bank);
 
             IndexedItem[] equipment = getAsType(jsonReader.get("equipment"), IndexedItem[].class);
-            player.getEquipment().setItems(equipment);
+            player.getEquipment().init(equipment);
 
             Skill[] skills = getAsType(jsonReader.get("skills"), Skill[].class);
             player.getSkills().setSkills(skills);
