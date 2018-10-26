@@ -83,6 +83,8 @@ implicit class RichMobileEntity(mob: Mob) {
     attr.set(applyValue)
   }
 
+  def isAttr(key: String) = mob.getAttributes.contains(key)
+
   def attrEquals(key: String, equals: Any) = equals == attr(key)
 
   def elapsedTime(key: String, ms: Long) = {
@@ -234,7 +236,7 @@ implicit class RichArray[T](array: Array[T]) {
 
 implicit class RichItemContainer(items: ItemContainer) {
 
-  def getIdForIndex(index: Int) = items.getIdForIndex(index).orElse(-1)
+  def getIdForIndex(index: Int) = items.computeIdForIndex(index).orElse(-1)
   def addAll(traversable: Iterable[Item]) = items.addAll(asJavaIterable(traversable))
 
 }
