@@ -1,13 +1,13 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.StringInputInterface;
+import io.luna.game.model.mob.inter.NameInputInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
  * A {@link GameMessageWriter} implementation that opens an "Enter name" input dialogue. Use
- * {@link StringInputInterface} instead of using this packet directly.
+ * {@link NameInputInterface} instead of using this packet directly.
  *
  * @author lare96 <http://github.org/lare96>
  */

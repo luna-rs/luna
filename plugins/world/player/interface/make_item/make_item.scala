@@ -1,7 +1,7 @@
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.inter.AmountInputInterface
 
 import scala.collection.mutable
 
@@ -11,7 +11,7 @@ private class MakeItemAction(val amount: Int, var index: Int) {
   def run(plr: Player, inter: MakeItemDialogueInterface) = {
     if (amount == -1) {
       // Make <x> option.
-      plr.interfaces.open(new NumberInputInterface() {
+      plr.interfaces.open(new AmountInputInterface() {
         override def onNumberInput(player: Player, number: Int) {
           inter.makeItemIndex(plr, index, number)
           plr.interfaces.close()

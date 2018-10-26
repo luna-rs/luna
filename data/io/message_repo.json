@@ -249,7 +249,8 @@
   },
   {
     "opcode": 60,
-    "size": 0
+    "size": 8,
+    "payload": "NameInputMessageReader"
   },
   {
     "opcode": 61,
