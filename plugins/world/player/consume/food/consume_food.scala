@@ -177,14 +177,14 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
 
   plr.interruptAction()
 
-  val toConsume = inventory.getIdForIndex(index).orElse(-1)
-  if (toConsume != -1 && inventory.remove(new Item(toConsume), index)) {
+  val toConsume = inventory.computeIdForIndex(index).orElse(-1)
+  if (toConsume != -1 && inventory.remove(index, new Item(toConsume))) {
     val consumeName = nameOfItem(toConsume)
 
     val nextIndex = ids.indexOf(toConsume) + 1
     if (ids.isDefinedAt(nextIndex)) {
       /* Add unfinished portion to inventory, if there is one. */
-      inventory.add(new Item(ids(nextIndex)), index)
+      inventory.add(index, new Item(ids(nextIndex)))
     }
 
     plr.sendMessage(food.firstMessage(consumeName))

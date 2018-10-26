@@ -25,7 +25,7 @@ private val TIARAS = Map(
 
 /* A function that sends the tiara key and value config when logging in. */
 private def sendLoginConfig(plr: Player) = {
-  val headId = plr.inventory.getIdForIndex(HEAD).orElse(-1)
+  val headId = plr.inventory.computeIdForIndex(HEAD).orElse(-1)
   val value = TIARAS.get(headId)
 
   plr.sendConfig(CONFIG_KEY, value.getOrElse(0))

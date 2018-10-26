@@ -266,11 +266,11 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
   plr.interruptAction()
 
   val toConsume = inventory.get(index)
-  if (inventory.remove(toConsume, index)) {
+  if (inventory.remove(index, toConsume)) {
 
     val nextIndex = ids.indexOf(toConsume.getId) + 1
     if (ids.isDefinedAt(nextIndex)) { /* Add the next dose or an empty vial to the inventory. */
-      inventory.add(new Item(ids(nextIndex)), index)
+      inventory.add(index, new Item(ids(nextIndex)))
     } else {
       inventory.add(VIAL)
     }

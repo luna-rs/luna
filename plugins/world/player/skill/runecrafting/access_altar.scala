@@ -168,12 +168,12 @@ on[ItemOnObjectEvent] { msg =>
 
 /* Intercept event for entering with tiaras. */
 on[ObjectFirstClickEvent] { msg =>
-  val headId = msg.plr.inventory.getIdForIndex(HEAD).orElse(-1)
+  val headId = msg.plr.inventory.computeIdForIndex(HEAD).orElse(-1)
 
   TIARA_TO_ALTAR.get(headId).foreach { altar =>
     if (altar.altar == msg.id) {
       enterWithTiara(msg.plr, altar, msg)
-    }
+  }
   }
 }
 
