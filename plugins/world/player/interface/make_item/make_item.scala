@@ -91,6 +91,7 @@ on[ButtonClickEvent] { msg =>
         case inter: MakeItemDialogueInterface => makeItem(msg, inter, action)
         case _ => interfaces.close()
       })
+      msg.terminate
     }
   } catch {
     case e: Exception => e.printStackTrace()

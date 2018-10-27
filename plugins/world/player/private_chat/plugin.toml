@@ -1,0 +1,8 @@
+[metadata]
+name = "Private chat"
+description = "Allows for private messaging between players."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

@@ -197,6 +197,8 @@ implicit class RichWorld(world: World) {
       action
     }
   }
+  def playerOnline(name: Long) = world.getPlayer(name).isPresent
+  def playerOnline(name: String) = world.getPlayer(name).isPresent
 
   def players = iterableAsScalaIterable(world.getPlayers)
 

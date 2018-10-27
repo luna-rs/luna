@@ -156,9 +156,9 @@ onargs[CommandEvent]("item_name", RIGHTS_DEV) { msg =>
   filtered.foreach(definition => {
     val add = new Item(definition.getId, amount)
 
-    if (plr.inventory.hasCapacityFor(add)) {
+    if (plr.inventory.hasSpaceFor(add)) {
       plr.inventory.add(add)
-    } else if (plr.bank.hasCapacityFor(add)) {
+    } else if (plr.bank.hasSpaceFor(add)) {
       plr.bank.add(add)
     } else {
       plr.sendMessage(s"Not enough space in bank or inventory for ${definition.getName}.")

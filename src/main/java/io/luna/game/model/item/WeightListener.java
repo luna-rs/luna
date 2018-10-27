@@ -13,7 +13,7 @@ import java.util.Optional;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class ItemWeightListener implements ItemContainerListener {
+public final class WeightListener implements ItemContainerListener {
 
     /**
      * The player.
@@ -26,21 +26,21 @@ public final class ItemWeightListener implements ItemContainerListener {
     private final List<Double> weightChanges = new ArrayList<>();
 
     /**
-     * Creates a new {@link ItemWeightListener}.
+     * Creates a new {@link WeightListener}.
      *
      * @param player The player.
      */
-    public ItemWeightListener(Player player) {
+    public WeightListener(Player player) {
         this.player = player;
     }
 
     @Override
-    public void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    public void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
         updateWeight(oldItem, newItem);
     }
 
     @Override
-    public void onBulkUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    public void onBulkUpdate(int index, Optional<Item> oldItem, Optional<Item> newItem, ItemContainer items) {
         weightChanges.add(computeWeightDifference(oldItem, newItem));
     }
 

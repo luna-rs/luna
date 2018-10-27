@@ -13,23 +13,23 @@ public interface ItemContainerListener {
     /**
      * Invoked after an item on one index is updated.
      *
+     * @param index The updated index.
      * @param items The container that fired the event.
      * @param oldItem The old item.
      * @param newItem The new item.
-     * @param index The updated index.
      */
-    default void onSingleUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    default void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
     }
 
     /**
      * Invoked after an item on one index is updated during a bulk operation.
      *
-     * @param items The container that fired the event.
+     * @param index The updated index.
      * @param oldItem The old item.
      * @param newItem The new item.
-     * @param index The updated index.
+     * @param items The container that fired the event.
      */
-    default void onBulkUpdate(ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem, int index) {
+    default void onBulkUpdate(int index, Optional<Item> oldItem, Optional<Item> newItem, ItemContainer items) {
 
     }
 

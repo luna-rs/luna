@@ -121,7 +121,7 @@ public final class Item {
      * @return The new item.
      */
     public Item changeAmount(int add) {
-        boolean positive = add < 0;
+        boolean positive = add > 0;
         int newAmount = amount + add;
 
         // Handle potential overflows and underflows.

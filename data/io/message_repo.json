@@ -306,7 +306,8 @@
   },
   {
     "opcode": 74,
-    "size": 8
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 75,
@@ -520,7 +521,8 @@
   },
   {
     "opcode": 126,
-    "size": -1
+    "size": -1,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 127,
@@ -537,7 +539,8 @@
   },
   {
     "opcode": 130,
-    "size": 0
+    "size": 0,
+    "payload": "CloseWindowMessageReader"
   },
   {
     "opcode": 131,
@@ -550,7 +553,8 @@
   },
   {
     "opcode": 133,
-    "size": 8
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 134,
@@ -775,7 +779,8 @@
   },
   {
     "opcode": 188,
-    "size": 8
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 189,
@@ -886,7 +891,8 @@
   },
   {
     "opcode": 215,
-    "size": 8
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 216,

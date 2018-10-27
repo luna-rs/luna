@@ -37,6 +37,16 @@ public final class IndexedItem {
         this.amount = amount;
     }
 
+    /**
+     * Creates a new {@link IndexedItem}.
+     *
+     * @param index The index.
+     * @param item
+     */
+    public IndexedItem(int index, Item item) {
+        this(index, item.getId(), item.getAmount());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -58,9 +58,7 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
                 return;
             }
 
-            int newSlots = inventory.computeSize(currentAdd);
-            int oldSlots = inventory.computeSize(currentRemove);
-            if ((newSlots - oldSlots) > inventory.computeRemainingSize()) {
+            if (!inventory.hasSpaceFor(currentAdd)) {
                 mob.sendMessage("You do not have enough space in your inventory.");
                 interrupt();
                 return;
