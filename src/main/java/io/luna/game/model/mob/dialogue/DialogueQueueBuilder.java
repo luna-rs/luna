@@ -254,7 +254,7 @@ public final class DialogueQueueBuilder {
         DialogueInterface lastDialogue = dialogues.peekLast();
 
         checkState(lastDialogue != null, "No past dialogue to attach action to.");
-        lastDialogue. setOpenAction(action);
+        lastDialogue.setOpenAction(action);
         return this;
     }
 
@@ -270,10 +270,17 @@ public final class DialogueQueueBuilder {
      * dialogue queue.
      */
     public void open() {
-        DialogueQueue queue = new DialogueQueue(player, dialogues);
-        queue.advance();
+        if(dialogues.size() == 1) {
+            // Optimization for single-entry dialogues.
+            player.getInterfaces().open(dialogues.peekFirst());
+        } else {
+            DialogueQueue queue = new DialogueQueue(player, dialogues);
+            queue.advance();
 
-        player.setDialogues(queue);
+            player.setDialogues(queue);
+        }
+
+        // Lock so that this builder's reference to 'dialogues' is immutable.
         locked = true;
     }
 }
