@@ -1,8 +1,10 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.NumberInputInterface;
+import io.luna.game.model.mob.PlayerRights;
+import io.luna.game.model.mob.inter.AmountInputInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -61,10 +63,16 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                 player.getEquipment().unequip(index);
                 break;
             case 5064:
-                player.getBank().deposit(index, 1);
+                if (player.getBank().isOpen()) {
+                    player.getBank().deposit(index, 1);
+                }
                 break;
             case 5382:
-                player.getBank().withdraw(index, 1);
+                if (player.getBank().isOpen()) {
+                    player.getBank().withdraw(index, 1);
+                } else if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
+                    player.getInventory().add(new Item(itemId, 1));
+                }
                 break;
             case 3900:
                 //Shop will sell for <x>
@@ -98,10 +106,16 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
 
         switch (interfaceId) {
             case 5064:
-                player.getBank().deposit(index, 5);
+                if (player.getBank().isOpen()) {
+                    player.getBank().deposit(index, 5);
+                }
                 break;
             case 5382:
-                player.getBank().withdraw(index, 5);
+                if (player.getBank().isOpen()) {
+                    player.getBank().withdraw(index, 5);
+                } else if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
+                    player.getInventory().add(new Item(itemId, 5));
+                }
                 break;
             case 3900:
                 // Buy 1 of <item> from shop
@@ -135,10 +149,16 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
 
         switch (interfaceId) {
             case 5064:
-                player.getBank().deposit(index, 10);
+                if (player.getBank().isOpen()) {
+                    player.getBank().deposit(index, 10);
+                }
                 break;
             case 5382:
-                player.getBank().withdraw(index, 10);
+                if (player.getBank().isOpen()) {
+                    player.getBank().withdraw(index, 10);
+                } else if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
+                    player.getInventory().add(new Item(itemId, 10));
+                }
                 break;
             case 3900:
                 // Buy 5 of <item> from shop
@@ -172,10 +192,16 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
 
         switch (interfaceId) {
             case 5064:
-                player.getBank().deposit(index, player.getInventory().computeAmountForId(itemId));
+                if (player.getBank().isOpen()) {
+                    player.getBank().deposit(index, player.getInventory().computeAmountForId(itemId));
+                }
                 break;
             case 5382:
-                player.getBank().withdraw(index, player.getBank().computeAmountForId(itemId));
+                if (player.getBank().isOpen()) {
+                    player.getBank().withdraw(index, player.getBank().computeAmountForId(itemId));
+                } else if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
+                    player.getInventory().add(new Item(itemId, 1_000_000));
+                }
                 break;
             case 3900:
                 // Buy 10 of <item> from shop
@@ -209,18 +235,24 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
 
         switch (interfaceId) {
             case 5064:
-                player.getInterfaces().open(new NumberInputInterface() {
-                    @Override
-                    public void onNumberInput(Player player, int number) {
-                        player.getBank().deposit(index, number);
-                    }
-                });
+                if (player.getBank().isOpen()) {
+                    player.getInterfaces().open(new AmountInputInterface() {
+                        @Override
+                        public void onAmountInput(Player player, int value) {
+                            player.getBank().deposit(index, value);
+                        }
+                    });
+                }
                 break;
             case 5382:
-                player.getInterfaces().open(new NumberInputInterface() {
+                player.getInterfaces().open(new AmountInputInterface() {
                     @Override
-                    public void onNumberInput(Player player, int number) {
-                        player.getBank().withdraw(index, number);
+                    public void onAmountInput(Player player, int value) {
+                        if (player.getBank().isOpen()) {
+                            player.getBank().withdraw(index, value);
+                        } else if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
+                            player.getInventory().add(new Item(itemId, value));
+                        }
                     }
                 });
                 break;

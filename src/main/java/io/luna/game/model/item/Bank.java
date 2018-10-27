@@ -28,7 +28,6 @@ public final class Bank extends ItemContainer {
         @Override
         public void onClose(Player player) {
             inventory.resetSecondaryRefresh();
-            bankInterface = new BankInterface();
         }
     }
 
@@ -45,7 +44,7 @@ public final class Bank extends ItemContainer {
     /**
      * The banking interface.
      */
-    private BankInterface bankInterface;
+    private BankInterface bankInterface = new BankInterface();
 
     /**
      * Creates a new {@link Bank}.
@@ -56,7 +55,6 @@ public final class Bank extends ItemContainer {
         super(352, StackPolicy.ALWAYS, 5382);
         this.player = player;
         inventory = player.getInventory();
-        bankInterface = new BankInterface();
 
         setListeners(new RefreshListener(player, "You do not have enough bank space to deposit that."));
     }
@@ -65,20 +63,24 @@ public final class Bank extends ItemContainer {
      * Opens the banking interface.
      */
     public void open() {
-        disableEvents();
-        try {
-            player.setWithdrawAsNote(false);
+        if (!isOpen()) {
+            disableEvents();
+            try {
+                player.setWithdrawAsNote(false);
 
-            // Display items on interface.
-            clearSpaces();
-            inventory.setSecondaryRefresh(5064);
-            inventory.refreshSecondary(player); // Refresh inventory onto bank.
-            refreshPrimary(player); // Refresh bank.
+                // Display items on interface.
+                clearSpaces();
+                inventory.setSecondaryRefresh(5064);
+                inventory.refreshSecondary(player); // Refresh inventory onto bank.
+                refreshPrimary(player); // Refresh bank.
 
-            // Open interface.
-            player.getInterfaces().open(bankInterface);
-        } finally {
-            enableEvents();
+                // Open interface.
+                player.getInterfaces().open(bankInterface);
+            } finally {
+                enableEvents();
+            }
+        } else {
+            player.sendMessage("Your bank is already open.");
         }
     }
 
@@ -174,6 +176,6 @@ public final class Bank extends ItemContainer {
      * @return {@code true} if the banking interface is open.
      */
     public boolean isOpen() {
-        return player.getInterfaces().isOpen(bankInterface);
+        return bankInterface.isOpen();
     }
 }
