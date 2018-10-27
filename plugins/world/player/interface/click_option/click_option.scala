@@ -5,9 +5,14 @@ import io.luna.game.model.mob.dialogue.OptionDialogueInterface
 
 /* Invoked when the player clicks an option on an option dialogue. */
 private def clickOption(plr: Player, action: OptionDialogueInterface => Unit) {
-  val newFunc = action.andThen(inter => plr.advanceDialogues())
   plr.interfaces.getCurrentStandard.ifPresent {
-    case inter: OptionDialogueInterface => newFunc(inter)
+    case inter: OptionDialogueInterface =>
+      action(inter)
+      if(inter.isOpen && !plr.getDialogues.isPresent) {
+        plr.interfaces.close()
+      } else {
+        plr.advanceDialogues()
+      }
   }
 }
 
