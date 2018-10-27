@@ -3,6 +3,14 @@ package io.luna.game.model.item;
 import com.google.common.collect.Iterables;
 import com.google.common.primitives.Ints;
 import io.luna.net.msg.out.WidgetItemGroupMessageWriter;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntHeapPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +23,7 @@ import java.util.OptionalInt;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -28,6 +37,7 @@ import static java.util.Objects.requireNonNull;
  * A model representing a group of items.
  *
  * @author lare96 <http://github.com/lare96>
+ * @author Jacob G. <http://github.com/jhg023>
  */
 public class ItemContainer implements Iterable<Item> {
 
@@ -113,6 +123,26 @@ public class ItemContainer implements Iterable<Item> {
     private final StackPolicy policy;
 
     /**
+     * A queue used to keep track of free slots within this container.
+     */
+    private final IntPriorityQueue freeSlots;
+
+    /**
+     * A mapping of item IDs to item amounts for stackable items within this container.
+     */
+    private final Int2IntMap stackableItemAmounts;
+
+    /**
+     * A mapping of item IDs to indices for stackable items within this container.
+     */
+    private final Int2IntMap stackableItemIndices;
+
+    /**
+     * A mapping of item IDs to indices for unstackable items within this container.
+     */
+    private final Int2ObjectMap<IntSortedSet> unstackableItemIndices;
+
+    /**
      * The items.
      */
     Item[] items;
@@ -141,7 +171,11 @@ public class ItemContainer implements Iterable<Item> {
     public ItemContainer(int capacity, StackPolicy policy) {
         this.capacity = capacity;
         this.policy = policy;
-        items = new Item[capacity];
+        this.items = new Item[capacity];
+        this.freeSlots = new IntHeapPriorityQueue(IntStream.range(0, capacity).toArray());
+        this.stackableItemAmounts = new Int2IntOpenHashMap(capacity);
+        this.stackableItemIndices = new Int2IntOpenHashMap(capacity);
+        this.unstackableItemIndices = new Int2ObjectOpenHashMap<>();
     }
 
     /**
@@ -191,8 +225,11 @@ public class ItemContainer implements Iterable<Item> {
 
         // Determine best index to add on.
         boolean stacks = isStackable(item);
+
+        int id = item.getId();
+
         if (stacks) {
-            preferredIndex = computeIndexForId(item.getId()).orElse(-1);
+            preferredIndex = computeIndexForId(id, true).orElse(-1);
         } else if (preferredIndex != -1) {
             preferredIndex = items[preferredIndex] != null ? -1 : preferredIndex;
         }
@@ -214,25 +251,29 @@ public class ItemContainer implements Iterable<Item> {
             if (current == null) {
                 items[preferredIndex] = item;
                 size++;
+                stackableItemIndices.put(id, preferredIndex);
             } else {
                 items[preferredIndex] = current.changeAmount(item.getAmount());
             }
+
+            stackableItemAmounts.put(id, items[preferredIndex].getAmount());
 
             fireUpdateEvent(current, items[preferredIndex], preferredIndex);
         } else {
             // Add non-stackable item.
             int remaining = computeRemainingSize();
-            int until = (remaining > item.getAmount()) ? item.getAmount() : remaining;
+            int until = Math.min(remaining, item.getAmount());
 
             for (int index = 0; index < until; index++) {
-
                 if (items[preferredIndex] != null) {
                     preferredIndex = nextFreeIndex().orElseThrow(IllegalStateException::new);
                 }
 
-                Item newItem = new Item(item.getId());
+                Item newItem = new Item(id);
                 items[preferredIndex] = newItem;
                 size++;
+
+                addUnstackableItem(id, preferredIndex);
 
                 fireUpdateEvent(null, newItem, preferredIndex++);
             }
@@ -259,11 +300,13 @@ public class ItemContainer implements Iterable<Item> {
     public boolean addAll(Iterable<? extends Item> items) {
         boolean added = false;
         bulkOperation = true;
+
         try {
             for (Item item : items) {
                 if (item == null) {
                     continue;
                 }
+
                 if (add(item)) {
                     added = true;
                 }
@@ -298,10 +341,15 @@ public class ItemContainer implements Iterable<Item> {
 
         // Determine best index to remove from.
         boolean stacks = isStackable(item);
+
+        int id = item.getId();
+
         if (stacks) {
-            preferredIndex = computeIndexForId(item.getId()).orElse(-1);
+            preferredIndex = computeIndexForId(id).orElse(-1);
         } else {
-            preferredIndex = preferredIndex == -1 ? computeIndexForId(item.getId()).orElse(-1) : preferredIndex;
+            if (preferredIndex == -1) {
+                preferredIndex = computeIndexForId(id).orElse(-1);
+            }
 
             if (preferredIndex != -1 && items[preferredIndex] == null) {
                 preferredIndex = -1;
@@ -316,30 +364,38 @@ public class ItemContainer implements Iterable<Item> {
         if (stacks) {
             // Remove stackable item.
             Item current = items[preferredIndex];
+
             if (current.getAmount() > item.getAmount()) {
                 items[preferredIndex] = current.changeAmount(-item.getAmount());
+                stackableItemAmounts.put(id, items[preferredIndex].getAmount());
             } else {
                 items[preferredIndex] = null;
                 size--;
+                stackableItemAmounts.remove(id);
+                stackableItemIndices.remove(id);
             }
 
             fireUpdateEvent(current, items[preferredIndex], preferredIndex);
         } else {
             // Remove non-stackable item.
-            int until = computeAmountForId(item.getId());
-            until = (item.getAmount() > until) ? until : item.getAmount();
+            int until = computeAmountForId(id);
+            until = Math.min(item.getAmount(), until);
 
             for (int index = 0; index < until; index++) {
-                preferredIndex = (items[preferredIndex] != null && items[preferredIndex].getId() == item.getId()) ?
-                        preferredIndex : computeIndexForId(item.getId()).orElse(-1);
+                if (items[preferredIndex].getId() != id) {
+                    preferredIndex = computeIndexForId(id, false).orElseThrow(IllegalStateException::new);
+                }
 
                 Item oldItem = items[preferredIndex];
                 items[preferredIndex] = null;
                 size--;
 
+                removeUnstackableItem(id, preferredIndex);
+
                 fireUpdateEvent(oldItem, null, preferredIndex++);
             }
         }
+
         return true;
     }
 
@@ -362,11 +418,13 @@ public class ItemContainer implements Iterable<Item> {
     public boolean removeAll(Iterable<? extends Item> items) {
         boolean removed = false;
         bulkOperation = true;
+
         try {
             for (Item item : items) {
                 if (item == null) {
                     continue;
                 }
+
                 if (remove(item)) {
                     removed = true;
                 }
@@ -395,11 +453,10 @@ public class ItemContainer implements Iterable<Item> {
      * @return The next free index, wrapped in an optional.
      */
     public final OptionalInt nextFreeIndex() {
-        for (int index = 0; index < capacity; index++) {
-            if (items[index] == null) {
-                return OptionalInt.of(index);
-            }
+        if (!freeSlots.isEmpty()) {
+            return OptionalInt.of(freeSlots.dequeueInt());
         }
+
         return OptionalInt.empty();
     }
 
@@ -410,13 +467,29 @@ public class ItemContainer implements Iterable<Item> {
      * @return The index of {@code id}, wrapped in an optional.
      */
     public final OptionalInt computeIndexForId(int id) {
-        for (int index = 0; index < capacity; index++) {
-            Item item = items[index];
-            if (item != null && item.getId() == id) {
-                return OptionalInt.of(index);
-            }
+        return computeIndexForId(id, isStackable(new Item(id)));
+    }
+
+    /**
+     * Computes the next index that {@code id} is found in.
+     *
+     * @param id The identifier to search for.
+     * @param stackable Whether or not the item is stackable.
+     * @return The index of {@code id}, wrapped in an optional.
+     */
+    public final OptionalInt computeIndexForId(int id, boolean stackable) {
+        if (stackable) {
+            int index = stackableItemIndices.getOrDefault(id, -1);
+            return index == -1 ? OptionalInt.empty() : OptionalInt.of(index);
         }
-        return OptionalInt.empty();
+
+        IntSortedSet set = unstackableItemIndices.get(id);
+
+        if (set == null) {
+            return OptionalInt.empty();
+        }
+
+        return OptionalInt.of(set.firstInt());
     }
 
     /**
@@ -426,13 +499,17 @@ public class ItemContainer implements Iterable<Item> {
      * @return The total amount of items with {@code id}.
      */
     public final int computeAmountForId(int id) {
-        int amount = 0;
-        for (Item item : items) {
-            if (item != null && item.getId() == id) {
-                amount += item.getAmount();
-            }
+        if (isStackable(new Item(id))) {
+            return stackableItemAmounts.getOrDefault(id, 0);
         }
-        return amount;
+
+        IntSortedSet set = unstackableItemIndices.get(id);
+
+        if (set == null) {
+            return 0;
+        }
+
+        return set.size();
     }
 
     /**
@@ -463,16 +540,20 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final int computeSize(Item... forItems) {
         int size = 0;
+
         for (Item item : forItems) {
             boolean stacks = isStackable(item);
+
             if (stacks) {
-                int index = computeIndexForId(item.getId()).orElse(-1);
+                int index = computeIndexForId(item.getId(), true).orElse(-1);
+
                 if (index == -1) {
                     size++;
                     continue;
                 }
 
                 Item existing = items[index];
+
                 if ((existing.getAmount() + item.getAmount()) <= 0) {
                     size++;
                 }
@@ -480,6 +561,7 @@ public class ItemContainer implements Iterable<Item> {
                 size += item.getAmount();
             }
         }
+
         return size;
     }
 
@@ -501,9 +583,11 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final boolean replace(int oldId, int newId) {
         OptionalInt oldIndex = computeIndexForId(oldId);
+
         if (!oldIndex.isPresent()) {
             return false;
         }
+
         int index = oldIndex.getAsInt();
 
         Item oldItem = items[index];
@@ -511,7 +595,9 @@ public class ItemContainer implements Iterable<Item> {
 
         checkState(!isStackable(oldItem) && !isStackable(newItem), "use add(Item) and remove(Item) instead");
 
-        items[index] = null;
+        removeUnstackableItem(oldId, index);
+        addUnstackableItem(newId, index);
+
         items[index] = newItem;
         fireUpdateEvent(oldItem, newItem, index);
         return true;
@@ -528,6 +614,7 @@ public class ItemContainer implements Iterable<Item> {
     public final boolean replaceAll(int oldId, int newId) {
         boolean replaced = false;
         bulkOperation = true;
+
         try {
             while (replace(oldId, newId)) {
                 replaced = true;
@@ -535,6 +622,7 @@ public class ItemContainer implements Iterable<Item> {
         } finally {
             bulkOperation = false;
         }
+
         fireUpdateCompletedEvent();
         return replaced;
     }
@@ -557,7 +645,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code id} is present in this container.
      */
     public final boolean contains(int id) {
-        return computeIndexForId(id).isPresent();
+        return stackableItemIndices.containsKey(id) || unstackableItemIndices.containsKey(id);
     }
 
     /**
@@ -699,11 +787,13 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final void swap(int firstIndex, int secondIndex) {
         bulkOperation = true;
+
         try {
             swapOperation(firstIndex, secondIndex);
         } finally {
             bulkOperation = false;
         }
+
         fireUpdateCompletedEvent();
     }
 
@@ -716,6 +806,7 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final void insert(int oldIndex, int newIndex) {
         bulkOperation = true;
+
         try {
             if (newIndex > oldIndex) {
                 for (int index = oldIndex; index < newIndex; index++) {
@@ -729,6 +820,7 @@ public class ItemContainer implements Iterable<Item> {
         } finally {
             bulkOperation = false;
         }
+
         fireUpdateCompletedEvent();
     }
 
@@ -745,6 +837,9 @@ public class ItemContainer implements Iterable<Item> {
         Item itemOld = items[firstIndex];
         Item itemNew = items[secondIndex];
 
+        swapNullableItem(itemOld, firstIndex, secondIndex);
+        swapNullableItem(itemNew, secondIndex,firstIndex);
+
         items[firstIndex] = itemNew;
         items[secondIndex] = itemOld;
 
@@ -759,8 +854,33 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final void setItems(IndexedItem[] newItems) {
         size = 0;
+
         for (IndexedItem item : newItems) {
-            items[item.getIndex()] = item.toItem();
+            int index = item.getIndex();
+            Item currentItem = items[index];
+            Item newItem = item.toItem();
+
+            if (currentItem != null) {
+                int id = currentItem.getId();
+
+                if (isStackable(currentItem)) {
+                    stackableItemAmounts.remove(id);
+                    stackableItemIndices.remove(id);
+                } else {
+                    removeUnstackableItem(id, index);
+                }
+            }
+
+            if (isStackable(newItem)) {
+                int id = newItem.getId();
+
+                stackableItemAmounts.put(id, newItem.getAmount());
+                stackableItemIndices.put(id, index);
+            } else {
+                addUnstackableItem(newItem.getId(), index);
+            }
+
+            items[index] = newItem;
             size++;
         }
     }
@@ -781,13 +901,17 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final IndexedItem[] toIndexedArray() {
         List<IndexedItem> indexedItems = new LinkedList<>();
+
         for (int index = 0; index < capacity; index++) {
             Item item = items[index];
+
             if (item == null) {
                 continue;
             }
+
             indexedItems.add(new IndexedItem(index, item.getId(), item.getAmount()));
         }
+
         return Iterables.toArray(indexedItems, IndexedItem.class);
     }
 
@@ -798,13 +922,32 @@ public class ItemContainer implements Iterable<Item> {
      * @param item The item to set.
      */
     public final void set(int index, Item item) {
-        boolean indexFree = items[index] == null;
+        Item currentItem = items[index];
+        boolean indexFree = currentItem == null;
         boolean removingItem = item == null;
 
         if (indexFree && !removingItem) {
             size++;
         } else if (!indexFree && removingItem) {
             size--;
+        }
+
+        if (!indexFree) {
+            if (isStackable(currentItem)) {
+                stackableItemAmounts.remove(currentItem.getId());
+                stackableItemIndices.remove(currentItem.getId());
+            } else {
+                removeUnstackableItem(currentItem.getId(), index);
+            }
+        }
+
+        if (!removingItem) {
+            if (isStackable(item)) {
+                stackableItemAmounts.put(item.getId(), item.getAmount());
+                stackableItemIndices.put(item.getId(), index);
+            } else {
+                addUnstackableItem(item.getId(), index);
+            }
         }
 
         Item oldItem = items[index];
@@ -820,8 +963,10 @@ public class ItemContainer implements Iterable<Item> {
      * @return The item, wrapped in an optional.
      */
     public final Optional<Item> nonNullGet(int index) {
-        if (index == -1 || index >= items.length)
+        if (index == -1 || index >= items.length) {
             return Optional.empty();
+        }
+
         return Optional.ofNullable(items[index]);
     }
 
@@ -879,9 +1024,20 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final void clear() {
         bulkOperation = true;
+
         try {
             for (int index = 0; index < capacity; index++) {
                 Item old = items[index];
+
+                if (old != null) {
+                    if (isStackable(old)) {
+                        stackableItemAmounts.remove(old.getId());
+                        stackableItemIndices.remove(old.getId());
+                    } else {
+                        removeUnstackableItem(old.getId(), index);
+                    }
+                }
+
                 items[index] = null;
 
                 fireUpdateEvent(old, null, index);
@@ -889,9 +1045,67 @@ public class ItemContainer implements Iterable<Item> {
             }
         } finally {
             bulkOperation = false;
-
         }
+
         fireUpdateCompletedEvent();
+    }
+
+    /**
+     * Adds a single, unstackable item with ID {@code id} to the
+     * index tracker in this container.
+     *
+     * @param id    The ID of the item to add.
+     * @param index The index that the item resides at in this container.
+     * @return {@code true} if the add was successful and {@code false}
+     *          otherwise.
+     */
+    private boolean addUnstackableItem(int id, int index) {
+        return unstackableItemIndices.compute(id, (k, v) -> {
+            return v == null ? new IntAVLTreeSet() : v;
+        }).add(index);
+    }
+
+    /**
+     * Removes a single, unstackable item with ID {@code id} from the
+     * index tracker in this container.
+     *
+     * @param id    The ID of the item to remove.
+     * @param index The index that the item resides at in this container.
+     * @return The index tracker, which can be {@code null} if no more
+     *          items with ID {@code id} exist within this container
+     *          after removal.
+     */
+    private IntSortedSet removeUnstackableItem(int id, int index) {
+        return unstackableItemIndices.computeIfPresent(id, (k, v) -> {
+            if (v.size() == 1) {
+                return null;
+            }
+
+            v.remove(index);
+
+            return v;
+        });
+    }
+
+    /**
+     * Swaps a, possibly {@code null}, {@link Item} that resides in
+     * {@code oldIndex} to {@code newIndex} in the index tracker
+     * for this container.
+     *
+     * @param item     The item to swap.
+     * @param oldIndex The index that the item resides in.
+     * @param newIndex The index to move the item to.
+     */
+    private void swapNullableItem(Item item, int oldIndex, int newIndex) {
+        if (item != null) {
+            if (isStackable(item)) {
+                stackableItemIndices.put(item.getId(), newIndex);
+            } else {
+                IntSortedSet indices = unstackableItemIndices.get(item.getId());
+                indices.remove(oldIndex);
+                indices.add(newIndex);
+            }
+        }
     }
 
     /**
