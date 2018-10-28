@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Player;
 import java.util.OptionalInt;
 
 /**
- * An abstraction model representing an interface that can be opened and closed on a Player's screen.
+ * A stateful abstraction model representing an interface that can be opened and closed on a Player's screen.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -20,6 +20,11 @@ public abstract class AbstractInterface {
      * The interface type.
      */
     final InterfaceType type;
+
+    /**
+     * The interface state.
+     */
+    private InterfaceState state = InterfaceState.IDLE;
 
     /**
      * Creates a new {@link AbstractInterface}.
@@ -64,7 +69,7 @@ public abstract class AbstractInterface {
      *
      * @param player The player to open for.
      */
-    public abstract void open(Player player);
+    abstract void open(Player player);
 
     /**
      * A function called when this interface is closed.
@@ -72,6 +77,51 @@ public abstract class AbstractInterface {
      * @param player The player to apply to listener for.
      */
     public void onClose(Player player) {
+    }
+
+    /**
+     * A function called when this interface is opened.
+     *
+     * @param player The player to apply to listener for.
+     */
+    public void onOpen(Player player) {
+
+    }
+
+    /**
+     * Sets this interface's state to {@link InterfaceState#CLOSED} and fires listeners. Does nothing if
+     * this interface is not open.
+     *
+     * @param player The player.
+     */
+    final void setClosed(Player player) {
+        if (isOpen()) {
+            state = InterfaceState.CLOSED;
+            onClose(player);
+        }
+    }
+
+    /**
+     * Sets this interface's state to {@link InterfaceState#OPEN} and fires listeners. Does nothing if
+     * this interface is not idle or closed.
+     *
+     * @param player The player.
+     */
+    final void setOpened(Player player) {
+        if (!isOpen()) {
+            state = InterfaceState.OPEN;
+            onOpen(player);
+            open(player);
+        }
+    }
+
+    /**
+     * Determines if this interface is open and viewable on the Player's screen.
+     *
+     * @return {@code true} if this interface is open.
+     */
+    public final boolean isOpen() {
+        return state == InterfaceState.OPEN;
     }
 
     /**
@@ -122,5 +172,12 @@ public abstract class AbstractInterface {
      */
     public final InterfaceType getType() {
         return type;
+    }
+
+    /**
+     * @return The interface state.
+     */
+    public final InterfaceState getState() {
+        return state;
     }
 }

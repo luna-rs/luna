@@ -6,8 +6,6 @@ import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 
 import java.util.Optional;
 
-import static io.luna.util.OptionalUtils.matches;
-
 /**
  * A collection of {@link AbstractInterface}s that are displayed on the Player's game screen.
  *
@@ -57,7 +55,7 @@ public final class AbstractInterfaceSet {
         } else if (inter.isWalkable()) {
             setCurrentWalkable((WalkableInterface) inter);
         }
-        inter.open(player);
+        inter.setOpened(player);
     }
 
     /**
@@ -110,24 +108,6 @@ public final class AbstractInterfaceSet {
     }
 
     /**
-     * Determines if {@code inter} is open.
-     *
-     * @param inter The interface.
-     * @return {@code true} if the interface is open.
-     */
-    public boolean isOpen(AbstractInterface inter) {
-        switch (inter.getType()) {
-            case STANDARD:
-                return matches(currentStandard, inter);
-            case WALKABLE:
-                return matches(currentWalkable, inter);
-            case INPUT:
-                return matches(currentInput, inter);
-        }
-        return false;
-    }
-
-    /**
      * Determines if an interface needs to close on movement or action initialization.
      *
      * @param optional The interface optional.
@@ -170,7 +150,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentStandard(StandardInterface inter) {
-        currentStandard.ifPresent(curr -> curr.onClose(player));
+        currentStandard.ifPresent(curr -> curr.setClosed(player));
         currentStandard = Optional.ofNullable(inter);
     }
 
@@ -194,7 +174,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentInput(InputInterface inter) {
-        currentInput.ifPresent(curr -> curr.onClose(player));
+        currentInput.ifPresent(curr -> curr.setClosed(player));
         currentInput = Optional.ofNullable(inter);
     }
 
@@ -211,7 +191,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentWalkable(WalkableInterface inter) {
-        currentWalkable.ifPresent(curr -> curr.onClose(player));
+        currentWalkable.ifPresent(curr -> curr.setClosed(player));
         currentWalkable = Optional.ofNullable(inter);
     }
 
