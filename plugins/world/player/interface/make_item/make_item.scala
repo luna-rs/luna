@@ -6,14 +6,14 @@ import io.luna.game.model.mob.inter.AmountInputInterface
 import scala.collection.mutable
 
 
-/* A model that runs the action based on the item's index and amount */
+/* A model that runs the action based on the item's index and amount. */
 private class MakeItemAction(val amount: Int, var index: Int) {
   def run(plr: Player, inter: MakeItemDialogueInterface) = {
     if (amount == -1) {
       // Make <x> option.
       plr.interfaces.open(new AmountInputInterface() {
-        override def onNumberInput(player: Player, number: Int) {
-          inter.makeItemIndex(plr, index, number)
+        override def onAmountInput(player: Player, value: Int) {
+          inter.makeItemIndex(plr, index, value)
           plr.interfaces.close()
         }
       })
@@ -82,18 +82,14 @@ private def isDuplicate(id: Int) = id match {
 
 /* Get MakeItemAction from button id, if available. */
 on[ButtonClickEvent] { msg =>
-  try {
-    val interfaces = msg.plr.interfaces
-    val buttonAction = BUTTON_MAP.get(msg.id)
+  val interfaces = msg.plr.interfaces
+  val buttonAction = BUTTON_MAP.get(msg.id)
 
-    buttonAction.foreach { action =>
-      interfaces.getCurrentStandard.ifPresent({
-        case inter: MakeItemDialogueInterface => makeItem(msg, inter, action)
-        case _ => interfaces.close()
-      })
-      msg.terminate
-    }
-  } catch {
-    case e: Exception => e.printStackTrace()
+  buttonAction.foreach { action =>
+    interfaces.getCurrentStandard.ifPresent({
+      case inter: MakeItemDialogueInterface => makeItem(msg, inter, action)
+      case _ => interfaces.close()
+    })
+    msg.terminate
   }
 }
