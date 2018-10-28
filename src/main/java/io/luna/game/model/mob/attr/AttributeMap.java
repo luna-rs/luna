@@ -43,27 +43,45 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
     @SuppressWarnings("unchecked")
     public <T> AttributeValue<T> get(String key) throws AttributeTypeException {
 
-
         //noinspection StringEquality
         if (lastKey == requireNonNull(key)) { // Check if we can use our cached value.
             return lastValue;
         }
 
         // Try and retrieve the key. If it's null, try again and forcibly intern the argument.
-        AttributeKey<?> alias = Optional.ofNullable(AttributeKey.ALIASES.get(key)).
-            orElse(AttributeKey.ALIASES.get(key.intern()));
+        AttributeKey<?> alias = getAttributeKey(key);
         checkState(alias != null, "attributes need to be aliased in the AttributeKey class");
 
         try {
             // Cache key and new attribute value, return cached value.
             lastKey = alias.getName();
             lastValue = attributes
-                .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
+                    .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
             return lastValue;
         } catch (ClassCastException e) {
             // Throw an exception on type mismatch.
             throw new AttributeTypeException(alias);
         }
+    }
+
+    /**
+     * Determines if {@code key} is a valid attribute in the backing map.
+     *
+     * @param key The key to check.
+     * @return {@code true} if the backing map contains the key.
+     */
+    public boolean contains(String key) {
+        return getAttributeKey(key) != null;
+    }
+
+    /**
+     * Retrieves the {@link AttributeKey} instance from a String {@code key}.
+     * @param key The key.
+     * @return The attribute key instance.
+     */
+    private AttributeKey<?> getAttributeKey(String key) {
+        return Optional.ofNullable(AttributeKey.ALIASES.get(key)).
+                orElse(AttributeKey.ALIASES.get(key.intern()));
     }
 
     @Override
