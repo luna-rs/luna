@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -237,14 +238,18 @@ public final class PluginBootstrap {
         int totalCount = plugins.size();
 
         // Determine selected plugins and launch the GUI.
-        Set<String> selectedPlugins;
+        final Set<String> selectedPlugins = new HashSet<>();
         if (displayGui) {
             PluginGui gui = new PluginGui(plugins);
-            selectedPlugins = gui.launch();
+            selectedPlugins.addAll(gui.launch());
         } else {
-            List<String> selectedSettings = new Toml().read(new File("./data/gui/settings.toml")).
-                    getTable("settings").getList("selected");
-            selectedPlugins = new HashSet<>(selectedSettings);
+            Toml guiSettings = new Toml().
+                    read(new File("./data/gui/settings.toml")).
+                    getTable("settings");
+            boolean retainSelection = guiSettings.getBoolean("retain_selection");
+            Collection<String> selected = retainSelection ?
+                    guiSettings.getList("selected") : plugins.keySet();
+            selectedPlugins.addAll(selected);
         }
         plugins.keySet().retainAll(selectedPlugins);
 
@@ -254,10 +259,10 @@ public final class PluginBootstrap {
         engine.put("$logger$", LOGGER);
         engine.put("$scriptListeners$", scriptListeners);
 
-        // Run the Plugin API first.
+        // Load the Plugin API into memory.
         loadPlugin(api, scriptListeners);
 
-        // Then run other plugins.
+        // Then load other plugins.
         for (Plugin other : plugins.values()) {
             loadPlugin(other, scriptListeners);
         }

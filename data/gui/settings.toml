@@ -1,4 +1,5 @@
 [settings]
 dark_mode = false
 save_on_exit = true
-selected = ["Private chat", "Spawn NPCs", "Developer commands", "Punishment commands", "Check mute status", "Herblore", "Water filling", "Fishing", "Click option", "Consume food", "Make item", "Starter package", "Commands", "Fun items", "Consume food/drinks", "Fun rings", "Consume potions", "Banking", "Logout button", "Destroy item", "Interface state settings", "Open bank", "Login/logout", "Runecrafting", "Advance level", "Toggle run", "Restore prayer", "Walk/Run button", "Change withdraw mode", "Announcements", "Prayer"]
+retain_selection = false
+selected = ["Private chat", "Fishing", "Developer commands", "Punishment commands", "Spawn NPCs", "Check mute status", "Herblore", "Set skill command", "Water filling", "Search item command", "Generic developer commands", "Click option", "Consume food", "Make item", "Starter package", "Commands", "Fun items", "Consume food/drinks", "Position command", "Fun rings", "Consume potions", "Banking", "Logout button", "Destroy item", "Interface state settings", "Open bank", "Login/logout", "Runecrafting", "Advance level", "Toggle run", "Restore prayer", "Walk/Run button", "Change withdraw mode", "Announcements", "Prayer"]

@@ -42,6 +42,11 @@ final class PluginGuiSettings {
     private boolean saveOnExit;
 
     /**
+     * If the GUI should retain plugin selections even when inactive.
+     */
+    private boolean retainSelection;
+
+    /**
      * A list of selected plugins.
      */
     private final Set<String> selected = Sets.newConcurrentHashSet();
@@ -64,6 +69,7 @@ final class PluginGuiSettings {
         Map<String, Object> settings = new LinkedHashMap<>();
         settings.put("dark_mode", darkMode);
         settings.put("save_on_exit", saveOnExit);
+        settings.put("retain_selection", retainSelection);
         settings.put("selected", selected.toArray());
         return new TomlWriter().write(new Settings(settings));
     }
@@ -130,6 +136,9 @@ final class PluginGuiSettings {
         // Apply save on exit setting.
         controller.getSaveOnExit().setSelected(saveOnExit);
 
+        // Apply retain selection setting.
+        controller.getRetainSelection().setSelected(retainSelection);
+
         // Apply selected plugins.
         controller.getChangeListener().setFiringEvents(false);
         if (selected.size() > 0) {
@@ -157,6 +166,7 @@ final class PluginGuiSettings {
     void set(JsonObject settings) {
         darkMode = settings.get("dark_mode").getAsBoolean();
         saveOnExit = settings.get("save_on_exit").getAsBoolean();
+        retainSelection = settings.get("retain_selection").getAsBoolean();
         settings.getAsJsonArray("selected").
                 forEach(e -> selected.add(e.getAsString()));
     }
@@ -194,6 +204,22 @@ final class PluginGuiSettings {
     }
 
     /**
+     * Sets if the GUI should retain plugin selections even when inactive.
+     *
+     * @param retainSelection The new value.
+     */
+    void setRetainSelection(boolean retainSelection) {
+        this.retainSelection = retainSelection;
+    }
+
+    /**
+     * @return If the GUI should retain plugin selections even when inactive.
+     */
+    boolean isRetainSelection() {
+        return retainSelection;
+    }
+
+    /**
      * @return A list of selected plugins.
      */
     Set<String> getSelected() {
@@ -205,7 +231,6 @@ final class PluginGuiSettings {
      */
     private final class Settings {
         private final Map<String, Object> settings;
-
         private Settings(Map<String, Object> settings) {
             this.settings = settings;
         }

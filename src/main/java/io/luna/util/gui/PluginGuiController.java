@@ -67,6 +67,12 @@ final class PluginGuiController {
     private CheckMenuItem saveOnExit;
 
     /**
+     * The retain selection menu item.
+     */
+    @FXML
+    private CheckMenuItem retainSelection;
+
+    /**
      * Creates a new {@link PluginGuiController}.
      *
      * @param gui The plugin GUI.
@@ -139,6 +145,13 @@ final class PluginGuiController {
      */
     CheckMenuItem getSaveOnExit() {
         return saveOnExit;
+    }
+
+    /**
+     * @return The retain selection menu item.
+     */
+    CheckMenuItem getRetainSelection() {
+        return retainSelection;
     }
 
     /**
@@ -278,11 +291,36 @@ final class PluginGuiController {
 
     /**
      * Called when the "Save on exit" menu item is clicked.
+     *
+     * @param evt The action event.
      */
     @FXML
     private void onSaveOnExit(ActionEvent evt) {
         CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
         gui.getSettings().setSaveOnExit(menuItem.isSelected());
+    }
+
+    /**
+     * Called when the "Retain selection..." button is clicked.
+     *
+     * @param evt The action event.
+     */
+    @FXML
+    private void onRetainSelection(ActionEvent evt) {
+        PluginGuiSettings settings = gui.getSettings();
+        CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
+
+        if (menuItem.isSelected()) {
+            String text = "Are you sure you would like to retain your plugin selection, even if the GUI is inactive?";
+            ButtonType buttonClicked = gui.openConfirmAlert(text,
+                    ButtonType.YES, ButtonType.NO).orElse(ButtonType.NO);
+            if (buttonClicked == ButtonType.YES) {
+                settings.setRetainSelection(true);
+                return;
+            }
+        }
+        menuItem.setSelected(false);
+        settings.setRetainSelection(false);
     }
 
     /**
