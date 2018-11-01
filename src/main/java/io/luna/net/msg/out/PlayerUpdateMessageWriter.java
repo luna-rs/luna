@@ -29,7 +29,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
-        ByteMessage blockMsg = ByteMessage.message();
+        ByteMessage blockMsg = ByteMessage.raw();
 
         try {
             msg.startBitAccess();

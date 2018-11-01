@@ -1,7 +1,6 @@
 package io.luna.net.codec;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
 
@@ -15,9 +14,9 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
-     * A buffer pool.
+     * The default initial buffer size.
      */
-    public static final ByteBufAllocator ALLOC = PooledByteBufAllocator.DEFAULT;
+    private static final int DEFAULT_SIZE = 128;
 
     /**
      * An array of bit masks.
@@ -27,10 +26,20 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Creates a {@link ByteMessage} used to read and encode raw messages.
      *
+     * @param size The initial size.
      * @return A new buffer.
      */
-    public static ByteMessage message() {
-        return new ByteMessage(ALLOC.buffer(128), -1, MessageType.RAW);
+    public static ByteMessage raw(int size) {
+        return new ByteMessage(pooledBuffer(size), -1, MessageType.RAW);
+    }
+
+    /**
+     * Creates a {@link ByteMessage} used to read and encode raw messages.
+     *
+     * @return A new buffer.
+     */
+    public static ByteMessage raw() {
+        return raw(128);
     }
 
     /**
@@ -41,7 +50,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return A new buffer.
      */
     public static ByteMessage message(int opcode, MessageType type) {
-        return new ByteMessage(ALLOC.buffer(128), opcode, type);
+        return new ByteMessage(pooledBuffer(), opcode, type);
     }
 
     /**
@@ -62,6 +71,25 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public static ByteMessage wrap(ByteBuf buf) {
         return new ByteMessage(buf, -1, MessageType.RAW);
+    }
+
+    /**
+     * Creates a raw backing pooled {@link ByteBuf}.
+     *
+     * @param size The initial size.
+     * @return A new buffer.
+     */
+    public static ByteBuf pooledBuffer(int size) {
+        return PooledByteBufAllocator.DEFAULT.buffer(size);
+    }
+
+    /**
+     * Creates a raw backing pooled {@link ByteBuf}.
+     *
+     * @return A new buffer.
+     */
+    public static ByteBuf pooledBuffer() {
+        return pooledBuffer(DEFAULT_SIZE);
     }
 
     /**

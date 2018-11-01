@@ -129,11 +129,14 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             checkState(opcode == 14, "opcode != 14");
 
-            ByteBuf buf = ctx.alloc().buffer(17);
-            buf.writeLong(0);
-            buf.writeByte(0);
-            buf.writeLong(RANDOM.nextLong());
-            ctx.writeAndFlush(buf);
+            ByteBuf msg = ByteMessage.pooledBuffer(17);
+            try {
+                msg.writeLong(0);
+                msg.writeByte(0);
+                msg.writeLong(RANDOM.nextLong());
+            } finally {
+                ctx.writeAndFlush(msg);
+            }
 
             checkpoint(DecodeState.LOGIN_TYPE);
         }
@@ -186,7 +189,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             byte[] rsaBytes = new byte[rsaBlockSize];
             in.readBytes(rsaBytes);
 
-            ByteBuf rsaBuffer = ctx.alloc().buffer();
+            ByteBuf rsaBuffer = ByteMessage.pooledBuffer();
             try {
                 rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXP, RSA_MOD).toByteArray());
 

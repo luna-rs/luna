@@ -29,7 +29,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        ByteMessage buf = ByteMessage.message();
+        ByteMessage buf = ByteMessage.raw();
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
             buf.put(player.getPrayerIcon().getId()); // Prayer icon.

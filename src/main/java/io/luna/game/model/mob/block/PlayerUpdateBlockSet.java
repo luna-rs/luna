@@ -47,7 +47,7 @@ public class PlayerUpdateBlockSet extends UpdateBlockSet<Player> {
         }
 
         // Otherwise, encode and cache a new set of update blocks.
-        ByteMessage blockMsg = ByteMessage.message();
+        ByteMessage blockMsg = ByteMessage.raw();
         try {
             encodeBlockSet(player, blockMsg, state);
             msg.putBytes(blockMsg);

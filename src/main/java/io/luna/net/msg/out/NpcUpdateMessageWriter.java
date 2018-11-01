@@ -28,7 +28,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(65, MessageType.VAR_SHORT);
-        ByteMessage blockMsg = ByteMessage.message();
+        ByteMessage blockMsg = ByteMessage.raw();
 
         try {
             msg.startBitAccess();

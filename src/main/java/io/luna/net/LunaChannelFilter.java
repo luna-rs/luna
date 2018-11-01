@@ -4,6 +4,7 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
 import io.netty.buffer.ByteBuf;
@@ -93,14 +94,18 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
 
         // Retrieve the response message.
         LoginResponse response = channel.attr(KEY).get();
-        LoginResponseMessage message = new LoginResponseMessage(response);
+        LoginResponseMessage msg = new LoginResponseMessage(response);
 
         // Write initial message.
-        ByteBuf initialMessage = ctx.alloc().buffer(8).writeLong(0);
-        channel.write(initialMessage, channel.voidPromise());
+        ByteBuf initialMsg = ByteMessage.pooledBuffer(8);
+        try {
+            initialMsg.writeLong(0);
+        } finally {
+            channel.write(initialMsg, channel.voidPromise());
+        }
 
         // Write response message.
-        return channel.writeAndFlush(message);
+        return channel.writeAndFlush(msg);
     }
 
     /**
