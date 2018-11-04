@@ -37,9 +37,16 @@ public final class StringUtils {
      * @return The article.
      */
     public static String computeArticle(Object thing) {
-        char first = thing.toString().toLowerCase().charAt(0);
-        boolean vowel = "aeiouAEIOU".indexOf(first) != -1;
-        return vowel ? "an" : "a";
+        switch (Character.toLowerCase(thing.toString().charAt(0))) {
+            case 'a':
+            case 'e':
+            case 'i':
+            case 'o':
+            case 'u':
+                return "an";
+        }
+
+        return "a";
     }
 
     /**

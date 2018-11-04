@@ -103,11 +103,13 @@ public final class AsyncExecutor implements Executor {
     public void await(boolean terminate) throws ExecutionException {
         checkState(isRunning(), "Backing thread pool has already been terminated.");
 
-        for (; ; ) {
+        for (;;) {
             Future<?> pending = pendingTasks.poll();
+
             if (pending == null) {
                 break;
             }
+
             Uninterruptibles.getUninterruptibly(pending);
         }
 
