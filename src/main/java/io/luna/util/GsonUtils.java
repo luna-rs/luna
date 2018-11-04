@@ -48,5 +48,6 @@ public final class GsonUtils {
     /**
      * A private constructor to discourage external instantiation.
      */
-    private GsonUtils() {}
+    private GsonUtils() {
+    }
 }

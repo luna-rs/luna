@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 
 /**
  * A static-utility class that contains functions for the Optional API. These functions are meant to be
@@ -25,10 +25,9 @@ public final class OptionalUtils {
      * @param <T> The optional type.
      * @return The {@link OptionalInt}.
      */
-    public static <T> OptionalInt mapToInt(Optional<T> optional, Function<T, Integer> mapper) {
-        return optional.map(mapper).
-                map(OptionalInt::of).
-                orElseGet(OptionalInt::empty);
+    public static <T> OptionalInt mapToInt(Optional<T> optional, ToIntFunction<T> mapper) {
+        return optional.map(value -> OptionalInt.of(mapper.applyAsInt(value)))
+                       .orElseGet(OptionalInt::empty);
     }
 
     /**

@@ -84,15 +84,15 @@ public final class Rational extends Number {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
         if (numerator == 0) {
-            sb.append("0");
-        } else if (denominator == 1) {
-            sb.append(numerator);
-        } else {
-            sb.append(numerator).append("/").append(denominator);
+            return "0";
         }
-        return sb.toString();
+
+        if (denominator == 1) {
+            return Integer.toString(numerator);
+        }
+
+        return numerator + "/" + denominator;
     }
 
     @Override
@@ -105,10 +105,12 @@ public final class Rational extends Number {
         if (this == obj) {
             return true;
         }
+
         if (obj instanceof Rational) {
             Rational other = (Rational) obj;
             return numerator == other.numerator && denominator == other.denominator;
         }
+
         return false;
     }
 

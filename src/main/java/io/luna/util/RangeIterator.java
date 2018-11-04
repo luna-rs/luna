@@ -11,7 +11,7 @@ import java.util.Iterator;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class RangeIterator<C extends Comparable> implements Iterator<C> {
+public final class RangeIterator<C extends Comparable<? super C>> implements Iterator<C> {
 
     /**
      * The delegate iterator.
