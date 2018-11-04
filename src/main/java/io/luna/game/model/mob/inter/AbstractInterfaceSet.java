@@ -162,6 +162,26 @@ public final class AbstractInterfaceSet {
     }
 
     /**
+     * Casts the current standard interface to {@code type}.
+     *
+     * @param type The type to cast to.
+     * @param <I> The type.
+     * @return The casted interface.
+     */
+    public <I extends StandardInterface> Optional<I> standardTo(Class<I> type) {
+        if (!currentStandard.isPresent()) {
+            return Optional.empty();
+        }
+
+        StandardInterface inter = currentStandard.get();
+        if (type.isInstance(inter)) {
+            return Optional.of(type.cast(inter));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Resets the current input interface.
      */
     public void resetCurrentInput() {
@@ -186,6 +206,26 @@ public final class AbstractInterfaceSet {
     }
 
     /**
+     * Casts the current input interface to {@code type}.
+     *
+     * @param type The type to cast to.
+     * @param <I> The type.
+     * @return The casted interface.
+     */
+    public <I extends InputInterface> Optional<I> inputTo(Class<I> type) {
+        if (!currentInput.isPresent()) {
+            return Optional.empty();
+        }
+
+        InputInterface inter = currentInput.get();
+        if (type.isInstance(inter)) {
+            return Optional.of(type.cast(inter));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Sets the current walkable interface.
      *
      * @param inter The new interface.
@@ -200,5 +240,25 @@ public final class AbstractInterfaceSet {
      */
     public Optional<WalkableInterface> getCurrentWalkable() {
         return currentWalkable;
+    }
+
+    /**
+     * Casts the current walkable interface to {@code type}.
+     *
+     * @param type The type to cast to.
+     * @param <I> The type.
+     * @return The casted interface.
+     */
+    public <I extends WalkableInterface> Optional<I> walkableTo(Class<I> type) {
+        if (!currentWalkable.isPresent()) {
+            return Optional.empty();
+        }
+
+        WalkableInterface inter = currentWalkable.get();
+        if (type.isInstance(inter)) {
+            return Optional.of(type.cast(inter));
+        } else {
+            return Optional.empty();
+        }
     }
 }

@@ -4,6 +4,7 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
+import io.luna.game.task.TaskState;
 
 /**
  * An abstraction model representing a mob-specific task. Actions have their own set of unique traits that make
@@ -34,8 +35,9 @@ public abstract class Action<T extends Mob> {
         }
 
         @Override
-        protected void onSchedule() {
+        protected boolean onSchedule() {
             onInit();
+            return true;
         }
 
         @Override
@@ -139,10 +141,10 @@ public abstract class Action<T extends Mob> {
     protected abstract boolean isEqual(Action<?> other);
 
     /**
-     * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
+     * @return {@code true} if this Action hasn't been interrupted, {@code false} otherwise.
      */
     public final boolean isRunning() {
-        return runner.isRunning();
+        return runner.getState() != TaskState.CANCELLED;
     }
 
     /**
