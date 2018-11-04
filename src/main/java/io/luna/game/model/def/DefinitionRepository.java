@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -141,10 +142,25 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      * @return The definition instance.
      * @throws NoSuchElementException If there is no definition for {@code id}.
      */
-    public T retrieve(int id) throws NoSuchElementException {
+    public final T retrieve(int id) throws NoSuchElementException {
         return get(id).orElseThrow(() -> new NoSuchElementException("No definition mapped for " + id));
     }
 
+    /**
+     * Finds the first definition that matches {@code predicate}.
+     * @param predicate The predicate.
+     * @return The matching definition.
+     */
+    public Optional<T> lookup(Predicate<T> predicate) {
+        Iterator<T> it = newIterator();
+        while(it.hasNext()) {
+            T next = it.next();
+            if(predicate.test(next)) {
+                return Optional.of(next);
+            }
+        }
+        return Optional.empty();
+    }
 
     /**
      * Attempts to store {@code definition} in this repository.
@@ -184,7 +200,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      *
      * @return The new stream.
      */
-    public Stream<T> stream() {
+    public final Stream<T> stream() {
         return StreamSupport.stream(spliterator(), false);
     }
 
