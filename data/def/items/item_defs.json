@@ -15721,7 +15721,7 @@
     "unnoted_id": -1,
     "stack?": true,
     "members_only?": false,
-    "trade?": true,
+    "trade?": false,
     "inventory_actions": [],
     "ground_actions": []
   },
