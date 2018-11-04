@@ -3,6 +3,7 @@ package io.luna.game.model.item;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
+import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
@@ -326,7 +327,7 @@ public final class Equipment extends ItemContainer {
         EquipmentListener equipmentListener = new EquipmentListener(player);
         this.equipmentListener = equipmentListener;
 
-        setListeners(new RefreshListener(player, ERROR_MSG),
+        setListeners(new PlayerRefreshListener(player, ERROR_MSG),
                 equipmentListener,
                 new WeightListener(player));
     }

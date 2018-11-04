@@ -2,6 +2,7 @@ package io.luna.game.model.item;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
@@ -359,7 +360,7 @@ public class ItemContainer implements Iterable<Item> {
 
                     // Calculate next free index if needed.
                     boolean isItemPresent = computeIdForIndex(removeIndex).orElse(-1) == item.getId();
-                    removeIndex = isItemPresent ? removeIndex : computeIndexForId(removeIndex).orElse(-1);
+                    removeIndex = isItemPresent ? removeIndex : computeIndexForId(item.getId()).orElse(-1);
 
                     // Can't remove anymore.
                     if (removeIndex == -1) {
@@ -572,30 +573,53 @@ public class ItemContainer implements Iterable<Item> {
      * @param items The items.
      * @return {@code true} if there's enough space for {@code items}.
      */
-    public final boolean hasSpaceFor(Item... items) {
+    public final boolean hasSpaceForAll(Item... items) {
         int count = 0;
         for (Item item : items) {
-            if (isStackable(item)) {
-                // See if there's an index for the item.
-                int index = computeIndexForId(item.getId()).orElse(-1);
-                if (index == -1) {
-                    // There isn't, we require a space.
-                    count++;
-                } else if (get(index).getAmount() + item.getAmount() < 0) {
-                    // There is, and trying to add onto it will result in an overflow.
-                    return false;
-                }
-            } else {
-                // Non-stackable items are equal to the amount.
-                count += item.getAmount();
-            }
+            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
 
-            // Can't fit, no point in checking other items.
             if (count > computeRemainingSize()) {
+                // Can't fit, no point in checking other items.
                 return false;
             }
         }
         return true;
+    }
+
+
+    public final boolean hasSpaceFor(Item item) {
+        int spaceRequired = computeSpaceFor(item);
+        if(spaceRequired > computeRemainingSize()) {
+            return false;
+        }
+        return true;
+    }
+    public final int computeAllSpaceFor(Item... items) {
+        int count = 0;
+        for (Item item : items) {
+            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
+        }
+        return count;
+    }
+
+    public final int computeSpaceFor(Item item) {
+        if (isStackable(item)) {
+            // See if there's an index for the item.
+            int index = computeIndexForId(item.getId()).orElse(-1);
+            if (index == -1) {
+                // There isn't, we require a space.
+                return 1;
+            } else if (get(index).getAmount() + item.getAmount() < 0) {
+                // There is, and trying to add onto it will result in an overflow.
+                return Integer.MAX_VALUE;
+            } else {
+                // There is, no space needed.
+                return 0;
+            }
+        }
+
+        // Non-stackable items are equal to the amount.
+        return item.getAmount();
     }
 
     /**
@@ -657,7 +681,6 @@ public class ItemContainer implements Iterable<Item> {
         }
         return false;
     }
-
 
     /**
      * Determines if {@code item} is present.

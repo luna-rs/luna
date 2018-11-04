@@ -1,5 +1,6 @@
 package io.luna.game.model.item;
 
+import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -17,7 +18,7 @@ public final class Inventory extends ItemContainer {
     public Inventory(Player player) {
         super(28, StackPolicy.STANDARD, 3214);
 
-        setListeners(new RefreshListener(player, "You do not have enough space in your inventory."),
+        setListeners(new PlayerRefreshListener(player, "You do not have enough space in your inventory."),
                 new WeightListener(player));
     }
 }

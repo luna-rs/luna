@@ -39,7 +39,7 @@ public final class Item {
      */
     public Item(int id, int amount) {
         checkArgument(VALID_IDS.contains(id), "id ["+id+"] out of range");
-        checkArgument(amount > 0, "amount <= 0");
+        checkArgument(amount >= 0, "amount <= 0");
 
         this.id = id;
         this.amount = amount;

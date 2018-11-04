@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 
@@ -56,7 +57,7 @@ public final class Bank extends ItemContainer {
         this.player = player;
         inventory = player.getInventory();
 
-        setListeners(new RefreshListener(player, "You do not have enough bank space to deposit that."));
+        setListeners(new PlayerRefreshListener(player, "You do not have enough bank space to deposit that."));
     }
 
     /**

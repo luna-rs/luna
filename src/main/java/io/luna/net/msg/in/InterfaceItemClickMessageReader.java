@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.item.Item;
+import io.luna.game.model.item.shop.ShopInterface;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.inter.AmountInputInterface;
@@ -75,10 +76,12 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                 }
                 break;
             case 3900:
-                //Shop will sell for <x>
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().sendBuyValue(player, index));
                 break;
             case 3823:
-                //Shop will buy for <x>
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().sendSellValue(player, index));
                 break;
             case 3322:
                 // Offer 1 item on trade screen
@@ -118,10 +121,12 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                 }
                 break;
             case 3900:
-                // Buy 1 of <item> from shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().buy(player, index, 1));
                 break;
             case 3823:
-                // Sell 1 of <item> to shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().sell(player, index, 1));
                 break;
             case 3322:
                 // Add 5 of <item> on trade screen
@@ -161,10 +166,12 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                 }
                 break;
             case 3900:
-                // Buy 5 of <item> from shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().buy(player, index, 5));
                 break;
             case 3823:
-                // Sell 5 of <item> to shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().sell(player, index, 5));
                 break;
             case 3322:
                 // Add 10 of <item> on trade screen
@@ -204,10 +211,12 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                 }
                 break;
             case 3900:
-                // Buy 10 of <item> from shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().buy(player, index, 10));
                 break;
             case 3823:
-                // Sell 10 of <item> to shop
+                player.getInterfaces().standardTo(ShopInterface.class).
+                        ifPresent(inter -> inter.getShop().sell(player, index, 10));
                 break;
             case 3322:
                 // Add all of <item> on trade screen

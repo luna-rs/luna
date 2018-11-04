@@ -44,7 +44,7 @@ public abstract class ProducingAction extends StationaryAction<Player> {
             return;
         }
 
-        if (!inventory.hasSpaceFor(currentAdd)) {
+        if (!inventory.hasSpaceForAll(currentAdd)) {
             mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();
             return;
