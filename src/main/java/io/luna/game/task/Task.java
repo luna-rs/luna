@@ -21,7 +21,7 @@ public abstract class Task {
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * If execution happens instantly upon being scheduled.
+     * If execution happens instantly.
      */
     private final boolean instant;
 
@@ -31,29 +31,28 @@ public abstract class Task {
     private int delay;
 
     /**
-     * If this task is running.
+     * The state.
      */
-    private boolean running = true;
+    private TaskState state = TaskState.IDLE;
 
     /**
-     * An execution counter.
+     * The execution counter. This task is ran when it reaches the delay.
      */
-    private int counter;
+    private int executionCounter;
 
     /**
-     * An optional attachment.
+     * The attachment.
      */
     private Optional<Object> key = Optional.empty();
 
     /**
      * Creates a new {@link Task}.
      *
-     * @param instant If execution happens instantly upon being scheduled.
+     * @param instant If execution happens instantly.
      * @param delay The cyclic delay.
      */
     public Task(boolean instant, int delay) {
         checkArgument(delay > 0);
-
         this.instant = instant;
         this.delay = delay;
     }
@@ -73,20 +72,20 @@ public abstract class Task {
     protected abstract void execute();
 
     /**
-     * Determines if execution should take place.
+     * Increments the timer and determines if this task is ready to be ran.
      *
-     * @return {@code true} if this task executes on this tick.
+     * @return {@code true} if this task is ready to be ran.
      */
-    final boolean canExecute() {
-        if (++counter >= delay && running) {
-            counter = 0;
+    final boolean isReady() {
+        if (++executionCounter >= delay && state == TaskState.RUNNING) {
+            executionCounter = 0;
             return true;
         }
         return false;
     }
 
     /**
-     * Runs this task once. This should only be called by the {@link TaskManager}.
+     * Runs this task once. Forwards any errors to {@link #onException(Exception)}.
      */
     final void runTask() {
         try {
@@ -97,31 +96,27 @@ public abstract class Task {
     }
 
     /**
-     * Cancels all subsequent executions. Does nothing if already cancelled.
+     * Cancels all subsequent executions, and fires {@link #onCancel()}. Does nothing if already
+     * cancelled.
      */
     public final void cancel() {
-        if (running) {
+        if (state != TaskState.CANCELLED) {
             onCancel();
-            running = false;
+            state = TaskState.CANCELLED;
         }
     }
 
     /**
-     * A function executed when this task is iterated over.
+     * A function executed when this task is scheduled.
+     *
+     * @return {@code true} if this task should still be scheduled.
      */
-    protected void onLoop() {
-
+    protected boolean onSchedule() {
+        return true;
     }
 
     /**
-     * A function executed on registration.
-     */
-    protected void onSchedule() {
-
-    }
-
-    /**
-     * A function executed on cancellation.
+     * A function executed when this task is cancelled.
      */
     protected void onCancel() {
 
@@ -149,7 +144,7 @@ public abstract class Task {
     }
 
     /**
-     * @return {@code true} if execution happens instantly upon being scheduled.
+     * @return {@code true} if execution happens instantly.
      */
     public boolean isInstant() {
         return instant;
@@ -172,10 +167,19 @@ public abstract class Task {
     }
 
     /**
-     * @return {@code true} if this task is running.
+     * @return The state.
      */
-    public boolean isRunning() {
-        return running;
+    public TaskState getState() {
+        return state;
+    }
+
+    /**
+     * Sets the state.
+     *
+     * @param state The new value to set.
+     */
+    void setState(TaskState state) {
+        this.state = state;
     }
 
     /**
