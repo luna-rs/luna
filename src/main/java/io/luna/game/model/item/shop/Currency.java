@@ -7,10 +7,10 @@ package io.luna.game.model.item.shop;
  * @author lare96 <http://github.com/lare96>
  */
 public enum Currency {
-    COINS(995, "coin", "coins"),
-    TOKKUL(6529, "tokkul"),
-    CASTLE_WARS_TICKET(4067, "castle wars ticket", "castle wars tickets"),
-    AGILITY_ARENA_TICKET(2996, "agility arena ticket", "agility arena tickets");
+    COINS(995),
+    TOKKUL(6529),
+    CASTLE_WARS_TICKETS(4067),
+    AGILITY_ARENA_TICKETS(2996);
 
     /**
      * The item identifier.
@@ -31,30 +31,11 @@ public enum Currency {
      * Creates a new {@link Currency}.
      *
      * @param id The item identifier.
-     * @param singularName The singular name.
-     * @param pluralName The plural name.
      */
-    Currency(int id, String singularName, String pluralName) {
+    Currency(int id) {
         this.id = id;
-        this.singularName = singularName;
-        this.pluralName = pluralName;
-    }
-
-    /**
-     * Creates a new {@link Currency} with no plural name.
-     *
-     * @param id The item identifier.
-     * @param singularName The singular name.
-     */
-    Currency(int id, String singularName) {
-        this(id, singularName, singularName);
-    }
-
-    /**
-     * @return The item identifier.
-     */
-    public int getId() {
-        return id;
+        pluralName = name().toLowerCase().replaceAll("_", " ");
+        singularName = computeSingularName();
     }
 
     /**
@@ -65,6 +46,26 @@ public enum Currency {
      */
     public String computeName(int value) {
         return value > 1 ? pluralName : singularName;
+    }
+
+    /**
+     * Computes the singular name from the plural name.
+     *
+     * @return The computed singular name.
+     */
+    String computeSingularName() {
+        int lastIndex = pluralName.length() - 1;
+        if (pluralName.charAt(lastIndex) == 's') {
+            return pluralName.substring(0, lastIndex);
+        }
+        return pluralName;
+    }
+
+    /**
+     * @return The item identifier.
+     */
+    public int getId() {
+        return id;
     }
 
     /**
