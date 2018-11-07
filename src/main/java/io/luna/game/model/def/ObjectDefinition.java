@@ -1,5 +1,6 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
@@ -45,9 +46,9 @@ public final class ObjectDefinition implements Definition {
     private final int width;
 
     /**
-     * A list of actions.
+     * A set of actions.
      */
-    private final ContextMenu actions;
+    private final ImmutableList<String> actions;
 
     /**
      * If the object is impenetrable.
@@ -94,7 +95,7 @@ public final class ObjectDefinition implements Definition {
         this.isInteractive = isInteractive;
         this.isObstructive = isObstructive;
         this.isSolid = isSolid;
-        this.actions = new ContextMenu(actions);
+        this.actions = ImmutableList.copyOf(actions);
     }
 
     @Override
@@ -168,9 +169,9 @@ public final class ObjectDefinition implements Definition {
     }
 
     /**
-     * @return A list of actions.
+     * @return A set of actions.
      */
-    public ContextMenu getActions() {
+    public ImmutableList<String> getActions() {
         return actions;
     }
 }

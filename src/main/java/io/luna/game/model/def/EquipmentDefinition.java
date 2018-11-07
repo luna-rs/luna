@@ -225,7 +225,7 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * @return A set of the requirements.
+     * @return A list of the requirements.
      */
     public ImmutableList<Requirement> getRequirements() {
         return requirements;

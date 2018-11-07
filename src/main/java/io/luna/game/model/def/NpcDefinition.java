@@ -1,5 +1,6 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
@@ -60,9 +61,9 @@ public final class NpcDefinition implements Definition {
     private final int walkRightAnimation;
 
     /**
-     * A list of actions.
+     * A set of actions.
      */
-    private final ContextMenu actions;
+    private final ImmutableList<String> actions;
 
     /**
      * Creates a new {@link NpcDefinition}.
@@ -87,7 +88,7 @@ public final class NpcDefinition implements Definition {
         this.walkBackAnimation = walkBackAnimation;
         this.walkLeftAnimation = walkLeftAnimation;
         this.walkRightAnimation = walkRightAnimation;
-        this.actions = new ContextMenu(actions);
+        this.actions = ImmutableList.copyOf(actions);
     }
 
     /**
@@ -147,9 +148,9 @@ public final class NpcDefinition implements Definition {
     }
 
     /**
-     * @return A list of actions.
+     * @return A set of actions.
      */
-    public ContextMenu getActions() {
+    public ImmutableList<String> getActions() {
         return actions;
     }
 }
