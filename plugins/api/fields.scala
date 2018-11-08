@@ -6,7 +6,7 @@
 import io.luna.LunaContext
 import io.luna.game.event.EventListener
 import io.luna.game.model.EntityType
-import io.luna.game.model.mob.{PlayerRights, Skill}
+import io.luna.game.model.mob.{PlayerInteraction, PlayerRights, Skill}
 import io.luna.util.Rational
 import org.apache.logging.log4j.Logger
 
@@ -28,6 +28,13 @@ val RIGHTS_PLAYER = PlayerRights.PLAYER
 val RIGHTS_MOD = PlayerRights.MODERATOR
 val RIGHTS_ADMIN = PlayerRights.ADMINISTRATOR
 val RIGHTS_DEV = PlayerRights.DEVELOPER
+
+
+/* Aliases for 'PlayerInteraction'. */
+val INTERACTION_TRADE = PlayerInteraction.TRADE
+val INTERACTION_CHALLENGE = PlayerInteraction.CHALLENGE
+val INTERACTION_ATTACK = PlayerInteraction.ATTACK
+val INTERACTION_FOLLOW = PlayerInteraction.FOLLOW
 
 
 /* Aliases for 'EntityType'. */

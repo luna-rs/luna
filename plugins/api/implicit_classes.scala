@@ -21,6 +21,8 @@ import scala.util.Random
 
 implicit class RichPlayer(plr: Player) {
 
+  def interactions = plr.getInteractionMenu
+
   def address = plr.getClient.getIpAddress
 
   def name = plr.getUsername

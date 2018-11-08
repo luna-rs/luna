@@ -155,7 +155,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
         Iterator<T> it = newIterator();
         while(it.hasNext()) {
             T next = it.next();
-            if(predicate.test(next)) {
+            if(next != null && predicate.test(next)) {
                 return Optional.of(next);
             }
         }
