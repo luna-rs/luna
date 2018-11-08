@@ -512,7 +512,7 @@ public final class Player extends Mob {
      * @param runEnergy The value to change by.
      */
     public void changeRunEnergy(double runEnergy) {
-        if(runEnergy <= 0.0) {
+        if (runEnergy <= 0.0) {
             return;
         }
 
@@ -955,6 +955,6 @@ public final class Player extends Mob {
      * @return The interaction menu.
      */
     public PlayerInteractionMenu getInteractionMenu() {
-        return interactionMenu ;
+        return interactionMenu;
     }
 }

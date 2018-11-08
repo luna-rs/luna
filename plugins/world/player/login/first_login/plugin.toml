@@ -1,0 +1,8 @@
+[metadata]
+name = "First login"
+description = "Opens the Player design screen and gives starter items on the first login."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

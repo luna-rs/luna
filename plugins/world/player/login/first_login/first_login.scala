@@ -1,9 +1,10 @@
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface
 
 
 /* Added to inventory. */
-private val STARTER_INVENTORY = List(
+private val STARTER_INVENTORY = Vector(
   new Item(995, 10000), // Coins
   new Item(556, 250), // Air runes
   new Item(555, 250), // Water runes
@@ -14,7 +15,7 @@ private val STARTER_INVENTORY = List(
 )
 
 /* Added to equipment. */
-private val STARTER_EQUIPMENT = List(
+private val STARTER_EQUIPMENT = Vector(
   new Item(1153), // Iron full helm
   new Item(1115), // Iron platebody
   new Item(1067), // Iron platelegs
@@ -29,7 +30,7 @@ private val STARTER_EQUIPMENT = List(
 )
 
 
-/* Give 'starter package' if the player is new. */
+/* Give 'starter package' and open character design if the player is new. */
 on[LoginEvent] { msg =>
   val plr = msg.plr
   if (plr.attr("first_login")) {
@@ -37,6 +38,7 @@ on[LoginEvent] { msg =>
 
     plr.inventory.addAll(STARTER_INVENTORY)
     plr.equipment.addAll(STARTER_EQUIPMENT)
+    plr.interfaces.open(new DesignPlayerInterface)
 
     plr.attr("first_login", false)
   }

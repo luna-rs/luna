@@ -418,7 +418,8 @@
   },
   {
     "opcode": 101,
-    "size": 13
+    "size": 13,
+    "payload": "DesignPlayerMessageReader"
   },
   {
     "opcode": 102,
