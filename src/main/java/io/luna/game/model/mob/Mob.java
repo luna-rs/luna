@@ -11,7 +11,6 @@ import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -128,21 +127,10 @@ public abstract class Mob extends Entity {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof Mob) {
-            Mob other = (Mob) obj;
-            return index == other.index && type == other.type;
-        }
-        return false;
-    }
+    public abstract boolean equals(Object obj);
 
     @Override
-    public int hashCode() {
-        return Objects.hash(index, type);
-    }
+    public abstract int hashCode();
 
     /**
      * Resets additional data for the next tick.
@@ -240,7 +228,7 @@ public abstract class Mob extends Entity {
      * @param newAnimation The animation to perform.
      */
     public final void animation(Animation newAnimation) {
-        if(!animation.isPresent() ||
+        if (!animation.isPresent() ||
                 animation.filter(newAnimation::overrides).isPresent()) {
             animation = Optional.of(newAnimation);
             updateFlags.flag(UpdateFlag.ANIMATION);
