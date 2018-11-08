@@ -341,7 +341,7 @@ public class ItemContainer implements Iterable<Item> {
         if (isStackable(item)) {
             // Remove stackable item.
             Item current = get(removeIndex);
-            if (item.encompasses(current)) {
+            if (item.contains(current)) {
                 // Remove item.
                 set(removeIndex, null);
             } else {
@@ -358,6 +358,7 @@ public class ItemContainer implements Iterable<Item> {
             try {
                 for (int removed = 0; removed < until; removed++) {
 
+                    // TODO compute next index from index...
                     // Calculate next free index if needed.
                     boolean isItemPresent = computeIdForIndex(removeIndex).orElse(-1) == item.getId();
                     removeIndex = isItemPresent ? removeIndex : computeIndexForId(item.getId()).orElse(-1);
@@ -459,6 +460,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The index of {@code id}, wrapped in an optional.
      */
     public final OptionalInt computeIndexForId(int id) {
+        int count = 0;
         for (int index = 0; index < capacity; index++) {
             if (matches(computeIdForIndex(index), id)) {
                 return OptionalInt.of(index);
@@ -586,14 +588,22 @@ public class ItemContainer implements Iterable<Item> {
         return true;
     }
 
-
+    /**
+     * Determines if there is enough space for {@code item} to be added.
+     *
+     * @param item The items.
+     * @return {@code true} if there's enough space for {@code item}.
+     */
     public final boolean hasSpaceFor(Item item) {
-        int spaceRequired = computeSpaceFor(item);
-        if(spaceRequired > computeRemainingSize()) {
-            return false;
-        }
-        return true;
+        return computeSpaceFor(item) <= computeRemainingSize();
     }
+
+    /**
+     * Computes the amount of space required to hold {@code items}.
+     *
+     * @param items The items.
+     * @return The amount of space required.
+     */
     public final int computeAllSpaceFor(Item... items) {
         int count = 0;
         for (Item item : items) {
@@ -602,6 +612,12 @@ public class ItemContainer implements Iterable<Item> {
         return count;
     }
 
+    /**
+     * Computes the amount of space required to hold {@code item}.
+     *
+     * @param item The item.
+     * @return The amount of space required.
+     */
     public final int computeSpaceFor(Item item) {
         if (isStackable(item)) {
             // See if there's an index for the item.
@@ -689,7 +705,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code item} is present in this container.
      */
     public final boolean contains(Item item) {
-        return stream().anyMatch(it -> it.encompasses(item));
+        return stream().anyMatch(it -> it.contains(item));
     }
 
     /**
@@ -1156,5 +1172,12 @@ public class ItemContainer implements Iterable<Item> {
         if (firingEvents) {
             listeners.forEach(listener -> listener.onBulkUpdateCompleted(this));
         }
+    }
+
+    /**
+     * @return {@code true} if this container has been initialized.
+     */
+    public boolean isInitialized() {
+        return initialized;
     }
 }

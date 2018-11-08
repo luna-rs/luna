@@ -253,6 +253,11 @@ public final class Player extends Mob {
     private final Set<Long> ignores = new LinkedHashSet<>();
 
     /**
+     * The interaction menu.
+     */
+    private final PlayerInteractionMenu interactionMenu = new PlayerInteractionMenu(this);
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context instance.
@@ -298,6 +303,9 @@ public final class Player extends Mob {
     protected void onActive() {
         updateFlags.flag(UpdateFlag.APPEARANCE);
         tabs.resetAll();
+
+        interactionMenu.show(PlayerInteraction.FOLLOW);
+        interactionMenu.show(PlayerInteraction.TRADE);
 
         // Temporary, until "init" for containers is moved here. That will happen
         // when login synchronization is being fixed.
@@ -504,7 +512,7 @@ public final class Player extends Mob {
      * @param runEnergy The value to change by.
      */
     public void changeRunEnergy(double runEnergy) {
-        if(runEnergy <= 0.0) {
+        if (runEnergy <= 0.0) {
             return;
         }
 
@@ -941,5 +949,12 @@ public final class Player extends Mob {
      */
     public Set<Long> getIgnores() {
         return ignores;
+    }
+
+    /**
+     * @return The interaction menu.
+     */
+    public PlayerInteractionMenu getInteractionMenu() {
+        return interactionMenu;
     }
 }

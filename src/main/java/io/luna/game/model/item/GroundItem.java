@@ -38,7 +38,7 @@ public class GroundItem extends Entity {
      */
     public GroundItem(LunaContext context, int id, int amount, Position position) {
         super(context, EntityType.ITEM);
-        checkArgument(Item.VALID_IDS.contains(id), "Invalid item identifier.");
+        checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
 
         // Non-stackable ground items are placed one by one.

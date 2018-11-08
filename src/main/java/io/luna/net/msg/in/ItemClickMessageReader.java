@@ -6,8 +6,8 @@ import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemFourthClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemSecondClickEvent;
 import io.luna.game.event.impl.ItemClickEvent.ItemThirdClickEvent;
+import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
@@ -52,7 +52,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
      * @return {@code true} if the item clicked is valid.
      */
     private boolean validate(Player player, int id, int index, int interfaceId) {
-        checkState(Item.VALID_IDS.contains(id), "itemId out of range");
+        checkState(ItemDefinition.isIdValid(id), "itemId out of range");
         checkState(index >= 0, "index out of range");
         checkState(interfaceId > 0, "interfaceId out of range");
 

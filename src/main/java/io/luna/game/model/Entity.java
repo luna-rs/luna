@@ -8,6 +8,7 @@ import io.luna.game.model.region.RegionCoordinates;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A model representing anything that can be interacted with.
@@ -134,19 +135,21 @@ public abstract class Entity {
      * @param newState The new state.
      */
     public final void setState(EntityState newState) {
-        checkArgument(newState != EntityState.NEW, "cannot set to NEW");
-        checkArgument(newState != state, "state already equal to " + newState);
+        checkArgument(newState != EntityState.NEW, "Cannot set state to NEW.");
+        checkArgument(newState != state, "State already equal to " + newState + ".");
+        checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");
 
         state = newState;
         switch (state) {
             case ACTIVE:
+                checkState(position != null, "ACTIVE entity must have position set.");
+
+                setCurrentRegion();
                 onActive();
                 break;
             case INACTIVE:
                 onInactive();
-                if (currentRegion != null) {
-                    currentRegion.remove(this);
-                }
+                removeCurrentRegion();
                 break;
         }
     }
@@ -157,23 +160,43 @@ public abstract class Entity {
      * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
+        checkState(state != EntityState.INACTIVE, "Cannot set position for INACTIVE entity.");
         if (!newPosition.equals(position)) {
-            RegionCoordinates next = newPosition.getRegionCoordinates();
-            if (position != null) {
-                if (currentRegion.getCoordinates().equals(next)) {
-                    plugins.post(new PositionChangeEvent(this, position, newPosition));
-                    position = newPosition;
-                    return;
-                }
-                currentRegion.remove(this);
+            Position old = position;
+            position = newPosition;
+            plugins.post(new PositionChangeEvent(this, old, newPosition));
+
+            if (state == EntityState.ACTIVE) {
+                setCurrentRegion();
             }
+        }
+    }
+
+    /**
+     * Sets the current region depending on the current position.
+     */
+    private void setCurrentRegion() {
+        RegionCoordinates next = position.getRegionCoordinates();
+        if (currentRegion == null) {
+            // We have no current region.
             currentRegion = world.getRegions().getRegion(next);
             currentRegion.add(this);
+        } else if (!currentRegion.getCoordinates().equals(next)) {
+            // We have a region, and it's not equal to the new one.
+            currentRegion.remove(this);
 
-            plugins.post(new PositionChangeEvent(this, position, newPosition));
-            position = newPosition;
+            currentRegion = world.getRegions().getRegion(next);
+            currentRegion.add(this);
         }
+    }
 
+    /**
+     * Removes this Entity from its current region.
+     */
+    private void removeCurrentRegion() {
+        if (currentRegion != null) {
+            currentRegion.remove(this);
+        }
     }
 
     /**

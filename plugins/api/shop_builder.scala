@@ -7,15 +7,18 @@
   `and buy policy` BUY_EXISTING
   `and restock policy` RESTOCK_DEFAULT
   `using currency` CURRENCY_COINS
-  selling "Dragon scimitar" x 50
-  selling "Dragon mace" x 50
-  selling "Drgaon dagger" x 50
-  selling "Dragon longsword" x 50
-  `selling noted` "Lobster" x 1000
-  `selling noted` "Swordfish" x 500) register
+  `opened by npc` 520
+  sell "Dragon scimitar" x 50
+  sell "Dragon mace" x 50
+  sell "Drgaon dagger" x 50
+  sell "Dragon longsword" x 50
+  `sell noted` "Lobster" x 1000
+  `sell noted` "Swordfish" x 500) register
 */
-import java.util.Objects
 
+import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
+import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
+import io.luna.game.model.EntityType
 import io.luna.game.model.`def`.ItemDefinition
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.shop._
@@ -68,6 +71,7 @@ final class ShopBuilder2(name: String) {
   private var buyPolicy = BUY_EXISTING
   private var restockPolicy = RESTOCK_DEFAULT
   private var currency = CURRENCY_COINS
+  private var openBy: Option[(EntityType, Int)] = None
   var items = new mutable.HashMap[Int, IndexedItem]()
   var index = 0
 
@@ -87,25 +91,54 @@ final class ShopBuilder2(name: String) {
     this
   }
 
-  def `selling noted`(value: String) = lookup(itemDef => itemDef.isTradeable &&
-    itemDef.getName == value && itemDef.isNoted, value, this)
+  def `opened by npc`(id: Int) = {
+    openBy = Some((TYPE_NPC, id))
+    this
+  }
 
-  def selling(value: String) = lookup(itemDef => itemDef.isTradeable &&
-    itemDef.getName == value && !itemDef.isNoted, value, this)
+  def `opened by object`(id: Int) = {
+    openBy = Some((TYPE_OBJECT, id))
+    this
+  }
 
-  def selling(value: Int) = new ShopBuilder3(value, this)
+  def `sell noted`(name: String) = lookup(itemDef => itemDef.isTradeable &&
+    itemDef.getName == name && itemDef.isNoted, name, this)
 
+  def sell(name: String) = lookup(itemDef => itemDef.isTradeable &&
+    itemDef.getName == name && !itemDef.isNoted, name, this)
+
+  def sell(id: Int) = new ShopBuilder3(id, this)
+
+  /* Register shop in 'World'. */
   def register = {
+
+    // Validate builder values.
     require(buyPolicy != null, "buyPolicy == null")
     require(restockPolicy != null, "restockPolicy == null")
     require(currency != null, "currency == null")
-    require(items.nonEmpty && index > 0, "items.isEmpty || index <= 0")
+    require(openBy != null, "openBy == null")
 
+    // Initialize shop for builder.
     val shop = new Shop(world, name, restockPolicy, buyPolicy, currency)
     shop.init(items.values.toArray)
 
-    ShopInterface.register(shop)
-    0
+    // Add NPC or Object first click listeners.
+    openBy.foreach { case (etype, id) =>
+      etype match {
+        case TYPE_NPC =>
+          onargs[NpcFirstClickEvent](id) {
+            _.plr.interfaces.open(new ShopInterface(shop))
+          }
+        case TYPE_OBJECT =>
+          onargs[ObjectFirstClickEvent](id) {
+            _.plr.interfaces.open(new ShopInterface(shop))
+          }
+      }
+    }
+
+    // Register shop and add placeholder return type for DSL syntax.
+    world.getShops.register(shop)
+    None
   }
 }
 
@@ -114,7 +147,7 @@ final class ShopBuilder3(id: Int, builder: ShopBuilder2) {
   def x(amount: Int) = {
     val option = builder.items.put(id, new IndexedItem(builder.index, id, amount))
     if (option.isDefined) {
-      throw new IllegalStateException(s"Shop already contains item <$id>")
+      throw new IllegalStateException(s"Shop already contains item '$id'")
     }
     builder.index += 1
     builder

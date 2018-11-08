@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -108,6 +109,11 @@ public final class World {
     private final TaskManager tasks = new TaskManager();
 
     /**
+     * The shop manager.
+     */
+    private final ShopManager shops = new ShopManager();
+
+    /**
      * A synchronization barrier.
      */
     private final Phaser barrier = new Phaser(1);
@@ -162,7 +168,11 @@ public final class World {
             if (player == null) {
                 break;
             }
-            playerList.add(player);
+            try {
+                playerList.add(player);
+            } catch (Exception e) {
+                LOGGER.catching(e);
+            }
         }
     }
 
@@ -325,5 +335,12 @@ public final class World {
      */
     public MobList<Npc> getNpcs() {
         return npcList;
+    }
+
+    /**
+     * @return The shop manager.
+     */
+    public ShopManager getShops() {
+        return shops;
     }
 }

@@ -9,6 +9,7 @@ import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -59,6 +60,23 @@ public final class Npc extends Mob {
 
         // Set position.
         setPosition(position);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof Npc) {
+            Npc other = (Npc) obj;
+            return getIndex() == other.getIndex();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getIndex());
     }
 
     @Override
@@ -128,6 +146,13 @@ public final class Npc extends Mob {
     }
 
     /**
+     * @return The base identifier.
+     */
+    public int getBaseId() {
+        return id;
+    }
+
+    /**
      * @return The identifier.
      */
     public int getId() {
@@ -147,5 +172,4 @@ public final class Npc extends Mob {
     public Optional<NpcCombatDefinition> getCombatDefinition() {
         return combatDefinition;
     }
-
 }

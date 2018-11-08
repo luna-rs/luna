@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 import com.google.common.primitives.Ints;
+import io.luna.game.model.mob.inter.StandardInterface;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,6 +21,19 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96 <http://github.com/lare96>
  */
 public final class PlayerAppearance {
+
+    /**
+     * A {@link StandardInterface} implementation representing the Player appearance design interface.
+     */
+    public static final class DesignPlayerInterface extends StandardInterface {
+
+        /**
+         * Creates a new {@link DesignPlayerInterface}.
+         */
+        public DesignPlayerInterface() {
+            super(3559);
+        }
+    }
 
     /**
      * The male identifier.
@@ -37,24 +51,24 @@ public final class PlayerAppearance {
     public static final int GENDER = 0;
 
     /**
+     * The head index.
+     */
+    public static final int HEAD = 1;
+
+    /**
+     * The beard index.
+     */
+    public static final int BEARD = 2;
+
+    /**
      * The chest index.
      */
-    public static final int CHEST = 1;
+    public static final int CHEST = 3;
 
     /**
      * The arms index.
      */
-    public static final int ARMS = 2;
-
-    /**
-     * The legs index.
-     */
-    public static final int LEGS = 3;
-
-    /**
-     * The head index.
-     */
-    public static final int HEAD = 4;
+    public static final int ARMS = 4;
 
     /**
      * The hands index.
@@ -62,14 +76,14 @@ public final class PlayerAppearance {
     public static final int HANDS = 5;
 
     /**
-     * The feet index.
+     * The legs index.
      */
-    public static final int FEET = 6;
+    public static final int LEGS = 6;
 
     /**
-     * The beard index.
+     * The feet index.
      */
-    public static final int BEARD = 7;
+    public static final int FEET = 7;
 
     /**
      * The hair color index.
@@ -100,7 +114,7 @@ public final class PlayerAppearance {
      * The default appearance set.
      */
     public static final ImmutableList<Integer> DEFAULT_APPEARANCE = ImmutableList
-            .of(0, 18, 26, 36, 0, 33, 42, 10, 0, 0, 0, 0, 0);
+            .of(0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0);
 
     /**
      * The valid gender values.
@@ -124,7 +138,7 @@ public final class PlayerAppearance {
         models.put(GENDER_FEMALE, HEAD, Range.closed(45, 54));
 
         models.put(GENDER_MALE, BEARD, Range.closed(10, 17));
-        models.put(GENDER_FEMALE, BEARD, Range.closed(-1, -1));
+        models.put(GENDER_FEMALE, BEARD, Range.singleton(-1));
 
         models.put(GENDER_MALE, CHEST, Range.closed(18, 25));
         models.put(GENDER_FEMALE, CHEST, Range.closed(56, 60));
@@ -206,7 +220,7 @@ public final class PlayerAppearance {
         } else if (index >= 8 && index <= 12) {
             return isColorValid(index, value);
         }
-        throw new IllegalArgumentException("invalid id value, must be >= 0 || <= 12");
+        throw new IllegalArgumentException("Invalid id value, must be >= 0 || <= 12.");
     }
 
     /**
@@ -216,7 +230,7 @@ public final class PlayerAppearance {
      * @return {@code true} if the set is valid.
      */
     public static boolean isAllValid(int[] appearance) {
-        checkArgument(appearance.length == 13, "invalid appearance set length");
+        checkArgument(appearance.length == 13, "Invalid appearance set length.");
 
         for (int index = 0; index < appearance.length; index++) {
             if (!isAnyValid(index, appearance[GENDER], appearance[index])) {
@@ -259,7 +273,7 @@ public final class PlayerAppearance {
      * @param value The value to set.
      */
     public void set(int index, int value) {
-        checkArgument(isAnyValid(index, get(GENDER), value), "invalid id and value pair");
+        checkArgument(isAnyValid(index, get(GENDER), value), "Invalid id and value pair.");
         appearance[index] = value;
     }
 
@@ -283,7 +297,7 @@ public final class PlayerAppearance {
      * @param newValues The new values to set.
      */
     public void setValues(int[] newValues) {
-        checkArgument(isAllValid(newValues), "invalid appearance array");
+        checkArgument(isAllValid(newValues), "Invalid appearance array.");
         System.arraycopy(newValues, 0, appearance, 0, 13);
     }
 
