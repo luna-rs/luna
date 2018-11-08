@@ -13,6 +13,16 @@ import java.util.OptionalInt;
 public final class ItemDefinition implements Definition {
 
     /**
+     * Determines if {@code id} is valid.
+     *
+     * @param id The identifier.
+     * @return {@code true} if the identifier is valid.
+     */
+    public static boolean isIdValid(int id) {
+        return id > 0 && id < SIZE;
+    }
+
+    /**
      * The definition count.
      */
     public static final int SIZE = 7956;

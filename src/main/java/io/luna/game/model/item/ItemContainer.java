@@ -341,7 +341,7 @@ public class ItemContainer implements Iterable<Item> {
         if (isStackable(item)) {
             // Remove stackable item.
             Item current = get(removeIndex);
-            if (item.encompasses(current)) {
+            if (item.contains(current)) {
                 // Remove item.
                 set(removeIndex, null);
             } else {
@@ -358,6 +358,7 @@ public class ItemContainer implements Iterable<Item> {
             try {
                 for (int removed = 0; removed < until; removed++) {
 
+                    // TODO compute next index from index...
                     // Calculate next free index if needed.
                     boolean isItemPresent = computeIdForIndex(removeIndex).orElse(-1) == item.getId();
                     removeIndex = isItemPresent ? removeIndex : computeIndexForId(item.getId()).orElse(-1);
@@ -689,7 +690,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code item} is present in this container.
      */
     public final boolean contains(Item item) {
-        return stream().anyMatch(it -> it.encompasses(item));
+        return stream().anyMatch(it -> it.contains(item));
     }
 
     /**

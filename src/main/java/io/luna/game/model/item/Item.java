@@ -1,7 +1,6 @@
 package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Range;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 
@@ -15,11 +14,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96 <http://github.org/lare96>
  */
 public final class Item {
-
-    /**
-     * A range of valid item identifiers.
-     */
-    public static final Range<Integer> VALID_IDS = Range.open(0, ItemDefinition.SIZE);
 
     /**
      * The identifier.
@@ -38,13 +32,19 @@ public final class Item {
      * @param amount The amount.
      */
     public Item(int id, int amount) {
-        checkArgument(VALID_IDS.contains(id), "id ["+id+"] out of range");
+        checkArgument(ItemDefinition.isIdValid(id), "id [" + id + "] out of range");
         checkArgument(amount >= 0, "amount <= 0");
 
         this.id = id;
         this.amount = amount;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Two items are only equal if the identifiers <strong>and</strong> the amounts are equal. For calculating
+     * if the amount is equal to or greater, use {@link #contains(Item)}.
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -64,7 +64,9 @@ public final class Item {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).add("amount", amount).toString();
+        return MoreObjects.toStringHelper(this).
+                add("id", id).
+                add("amount", amount).toString();
     }
 
     /**
@@ -77,13 +79,13 @@ public final class Item {
     }
 
     /**
-     * Determines if this item encompasses {@code other}. An item that encompasses another item has an equal
-     * identifier to that item but an amount that's equal to or greater than the item.
+     * Determines if this item contains {@code other}. An item that contains another item has an equal identifier
+     * to that item but an amount that's equal to or greater than the item.
      *
      * @param other The other item.
-     * @return {@code true} if this item encompasses {@code other}.
+     * @return {@code true} if this item contains {@code other}.
      */
-    public boolean encompasses(Item other) {
+    public boolean contains(Item other) {
         return id == other.id && amount >= other.amount;
     }
 

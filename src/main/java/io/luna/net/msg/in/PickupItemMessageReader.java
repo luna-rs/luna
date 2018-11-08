@@ -4,8 +4,8 @@ import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.PickupItemEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.GroundItem;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
@@ -27,7 +27,7 @@ public final class PickupItemMessageReader extends GameMessageReader {
         int id = msg.getPayload().getShort(false);
         int x = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
-        checkState(Item.VALID_IDS.contains(id), "invalid item id");
+        checkState(ItemDefinition.isIdValid(id), "invalid item id");
 
         Position position = new Position(x, y, player.getPosition().getZ());
         Event event = new PickupItemEvent(player, x, y, id);

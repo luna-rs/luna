@@ -4,9 +4,9 @@ import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ItemOnObjectEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteOrder;
@@ -64,7 +64,7 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         checkState(objectY > 0, "objectY out of range");
         checkState(itemIndex >= 0, "itemIndex out of range");
         checkState(objectX > 0, "objectX out of range");
-        checkState(Item.VALID_IDS.contains(itemId), "itemId out of range");
+        checkState(ItemDefinition.isIdValid(itemId), "itemId out of range");
 
         // TODO make sure object exists
         switch (itemInterfaceId) {

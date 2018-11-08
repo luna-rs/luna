@@ -2,8 +2,8 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ItemOnItemEvent;
+import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -54,9 +54,9 @@ public final class ItemOnItemMessageReader extends GameMessageReader {
 
         checkState(targetIndex >= 0, "targetIndex is out of range");
         checkState(usedIndex >= 0, "usedIndex is out of range");
-        checkState(Item.VALID_IDS.contains(targetId), "targetId is out of range");
+        checkState(ItemDefinition.isIdValid(targetId), "targetId is out of range");
         checkState(targetInterfaceId > 0, "targetInterfaceId is invalid interface identifier");
-        checkState(Item.VALID_IDS.contains(usedId), "usedId is out of range");
+        checkState(ItemDefinition.isIdValid(usedId), "usedId is out of range");
         checkState(usedInterfaceId > 0, "usedInterfaceId is invalid identifier");
 
         switch (usedInterfaceId) {
