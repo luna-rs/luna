@@ -1157,4 +1157,11 @@ public class ItemContainer implements Iterable<Item> {
             listeners.forEach(listener -> listener.onBulkUpdateCompleted(this));
         }
     }
+
+    /**
+     * @return {@code true} if this container has been initialized.
+     */
+    public boolean isInitialized() {
+        return initialized;
+    }
 }
