@@ -15,6 +15,10 @@ Currently, the Runescape private server scene is plagued with somewhat of a dile
 The goal of Luna (and its predecessor, Asteria) is to rectify this by being fast and scalable, while still being <b>relatively</b> lightweight and easy to understand.
 
 
+# Getting started
+An official client can be found [here](https://gitlab.com/lare96/luna-client), along with the cache. To learn more about how to get started with Luna please visit the [wiki](https://github.com/luna-rs/luna/wiki).
+
+
 # Acknowledgements
 Much of the inspiration for various features within Luna came from
 - the [Apollo project](https://github.com/apollo-rsps/apollo)
