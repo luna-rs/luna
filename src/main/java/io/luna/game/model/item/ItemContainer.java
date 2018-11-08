@@ -460,6 +460,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The index of {@code id}, wrapped in an optional.
      */
     public final OptionalInt computeIndexForId(int id) {
+        int count = 0;
         for (int index = 0; index < capacity; index++) {
             if (matches(computeIdForIndex(index), id)) {
                 return OptionalInt.of(index);
@@ -587,14 +588,22 @@ public class ItemContainer implements Iterable<Item> {
         return true;
     }
 
-
+    /**
+     * Determines if there is enough space for {@code item} to be added.
+     *
+     * @param item The items.
+     * @return {@code true} if there's enough space for {@code item}.
+     */
     public final boolean hasSpaceFor(Item item) {
-        int spaceRequired = computeSpaceFor(item);
-        if(spaceRequired > computeRemainingSize()) {
-            return false;
-        }
-        return true;
+        return computeSpaceFor(item) <= computeRemainingSize();
     }
+
+    /**
+     * Computes the amount of space required to hold {@code items}.
+     *
+     * @param items The items.
+     * @return The amount of space required.
+     */
     public final int computeAllSpaceFor(Item... items) {
         int count = 0;
         for (Item item : items) {
@@ -603,6 +612,12 @@ public class ItemContainer implements Iterable<Item> {
         return count;
     }
 
+    /**
+     * Computes the amount of space required to hold {@code item}.
+     *
+     * @param item The item.
+     * @return The amount of space required.
+     */
     public final int computeSpaceFor(Item item) {
         if (isStackable(item)) {
             // See if there's an index for the item.
