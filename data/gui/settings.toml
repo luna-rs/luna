@@ -2,4 +2,5 @@
 dark_mode = false
 save_on_exit = true
 retain_selection = false
-selected = ["Private chat", "Fishing", "Developer commands", "Punishment commands", "Spawn NPCs", "Check mute status", "Herblore", "Set skill command", "Water filling", "Search item command", "Generic developer commands", "Click option", "Consume food", "Make item", "Starter package", "Commands", "Fun items", "Consume food/drinks", "Position command", "Fun rings", "Consume potions", "Banking", "Logout button", "Destroy item", "Interface state settings", "Open bank", "Login/logout", "Runecrafting", "Advance level", "Toggle run", "Restore prayer", "Walk/Run button", "Change withdraw mode", "Announcements", "Prayer"]
+flatten_packages = true
+selected = ["Private chat", "Developer commands", "Punishment commands", "Spawn NPCs", "Check mute status", "First login", "Herblore", "Set skill command", "Water filling", "Fishing", "Search item command", "Generic developer commands", "Click option", "Consume food", "Make item", "Starter package", "Commands", "Fun items", "Consume food/drinks", "Position command", "Fun rings", "Consume potions", "Banking", "Logout button", "Destroy item", "Interface state settings", "Open bank", "Login/logout", "Runecrafting", "Advance level", "Toggle run", "Restore prayer", "General store", "Walk/Run button", "Change withdraw mode", "Announcements", "Prayer"]

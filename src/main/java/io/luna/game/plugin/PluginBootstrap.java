@@ -36,7 +36,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-
 /**
  * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
  *
@@ -122,7 +121,24 @@ public final class PluginBootstrap {
                 LOGGER.catching(Level.WARN, e);
                 return;
             }
-            plugins.put(pluginName, new Plugin(metadata, scripts));
+            plugins.put(pluginName, new Plugin(metadata, computePackageName(), scripts));
+        }
+
+        /**
+         * Computes the fully qualified package name.
+         *
+         * @return The package name.
+         */
+        private String computePackageName() {
+            String packageDir = dir.toString().
+                    replace(File.separator, ".").
+                    substring(2);
+            int firstIndex = packageDir.indexOf('.');
+            int lastIndex = packageDir.lastIndexOf('.');
+            if (firstIndex == lastIndex) {
+                return "";
+            }
+            return packageDir.substring(firstIndex + 1, lastIndex);
         }
 
         /**
@@ -186,7 +202,7 @@ public final class PluginBootstrap {
      * @param displayGui If the plugin GUI should be started.
      * @return Returns a numerator and denominator indicating how many plugins out of the total
      * amount were loaded.
-     * @throws IOException        If an I/O error occurs.
+     * @throws IOException If an I/O error occurs.
      */
     public P2<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager pluginManager = context.getPlugins();

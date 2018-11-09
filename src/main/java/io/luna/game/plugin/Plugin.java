@@ -25,6 +25,11 @@ public final class Plugin {
     private final PluginMetadata metadata;
 
     /**
+     * The fully qualified package name.
+     */
+    private final String packageName;
+
+    /**
      * A set of scripts.
      */
     private final ImmutableSet<Script> scripts;
@@ -33,10 +38,12 @@ public final class Plugin {
      * Creates a new {@link Plugin}.
      *
      * @param metadata The metadata describing this plugin.
+     * @param packageName The fully qualified package name.
      * @param scripts A set of scripts.
      */
-    public Plugin(PluginMetadata metadata, Set<Script> scripts) {
+    public Plugin(PluginMetadata metadata, String packageName, Set<Script> scripts) {
         this.metadata = metadata;
+        this.packageName = packageName;
         this.scripts = ImmutableSet.copyOf(scripts);
     }
 
@@ -45,6 +52,13 @@ public final class Plugin {
      */
     public PluginMetadata getMetadata() {
         return metadata;
+    }
+
+    /**
+     * @return The fully qualified package name.
+     */
+    public String getPackageName() {
+        return packageName;
     }
 
     /**
