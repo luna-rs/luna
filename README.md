@@ -1,4 +1,4 @@
-# Luna | [![Build Status](https://travis-ci.org/luna-rs/luna.svg?branch=master)](https://travis-ci.org/luna-rs/luna) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
+# Luna | [![Build Status](https://travis-ci.org/luna-rs/luna.svg?branch=master)](https://travis-ci.org/luna-rs/luna) [![Discord chat](https://img.shields.io/discord/510259198605525007.svg)](https://discord.gg/BGmfegr) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
 Luna is a Runescape emulator that aims to correct all of the fundamental issues accumulated over the various releases of it's predecessor [Asteria](https://github.com/lare96/asteria-3.0).
 
 Some of the sweetness within Luna
@@ -17,6 +17,8 @@ The goal of Luna (and its predecessor, Asteria) is to rectify this by being fast
 
 # Getting started
 An official client can be found [here](https://gitlab.com/lare96/luna-client), along with the cache. To learn more about how to get started with Luna please visit the [wiki](https://github.com/luna-rs/luna/wiki).
+
+For more help, inquiries, or just to dicuss the state of the project please join our [Discord server](https://discord.gg/BGmfegr).
 
 
 # Acknowledgements
