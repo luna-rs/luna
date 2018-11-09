@@ -175,7 +175,7 @@ public final class PluginGui {
      * @throws IOException If an error occurs while loading the GUI icon.
      */
     private void loadMainFrame() throws IOException {
-        BufferedImage iconImage = ImageIO.read(Resources.getResource("plugin_icon.png"));
+        BufferedImage iconImage = ImageIO.read(Resources.getResource("plugin_title_icon.png"));
         mainFrame.setSize(505, 380);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setResizable(false);

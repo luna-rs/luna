@@ -47,6 +47,11 @@ final class PluginGuiSettings {
     private boolean retainSelection;
 
     /**
+     * If the GUI should show plugins in package view.
+     */
+    private boolean flattenPackages;
+
+    /**
      * A list of selected plugins.
      */
     private final Set<String> selected = Sets.newConcurrentHashSet();
@@ -70,6 +75,7 @@ final class PluginGuiSettings {
         settings.put("dark_mode", darkMode);
         settings.put("save_on_exit", saveOnExit);
         settings.put("retain_selection", retainSelection);
+        settings.put("flatten_packages", flattenPackages);
         settings.put("selected", selected.toArray());
         return new TomlWriter().write(new Settings(settings));
     }
@@ -139,6 +145,9 @@ final class PluginGuiSettings {
         // Apply retain selection setting.
         controller.getRetainSelection().setSelected(retainSelection);
 
+        // Apply package view setting.
+        controller.getFlattenPackages().setSelected(flattenPackages);
+
         // Apply selected plugins.
         controller.getChangeListener().setFiringEvents(false);
         if (selected.size() > 0) {
@@ -167,6 +176,7 @@ final class PluginGuiSettings {
         darkMode = settings.get("dark_mode").getAsBoolean();
         saveOnExit = settings.get("save_on_exit").getAsBoolean();
         retainSelection = settings.get("retain_selection").getAsBoolean();
+        flattenPackages = settings.get("flatten_packages").getAsBoolean();
         settings.getAsJsonArray("selected").
                 forEach(e -> selected.add(e.getAsString()));
     }
@@ -217,6 +227,22 @@ final class PluginGuiSettings {
      */
     boolean isRetainSelection() {
         return retainSelection;
+    }
+
+    /**
+     * Sets if the GUI should show plugins in package view.
+     *
+     * @param flattenPackages The new value.
+     */
+    void setFlattenPackages(boolean flattenPackages) {
+        this.flattenPackages = flattenPackages;
+    }
+
+    /**
+     * @return {@code true} if the GUI should show plugins in package view.
+     */
+    boolean isFlattenPackages() {
+        return flattenPackages;
     }
 
     /**

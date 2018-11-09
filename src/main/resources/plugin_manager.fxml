@@ -13,7 +13,6 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
 <VBox fx:id="mainPane" prefHeight="350.0" prefWidth="501.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <MenuBar VBox.vgrow="NEVER">
@@ -30,6 +29,9 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <CheckMenuItem fx:id="retainSelection" mnemonicParsing="false" onAction="#onRetainSelection" text="Retain selection..." />
                   <SeparatorMenuItem mnemonicParsing="false" />
+                        <CheckMenuItem fx:id="flattenPackages" mnemonicParsing="false" onAction="#onFlattenPackages"
+                                       text="Flatten packages"/>
+                        <SeparatorMenuItem mnemonicParsing="false"/>
                   <CheckMenuItem fx:id="saveOnExit" mnemonicParsing="false" onAction="#onSaveOnExit" text="Save on exit" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <CheckMenuItem fx:id="darkTheme" mnemonicParsing="false" onAction="#onDarkTheme" text="Dark theme" />

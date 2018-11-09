@@ -16,7 +16,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static com.google.common.base.Preconditions.checkState;
+import static io.luna.util.gui.PluginGuiImage.PACKAGE_IMG;
+import static io.luna.util.gui.PluginGuiImage.addTreeItemIcons;
 
 /**
  * A model that builds and controls Javafx components. This class is linked with the "plugin_manager.fxml"
@@ -73,6 +74,12 @@ final class PluginGuiController {
     private CheckMenuItem retainSelection;
 
     /**
+     * The flatten packages menu item.
+     */
+    @FXML
+    private CheckMenuItem flattenPackages;
+
+    /**
      * Creates a new {@link PluginGuiController}.
      *
      * @param gui The plugin GUI.
@@ -85,10 +92,9 @@ final class PluginGuiController {
      * Builds the tree within the plugin viewer. Should only be called once.
      */
     void buildPluginViewer() {
-        checkState(pluginTree.getRoot() == null, "Plugin viewer already constructed.");
 
         // Create root and event listener for root.
-        CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("All plugins");
+        CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Plugins");
         rootItem.addEventHandler(CheckBoxTreeItem.checkBoxSelectionChangedEvent(), getChangeListener());
 
         // Create cell factory for the tree.
@@ -96,9 +102,15 @@ final class PluginGuiController {
         pluginTree.setCellFactory(cellFactory);
 
         // And add plugins to the tree.
-        gui.getPluginItems().forEach((k, v) -> rootItem.getChildren().add(v));
+        PluginTreeItemView packages = new PluginTreeItemView(rootItem, gui.getPluginItems());
+        if (gui.getSettings().isFlattenPackages()) {
+            packages.buildFlat();
+        } else {
+            packages.buildNested();
+        }
 
         // Set the new root.
+        addTreeItemIcons(rootItem, PACKAGE_IMG);
         pluginTree.setRoot(rootItem);
     }
 
@@ -127,6 +139,13 @@ final class PluginGuiController {
     }
 
     /**
+     * @return The plugin GUI.
+     */
+    PluginGui getGui() {
+        return gui;
+    }
+
+    /**
      * @return The metadata text area.
      */
     TextArea getDescriptionArea() {
@@ -152,6 +171,13 @@ final class PluginGuiController {
      */
     CheckMenuItem getRetainSelection() {
         return retainSelection;
+    }
+
+    /**
+     * @return The flatten packages menu item.
+     */
+    CheckMenuItem getFlattenPackages() {
+        return flattenPackages;
     }
 
     /**
@@ -298,6 +324,19 @@ final class PluginGuiController {
     private void onSaveOnExit(ActionEvent evt) {
         CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
         gui.getSettings().setSaveOnExit(menuItem.isSelected());
+    }
+
+    /**
+     * Caleld when the "Flatten packages" menu item is clicked.
+     *
+     * @param evt The action event.
+     */
+    @FXML
+    private void onFlattenPackages(ActionEvent evt) {
+        CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
+        gui.getSettings().setFlattenPackages(menuItem.isSelected());
+
+        buildPluginViewer();
     }
 
     /**

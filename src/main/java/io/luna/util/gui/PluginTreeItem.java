@@ -5,9 +5,13 @@ import io.luna.game.plugin.PluginMetadata;
 import io.luna.game.plugin.Script;
 import javafx.scene.control.CheckBoxTreeItem;
 
+import java.text.Collator;
 import java.util.function.BiConsumer;
 
 import static io.luna.util.StringUtils.COMMA_JOINER;
+import static io.luna.util.gui.PluginGuiImage.PLUGIN_IMG;
+import static io.luna.util.gui.PluginGuiImage.SCRIPT_IMG;
+import static io.luna.util.gui.PluginGuiImage.addTreeItemIcons;
 
 /**
  * A model representing a {@link CheckBoxTreeItem} plugin within a plugin tree. This class provides additional
@@ -15,7 +19,7 @@ import static io.luna.util.StringUtils.COMMA_JOINER;
  *
  * @author lare96 <http://github.com/lare96>
  */
-final class PluginTreeItem extends CheckBoxTreeItem<String> {
+final class PluginTreeItem extends CheckBoxTreeItem<String> implements Comparable<PluginTreeItem> {
 
     /**
      * The plugin instance.
@@ -37,6 +41,12 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
         super(plugin.getMetadata().getName());
         this.plugin = plugin;
         this.controller = controller;
+        addTreeItemIcons(this, PLUGIN_IMG);
+    }
+
+    @Override
+    public int compareTo(PluginTreeItem o) {
+        return Collator.getInstance().compare(getValue(), o.getValue());
     }
 
     /**
@@ -44,7 +54,9 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> {
      */
     void addScriptChildren() {
         for (Script script : plugin.getScripts()) {
-            getChildren().add(new CheckBoxTreeItem<>(script.getName()));
+            CheckBoxTreeItem<String> child = new CheckBoxTreeItem<>(script.getName());
+            addTreeItemIcons(child, SCRIPT_IMG);
+            getChildren().add(child);
         }
     }
 
