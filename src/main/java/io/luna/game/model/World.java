@@ -56,8 +56,8 @@ public final class World {
         public void run() {
             synchronized (player) {
                 try {
+                    player.queue(new PlayerUpdateMessageWriter()); // Must be first!
                     player.queue(new NpcUpdateMessageWriter());
-                    player.queue(new PlayerUpdateMessageWriter());
                 } catch (Exception e) {
                     LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
@@ -227,8 +227,8 @@ public final class World {
         for (Player player : playerList) {
             try {
                 player.getWalkingQueue().process();
-                player.sendRegionUpdate();
                 player.getClient().handleDecodedMessages();
+                player.sendRegionUpdate(); // Must be last!
             } catch (Exception e) {
                 player.logout();
                 LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));

@@ -65,11 +65,6 @@ public abstract class Mob extends Entity {
     private Direction runningDirection = Direction.NONE;
 
     /**
-     * If a teleportation is in progress.
-     */
-    private boolean teleporting;
-
-    /**
      * The current animation.
      */
     private Optional<Animation> animation = Optional.empty();
@@ -121,9 +116,6 @@ public abstract class Mob extends Entity {
      */
     public Mob(LunaContext context, EntityType type) {
         super(context, type);
-
-        // Needed for initial placement.
-        teleporting = true;
     }
 
     @Override
@@ -216,10 +208,10 @@ public abstract class Mob extends Entity {
      */
     public final void teleport(Position position) {
         setPosition(position);
-        teleporting = true;
         walkingQueue.clear();
         actionSet.interrupt();
         resetInteractingWith();
+        onTeleport(position);
     }
 
     /**
@@ -376,7 +368,6 @@ public abstract class Mob extends Entity {
      */
     public final void resetFlags() {
         reset();
-        teleporting = false;
         animation = Optional.empty();
         forcedChat = Optional.empty();
         facePosition = Optional.empty();
@@ -394,6 +385,15 @@ public abstract class Mob extends Entity {
      */
     public Skill skill(int id) {
         return skillSet.getSkill(id);
+    }
+
+    /**
+     * A function invoked when teleporting.
+     *
+     * @param newPosition The teleport position.
+     */
+    public void onTeleport(Position newPosition) {
+
     }
 
     /**
@@ -440,13 +440,6 @@ public abstract class Mob extends Entity {
      */
     public void setRunningDirection(Direction runningDirection) {
         this.runningDirection = runningDirection;
-    }
-
-    /**
-     * @return {@code true} if a teleportation is in progress.
-     */
-    public final boolean isTeleporting() {
-        return teleporting;
     }
 
     /**
