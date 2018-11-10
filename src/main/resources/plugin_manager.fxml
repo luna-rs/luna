@@ -13,7 +13,8 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<VBox fx:id="mainPane" prefHeight="350.0" prefWidth="501.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="mainPane" prefHeight="650.0" prefWidth="1002.0" xmlns="http://javafx.com/javafx/8.0.121"
+      xmlns:fx="http://javafx.com/fxml/1">
     <children>
         <MenuBar VBox.vgrow="NEVER">
             <menus>
@@ -55,29 +56,33 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <Pane prefHeight="325.0" prefWidth="500.0">
+        <Pane prefHeight="650.0" prefWidth="952.0">
             <children>
-                <ScrollPane layoutX="14.0" layoutY="53.0" prefHeight="258.0" prefWidth="172.0">
+                <ScrollPane layoutX="28.0" layoutY="69.0" prefHeight="516.0" prefWidth="344.0">
                     <content>
-                        <TreeView fx:id="pluginTree" prefHeight="256.0" prefWidth="170.0" />
+                        <TreeView fx:id="pluginTree" prefHeight="512.0" prefWidth="340.0"/>
                     </content>
                 </ScrollPane>
-                <ScrollPane layoutX="221.0" layoutY="53.0" prefHeight="221.0" prefWidth="266.0">
+                <ScrollPane layoutX="441.0" layoutY="69.0" prefHeight="442.0" prefWidth="532.0">
                     <content>
-                        <TextArea fx:id="descriptionArea" editable="false" prefHeight="219.0" prefWidth="264.0" wrapText="true" />
+                        <TextArea fx:id="descriptionArea" editable="false" prefHeight="438.0" prefWidth="528.0"
+                                  wrapText="true"/>
                     </content>
                 </ScrollPane>
-                <Label alignment="CENTER" layoutX="54.0" layoutY="27.0" prefHeight="20.0" prefWidth="93.0" text="Plugin Viewer">
+                <Label alignment="CENTER" layoutX="101.0" layoutY="14.0" prefHeight="40.0" prefWidth="186.0"
+                       text="Plugin Viewer">
                     <font>
                         <Font size="14.0" />
                     </font>
                 </Label>
-                <Label alignment="CENTER" layoutX="302.0" layoutY="27.0" prefHeight="20.0" prefWidth="105.0" text="Plugin Metadata" textAlignment="CENTER">
+                <Label alignment="CENTER" layoutX="602.0" layoutY="14.0" prefHeight="40.0" prefWidth="210.0"
+                       text="Plugin Metadata" textAlignment="CENTER">
                     <font>
                         <Font size="14.0" />
                     </font>
                 </Label>
-            <Button layoutX="302.0" layoutY="286.0" mnemonicParsing="false" onAction="#onFinished" prefHeight="25.0" prefWidth="105.0" text="Finished" />
+                <Button layoutX="602.0" layoutY="535.0" mnemonicParsing="false" onAction="#onFinished" prefHeight="50.0"
+                        prefWidth="210.0" text="Finished"/>
             </children>
         </Pane>
     </children>

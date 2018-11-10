@@ -176,7 +176,7 @@ public final class PluginGui {
      */
     private void loadMainFrame() throws IOException {
         BufferedImage iconImage = ImageIO.read(Resources.getResource("plugin_title_icon.png"));
-        mainFrame.setSize(505, 380);
+        mainFrame.setSize(1010, 670);
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setResizable(false);
         mainFrame.setAutoRequestFocus(true);
