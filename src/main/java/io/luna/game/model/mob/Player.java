@@ -243,6 +243,11 @@ public final class Player extends Mob {
     private int privateMsgCounter = 1;
 
     /**
+     * If a teleportation is in progress.
+     */
+    private boolean teleporting;
+
+    /**
      * The friend list.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
@@ -301,6 +306,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
+        teleporting = true; // Needed for initial placement (teleportation).
         updateFlags.flag(UpdateFlag.APPEARANCE);
         tabs.resetAll();
 
@@ -337,7 +343,13 @@ public final class Player extends Mob {
     }
 
     @Override
+    public void onTeleport(Position position) {
+        teleporting = true;
+    }
+
+    @Override
     public void reset() {
+        teleporting = false;
         chat = Optional.empty();
         forcedMovement = Optional.empty();
         regionChanged = false;
@@ -949,6 +961,13 @@ public final class Player extends Mob {
      */
     public Set<Long> getIgnores() {
         return ignores;
+    }
+
+    /**
+     * @return {@code true} if a teleportation is in progress.
+     */
+    public final boolean isTeleporting() {
+        return teleporting;
     }
 
     /**
