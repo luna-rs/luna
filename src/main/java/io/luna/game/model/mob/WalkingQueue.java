@@ -134,6 +134,7 @@ public final class WalkingQueue {
      * taking steps.
      */
     public void process() {
+        // TODO clean up function
         Step current = new Step(mob.getPosition());
 
         Direction walkingDirection = Direction.NONE;
@@ -167,6 +168,9 @@ public final class WalkingQueue {
                     runningPath = false;
                 }
             }
+
+            Position newPosition = new Position(current.getX(), current.getY(), mob.getPosition().getZ());
+            mob.setPosition(newPosition);
         }
 
         if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
@@ -175,9 +179,6 @@ public final class WalkingQueue {
 
         mob.setWalkingDirection(walkingDirection);
         mob.setRunningDirection(runningDirection);
-
-        Position newPosition = new Position(current.getX(), current.getY(), mob.getPosition().getZ());
-        mob.setPosition(newPosition);
     }
 
     /**
