@@ -80,8 +80,6 @@ public final class Bank extends ItemContainer {
             } finally {
                 enableEvents();
             }
-        } else {
-            player.sendMessage("Your bank is already open.");
         }
     }
 
