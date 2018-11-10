@@ -2,7 +2,7 @@
 # invalid value for a setting will result in luna failing to start.
 
 [game]
-starting_position = { x = 3222, y = 3222 }
+starting_position = { x = 3093, y = 3244 }
 experience_multiplier = 1.0
 staggered_updating = false
 packet_126_caching = false
