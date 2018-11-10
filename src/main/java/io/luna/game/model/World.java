@@ -227,8 +227,8 @@ public final class World {
         for (Player player : playerList) {
             try {
                 player.getWalkingQueue().process();
-                player.sendRegionUpdate();
                 player.getClient().handleDecodedMessages();
+                player.sendRegionUpdate(); // Must be last!
             } catch (Exception e) {
                 player.logout();
                 LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
