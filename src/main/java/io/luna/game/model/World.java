@@ -56,8 +56,8 @@ public final class World {
         public void run() {
             synchronized (player) {
                 try {
+                    player.queue(new PlayerUpdateMessageWriter()); // Must be first!
                     player.queue(new NpcUpdateMessageWriter());
-                    player.queue(new PlayerUpdateMessageWriter());
                 } catch (Exception e) {
                     LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
