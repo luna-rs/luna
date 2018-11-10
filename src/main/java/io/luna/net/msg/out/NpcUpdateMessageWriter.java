@@ -1,6 +1,7 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.NpcUpdateBlockSet;
@@ -38,7 +39,8 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             while (iterator.hasNext()) {
                 Npc other = iterator.next();
 
-                if (other.isViewable(player)) {
+                if (other.isViewable(player) &&
+                        other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
@@ -55,7 +57,9 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }
-                if (other.isViewable(player) && player.getLocalNpcs().add(other)) {
+                if (other.isViewable(player) &&
+                        other.getState() == EntityState.ACTIVE &&
+                        player.getLocalNpcs().add(other)) {
                     addNpc(player, other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
                     npcsAdded++;
