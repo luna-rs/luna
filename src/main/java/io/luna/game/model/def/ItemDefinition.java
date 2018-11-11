@@ -43,11 +43,6 @@ public final class ItemDefinition implements Definition {
     private final String name;
 
     /**
-     * The examine text.
-     */
-    private final String examine;
-
-    /**
      * If the item is stackable.
      */
     private final boolean stackable;
@@ -97,7 +92,6 @@ public final class ItemDefinition implements Definition {
      *
      * @param id The identifier.
      * @param name The name.
-     * @param examine The examine text.
      * @param stackable If the item is stackable.
      * @param value The base value.
      * @param notedId The noted identifier.
@@ -108,12 +102,11 @@ public final class ItemDefinition implements Definition {
      * @param inventoryActions A list of inventory actions.
      * @param groundActions A list of ground actions.
      */
-    public ItemDefinition(int id, String name, String examine, boolean stackable, int value, int notedId,
+    public ItemDefinition(int id, String name, boolean stackable, int value, int notedId,
                           int unnotedId, boolean membersOnly, double weight, boolean tradeable,
                           String[] inventoryActions, String[] groundActions) {
         this.id = id;
         this.name = name;
-        this.examine = examine;
         this.stackable = stackable;
         this.value = value;
         this.notedId = notedId == -1 ? OptionalInt.empty() : OptionalInt.of(notedId);
@@ -152,13 +145,6 @@ public final class ItemDefinition implements Definition {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * @return The examine text.
-     */
-    public String getExamine() {
-        return examine;
     }
 
     /**
