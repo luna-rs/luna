@@ -44,14 +44,14 @@ private def addIgnore(plr: Player, name: Long) {
 }
 
 /* Removes a friend. */
-private def removeFriend(plr: Player,name: Long) = {
+private def removeFriend(plr: Player, name: Long) = {
   if (!plr.getFriends.remove(name)) {
     plr.sendMessage("They are not on your friends list.")
   }
 }
 
 /* Removes an ignore. */
-private def removeIgnore(plr: Player,name: Long) = {
+private def removeIgnore(plr: Player, name: Long) = {
   if (!plr.getIgnores.remove(name)) {
     plr.sendMessage("They are not on your ignore list.")
   }
@@ -60,12 +60,13 @@ private def removeIgnore(plr: Player,name: Long) = {
 /* Sends a private message. */
 private def sendMessage(plr: Player, name: Long, msg: Array[Byte]): Unit = {
   world.getPlayer(name).ifPresent {
-    _.queue(new PrivateChatMessageWriter(plr.getUsernameHash, msg)) }
+    _.queue(new PrivateChatMessageWriter(plr.getUsernameHash, msg))
+  }
 }
 
 
 /* Update your own friend list and your friends lists. */
-on[LoginEvent] { msg =>
+on[LoginEvent].run { msg =>
   val plr = msg.plr
 
   plr.queue(new FriendsListStatusMessageWriter(2))
@@ -74,10 +75,10 @@ on[LoginEvent] { msg =>
 }
 
 /* Update your friends lists. */
-on[LogoutEvent] { msg => updateOtherLists(msg.plr, online = false) }
+on[LogoutEvent].run { msg => updateOtherLists(msg.plr, online = false) }
 
 /* Record friend and ignore list changes. */
-on[PrivateChatListChangeEvent] { msg =>
+on[PrivateChatListChangeEvent].run { msg =>
   msg.`type` match {
     case ChangeType.ADD_FRIEND => addFriend(msg.plr, msg.name)
     case ChangeType.ADD_IGNORE => addIgnore(msg.plr, msg.name)
@@ -88,7 +89,7 @@ on[PrivateChatListChangeEvent] { msg =>
 }
 
 /* Send private message to a player. */
-on[PrivateChatEvent] { msg =>
+on[PrivateChatEvent].run { msg =>
   sendMessage(msg.plr, msg.name, msg.message)
   msg.terminate
 }

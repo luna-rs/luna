@@ -2,7 +2,7 @@ import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import io.luna.game.model.mob.{Animation, Mob, Player}
+import io.luna.game.model.mob.{Animation, Player}
 
 
 /* Filling animation. */
@@ -60,7 +60,7 @@ private final class FillDialogue(val toFill: Int,
 
 
 /* Intercept an item on object event, fill items if applicable. */
-on[ItemOnObjectEvent] { msg =>
+on[ItemOnObjectEvent].run { msg =>
   if (WATER_SOURCES.contains(msg.objectId)) {
 
     FILLABLES.get(msg.itemId).foreach { fillable =>

@@ -4,7 +4,6 @@ import io.luna.game.event.impl.CommandEvent
 
 import scala.reflect.io.File
 
-// TODO turn these into right click actions
 
 /* Perform a lookup for the person we're punishing. */
 private def findPunish(msg: CommandEvent) = {
@@ -31,48 +30,59 @@ private def punishDuration(msg: CommandEvent) = {
 
 
 /* Perform an IP ban on a player. */
-onargs[CommandEvent]("ip_ban", RIGHTS_ADMIN) { msg =>
-  val file = File("./data/players/blacklist.txt")
-
-  findPunish(msg).foreach { plr =>
-    async {
-      file.appendAll(System.lineSeparator, plr.address)
+on[CommandEvent].
+  args("ip_ban", RIGHTS_ADMIN).
+  run {
+    val file = File("./data/players/blacklist.txt")
+    findPunish(_).foreach { plr =>
+      async {
+        file.appendAll(System.lineSeparator, plr.address)
+      }
+      plr.logout
     }
-    plr.logout
   }
-}
 
 /* Perform a permanent ban on a player. */
-onargs[CommandEvent]("perm_ban", RIGHTS_ADMIN) { msg =>
-  findPunish(msg).foreach { plr =>
-    plr.attr("unban_date", "never")
-    plr.logout
+on[CommandEvent].
+  args("perm_ban", RIGHTS_ADMIN).
+  run {
+    findPunish(_).foreach { plr =>
+      plr.attr("unban_date", "never")
+      plr.logout
+    }
   }
-}
 
 /* Perform a permanent mute on a player. */
-onargs[CommandEvent]("perm_mute", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach { plr =>
-    plr.attr("unmute_date", "never")
-    plr.logout
+on[CommandEvent].
+  args("perm_mute", RIGHTS_MOD).
+  run {
+    findPunish(_).foreach { plr =>
+      plr.attr("unmute_date", "never")
+      plr.logout
+    }
   }
-}
 
 /* Perform a temporary ban on a player. */
-onargs[CommandEvent]("ban", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach { plr =>
-    plr.attr("unban_date", punishDuration(msg))
-    plr.logout
+on[CommandEvent].
+  args("ban", RIGHTS_MOD).
+  run { msg =>
+    findPunish(msg).foreach { plr =>
+      plr.attr("unban_date", punishDuration(msg))
+      plr.logout
+    }
   }
-}
 
 /* Perform a temporary mute on a player. */
-onargs[CommandEvent]("mute", RIGHTS_MOD) { msg =>
-  findPunish(msg).foreach { plr =>
-    plr.attr("unmute_date", punishDuration(msg))
-    plr.logout
+on[CommandEvent].
+  args("mute", RIGHTS_MOD).
+  run { msg =>
+    findPunish(msg).foreach { plr =>
+      plr.attr("unmute_date", punishDuration(msg))
+      plr.logout
+    }
   }
-}
 
 /* Perform a forced disconnect on a player. */
-onargs[CommandEvent]("kick", RIGHTS_MOD) { findPunish(_).foreach(_.logout) }
+on[CommandEvent].
+  args("kick", RIGHTS_MOD).
+  run { findPunish(_).foreach(_.logout) }

@@ -126,13 +126,13 @@ final class ShopBuilder2(name: String) {
     openBy.foreach { case (etype, id) =>
       etype match {
         case TYPE_NPC =>
-          onargs[NpcFirstClickEvent](id) {
-            _.plr.interfaces.open(new ShopInterface(shop))
-          }
+          on[NpcFirstClickEvent].
+            args { id }.
+            run { _.plr.interfaces.open(new ShopInterface(shop)) }
         case TYPE_OBJECT =>
-          onargs[ObjectFirstClickEvent](id) {
-            _.plr.interfaces.open(new ShopInterface(shop))
-          }
+          on[ObjectFirstClickEvent].
+            args { id }.
+            run { _.plr.interfaces.open(new ShopInterface(shop)) }
       }
     }
 

@@ -2,8 +2,8 @@ import io.luna.game.action.{Action, HarvestingAction}
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.{NpcFirstClickEvent, NpcSecondClickEvent}
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Animation.CANCEL
-import io.luna.game.model.mob.{Animation, Mob, Player}
 import io.luna.util.Rational
 
 
@@ -241,13 +241,13 @@ private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends H
 
   private def canFish = {
     if (skill.getLevel < tool.level) {
-      mob.sendMessage(s"You need a Fishing level of ${tool.level} to fish here.")
+      mob.sendMessage(s"You need a Fishing level of ${ tool.level } to fish here.")
       false
     } else if (!tool.bait.forall(mob.inventory.contains)) {
       mob.sendMessage(s"You do not have the bait required to fish here.")
       false
     } else if (!mob.inventory.contains(tool.id)) {
-      mob.sendMessage(s"You need a ${nameOfItem(tool.id)} to fish here.")
+      mob.sendMessage(s"You need a ${ nameOfItem(tool.id) } to fish here.")
       false
     } else {
       mob.animation(new Animation(tool.animation))
@@ -267,7 +267,7 @@ private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends H
 
   override def onHarvest() = {
     if (!noCatchMessage) {
-      currentAdd.foreach(it => mob.sendMessage(s"You catch some ${nameOfItem(it.getId)}."))
+      currentAdd.foreach(it => mob.sendMessage(s"You catch some ${ nameOfItem(it.getId) }."))
     }
 
     skill.addExperience(exp)
@@ -306,39 +306,39 @@ private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends H
 
 
 /* Intercepted first click events for fishing spots. */
-onargs[NpcFirstClickEvent](233, 234, 235, 236) { msg =>
-  msg.plr.submitAction(new FishAction(msg, FISHING_ROD))
-}
+on[NpcFirstClickEvent].
+  args(233, 234, 235, 236).
+  run { msg => msg.plr.submitAction(new FishAction(msg, FISHING_ROD)) }
 
-onargs[NpcFirstClickEvent](309, 310, 311, 314, 315, 317, 318) { msg =>
-  msg.plr.submitAction(new FishAction(msg, FLY_FISHING_ROD))
-}
+on[NpcFirstClickEvent].
+  args(309, 310, 311, 314, 315, 317, 318).
+  run { msg => msg.plr.submitAction(new FishAction(msg, FLY_FISHING_ROD)) }
 
-onargs[NpcFirstClickEvent](312) { msg =>
-  msg.plr.submitAction(new FishAction(msg, LOBSTER_POT))
-}
+on[NpcFirstClickEvent].
+  args { 312 }.
+  run { msg => msg.plr.submitAction(new FishAction(msg, LOBSTER_POT)) }
 
-onargs[NpcFirstClickEvent](313) { msg =>
-  msg.plr.submitAction(new FishAction(msg, BIG_NET))
-}
+on[NpcFirstClickEvent].
+  args { 313 }.
+  run { msg => msg.plr.submitAction(new FishAction(msg, BIG_NET)) }
 
-onargs[NpcFirstClickEvent](316, 319) { msg =>
-  msg.plr.submitAction(new FishAction(msg, SMALL_NET))
-}
+on[NpcFirstClickEvent].
+  args(316, 319).
+  run { msg => msg.plr.submitAction(new FishAction(msg, SMALL_NET)) }
 
-onargs[NpcFirstClickEvent](1174) { msg =>
-  msg.plr.submitAction(new FishAction(msg, MONKFISH_NET))
-}
+on[NpcFirstClickEvent].
+  args { 1174 }.
+  run { msg => msg.plr.submitAction(new FishAction(msg, MONKFISH_NET)) }
 
 /* Intercepted second click events for fishing spots. */
-onargs[NpcSecondClickEvent](309, 316, 319, 310, 311, 314, 315, 317, 318) { msg =>
-  msg.plr.submitAction(new FishAction(msg, FISHING_ROD))
-}
+on[NpcSecondClickEvent].
+  args(309, 316, 319, 310, 311, 314, 315, 317, 318).
+  run { msg => msg.plr.submitAction(new FishAction(msg, FISHING_ROD)) }
 
-onargs[NpcSecondClickEvent](312) { msg =>
-  msg.plr.submitAction(new FishAction(msg, HARPOON))
-}
+on[NpcSecondClickEvent].
+  args { 312 }.
+  run { msg => msg.plr.submitAction(new FishAction(msg, HARPOON)) }
 
-onargs[NpcSecondClickEvent](313) { msg =>
-  msg.plr.submitAction(new FishAction(msg, SHARK_HARPOON))
-}
+on[NpcSecondClickEvent].
+  args { 313 }.
+  run { msg => msg.plr.submitAction(new FishAction(msg, SHARK_HARPOON)) }

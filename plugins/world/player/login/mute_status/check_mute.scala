@@ -12,7 +12,7 @@ private def getLiftDate(date: String) = DATE_FORMATTER.format(LocalDate.parse(da
 
 
 /* If the player is muted, indicate that they are and when it will be lifted. */
-on[LoginEvent] { msg =>
+on[LoginEvent].run { msg =>
   val plr = msg.plr
   val date: String = plr.attr("unmute_date")
 

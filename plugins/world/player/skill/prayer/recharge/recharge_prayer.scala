@@ -22,7 +22,9 @@ private def rechargePrayer(plr: Player) = {
 
 
 /* If the object being clicked is an altar, recharge prayer. */
-onargs[ObjectFirstClickEvent](409, 3243) { msg =>
-  rechargePrayer(msg.plr)
-  msg.terminate
-}
+on[ObjectFirstClickEvent].
+  args(409, 3243).
+  run { msg =>
+    rechargePrayer(msg.plr)
+    msg.terminate
+  }

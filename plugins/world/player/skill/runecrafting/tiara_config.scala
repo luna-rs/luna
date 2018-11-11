@@ -48,10 +48,10 @@ private def sendEquipmentConfig(plr: Player, oldItem: Option[Item], newItem: Opt
 
 
 /* Intercept event to send config key and value on login. */
-on[LoginEvent] { msg => sendLoginConfig(msg.plr) }
+on[LoginEvent].run { msg => sendLoginConfig(msg.plr) }
 
 /* Intercept event to send config key and value on equipment change. */
-on[EquipmentChangeEvent] { msg =>
+on[EquipmentChangeEvent].run { msg =>
   if (msg.index == HEAD) {
     sendEquipmentConfig(msg.plr, msg.oldItem, msg.newItem)
   }

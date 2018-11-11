@@ -168,7 +168,7 @@ private def craftRunes(plr: Player, rune: Rune): Unit = {
 
 
 /* If the object being clicked is an altar, attempt to craft runes of that altar. */
-on[ObjectFirstClickEvent] { msg =>
+on[ObjectFirstClickEvent].run { msg =>
   ALTAR_TO_RUNE.get(msg.id).foreach { it =>
     craftRunes(msg.plr, it)
     msg.terminate

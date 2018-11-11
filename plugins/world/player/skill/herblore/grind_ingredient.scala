@@ -66,7 +66,7 @@ private def grind(plr: Player, id: Int, evt: ItemOnItemEvent) = {
 
 
 /* Intercept an item on item event, handle using ingredient with pestle and mortar. */
-on[ItemOnItemEvent] { msg =>
+on[ItemOnItemEvent].run { msg =>
   if (msg.usedId == PESTLE_AND_MORTAR) {
     grind(msg.plr, msg.targetId, msg)
   } else if (msg.targetId == PESTLE_AND_MORTAR) {

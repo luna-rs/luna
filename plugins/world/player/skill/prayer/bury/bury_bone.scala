@@ -36,7 +36,7 @@ private def buryBone(plr: Player, id: Int, exp: Double) = {
 
 
 /* If the item being clicked is a bone, attempt to bury it. */
-on[ItemFirstClickEvent] { msg =>
+on[ItemFirstClickEvent].run { msg =>
   val boneId = msg.id
   BONES.get(boneId).foreach { experience =>
     buryBone(msg.plr, boneId, experience)

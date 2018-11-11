@@ -2,7 +2,7 @@ import io.luna.game.action.{Action, ProducingAction}
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import io.luna.game.model.mob.{Animation, Mob, Player}
+import io.luna.game.model.mob.{Animation, Player}
 
 
 /* Class representing potions in the 'POTION_TABLE'. */
@@ -206,7 +206,7 @@ private final class PotionDialogue(val potion: Potion) extends MakeItemDialogueI
 
 
 /* Make finished potions if the required items are present. */
-on[ItemOnItemEvent] { msg =>
+on[ItemOnItemEvent].run { msg =>
   val potionOption = INGREDIENTS_TO_POTION.get(msg.targetId -> msg.usedId).
     orElse(INGREDIENTS_TO_POTION.get(msg.usedId -> msg.targetId))
 

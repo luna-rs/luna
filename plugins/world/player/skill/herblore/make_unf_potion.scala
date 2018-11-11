@@ -139,7 +139,7 @@ private def makeUnf(plr: Player, msg: Event, herb: Int) = {
 
 
 /* Make unfinished potions if the required items are present. */
-on[ItemOnItemEvent] { msg =>
+on[ItemOnItemEvent].run { msg =>
   if (msg.targetId == VIAL_OF_WATER) {
     makeUnf(msg.plr, msg, msg.usedId)
   } else if (msg.usedId == VIAL_OF_WATER) {

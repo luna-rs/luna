@@ -9,6 +9,6 @@ private def spawn(id: Int, x: Int, y: Int, z: Int = 0): Npc = {
   npc
 }
 
-on[ServerLaunchEvent] { msg =>
+on[ServerLaunchEvent].run { msg =>
   // NPC spawns go here.
 }

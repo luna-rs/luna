@@ -113,7 +113,7 @@ private def identifyHerb(plr: Player, herb: Herb) {
 
 
 /* If the item clicked is an unidentified herb, identify it. */
-on[ItemFirstClickEvent] { msg =>
+on[ItemFirstClickEvent].run { msg =>
   UNIDENTIFIED_TO_HERB.get(msg.id).foreach { it =>
     identifyHerb(msg.plr, it)
     msg.terminate

@@ -31,7 +31,7 @@ private val STARTER_EQUIPMENT = Vector(
 
 
 /* Give 'starter package' and open character design if the player is new. */
-on[LoginEvent] { msg =>
+on[LoginEvent].run { msg =>
   val plr = msg.plr
   if (plr.attr("first_login")) {
     plr.sendMessage("This is your first login. Enjoy your starter package!")

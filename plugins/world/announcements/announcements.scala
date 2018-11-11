@@ -18,7 +18,7 @@ private val FILTER = (plr: Player) => plr.rights <= RIGHTS_ADMIN // Only players
 
 
 /* Filter players and broadcast announcements at set intervals. */
-on[ServerLaunchEvent] { msg =>
+on[ServerLaunchEvent].run { msg =>
   world.scheduleForever(TICK_INTERVAL) {
     world.players.
       filter(FILTER).

@@ -43,7 +43,7 @@ private def moveFishingSpots() = {
 
 
 /* Schedule a task that attempts to move spot every minute. */
-on[ServerLaunchEvent] { msg =>
+on[ServerLaunchEvent].run { msg =>
   if (FISHING_SPOTS.nonEmpty) {
     FISHING_SPOTS.foreach(spot => world.add(spot.npc))
 

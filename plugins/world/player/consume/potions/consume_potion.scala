@@ -294,7 +294,7 @@ private def consume(plr: Player, potion: Potion, index: Int): Unit = {
 
 
 /* Intercept the item click event, and if the item is a potion then drink it. */
-on[ItemFirstClickEvent] { msg =>
+on[ItemFirstClickEvent].run { msg =>
   ID_TO_POTION.get(msg.id).foreach { potion =>
     consume(msg.plr, potion, msg.index)
     msg.terminate

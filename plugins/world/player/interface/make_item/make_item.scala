@@ -81,7 +81,7 @@ private def isDuplicate(id: Int) = id match {
 }
 
 /* Get MakeItemAction from button id, if available. */
-on[ButtonClickEvent] { msg =>
+on[ButtonClickEvent].run { msg =>
   val interfaces = msg.plr.interfaces
   val buttonAction = BUTTON_MAP.get(msg.id)
 

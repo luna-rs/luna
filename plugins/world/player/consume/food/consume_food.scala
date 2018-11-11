@@ -202,7 +202,7 @@ private def consume(plr: Player, food: Food, index: Int): Unit = {
 
 
 /* Intercept first click item event, attempt to consume food if applicable. */
-on[ItemFirstClickEvent] { msg =>
+on[ItemFirstClickEvent].run { msg =>
   ID_TO_FOOD.get(msg.id).foreach { food =>
     consume(msg.plr, food, msg.index)
     msg.terminate

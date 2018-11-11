@@ -59,12 +59,14 @@ private final class SearchResultInterface(searchItem: String) extends StandardIn
 }
 
 /* A command that opens an interface spawns item(s) by name. */
-onargs[CommandEvent]("search_item", RIGHTS_DEV) { msg =>
-  val plr = msg.plr
-  val search = msg.args(0).replaceAll("_", " ")
-  if (search.length > 1) {
-    plr.interfaces.open(new SearchResultInterface(search))
-  } else {
-    plr.sendMessage("Search term must be more than 1 character.")
+on[CommandEvent].
+  args("search_item", RIGHTS_DEV).
+  run { msg =>
+    val plr = msg.plr
+    val search = msg.args(0).replaceAll("_", " ")
+    if (search.length > 1) {
+      plr.interfaces.open(new SearchResultInterface(search))
+    } else {
+      plr.sendMessage("Search term must be more than 1 character.")
+    }
   }
-}

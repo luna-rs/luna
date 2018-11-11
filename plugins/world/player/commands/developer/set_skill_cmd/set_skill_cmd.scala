@@ -58,19 +58,19 @@ private def setLevel(msg: ButtonClickEvent, id: Int) {
         }
 
         player.sendSkillUpdate(id)
-        player.sendMessage(s"You set your ${Skill.getName(id)} level to $value.")
+        player.sendMessage(s"You set your ${ Skill.getName(id) } level to $value.")
       }
     }
   })
 }
 
 /* A command that sets skill levels. */
-onargs[CommandEvent]("set_skill", RIGHTS_DEV) {
-  _.plr.interfaces.open(new SetLevelInterface)
-}
+on[CommandEvent].
+  args("set_skill", RIGHTS_DEV).
+  run { _.plr.interfaces.open(new SetLevelInterface) }
 
 /* A listener that listens for button clicks. */
-on[ButtonClickEvent] { msg =>
+on[ButtonClickEvent].run { msg =>
   val plr = msg.plr
   if (plr.rights >= RIGHTS_DEV) {
     BUTTONS.get(msg.id).foreach(setLevel(msg, _))

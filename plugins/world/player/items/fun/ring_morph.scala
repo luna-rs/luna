@@ -44,7 +44,7 @@ private def unmorph(plr: Player) = {
 }
 
 /* Listens for equipment changes. */
-on[EquipmentChangeEvent] { msg =>
+on[EquipmentChangeEvent].run { msg =>
   if (msg.index == RING) {
 
     msg.newId.foreach {
@@ -55,4 +55,7 @@ on[EquipmentChangeEvent] { msg =>
   }
 }
 
-onargs[ButtonClickEvent](6020) { msg => unmorph(msg.plr) }
+/* Unmorph button. */
+on[ButtonClickEvent].
+  args { 6020 }.
+  run { msg => unmorph(msg.plr) }

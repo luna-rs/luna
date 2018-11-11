@@ -158,7 +158,7 @@ private def exitWithPortal(plr: Player, altar: Altar, msg: Event) = {
 
 
 /* Intercept event for entering with talismans. */
-on[ItemOnObjectEvent] { msg =>
+on[ItemOnObjectEvent].run { msg =>
   TALISMAN_TO_ALTAR.get(msg.itemId).foreach { altar =>
     if (altar.altar == msg.objectId) {
       enterWithTalisman(msg.plr, altar, msg)
@@ -167,7 +167,7 @@ on[ItemOnObjectEvent] { msg =>
 }
 
 /* Intercept event for entering with tiaras. */
-on[ObjectFirstClickEvent] { msg =>
+on[ObjectFirstClickEvent].run { msg =>
   val headId = msg.plr.inventory.computeIdForIndex(HEAD).orElse(-1)
 
   TIARA_TO_ALTAR.get(headId).foreach { altar =>
@@ -178,6 +178,6 @@ on[ObjectFirstClickEvent] { msg =>
 }
 
 /* Intercept event for exiting through altar portals. */
-on[ObjectFirstClickEvent] { msg =>
+on[ObjectFirstClickEvent].run { msg =>
   PORTAL_TO_ALTAR.get(msg.id).foreach(exitWithPortal(msg.plr, _, msg))
 }
