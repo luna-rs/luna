@@ -24,7 +24,6 @@ public final class ItemDefinitionFileParser extends JsonFileParser<ItemDefinitio
     public ItemDefinition convert(JsonObject token) throws Exception {
         int id = token.get("id").getAsInt();
         String name = token.get("name").getAsString();
-        String examine = token.get("examine").getAsString();
         boolean stackable = token.get("stack?").getAsBoolean();
         int baseValue = token.get("value").getAsInt();
         int notedId = token.get("noted_id").getAsInt();
@@ -34,7 +33,7 @@ public final class ItemDefinitionFileParser extends JsonFileParser<ItemDefinitio
         boolean tradeable = token.get("trade?").getAsBoolean();
         String[] inventoryActions = GsonUtils.getAsType(token.get("inventory_actions"), String[].class);
         String[] groundActions = GsonUtils.getAsType(token.get("ground_actions"), String[].class);
-        return new ItemDefinition(id, name, examine, stackable, baseValue, notedId, unnotedId, membersOnly, weight,
+        return new ItemDefinition(id, name, stackable,baseValue, notedId, unnotedId, membersOnly, weight,
                 tradeable, inventoryActions, groundActions);
     }
 
