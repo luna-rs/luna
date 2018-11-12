@@ -3,6 +3,7 @@ package io.luna.game.model.region;
 import com.google.common.collect.ImmutableList;
 import fj.P2;
 import io.luna.LunaConstants;
+import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 
@@ -20,8 +21,6 @@ import static fj.P.p;
  */
 public final class RegionUpdateComparator implements Comparator<Mob> {
 
-    // TODO Add comparisons for people on friend list.
-
     /**
      * A makeshift type alias for the {@link BiFunction} type declaration.
      */
@@ -33,8 +32,12 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     /**
      * An immutable list of factors used to compare mobs.
      */
-    private final ImmutableList<WeightFactor> factors = ImmutableList
-            .of(this::comparePosition, this::compareSize, this::compareCombatLevel, this::compareCombat);
+    private final ImmutableList<WeightFactor> factors = ImmutableList.of(
+            this::comparePosition,
+            this::compareFriends,
+            this::compareSize,
+            this::compareCombatLevel,
+            this::compareCombat);
 
     /**
      * The player to compare mobs for.
@@ -72,7 +75,7 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     }
 
     /**
-     * Compare mob combat levels. Awards {@code 1} weight.
+     * Compare mob combat levels. Awards {@code 2} weight.
      *
      * @param left The left mob.
      * @param right The right mob.
@@ -81,12 +84,11 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     private P2<Integer, Integer> compareCombatLevel(Mob left, Mob right) {
         int leftCombatLevel = left.getCombatLevel();
         int rightCombatLevel = right.getCombatLevel();
-        return computeWeightFactor(leftCombatLevel, rightCombatLevel, 1);
+        return computeWeightFactor(leftCombatLevel, rightCombatLevel, 2);
     }
 
-
     /**
-     * Compare mob sizes. Awards {@code 2} weight.
+     * Compare mob sizes. Awards {@code 3} weight.
      *
      * @param left The left mob.
      * @param right The right mob.
@@ -95,7 +97,7 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     private P2<Integer, Integer> compareSize(Mob left, Mob right) {
         int leftSize = left.size();
         int rightSize = right.size();
-        return computeWeightFactor(leftSize, rightSize, 2);
+        return computeWeightFactor(leftSize, rightSize, 3);
     }
 
     /**
@@ -112,7 +114,34 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     }
 
     /**
-     * Compare mob combat states. Awards {@code 4} weight.
+     * Compares Player friends' lists. Awards {@code 4} weight.
+     *
+     * @param left The left mob.
+     * @param right The right mob.
+     * @return The factor values and weight for each mob.
+     */
+    private P2<Integer, Integer> compareFriends(Mob left, Mob right) {
+        int leftFactor = isFriend(left) ? 1 : 0;
+        int rightFactor = isFriend(right) ? 1 : 0;
+        return computeWeightFactor(leftFactor, rightFactor, 4);
+    }
+
+    /**
+     * Determines if {@code mob} is on {@code player}'s friend list.
+     *
+     * @param mob The mob.
+     * @return {@code true} if the mob is on the friend's list.
+     */
+    private boolean isFriend(Mob mob) {
+        if (mob.getType() == EntityType.PLAYER) {
+            long hash = ((Player) mob).getUsernameHash();
+            return player.getFriends().contains(hash);
+        }
+        return false;
+    }
+
+    /**
+     * Compare mob combat states. Awards {@code 5} weight.
      *
      * @param left The left mob.
      * @param right The right mob.
@@ -121,7 +150,7 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     private P2<Integer, Integer> compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
         int leftCombat = /* left.inCombat() ? 1 :*/ 0;
         int rightCombat = /* right.inCombat() ? 1 :*/ 0;
-        return computeWeightFactor(leftCombat, rightCombat, 4);
+        return computeWeightFactor(leftCombat, rightCombat, 5);
     }
 
     /**
@@ -134,11 +163,11 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
      */
     private P2<Integer, Integer> computeWeightFactor(int left, int right, int weight) {
         if (left > right) {
-            return p(weight, 0);
+            return p(weight, 1);
         } else if (right > left) {
-            return p(0, weight);
+            return p(1, weight);
         } else {
-            return p(weight, weight);
+            return p(1, 1);
         }
     }
 }
