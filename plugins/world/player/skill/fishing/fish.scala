@@ -257,7 +257,6 @@ private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends H
 
   override def canInit = {
     if (canFish) {
-      // TODO Message should correspond to the tool being used
       mob.sendMessage("You begin to fish...")
       true
     } else {

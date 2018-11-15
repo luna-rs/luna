@@ -8,13 +8,13 @@ import io.luna.game.model.mob.{Animation, Player}
 
 /* Class representing altars in the 'ALTAR_TABLE'. */
 private case class Altar(
-  talisman: Int,
-  tiara: Int,
-  altar: Int,
-  portal: Int,
-  enter: Position,
-  exit: Position
-)
+                          talisman: Int,
+                          tiara: Int,
+                          altar: Int,
+                          portal: Int,
+                          enter: Position,
+                          exit: Position
+                        )
 
 
 /* Animation that plays when using a talisman on an altar. */
@@ -25,7 +25,6 @@ private val TALISMAN_ANIMATION = new Animation(827)
 
  altar_symbol -> Altar
 */
-// TODO "altar" ids are wrong. Find proper object ids
 private val ALTAR_TABLE = Map(
   'air_altar -> Altar(talisman = 1438,
     tiara = 5527,
@@ -173,7 +172,7 @@ on[ObjectFirstClickEvent].run { msg =>
   TIARA_TO_ALTAR.get(headId).foreach { altar =>
     if (altar.altar == msg.id) {
       enterWithTiara(msg.plr, altar, msg)
-  }
+    }
   }
 }
 
