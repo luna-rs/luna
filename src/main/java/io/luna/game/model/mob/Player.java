@@ -337,6 +337,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        interfaces.close();
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);
