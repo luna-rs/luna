@@ -2,6 +2,7 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.Entity;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -27,8 +28,6 @@ class EntityEvent extends Event {
     public EntityEvent(Entity entity) {
         this.entity = entity;
     }
-
-    /* TODO: add item method, once they're implemented. */
 
     /**
      * @return The entity.
@@ -63,5 +62,12 @@ class EntityEvent extends Event {
      */
     public GameObject asObject() {
         return (GameObject) entity;
+    }
+
+    /**
+     * Returns the entity as a ground item.
+     */
+    public GroundItem asItem() {
+        return (GroundItem) entity;
     }
 }
