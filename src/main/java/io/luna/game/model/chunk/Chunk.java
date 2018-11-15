@@ -1,4 +1,4 @@
-package io.luna.game.model.region;
+package io.luna.game.model.chunk;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
@@ -10,46 +10,45 @@ import io.luna.game.model.EntityType;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
- * A model containing entities within a map region.
+ * A model containing entities and updates for those entities within a chunk.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
-public final class Region {
+public final class Chunk {
 
     /**
-     * The region coordinates.
+     * This chunk's position.
      */
-    private final RegionCoordinates coordinates;
+    private final ChunkPosition position;
 
     /**
      * A map of entities.
      */
     private final ImmutableMap<EntityType, Set<Entity>> entities;
 
-    { // Initializes the repository by creating concurrent sets for each entity type.
-        Map<EntityType, Set<Entity>> mutableEntities = new EnumMap<>(EntityType.class);
-
-        for(EntityType type : EntityType.ALL) {
-            mutableEntities.put(type, Sets.newConcurrentHashSet());
+    {
+        Map<EntityType, Set<Entity>> map = new EnumMap<>(EntityType.class);
+        for (EntityType type : EntityType.ALL) {
+            // Create concurrent sets for each entity type.
+            map.put(type, Sets.newConcurrentHashSet());
         }
-        entities = Maps.immutableEnumMap(mutableEntities);
+        entities = Maps.immutableEnumMap(map);
     }
 
     /**
-     * Creates a new {@link Region}.
+     * Creates a new {@link ChunkPosition}.
      *
-     * @param coordinates The region coordinates.
+     * @param position The chunk position.
      */
-    Region(RegionCoordinates coordinates) {
-        this.coordinates = coordinates;
+    Chunk(ChunkPosition position) {
+        this.position = position;
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("coordinates", coordinates).
+        return MoreObjects.toStringHelper(this).add("position", position).
                 add("entities", entities).toString();
     }
 
@@ -58,32 +57,20 @@ public final class Region {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof Region) {
-            Region other = (Region) obj;
-            return coordinates.equals(other.coordinates);
+        if (obj instanceof Chunk) {
+            Chunk other = (Chunk) obj;
+            return position.equals(other.position);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return coordinates.hashCode();
+        return position.hashCode();
     }
 
     /**
-     * Iterates through every {@link Entity} in this region and applies the consumer
-     * on them.
-     *
-     * @param action The consumer to apply.
-     */
-    public void forEach(Consumer<? super Entity> action) {
-        for (Set<Entity> entitySet : entities.values()) {
-            entitySet.forEach(action);
-        }
-    }
-
-    /**
-     * Adds an entity to this repository.
+     * Adds an entity to this chunk.
      *
      * @param entity The entity to add.
      * @return {@code true} if successful, {@code false} otherwise.
@@ -93,7 +80,7 @@ public final class Region {
     }
 
     /**
-     * Removes an entity from this repository.
+     * Removes an entity from this chunk.
      *
      * @param entity The entity to remove.
      * @return {@code true} if successful, {@code false} otherwise.
@@ -103,17 +90,17 @@ public final class Region {
     }
 
     /**
-     * Determines if this repository contains an entity.
+     * Determines if this chunk contains an entity.
      *
      * @param entity The entity to determine for.
-     * @return {@code true} if this repository contains the entity, {@code false} otherwise.
+     * @return {@code true} if this chunk contains the entity, {@code false} otherwise.
      */
     public boolean contains(Entity entity) {
         return entities.get(entity.getType()).contains(entity);
     }
 
     /**
-     * Returns a {@link Set} containing all entities in this region of the specified type. The cast type
+     * Returns a {@link Set} containing all entities of the specified type in this chunk. The cast type
      * must match the argued type or a {@link ClassCastException} will be thrown.
      *
      * @param type The type of entities to get.
@@ -127,9 +114,9 @@ public final class Region {
     }
 
     /**
-     * @return The coordinates.
+     * @return The position.
      */
-    public RegionCoordinates getCoordinates() {
-        return coordinates;
+    public ChunkPosition getPosition() {
+        return position;
     }
 }

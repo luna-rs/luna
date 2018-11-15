@@ -3,11 +3,11 @@ package io.luna.net.msg.out;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
+import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateState;
-import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
@@ -52,16 +52,17 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                 }
             }
 
-            RegionManager regions = player.getWorld().getRegions();
+            ChunkManager chunks = player.getWorld().getChunks();
             int playersAdded = 0;
 
-            for (Player other : regions.getViewablePlayers(player)) {
+            for (Player other : chunks.getViewablePlayers(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
                 if (player.equals(other) || other.getState() != EntityState.ACTIVE) {
                     continue;
                 }
+
                 if (other.getPosition().isViewable(player.getPosition()) && player.getLocalPlayers().add(other)) {
                     playersAdded++;
                     addPlayer(msg, player, other);

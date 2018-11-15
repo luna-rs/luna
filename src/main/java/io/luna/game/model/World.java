@@ -4,11 +4,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.region.RegionManager;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -99,9 +99,9 @@ public final class World {
     private final Queue<Player> logouts = new ConcurrentLinkedQueue<>();
 
     /**
-     * The region manager.
+     * The chunk manager.
      */
-    private final RegionManager regions = new RegionManager();
+    private final ChunkManager chunks = new ChunkManager();
 
     /**
      * The task manager.
@@ -310,10 +310,10 @@ public final class World {
     }
 
     /**
-     * @return The region manager.
+     * @return The chunk manager.
      */
-    public RegionManager getRegions() {
-        return regions;
+    public ChunkManager getChunks() {
+        return chunks;
     }
 
     /**

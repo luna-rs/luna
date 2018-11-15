@@ -174,7 +174,7 @@ public final class Player extends Mob {
     /**
      * The cached update block.
      */
-    // TODO Might have to be volatile?
+    // TODO Might have to be volatile? Or atomic?
     private ByteMessage cachedBlock;
 
     /**

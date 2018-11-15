@@ -2,12 +2,12 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
+import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.NpcUpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateState;
-import io.luna.game.model.region.RegionManager;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
@@ -50,10 +50,10 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                 }
             }
 
-            RegionManager regions = player.getWorld().getRegions();
+            ChunkManager chunks = player.getWorld().getChunks();
             int npcsAdded = 0;
 
-            for (Npc other : regions.getViewableNpcs(player)) {
+            for (Npc other : chunks.getViewableNpcs(player)) {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }

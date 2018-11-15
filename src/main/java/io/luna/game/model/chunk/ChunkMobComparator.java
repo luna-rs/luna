@@ -1,4 +1,4 @@
-package io.luna.game.model.region;
+package io.luna.game.model.chunk;
 
 import com.google.common.collect.ImmutableList;
 import fj.P2;
@@ -13,26 +13,26 @@ import java.util.function.BiFunction;
 import static fj.P.p;
 
 /**
- * A comparator that ensures that important mobs are added to the local list of a player before other (less
- * important) mobs.
+ * A {@link Comparator} implementation that ensures that important mobs are added to the local list of a
+ * player before other mobs.
  *
  * @author lare96 <http://github.org/lare96>
  * @see LunaConstants#STAGGERED_UPDATING
  */
-public final class RegionUpdateComparator implements Comparator<Mob> {
+public final class ChunkMobComparator implements Comparator<Mob> {
 
     /**
      * A makeshift type alias for the {@link BiFunction} type declaration.
      */
     @FunctionalInterface
-    private interface WeightFactor extends BiFunction<Mob, Mob, P2<Integer, Integer>> {
+    private interface ComparableFactor extends BiFunction<Mob, Mob, P2<Integer, Integer>> {
 
     }
 
     /**
      * An immutable list of factors used to compare mobs.
      */
-    private final ImmutableList<WeightFactor> factors = ImmutableList.of(
+    private final ImmutableList<ComparableFactor> factors = ImmutableList.of(
             this::comparePosition,
             this::compareFriends,
             this::compareSize,
@@ -45,11 +45,11 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
     private final Player player;
 
     /**
-     * Creates a new {@link RegionUpdateComparator}.
+     * Creates a new {@link ChunkMobComparator}.
      *
      * @param player The player  to compare mobs for.
      */
-    public RegionUpdateComparator(Player player) {
+    public ChunkMobComparator(Player player) {
         this.player = player;
     }
 
@@ -59,7 +59,7 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
         int rightWeight = 0;
 
         // Compare all factors and award weight.
-        for (WeightFactor factor : factors) {
+        for (ComparableFactor factor : factors) {
             P2<Integer, Integer> tuple = factor.apply(left, right);
             leftWeight += tuple._1();
             rightWeight += tuple._2();
@@ -108,8 +108,8 @@ public final class RegionUpdateComparator implements Comparator<Mob> {
      * @return The factor values and weight for each mob.
      */
     private P2<Integer, Integer> comparePosition(Mob left, Mob right) {
-        int leftDistance = player.distanceFrom(left);
-        int rightDistance = player.distanceFrom(right);
+        int leftDistance = player.computeLongestDistance(left);
+        int rightDistance = player.computeLongestDistance(right);
         return computeWeightFactor(leftDistance, rightDistance, 3);
     }
 

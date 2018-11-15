@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AddGroundItemMessageWriter extends GameMessageWriter {
+public final class AddFloorItemMessageWriter extends GameMessageWriter {
 
     /**
      * The item.
@@ -25,12 +25,12 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter {
     private final int offset;
 
     /**
-     * Creates a new {@link AddGroundItemMessageWriter}.
+     * Creates a new {@link AddFloorItemMessageWriter}.
      *
      * @param item The item.
      * @param offset The position offset.
      */
-    public AddGroundItemMessageWriter(Item item, int offset) {
+    public AddFloorItemMessageWriter(Item item, int offset) {
         this.item = item;
         this.offset = offset;
     }

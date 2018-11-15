@@ -3,7 +3,7 @@ package io.luna;
 import com.google.gson.JsonObject;
 import com.moandjiezana.toml.Toml;
 import io.luna.game.model.Position;
-import io.luna.game.model.region.RegionUpdateComparator;
+import io.luna.game.model.chunk.ChunkMobComparator;
 import io.netty.util.ResourceLeakDetector.Level;
 
 import java.io.File;
@@ -78,7 +78,7 @@ public final class LunaConstants {
      * potential problems if a large volume of players are in one place.
      * <p>
      * A solution to this problem is <strong>staggered updating</strong>, which in this context means to update the
-     * most important players first. This is done through the {@link RegionUpdateComparator}.
+     * most important players first. This is done through the {@link ChunkMobComparator}.
      * <p>
      * The tradeoff for this feature is a slight performance regression, as surrounding mobs have to be stored
      * within a {@link TreeSet} (O(log n) performance) instead of a regular {@link HashSet} (O(1) performance).

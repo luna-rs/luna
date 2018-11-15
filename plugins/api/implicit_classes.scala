@@ -4,12 +4,11 @@
 */
 
 import io.luna.game.action.Action
-import io.luna.game.model.{Entity, EntityType, Position, World}
 import io.luna.game.model.item.{Item, ItemContainer}
 import io.luna.game.model.mob.attr.AttributeValue
-import io.luna.game.model.mob.{Mob, Npc, Player, PlayerRights}
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
-import io.luna.game.model.mob.inter.AbstractInterface
+import io.luna.game.model.mob.{Mob, Npc, Player, PlayerRights}
+import io.luna.game.model.{Entity, Position, World}
 import io.luna.game.task.Task
 import io.luna.net.msg.out._
 import io.luna.util.Rational
@@ -210,14 +209,15 @@ implicit class RichWorld(world: World) {
 
   def messageToAll(str: String) = players.foreach(_.sendMessage(str))
 
-  def getRegion(pos: Position) = world.getRegions.getRegion(pos.getRegionCoordinates)
+  def getChunk(pos: Position) = world.getChunks.getChunk(pos.getChunkPosition)
 }
 
 implicit class RichPosition(position: Position) {
 
   def x = position.getX
   def y = position.getY
-  def regionCoordinates = position.getRegionCoordinates
+
+  def z = position.getZ
 }
 
 implicit class RichArray[T](array: Array[T]) {

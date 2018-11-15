@@ -30,8 +30,8 @@ public final class SendChunkMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(85);
-        msg.put(position.getY() - (position.getChunkY() * 8), ByteTransform.C);
-        msg.put(position.getX() - (position.getChunkX() * 8), ByteTransform.C);
+        msg.put(position.getY() - (position.getBottomLeftChunkY() * 8), ByteTransform.C);
+        msg.put(position.getX() - (position.getBottomLeftChunkX() * 8), ByteTransform.C);
         return msg;
     }
 }
