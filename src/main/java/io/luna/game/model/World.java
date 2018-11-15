@@ -58,6 +58,7 @@ public final class World {
                 try {
                     player.queue(new PlayerUpdateMessageWriter()); // Must be first!
                     player.queue(new NpcUpdateMessageWriter());
+                    player.getClient().flush();
                 } catch (Exception e) {
                     LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
@@ -228,7 +229,7 @@ public final class World {
             try {
                 player.getWalkingQueue().process();
                 player.getClient().handleDecodedMessages();
-                player.sendRegionUpdate(); // Must be last!
+                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
@@ -257,13 +258,11 @@ public final class World {
     }
 
     /**
-     * Post-synchronization part of the game loop, send all queued network data and reset
-     * variables.
+     * Post-synchronization part of the game loop, reset variables.
      */
     private void postSynchronize() {
         for (Player player : playerList) {
             try {
-                player.getClient().flush();
                 player.resetFlags();
                 player.setCachedBlock(null);
             } catch (Exception e) {

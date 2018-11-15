@@ -58,8 +58,8 @@ public class GameClient extends Client<GameMessage> {
     }
 
     /**
-     * Handles decoded game packets and posts their created events to all applicable plugin
-     * listeners.
+     * Handles decoded game packets and posts their created events to all applicable plugin listeners.
+     * Fires a region update afterwards, if needed.
      */
     public void handleDecodedMessages() {
         for (; ; ) {
@@ -70,6 +70,7 @@ public class GameClient extends Client<GameMessage> {
             GameMessageReader reader = repository.get(msg.getOpcode());
             reader.postEvent(player, msg);
         }
+        player.sendRegionUpdate();
     }
 
     /**
