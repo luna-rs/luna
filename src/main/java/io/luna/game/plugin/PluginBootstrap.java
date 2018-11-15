@@ -2,14 +2,13 @@ package io.luna.game.plugin;
 
 import com.google.common.io.MoreFiles;
 import com.moandjiezana.toml.Toml;
-import fj.P;
-import fj.P2;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
+import io.luna.util.Tuple;
 import io.luna.util.gui.PluginGui;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -204,12 +203,12 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    public P2<Integer, Integer> init(boolean displayGui) throws IOException {
+    public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
-        P2<Integer, Integer> pluginCount = initPlugins(displayGui);
+        Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
 
         service.sync(() -> pluginManager.getPipelines().replaceAll(pipelines));
         return pluginCount;
@@ -249,7 +248,7 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    private P2<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
+    private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
         Plugin api = plugins.remove("Plugin API"); // API not counted as a plugin.
         int totalCount = plugins.size();
 
@@ -284,7 +283,7 @@ public final class PluginBootstrap {
         }
 
         int selectedCount = plugins.size();
-        return P.p(selectedCount, totalCount);
+        return new Tuple<>(selectedCount, totalCount);
     }
 
     /**

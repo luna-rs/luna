@@ -1,16 +1,14 @@
 package io.luna.game.model.chunk;
 
 import com.google.common.collect.ImmutableList;
-import fj.P2;
 import io.luna.LunaConstants;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
+import io.luna.util.Tuple;
 
 import java.util.Comparator;
 import java.util.function.BiFunction;
-
-import static fj.P.p;
 
 /**
  * A {@link Comparator} implementation that ensures that important mobs are added to the local list of a
@@ -25,7 +23,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * A makeshift type alias for the {@link BiFunction} type declaration.
      */
     @FunctionalInterface
-    private interface ComparableFactor extends BiFunction<Mob, Mob, P2<Integer, Integer>> {
+    private interface ComparableFactor extends BiFunction<Mob, Mob, Tuple<Integer, Integer>> {
 
     }
 
@@ -60,9 +58,9 @@ public final class ChunkMobComparator implements Comparator<Mob> {
 
         // Compare all factors and award weight.
         for (ComparableFactor factor : factors) {
-            P2<Integer, Integer> tuple = factor.apply(left, right);
-            leftWeight += tuple._1();
-            rightWeight += tuple._2();
+            Tuple<Integer, Integer> tuple = factor.apply(left, right);
+            leftWeight += tuple.first();
+            rightWeight += tuple.second();
         }
 
         // The weight is equal, meaning equal importance. Just let left win.
@@ -81,7 +79,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> compareCombatLevel(Mob left, Mob right) {
+    private Tuple<Integer, Integer> compareCombatLevel(Mob left, Mob right) {
         int leftCombatLevel = left.getCombatLevel();
         int rightCombatLevel = right.getCombatLevel();
         return computeWeightFactor(leftCombatLevel, rightCombatLevel, 2);
@@ -94,7 +92,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> compareSize(Mob left, Mob right) {
+    private Tuple<Integer, Integer> compareSize(Mob left, Mob right) {
         int leftSize = left.size();
         int rightSize = right.size();
         return computeWeightFactor(leftSize, rightSize, 3);
@@ -107,7 +105,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> comparePosition(Mob left, Mob right) {
+    private Tuple<Integer, Integer> comparePosition(Mob left, Mob right) {
         int leftDistance = player.computeLongestDistance(left);
         int rightDistance = player.computeLongestDistance(right);
         return computeWeightFactor(leftDistance, rightDistance, 3);
@@ -120,7 +118,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> compareFriends(Mob left, Mob right) {
+    private Tuple<Integer, Integer> compareFriends(Mob left, Mob right) {
         int leftFactor = isFriend(left) ? 1 : 0;
         int rightFactor = isFriend(right) ? 1 : 0;
         return computeWeightFactor(leftFactor, rightFactor, 4);
@@ -147,7 +145,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
+    private Tuple<Integer, Integer> compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
         int leftCombat = /* left.inCombat() ? 1 :*/ 0;
         int rightCombat = /* right.inCombat() ? 1 :*/ 0;
         return computeWeightFactor(leftCombat, rightCombat, 5);
@@ -161,13 +159,13 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param weight The amount of weight to award.
      * @return The factor values and weight for each mob.
      */
-    private P2<Integer, Integer> computeWeightFactor(int left, int right, int weight) {
+    private Tuple<Integer, Integer> computeWeightFactor(int left, int right, int weight) {
         if (left > right) {
-            return p(weight, 1);
+            return new Tuple<>(weight, 1);
         } else if (right > left) {
-            return p(1, weight);
+            return new Tuple<>(1, weight);
         } else {
-            return p(1, 1);
+            return new Tuple<>(1, 1);
         }
     }
 }

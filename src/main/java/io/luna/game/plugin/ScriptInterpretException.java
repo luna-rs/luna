@@ -1,6 +1,5 @@
 package io.luna.game.plugin;
 
-import fj.function.Strings;
 import io.luna.util.ReflectionUtils;
 
 import javax.script.ScriptException;
@@ -66,16 +65,16 @@ public class ScriptInterpretException extends RuntimeException {
      * @return The lines of code that caused the failure.
      */
     private String computeLines(ScriptException cause) {
-        fj.data.List<String> lines = Strings.lines(script.getContents());
+        String[] lines = script.getContents().split("\n"); // Temporary.
 
         int startLine = cause.getLineNumber() - 3;
         int finishLine = cause.getLineNumber() + 3;
         startLine = startLine < 0 ? 0 : startLine;
-        finishLine = finishLine >= lines.length() ? lines.length() - 1 : finishLine;
+        finishLine = finishLine >= lines.length ? lines.length - 1 : finishLine;
 
         StringBuilder sb = new StringBuilder();
         for (int index = startLine; index < finishLine; index++) {
-            sb.append("\t> ").append(lines.index(index)).append('\n');
+            sb.append("\t> ").append(lines[index]).append('\n');
         }
         return sb.toString();
     }
