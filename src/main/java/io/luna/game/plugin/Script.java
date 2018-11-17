@@ -1,5 +1,6 @@
 package io.luna.game.plugin;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -15,6 +16,11 @@ public final class Script {
     private final String name;
 
     /**
+     * The absolute path to this script.
+     */
+    private final Path path;
+
+    /**
      * The contents of this script.
      */
     private final String contents;
@@ -23,10 +29,12 @@ public final class Script {
      * Creates a new {@link Script}.
      *
      * @param name The name of this script.
+     * @param path The absolute path to this script.
      * @param contents The contents of this script.
      */
-    public Script(String name, String contents) {
+    public Script(String name, Path path, String contents) {
         this.name = name;
+        this.path = path;
         this.contents = contents;
     }
 
@@ -36,7 +44,7 @@ public final class Script {
             return true;
         }
         if (obj instanceof Script) {
-           Script other = (Script) obj;
+            Script other = (Script) obj;
             return name.equals(other.name);
         }
         return false;
@@ -52,6 +60,13 @@ public final class Script {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * @return The absolute path to this script.
+     */
+    public Path getPath() {
+        return path;
     }
 
     /**

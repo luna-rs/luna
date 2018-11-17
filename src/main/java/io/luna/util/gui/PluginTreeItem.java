@@ -73,9 +73,6 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> implements Comparabl
         appendData.accept("Version", getMetadata().getVersion());
         appendData.accept("Description", getMetadata().getDescription());
 
-        String dependencies = COMMA_JOINER.join(getMetadata().getDependencies());
-        appendData.accept("Dependencies", dependencies.isEmpty() ? none : dependencies);
-
         String authors = COMMA_JOINER.join(getMetadata().getAuthors());
         appendData.accept("Authors", authors.isEmpty() ? none : authors);
 

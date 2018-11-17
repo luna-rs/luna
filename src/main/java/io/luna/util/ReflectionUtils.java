@@ -1,8 +1,5 @@
 package io.luna.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.lang.reflect.Field;
 
 /**
@@ -13,12 +10,45 @@ import java.lang.reflect.Field;
 public class ReflectionUtils {
 
     /**
-     * The asynchronous logger.
+     * Reflectively retrieves a static field from {@code fromClass}.
+     *
+     * @param fromClass The Class to retrieve the field of.
+     * @param name The name of the field to retrieve.
+     * @param fieldType The type of the field to retrieve.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    public static <T> T getStaticField(Class<?> fromClass, String name, Class<T> fieldType) {
+        try {
+            Field field = fromClass.getDeclaredField(name);
+            field.setAccessible(true);
+            return fieldType.cast(field.get(null));
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        } catch (NoSuchFieldException e) {
+            throw new TypeNotPresentException(name, e);
+        }
+    }
 
     /**
-     * Reflectively sets a field within {@code instance}.
+     * Reflectively retrieves an instanced field within {@code instance}.
+     *
+     * @param instance The Object instance to retrieve the field of.
+     * @param name The name of the field to retrieve.
+     * @param fieldType The type of the field to retrieve.
+     */
+    public static <T> T getField(Object instance, String name, Class<T> fieldType) {
+        try {
+            Field field = instance.getClass().getDeclaredField(name);
+            field.setAccessible(true);
+            return fieldType.cast(field.get(instance));
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        } catch (NoSuchFieldException e) {
+            throw new TypeNotPresentException(name, e);
+        }
+    }
+
+    /**
+     * Reflectively sets an instanced field within {@code instance}.
      *
      * @param instance The Object instance to set the field of.
      * @param name The name of the field to set.

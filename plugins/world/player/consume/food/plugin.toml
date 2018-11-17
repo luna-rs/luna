@@ -7,7 +7,6 @@ SUPPORTS:
  -> Multi-portion foods (pizzas, cakes, etc).
  -> Foods with different throttle rates (karambwans, pies, etc)."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

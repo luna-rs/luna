@@ -3,7 +3,6 @@
  writing new implicit conversions, as they can end up producing negative side effects if they aren't carefully
  written.
 */
-
 import java.util.concurrent.{ThreadLocalRandom, TimeUnit}
 import java.util.function._
 import java.util.{Optional, OptionalInt}

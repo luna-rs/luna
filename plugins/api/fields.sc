@@ -2,23 +2,22 @@
  A collection of variables accessible to every plugin. Variables with '$' symbols in their names have been injected
  into this script from the Java bootstrap.
 */
-
-import io.luna.LunaContext
-import io.luna.game.event.EventListener
 import io.luna.game.model.EntityType
 import io.luna.game.model.mob.{PlayerInteraction, PlayerRights, Skill}
-import io.luna.util.Rational
-import org.apache.logging.log4j.Logger
+import io.luna.game.plugin.{PluginBootstrap, ScalaBindings}
+import io.luna.util.{Rational, ReflectionUtils}
 
+
+/* The scala bindings. */
+val BINDINGS = ReflectionUtils.getStaticField(classOf[PluginBootstrap], "bindings", classOf[ScalaBindings])
 
 /* The injected state. */
-val ctx = $context$.asInstanceOf[LunaContext]
-val logger = $logger$.asInstanceOf[Logger]
-val scriptListeners = $scriptListeners$.asInstanceOf[java.util.ArrayList[EventListener[_]]]
-
+val ctx = BINDINGS.getCtx
+val logger = BINDINGS.getLogger
+val scriptListeners = BINDINGS.getListeners
 
 /* Aliases for 'LunaContext'. */
-def plugins = ctx.getPlugins
+def pluginManager = ctx.getPlugins
 def world = ctx.getWorld
 def service = ctx.getService
 

@@ -1,16 +1,15 @@
 package io.luna.game.plugin;
 
-import io.luna.util.ReflectionUtils;
+import ammonite.util.Res;
 
-import javax.script.ScriptException;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link RuntimeException} implementation thrown when a {@link Script} can't be interpreted. This class only
- * exists because {@link ScriptException} provides an inadequate amount of details about the cause of the exception.
+ * A {@link RuntimeException} implementation thrown when a {@link Script} fails to be interpreted.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class ScriptInterpretException extends RuntimeException {
+public final class ScriptInterpretException extends RuntimeException {
 
     /**
      * The script that failed.
@@ -18,65 +17,15 @@ public class ScriptInterpretException extends RuntimeException {
     private final Script script;
 
     /**
-     * The reason for failure.
-     */
-    private final String reason;
-
-    /**
-     * The lines of code that caused the failure.
-     */
-    private final String codeLines;
-
-    /**
      * Creates a new {@link ScriptInterpretException}.
      *
      * @param script The script that failed.
-     * @param cause The cause of the failure.
+     * @param result The failing result.
      */
-    public ScriptInterpretException(Script script, ScriptException cause) {
-        super();
+    public ScriptInterpretException(Script script, Res<Object> result) {
+        super(result.toString());
+        checkState(!result.isSuccess(), "Interpret result must be failing.");
         this.script = script;
-        reason = computeReason(cause);
-        codeLines = computeLines(cause);
-    }
-
-    @Override
-    public String getMessage() {
-        return "\n\t\tINTERPRET FAILED: " + script.getName() + '\n' +
-                "\t\tREASON: " + reason + '\n' +
-                "\t\t@ LINES: \n" + codeLines;
-    }
-
-    /**
-     * Computes the reason for the interpretation failure.
-     *
-     * @param cause The cause of the failure.
-     * @return The reason for failure.
-     */
-    private String computeReason(ScriptException cause) {
-        ReflectionUtils.setField(cause, "fileName", null);
-        return cause.getMessage();
-    }
-
-    /**
-     * Computes the lines that the failure occurred on.
-     *
-     * @param cause The cause of the failure.
-     * @return The lines of code that caused the failure.
-     */
-    private String computeLines(ScriptException cause) {
-        String[] lines = script.getContents().split("\n"); // Temporary.
-
-        int startLine = cause.getLineNumber() - 3;
-        int finishLine = cause.getLineNumber() + 3;
-        startLine = startLine < 0 ? 0 : startLine;
-        finishLine = finishLine >= lines.length ? lines.length - 1 : finishLine;
-
-        StringBuilder sb = new StringBuilder();
-        for (int index = startLine; index < finishLine; index++) {
-            sb.append("\t> ").append(lines[index]).append('\n');
-        }
-        return sb.toString();
     }
 
     /**
@@ -84,19 +33,5 @@ public class ScriptInterpretException extends RuntimeException {
      */
     public Script getScript() {
         return script;
-    }
-
-    /**
-     * @return The reason for failure.
-     */
-    public String getReason() {
-        return reason;
-    }
-
-    /**
-     * @return The lines of code that caused the failure.
-     */
-    public String getCodeLines() {
-        return codeLines;
     }
 }

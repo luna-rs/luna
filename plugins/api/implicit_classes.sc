@@ -2,7 +2,6 @@
  All implicit (monkey patching) classes below are 'extending' Java classes by creating new functions for them. We
  do this to ensure that all code coming from Java is as concise and idiomatic (Scala-like) as possible.
 */
-
 import io.luna.game.action.Action
 import io.luna.game.model.item.{Item, ItemContainer}
 import io.luna.game.model.mob.attr.AttributeValue
@@ -200,7 +199,9 @@ implicit class RichWorld(world: World) {
       action
     }
   }
+
   def playerOnline(name: Long) = world.getPlayer(name).isPresent
+
   def playerOnline(name: String) = world.getPlayer(name).isPresent
 
   def players = iterableAsScalaIterable(world.getPlayers)
@@ -215,6 +216,7 @@ implicit class RichWorld(world: World) {
 implicit class RichPosition(position: Position) {
 
   def x = position.getX
+
   def y = position.getY
 
   def z = position.getZ
@@ -239,6 +241,7 @@ implicit class RichArray[T](array: Array[T]) {
 implicit class RichItemContainer(items: ItemContainer) {
 
   def getIdForIndex(index: Int) = items.computeIdForIndex(index).orElse(-1)
+
   def addAll(traversable: Iterable[Item]) = items.addAll(asJavaIterable(traversable))
 
 }

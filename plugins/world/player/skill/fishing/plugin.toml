@@ -9,7 +9,6 @@ SUPPORTS:
  -> Two possible positions for a fishing spots to be in.
  -> Moving different fishing spots at different times."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

@@ -9,7 +9,6 @@ SUPPORTS:
  -> Making unfinished potions from all herbs.
  -> Completing potions from all unfinished potions."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

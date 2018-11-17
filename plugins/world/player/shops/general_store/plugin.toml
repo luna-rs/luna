@@ -2,7 +2,6 @@
 name = "General store"
 description = "A plugin that builds the General store."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

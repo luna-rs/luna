@@ -15,7 +15,6 @@
   `sell noted` "Lobster" x 1000
   `sell noted` "Swordfish" x 500) register
 */
-
 import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.EntityType

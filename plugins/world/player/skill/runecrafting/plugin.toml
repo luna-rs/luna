@@ -12,7 +12,6 @@ SUPPORTS:
  -> Sending all the correct tiara config values.
  -> Only sends the '0' config value on login or when a tiara is unequipped."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]
