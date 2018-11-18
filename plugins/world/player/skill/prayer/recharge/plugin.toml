@@ -2,7 +2,6 @@
 name = "Restore prayer"
 description = "Adds functionality for restoring Prayer."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

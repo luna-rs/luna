@@ -3,8 +3,8 @@ package io.luna.game.model;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.PositionChangeEvent;
-import io.luna.game.model.region.Region;
-import io.luna.game.model.region.RegionCoordinates;
+import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.plugin.PluginManager;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -53,9 +53,9 @@ public abstract class Entity {
     protected Position position;
 
     /**
-     * The current region.
+     * The current chunk.
      */
-    protected Region currentRegion;
+    protected Chunk currentChunk;
 
     /**
      * Creates a new {@link Entity}.
@@ -108,13 +108,13 @@ public abstract class Entity {
     }
 
     /**
-     * Returns the distance between this entity and {@code other}.
+     * Returns the longest distance between this entity and {@code other}.
      *
      * @param other The entity to compare.
-     * @return The distance from {@code other}, in tiles.
+     * @return The longest distance from {@code other}, in tiles.
      */
-    public int distanceFrom(Entity other) {
-        return position.getDistance(other.position);
+    public int computeLongestDistance(Entity other) {
+        return position.computeLongestDistance(other.position);
     }
 
     /**
@@ -144,18 +144,18 @@ public abstract class Entity {
             case ACTIVE:
                 checkState(position != null, "ACTIVE entity must have position set.");
 
-                setCurrentRegion();
+                setCurrentChunk();
                 onActive();
                 break;
             case INACTIVE:
                 onInactive();
-                removeCurrentRegion();
+                removeCurrentChunk();
                 break;
         }
     }
 
     /**
-     * Sets the current position and performs region checking.
+     * Sets the current position and performs chunk checking.
      *
      * @param newPosition The new position.
      */
@@ -167,35 +167,35 @@ public abstract class Entity {
             plugins.post(new PositionChangeEvent(this, old, newPosition));
 
             if (state == EntityState.ACTIVE) {
-                setCurrentRegion();
+                setCurrentChunk();
             }
         }
     }
 
     /**
-     * Sets the current region depending on the current position.
+     * Sets the chunk depending on the current position.
      */
-    private void setCurrentRegion() {
-        RegionCoordinates next = position.getRegionCoordinates();
-        if (currentRegion == null) {
-            // We have no current region.
-            currentRegion = world.getRegions().getRegion(next);
-            currentRegion.add(this);
-        } else if (!currentRegion.getCoordinates().equals(next)) {
-            // We have a region, and it's not equal to the new one.
-            currentRegion.remove(this);
+    private void setCurrentChunk() {
+        ChunkPosition next = position.getChunkPosition();
+        if (currentChunk == null) {
+            // We have no current chunk.
+            currentChunk = world.getChunks().getChunk(next);
+            currentChunk.add(this);
+        } else if (!currentChunk.getPosition().equals(next)) {
+            // We have a chunk, and it's not equal to the new one.
+            currentChunk.remove(this);
 
-            currentRegion = world.getRegions().getRegion(next);
-            currentRegion.add(this);
+            currentChunk = world.getChunks().getChunk(next);
+            currentChunk.add(this);
         }
     }
 
     /**
-     * Removes this Entity from its current region.
+     * Removes this Entity from its current chunk.
      */
-    private void removeCurrentRegion() {
-        if (currentRegion != null) {
-            currentRegion.remove(this);
+    private void removeCurrentChunk() {
+        if (currentChunk != null) {
+            currentChunk.remove(this);
         }
     }
 
@@ -249,9 +249,9 @@ public abstract class Entity {
     }
 
     /**
-     * @return The current region.
+     * @return The current chunk.
      */
-    public Region getCurrentRegion() {
-        return currentRegion;
+    public Chunk getCurrentChunk() {
+        return currentChunk;
     }
 }

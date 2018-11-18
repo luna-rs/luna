@@ -12,8 +12,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public enum Expression {
 
-    // TODO This varies largely upon which NPC's model is being animated. Think of a new system.
-
     /**
      * The skeptical expressions. Includes {@link #DEFAULT}.
      */

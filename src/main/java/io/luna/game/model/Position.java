@@ -2,7 +2,7 @@ package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
-import io.luna.game.model.region.RegionCoordinates;
+import io.luna.game.model.chunk.ChunkPosition;
 
 import java.util.Objects;
 
@@ -95,8 +95,9 @@ public final class Position {
         if (z != other.z) {
             return false;
         }
-        int dist = getDistance(other);
-        return dist <= distance;
+        int deltaX = Math.abs(other.x - x);
+        int deltaY = Math.abs(other.y - y);
+        return deltaX <= distance && deltaY <= distance;
     }
 
     /**
@@ -110,12 +111,12 @@ public final class Position {
     }
 
     /**
-     * Returns the distance between this position and {@code other}.
+     * Returns the longest distance between this position and {@code other}.
      *
      * @param other The other position.
-     * @return The distance between this and {@code other}.
+     * @return The longest distance between this and {@code other}.
      */
-    public int getDistance(Position other) {
+    public int computeLongestDistance(Position other) {
         int deltaX = Math.abs(other.x - x);
         int deltaY = Math.abs(other.y - y);
         return Math.max(deltaX, deltaY);
@@ -146,20 +147,20 @@ public final class Position {
     }
 
     /**
-     * Returns the top-left x coordinate of this chunk.
+     * Returns the formatted x coordinate of this position's chunk.
      *
-     * @return The top-left chunk x.
+     * @return The bottom-left chunk x.
      */
-    public int getChunkX() {
+    public int getBottomLeftChunkX() {
         return (x / 8) - 6;
     }
 
     /**
-     * Returns the top-left y coordinate of this chunk.
+     * Returns the formatted y coordinate of this position's chunk.
      *
-     * @return The top-left chunk y.
+     * @return The bottom-left chunk y.
      */
-    public int getChunkY() {
+    public int getBottomLeftChunkY() {
         return (y / 8) - 6;
     }
 
@@ -169,7 +170,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalX(Position base) {
-        return x - (base.getChunkX() * 8);
+        return x - (base.getBottomLeftChunkX() * 8);
     }
 
     /**
@@ -178,7 +179,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalY(Position base) {
-        return y - (base.getChunkY() * 8);
+        return y - (base.getBottomLeftChunkY() * 8);
     }
 
     /**
@@ -200,12 +201,21 @@ public final class Position {
     }
 
     /**
-     * Returns the coordinates of the region this position is in.
+     * Returns a new {@link ChunkPosition} built from this position.
      *
-     * @return The region coordinates.
+     * @return The chunk position.
      */
-    public RegionCoordinates getRegionCoordinates() {
-        return new RegionCoordinates(this);
+    public ChunkPosition getChunkPosition() {
+        return new ChunkPosition(this);
+    }
+
+    /**
+     * Returns a new {@link RegionPosition} built from this position.
+     *
+     * @return The region position.
+     */
+    public RegionPosition getRegionPosition() {
+        return new RegionPosition(this);
     }
 
     /**

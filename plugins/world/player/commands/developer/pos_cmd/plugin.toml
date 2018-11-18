@@ -1,8 +1,0 @@
-[metadata]
-name = "Position command"
-description = "The retrieval of location and region related values."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

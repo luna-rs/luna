@@ -174,7 +174,7 @@ public final class Player extends Mob {
     /**
      * The cached update block.
      */
-    // TODO Might have to be volatile?
+    // TODO Might have to be volatile? Or atomic?
     private ByteMessage cachedBlock;
 
     /**
@@ -337,6 +337,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        interfaces.close();
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);

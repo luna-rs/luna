@@ -1,34 +1,29 @@
 package io.luna.game.plugin;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.MoreFiles;
 import com.moandjiezana.toml.Toml;
-import fj.P;
-import fj.P2;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
+import io.luna.util.Tuple;
 import io.luna.util.gui.PluginGui;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
@@ -94,7 +89,7 @@ public final class PluginBootstrap {
         public void run() {
             //noinspection ConstantConditions
             Set<String> fileList = Arrays.stream(dir.toFile().list()).
-                    filter(f -> f.endsWith(".scala")).
+                    filter(f -> f.endsWith(".sc")).
                     collect(Collectors.toSet());
 
             // Metadata TOML -> Java
@@ -108,14 +103,8 @@ public final class PluginBootstrap {
                 return;
             }
 
+            // Read all scripts.
             try {
-                // Read dependencies first, this order will be respected during script execution.
-                for (String dependencies : metadata.getDependencies()) {
-                    loadFileContents(dependencies);
-                    fileList.remove(dependencies);
-                }
-
-                // Read other scripts.
                 fileList.forEach(this::loadFileContents);
             } catch (LoadScriptException e) {
                 LOGGER.catching(Level.WARN, e);
@@ -148,11 +137,23 @@ public final class PluginBootstrap {
          */
         private void loadFileContents(String fileName) {
             try {
-                byte[] sourceBytes = Files.readAllBytes(dir.resolve(fileName));
-                scripts.add(new Script(fileName, new String(sourceBytes)));
+                Path path = dir.resolve(fileName);
+                byte[] sourceBytes = Files.readAllBytes(path);
+                scripts.add(new Script(fileName, path.toAbsolutePath(), new String(sourceBytes)));
             } catch (IOException e) {
                 throw new LoadScriptException(fileName, e);
             }
+        }
+    }
+
+    /**
+     * Creates and sets the global Scala bindings. Is only set once.
+     *
+     * @param context The context instance.
+     */
+    private static void setBindings(LunaContext context) {
+        if (bindings == null) {
+            bindings = new ScalaBindings(context);
         }
     }
 
@@ -164,7 +165,18 @@ public final class PluginBootstrap {
     /**
      * The directory containing plugin files.
      */
-    private static final Path DIR = Paths.get("./plugins");
+    static final Path DIR = Paths.get("./plugins");
+
+    /**
+     * An immutable set containing API files.
+     */
+    private static final ImmutableSet<String> API_FILES = ImmutableSet.of("fields.sc", "functions.sc",
+            "event_interception.sc", "implicit_classes.sc", "shop_builder.sc");
+
+    /**
+     * The bindings. Has to be global in order for Ammonite scripts to access it.
+     */
+    private static ScalaBindings bindings;
 
     /**
      * The pipeline set.
@@ -182,18 +194,13 @@ public final class PluginBootstrap {
     private final LunaContext context;
 
     /**
-     * The script engine evaluating {@code Scala} code.
-     */
-    private final ScriptEngine engine;
-
-    /**
      * Creates a new {@link PluginBootstrap}.
      *
      * @param context The context instance.
      */
     public PluginBootstrap(LunaContext context) {
         this.context = context;
-        engine = createScriptEngine();
+        setBindings(context);
     }
 
     /**
@@ -204,12 +211,12 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    public P2<Integer, Integer> init(boolean displayGui) throws IOException {
+    public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager pluginManager = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
-        P2<Integer, Integer> pluginCount = initPlugins(displayGui);
+        Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
 
         service.sync(() -> pluginManager.getPipelines().replaceAll(pipelines));
         return pluginCount;
@@ -249,11 +256,10 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    private P2<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
-        Plugin api = plugins.remove("Plugin API"); // API not counted as a plugin.
-        int totalCount = plugins.size();
+    private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
 
         // Determine selected plugins and launch the GUI.
+        int totalCount = plugins.size();
         final Set<String> selectedPlugins = new HashSet<>();
         if (displayGui) {
             PluginGui gui = new PluginGui(plugins);
@@ -269,56 +275,52 @@ public final class PluginBootstrap {
         }
         plugins.keySet().retainAll(selectedPlugins);
 
-        // Inject context state.
-        List<EventListener<?>> scriptListeners = new ArrayList<>();
-        engine.put("$context$", context);
-        engine.put("$logger$", LOGGER);
-        engine.put("$scriptListeners$", scriptListeners);
-
-        // Load the Plugin API into memory.
-        loadPlugin(api, scriptListeners);
-
-        // Then load other plugins.
+        // Load all plugins.
+        ScalaInterpreter interpreter = new ScalaInterpreter.Builder().
+                predef(computePredefCode()).outStream(System.out).build();
         for (Plugin other : plugins.values()) {
-            loadPlugin(other, scriptListeners);
+            loadPlugin(other, interpreter);
         }
 
         int selectedCount = plugins.size();
-        return P.p(selectedCount, totalCount);
+        return new Tuple<>(selectedCount, totalCount);
+    }
+
+    /**
+     * Computes the code to be used as the Ammonite scripting predef.
+     *
+     * @return The predef code.
+     * @throws IOException If any I/O errors occur.
+     */
+    private String computePredefCode() throws IOException {
+        StringBuilder predefCode = new StringBuilder();
+        for (String file : API_FILES) {
+            byte[] contents = Files.readAllBytes(DIR.resolve("api").resolve(file));
+            predefCode.append(new String(contents)).
+                    append('\n').
+                    append('\n');
+        }
+        return predefCode.toString();
     }
 
     /**
      * Evaluates a single plugin directory.
      *
      * @param plugin The plugin to load.
-     * @param listeners A list of event listeners within a script.
+     * @param interpreter The Scala interpreter.
      */
-    private void loadPlugin(Plugin plugin, List<EventListener<?>> listeners) {
+    private void loadPlugin(Plugin plugin, ScalaInterpreter interpreter) {
         for (Script script : plugin.getScripts()) {
 
-            // Load the script.
-            try {
-                engine.eval(script.getContents());
-            } catch (ScriptException e) {
-                throw new ScriptInterpretException(script, e);
-            }
+            // Evaluate the script.
+            interpreter.eval(script);
 
             // Add all of its listeners, reflectively set the listener script name.
-            for (EventListener<?> evtListener : listeners) {
+            for (EventListener<?> evtListener : bindings.getListeners()) {
                 evtListener.setScriptName(script.getName());
                 pipelines.add(evtListener.getEventType(), evtListener);
             }
-            listeners.clear();
+            bindings.getListeners().clear();
         }
-    }
-
-    /**
-     * Creates a new {@code Scala} script engine.
-     *
-     * @return The script engine.
-     */
-    private ScriptEngine createScriptEngine() {
-        ClassLoader loader = ClassLoader.getSystemClassLoader();
-        return new ScriptEngineManager(loader).getEngineByName("scala");
     }
 }

@@ -1,8 +1,0 @@
-[metadata]
-name = "Generic developer commands"
-description = "Handles generic developer command input."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

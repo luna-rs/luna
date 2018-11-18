@@ -9,7 +9,6 @@ SUPPORTS:
  -> Specific punishment lift dates.
  -> Kicking (forced disconnect)."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

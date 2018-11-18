@@ -32,11 +32,6 @@ public final class PluginMetadata {
     private final String version;
 
     /**
-     * The scripts to run first.
-     */
-    private final String[] dependencies;
-
-    /**
      * The authors.
      */
     private final String[] authors;
@@ -47,15 +42,13 @@ public final class PluginMetadata {
      * @param name The name.
      * @param description The description.
      * @param version The version.
-     * @param dependencies The scripts to run first.
      * @param authors The authors.
      */
-    public PluginMetadata(String name, String description, String version, String[] dependencies, String[] authors) {
+    public PluginMetadata(String name, String description, String version, String[] authors) {
         checkArgument(VERSION.matcher(version).matches(), "Invalid version for plugin ["+ name+"].");
         this.name = name;
         this.description = description;
         this.version = version;
-        this.dependencies = dependencies;
         this.authors = authors;
     }
 
@@ -78,13 +71,6 @@ public final class PluginMetadata {
      */
     public String getVersion() {
         return version;
-    }
-
-    /**
-     * @return The scripts to run first.
-     */
-    public String[] getDependencies() {
-        return dependencies;
     }
 
     /**

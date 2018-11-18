@@ -2,7 +2,6 @@
 name = "Open bank"
 description = "Opens the banking interface when a Player clicks on a bank."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

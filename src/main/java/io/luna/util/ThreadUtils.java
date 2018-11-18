@@ -34,7 +34,7 @@ public final class ThreadUtils {
      * @param unit The time unit.
      */
     public static void awaitTerminationUninterruptibly(ExecutorService service, long timeout, TimeUnit unit) {
-        // Taken from Google Guava, thanks Anthony.
+        //  ----------- Code snippet taken from Google Guava.
         boolean interrupted = false;
 
         try {
@@ -51,5 +51,6 @@ public final class ThreadUtils {
                 Thread.currentThread().interrupt();
             }
         }
+        // -----------
     }
 }

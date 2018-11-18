@@ -1,7 +1,6 @@
 package io.luna;
 
 import com.google.common.base.Stopwatch;
-import fj.P2;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
@@ -11,6 +10,7 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
+import io.luna.util.Tuple;
 import io.luna.util.parser.impl.BlacklistFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.ItemDefinitionFileParser;
@@ -118,9 +118,9 @@ public final class LunaServer {
      */
     private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        P2<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
+        Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
-        String fractionString = pluginCount._1() + "/" + pluginCount._2();
+        String fractionString = pluginCount.first() + "/" + pluginCount.second();
         LOGGER.info("[{}] Scala plugins have been loaded into memory.", fractionString);
     }
 
