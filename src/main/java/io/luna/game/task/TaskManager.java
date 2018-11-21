@@ -32,11 +32,12 @@ public final class TaskManager {
      */
     public void schedule(Task task) {
         if (task.getState() == TaskState.IDLE && task.onSchedule()) {
+            task.setState(TaskState.RUNNING);
+
             if (task.isInstant()) {
                 task.runTask();
             }
             pending.add(task);
-            task.setState(TaskState.RUNNING);
         }
     }
 
