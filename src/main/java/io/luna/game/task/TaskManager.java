@@ -81,9 +81,10 @@ public final class TaskManager {
      * @param action The action.
      */
     public void forEachAttachment(Object attachment, Consumer<Task> action) {
-        for (Task t : pending) {
-            if (Objects.equals(t.getAttachment(), attachment)) {
-                action.accept(t);
+        for (Task task : pending) {
+            Object taskAttachment = task.getAttachment().orElse(null);
+            if (Objects.equals(taskAttachment, attachment)) {
+                action.accept(task);
             }
         }
     }
