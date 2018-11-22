@@ -40,6 +40,7 @@ public final class AttributeKey<T> {
         forTransient("last_potion_consume", 0L);
         forTransient("withdraw_as_note", false);
         forTransient("weight", 0.0);
+        forTransient("trade_with", -1);
     }
 
     /**

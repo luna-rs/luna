@@ -30,6 +30,7 @@ import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
+import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -411,6 +412,17 @@ public final class Player extends Mob {
     }
 
     /**
+     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. It's used enough where this
+     * is warranted.
+     *
+     * @param text The text to send.
+     * @param id The widget identifier.
+     */
+    public void sendText(String text, int id) {
+        queue(new WidgetTextMessageWriter(text, id));
+    }
+
+    /**
      * Disconnects this player.
      */
     public void logout() {
@@ -600,6 +612,31 @@ public final class Player extends Mob {
      */
     public double getWeight() {
         AttributeValue<Double> attr = attributes.get("weight");
+        return attr.get();
+    }
+
+    /**
+     * Resets the 'trading_with' attribute.
+     */
+    public void resetTradingWith() {
+        setTradingWith(-1);
+    }
+
+    /**
+     * Sets the 'trading_with' attribute.
+     *
+     * @param tradingWith The new value.
+     */
+    public void setTradingWith(int tradingWith) {
+        AttributeValue<Integer> attr = attributes.get("trade_with");
+        attr.set(tradingWith);
+    }
+
+    /**
+     * @return Retrieves the 'trading_with' attribute.
+     */
+    public int getTradingWith() {
+        AttributeValue<Integer> attr = attributes.get("trade_with");
         return attr.get();
     }
 

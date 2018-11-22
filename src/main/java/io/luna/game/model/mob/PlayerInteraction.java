@@ -28,12 +28,12 @@ public final class PlayerInteraction {
     /**
      * The "Follow" interaction.
      */
-    public static final PlayerInteraction FOLLOW = new PlayerInteraction(4, "Follow", false);
+    public static final PlayerInteraction FOLLOW = new PlayerInteraction(3, "Follow", false);
 
     /**
      * The "Trade" interaction.
      */
-    public static final PlayerInteraction TRADE = new PlayerInteraction(5, "Trade with", false);
+    public static final PlayerInteraction TRADE = new PlayerInteraction(4, "Trade with", false);
 
     /**
      * The index.
