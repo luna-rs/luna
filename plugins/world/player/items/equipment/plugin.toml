@@ -1,0 +1,7 @@
+[metadata]
+name = "Equipment"
+description = "A plugin that handles equipment input functionality."
+version = "1.0"
+authors = [
+  "lare96"
+]

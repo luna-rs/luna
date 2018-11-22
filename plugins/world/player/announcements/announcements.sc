@@ -10,7 +10,6 @@ private val MESSAGES = Vector(
   "Luna can be found on GitHub under luna-rs/luna",
   "Change these messages in /plugins/world/announcements/announcements.sc",
   "Any bugs found using Luna should be reported to the GitHub page.",
-  "There's a special girl that I hold close to my heart, her name is Chillian."
 )
 
 /* A filter for players that will receive the announcement. */

@@ -105,6 +105,7 @@ def joinArticle(prefix: String, thing: String, suffix: String) = {
   sb.toString
 }
 
+
 /* Asynchronous block functions. */
 def async(func: => Unit) = service.submit(new Runnable {
   override def run() = {

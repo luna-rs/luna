@@ -85,11 +85,9 @@ on[PrivateChatListChangeEvent].run { msg =>
     case ChangeType.REMOVE_FRIEND => removeFriend(msg.plr, msg.name)
     case ChangeType.REMOVE_IGNORE => removeIgnore(msg.plr, msg.name)
   }
-  msg.terminate
 }
 
 /* Send private message to a player. */
 on[PrivateChatEvent].run { msg =>
   sendMessage(msg.plr, msg.name, msg.message)
-  msg.terminate
 }

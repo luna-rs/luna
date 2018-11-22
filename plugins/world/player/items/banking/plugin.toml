@@ -1,0 +1,7 @@
+[metadata]
+name = "Banking"
+description = "A plugin that handles banking related input."
+version = "1.0"
+authors = [
+  "lare96"
+]

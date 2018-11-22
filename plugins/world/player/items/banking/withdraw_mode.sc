@@ -1,8 +1,5 @@
-/*
- Adds functionality for withdrawing items from the bank as noted.
-*/
-
 import io.luna.game.event.impl.ButtonClickEvent
+
 
 /* Sets the withdraw mode if the banking interface is open. */
 private def setWithdrawMode(msg: ButtonClickEvent, value: Boolean): Unit = {
@@ -11,6 +8,7 @@ private def setWithdrawMode(msg: ButtonClickEvent, value: Boolean): Unit = {
     plr.attr("withdraw_as_note", value)
   }
 }
+
 
 /* Withdraw items as unnoted. */
 on[ButtonClickEvent].

@@ -4,9 +4,6 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 private val BANK_OBJECTS = Set(3193, 2213, 3095)
 
 /* Open the banking interface. */
-on[ObjectFirstClickEvent].run { msg =>
-  if (BANK_OBJECTS.contains(msg.id)) {
-    msg.plr.bank.open
-    msg.terminate
-  }
-}
+on[ObjectFirstClickEvent].
+  condition { msg => BANK_OBJECTS.contains(msg.id) }.
+  run { _.plr.bank.open }
