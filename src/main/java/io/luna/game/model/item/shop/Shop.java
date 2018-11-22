@@ -276,7 +276,7 @@ public final class Shop {
      * @return {@code true} if this item can be sold.
      */
     private boolean computeCanSell(Item item) {
-        if (item.getItemDef().isTradeable()) {
+        if (!Currency.IDENTIFIERS.contains(item.getId()) && item.getItemDef().isTradeable()) {
             switch (sellPolicy) {
                 case ALL:
                     // All trading items can be sold.

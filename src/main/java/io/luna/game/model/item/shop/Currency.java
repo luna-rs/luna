@@ -1,5 +1,9 @@
 package io.luna.game.model.item.shop;
 
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Arrays;
+
 /**
  * The enumerated type whose elements represent currencies that can be used to purchase items
  * from shops.
@@ -11,6 +15,13 @@ public enum Currency {
     TOKKUL(6529),
     CASTLE_WARS_TICKETS(4067),
     AGILITY_ARENA_TICKETS(2996);
+
+    /**
+     * An immutable set of currency identifiers.
+     */
+    public static final ImmutableSet<Integer> IDENTIFIERS = Arrays.stream(values()).
+            map(currency -> currency.id).
+            collect(ImmutableSet.toImmutableSet());
 
     /**
      * The item identifier.
