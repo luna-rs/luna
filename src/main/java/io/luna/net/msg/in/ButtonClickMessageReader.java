@@ -3,6 +3,8 @@ package io.luna.net.msg.in;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.trade.ConfirmTradeInterface;
+import io.luna.game.model.mob.trade.OfferTradeInterface;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -23,6 +25,17 @@ public final class ButtonClickMessageReader extends GameMessageReader {
 
         checkState(buttonId >= 0, "buttonId < 0");
         LOGGER.debug("[{}]: {}", simpleClassName(this), box(buttonId));
+
+        switch (buttonId) {
+            case 3420:
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.accept(player));
+                return null;
+            case 3546:
+                player.getInterfaces().standardTo(ConfirmTradeInterface.class).
+                        ifPresent(inter -> inter.accept(player));
+                return null;
+        }
         return new ButtonClickEvent(player, buttonId);
     }
 }

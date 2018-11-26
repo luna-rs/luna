@@ -180,7 +180,7 @@
   {
     "opcode": 43,
     "size": 6,
-    "payload": "InterfaceItemClickMessageReader"
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 44,
@@ -485,7 +485,7 @@
   {
     "opcode": 117,
     "size": 6,
-    "payload": "InterfaceItemClickMessageReader"
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 118,
@@ -537,7 +537,7 @@
   {
     "opcode": 129,
     "size": 6,
-    "payload": "InterfaceItemClickMessageReader"
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 130,
@@ -565,7 +565,7 @@
   {
     "opcode": 135,
     "size": 6,
-    "payload": "InterfaceItemClickMessageReader"
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 136,
@@ -581,7 +581,8 @@
   },
   {
     "opcode": 139,
-    "size": 2
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 140,
@@ -606,7 +607,7 @@
   {
     "opcode": 145,
     "size": 6,
-    "payload": "InterfaceItemClickMessageReader"
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 146,

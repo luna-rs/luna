@@ -12,7 +12,7 @@ import io.luna.game.model.mob.Player;
 public class ObjectClickEvent extends PlayerEvent implements IdBasedEvent {
 
     /**
-     * An event sent when a player clicks an npc's first index.
+     * An event sent when a player clicks an object's first index.
      *
      * @author lare96 <http://github.org/lare96>
      */
@@ -27,7 +27,7 @@ public class ObjectClickEvent extends PlayerEvent implements IdBasedEvent {
     }
 
     /**
-     * An event sent when a player clicks an npc's second index.
+     * An event sent when a player clicks an object's second index.
      *
      * @author lare96 <http://github.org/lare96>
      */

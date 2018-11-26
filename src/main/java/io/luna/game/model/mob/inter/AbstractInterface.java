@@ -89,15 +89,30 @@ public abstract class AbstractInterface {
     }
 
     /**
+     * A function called when this interface is replaced with another interface. The default behaviour forwards
+     * to {@link #onClose(Player)}.
+     *
+     * @param player The player to apply to listener for.
+     * @param replace The interface replacing this one.
+     */
+    public void onReplace(Player player, AbstractInterface replace) {
+        onClose(player);
+    }
+
+    /**
      * Sets this interface's state to {@link InterfaceState#CLOSED} and fires listeners. Does nothing if
      * this interface is not open.
      *
      * @param player The player.
      */
-    final void setClosed(Player player) {
+    final void setClosed(Player player, AbstractInterface replace) {
         if (isOpen()) {
             state = InterfaceState.CLOSED;
-            onClose(player);
+            if (replace != null) {
+                onReplace(player, replace);
+            } else {
+                onClose(player);
+            }
         }
     }
 

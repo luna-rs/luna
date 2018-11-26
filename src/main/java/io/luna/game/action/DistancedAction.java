@@ -53,6 +53,25 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation checks if {@code other} is equal by comparing the position values.
+     */
+    @Override
+    protected boolean isEqual(Action<?> other) {
+        if (other == this) {
+            return true;
+        }
+        if (other instanceof DistancedAction<?>) {
+            Position otherPosition = ((DistancedAction<?>) other).position;
+            return position.getX() == otherPosition.getX() &&
+                    position.getY() == otherPosition.getY() &&
+                    position.getZ() == otherPosition.getZ();
+        }
+        return false;
+    }
+
+    /**
      * Function called when the mob is within correct range of the position.
      */
     protected abstract void execute();

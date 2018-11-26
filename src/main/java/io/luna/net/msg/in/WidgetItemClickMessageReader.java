@@ -1,11 +1,17 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFifthClickEvent;
+import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
+import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFourthClickEvent;
+import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemSecondClickEvent;
+import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemThirdClickEvent;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.shop.ShopInterface;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.inter.AmountInputInterface;
+import io.luna.game.model.mob.trade.OfferTradeInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ByteTransform;
@@ -19,27 +25,22 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class InterfaceItemClickMessageReader extends GameMessageReader {
+public final class WidgetItemClickMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         switch (opcode) {
             case 145:
-                firstIndex(player, msg.getPayload());
-                break;
+                return firstIndex(player, msg.getPayload());
             case 117:
-                secondIndex(player, msg.getPayload());
-                break;
+                return secondIndex(player, msg.getPayload());
             case 43:
-                thirdIndex(player, msg.getPayload());
-                break;
+                return thirdIndex(player, msg.getPayload());
             case 129:
-                fourthIndex(player, msg.getPayload());
-                break;
+                return fourthIndex(player, msg.getPayload());
             case 135:
-                fifthIndex(player, msg.getPayload());
-                break;
+                return fifthIndex(player, msg.getPayload());
         }
         return null;
     }
@@ -50,7 +51,7 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
      * @param player The player.
      * @param msg The buffer to read from.
      */
-    private void firstIndex(Player player, ByteMessage msg) {
+    private Event firstIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(ByteTransform.A);
         int index = msg.getShort(ByteTransform.A);
         int itemId = msg.getShort(ByteTransform.A);
@@ -84,12 +85,17 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                         ifPresent(inter -> inter.getShop().sendSellValue(player, index));
                 break;
             case 3322:
-                // Offer 1 item on trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.add(player, index, 1));
                 break;
             case 3415:
-                // Remove 1 item from trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.remove(player, index, 1));
                 break;
+            default:
+                return new WidgetItemFirstClickEvent(player, index, interfaceId, itemId);
         }
+        return null;
     }
 
     /**
@@ -98,7 +104,7 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
      * @param player The player.
      * @param msg The buffer to read from.
      */
-    private void secondIndex(Player player, ByteMessage msg) {
+    private Event secondIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int itemId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
         int index = msg.getShort(true, ByteOrder.LITTLE);
@@ -129,12 +135,17 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                         ifPresent(inter -> inter.getShop().sell(player, index, 1));
                 break;
             case 3322:
-                // Add 5 of <item> on trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.add(player, index, 5));
                 break;
             case 3415:
-                // Remove 5 of <item> from trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.remove(player, index, 5));
                 break;
+            default:
+                return new WidgetItemSecondClickEvent(player, index, interfaceId, itemId);
         }
+        return null;
     }
 
     /**
@@ -143,7 +154,7 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
      * @param player The player.
      * @param msg The buffer to read from.
      */
-    private void thirdIndex(Player player, ByteMessage msg) {
+    private Event thirdIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(ByteOrder.LITTLE);
         int itemId = msg.getShort(ByteTransform.A);
         int index = msg.getShort(ByteTransform.A);
@@ -174,12 +185,17 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                         ifPresent(inter -> inter.getShop().sell(player, index, 5));
                 break;
             case 3322:
-                // Add 10 of <item> on trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.add(player, index, 10));
                 break;
             case 3415:
-                // Remove 10 of <item> from trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.remove(player, index, 10));
                 break;
+            default:
+                return new WidgetItemThirdClickEvent(player, index, interfaceId, itemId);
         }
+        return null;
     }
 
     /**
@@ -188,7 +204,7 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
      * @param player The player.
      * @param msg The buffer to read from.
      */
-    private void fourthIndex(Player player, ByteMessage msg) {
+    private Event fourthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteTransform.A);
         int interfaceId = msg.getShort();
         int itemId = msg.getShort(ByteTransform.A);
@@ -219,12 +235,17 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                         ifPresent(inter -> inter.getShop().sell(player, index, 10));
                 break;
             case 3322:
-                // Add all of <item> on trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.add(player, index, -1));
                 break;
             case 3415:
-                // Remove all of <item> from trade screen
+                player.getInterfaces().standardTo(OfferTradeInterface.class).
+                        ifPresent(inter -> inter.remove(player, index, -1));
                 break;
+            default:
+                return new WidgetItemFourthClickEvent(player, index, interfaceId, itemId);
         }
+        return null;
     }
 
     /**
@@ -233,7 +254,7 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
      * @param player The player.
      * @param msg The buffer to read from.
      */
-    private void fifthIndex(Player player, ByteMessage msg) {
+    private Event fifthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteOrder.LITTLE);
         int interfaceId = msg.getShort(false, ByteTransform.A);
         int itemId = msg.getShort(ByteOrder.LITTLE);
@@ -265,6 +286,27 @@ public final class InterfaceItemClickMessageReader extends GameMessageReader {
                     }
                 });
                 break;
+            case 3322:
+                player.getInterfaces().open(new AmountInputInterface() {
+                    @Override
+                    public void onAmountInput(Player player, int value) {
+                        player.getInterfaces().standardTo(OfferTradeInterface.class).
+                                ifPresent(inter -> inter.add(player, index, value));
+                    }
+                });
+                break;
+            case 3415:
+                player.getInterfaces().open(new AmountInputInterface() {
+                    @Override
+                    public void onAmountInput(Player player, int value) {
+                        player.getInterfaces().standardTo(OfferTradeInterface.class).
+                                ifPresent(inter -> inter.remove(player, index, value));
+                    }
+                });
+                break;
+            default:
+                return new WidgetItemFifthClickEvent(player, index, interfaceId, itemId);
         }
+        return null;
     }
 }

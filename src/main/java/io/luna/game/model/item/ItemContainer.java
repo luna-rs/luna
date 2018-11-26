@@ -432,9 +432,11 @@ public class ItemContainer implements Iterable<Item> {
      * @return The index, or {@code -1} if no index is available.
      */
     private int computeRemoveIndex(int preferredIndex, Item item) {
-        if (preferredIndex == -1 || !occupied(preferredIndex) ||
-                get(preferredIndex).getId() != item.getId() || isStackable(item)) {
+        if (preferredIndex == -1 || !occupied(preferredIndex)) {
             return computeIndexForId(item.getId()).orElse(-1);
+        }
+        if (item.getId() == get(preferredIndex).getId()) {
+            return preferredIndex;
         }
         return -1;
     }
@@ -460,7 +462,6 @@ public class ItemContainer implements Iterable<Item> {
      * @return The index of {@code id}, wrapped in an optional.
      */
     public final OptionalInt computeIndexForId(int id) {
-        int count = 0;
         for (int index = 0; index < capacity; index++) {
             if (matches(computeIdForIndex(index), id)) {
                 return OptionalInt.of(index);

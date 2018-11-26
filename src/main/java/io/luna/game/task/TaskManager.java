@@ -32,11 +32,12 @@ public final class TaskManager {
      */
     public void schedule(Task task) {
         if (task.getState() == TaskState.IDLE && task.onSchedule()) {
+            task.setState(TaskState.RUNNING);
+
             if (task.isInstant()) {
                 task.runTask();
             }
             pending.add(task);
-            task.setState(TaskState.RUNNING);
         }
     }
 
@@ -80,9 +81,10 @@ public final class TaskManager {
      * @param action The action.
      */
     public void forEachAttachment(Object attachment, Consumer<Task> action) {
-        for (Task t : pending) {
-            if (Objects.equals(t.getAttachment(), attachment)) {
-                action.accept(t);
+        for (Task task : pending) {
+            Object taskAttachment = task.getAttachment().orElse(null);
+            if (Objects.equals(taskAttachment, attachment)) {
+                action.accept(task);
             }
         }
     }

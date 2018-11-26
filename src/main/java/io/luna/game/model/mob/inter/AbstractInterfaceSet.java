@@ -150,7 +150,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentStandard(StandardInterface inter) {
-        currentStandard.ifPresent(curr -> curr.setClosed(player));
+        currentStandard.ifPresent(curr -> curr.setClosed(player, inter));
         currentStandard = Optional.ofNullable(inter);
     }
 
@@ -194,7 +194,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentInput(InputInterface inter) {
-        currentInput.ifPresent(curr -> curr.setClosed(player));
+        currentInput.ifPresent(curr -> curr.setClosed(player, inter));
         currentInput = Optional.ofNullable(inter);
     }
 
@@ -231,7 +231,7 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentWalkable(WalkableInterface inter) {
-        currentWalkable.ifPresent(curr -> curr.setClosed(player));
+        currentWalkable.ifPresent(curr -> curr.setClosed(player, inter));
         currentWalkable = Optional.ofNullable(inter);
     }
 

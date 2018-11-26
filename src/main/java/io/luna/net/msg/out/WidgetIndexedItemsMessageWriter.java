@@ -33,7 +33,7 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
      * @param id The widget identifier.
      * @param items The items to display.
      */
-        public WidgetIndexedItemsMessageWriter(int id, Collection<IndexedItem> items) {
+    public WidgetIndexedItemsMessageWriter(int id, Collection<IndexedItem> items) {
         this.id = id;
         this.items = items;
     }
@@ -47,9 +47,9 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
     public WidgetIndexedItemsMessageWriter(int id, IndexedItem... items) {
         this.id = id;
 
-        if(items.length == 0) {
+        if (items.length == 0) {
             this.items = ImmutableList.of();
-        } else if(items.length == 1) {
+        } else if (items.length == 1) {
             this.items = ImmutableList.of(items[0]);
         } else {
             // Arrays.asList is faster here, doesn't make a copy of the array.
