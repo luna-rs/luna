@@ -77,7 +77,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
 
         // Create class and instance from qualified name.
         Object readerInstance = className != null ?
-                Class.forName(DIR + className).newInstance() : new DefaultMessageReader();
+                Class.forName(DIR + className).getDeclaredConstructor().newInstance() : new DefaultMessageReader();
 
         // Retrieve opcode and size fields.
         Class<?> readerClass = readerInstance.getClass().getSuperclass();
