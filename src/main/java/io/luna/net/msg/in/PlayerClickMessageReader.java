@@ -1,9 +1,9 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.trade.TradeRequest;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
@@ -36,12 +36,11 @@ public final class PlayerClickMessageReader extends GameMessageReader {
     private Event fourthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(true, ByteOrder.LITTLE);
         World world = player.getWorld();
-        Player tradingWith = world.getPlayers().get(index);
-        if (tradingWith == null || !tradingWith.isViewable(player) || tradingWith.equals(player)) {
+        Player other = world.getPlayers().get(index);
+        // TODO Change isViewable to canFindPath, after pathfinding
+        if (other == null || !other.isViewable(player) || other.equals(player)) {
             throw new IllegalStateException("Invalid requested player.");
         }
-        TradeRequest tradeRequest = new TradeRequest(player, tradingWith);
-        tradeRequest.request();
-        return null;
+        return new PlayerFourthClickEvent(player, index, other);
     }
 }

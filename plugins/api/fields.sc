@@ -17,9 +17,9 @@ val logger = BINDINGS.getLogger
 val scriptListeners = BINDINGS.getListeners
 
 /* Aliases for 'LunaContext'. */
-def pluginManager = ctx.getPlugins
-def world = ctx.getWorld
-def service = ctx.getService
+val pluginManager = ctx.getPlugins
+val world = ctx.getWorld
+val service = ctx.getService
 
 
 /* Aliases for 'PlayerRights'. */

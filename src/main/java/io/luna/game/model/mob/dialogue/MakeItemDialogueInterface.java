@@ -30,14 +30,14 @@ public class MakeItemDialogueInterface extends DialogueInterface {
     }
 
     /**
-     * Applies {@link #makeItem(Player, int, int)} for {@code index}.
+     * Applies {@link #makeItem(Player, int, int, int)} for {@code index}.
      *
      * @param player The player.
      * @param index The index.
      * @param forAmount The amount.
      */
     public final void makeItemIndex(Player player, int index, int forAmount) {
-        makeItem(player, items[index], forAmount);
+        makeItem(player, items[index], index, forAmount);
     }
 
     /**
@@ -45,9 +45,10 @@ public class MakeItemDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      * @param id The identifier of the item clicked.
+     * @param index
      * @param forAmount The amount clicked.
      */
-    public void makeItem(Player player, int id, int forAmount) {
+    public void makeItem(Player player, int id, int index, int forAmount) {
 
     }
 

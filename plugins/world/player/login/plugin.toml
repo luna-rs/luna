@@ -1,0 +1,8 @@
+[metadata]
+name = "Login"
+description = "A plugin that prepares players for gameplay."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

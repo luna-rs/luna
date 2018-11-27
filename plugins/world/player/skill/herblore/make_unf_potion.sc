@@ -123,7 +123,7 @@ private final class MakeUnfAction(val plr: Player,
 
 /* A dialogue that displays the item to grind. */
 private final class UnfPotionDialogue(val unfPotion: UnfPotion) extends MakeItemDialogueInterface(unfPotion.unf) {
-  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+  override def makeItem(player: Player, id: Int, index: Int, forAmount: Int) = {
     player.submitAction(new MakeUnfAction(player, unfPotion, forAmount))
   }
 }

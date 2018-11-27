@@ -29,7 +29,7 @@ private def withdraw(msg: WidgetItemClickEvent, amount: Int): Unit = {
   } else if (plr.rights >= RIGHTS_DEV) {
     // For the "::search_item" command (it uses the banking interface).
     amount match {
-      case -1 => plr.inventory.add(new Item(msg.itemId, "1,000,000".fInt))
+      case -1 => plr.inventory.add(new Item(msg.itemId, 1000000))
       case _ => plr.inventory.add(new Item(msg.itemId, amount))
     }
   }

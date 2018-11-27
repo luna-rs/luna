@@ -50,7 +50,7 @@ private final class GrindAction(val plr: Player, val oldId: Int,
 
 /* A dialogue that displays the item to grind. */
 private final class GrindDialogue(val oldId: Int, val newId: Int) extends MakeItemDialogueInterface(newId) {
-  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+  override def makeItem(player: Player, id: Int, index: Int, forAmount: Int) = {
     player.submitAction(new GrindAction(player, oldId, id, forAmount))
   }
 }

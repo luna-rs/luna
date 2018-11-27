@@ -199,7 +199,7 @@ private final class MakePotionAction(val plr: Player,
 
 /* A dialogue that displays the item to grind. */
 private final class PotionDialogue(val potion: Potion) extends MakeItemDialogueInterface(potion.id) {
-  override def makeItem(player: Player, id: Int, forAmount: Int) = {
+  override def makeItem(player: Player, id: Int, index: Int, forAmount: Int) = {
     player.submitAction(new MakePotionAction(player, potion, forAmount))
   }
 }

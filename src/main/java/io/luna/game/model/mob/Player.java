@@ -22,12 +22,10 @@ import io.luna.game.model.mob.inter.GameTabSet;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
-import io.luna.net.msg.out.SkillUpdateMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
@@ -307,38 +305,14 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
-        teleporting = true; // Needed for initial placement (teleportation).
+        teleporting = true;
         updateFlags.flag(UpdateFlag.APPEARANCE);
-        tabs.resetAll();
-
-        interactionMenu.show(PlayerInteraction.FOLLOW);
-        interactionMenu.show(PlayerInteraction.TRADE);
-
-        // Temporary, until "init" for containers is moved here. That will happen
-        // when login synchronization is being fixed.
-        equipment.loadBonuses();
-
-        inventory.refreshPrimary(this);
-        equipment.refreshPrimary(this);
-
-        queue(new UpdateRunEnergyMessageWriter());
-        queue(new AssignmentMessageWriter(true));
-
-        int size = SkillSet.size();
-        for (int index = 0; index < size; index++) {
-            queue(new SkillUpdateMessageWriter(index));
-        }
-
-        sendMessage("Welcome to Luna.");
-        sendMessage("You currently have " + rights.getFormattedName() + " privileges.");
-
-        LOGGER.info("{} has logged in.", this);
         plugins.post(new LoginEvent(this));
+        LOGGER.info("{} has logged in.", this);
     }
 
     @Override
     protected void onInactive() {
-        interfaces.close();
         plugins.post(new LogoutEvent(this));
         asyncSave();
         LOGGER.info("{} has logged out.", this);

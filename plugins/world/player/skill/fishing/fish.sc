@@ -295,12 +295,12 @@ private final class FishAction(val evt: NpcClickEvent, val tool: Tool) extends H
 
   override def onInterrupt() = mob.animation(CANCEL)
 
-  override def isEqual(other: Action[_]) = {
+  override def isEqual(other: Action[_]) =
     other match {
       case action: FishAction => evt.npc.equals(action.evt.npc)
       case _ => false
     }
-  }
+
 }
 
 

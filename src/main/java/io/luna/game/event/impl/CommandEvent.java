@@ -46,7 +46,7 @@ public final class CommandEvent extends PlayerEvent {
 
     @Override
     public boolean matches(EventArguments args) {
-        PlayerRights rights = player.getRights();
+        PlayerRights rights = plr.getRights();
         return args.equals(0, name) && rights.equalOrGreater((PlayerRights) args.get(1));
     }
 

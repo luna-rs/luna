@@ -53,7 +53,7 @@ private final class FillAction(val evt: ItemOnObjectEvent, val oldId: Int,
 /* Opens the "Make item" interface. */
 private final class FillDialogue(val toFill: Int,
                                  val msg: ItemOnObjectEvent) extends MakeItemDialogueInterface(toFill) {
-  override def makeItem(player: Player, id: Int, forAmount: Int) ={
+  override def makeItem(player: Player, id: Int, index: Int, forAmount: Int) = {
     player.submitAction(new FillAction(msg, msg.itemId, id, forAmount))
   }
 }

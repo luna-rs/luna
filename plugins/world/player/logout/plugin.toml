@@ -1,0 +1,8 @@
+[metadata]
+name = "Logout"
+description = "A plugin that prepares players for disconnection and enables the logout button."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]

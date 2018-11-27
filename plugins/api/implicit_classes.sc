@@ -7,7 +7,7 @@ import io.luna.game.action.Action
 import io.luna.game.model.item.{Item, ItemContainer}
 import io.luna.game.model.mob.attr.AttributeValue
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
-import io.luna.game.model.mob.inter.{AbstractInterfaceSet, InputInterface, StandardInterface, WalkableInterface}
+import io.luna.game.model.mob.inter._
 import io.luna.game.model.mob.{Mob, Npc, Player, PlayerRights}
 import io.luna.game.model.{Entity, Position, World}
 import io.luna.game.task.Task
@@ -16,7 +16,6 @@ import io.luna.util.Rational
 
 import scala.collection.JavaConverters._
 import scala.collection.generic.FilterMonadic
-import scala.reflect.ClassTag
 import scala.util.Random
 
 
@@ -216,43 +215,25 @@ implicit class RichWorld(world: World) {
   def getChunk(pos: Position) = world.getChunks.getChunk(pos.getChunkPosition)
 }
 
-implicit class RichString(str: String) {
-  def fInt = str.replace(",", "").toInt
-
-  def fLong = str.replace(",", "").toLong
-
-  def fDouble = str.replace(",", "").toDouble
-}
-
 implicit class RichAbstractInterfaceSet(interfaceSet: AbstractInterfaceSet) {
-  def standard[T <: StandardInterface](implicit tag: ClassTag[T]) = {
-    val currentStandard = interfaceSet.getCurrentStandard
-    val standardClass = currentStandard.map(_.getClass)
-    if (standardClass.isPresent && tag.runtimeClass.isAssignableFrom(standardClass.get)) {
-      Some(currentStandard.get)
-    } else {
-      None
-    }
-  }
+  def get[T <: AbstractInterface](interClass: Class[T]): Option[T] = {
+    val currentStandard = interfaceSet.getCurrentStandard.
+      filter(interClass.isInstance(_))
+    if (currentStandard.isPresent)
+      return Some(interClass.cast(currentStandard.get))
 
-  def input[T <: InputInterface](implicit tag: ClassTag[T]) = {
-    val currentInput = interfaceSet.getCurrentInput
-    val inputClass = currentInput.map(_.getClass)
-    if (inputClass.isPresent && tag.runtimeClass.isAssignableFrom(inputClass.get)) {
-      Some(currentInput.get)
-    } else {
-      None
-    }
-  }
+    /*val currentInput = interfaceSet.getCurrentInput.
+      filter(interClass.isInstance(_)).
+      map(interClass.cast(_))
+    if (currentInput.isPresent)
+      return Some(interClass.currentInput.get)
 
-  def walkable[T <: WalkableInterface](implicit tag: ClassTag[T]) = {
-    val currentWalkable = interfaceSet.getCurrentWalkable
-    val walkableClass = currentWalkable.map(_.getClass)
-    if (walkableClass.isPresent && tag.runtimeClass.isAssignableFrom(walkableClass.get)) {
-      Some(currentWalkable.get)
-    } else {
-      None
-    }
+    val currentWalkable = interfaceSet.getCurrentWalkable.
+      filter(interClass.isInstance(_)).
+      map(interClass.cast(_))
+    if (currentWalkable.isPresent)
+      return Some(currentWalkable.get)*/
+    None
   }
 }
 

@@ -3,8 +3,8 @@ package io.luna.net.msg.in;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.trade.ConfirmTradeInterface;
-import io.luna.game.model.mob.trade.OfferTradeInterface;
+import io.luna.game.model.mob.inter.ConfirmTradeInterface;
+import io.luna.game.model.mob.inter.OfferTradeInterface;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 

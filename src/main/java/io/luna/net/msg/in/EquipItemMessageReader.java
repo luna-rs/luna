@@ -1,6 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.EquipItemEvent;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteTransform;
@@ -30,11 +31,6 @@ public final class EquipItemMessageReader extends GameMessageReader {
         if (inventory.computeIdForIndex(index).orElse(-1) != itemId) {
             return null;
         }
-
-        player.interruptAction();
-        player.resetInteractingWith();
-        player.getEquipment().equip(index);
-        player.getInterfaces().close();
-        return null;
+        return new EquipItemEvent(player, index, itemId, interfaceId);
     }
 }
