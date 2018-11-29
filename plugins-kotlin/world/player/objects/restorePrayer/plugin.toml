@@ -1,0 +1,7 @@
+[metadata]
+name = "Restore prayer"
+description = "A plugin that enables restoring Prayer points using an altar."
+version = "1.0"
+authors = [
+  "lare96"
+]
