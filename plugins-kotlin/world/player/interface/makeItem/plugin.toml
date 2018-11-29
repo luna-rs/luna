@@ -1,0 +1,8 @@
+[metadata]
+name = "Make item"
+description = "A plugin that enables the use of the 'Make item' interfaces."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]
