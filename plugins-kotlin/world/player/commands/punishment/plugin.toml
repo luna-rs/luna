@@ -1,0 +1,7 @@
+[metadata]
+name = "Punishment commands"
+description = "A plugin that enables punishment commands."
+version = "1.0"
+authors = [
+  "lare96"
+]
