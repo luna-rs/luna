@@ -1,6 +1,6 @@
 [metadata]
 name = "Spawn NPCs"
-description = "Allows for spawning global NPCs."
+description = "A plugin that enables spawning global NPCs."
 version = "1.0"
 authors = [
   "lare96"

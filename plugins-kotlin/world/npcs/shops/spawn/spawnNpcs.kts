@@ -3,7 +3,9 @@ import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
 
-/* Spawn an npc. */
+/**
+ * Spawns an npc.
+ */
 fun spawn(id: Int, x: Int, y: Int, z: Int = 0): Npc {
     val npc = Npc(ctx, id, Position(x, y, z))
     world.add(npc)
