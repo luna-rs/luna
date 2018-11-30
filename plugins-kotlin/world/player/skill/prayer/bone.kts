@@ -19,6 +19,13 @@ enum class Bone(val id: Int, val exp: Double) {
     DRAGON_BONES(id = 536,
                  exp = 72.0);
 
+    /**
+     * The bone item (with 1 as the amount).
+     */
     val boneItem = Item(id)
+
+    /**
+     * Computes the item name of this bone.
+     */
     fun itemName() = boneItem.itemDef.name
 }
