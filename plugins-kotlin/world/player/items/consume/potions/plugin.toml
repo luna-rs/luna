@@ -1,0 +1,7 @@
+[metadata]
+name = "Drink potions"
+description = "A plugin that enables drinking potions."
+version = "1.0"
+authors = [
+  "lare96"
+]
