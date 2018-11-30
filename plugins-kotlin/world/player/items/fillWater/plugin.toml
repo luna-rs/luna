@@ -1,0 +1,8 @@
+[metadata]
+name = "Fill water"
+description = "A plugin that enables players to fill items with water."
+version = "1.0"
+dependencies = [ ]
+authors = [
+  "lare96"
+]
