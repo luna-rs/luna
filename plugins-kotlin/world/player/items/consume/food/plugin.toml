@@ -1,0 +1,7 @@
+[metadata]
+name = "Eat food"
+description = "A plugin that enables eating food."
+version = "1.0"
+authors = [
+  "lare96"
+]
