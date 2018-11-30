@@ -1,6 +1,6 @@
 [metadata]
 name = "General store"
-description = "A plugin that opens the General store."
+description = "A plugin that enables the General store."
 version = "1.0"
 authors = [
   "lare96"
