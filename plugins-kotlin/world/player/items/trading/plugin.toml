@@ -1,0 +1,7 @@
+[metadata]
+name = "Trading"
+description = "A plugin that enables trading between players."
+version = "1.0"
+authors = [
+  "lare96"
+]
