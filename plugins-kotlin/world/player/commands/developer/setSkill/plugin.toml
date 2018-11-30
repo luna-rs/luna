@@ -1,0 +1,7 @@
+[metadata]
+name = "Set skill command"
+description = "A plugin that enables the ::set_skill command. It allows for dynamic modification of skill levels."
+version = "1.0"
+authors = [
+  "lare96"
+]
