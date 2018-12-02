@@ -1,6 +1,6 @@
 [metadata]
 name = "Shops"
-description = "A plugin that handles shopping related input."
+description = "A plugin that enables shopping."
 version = "1.0"
 authors = [
   "lare96"

@@ -1,7 +1,0 @@
-[metadata]
-name = "Search item command"
-description = "Handles searching and spawning of items."
-version = "1.0"
-authors = [
-  "lare96"
-]

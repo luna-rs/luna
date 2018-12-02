@@ -1,6 +1,6 @@
 [metadata]
 name = "Generic developer commands"
-description = "Handles generic developer command input."
+description = "A plugin that enables generic developer commands."
 version = "1.0"
 authors = [
   "lare96"

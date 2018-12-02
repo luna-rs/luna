@@ -1,7 +1,0 @@
-[metadata]
-name = "Private chat"
-description = "Allows for private messaging between players."
-version = "1.0"
-authors = [
-  "lare96"
-]

@@ -1,6 +1,6 @@
 [metadata]
 name = "Settings"
-description = "A plugin that adds toggling and loading settings."
+description = "A plugin enables the settings tab."
 version = "1.0"
 authors = [
   "lare96"

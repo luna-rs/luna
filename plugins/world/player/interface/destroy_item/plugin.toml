@@ -1,8 +1,0 @@
-[metadata]
-name = "Destroy item"
-description = "Enables the use of the 'Destroy item' interface."
-version = "1.0"
-dependencies = [ ]
-authors = [
-  "lare96"
-]

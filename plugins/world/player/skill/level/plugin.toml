@@ -1,11 +1,6 @@
 [metadata]
 name = "Advance level"
-description = "Adds functionality for advancing skill levels.
-
-SUPPORTS:
- -> Fireworks, congratulations interface, etc.
- -> Recalculation of combat level when combat skills change.
- -> Queuing messages for level and experience changes."
+description = "A plugin that enables congratulatory level up messages."
 version = "1.0"
 authors = [
   "lare96"

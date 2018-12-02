@@ -1,10 +1,6 @@
 [metadata]
 name = "Announcements"
-description = "Sends server-wide announcements at specified intervals.
-
-SUPPORTS:
- -> Random message selection at fixed interval.
- -> Filtering certain players from the announcements."
+description = "A plugin that sends server-wide announcements at specified intervals."
 version = "1.0"
 authors = [
   "lare96"

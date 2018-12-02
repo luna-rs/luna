@@ -1,11 +1,6 @@
 [metadata]
-name = "Consume food"
-description = "Allows players to consume food.
-
-SUPPORTS:
- -> Eating a variety of consumables.
- -> Multi-portion foods (pizzas, cakes, etc).
- -> Foods with different throttle rates (karambwans, pies, etc)."
+name = "Eat food"
+description = "A plugin that enables eating food."
 version = "1.0"
 authors = [
   "lare96"

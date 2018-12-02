@@ -1,13 +1,6 @@
 [metadata]
 name = "Punishment commands"
-description = "Handles punishment command input.
-
-SUPPORTS:
- -> Internet protocol address ban.
- -> Permanent ban/mute.
- -> Temporary ban/mute.
- -> Specific punishment lift dates.
- -> Kicking (forced disconnect)."
+description = "A plugin that enables punishment commands."
 version = "1.0"
 authors = [
   "lare96"

@@ -1,0 +1,7 @@
+[metadata]
+name = "Runecrafting"
+description = "A plugin that enables the Runecrafting skill."
+version = "1.0"
+authors = [
+  "lare96"
+]

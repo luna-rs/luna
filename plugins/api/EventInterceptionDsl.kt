@@ -3,7 +3,9 @@ package api
 import io.luna.game.event.Event
 import io.luna.game.event.EventArguments
 import io.luna.game.event.EventListener
+import io.luna.game.event.IdBasedEvent
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 /**
  * The main event interception function. Forwards to [TestEvent].
@@ -40,7 +42,7 @@ class TestEvent<E : Event>(private val eventClass: KClass<E>) {
 }
 
 /**
- * A final builder. Tests if the event satisfies an arbitrary condition.
+ * A final builder. Tests if the event satisfies an arbitrary condition, and terminates the event if it does.
  */
 class ConditionTest<E : Event>(private val eventClass: KClass<E>, private val cond: (E) -> Boolean) {
 
@@ -50,6 +52,7 @@ class ConditionTest<E : Event>(private val eventClass: KClass<E>, private val co
     fun run(action: (E) -> Unit) = addListener(eventClass, EventArguments.NO_ARGS) {
         if (cond(it)) {
             action(it)
+            it.terminate()
         }
     }
 }
@@ -64,6 +67,16 @@ class ArgsTest<E : Event>(private val eventClass: KClass<E>, private val args: A
      */
     fun run(action: (E) -> Unit) {
         val eventArguments = EventArguments(args)
-        scriptListeners.add(EventListener(eventClass.java, eventArguments, action))
+        // TODO Needs testing!
+        if (eventClass.isSubclassOf(IdBasedEvent::class)) {
+            addListener(eventClass, eventArguments, action)
+        } else {
+            addListener(eventClass, eventArguments) {
+                if (it.matches(eventArguments)) {
+                    action(it)
+                    it.terminate()
+                }
+            }
+        }
     }
 }
