@@ -9,22 +9,22 @@ import world.player.skills.runecrafting.Rune
 /**
  * The rune essence identifier.
  */
-private val runeEssence = 1436
+val runeEssence = 1436
 
 /**
  * The pure essence identifier.
  */
-private val pureEssence = 7936
+val pureEssence = 7936
 
 /**
  * The runecrafting animation.
  */
-private val craftAnimation = Animation(791)
+val craftAnimation = Animation(791)
 
 /**
  * The runecrafting graphic.
  */
-private val craftGraphic = Graphic(186, 100)
+val craftGraphic = Graphic(186, 100)
 
 /**
  * Attempts to craft [rune] for [plr].

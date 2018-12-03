@@ -36,7 +36,6 @@ public abstract class ProducingAction extends StationaryAction<Player> {
         }
 
         currentRemove = remove();
-        currentAdd = add();
 
         Inventory inventory = mob.getInventory();
         if (!inventory.containsAll(currentRemove)) {
@@ -44,6 +43,7 @@ public abstract class ProducingAction extends StationaryAction<Player> {
             return;
         }
 
+        currentAdd = add();
         if (!inventory.hasSpaceForAll(currentAdd)) {
             mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();

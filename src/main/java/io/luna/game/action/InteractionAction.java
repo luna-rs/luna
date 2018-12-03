@@ -41,7 +41,7 @@ public final class InteractionAction extends DistancedAction<Player> {
         if (interact.getType() != EntityType.ITEM) {
             mob.interact(interact);
         }
-        mob.getWalkingQueue().clear();
+        mob.getWalking().clear();
 
         PluginManager plugins = mob.getPlugins();
         plugins.post(event);

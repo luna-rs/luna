@@ -111,7 +111,7 @@ public class NpcClickEvent extends PlayerEvent implements IdBasedEvent {
     /**
      * @return The non-player character.
      */
-    public Npc npc() {
+    public Npc getNpc() {
         return npc;
     }
 }

@@ -71,42 +71,42 @@ public final class ItemOnItemEvent extends PlayerEvent {
     /**
      * @return The used item identifier.
      */
-    public int usedId() {
+    public int getUsedId() {
         return usedId;
     }
 
     /**
      * @return The target item identifier.
      */
-    public int targetId() {
+    public int getTargetId() {
         return targetId;
     }
 
     /**
      * @return The used item index.
      */
-    public int usedIndex() {
+    public int getUsedIndex() {
         return usedIndex;
     }
 
     /**
      * @return The target item index.
      */
-    public int targetIndex() {
+    public int getTargetIndex() {
         return targetIndex;
     }
 
     /**
      * @return The used interface identifier.
      */
-    public int usedInterfaceId() {
+    public int getUsedInterfaceId() {
         return usedInterfaceId;
     }
 
     /**
      * @return The target interface identifier.
      */
-    public int targetInterfaceId() {
+    public int getTargetInterfaceId() {
         return targetInterfaceId;
     }
 }

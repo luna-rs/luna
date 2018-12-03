@@ -8,27 +8,27 @@ import world.player.items.consume.potion.Potion
 /**
  * The "last_drink_timer" attribute.
  */
-private var Player.lastDrink by TimerAttr("last_drink_timer")
+var Player.lastDrink by TimerAttr("last_drink_timer")
 
 /**
  * The "last_eat_timer" attribute.
  */
-private var Player.lastEat by TimerAttr("last_eat_timer")
+var Player.lastEat by TimerAttr("last_eat_timer")
 
 /**
  * Item instance for empty vials.
  */
-private val vialItem = Item(229)
+val vialItem = Item(229)
 
 /**
  * The consume potion animation.
  */
-private val drinkAnimation = Animation(829)
+val drinkAnimation = Animation(829)
 
 /**
  * The delay between consuming potions.
  */
-private val consumeDelay = 1800L
+val consumeDelay = 1800L
 
 /**
  * Forwards to [drink] if the [Player] is alive and not drinking too quickly.

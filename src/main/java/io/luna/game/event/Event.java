@@ -7,8 +7,6 @@ import java.util.OptionalInt;
  * An Object passed through a pipeline to be intercepted by event listeners. Events should
  * <strong>always</strong> be immutable to ensure that they cannot be modified while being passed
  * through the pipeline.
- * <p>
- * When writing getters for events, "get" should be omitted in order to conform to Scala conventions.
  *
  * @author lare96 <http://github.org/lare96>
  */

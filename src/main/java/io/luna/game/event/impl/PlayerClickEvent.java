@@ -24,20 +24,40 @@ public class PlayerClickEvent extends PlayerEvent {
         }
     }
 
+    /**
+     * The index of the other player.
+     */
     private final int index;
+
+    /**
+     * The other player.
+     */
     private final Player other;
 
+    /**
+     * Creates a new {@link PlayerClickEvent}.
+     *
+     * @param player The player.
+     * @param index The index of the other player.
+     * @param other The other player.
+     */
     public PlayerClickEvent(Player player, int index, Player other) {
         super(player);
         this.index = index;
         this.other = other;
     }
 
-    public int index() {
+    /**
+     * @return The index of the other player.
+     */
+    public int getIndex() {
         return index;
     }
 
-    public Player other() {
+    /**
+     * @return The other player.
+     */
+    public Player getOther() {
         return other;
     }
 }

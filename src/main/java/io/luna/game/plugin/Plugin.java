@@ -30,6 +30,11 @@ public final class Plugin {
     private final String packageName;
 
     /**
+     * A set of script dependencies.
+     */
+    private final ImmutableSet<ScriptDependency> dependencies;
+
+    /**
      * A set of scripts.
      */
     private final ImmutableSet<Script> scripts;
@@ -41,10 +46,12 @@ public final class Plugin {
      * @param packageName The fully qualified package name.
      * @param scripts A set of scripts.
      */
-    public Plugin(PluginMetadata metadata, String packageName, Set<Script> scripts) {
+    public Plugin(PluginMetadata metadata, String packageName,
+                  Set<ScriptDependency> dependencies, Set<Script> scripts) {
         this.metadata = metadata;
         this.packageName = packageName;
         this.scripts = ImmutableSet.copyOf(scripts);
+        this.dependencies = ImmutableSet.copyOf(dependencies);
     }
 
     /**
@@ -59,6 +66,13 @@ public final class Plugin {
      */
     public String getPackageName() {
         return packageName;
+    }
+
+    /**
+     * @return A set of script dependencies.
+     */
+    public ImmutableSet<ScriptDependency> getDependencies() {
+        return dependencies;
     }
 
     /**

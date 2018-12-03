@@ -6,6 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.PlayerSerializer;
+import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;
@@ -157,7 +158,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
      * @return The login response, wrapped in an optional.
      */
     private Optional<LoginResponse> handlePunishments(Player player) {
-        // TODO rewrite
+        // TODO rewrite, should also be done in a plugin...
         LocalDate now = LocalDate.now();
         Function<String, LocalDate> liftFunc =
                 it -> it.equals("never") ? now.plusYears(1) : LocalDate.parse(it);
@@ -176,7 +177,8 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
             LocalDate liftDate = liftFunc.apply(player.getUnmuteDate());
             if (liftDate.isBefore(now)) {
                 // Player has been unmuted.
-                player.setUnmuteDate("n/a");
+                AttributeValue<String> attr = player.getAttributes().get("unmute_date");
+                attr.set("n/a");
             }
         }
         return Optional.empty();

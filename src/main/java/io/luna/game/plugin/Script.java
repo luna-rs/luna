@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A model representing a single Scala file contained within a {@link Plugin}.
+ * A model representing a single Kotlin script file (.kts) contained within a {@link Plugin}.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -16,7 +16,7 @@ public final class Script {
     private final String name;
 
     /**
-     * The absolute path to this script.
+     * The path to this script.
      */
     private final Path path;
 
@@ -29,7 +29,7 @@ public final class Script {
      * Creates a new {@link Script}.
      *
      * @param name The name of this script.
-     * @param path The absolute path to this script.
+     * @param path The path to this script.
      * @param contents The contents of this script.
      */
     public Script(String name, Path path, String contents) {
@@ -45,14 +45,14 @@ public final class Script {
         }
         if (obj instanceof Script) {
             Script other = (Script) obj;
-            return name.equals(other.name);
+            return name.equals(other.name) && path.equals(other.path);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name, path);
     }
 
     /**
@@ -63,7 +63,7 @@ public final class Script {
     }
 
     /**
-     * @return The absolute path to this script.
+     * @return The path to this script.
      */
     public Path getPath() {
         return path;

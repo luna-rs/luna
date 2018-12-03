@@ -8,12 +8,12 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class PlayerEvent extends Event {
+public class PlayerEvent extends Event {
 
     /**
      * The player.
      */
-    public final Player plr;
+    protected final Player plr;
 
     /**
      * Creates a new {@link PlayerEvent}.
@@ -33,5 +33,12 @@ class PlayerEvent extends Event {
     public PlayerEvent(Player plr, int mapId) {
         super(mapId);
         this.plr = plr;
+    }
+
+    /**
+     * @return The player.
+     */
+    public Player getPlr() {
+        return plr;
     }
 }

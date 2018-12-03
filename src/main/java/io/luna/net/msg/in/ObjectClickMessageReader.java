@@ -48,13 +48,13 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * @param evt The interaction event.
      */
     private void handleClick(Player player, ObjectClickEvent evt) {
-        checkState(evt.x() >= 0, "x coordinate out of range");
-        checkState(evt.y() >= 0, "y coordinate out of range");
-        checkState(evt.id() > 0, "id out of range");
+        checkState(evt.getX() >= 0, "x coordinate out of range");
+        checkState(evt.getY() >= 0, "y coordinate out of range");
+        checkState(evt.getId() > 0, "id out of range");
 
         // TODO: Make sure object really exists
-        Position position = new Position(evt.x(), evt.y(), player.getPosition().getZ());
-        GameObject object = new GameObject(player.getContext(), evt.id(), position);
+        Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
+        GameObject object = new GameObject(player.getContext(), evt.getId(), position);
         player.submitAction(new InteractionAction(player, object, evt));
     }
 

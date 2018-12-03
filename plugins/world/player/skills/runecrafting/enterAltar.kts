@@ -9,7 +9,7 @@ import world.player.skills.runecrafting.Altar
 /**
  * The entering an altar with a talisman animation.
  */
-private val talismanAnimation = Animation(827)
+val talismanAnimation = Animation(827)
 
 /**
  * Moves the player inside an altar using a talisman.

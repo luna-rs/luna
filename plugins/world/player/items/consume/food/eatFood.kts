@@ -8,17 +8,17 @@ import world.player.items.consume.food.Food
 /**
  * The "last_eat_timer" attribute.
  */
-private var Player.lastEat by TimerAttr("last_eat_timer")
+var Player.lastEat by TimerAttr("last_eat_timer")
 
 /**
  * Mappings of [Food.id] to [Food].
  */
-private val foodMap = Food.values().map { it.id to it }.toMap()
+val foodMap = Food.values().map { it.id to it }.toMap()
 
 /**
  * The animation played when eating food.
  */
-private val eatAnimation = Animation(829)
+val eatAnimation = Animation(829)
 
 /**
  * Forwards to [eat] if the [Player] is alive and not eating too quickly.

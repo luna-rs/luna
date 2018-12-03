@@ -48,21 +48,21 @@ public final class PickupItemEvent extends PlayerEvent  implements IdBasedEvent 
     /**
      * @return The item's x coordinate.
      */
-    public int x() {
+    public int getX() {
         return x;
     }
 
     /**
      * @return The item's y coordinate.
      */
-    public int y() {
+    public int getY() {
         return y;
     }
 
     /**
      * @return The item identifier.
      */
-    public int id() {
+    public int getId() {
         return id;
     }
 }

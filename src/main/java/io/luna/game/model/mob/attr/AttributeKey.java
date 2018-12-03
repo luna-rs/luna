@@ -35,12 +35,12 @@ public final class AttributeKey<T> {
         forPersistent("unmute_date", "n/a");
 
         // Transient attributes. These are reset on logout.
-        forTransient("last_bone_bury", 0L);
-        forTransient("last_food_consume", 0L);
-        forTransient("last_potion_consume", 0L);
+        forTransient("last_bury_timer", 0L);
+        forTransient("last_eat_timer", 0L);
+        forTransient("last_drink_timer", 0L);
         forTransient("withdraw_as_note", false);
         forTransient("weight", 0.0);
-        forTransient("trade_with", -1);
+        forTransient("trading_with", -1);
     }
 
     /**

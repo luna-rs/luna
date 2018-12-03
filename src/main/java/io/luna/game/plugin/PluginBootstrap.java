@@ -1,6 +1,5 @@
 package io.luna.game.plugin;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.MoreFiles;
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
@@ -21,7 +20,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -32,7 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
- * A bootstrapper that initializes and evaluates all {@code Scala} dependencies and plugins.
+ * A bootstrapper that initializes and evaluates all {@code Kotlin} plugins.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -58,6 +56,11 @@ public final class PluginBootstrap {
      * A task that will load a single plugin directory.
      */
     private final class PluginDirLoader implements Runnable {
+
+        /**
+         * All script dependencies for the plugin.
+         */
+        private final Set<ScriptDependency> dependencies = new LinkedHashSet<>();
 
         /**
          * All scripts for the plugin.
@@ -89,7 +92,7 @@ public final class PluginBootstrap {
         public void run() {
             //noinspection ConstantConditions
             Set<String> fileList = Arrays.stream(dir.toFile().list()).
-                    filter(f -> f.endsWith(".sc")).
+                    filter(f -> f.endsWith(".kt") || f.endsWith(".kts")).
                     collect(Collectors.toSet());
 
             // Metadata TOML -> Java
@@ -103,14 +106,14 @@ public final class PluginBootstrap {
                 return;
             }
 
-            // Read all scripts.
+            // Load all non-metadata plugin files.
             try {
-                fileList.forEach(this::loadFileContents);
+                fileList.forEach(this::loadFile);
             } catch (LoadScriptException e) {
                 LOGGER.catching(Level.WARN, e);
                 return;
             }
-            plugins.put(pluginName, new Plugin(metadata, computePackageName(), scripts));
+            plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
         }
 
         /**
@@ -131,15 +134,21 @@ public final class PluginBootstrap {
         }
 
         /**
-         * Loads the file with {@code fileName} into the backing map.
+         * Loads the file with {@code fileName} into one of the backing sets.
          *
          * @param fileName The file to load.
          */
-        private void loadFileContents(String fileName) {
+        private void loadFile(String fileName) {
             try {
                 Path path = dir.resolve(fileName);
-                byte[] sourceBytes = Files.readAllBytes(path);
-                scripts.add(new Script(fileName, path.toAbsolutePath(), new String(sourceBytes)));
+                if (fileName.endsWith(".kts")) {
+                    // Load script file.
+                    String scriptContents = new String(Files.readAllBytes(path));
+                    scripts.add(new Script(fileName, path, scriptContents));
+                } else {
+                    // Load dependency file.
+                    dependencies.add(new ScriptDependency(fileName, path));
+                }
             } catch (IOException e) {
                 throw new LoadScriptException(fileName, e);
             }
@@ -147,13 +156,13 @@ public final class PluginBootstrap {
     }
 
     /**
-     * Creates and sets the global Scala bindings. Is only set once.
+     * Creates and sets the global Kotlin bindings. Is only set once.
      *
      * @param context The context instance.
      */
     private static void setBindings(LunaContext context) {
         if (bindings == null) {
-            bindings = new ScalaBindings(context);
+            bindings = new KotlinBindings(context);
         }
     }
 
@@ -168,15 +177,9 @@ public final class PluginBootstrap {
     static final Path DIR = Paths.get("./plugins");
 
     /**
-     * An immutable set containing API files.
+     * The bindings. Has to be global in order for Kotlin scripts to access it.
      */
-    private static final ImmutableSet<String> API_FILES = ImmutableSet.of("fields.sc", "functions.sc",
-            "event_interception.sc", "implicit_classes.sc", "shop_builder.sc");
-
-    /**
-     * The bindings. Has to be global in order for Ammonite scripts to access it.
-     */
-    private static ScalaBindings bindings;
+    private static KotlinBindings bindings;
 
     /**
      * The pipeline set.
@@ -258,26 +261,12 @@ public final class PluginBootstrap {
      */
     private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
 
-        // Determine selected plugins and launch the GUI.
+        // Launch the GUI, determine selected plugins.
         int totalCount = plugins.size();
-        final Set<String> selectedPlugins = new HashSet<>();
-        if (displayGui) {
-            PluginGui gui = new PluginGui(plugins);
-            selectedPlugins.addAll(gui.launch());
-        } else {
-            Toml guiSettings = new Toml().
-                    read(new File("./data/gui/settings.toml")).
-                    getTable("settings");
-            boolean retainSelection = guiSettings.getBoolean("retain_selection");
-            Collection<String> selected = retainSelection ?
-                    guiSettings.getList("selected") : plugins.keySet();
-            selectedPlugins.addAll(selected);
-        }
-        plugins.keySet().retainAll(selectedPlugins);
+        selectPlugins(displayGui);
 
         // Load all plugins.
-        ScalaInterpreter interpreter = new ScalaInterpreter.Builder().
-                predef(computePredefCode()).outStream(System.out).build();
+        KotlinInterpreter interpreter = new KotlinInterpreter();
         for (Plugin other : plugins.values()) {
             loadPlugin(other, interpreter);
         }
@@ -287,37 +276,49 @@ public final class PluginBootstrap {
     }
 
     /**
-     * Computes the code to be used as the Ammonite scripting predef.
+     * Opens the plugin GUI if needed, and determines which plugins will be loaded.
      *
-     * @return The predef code.
-     * @throws IOException If any I/O errors occur.
+     * @param displayGui If the plugin GUI should be started.
+     * @throws IOException If an I/O error occurs.
      */
-    private String computePredefCode() throws IOException {
-        StringBuilder predefCode = new StringBuilder();
-        for (String file : API_FILES) {
-            byte[] contents = Files.readAllBytes(DIR.resolve("api").resolve(file));
-            predefCode.append(new String(contents)).
-                    append('\n').
-                    append('\n');
+    private void selectPlugins(boolean displayGui) throws IOException {
+        final Set<String> selectedPlugins = new HashSet<>();
+        if (displayGui) {
+            // Displays the GUI, grabs the plugin selection from the interface.
+            PluginGui gui = new PluginGui(plugins);
+            selectedPlugins.addAll(gui.launch());
+        } else {
+            // Loads the plugin selection from the GUI settings file.
+            Toml guiSettings = new Toml().
+                    read(new File("./data/gui/settings.toml")).
+                    getTable("settings");
+
+            boolean retainSelection = guiSettings.getBoolean("retain_selection");
+            if (retainSelection) {
+                // Load only selected plugins.
+                selectedPlugins.addAll(guiSettings.getList("selected"));
+            } else {
+                // Load all plugins!
+                selectedPlugins.addAll(plugins.keySet());
+            }
         }
-        return predefCode.toString();
+        plugins.keySet().retainAll(selectedPlugins);
     }
 
     /**
      * Evaluates a single plugin directory.
      *
      * @param plugin The plugin to load.
-     * @param interpreter The Scala interpreter.
+     * @param interpreter The Kotlin interpreter.
      */
-    private void loadPlugin(Plugin plugin, ScalaInterpreter interpreter) {
+    private void loadPlugin(Plugin plugin, KotlinInterpreter interpreter) {
         for (Script script : plugin.getScripts()) {
-
             // Evaluate the script.
             interpreter.eval(script);
 
             // Add all of its listeners, reflectively set the listener script name.
             for (EventListener<?> evtListener : bindings.getListeners()) {
-                evtListener.setScriptName(script.getName());
+                evtListener.setScript(script);
                 pipelines.add(evtListener.getEventType(), evtListener);
             }
             bindings.getListeners().clear();

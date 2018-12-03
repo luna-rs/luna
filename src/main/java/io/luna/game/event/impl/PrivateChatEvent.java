@@ -35,14 +35,14 @@ public final class PrivateChatEvent extends PlayerEvent {
     /**
      * @return The name of the receiver.
      */
-    public long name() {
+    public long getName() {
         return name;
     }
 
     /**
      * @return The message to send.
      */
-    public byte[] message() {
+    public byte[] getMessage() {
         return message;
     }
 }

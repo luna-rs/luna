@@ -84,7 +84,7 @@ public abstract class UpdateBlockSet<E extends Mob> {
             }
 
             // Add the update block to the cache, if its flagged.
-            if (mob.getUpdateFlags().get(updateFlag)) {
+            if (mob.getFlags().get(updateFlag)) {
                 mask |= block.getMask(mob);
                 encodeBlocks.add(block);
             }
@@ -112,7 +112,7 @@ public abstract class UpdateBlockSet<E extends Mob> {
      * @param state The update state.
      */
     public void encode(E mob, ByteMessage msg, UpdateState state) {
-        if (!mob.getUpdateFlags().isEmpty() || state == ADD_LOCAL) {
+        if (!mob.getFlags().isEmpty() || state == ADD_LOCAL) {
             addBlockSet(mob, msg, state);
         }
     }

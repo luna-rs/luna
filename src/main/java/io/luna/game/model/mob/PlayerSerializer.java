@@ -108,7 +108,7 @@ public final class PlayerSerializer {
         tokens.addProperty("password", getPassword());
         tokens.add("position", toJsonTree(player.getPosition()));
         tokens.addProperty("rights", player.getRights().name());
-        tokens.addProperty("running", player.getWalkingQueue().isRunning());
+        tokens.addProperty("running", player.getWalking().isRunning());
         tokens.add("appearance", toJsonTree(player.getAppearance().toArray()));
         tokens.add("inventory", toJsonTree(player.getInventory().toIndexedArray()));
         tokens.add("bank", toJsonTree(player.getBank().toIndexedArray()));
@@ -178,7 +178,7 @@ public final class PlayerSerializer {
             player.setRights(rights);
 
             boolean running = jsonReader.get("running").getAsBoolean();
-            player.getWalkingQueue().setRunning(running);
+            player.getWalking().setRunning(running);
 
             int[] appearance = getAsType(jsonReader.get("appearance"), int[].class);
             player.getAppearance().setValues(appearance);

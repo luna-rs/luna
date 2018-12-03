@@ -259,7 +259,7 @@ public final class Player extends Mob {
     /**
      * The interaction menu.
      */
-    private final PlayerInteractionMenu interactionMenu = new PlayerInteractionMenu(this);
+    private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
 
     /**
      * Creates a new {@link Player}.
@@ -306,7 +306,7 @@ public final class Player extends Mob {
     @Override
     protected void onActive() {
         teleporting = true;
-        updateFlags.flag(UpdateFlag.APPEARANCE);
+        flags.flag(UpdateFlag.APPEARANCE);
         plugins.post(new LoginEvent(this));
         LOGGER.info("{} has logged in.", this);
     }
@@ -339,20 +339,20 @@ public final class Player extends Mob {
     @Override
     public void transform(int id) {
         transformId = OptionalInt.of(id);
-        updateFlags.flag(UpdateFlag.APPEARANCE);
+        flags.flag(UpdateFlag.APPEARANCE);
     }
 
     @Override
     public void resetTransform() {
         if (transformId.isPresent()) {
             transformId = OptionalInt.empty();
-            updateFlags.flag(UpdateFlag.APPEARANCE);
+            flags.flag(UpdateFlag.APPEARANCE);
         }
     }
 
     @Override
     public int getCombatLevel() {
-        return skillSet.getCombatLevel();
+        return skills.getCombatLevel();
     }
 
     @Override
@@ -392,7 +392,7 @@ public final class Player extends Mob {
      * @param text The text to send.
      * @param id The widget identifier.
      */
-    public void sendText(String text, int id) {
+    public void sendText(String text, int id) {//TODO rename
         queue(new WidgetTextMessageWriter(text, id));
     }
 
@@ -413,7 +413,7 @@ public final class Player extends Mob {
      */
     public void chat(Chat chat) {
         this.chat = Optional.of(chat);
-        updateFlags.flag(UpdateFlag.CHAT);
+        flags.flag(UpdateFlag.CHAT);
     }
 
     /**
@@ -423,7 +423,7 @@ public final class Player extends Mob {
      */
     public void forceMovement(ForcedMovement forcedMovement) {
         this.forcedMovement = Optional.of(forcedMovement);
-        updateFlags.flag(UpdateFlag.FORCED_MOVEMENT);
+        flags.flag(UpdateFlag.FORCED_MOVEMENT);
     }
 
     /**
@@ -472,6 +472,7 @@ public final class Player extends Mob {
      *
      * @param withdrawAsNote The value to set to.
      */
+    // No point in this being an attribute. Migrate to boolean within "Bank" class
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         if (attr.get() != withdrawAsNote) {
@@ -586,31 +587,6 @@ public final class Player extends Mob {
      */
     public double getWeight() {
         AttributeValue<Double> attr = attributes.get("weight");
-        return attr.get();
-    }
-
-    /**
-     * Resets the 'trading_with' attribute.
-     */
-    public void resetTradingWith() {
-        setTradingWith(-1);
-    }
-
-    /**
-     * Sets the 'trading_with' attribute.
-     *
-     * @param tradingWith The new value.
-     */
-    public void setTradingWith(int tradingWith) {
-        AttributeValue<Integer> attr = attributes.get("trade_with");
-        attr.set(tradingWith);
-    }
-
-    /**
-     * @return Retrieves the 'trading_with' attribute.
-     */
-    public int getTradingWith() {
-        AttributeValue<Integer> attr = attributes.get("trade_with");
         return attr.get();
     }
 
@@ -840,7 +816,7 @@ public final class Player extends Mob {
      */
     public void setPrayerIcon(PrayerIcon prayerIcon) {
         this.prayerIcon = prayerIcon;
-        updateFlags.flag(UpdateFlag.APPEARANCE);
+        flags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
@@ -857,7 +833,7 @@ public final class Player extends Mob {
      */
     public void setSkullIcon(SkullIcon skullIcon) {
         this.skullIcon = skullIcon;
-        updateFlags.flag(UpdateFlag.APPEARANCE);
+        flags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
@@ -881,7 +857,7 @@ public final class Player extends Mob {
      */
     public void setModelAnimation(ModelAnimation modelAnimation) {
         this.modelAnimation = modelAnimation;
-        updateFlags.flag(UpdateFlag.APPEARANCE);
+        flags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
@@ -985,7 +961,7 @@ public final class Player extends Mob {
     /**
      * @return The interaction menu.
      */
-    public PlayerInteractionMenu getInteractionMenu() {
-        return interactionMenu;
+    public PlayerInteractionMenu getInteractions() {
+        return interactions;
     }
 }

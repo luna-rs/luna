@@ -14,9 +14,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
-import static io.luna.util.OptionalUtils.ifPresent;
-import static io.luna.util.OptionalUtils.mapToInt;
-import static io.luna.util.OptionalUtils.matches;
+import static io.luna.util.OptionalUtils.*;
 
 /**
  * An item container model representing a player's equipment.
@@ -476,7 +474,7 @@ public final class Equipment extends ItemContainer {
      */
     private void flagAppearance(int index) {
         if (index != RING && index != AMMUNITION) {
-            player.getUpdateFlags().flag(UpdateFlag.APPEARANCE);
+            player.getFlags().flag(UpdateFlag.APPEARANCE);
         }
     }
 

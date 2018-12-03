@@ -35,7 +35,7 @@ public final class ButtonClickEvent extends PlayerEvent implements IdBasedEvent 
     /**
      * @return The clicked button.
      */
-    public int id() {
+    public int getId() {
         return id;
     }
 }

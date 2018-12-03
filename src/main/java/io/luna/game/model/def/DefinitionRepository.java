@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -113,7 +114,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
     /**
      * Stores {@code definition} in this repository. Should only ever be used by this class.
      *
-     * @param id The definition identifier.
+     * @param id         The definition identifier.
      * @param definition The definition.
      */
     abstract void put(int id, T definition);
@@ -148,14 +149,15 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
 
     /**
      * Finds the first definition that matches {@code predicate}.
+     *
      * @param predicate The predicate.
      * @return The matching definition.
      */
     public Optional<T> lookup(Predicate<T> predicate) {
         Iterator<T> it = newIterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             T next = it.next();
-            if(next != null && predicate.test(next)) {
+            if (next != null && predicate.test(next)) {
                 return Optional.of(next);
             }
         }
@@ -201,7 +203,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      * @return The new stream.
      */
     public final Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
+        return StreamSupport.stream(spliterator(), false).filter(Objects::nonNull);
     }
 
     /**

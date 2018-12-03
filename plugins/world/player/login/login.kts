@@ -12,17 +12,17 @@ import java.time.format.DateTimeFormatter
 /**
  * The "first_login" attribute.
  */
-private var Player.firstLogin by Attr<Boolean>("first_login")
+var Player.firstLogin by Attr<Boolean>("first_login")
 
 /**
  * Formats dates into the specified pattern.
  */
-private val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, uuuu")
+val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, uuuu")
 
 /**
  * Inventory starter items.
  */
-private val inventoryStarter = listOf(
+val inventoryStarter = listOf(
         Item(995, 10000), // Coins
         Item(556, 250), // Air runes
         Item(555, 250), // Water runes
@@ -34,7 +34,7 @@ private val inventoryStarter = listOf(
 /**
  * Equipment starter items.
  */
-private val equipmentStarter = listOf(
+val equipmentStarter = listOf(
         Item(1153), // Iron full helm
         Item(1115), // Iron platebody
         Item(1067), // Iron platelegs

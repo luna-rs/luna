@@ -2,6 +2,7 @@ package io.luna.game.event;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
+import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
 
@@ -18,9 +19,9 @@ import static com.google.common.base.Preconditions.checkState;
 public final class EventListener<E extends Event> {
 
     /**
-     * The encompassing script name.
+     * The encompassing script.
      */
-    private final String scriptName;
+    private final Script script;
 
     /**
      * The type of event being intercepted.
@@ -50,7 +51,7 @@ public final class EventListener<E extends Event> {
         this.args = args;
 
         // Value injected with reflection.
-        scriptName = null;
+        script = null;
     }
 
     @Override
@@ -79,21 +80,21 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * Sets the encompassing script name to {@code name}.
+     * Sets the encompassing script to {@code newScript}.
      *
-     * @param name The name to set to.
+     * @param newScript The script to set to.
      */
-    public void setScriptName(String name) {
-        checkState(scriptName == null, "Script name already set.");
-        ReflectionUtils.setField(this, "scriptName", name);
+    public void setScript(Script newScript) {
+        checkState(script == null, "Script already set.");
+        ReflectionUtils.setField(this, "script", newScript);
     }
 
     /**
-     * @return The encompassing script name.
+     * @return The encompassing script.
      */
-    public String getScriptName() {
-        checkState(scriptName != null, "Script name cannot be <null>.");
-        return scriptName;
+    public Script getScript() {
+        checkState(script != null, "Script cannot be <null>.");
+        return script;
     }
 
     /**

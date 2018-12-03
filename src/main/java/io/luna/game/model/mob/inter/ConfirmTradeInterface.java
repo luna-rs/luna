@@ -3,6 +3,7 @@ package io.luna.game.model.mob.inter;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.util.LazyVal;
 
 import java.text.NumberFormat;
@@ -36,6 +37,11 @@ public final class ConfirmTradeInterface extends InventoryOverlayInterface {
     private final ItemContainer tradingItems;
 
     /**
+     * The "trading_with" attribute.
+     */
+    private AttributeValue<Integer> tradingAttr;
+
+    /**
      * The trading player's confirm instance.
      */
     private LazyVal<ConfirmTradeInterface> otherConfirm;
@@ -67,6 +73,9 @@ public final class ConfirmTradeInterface extends InventoryOverlayInterface {
 
     @Override
     public void onOpen(Player player) {
+        // Initialize variables.
+        tradingAttr = player.getAttributes().get("trading_with");
+
         // Display item names on confirmation screens.
         String myNames = computeItemsString();
         player.sendText(myNames, 3557);
@@ -80,7 +89,7 @@ public final class ConfirmTradeInterface extends InventoryOverlayInterface {
             offerInterface.onClose(player);
         } else {
             // Trade completed successfully!
-            player.resetTradingWith();
+            tradingAttr.set(-1);
         }
     }
 

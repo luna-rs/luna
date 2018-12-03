@@ -1,7 +1,0 @@
-[metadata]
-name = "Spawn NPCs"
-description = "A plugin that enables spawning global NPCs."
-version = "1.0"
-authors = [
-  "lare96"
-]

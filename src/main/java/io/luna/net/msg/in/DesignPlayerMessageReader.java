@@ -30,7 +30,7 @@ public final class DesignPlayerMessageReader extends GameMessageReader {
             values[index++] = color;
         }
         player.getAppearance().setValues(values);
-        player.getUpdateFlags().flag(UpdateFlag.APPEARANCE);
+        player.getFlags().flag(UpdateFlag.APPEARANCE);
         player.getInterfaces().close();
         return null;
     }

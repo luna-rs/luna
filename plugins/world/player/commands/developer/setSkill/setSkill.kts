@@ -26,7 +26,7 @@ class SetLevelInterface : StandardInterface(2808) {
 /**
  * An [AmountInputInterface] used to enter the desired level.
  */
-class SetLevelInput(private val skillId: Int) : AmountInputInterface() {
+class SetLevelInput(val skillId: Int) : AmountInputInterface() {
 
     override fun onAmountInput(plr: Player, level: Int) {
         if (level < 1 || level > 99) {
@@ -54,7 +54,7 @@ class SetLevelInput(private val skillId: Int) : AmountInputInterface() {
 /**
  * A mapping of buttons to skill identifiers.
  */
-private val buttonToSkill = mapOf(
+val buttonToSkill = mapOf(
         2812 to SKILL_ATTACK,
         2816 to SKILL_DEFENCE,
         2813 to SKILL_STRENGTH,
@@ -82,6 +82,7 @@ private val buttonToSkill = mapOf(
  * Opens the input interface for choosing what level to set to.
  */
 fun openInput(msg: ButtonClickEvent) {
+    // TODO check here for msg.id == 2831, close interface
     val id = buttonToSkill[msg.id]
     if (id != null) {
         msg.plr.interfaces.open(SetLevelInput(id))

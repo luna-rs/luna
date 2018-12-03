@@ -5,4 +5,4 @@ Alternatively, you can submit a [pull request](https://github.com/lare96/luna/pu
 - follow the current programming style present in the code (conventions, etc.)
 - <b>do not</b> format the code as it makes it very hard to see what your changes were
 - look over the [conventions](https://github.com/lare96/luna/wiki/Writing-Plugins#conventions) section of the wiki if your PR contains 
-Scala code
+Kotlin code

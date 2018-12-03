@@ -45,14 +45,14 @@ public final class PrivateChatListChangeEvent extends PlayerEvent {
     /**
      * @return The changed friend/ignore.
      */
-    public long name() {
+    public long getName() {
         return name;
     }
 
     /**
      * @return The type of change.
      */
-    public ChangeType type() {
+    public ChangeType getType() {
         return type;
     }
 }

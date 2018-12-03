@@ -1,6 +1,7 @@
 package api
 
 import com.google.common.collect.HashBasedTable
+import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Table
 import com.google.common.util.concurrent.ListenableFuture
 import io.luna.game.model.def.EquipmentDefinition
@@ -66,19 +67,28 @@ fun rand(lower: Int, upper: Int): Int = rand().nextInt((upper - lower) + 1) + lo
  */
 fun rand(upper: Int): Int = rand().nextInt(upper + 1)
 
-// should use "8 to 8 to 8" syntax
-fun <R, C, V> tableOf(vararg entries: TableEntry<R, C, V>): Table<R, C, V> =
+/**
+ * Creates an emtpy mutable table of [entries].
+ */
+fun <R, C, V> emptyTable(size: Int = 16): Table<R, C, V> = HashBasedTable.create(size, size)
+
+/**
+ * Creates an immutable table of [entries]. The syntax for creating entries is (row [to] column [to] value).
+ */
+fun <R, C, V> immutableTableOf(vararg entries: TableEntry<R, C, V>): Table<R, C, V> =
     when (entries.size) {
-        0 -> HashBasedTable.create()
+        0 -> ImmutableTable.of()
+        1 -> {
+            val entry = entries[0]
+            val key = entry.first
+            ImmutableTable.of(key.first, key.second, entry.second)
+        }
         else -> {
-            val size = entries.size
-            val table = HashBasedTable.create<R, C, V>(size, size)
+            val table = ImmutableTable.builder<R, C, V>()
             for (entry in entries) {
                 val key = entry.first
                 table.put(key.first, key.second, entry.second)
             }
-            table
+            table.build()
         }
     }
-
-fun <R, C, V> emptyTable(size: Int = 16): Table<R, C, V> = HashBasedTable.create(size, size)

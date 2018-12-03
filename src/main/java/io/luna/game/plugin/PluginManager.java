@@ -6,14 +6,14 @@ import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.event.EventListenerPipelineSet;
 
 /**
- * A model that acts as a bridge between interpreted Scala code and compiled Java code.
+ * A model that acts as a bridge between interpreted Kotlin code and compiled Java code.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginManager {
 
     /**
-     * A pipeline set containing interpreted Scala code.
+     * A pipeline set containing interpreted Kotlin code.
      */
     private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
@@ -53,7 +53,7 @@ public final class PluginManager {
     }
 
     /**
-     * @return A pipeline set containing interpreted Scala code.
+     * @return A pipeline set containing interpreted Kotlin code.
      */
     public EventListenerPipelineSet getPipelines() {
         return pipelines;

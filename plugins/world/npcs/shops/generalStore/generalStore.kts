@@ -10,7 +10,6 @@ shop {
     currency = COINS
 
     sell {
-        item("Abyssal whip") x 100
         item("Pot") x 10
         item("Jug") x 15
         item("Tinderbox") x 15

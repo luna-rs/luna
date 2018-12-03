@@ -7,7 +7,7 @@ import io.luna.game.event.EventListener;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class ScriptExecutionException extends RuntimeException {
+public final class ScriptExecutionException extends RuntimeException {
 
     /**
      * The failed listener.
@@ -21,7 +21,7 @@ public class ScriptExecutionException extends RuntimeException {
      * @param cause The cause of the failure.
      */
     public ScriptExecutionException(EventListener<?> listener, Exception cause) {
-        super("EXECUTE FAILED: " + listener.getScriptName(), cause);
+        super("Listener failed to execute: " + listener.getScript(), cause);
         this.listener = listener;
     }
 

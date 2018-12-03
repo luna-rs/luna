@@ -7,6 +7,7 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.item.RefreshListener;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 import io.luna.net.msg.out.WidgetItemsMessageWriter;
 import io.luna.util.LazyVal;
@@ -58,6 +59,11 @@ public final class OfferTradeInterface extends InventoryOverlayInterface {
     private final ItemContainer tradeItems = new ItemContainer(28, ItemContainer.StackPolicy.STANDARD, 3415);
 
     /**
+     * The "trading_with" attribute.
+     */
+    private AttributeValue<Integer> tradingAttr;
+
+    /**
      * The trading player's offer instance.
      */
     private LazyVal<OfferTradeInterface> otherOffer;
@@ -82,6 +88,8 @@ public final class OfferTradeInterface extends InventoryOverlayInterface {
 
     @Override
     public void onOpen(Player player) {
+        // Initialize variables.
+        tradingAttr = player.getAttributes().get("trading_with");
 
         // Send text to trading interface.
         sendTradingWith(player);
@@ -106,7 +114,7 @@ public final class OfferTradeInterface extends InventoryOverlayInterface {
     @Override
     public void onClose(Player player) {
         // Trade was declined.
-        player.resetTradingWith();
+        tradingAttr.set(-1);
         player.getInventory().resetSecondaryRefresh();
         player.getInventory().addAll(tradeItems);
 

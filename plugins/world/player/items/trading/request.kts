@@ -7,13 +7,13 @@ import io.luna.game.model.mob.inter.OfferTradeInterface
 /**
  * The "trading_with" attribute.
  */
-private var Player.tradingWith by Attr<Int>("trading_with")
+var Player.tradingWith by Attr<Int>("trading_with")
 
 /**
  * A [DistancedAction] that sends a trade request when close enough to a Player.
  */
-class RequestAction(private val plr: Player,
-                    private val other: Player) : DistancedAction<Player>(plr, other.position, 1, true) {
+class RequestAction(val plr: Player,
+                    val other: Player) : DistancedAction<Player>(plr, other.position, 1, true) {
 
     override fun execute() {
         if (plr.index == other.tradingWith) {

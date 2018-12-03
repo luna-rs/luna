@@ -32,22 +32,22 @@ public abstract class Mob extends Entity {
     /**
      * The update flag set.
      */
-    protected final UpdateFlagSet updateFlags = new UpdateFlagSet();
+    protected final UpdateFlagSet flags = new UpdateFlagSet();
 
     /**
      * The skill set.
      */
-    protected final SkillSet skillSet = new SkillSet(this);
+    protected final SkillSet skills = new SkillSet(this);
 
     /**
      * The action set.
      */
-    protected final ActionSet actionSet = new ActionSet();
+    protected final ActionSet actions = new ActionSet();
 
     /**
      * The walking queue.
      */
-    protected final WalkingQueue walkingQueue = new WalkingQueue(this);
+    protected final WalkingQueue walking = new WalkingQueue(this);
 
     /**
      * The mob list index.
@@ -191,14 +191,14 @@ public abstract class Mob extends Entity {
      * @param pending The action to submit.
      */
     public final void submitAction(Action<? extends Mob> pending) {
-        actionSet.submit(pending);
+        actions.submit(pending);
     }
 
     /**
      * Shortcut to function {@link ActionSet#interrupt()}.
      */
     public final void interruptAction() {
-        actionSet.interrupt();
+        actions.interrupt();
     }
 
     /**
@@ -208,8 +208,8 @@ public abstract class Mob extends Entity {
      */
     public final void teleport(Position position) {
         setPosition(position);
-        walkingQueue.clear();
-        actionSet.interrupt();
+        walking.clear();
+        actions.interrupt();
         resetInteractingWith();
         onTeleport(position);
     }
@@ -223,7 +223,7 @@ public abstract class Mob extends Entity {
         if (!animation.isPresent() ||
                 animation.filter(newAnimation::overrides).isPresent()) {
             animation = Optional.of(newAnimation);
-            updateFlags.flag(UpdateFlag.ANIMATION);
+            flags.flag(UpdateFlag.ANIMATION);
         }
     }
 
@@ -234,7 +234,7 @@ public abstract class Mob extends Entity {
      */
     public final void face(Position position) {
         facePosition = Optional.of(position);
-        updateFlags.flag(UpdateFlag.FACE_POSITION);
+        flags.flag(UpdateFlag.FACE_POSITION);
     }
 
     /**
@@ -280,7 +280,7 @@ public abstract class Mob extends Entity {
      */
     public final void forceChat(String message) {
         forcedChat = Optional.of(message);
-        updateFlags.flag(UpdateFlag.FORCED_CHAT);
+        flags.flag(UpdateFlag.FORCED_CHAT);
     }
 
     /**
@@ -290,7 +290,7 @@ public abstract class Mob extends Entity {
      */
     public final void graphic(Graphic newGraphic) {
         graphic = Optional.of(newGraphic);
-        updateFlags.flag(UpdateFlag.GRAPHIC);
+        flags.flag(UpdateFlag.GRAPHIC);
     }
 
     /**
@@ -300,13 +300,13 @@ public abstract class Mob extends Entity {
         if (entity == null) {
             // Reset the current interaction.
             interactionIndex = OptionalInt.of(65535);
-            updateFlags.flag(UpdateFlag.INTERACTION);
+            flags.flag(UpdateFlag.INTERACTION);
         } else if (entity instanceof Mob) {
             // Interact with player or npc.
             Mob mob = (Mob) entity;
             interactionIndex = mob.type == EntityType.PLAYER ?
                     OptionalInt.of(mob.index + 32768) : OptionalInt.of(mob.index);
-            updateFlags.flag(UpdateFlag.INTERACTION);
+            flags.flag(UpdateFlag.INTERACTION);
         } else {
             // Interact with a non-movable entity.
             face(entity.getPosition());
@@ -331,7 +331,7 @@ public abstract class Mob extends Entity {
      */
     private void primaryHit(Hit hit) {
         primaryHit = Optional.of(hit);
-        updateFlags.flag(UpdateFlag.PRIMARY_HIT);
+        flags.flag(UpdateFlag.PRIMARY_HIT);
     }
 
     /**
@@ -341,7 +341,7 @@ public abstract class Mob extends Entity {
      */
     private void secondaryHit(Hit hit) {
         secondaryHit = Optional.of(hit);
-        updateFlags.flag(UpdateFlag.SECONDARY_HIT);
+        flags.flag(UpdateFlag.SECONDARY_HIT);
     }
 
     /**
@@ -374,7 +374,11 @@ public abstract class Mob extends Entity {
         interactionIndex = OptionalInt.empty();
         primaryHit = Optional.empty();
         secondaryHit = Optional.empty();
-        updateFlags.clear();
+        flags.clear();
+    }
+
+    public final boolean isAlive() {
+        return skill(Skill.HITPOINTS).getLevel() > 0;
     }
 
     /**
@@ -384,7 +388,7 @@ public abstract class Mob extends Entity {
      * @return The skill.
      */
     public Skill skill(int id) {
-        return skillSet.getSkill(id);
+        return skills.getSkill(id);
     }
 
     /**
@@ -406,8 +410,8 @@ public abstract class Mob extends Entity {
     /**
      * @return The update flag set.
      */
-    public final UpdateFlagSet getUpdateFlags() {
-        return updateFlags;
+    public final UpdateFlagSet getFlags() {
+        return flags;
     }
 
     /**
@@ -494,15 +498,15 @@ public abstract class Mob extends Entity {
     /**
      * @return The walking queue.
      */
-    public final WalkingQueue getWalkingQueue() {
-        return walkingQueue;
+    public final WalkingQueue getWalking() {
+        return walking;
     }
 
     /**
      * @return The skill set.
      */
     public final SkillSet getSkills() {
-        return skillSet;
+        return skills;
     }
 
     /**

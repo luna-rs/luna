@@ -27,6 +27,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
+        player.interruptAction();
         switch (opcode) {
         case 122:
             return firstIndex(player, msg.getPayload());

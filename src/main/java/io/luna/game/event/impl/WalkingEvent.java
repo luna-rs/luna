@@ -36,14 +36,14 @@ public final class WalkingEvent extends PlayerEvent {
     /**
      * @return The walking path.
      */
-    public Step[] path() {
+    public Step[] getPath() {
         return path;
     }
 
     /**
      * @return If the player is running.
      */
-    public boolean running() {
+    public boolean isRunning() {
         return running;
     }
 }

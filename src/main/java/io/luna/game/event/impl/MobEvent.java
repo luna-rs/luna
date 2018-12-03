@@ -2,8 +2,6 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Npc;
-import io.luna.game.model.mob.Player;
 
 /**
  * A mob-based event. Not intended for interception.
@@ -15,7 +13,7 @@ class MobEvent extends Event {
     /**
      * The mob.
      */
-    protected final Mob mob;
+    private final Mob mob;
 
     /**
      * Creates a new {@link MobEvent}.
@@ -29,21 +27,7 @@ class MobEvent extends Event {
     /**
      * @return The mob.
      */
-    public Mob mob() {
+    public Mob getMob() {
         return mob;
-    }
-
-    /**
-     * Returns the mob as a non-player.
-     */
-    public Npc npc() {
-        return (Npc) mob;
-    }
-
-    /**
-     * Returns the mob as a player.
-     */
-    public Player plr() {
-        return (Player) mob;
     }
 }

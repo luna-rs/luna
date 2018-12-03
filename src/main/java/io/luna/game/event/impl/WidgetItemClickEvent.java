@@ -151,21 +151,21 @@ public class WidgetItemClickEvent extends PlayerEvent implements IdBasedEvent {
     /**
      * @return The item's index.
      */
-    public int index() {
+    public int getIndex() {
         return index;
     }
 
     /**
      * @return The widget identifier.
      */
-    public int widgetId() {
+    public int getWidgetId() {
         return widgetId;
     }
 
     /**
      * @return The item identifier.
      */
-    public int itemId() {
+    public int getItemId() {
         return itemId;
     }
 }

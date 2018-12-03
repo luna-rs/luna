@@ -24,7 +24,7 @@ public final class WalkingMessageReader extends GameMessageReader {
         int size = msg.getSize();
         ByteMessage payload = msg.getPayload();
 
-        WalkingQueue walkingQueue = player.getWalkingQueue();
+        WalkingQueue walkingQueue = player.getWalking();
         if (walkingQueue.isLocked()) {
             return null;
         }

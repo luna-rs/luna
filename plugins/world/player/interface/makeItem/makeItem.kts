@@ -34,7 +34,7 @@ class ButtonIndex(val make1: Int,
 /**
  * A model that runs the action based on the item's index and amount.
  */
-class MakeItemOption(private val amount: Int, var index: Int) {
+class MakeItemOption(val amount: Int, var index: Int) {
     fun run(plr: Player, inter: MakeItemDialogueInterface) {
         if (amount == -1) {
             // Make <x> option.
@@ -55,7 +55,7 @@ class MakeItemOption(private val amount: Int, var index: Int) {
 /**
  * A list of button ids and the indexes that they correspond to.
  */
-private val buttonList = listOf(
+val buttonList = listOf(
         ButtonIndex(8893, 8892, 8891, 8890, 0),
         ButtonIndex(8874, 8873, 8872, 8871, 0),
         ButtonIndex(8878, 8877, 8876, 8875, 1),
@@ -75,7 +75,7 @@ private val buttonList = listOf(
 /**
  * A mapping of every option's button to its [MakeItemOption].
  */
-private val buttonMap = buttonList.flatMap { it.options() }.toMap()
+val buttonMap = buttonList.flatMap { it.options() }.toMap()
 
 /**
  * Runs the [MakeItemOption] after checking the item length.

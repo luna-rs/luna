@@ -1,7 +1,6 @@
 import api.*
 import io.luna.game.event.impl.WidgetItemClickEvent
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemSecondClickEvent
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemThirdClickEvent
+import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.item.shop.ShopInterface
 
 /**
@@ -58,11 +57,11 @@ on(WidgetItemThirdClickEvent::class)
 /**
  * Buy/sell 10.
  */
-on(WidgetItemThirdClickEvent::class)
+on(WidgetItemFourthClickEvent::class)
     .args(3900)
     .run { modify(it, 10, Buy) }
 
-on(WidgetItemThirdClickEvent::class)
+on(WidgetItemFourthClickEvent::class)
     .args(3823)
     .run { modify(it, 10, Sell) }
 

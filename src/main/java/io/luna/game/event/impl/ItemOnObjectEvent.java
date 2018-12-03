@@ -70,42 +70,42 @@ public final class ItemOnObjectEvent extends PlayerEvent {
     /**
      * @return The item identifier.
      */
-    public int itemId() {
+    public int getItemId() {
         return itemId;
     }
 
     /**
      * @return The item index.
      */
-    public int itemIndex() {
+    public int getItemIndex() {
         return itemIndex;
     }
 
     /**
      * @return The item interface identifier.
      */
-    public int itemInterfaceId() {
+    public int getItemInterfaceId() {
         return itemInterfaceId;
     }
 
     /**
      * @return The object identifier.
      */
-    public int objectId() {
+    public int getObjectId() {
         return objectId;
     }
 
     /**
      * @return The object's x coordinate.
      */
-    public int objectX() {
+    public int getObjectX() {
         return objectX;
     }
 
     /**
      * @return The object's y coordinate.
      */
-    public int objectY() {
+    public int getObjectY() {
         return objectY;
     }
 }

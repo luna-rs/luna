@@ -1,0 +1,72 @@
+package world.player.skills.fishing
+
+import api.*
+import io.luna.util.Rational
+import world.player.skills.fishing.Fish.*
+
+/**
+ * An enum representing tools used to catch [Fish].
+ */
+enum class Tool(val id: Int,
+                val level: Int,
+                val bait: Int? = null,
+                val catchAmount: IntRange = 1..1,
+                val chance: Rational,
+                val animation: Int,
+                val fish: List<Fish>) {
+
+    SMALL_NET(id = 303,
+              level = 1,
+              chance = CHANCE_COMMON,
+              animation = 621,
+              fish = listOf(SHRIMP, ANCHOVY)),
+    KARAMBWANJI_SMALL_NET(id = 303,
+                          level = 5,
+                          chance = CHANCE_COMMON,
+                          animation = 621,
+                          fish = listOf(SHRIMP, KARAMBWANJI)),
+    FISHING_ROD(id = 307,
+                level = 5,
+                bait = 313,
+                chance = CHANCE_COMMON,
+                animation = 622,
+                fish = listOf(SARDINE, HERRING, PIKE)),
+    BIG_NET(id = 305,
+            level = 16,
+            catchAmount = 1..3,
+            chance = CHANCE_UNCOMMON,
+            animation = 620,
+            fish = listOf(MACKEREL, OYSTER, COD, BASS, CASKET, LEATHER_BOOTS, LEATHER_GLOVES, SEAWEED)),
+    FLY_FISHING_ROD(id = 309,
+                    level = 20,
+                    bait = 314,
+                    chance = CHANCE_VERY_COMMON,
+                    animation = 622,
+                    fish = listOf(TROUT, SALMON)),
+    HARPOON(id = 311,
+            level = 35,
+            chance = CHANCE_VERY_UNCOMMON,
+            animation = 618,
+            fish = listOf(TUNA, SWORDFISH)),
+    LOBSTER_POT(id = 301,
+                level = 40,
+                chance = CHANCE_UNCOMMON,
+                animation = 619,
+                fish = listOf(LOBSTER)),
+    MONKFISH_NET(id = 303,
+                 level = 62,
+                 chance = CHANCE_COMMON,
+                 animation = 621,
+                 fish = listOf(MONKFISH)),
+    KARAMBWAN_VESSEL(id = 3157,
+                     level = 65,
+                     bait = 3150,
+                     chance = CHANCE_UNCOMMON,
+                     animation = 519,
+                     fish = listOf(KARAMBWAN)),
+    SHARK_HARPOON(id = 311,
+                  level = 76,
+                  chance = CHANCE_VERY_UNCOMMON,
+                  animation = 618,
+                  fish = listOf(SHARK))
+}

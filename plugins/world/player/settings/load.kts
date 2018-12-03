@@ -13,7 +13,7 @@ fun Player.sendConfig(id: Int, state: Boolean) {
 /**
  * The run button config id.
  */
-private val RUN_BUTTON = 173
+val RUN_BUTTON = 173
 
 /**
  * Sends all config messages on login.

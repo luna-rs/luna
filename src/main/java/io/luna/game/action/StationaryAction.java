@@ -24,7 +24,7 @@ public abstract class StationaryAction<T extends Mob> extends Action<T> {
     @Override
     protected final void onInit() {
         if (canInit()) {
-            WalkingQueue walking = mob.getWalkingQueue();
+            WalkingQueue walking = mob.getWalking();
             walking.clear();
         } else {
             interrupt();

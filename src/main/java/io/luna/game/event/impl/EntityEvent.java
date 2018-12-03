@@ -2,11 +2,6 @@ package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.Entity;
-import io.luna.game.model.item.GroundItem;
-import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Npc;
-import io.luna.game.model.mob.Player;
-import io.luna.game.model.object.GameObject;
 
 /**
  * An entity-based event. Not intended for interception.
@@ -32,42 +27,7 @@ class EntityEvent extends Event {
     /**
      * @return The entity.
      */
-    public Entity entity() {
+    public Entity getEntity() {
         return entity;
-    }
-
-    /**
-     * Returns the entity as a mob.
-     */
-    public Mob asMob() {
-        return (Mob) entity;
-    }
-
-    /**
-     * Returns the entity as a non-player.
-     */
-    public Npc asNpc() {
-        return (Npc) entity;
-    }
-
-    /**
-     * Returns the entity as a player.
-     */
-    public Player asPlr() {
-        return (Player) entity;
-    }
-
-    /**
-     * Returns the entity as an object.
-     */
-    public GameObject asObject() {
-        return (GameObject) entity;
-    }
-
-    /**
-     * Returns the entity as a ground item.
-     */
-    public GroundItem asItem() {
-        return (GroundItem) entity;
     }
 }

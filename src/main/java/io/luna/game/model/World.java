@@ -227,7 +227,7 @@ public final class World {
     private void preSynchronize() {
         for (Player player : playerList) {
             try {
-                player.getWalkingQueue().process();
+                player.getWalking().process();
                 player.getClient().handleDecodedMessages();
                 player.getClient().flush();
             } catch (Exception e) {
@@ -238,7 +238,7 @@ public final class World {
 
         for (Npc npc : npcList) {
             try {
-                npc.getWalkingQueue().process();
+                npc.getWalking().process();
             } catch (Exception e) {
                 npcList.remove(npc);
                 LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
@@ -298,7 +298,7 @@ public final class World {
      * @return The player, or no player.
      */
     public Optional<Player> getPlayer(String username) {
-        return playerList.findFirst(player -> player.getUsername().equals(username));
+        return playerList.findFirst(player -> player.getUsername().equalsIgnoreCase(username));
     }
 
     /**

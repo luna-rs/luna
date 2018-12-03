@@ -51,23 +51,38 @@ public final class CommandEvent extends PlayerEvent {
     }
 
     /**
-     * Returns the command argument at {@code index}.
+     * Retrieves the argument at {@code index} as an integer.
+     *
+     * @param index The index.
+     * @return The converted integer.
      */
-    public String args(int index) {
-        return args[index];
+    public int asInt(int index) {
+        return Integer.parseInt(args[index]);
+    }
+
+    /**
+     * Replaces a character of the argument at {@code index}.
+     *
+     * @param index The index.
+     * @param oldChar The character to replace.
+     * @param newChar The character to replace with.
+     * @return The argument, with the characters replaced.
+     */
+    public String replace(int index, char oldChar, char newChar) {
+        return args[index].replace(oldChar, newChar);
     }
 
     /**
      * @return The command name.
      */
-    public String name() {
+    public String getName() {
         return name;
     }
 
     /**
      * @return The command arguments.
      */
-    public String[] args() {
+    public String[] getArgs() {
         return args;
     }
 }

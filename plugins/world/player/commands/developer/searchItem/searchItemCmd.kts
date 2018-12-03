@@ -11,12 +11,12 @@ import kotlin.streams.toList
 /**
  * A standard interface representing the result of a search.
  */
-class SearchResultInterface(private val searchToken: String) : StandardInterface(5292) {
+class SearchResultInterface(val searchToken: String) : StandardInterface(5292) {
 
     /**
      * A list of empty text widget messages.
      */
-    private val clearWidgets = mutableListOf(5388, 5389, 5390, 5391, 8132, 8133)
+    val clearWidgets = mutableListOf(5388, 5389, 5390, 5391, 8132, 8133)
         .map { WidgetTextMessageWriter("", it) }
 
     override fun onOpen(plr: Player) {

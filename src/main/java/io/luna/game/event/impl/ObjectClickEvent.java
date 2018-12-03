@@ -94,21 +94,21 @@ public class ObjectClickEvent extends PlayerEvent implements IdBasedEvent {
     /**
      * @return The object identifier.
      */
-    public final int id() {
+    public final int getId() {
         return id;
     }
 
     /**
      * @return The object's x coordinate.
      */
-    public final int x() {
+    public final int getX() {
         return x;
     }
 
     /**
      * @return The object's y coordinate.
      */
-    public final int y() {
+    public final int getY() {
         return y;
     }
 }

@@ -1,7 +1,0 @@
-[metadata]
-name = "Settings"
-description = "A plugin enables the settings tab."
-version = "1.0"
-authors = [
-  "lare96"
-]

@@ -5,7 +5,7 @@ Some of the sweetness within Luna
 - high performing and scalable code <b>where it matters most</b>
 - lightweight abstraction models that avoid [featuritis](https://en.wikipedia.org/wiki/Feature_creep)  
 - effective management of the host computer's resources 
-- flexible, event-based Scala plugin system for game content
+- flexible, event-based Kotlin plugin system for game content
 - highly documented code
 
 

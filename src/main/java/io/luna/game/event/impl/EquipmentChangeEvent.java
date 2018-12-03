@@ -45,35 +45,35 @@ public final class EquipmentChangeEvent extends PlayerEvent {
     /**
      * @return The index.
      */
-    public int index() {
+    public int getIndex() {
         return index;
     }
 
     /**
      * @return The old item on the index.
      */
-    public Optional<Item> oldItem() {
-        return oldItem;
+    public Item getOldItem() {
+        return oldItem.orElse(null);
     }
 
     /**
      * @return The old item identifier on the index.
      */
-    public OptionalInt oldId() {
+    public OptionalInt getOldId() {
         return oldItem.map(item -> OptionalInt.of(item.getId())).orElseGet(OptionalInt::empty);
     }
 
     /**
      * @return The new item on the index.
      */
-    public Optional<Item> newItem() {
-        return newItem;
+    public Item getNewItem() {
+        return newItem.orElse(null);
     }
 
     /**
      * @return The new item identifier on the index.
      */
-    public OptionalInt newId() {
+    public OptionalInt getNewId() {
         return newItem.map(item -> OptionalInt.of(item.getId())).orElseGet(OptionalInt::empty);
     }
 }

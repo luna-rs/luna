@@ -104,7 +104,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
      * Handles running, walking, and teleportation movement for {@code player}.
      */
     private void handleMovement(Player player, ByteMessage msg) {
-        boolean needsUpdate = !player.getUpdateFlags().isEmpty();
+        boolean needsUpdate = !player.getFlags().isEmpty();
 
         if (player.isTeleporting()) {
             Position position = player.getPosition();

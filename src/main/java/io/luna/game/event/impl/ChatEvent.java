@@ -49,28 +49,28 @@ public final class ChatEvent extends PlayerEvent {
     /**
      * @return The chat effects.
      */
-    public int effects() {
+    public int getEffects() {
         return effects;
     }
 
     /**
      * @return The chat color.
      */
-    public int color() {
+    public int getColor() {
         return color;
     }
 
     /**
      * @return The message length.
      */
-    public int messageLength() {
+    public int getMessageLength() {
         return messageLength;
     }
 
     /**
      * @return The message.
      */
-    public byte[] message() {
+    public byte[] getMessage() {
         return message;
     }
 }

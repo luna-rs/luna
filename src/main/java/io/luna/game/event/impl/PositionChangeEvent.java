@@ -17,37 +17,37 @@ public final class PositionChangeEvent extends EntityEvent {
     /**
      * The old position.
      */
-    private final Position oldPosition;
+    private final Position oldPos;
 
     /**
      * The new position.
      */
-    private final Position newPosition;
+    private final Position newPos;
 
     /**
      * Creates a new {@link PositionChangeEvent}.
      *
      * @param entity The entity.
-     * @param oldPosition The old position.
-     * @param newPosition The new new position.
+     * @param oldPos The old position.
+     * @param newPos The new new position.
      */
-    public PositionChangeEvent(Entity entity, Position oldPosition, Position newPosition) {
+    public PositionChangeEvent(Entity entity, Position oldPos, Position newPos) {
         super(entity);
-        this.oldPosition = oldPosition;
-        this.newPosition = newPosition;
+        this.oldPos = oldPos;
+        this.newPos = newPos;
     }
 
     /**
      * @return The old position.
      */
-    public Position oldPosition() {
-        return oldPosition;
+    public Position getOldPos() {
+        return oldPos;
     }
 
     /**
      * @return The new position.
      */
-    public Position newPosition() {
-        return newPosition;
+    public Position getNewPos() {
+        return newPos;
     }
 }

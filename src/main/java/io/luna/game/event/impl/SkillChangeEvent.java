@@ -48,28 +48,28 @@ public final class SkillChangeEvent extends MobEvent {
     /**
      * @return The old amount of experience.
      */
-    public double oldExperience() {
+    public double getOldExp() {
         return oldExp;
     }
 
     /**
      * @return The old static level.
      */
-    public int oldStaticLevel() {
+    public int getOldStaticLvl() {
         return oldStaticLvl;
     }
 
     /**
      * @return The old level.
      */
-    public int oldLevel() {
+    public int getOldLvl() {
         return oldLvl;
     }
 
     /**
      * @return The id of the skill whose experience was changed.
      */
-    public int id() {
+    public int getId() {
         return id;
     }
 }

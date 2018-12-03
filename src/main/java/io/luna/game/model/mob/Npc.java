@@ -114,7 +114,7 @@ public final class Npc extends Mob {
         combatDefinition = NpcCombatDefinition.ALL.get(id);
         transformId = OptionalInt.of(id);
         setSkills();
-        updateFlags.flag(UpdateFlag.TRANSFORM);
+        flags.flag(UpdateFlag.TRANSFORM);
     }
 
     @Override

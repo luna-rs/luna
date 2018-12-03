@@ -3,13 +3,35 @@ package io.luna.game.event.impl;
 import io.luna.game.model.mob.Player;
 
 /**
+ * An event sent when a Player clicks an item to equip it.
+ *
  * @author lare96 <http://github.com/lare96>
  */
 public final class EquipItemEvent extends PlayerEvent {
+
+    /**
+     * The clicked index.
+     */
     private final int index;
+
+    /**
+     * The item identifier clicked.
+     */
     private final int itemId;
+
+    /**
+     * The interface containing the clicked index.
+     */
     private final int interfaceId;
 
+    /**
+     * Creates a new {@link EquipItemEvent}.
+     *
+     * @param player The player.
+     * @param index The clicked index.
+     * @param itemId The item identifier clicked.
+     * @param interfaceId The interface containing the clicked index.
+     */
     public EquipItemEvent(Player player, int index, int itemId, int interfaceId) {
         super(player);
         this.index = index;
@@ -17,15 +39,24 @@ public final class EquipItemEvent extends PlayerEvent {
         this.interfaceId = interfaceId;
     }
 
-    public int index() {
+    /**
+     * @return The clicked index.
+     */
+    public int getIndex() {
         return index;
     }
 
-    public int itemId() {
+    /**
+     * @return The item identifier clicked.
+     */
+    public int getItemId() {
         return itemId;
     }
 
-    public int interfaceId() {
+    /**
+     * @return The interface containing the clicked index.
+     */
+    public int getInterfaceId() {
         return interfaceId;
     }
 }

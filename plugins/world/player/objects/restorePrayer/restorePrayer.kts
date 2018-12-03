@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player
 /**
  * The restore prayer animation.
  */
-private val prayerAnimation = Animation(645)
+val prayerAnimation = Animation(645)
 
 /**
  * Restores the player's prayer points.

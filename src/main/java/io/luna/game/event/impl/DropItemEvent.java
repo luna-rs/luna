@@ -49,21 +49,21 @@ public final class DropItemEvent extends PlayerEvent implements IdBasedEvent {
     /**
      * @return The item identifier.
      */
-    public int itemId() {
+    public int getItemId() {
         return itemId;
     }
 
     /**
      * @return The widget identifier.
      */
-    public int widgetId() {
+    public int getWidgetId() {
         return widgetId;
     }
 
     /**
      * @return The index of the item.
      */
-    public int index() {
+    public int getIndex() {
         return index;
     }
 }

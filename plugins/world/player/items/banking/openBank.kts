@@ -4,7 +4,7 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 /**
  * A set of objects used for banking.
  */
-private val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
+val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
 
 /**
  * Open the banking interface.

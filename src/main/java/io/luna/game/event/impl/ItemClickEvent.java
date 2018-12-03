@@ -124,21 +124,21 @@ public class ItemClickEvent extends PlayerEvent implements IdBasedEvent {
     /**
      * @return The identifier of the item clicked.
      */
-    public final int id() {
+    public final int getId() {
         return id;
     }
 
     /**
      * @return The index of the item clicked.
      */
-    public final int index() {
+    public final int getIndex() {
         return index;
     }
 
     /**
      * @return The identifier of the interface the item was clicked on.
      */
-    public final int interfaceId() {
+    public final int getInterfaceId() {
         return interfaceId;
     }
 }

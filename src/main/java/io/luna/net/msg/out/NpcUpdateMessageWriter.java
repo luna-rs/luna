@@ -86,7 +86,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
      * Adds {@code addNpc} in the view of {@code player}.
      */
     private void addNpc(Player player, Npc addNpc, ByteMessage msg) {
-        boolean updateRequired = !addNpc.getUpdateFlags().isEmpty();
+        boolean updateRequired = !addNpc.getFlags().isEmpty();
 
         int deltaX = addNpc.getPosition().getX() - player.getPosition().getX();
         int deltaY = addNpc.getPosition().getY() - player.getPosition().getY();
@@ -103,7 +103,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
      * Handles walking movement for {@code npc}.
      */
     private void handleMovement(Npc npc, ByteMessage msg) {
-        boolean updateRequired = !npc.getUpdateFlags().isEmpty();
+        boolean updateRequired = !npc.getFlags().isEmpty();
 
         if (npc.getWalkingDirection() == Direction.NONE) {
             if (updateRequired) {

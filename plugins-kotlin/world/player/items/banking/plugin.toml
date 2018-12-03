@@ -1,7 +1,0 @@
-[metadata]
-name = "Banking"
-description = "A plugin that enables the banking interface."
-version = "1.0"
-authors = [
-  "lare96"
-]

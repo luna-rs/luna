@@ -51,13 +51,12 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
             Inventory inventory = mob.getInventory();
 
             currentRemove = remove();
-            currentAdd = add();
-
             if (!inventory.containsAll(currentRemove)) {
                 interrupt();
                 return;
             }
 
+            currentAdd = add();
             if (!inventory.hasSpaceForAll(currentAdd)) {
                 mob.sendMessage("You do not have enough space in your inventory.");
                 interrupt();

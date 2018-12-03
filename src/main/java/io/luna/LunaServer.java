@@ -121,7 +121,7 @@ public final class LunaServer {
         Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        LOGGER.info("[{}] Scala plugins have been loaded into memory.", fractionString);
+        LOGGER.info("[{}] Kotlin plugins have been loaded into memory.", fractionString);
     }
 
     /**

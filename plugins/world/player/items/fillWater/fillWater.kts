@@ -10,16 +10,16 @@ import world.player.items.fillWater.Fill
 /**
  * Fills all items in an inventory with water.
  */
-class FillAction(private val evt: ItemOnObjectEvent,
-                 private val fill: Fill,
-                 private var amount: Int) : ProducingAction(evt.plr, true, 2) {
+class FillAction(val evt: ItemOnObjectEvent,
+                 val fill: Fill,
+                 var amount: Int) : ProducingAction(evt.plr, true, 2) {
 
     companion object {
 
         /**
          * The water filling animation.
          */
-        private val ANIMATION = Animation(832)
+        val ANIMATION = Animation(832)
     }
 
 
@@ -45,8 +45,8 @@ class FillAction(private val evt: ItemOnObjectEvent,
 /**
  * Set of water source identifiers.
  */
-private val waterSources: Set<Int> = hashSetOf(153, 879, 880, 34579, 2864, 6232, 878, 884, 3359, 3485, 4004, 4005,
-                                               5086, 6097, 8747, 8927, 9090, 6827, 3460)
+val waterSources: Set<Int> = hashSetOf(153, 879, 880, 34579, 2864, 6232, 878, 884, 3359, 3485, 4004, 4005,
+                                       5086, 6097, 8747, 8927, 9090, 6827, 3460)
 
 /**
  * Opens the [MakeItemDialogueInterface] for selecting how many items to fill.
