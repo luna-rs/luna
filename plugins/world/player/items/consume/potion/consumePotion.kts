@@ -80,14 +80,25 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
 }
 
 /**
- * Forwards to [tryDrink] if the item clicked was a potion.
+ * Performs a lookup for the potion and forwards to [tryDrink].
+ */
+fun lookup(msg: ItemFirstClickEvent) {
+    val potion = Potion.DOSE_TO_POTION[msg.id]
+    if (potion != null) {
+        tryDrink(msg.plr, potion, msg.index)
+        msg.terminate()
+    }
+}
+
+/**
+ * Forwards to [lookup] if the item clicked was a consumable.
  */
 on(ItemFirstClickEvent::class)
-    .condition { itemDef(it.id)?.inventoryActions?.get(0) == "Drink" }
     .run {
-        val potion = Potion.DOSE_TO_POTION[it.id]
-        if (potion != null) {
-            tryDrink(it.plr, potion, it.index)
-            it.terminate()
+        val action = itemDef(it.id)?.inventoryActions?.get(0)
+        when (action) {
+            "Drink" -> lookup(it)
+            else -> {
+            }
         }
     }

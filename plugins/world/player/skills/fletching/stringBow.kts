@@ -67,6 +67,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(StringBowAction(plr, bow, forAmount))
         })
+        msg.terminate()
     }
 }
 
@@ -74,7 +75,6 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
  * Intercept item on item event to open interface.
  */
 on(ItemOnItemEvent::class)
-    .condition { it.targetId == Bow.BOW_STRING || it.usedId == Bow.BOW_STRING }
     .run {
         when (Bow.BOW_STRING) {
             it.targetId -> openInterface(it, it.usedId)

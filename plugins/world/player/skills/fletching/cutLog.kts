@@ -81,6 +81,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(CutLogAction(plr, log.id, log.bows[index], forAmount))
         })
+        msg.terminate()
     }
 }
 
@@ -88,7 +89,6 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
  * Intercept item on item event to open interface.
  */
 on(ItemOnItemEvent::class)
-    .condition { it.targetId == Log.KNIFE || it.usedId == Log.KNIFE }
     .run {
         when (Log.KNIFE) {
             it.targetId -> openInterface(it, it.usedId)

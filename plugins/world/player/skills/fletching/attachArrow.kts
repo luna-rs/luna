@@ -81,6 +81,7 @@ fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeArrowAction(plr, arrow, forAmount))
         })
+        msg.terminate()
     }
 }
 
@@ -88,7 +89,6 @@ fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
  * Intercept item on item event to open interface.
  */
 on(ItemOnItemEvent::class)
-    .condition { it.targetId == Arrow.HEADLESS || it.usedId == Arrow.HEADLESS }
     .run {
         when (Arrow.HEADLESS) {
             it.targetId -> openInterface(it, Arrow.TIP_TO_ARROW[it.usedId])

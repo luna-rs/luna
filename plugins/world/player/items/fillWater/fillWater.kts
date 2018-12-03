@@ -60,13 +60,22 @@ fun openInterface(msg: ItemOnObjectEvent, fill: Fill) {
 }
 
 /**
+ * Performs a lookup for the fillable item, and attempts to call [openInterface].
+ */
+fun tryFill(msg: ItemOnObjectEvent) {
+    val fill = Fill.EMPTY_TO_FILL[msg.itemId]
+    if (fill != null) {
+        openInterface(msg, fill)
+        msg.terminate()
+    }
+}
+
+/**
  * Fills items if they are fillable and if the object used with is a water source.
  */
 on(ItemOnObjectEvent::class)
-    .condition { waterSources.contains(it.objectId) }
     .run {
-        val fill = Fill.EMPTY_TO_FILL[it.itemId]
-        if (fill != null) {
-            openInterface(it, fill)
+        if (waterSources.contains(it.objectId)) {
+            tryFill(it)
         }
     }
