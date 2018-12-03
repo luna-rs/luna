@@ -45,15 +45,12 @@ class RequestAction(val plr: Player,
 fun request(msg: PlayerFourthClickEvent) {
     val plr = msg.plr
     val other = msg.other
-    if (plr.interfaces.isStandardOpen) {
-        other.sendMessage("You are busy.")
-        return
+
+    when {
+        plr.interfaces.isStandardOpen -> plr.sendMessage("You are busy.")
+        other.interfaces.isStandardOpen -> plr.sendMessage("That player is busy.")
+        else -> plr.submitAction(RequestAction(plr, other))
     }
-    if (other.interfaces.isStandardOpen) {
-        other.sendMessage("That player is busy.")
-        return
-    }
-    plr.submitAction(RequestAction(plr, other))
 }
 
 /**
