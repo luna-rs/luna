@@ -5,6 +5,7 @@ import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
+import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.SkillUpdateMessageWriter
@@ -79,13 +80,17 @@ val buttonToSkill = mapOf(
 )
 
 /**
- * Opens the input interface for choosing what level to set to.
+ * Opens the input interface for choosing what level to set to, or closes the interface.
  */
-fun openInput(msg: ButtonClickEvent) {
-    // TODO check here for msg.id == 2831, close interface
-    val id = buttonToSkill[msg.id]
-    if (id != null) {
-        msg.plr.interfaces.open(SetLevelInput(id))
+fun buttonClick(id: Int, interfaces: AbstractInterfaceSet) {
+    when (id) {
+        2831 -> interfaces.close()
+        else -> {
+            val skill = buttonToSkill[id]
+            if (skill != null) {
+                interfaces.open(SetLevelInput(skill))
+            }
+        }
     }
 }
 
@@ -101,4 +106,7 @@ on(CommandEvent::class)
  */
 on(ButtonClickEvent::class)
     .condition { it.plr.rights >= RIGHTS_DEV && it.plr.interfaces.isOpen(SetLevelInterface::class) }
-    .run { openInput(it) }
+    .run {
+        buttonClick(it.id, it.plr.interfaces)
+        it.terminate()
+    }
