@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Npc
@@ -71,7 +71,7 @@ fun addSpots() = fishingSpots.forEach { world.npcs.add(it.npc) }
 /**
  * Schedules a task that spawns fishing spots, and attempts to move them every minute.
  */
-on(ServerLaunchEvent::class).run { _ ->
+on(ServerLaunchEvent::class) {
     if (fishingSpots.isNotEmpty()) {
         // Spawn fishing spots.
         addSpots()
@@ -82,3 +82,4 @@ on(ServerLaunchEvent::class).run { _ ->
         }
     }
 }
+

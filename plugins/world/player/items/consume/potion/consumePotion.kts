@@ -1,4 +1,5 @@
-import api.*
+import api.attr.Stopwatch
+import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
@@ -6,14 +7,14 @@ import io.luna.game.model.mob.Player
 import world.player.items.consume.potion.Potion
 
 /**
- * The "last_drink_timer" attribute.
+ * The "last_drink_timer" stopwatch.
  */
-var Player.lastDrink by TimerAttr("last_drink_timer")
+var Player.lastDrink by Stopwatch("last_drink_timer")
 
 /**
- * The "last_eat_timer" attribute.
+ * The "last_eat_timer" stopwatch.
  */
-var Player.lastEat by TimerAttr("last_eat_timer")
+var Player.lastEat by Stopwatch("last_eat_timer")
 
 /**
  * Item instance for empty vials.
@@ -40,8 +41,8 @@ fun tryDrink(plr: Player, potion: Potion, index: Int) {
     }
 
     plr.interruptAction()
-    plr.lastDrink = RESET_TIMER
-    plr.lastEat = RESET_TIMER
+    plr.lastDrink = -1
+    plr.lastEat = -1
 
     plr.inventory.computeIdForIndex(index)
         .map { Item(it) }
@@ -64,7 +65,7 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
         }
 
         // Send consume messages.
-        val name = itemDef(id)?.name
+        val name = itemDef(id).name
         plr.sendMessage("You drink some of your $name.")
 
         val dosesLeft = potion.getDosesLeft(id)
@@ -94,11 +95,5 @@ fun lookup(msg: ItemFirstClickEvent) {
  * Forwards to [lookup] if the item clicked was a consumable.
  */
 on(ItemFirstClickEvent::class)
-    .run {
-        val action = itemDef(it.id)?.inventoryActions?.get(0)
-        when (action) {
-            "Drink" -> lookup(it)
-            else -> {
-            }
-        }
-    }
+    .filter { itemDef(it.id).isInventoryAction(0, "Drink") }
+    .then { lookup(it) }

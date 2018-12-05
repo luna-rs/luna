@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -31,9 +31,9 @@ class GrindAction(plr: Player,
 
 
     override fun onProduce() {
-        val oldName = itemDef(ingredient.id)?.name
-        val newName = itemDef(ingredient.newId)?.name
-        val nextWord = if (ingredient.newId == 6693) "a" else "some"
+        val oldName = itemDef(ingredient.id).name
+        val newName = itemDef(ingredient.newId).name
+        val nextWord = if (ingredient == Ingredient.CRUSHED_NEST) "a" else "some"
         mob.sendMessage("You grind the $oldName into $nextWord $newName.")
 
         mob.animation(ANIMATION)
@@ -58,7 +58,7 @@ fun grind(msg: ItemOnItemEvent, id: Int) {
     val ingredient = Ingredient.OLD_TO_INGREDIENT[id]
     if (ingredient != null) {
         val plr = msg.plr
-        plr.interfaces.open(object : MakeItemDialogueInterface(ingredient.newId) {
+        plr.openInterface(object : MakeItemDialogueInterface(ingredient.newId) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(GrindAction(plr, ingredient, forAmount))
         })
@@ -69,7 +69,7 @@ fun grind(msg: ItemOnItemEvent, id: Int) {
 /**
  * Intercept event for using ingredient with pestle and mortar.
  */
-on(ItemOnItemEvent::class).run {
+on(ItemOnItemEvent::class) {
     when (Ingredient.PESTLE_AND_MORTAR) {
         it.usedId -> grind(it, it.targetId)
         it.targetId -> grind(it, it.usedId)

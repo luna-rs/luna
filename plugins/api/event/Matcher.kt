@@ -21,9 +21,10 @@ import kotlin.reflect.KClass
  *
  * This provides a performance increase when there are a large amount of event listeners in a pipeline. For
  * more information, see [issue #68](https://github.com/luna-rs/luna/issues/68).
+ *
+ * @author lare96
  */
 abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
-
 
     companion object {
 
@@ -38,10 +39,18 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
         private val SCRIPT = Script("matcherScript", Paths.get(""), "")
 
         /**
+         * Retrieves a [Matcher] from the backing map that is matching on events with [E].
+         */
+        @Suppress("UNCHECKED_CAST")
+        inline fun <reified E : Event, K> get(): Matcher<E, K> {
+            return get(E::class)
+        }
+
+        /**
          * Retrieves a [Matcher] from the backing map that is matching on events with [eventType].
          */
         @Suppress("UNCHECKED_CAST")
-        operator fun <E : Event, K> get(eventType: KClass<E>): Matcher<E, K> {
+        fun <E : Event, K> get(eventType: KClass<E>): Matcher<E, K> {
             val matcher = ALL[eventType]
             return when (matcher) {
                 null -> throw NoSuchElementException("Matcher for event type $eventType was not found.")
@@ -108,7 +117,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
             }
         }
         eventListener.script = SCRIPT
-        pipeline.setMatchListener(eventListener)
+        pipeline.setMatcher(eventListener)
     }
 
     /**
@@ -143,7 +152,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * A singleton [Matcher] instance for [CommandEvent]s.
      */
     object CommandMatcher : Matcher<CommandEvent, String>(CommandEvent::class) {
-        override fun key(msg: CommandEvent) = msg.name
+        override fun key(msg: CommandEvent) = msg.name!!
     }
 }
 

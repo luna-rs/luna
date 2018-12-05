@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent
 
 /**
@@ -27,6 +27,6 @@ fun sendMessages() {
 /**
  * Schedules a task that will send global messages.
  */
-on(ServerLaunchEvent::class).run {
+on(ServerLaunchEvent::class) {
     world.schedule(intervalTicks) { sendMessages() }
 }

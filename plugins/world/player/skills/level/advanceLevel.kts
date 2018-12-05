@@ -1,5 +1,5 @@
 import AdvanceLevel.LevelUpInterface
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Player
@@ -74,7 +74,8 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
             else -> newLevel
         }
 
-        plr.interfaces.open(LevelUpInterface(skillId, newLevel, levelUpTable[skillId]))
+        val levelUpData = levelUpTable[skillId]
+        plr.openInterface(LevelUpInterface(skillId, newLevel, levelUpData))
         plr.graphic(fireworksGraphic)
 
         if (Skill.isCombatSkill(skillId)) {
@@ -88,7 +89,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
  * When a player's skills change, send the update to the client and check if they've advanced a
  * level.
  */
-on(SkillChangeEvent::class).run {
+on(SkillChangeEvent::class) {
     val plr = it.mob as? Player
     if (plr != null) {
         val skill = it.id

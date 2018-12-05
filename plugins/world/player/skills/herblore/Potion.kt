@@ -1,6 +1,6 @@
 package world.player.skills.herblore
 
-import api.*
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**

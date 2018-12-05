@@ -1,5 +1,4 @@
-
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.event.impl.PrivateChatListChangeEvent
@@ -31,13 +30,13 @@ fun updateOtherLists(plr: Player, online: Boolean) {
  * Adds a friend.
  */
 fun addFriend(plr: Player, name: Long) {
-    if (plr.friends.size >= 200) {
-        plr.sendMessage("Your friends list is full.")
-    } else if (plr.friends.add(name)) {
-        val online = world.getPlayer(name).isPresent
-        plr.queue(UpdateFriendsListMessageWriter(name, online))
-    } else {
-        plr.sendMessage("They are already on your friends list.")
+    when {
+        plr.friends.size >= 200 -> plr.sendMessage("Your friends list is full.")
+        plr.friends.add(name) -> {
+            val online = world.getPlayer(name).isPresent
+            plr.queue(UpdateFriendsListMessageWriter(name, online))
+        }
+        else -> plr.sendMessage("They are already on your friends list.")
     }
 }
 
@@ -45,10 +44,9 @@ fun addFriend(plr: Player, name: Long) {
  * Adds an ignore.
  */
 fun addIgnore(plr: Player, name: Long) {
-    if (plr.ignores.size >= 100) {
-        plr.sendMessage("Your ignore list is full.")
-    } else if (!plr.ignores.add(name)) {
-        plr.sendMessage("They are already on your ignore list.")
+    when {
+        plr.ignores.size >= 100 -> plr.sendMessage("Your ignore list is full.")
+        !plr.ignores.add(name) -> plr.sendMessage("They are already on your ignore list.")
     }
 }
 
@@ -73,7 +71,7 @@ fun removeIgnore(plr: Player, name: Long) {
 /**
  * Record friend and ignore list changes.
  */
-on(PrivateChatListChangeEvent::class).run {
+on(PrivateChatListChangeEvent::class) {
     val plr = it.plr
     val name = it.name
     when (it.type!!) {
@@ -87,12 +85,12 @@ on(PrivateChatListChangeEvent::class).run {
 /**
  * Update friends lists on logout.
  */
-on(LogoutEvent::class).run { updateOtherLists(it.plr, false) }
+on(LogoutEvent::class) { updateOtherLists(it.plr, false) }
 
 /**
  * Update friends lists on login.
  */
-on(LoginEvent::class).run {
+on(LoginEvent::class) {
     val plr = it.plr
     plr.queue(FriendsListStatusMessageWriter(2))
     update(plr)

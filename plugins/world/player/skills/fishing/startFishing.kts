@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
@@ -16,40 +16,40 @@ fun fish(msg: NpcClickEvent, tool: Tool) {
  * First click fishing spots.
  */
 on(NpcFirstClickEvent::class)
-    .args(233, 234, 235, 236)
-    .run { fish(it, Tool.FISHING_ROD) }
+    .match(233, 234, 235, 236)
+    .then { fish(it, Tool.FISHING_ROD) }
 
 on(NpcFirstClickEvent::class)
-    .args(309, 310, 311, 314, 315, 317, 318)
-    .run { fish(it, Tool.FLY_FISHING_ROD) }
+    .match(309, 310, 311, 314, 315, 317, 318)
+    .then { fish(it, Tool.FLY_FISHING_ROD) }
 
 on(NpcFirstClickEvent::class)
-    .args(312)
-    .run { fish(it, Tool.LOBSTER_POT) }
+    .match(312)
+    .then { fish(it, Tool.LOBSTER_POT) }
 
 on(NpcFirstClickEvent::class)
-    .args(313)
-    .run { fish(it, Tool.BIG_NET) }
+    .match(313)
+    .then { fish(it, Tool.BIG_NET) }
 
 on(NpcFirstClickEvent::class)
-    .args(316, 319)
-    .run { fish(it, Tool.SMALL_NET) }
+    .match(316, 319)
+    .then { fish(it, Tool.SMALL_NET) }
 
 on(NpcFirstClickEvent::class)
-    .args(1174)
-    .run { fish(it, Tool.MONKFISH_NET) }
+    .match(1174)
+    .then { fish(it, Tool.MONKFISH_NET) }
 
 /**
  * Second click fishing spots.
  */
 on(NpcSecondClickEvent::class)
-    .args(309, 316, 319, 310, 311, 314, 315, 317, 318)
-    .run { fish(it, Tool.FISHING_ROD) }
+    .match(309, 316, 319, 310, 311, 314, 315, 317, 318)
+    .then { fish(it, Tool.FISHING_ROD) }
 
 on(NpcSecondClickEvent::class)
-    .args(312)
-    .run { fish(it, Tool.HARPOON) }
+    .match(312)
+    .then { fish(it, Tool.HARPOON) }
 
 on(NpcSecondClickEvent::class)
-    .args(313)
-    .run { fish(it, Tool.SHARK_HARPOON) }
+    .match(313)
+    .then { fish(it, Tool.SHARK_HARPOON) }

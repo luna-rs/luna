@@ -1,6 +1,6 @@
 package world.player.skills.fishing
 
-import api.*
+import api.predef.*
 import io.luna.util.Rational
 import world.player.skills.fishing.Fish.*
 

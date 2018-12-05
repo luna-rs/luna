@@ -1,6 +1,6 @@
 package world.player.items.consume.potion
 
-import api.*
+import api.predef.*
 import io.luna.game.model.mob.Player
 
 /**
@@ -153,7 +153,7 @@ enum class Potion(val fourDose: Int,
             threeDose -> 2
             twoDose -> 1
             oneDose -> 0
-            else -> throw Exception("Invalid dose identifier <$current>.")
+            else -> throw IllegalArgumentException("Invalid dose identifier <$current>.")
         }
 }
 

@@ -1,13 +1,8 @@
-import api.*
-import io.luna.game.event.impl.ButtonClickEvent
+import api.predef.*
 
 /**
  * Start/stop running.
  */
-on(ButtonClickEvent::class)
-    .args(152)
-    .run { it.plr.walking.isRunning = false }
+button(152) { it.plr.walking.isRunning = false }
 
-on(ButtonClickEvent::class)
-    .args(153)
-    .run { it.plr.walking.isRunning = true }
+button(153) { it.plr.walking.isRunning = true }

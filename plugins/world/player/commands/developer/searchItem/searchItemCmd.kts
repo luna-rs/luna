@@ -1,5 +1,4 @@
-import api.*
-import io.luna.game.event.impl.CommandEvent
+import api.predef.*
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -61,14 +60,12 @@ class SearchResultInterface(val searchToken: String) : StandardInterface(5292) {
 /**
  * A command that displays items on the banking interface, for easier item spawning.
  */
-on(CommandEvent::class)
-    .args("search_item", RIGHTS_DEV)
-    .run {
-        val plr = it.plr
-        val search = it.replace(0, '_', ' ')
-        if (search.length > 1) {
-            plr.interfaces.open(SearchResultInterface(search))
-        } else {
-            plr.sendMessage("Search term must be more than 1 character.")
-        }
+cmd("search_item", RIGHTS_DEV) {
+    val plr = it.plr
+    val search = it.replace(0, '_', ' ')
+    if (search.length > 1) {
+        plr.openInterface(SearchResultInterface(search))
+    } else {
+        plr.sendMessage("Search term must be more than 1 character.")
     }
+}

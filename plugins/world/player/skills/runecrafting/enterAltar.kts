@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Equipment
@@ -15,7 +15,7 @@ val talismanAnimation = Animation(827)
  * Moves the player inside an altar using a talisman.
  */
 fun talismanEnter(plr: Player, altar: Altar) {
-    plr.sendMessage("You hold the ${itemDef(altar.talisman)?.name} towards the mysterious ruins.")
+    plr.sendMessage("You hold the ${itemDef(altar.talisman).name} towards the mysterious ruins.")
     plr.animation(talismanAnimation)
     plr.walking.isLocked = true
 
@@ -48,7 +48,7 @@ fun portalExit(plr: Player, altar: Altar) {
 /**
  * Intercept event for entering with talismans.
  */
-on(ItemOnObjectEvent::class).run {
+on(ItemOnObjectEvent::class) {
     val altar = Altar.TALISMAN_TO_ALTAR[it.itemId]
     if (altar != null && altar.id == it.objectId) {
         talismanEnter(it.plr, altar)
@@ -59,9 +59,9 @@ on(ItemOnObjectEvent::class).run {
 /**
  * Intercept event for entering with tiaras.
  */
-on(ObjectFirstClickEvent::class).run {
+on(ObjectFirstClickEvent::class) {
     val headId = it.plr.equipment.get(Equipment.HEAD)?.id
-    if (headId != null && itemDef(headId)?.name?.contains("tiara") == true) {
+    if (headId != null && itemDef(headId).name.contains("tiara")) {
         tiaraEnter(it.plr, headId, it.id)
         it.terminate()
     }
@@ -70,11 +70,13 @@ on(ObjectFirstClickEvent::class).run {
 /**
  * Intercept event for exiting through altar portals.
  */
-on(ObjectFirstClickEvent::class).run {
-    val altar = Altar.PORTAL_TO_ALTAR[it.id]
-    if (altar != null) {
-        portalExit(it.plr, altar)
-        it.terminate()
+on(ObjectFirstClickEvent::class)
+    .filter { objectDef(it.id).name == "Portal" }
+    .then {
+        val altar = Altar.PORTAL_TO_ALTAR[it.id]
+        if (altar != null) {
+            portalExit(it.plr, altar)
+            it.terminate()
+        }
     }
-}
 

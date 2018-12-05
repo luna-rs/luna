@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -54,7 +54,7 @@ class CutLogAction(plr: Player,
 
 
     override fun onProduce() {
-        val unstrungName = itemDef(bow.unstrung)?.name
+        val unstrungName = itemDef(bow.unstrung).name
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
         mob.animation(ANIMATION)
@@ -77,7 +77,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
     val log = Log.ID_TO_LOG[id]
     if (log != null) {
         val plr = msg.plr
-        plr.interfaces.open(object : MakeItemDialogueInterface(*log.unstrungIds) {
+        plr.openInterface(object : MakeItemDialogueInterface(*log.unstrungIds) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(CutLogAction(plr, log.id, log.bows[index], forAmount))
         })
@@ -88,10 +88,9 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
 /**
  * Intercept item on item event to open interface.
  */
-on(ItemOnItemEvent::class)
-    .run {
-        when (Log.KNIFE) {
-            it.targetId -> openInterface(it, it.usedId)
-            it.usedId -> openInterface(it, it.targetId)
-        }
+on(ItemOnItemEvent::class) {
+    when (Log.KNIFE) {
+        it.targetId -> openInterface(it, it.usedId)
+        it.usedId -> openInterface(it, it.targetId)
     }
+}

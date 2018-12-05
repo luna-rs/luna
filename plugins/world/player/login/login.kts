@@ -1,4 +1,5 @@
-import api.*
+import api.attr.Attr
+import api.predef.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -17,7 +18,7 @@ var Player.firstLogin by Attr<Boolean>("first_login")
 /**
  * Formats dates into the specified pattern.
  */
-val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, uuuu")
+val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, uuuu")!!
 
 /**
  * Inventory starter items.
@@ -55,7 +56,7 @@ fun firstLogin(plr: Player) {
 
     plr.inventory.addAll(inventoryStarter)
     plr.equipment.addAll(equipmentStarter)
-    plr.interfaces.open(DesignPlayerInterface())
+    plr.openInterface(DesignPlayerInterface())
 }
 
 /**
@@ -102,7 +103,7 @@ fun checkMute(plr: Player) {
 /**
  * Listens for login events, initializes [Player]s.
  */
-on(LoginEvent::class).run {
+on(LoginEvent::class) {
     val plr = it.plr
     init(plr)
     checkMute(plr)

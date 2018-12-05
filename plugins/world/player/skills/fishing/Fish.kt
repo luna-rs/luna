@@ -1,6 +1,6 @@
 package world.player.skills.fishing
 
-import api.*
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**

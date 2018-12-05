@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -38,7 +38,7 @@ class MakeUnfAction(plr: Player,
         }
 
     override fun onProduce() {
-        mob.sendMessage("You put the ${itemDef(unfPotion.herb)?.name} into the vial of water.")
+        mob.sendMessage("You put the ${itemDef(unfPotion.herb).name} into the vial of water.")
         mob.animation(ANIMATION)
     }
 
@@ -60,7 +60,7 @@ fun makeUnf(msg: ItemOnItemEvent, herb: Int) {
     val unfPotion = UnfPotion.HERB_TO_UNF[herb]
     if (unfPotion != null) {
         val plr = msg.plr
-        plr.interfaces.open(object : MakeItemDialogueInterface(unfPotion.id) {
+        plr.openInterface(object : MakeItemDialogueInterface(unfPotion.id) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeUnfAction(plr, unfPotion, forAmount))
         })
@@ -71,7 +71,7 @@ fun makeUnf(msg: ItemOnItemEvent, herb: Int) {
 /**
  * Intercept event to make unf. potions if the required items are present.
  */
-on(ItemOnItemEvent::class).run {
+on(ItemOnItemEvent::class) {
     when (UnfPotion.VIAL_OF_WATER) {
         it.targetId -> makeUnf(it, it.usedId)
         it.usedId -> makeUnf(it, it.targetId)

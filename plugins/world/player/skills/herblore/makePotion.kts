@@ -1,5 +1,5 @@
 import MakePotion.MakePotionAction
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -40,7 +40,7 @@ class MakePotionAction(plr: Player,
     override fun canProduce() = canInit()
 
     override fun onProduce() {
-        mob.sendMessage("You mix the ${itemDef(potion.secondary)?.name} into your potion.")
+        mob.sendMessage("You mix the ${itemDef(potion.secondary).name} into your potion.")
         mob.animation(ANIMATION)
         skill.addExperience(potion.exp)
     }
@@ -57,16 +57,23 @@ class MakePotionAction(plr: Player,
 }
 
 /**
+ * Opens a [MakeItemDialogueInterface] to make finished potions.
+ */
+fun makePotion(msg: ItemOnItemEvent, potion: Potion) {
+    val plr = msg.plr
+    plr.openInterface(object : MakeItemDialogueInterface(potion.id) {
+        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+            plr.submitAction(MakePotionAction(plr, potion, forAmount))
+    })
+    msg.terminate()
+}
+
+/**
  * Start a [MakePotionAction] if the intercepted event contains the required items.
  */
-on(ItemOnItemEvent::class).run {
+on(ItemOnItemEvent::class) {
     val potion = Potion.getPotion(it.usedId, it.targetId)
     if (potion != null) {
-        val plr = it.plr
-        plr.interfaces.open(object : MakeItemDialogueInterface(potion.id) {
-            override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
-                plr.submitAction(MakePotionAction(plr, potion, forAmount))
-        })
-        it.terminate()
+        makePotion(it, potion)
     }
 }

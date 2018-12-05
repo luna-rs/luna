@@ -1,10 +1,10 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.PrivateChatEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.PrivateChatMessageWriter
 
 /**
- * Sends a  message.
+ * Sends a message.
  */
 fun sendMessage(plr: Player, name: Long, msg: ByteArray) {
     world.getPlayer(name)
@@ -14,4 +14,4 @@ fun sendMessage(plr: Player, name: Long, msg: ByteArray) {
 /**
  * Listens for a  chat event, and sends the message.
  */
-on(PrivateChatEvent::class).run { sendMessage(it.plr, it.name, it.message) }
+on(PrivateChatEvent::class) { sendMessage(it.plr, it.name, it.message) }

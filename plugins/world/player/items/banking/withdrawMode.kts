@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ButtonClickEvent
 
 /**
@@ -14,13 +14,9 @@ fun setWithdrawMode(msg: ButtonClickEvent, value: Boolean) {
 /**
  * Withdraw items as unnoted.
  */
-on(ButtonClickEvent::class)
-    .args(5387)
-    .run { setWithdrawMode(it, false) }
+button(5387) { setWithdrawMode(it, false) }
 
 /**
  * Withdraw items as noted.
  */
-on(ButtonClickEvent::class)
-    .args(5386)
-    .run { setWithdrawMode(it, true) }
+button(5386) { setWithdrawMode(it, true) }

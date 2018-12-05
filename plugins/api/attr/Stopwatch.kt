@@ -21,6 +21,8 @@ import kotlin.reflect.KProperty
  *     }
  * }
  * ```
+ *
+ * @author lare96
  */
 class Stopwatch(private val name: String) {
 

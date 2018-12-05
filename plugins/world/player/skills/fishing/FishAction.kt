@@ -1,6 +1,6 @@
 package world.player.skills.fishing
 
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.HarvestingAction
 import io.luna.game.event.impl.NpcClickEvent

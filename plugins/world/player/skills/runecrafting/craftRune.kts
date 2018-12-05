@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
@@ -59,7 +59,7 @@ fun craft(plr: Player, rune: Rune) {
     inv.remove(Item(essenceId, essenceAmt))
     inv.add(Item(rune.id, craftAmt))
 
-    plr.sendMessage("You bind the temple's power into ${itemDef(rune.id)?.name}s.")
+    plr.sendMessage("You bind the temple's power into ${itemDef(rune.id).name}s.")
 
     plr.animation(craftAnimation)
     plr.graphic(craftGraphic)
@@ -70,10 +70,12 @@ fun craft(plr: Player, rune: Rune) {
 /**
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
-on(ObjectFirstClickEvent::class).run {
-    val altar = Rune.ALTAR_TO_RUNE[it.id]
-    if (altar != null) {
-        craft(it.plr, altar)
-        it.terminate()
+on(ObjectFirstClickEvent::class)
+    .filter { objectDef(it.id).isAction(0, "Craft-rune") }
+    .then {
+        val altar = Rune.ALTAR_TO_RUNE[it.id]
+        if (altar != null) {
+            craft(it.plr, altar)
+            it.terminate()
+        }
     }
-}

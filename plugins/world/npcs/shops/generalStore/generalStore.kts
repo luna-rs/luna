@@ -1,13 +1,13 @@
-import api.*
-import io.luna.game.model.item.shop.Currency.COINS
-import io.luna.game.model.item.shop.RestockPolicy.FAST
-import io.luna.game.model.item.shop.SellPolicy.ALL
+import api.predef.*
+import io.luna.game.model.item.shop.BuyPolicy
+import io.luna.game.model.item.shop.Currency
+import io.luna.game.model.item.shop.RestockPolicy
 
 shop {
     name = "General Store"
-    buy = ALL
-    restock = FAST
-    currency = COINS
+    buy = BuyPolicy.ALL
+    restock = RestockPolicy.FAST
+    currency = Currency.COINS
 
     sell {
         item("Pot") x 10
@@ -23,7 +23,6 @@ shop {
     }
 
     open {
-        type = TYPE_NPC
-        id = 520
+        npc2 = 520
     }
 }

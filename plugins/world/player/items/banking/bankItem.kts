@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.item.Item
@@ -44,51 +44,51 @@ fun withdraw(msg: WidgetItemClickEvent, amount: Int) {
  * Withdraw/deposit 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .args(5064)
-    .run { deposit(it, 1) }
+    .condition { it.widgetId == 5064 }
+    .then { deposit(it, 1) }
 
 on(WidgetItemFirstClickEvent::class)
-    .args(5382)
-    .run { withdraw(it, 1) }
+    .condition { it.widgetId == 5382 }
+    .then { withdraw(it, 1) }
 
 /**
  * Withdraw/deposit 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .args(5064)
-    .run { deposit(it, 5) }
+    .condition { it.widgetId == 5064 }
+    .then { deposit(it, 5) }
 
 on(WidgetItemSecondClickEvent::class)
-    .args(5382)
-    .run { withdraw(it, 5) }
+    .condition { it.widgetId == 5382 }
+    .then { withdraw(it, 5) }
 
 /**
  * Withdraw/deposit 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .args(5064)
-    .run { deposit(it, 10) }
+    .condition { it.widgetId == 5064 }
+    .then { deposit(it, 10) }
 
 on(WidgetItemThirdClickEvent::class)
-    .args(5382)
-    .run { withdraw(it, 10) }
+    .condition { it.widgetId == 5382 }
+    .then { withdraw(it, 10) }
 
 
 /* Withdraw/deposit all. */
 on(WidgetItemFourthClickEvent::class)
-    .args(5064)
-    .run { deposit(it, -1) }
+    .condition { it.widgetId == 5064 }
+    .then { deposit(it, -1) }
 
 on(WidgetItemFourthClickEvent::class)
-    .args(5382)
-    .run { withdraw(it, -1) }
+    .condition { it.widgetId == 5382 }
+    .then { withdraw(it, -1) }
 
 /**
  * Withdraw/deposit (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .args(5064)
-    .run {
+    .condition { it.widgetId == 5064 }
+    .then {
         val interfaces = it.plr.interfaces
         interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = deposit(it, value)
@@ -96,8 +96,8 @@ on(WidgetItemFifthClickEvent::class)
     }
 
 on(WidgetItemFifthClickEvent::class)
-    .args(5382)
-    .run {
+    .condition { it.widgetId == 5382 }
+    .then {
         val interfaces = it.plr.interfaces
         interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = withdraw(it, value)

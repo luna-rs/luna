@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -56,8 +56,8 @@ class MakeArrowAction(plr: Player,
     }
 
     override fun onProduce() {
-        val withName = itemDef(arrow.with)?.name
-        val tipName = itemDef(arrow.tip)?.name
+        val withName = itemDef(arrow.with).name
+        val tipName = itemDef(arrow.tip).name
         mob.sendMessage("You attach the $tipName to the $withName.")
 
         fletching.addExperience(arrow.exp * setAmount)
@@ -77,7 +77,7 @@ class MakeArrowAction(plr: Player,
 fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
     if (arrow != null) {
         val plr = msg.plr
-        plr.interfaces.open(object : MakeItemDialogueInterface(arrow.arrow) {
+        plr.openInterface(object : MakeItemDialogueInterface(arrow.arrow) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeArrowAction(plr, arrow, forAmount))
         })
@@ -88,19 +88,18 @@ fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
 /**
  * Intercept item on item event to open interface.
  */
-on(ItemOnItemEvent::class)
-    .run {
-        when (Arrow.HEADLESS) {
-            it.targetId -> openInterface(it, Arrow.TIP_TO_ARROW[it.usedId])
-            it.usedId -> openInterface(it, Arrow.TIP_TO_ARROW[it.targetId])
-        }
+on(ItemOnItemEvent::class) {
+    when (Arrow.HEADLESS) {
+        it.targetId -> openInterface(it, Arrow.TIP_TO_ARROW[it.usedId])
+        it.usedId -> openInterface(it, Arrow.TIP_TO_ARROW[it.targetId])
     }
+}
 
 /**
  * Intercept even specifically for [Arrow.HEADLESS_ARROW], because it differs from others.
  */
 Arrow.HEADLESS_ARROW.apply {
     on(ItemOnItemEvent::class)
-        .args(tip, with)
-        .run { openInterface(it, this) }
+        .condition { it.matches(tip, with) }
+        .then { openInterface(it, this) }
 }

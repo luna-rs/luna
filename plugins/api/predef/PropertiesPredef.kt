@@ -1,4 +1,4 @@
-package api
+package api.predef
 
 import io.luna.game.event.EventListener
 import io.luna.game.model.EntityType
@@ -49,20 +49,20 @@ val world = ctx.world!!
 val service = ctx.service!!
 
 
-/********************
- *                  *
- *   Type aliases.  *
- *                  *
- *******************/
+/*******************
+ *                 *
+ *  Type aliases.  *
+ *                 *
+ ******************/
 
 typealias TableEntry<R, C, V> = Pair<Pair<R, C>, V>
 
 
-/***************************************
- *                                     *
- *   [PlayerRights] property aliases.  *
- *                                     *
- **************************************/
+/**************************************
+ *                                    *
+ *  [PlayerRights] property aliases.  *
+ *                                    *
+ *************************************/
 
 val RIGHTS_PLAYER = PlayerRights.PLAYER
 val RIGHTS_MOD = PlayerRights.MODERATOR
@@ -70,23 +70,23 @@ val RIGHTS_ADMIN = PlayerRights.ADMINISTRATOR
 val RIGHTS_DEV = PlayerRights.DEVELOPER
 
 
-/********************************************
- *                                          *
- *   [PlayerInteraction] property aliases.  *
- *                                          *
- *******************************************/
+/*******************************************
+ *                                         *
+ *  [PlayerInteraction] property aliases.  *
+ *                                         *
+ ******************************************/
 
-val INTERACTION_TRADE = PlayerInteraction.TRADE
-val INTERACTION_CHALLENGE = PlayerInteraction.CHALLENGE
-val INTERACTION_ATTACK = PlayerInteraction.ATTACK
-val INTERACTION_FOLLOW = PlayerInteraction.FOLLOW
+val INTERACTION_TRADE = PlayerInteraction.TRADE!!
+val INTERACTION_CHALLENGE = PlayerInteraction.CHALLENGE!!
+val INTERACTION_ATTACK = PlayerInteraction.ATTACK!!
+val INTERACTION_FOLLOW = PlayerInteraction.FOLLOW!!
 
 
-/*************************************
- *                                   *
- *   [EntityType] property aliases.  *
- *                                   *
- ************************************/
+/************************************
+ *                                  *
+ *  [EntityType] property aliases.  *
+ *                                  *
+ ***********************************/
 
 /* Aliases for 'EntityType'. */
 val TYPE_PLAYER = EntityType.PLAYER
@@ -95,11 +95,11 @@ val TYPE_OBJECT = EntityType.OBJECT
 val TYPE_ITEM = EntityType.ITEM
 
 
-/*******************************************
- *                                         *
- *   [Skill] identifier property aliases.  *
- *                                         *
- ******************************************/
+/******************************************
+ *                                        *
+ *  [Skill] identifier property aliases.  *
+ *                                        *
+ *****************************************/
 
 const val SKILL_ATTACK = Skill.ATTACK
 const val SKILL_DEFENCE = Skill.DEFENCE
@@ -124,11 +124,11 @@ const val SKILL_FARMING = Skill.FARMING
 const val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
 
 
-/***********************************
- *                                 *
- *   [Rational] property aliases.  *
- *                                 *
- **********************************/
+/**********************************
+ *                                *
+ *  [Rational] property aliases.  *
+ *                                *
+ *********************************/
 
 val CHANCE_ALWAYS = Rational.ALWAYS
 val CHANCE_VERY_COMMON = Rational.VERY_COMMON

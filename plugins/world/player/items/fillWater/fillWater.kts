@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
 import io.luna.game.event.impl.ItemOnObjectEvent
@@ -56,7 +56,7 @@ fun openInterface(msg: ItemOnObjectEvent, fill: Fill) {
         override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
             plr.submitAction(FillAction(msg, fill, forAmount))
     }
-    msg.plr.interfaces.open(inter)
+    msg.plr.openInterface(inter)
 }
 
 /**
@@ -74,8 +74,5 @@ fun tryFill(msg: ItemOnObjectEvent) {
  * Fills items if they are fillable and if the object used with is a water source.
  */
 on(ItemOnObjectEvent::class)
-    .run {
-        if (waterSources.contains(it.objectId)) {
-            tryFill(it)
-        }
-    }
+    .filter { waterSources.contains(it.objectId) }
+    .then { tryFill(it) }

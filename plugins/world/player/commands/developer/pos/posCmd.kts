@@ -1,5 +1,4 @@
-import api.*
-import io.luna.game.event.impl.CommandEvent
+import api.predef.*
 import io.luna.game.model.mob.Player
 
 /**
@@ -41,20 +40,16 @@ fun localRegionPos(plr: Player) {
 /**
  * A listener for the "pos" command.
  */
-on(CommandEvent::class)
-    .args("pos", RIGHTS_DEV)
-    .run { msg ->
-        msg.plr.newDialogue().options(
-                "Position", { currentPos(it) },
-                "ChunkPosition", { chunkPos(it) },
-                "ChunkPosition (local)", { localChunkPos(it) },
-                "RegionPosition", { regionPos(it) },
-                "RegionPosition (local)", { localRegionPos(it) }).open()
-    }
+cmd("pos", RIGHTS_DEV) { msg ->
+    msg.plr.newDialogue().options(
+            "Position", { currentPos(it) },
+            "ChunkPosition", { chunkPos(it) },
+            "ChunkPosition (local)", { localChunkPos(it) },
+            "RegionPosition", { regionPos(it) },
+            "RegionPosition (local)", { localRegionPos(it) }).open()
+}
 
 /**
  * A listener for the "mypos" command.
  */
-on(CommandEvent::class)
-    .args("mypos", RIGHTS_DEV)
-    .run { currentPos(it.plr) }
+cmd("mypos", RIGHTS_DEV) { currentPos(it.plr) }

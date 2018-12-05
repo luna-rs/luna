@@ -1,7 +1,6 @@
 import SetSkill.SetLevelInterface
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
@@ -97,16 +96,13 @@ fun buttonClick(id: Int, interfaces: AbstractInterfaceSet) {
 /**
  * A command that sets skill levels.
  */
-on(CommandEvent::class)
-    .args("set_skill", RIGHTS_DEV)
-    .run { it.plr.interfaces.open(SetLevelInterface()) }
+cmd("set_skill", RIGHTS_DEV) { it.plr.openInterface(SetLevelInterface()) }
 
 /**
  * Listens for button clicks on the [SetLevelInterface].
  */
 on(ButtonClickEvent::class)
-    .condition { it.plr.rights >= RIGHTS_DEV && it.plr.interfaces.isOpen(SetLevelInterface::class) }
-    .run {
+    .condition { it.plr.rights >= RIGHTS_DEV && it.plr.isInterfaceOpen(SetLevelInterface::class) }
+    .then {
         buttonClick(it.id, it.plr.interfaces)
-        it.terminate()
     }

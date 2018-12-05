@@ -1,4 +1,5 @@
-import api.*
+import api.attr.Stopwatch
+import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
@@ -6,9 +7,9 @@ import io.luna.game.model.mob.Player
 import world.player.items.consume.food.Food
 
 /**
- * The "last_eat_timer" attribute.
+ * The "last_eat_timer" stopwatch.
  */
-var Player.lastEat by TimerAttr("last_eat_timer")
+var Player.lastEat by Stopwatch("last_eat_timer")
 
 /**
  * Mappings of [Food.id] to [Food].
@@ -30,7 +31,7 @@ fun tryEat(plr: Player, food: Food, index: Int) {
     }
 
     plr.interruptAction()
-    plr.lastEat = RESET_TIMER
+    plr.lastEat = -1
     plr.inventory.computeIdForIndex(index)
         .map { Item(it) }
         .ifPresent { eat(plr, it, food, index) }
@@ -64,13 +65,19 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
 }
 
 /**
+ * Performs a lookup for the potion and forwards to [tryDrink].
+ */
+fun lookup(msg: ItemFirstClickEvent) {
+    val food = foodMap[msg.id]
+    if (food != null) {
+        tryEat(msg.plr, food, msg.index)
+        msg.terminate()
+    }
+}
+
+/**
  * Forwards to [tryEat] if the item clicked was food.
  */
 on(ItemFirstClickEvent::class)
-    .condition { itemDef(it.id)?.inventoryActions?.get(0) == "Eat" }
-    .run {
-        val food = foodMap[it.id]
-        if (food != null) {
-            tryEat(it.plr, food, it.index)
-        }
-    }
+    .filter { itemDef(it.id).isInventoryAction(0, "Eat") }
+    .then { lookup(it) }

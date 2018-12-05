@@ -2,7 +2,6 @@
 name = "Logout"
 description = "A plugin that enables logging out."
 version = "1.0"
-dependencies = [ ]
 authors = [
   "lare96"
 ]

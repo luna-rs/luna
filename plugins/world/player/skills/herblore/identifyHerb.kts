@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Player
 import world.player.skills.herblore.Herb
@@ -38,9 +38,6 @@ fun tryIdentify(msg: ItemFirstClickEvent) {
 /**
  * Listen for an unidentified herb clicks.
  */
-on(ItemFirstClickEvent::class).run {
-    val action = itemDef(it.id)?.inventoryActions?.get(0)
-    if (action == "Identify") {
-        tryIdentify(it)
-    }
-}
+on(ItemFirstClickEvent::class)
+    .filter { itemDef(it.id).isInventoryAction(0, "Identify") }
+    .then { tryIdentify(it) }

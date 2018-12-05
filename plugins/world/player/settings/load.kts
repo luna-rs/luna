@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.ConfigMessageWriter
@@ -18,7 +18,7 @@ val RUN_BUTTON = 173
 /**
  * Sends all config messages on login.
  */
-on(LoginEvent::class).run {
+on(LoginEvent::class) {
     val plr = it.plr
 
     plr.sendConfig(RUN_BUTTON, plr.walking.isRunning)

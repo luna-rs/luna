@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 
 /**
@@ -10,5 +10,5 @@ val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
  * Open the banking interface.
  */
 on(ObjectFirstClickEvent::class)
-    .condition { bankObjects.contains(it.id) }
-    .run { it.plr.bank.open() }
+    .match(bankObjects)
+    .then { it.plr.bank.open() }

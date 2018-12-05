@@ -1,6 +1,6 @@
 
 import MakeItem.MakeItemOption
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
@@ -38,16 +38,16 @@ class MakeItemOption(val amount: Int, var index: Int) {
     fun run(plr: Player, inter: MakeItemDialogueInterface) {
         if (amount == -1) {
             // Make <x> option.
-            plr.interfaces.open(object : AmountInputInterface() {
+            plr.openInterface(object : AmountInputInterface() {
                 override fun onAmountInput(player: Player, value: Int) {
                     inter.makeItemIndex(plr, index, value)
-                    plr.interfaces.close()
+                    plr.closeInterfaces()
                 }
             })
         } else {
             // Make specific amount option.
             inter.makeItemIndex(plr, index, amount)
-            plr.interfaces.close()
+            plr.closeInterfaces()
         }
     }
 }
@@ -99,16 +99,13 @@ fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogueInterface, action: Ma
 /**
  * Listens for button clicks on the [MakeItemDialogueInterface].
  */
-on(ButtonClickEvent::class).run {
-    val interfaces = it.plr.interfaces
-    val buttonAction = buttonMap[it.id]
-
-    if (buttonAction != null) {
-        val inter = interfaces.get(MakeItemDialogueInterface::class)
-        when (inter) {
-            null -> interfaces.close()
-            else -> makeItem(it, inter, buttonAction)
+on(ButtonClickEvent::class)
+    .filter { it.plr.isInterfaceOpen(MakeItemDialogueInterface::class) }
+    .then {
+        val action = buttonMap[it.id]
+        if (action != null) {
+            val inter = it.plr.getInterface(MakeItemDialogueInterface::class)!!
+            makeItem(it, inter, action)
+            it.terminate()
         }
-        it.terminate()
     }
-}

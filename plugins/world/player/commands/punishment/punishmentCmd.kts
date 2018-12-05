@@ -1,14 +1,15 @@
-
-import api.*
+import api.predef.*
 import com.google.common.io.Files
 import io.luna.game.event.impl.CommandEvent
+import io.luna.game.model.mob.Player
 import java.io.File
 import java.time.LocalDate
 
 /**
  * Performs a lookup for the person we're punishing.
  */
-fun findPunish(msg: CommandEvent) = world.getPlayer(msg.args[0])
+fun getPlayer(msg: CommandEvent, action: Player.() -> Unit) =
+    world.getPlayer(msg.name).ifPresent(action)
 
 /**
  * Construct a string with punishment lift date ~ [yyyy-mm-dd].
@@ -29,76 +30,59 @@ fun punishDuration(msg: CommandEvent): String {
 /**
  * Perform an IP ban on a player.
  */
-on(CommandEvent::class)
-    .args("ip_ban", RIGHTS_ADMIN)
-    .run {
-        val plr = it.plr
-        findPunish(it).ifPresent {
-            async {
-                val writeString = System.lineSeparator() + plr.client.ipAddress
-                Files.write(writeString.toByteArray(), File("./data/players/blacklist.txt"))
-            }
-            plr.logout()
+cmd("ip_ban", RIGHTS_ADMIN) {
+    getPlayer(it) {
+        async {
+            val writeString = System.lineSeparator() + client.ipAddress
+            Files.write(writeString.toByteArray(), File("./data/players/blacklist.txt"))
         }
+        logout()
     }
+}
 
 /**
  * Perform a permanent ban on a player.
  */
-on(CommandEvent::class)
-    .args("perm_ban", RIGHTS_ADMIN)
-    .run {
-        val plr = it.plr
-        findPunish(it).ifPresent {
-            plr.unbanDate = "never"
-            plr.logout()
-        }
+cmd("perm_ban", RIGHTS_ADMIN) {
+    getPlayer(it) {
+        unbanDate = "never"
+        logout()
     }
+}
 
 /**
  * Perform a permanent mute on a player.
  */
-on(CommandEvent::class)
-    .args("perm_mute", RIGHTS_MOD)
-    .run {
-        val plr = it.plr
-        findPunish(it).ifPresent {
-            plr.unmuteDate = "never"
-            plr.logout()
-        }
+cmd("perm_mute", RIGHTS_MOD) {
+    getPlayer(it) {
+        unmuteDate = "never"
+        logout()
     }
+}
 
 /**
  * Perform a temporary ban on a player.
  */
-on(CommandEvent::class)
-    .args("ban", RIGHTS_MOD)
-    .run { msg ->
-        val plr = msg.plr
-        findPunish(msg).ifPresent {
-            plr.unbanDate = punishDuration(msg)
-            plr.logout()
-        }
+cmd("ban", RIGHTS_MOD) {
+    getPlayer(it) {
+        unbanDate = punishDuration(it)
+        logout()
     }
+}
 
 /**
  * Perform a temporary mute on a player.
  */
-on(CommandEvent::class)
-    .args("mute", RIGHTS_MOD)
-    .run { msg ->
-        val plr = msg.plr
-        findPunish(msg).ifPresent {
-            plr.unmuteDate = punishDuration(msg)
-            plr.logout()
-        }
+cmd("mute", RIGHTS_MOD) {
+    getPlayer(it) {
+        unmuteDate = punishDuration(it)
+        logout()
     }
+}
 
 /**
  * Perform a forced disconnect on a player.
  */
-on(CommandEvent::class)
-    .args("kick", RIGHTS_MOD)
-    .run { msg ->
-        findPunish(msg).ifPresent { it.logout() }
-    }
+cmd("kick", RIGHTS_MOD) {
+    getPlayer(it) { logout() }
+}

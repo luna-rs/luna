@@ -1,4 +1,5 @@
-import api.*
+import api.attr.Attr
+import api.predef.*
 import io.luna.game.action.DistancedAction
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
@@ -21,8 +22,8 @@ class RequestAction(val plr: Player,
             plr.walking.clear()
             other.walking.clear()
 
-            plr.interfaces.open(OfferTradeInterface(other))
-            other.interfaces.open(OfferTradeInterface(plr))
+            plr.openInterface(OfferTradeInterface(other))
+            other.openInterface(OfferTradeInterface(plr))
 
             plr.interact(other)
             other.interact(plr)
@@ -58,4 +59,4 @@ fun request(msg: PlayerFourthClickEvent) {
  */
 on(PlayerFourthClickEvent::class)
     .condition { it.plr.interactions.contains(INTERACTION_TRADE) }
-    .run { request(it) }
+    .then { request(it) }

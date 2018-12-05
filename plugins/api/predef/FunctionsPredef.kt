@@ -1,4 +1,4 @@
-package api
+package api.predef
 
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable
@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.def.ObjectDefinition
 import io.luna.util.StringUtils
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
@@ -31,17 +32,26 @@ inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
 /**
  * Computes and returns the [ItemDefinition] for [id].
  */
-fun itemDef(id: Int): ItemDefinition? = ItemDefinition.ALL.get(id).orElse(null)
+fun itemDef(id: Int): ItemDefinition = ItemDefinition.ALL.get(id)
+    .orElseThrow { NoSuchElementException("Definition not found for item <$id>") }
 
 /**
  * Computes and returns the [EquipmentDefinition] for [id].
  */
-fun equipDef(id: Int): EquipmentDefinition? = EquipmentDefinition.ALL.get(id).orElse(null)
+fun equipDef(id: Int): EquipmentDefinition = EquipmentDefinition.ALL.get(id)
+    .orElseThrow { NoSuchElementException("Definition not found for item <$id>") }
 
 /**
  * Computes and returns the [NpcDefinition] for [id].
  */
-fun npcDef(id: Int): NpcDefinition? = NpcDefinition.ALL.get(id).orElse(null)
+fun npcDef(id: Int): NpcDefinition = NpcDefinition.ALL.get(id)
+    .orElseThrow { NoSuchElementException("Definition not found for npc <$id>") }
+
+/**
+ * Computes and returns the [ObjectDefinition] for [id].
+ */
+fun objectDef(id: Int): ObjectDefinition = ObjectDefinition.ALL.get(id)
+    .orElseThrow { NoSuchElementException("Definition not found for object <$id>") }
 
 /**
  * Forwards to [StringUtils.addArticle], returns an empty string if [thing] is null.

@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Equipment
@@ -26,15 +26,12 @@ fun equipmentUpdate(plr: Player, newItem: Item?) {
 /**
  * Forward to [loginUpdate].
  */
-on(LoginEvent::class).run { loginUpdate(it.plr) }
+on(LoginEvent::class) { loginUpdate(it.plr) }
 
 /**
  * Forward to [equipmentUpdate] if the changed equipment was in the head slot.
  */
-on(EquipmentChangeEvent::class).run {
-    if (it.index == Equipment.HEAD) {
-        equipmentUpdate(it.plr, it.newItem)
-        it.terminate()
-    }
-}
+on(EquipmentChangeEvent::class)
+    .filter { it.index == Equipment.HEAD }
+    .then { equipmentUpdate(it.plr, it.newItem) }
 

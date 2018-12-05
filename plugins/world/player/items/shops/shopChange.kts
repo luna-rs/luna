@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.item.shop.ShopInterface
@@ -23,7 +23,7 @@ object Sell : Mod()
  */
 fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.interfaces.get(ShopInterface::class)
+    val inter = plr.getInterface(ShopInterface::class)
     if (inter != null) {
         when (mod) {
             Buy -> inter.shop.buy(plr, msg.index, amount)
@@ -36,33 +36,33 @@ fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
  * Buy/sell 1.
  */
 on(WidgetItemSecondClickEvent::class)
-    .args(3900)
-    .run { modify(it, 1, Buy) }
+    .condition { it.widgetId == 3900 }
+    .then { modify(it, 1, Buy) }
 
 on(WidgetItemSecondClickEvent::class)
-    .args(3823)
-    .run { modify(it, 1, Sell) }
+    .condition { it.widgetId == 3823 }
+    .then { modify(it, 1, Sell) }
 
 /**
  * Buy/sell 5.
  */
 on(WidgetItemThirdClickEvent::class)
-    .args(3900)
-    .run { modify(it, 5, Buy) }
+    .condition { it.widgetId == 3900 }
+    .then { modify(it, 5, Buy) }
 
 on(WidgetItemThirdClickEvent::class)
-    .args(3823)
-    .run { modify(it, 5, Sell) }
+    .condition { it.widgetId == 3823 }
+    .then { modify(it, 5, Sell) }
 
 /**
  * Buy/sell 10.
  */
 on(WidgetItemFourthClickEvent::class)
-    .args(3900)
-    .run { modify(it, 10, Buy) }
+    .condition { it.widgetId == 3900 }
+    .then { modify(it, 10, Buy) }
 
 on(WidgetItemFourthClickEvent::class)
-    .args(3823)
-    .run { modify(it, 10, Sell) }
+    .condition { it.widgetId == 3823 }
+    .then { modify(it, 10, Sell) }
 
 

@@ -15,6 +15,8 @@ import kotlin.reflect.KProperty
  *     println(plr.myAttribute)
  * }
  * ```
+ *
+ * @author lare96
  */
 class Attr<T>(private val name: String) {
 

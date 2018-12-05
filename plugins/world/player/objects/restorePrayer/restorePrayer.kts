@@ -1,4 +1,4 @@
-import api.*
+import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
@@ -7,6 +7,11 @@ import io.luna.game.model.mob.Player
  * The restore prayer animation.
  */
 val prayerAnimation = Animation(645)
+
+/**
+ * The altars used to restore prayer.
+ */
+val altars: Set<Int> = hashSetOf(409, 3243)
 
 /**
  * Restores the player's prayer points.
@@ -23,11 +28,9 @@ fun restore(plr: Player) {
 }
 
 /**
- * Restore prayer points if clicking on correct object.
+ * Match all altars with [restore].
  */
 on(ObjectFirstClickEvent::class)
-    .args(409, 3243)
-    .run {
-        restore(it.plr)
-        it.terminate()
-    }
+    .match(altars)
+    .then { restore(it.plr) }
+
