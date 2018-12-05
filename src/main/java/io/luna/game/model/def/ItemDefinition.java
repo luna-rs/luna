@@ -119,6 +119,28 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
+     * Determines if the inventory action at {@code index} is equal to {@code action}.
+     *
+     * @param index The action index.
+     * @param action The action to compare.
+     * @return {@code true} if the actions are equal.
+     */
+    public boolean isInventoryAction(int index, String action) {
+        return action.equals(inventoryActions.get(index));
+    }
+
+    /**
+     * Determines if the ground action at {@code index} is equal to {@code action}.
+     *
+     * @param index The action index.
+     * @param action The action to compare.
+     * @return {@code true} if the actions are equal.
+     */
+    public boolean isGroundAction(int index, String action) {
+        return action.equals(groundActions.get(index));
+    }
+
+    /**
      * Returns {@code true} if the item can be noted.
      */
     public boolean isNoteable() {

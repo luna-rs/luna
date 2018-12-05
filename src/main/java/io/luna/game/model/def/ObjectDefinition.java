@@ -98,6 +98,17 @@ public final class ObjectDefinition implements Definition {
         this.actions = ImmutableList.copyOf(actions);
     }
 
+    /**
+     * Determines if the object action at {@code index} is equal to {@code action}.
+     *
+     * @param index The action index.
+     * @param action The action to compare.
+     * @return {@code true} if the actions are equal.
+     */
+    public boolean isAction(int index, String action) {
+        return action.equals(actions.get(index));
+    }
+
     @Override
     public int getId() {
         return id;
