@@ -1,5 +1,4 @@
-# A more detailed description of what each setting does can be found in the io.luna.LunaConstants class. An
-# invalid value for a setting will result in luna failing to start.
+# Detailed descriptions of what these settings do can be found in the LunaConstants class.
 
 [game]
 starting_position = { x = 3093, y = 3244 }
