@@ -1,41 +1,12 @@
-package api
+package api.attr
 
+import api.predef.*
 import io.luna.game.model.mob.Player
 import kotlin.reflect.KProperty
 
 /**
- * A model representing a delegate for attributes to be retrieved and set through properties. The syntax for
- * usage is as follows
- *
- * ```
- *
- * var Player.myAttribute by Attr<Int>("attribute_name")
- *
- * fun doSomething(plr: Player) {
- *     plr.myAttribute = 10
- *     println(plr.myAttribute)
- * }
- * ```
- */
-class Attr<T>(private val name: String) {
-
-    /**
-     * Retrieve attribute value.
-     */
-    operator fun getValue(player: Player, property: KProperty<*>): T =
-        player.attributes.get<T>(name).get()
-
-    /**
-     * Set attribute value.
-     */
-    operator fun setValue(player: Player, property: KProperty<*>, value: T) =
-        player.attributes.get<T>(name).set(value)
-}
-
-/**
- * A model representing a delegate for attribute timers. It includes functions for measuring elapsed time and
- * being reset. The syntax for usage is as follows
- *
+ * A model representing a delegate for an attribute timer with [name]. It includes functions for measuring
+ * elapsed time and being reset. The syntax for usage is as follows
  * ```
  *
  * var Player.myWatch by Stopwatch("stopwatch_name")
