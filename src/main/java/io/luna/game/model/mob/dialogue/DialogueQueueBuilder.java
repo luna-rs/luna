@@ -48,7 +48,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder playerChat(Expression expression, String... text) {
+    public DialogueQueueBuilder player(Expression expression, String... text) {
         checkLocked();
         dialogues.add(new PlayerDialogueInterface(expression, text));
         return this;
@@ -60,8 +60,8 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder playerChat(String... text) {
-        return playerChat(Expression.DEFAULT, text);
+    public DialogueQueueBuilder player(String... text) {
+        return player(Expression.DEFAULT, text);
     }
 
     /**
@@ -69,7 +69,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder npcChat(int npcId, Expression expression, String... text) {
+    public DialogueQueueBuilder npc(int npcId, Expression expression, String... text) {
         checkLocked();
         dialogues.add(new NpcDialogueInterface(npcId, expression, text));
         return this;
@@ -81,8 +81,8 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder npcChat(int npcId, String... text) {
-        return npcChat(npcId, Expression.DEFAULT, text);
+    public DialogueQueueBuilder npc(int npcId, String... text) {
+        return npc(npcId, Expression.DEFAULT, text);
     }
 
     /**
@@ -90,7 +90,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder chat(String... text) {
+    public DialogueQueueBuilder empty(String... text) {
         checkLocked();
         dialogues.add(new TextDialogueInterface(text));
         return this;
@@ -225,7 +225,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder giveItem(Item item, String displayText) {
+    public DialogueQueueBuilder give(Item item, String displayText) {
         checkLocked();
         dialogues.add(new GiveItemDialogueInterface(item, displayText));
         return this;
@@ -236,7 +236,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder giveItem(Item item) {
+    public DialogueQueueBuilder give(Item item) {
         checkLocked();
         dialogues.add(new GiveItemDialogueInterface(item));
         return this;
