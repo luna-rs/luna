@@ -605,7 +605,7 @@ public class ItemContainer implements Iterable<Item> {
      * @param items The items.
      * @return The amount of space required.
      */
-    public final int computeAllSpaceFor(Item... items) {
+    public final int computeSpaceForAll(Item... items) {
         int count = 0;
         for (Item item : items) {
             count = IntMath.saturatedAdd(count, computeSpaceFor(item));
@@ -628,6 +628,7 @@ public class ItemContainer implements Iterable<Item> {
                 return 1;
             } else if (get(index).getAmount() + item.getAmount() < 0) {
                 // There is, and trying to add onto it will result in an overflow.
+                // TODO Maybe add an event for overflow?
                 return Integer.MAX_VALUE;
             } else {
                 // There is, no space needed.
