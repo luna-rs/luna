@@ -100,6 +100,6 @@ on(ItemOnItemEvent::class) {
  */
 Arrow.HEADLESS_ARROW.apply {
     on(ItemOnItemEvent::class)
-        .condition { matches(tip, with) }
+        .filter { matches(tip, with) }
         .then { openInterface(this, this@apply) }
 }

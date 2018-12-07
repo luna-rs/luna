@@ -36,33 +36,33 @@ fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
  * Buy/sell 1.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 3900 }
+    .filter { widgetId == 3900 }
     .then { modify(this, 1, Buy) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 3823 }
+    .filter { widgetId == 3823 }
     .then { modify(this, 1, Sell) }
 
 /**
  * Buy/sell 5.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 3900 }
+    .filter { widgetId == 3900 }
     .then { modify(this, 5, Buy) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 3823 }
+    .filter { widgetId == 3823 }
     .then { modify(this, 5, Sell) }
 
 /**
  * Buy/sell 10.
  */
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 3900 }
+    .filter { widgetId == 3900 }
     .then { modify(this, 10, Buy) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 3823 }
+    .filter { widgetId == 3823 }
     .then { modify(this, 10, Sell) }
 
 

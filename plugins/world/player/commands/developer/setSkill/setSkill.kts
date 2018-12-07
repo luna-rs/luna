@@ -102,5 +102,5 @@ cmd("set_skill", RIGHTS_DEV) { plr.interfaces.open(SetLevelInterface()) }
  * Listens for button clicks on the [SetLevelInterface].
  */
 on(ButtonClickEvent::class)
-    .condition { plr.rights >= RIGHTS_DEV && plr.interfaces.isOpen(SetLevelInterface::class) }
+    .filter { plr.rights >= RIGHTS_DEV && plr.interfaces.isOpen(SetLevelInterface::class) }
     .then { buttonClick(id, plr.interfaces) }

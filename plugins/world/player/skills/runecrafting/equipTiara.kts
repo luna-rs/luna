@@ -32,6 +32,6 @@ on(LoginEvent::class) { loginUpdate(plr) }
  * Forward to [equipmentUpdate] if the changed equipment was in the head slot.
  */
 on(EquipmentChangeEvent::class)
-    .filter { index == Equipment.HEAD }
+    .condition { index == Equipment.HEAD }
     .then { equipmentUpdate(plr, newItem) }
 

@@ -18,7 +18,7 @@ fun getShop(plr: Player, action: (Shop) -> Unit) {
  * Send the item's shop value.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 3900 }
+    .filter { widgetId == 3900 }
     .then {
         getShop(plr) { it.sendBuyValue(plr, index) }
     }
@@ -27,7 +27,7 @@ on(WidgetItemFirstClickEvent::class)
  * Send the item's sell value.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 3823 }
+    .filter { widgetId == 3823 }
     .then {
         getShop(plr) { it.sendSellValue(plr, index) }
     }

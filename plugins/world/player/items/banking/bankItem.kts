@@ -46,50 +46,50 @@ fun withdraw(msg: WidgetItemClickEvent, amount: Int? = null) {
  * Withdraw/deposit 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 5064 }
+    .filter { widgetId == 5064 }
     .then { deposit(this, 1) }
 
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 5382 }
+    .filter { widgetId == 5382 }
     .then { withdraw(this, 1) }
 
 /**
  * Withdraw/deposit 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 5064 }
+    .filter { widgetId == 5064 }
     .then { deposit(this, 5) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 5382 }
+    .filter { widgetId == 5382 }
     .then { withdraw(this, 5) }
 
 /**
  * Withdraw/deposit 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 5064 }
+    .filter { widgetId == 5064 }
     .then { deposit(this, 10) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 5382 }
+    .filter { widgetId == 5382 }
     .then { withdraw(this, 10) }
 
 
 /* Withdraw/deposit all. */
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 5064 }
+    .filter { widgetId == 5064 }
     .then { deposit(this, -1) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 5382 }
+    .filter { widgetId == 5382 }
     .then { withdraw(this, -1) }
 
 /**
  * Withdraw/deposit (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .condition { widgetId == 5064 }
+    .filter { widgetId == 5064 }
     .then {
         plr.interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = deposit(this@then, value)
@@ -97,7 +97,7 @@ on(WidgetItemFifthClickEvent::class)
     }
 
 on(WidgetItemFifthClickEvent::class)
-    .condition { widgetId == 5382 }
+    .filter { widgetId == 5382 }
     .then {
         plr.interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = withdraw(this@then, value)

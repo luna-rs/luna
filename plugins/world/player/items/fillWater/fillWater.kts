@@ -73,5 +73,5 @@ fun tryFill(msg: ItemOnObjectEvent) {
  * Fills items if they are fillable and if the object used with is a water source.
  */
 on(ItemOnObjectEvent::class)
-    .filter { waterSources.contains(objectId) }
+    .condition { waterSources.contains(objectId) }
     .then { tryFill(this) }

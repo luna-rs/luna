@@ -58,5 +58,5 @@ fun request(msg: PlayerFourthClickEvent) {
  *  Send request if the [Player] has the trade interaction option.
  */
 on(PlayerFourthClickEvent::class)
-    .condition { plr.interactions.contains(INTERACTION_TRADE) }
+    .filter { plr.interactions.contains(INTERACTION_TRADE) }
     .then { request(this) }

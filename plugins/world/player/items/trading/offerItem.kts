@@ -39,51 +39,51 @@ fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
  * Offer 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 3322 }
+    .filter { widgetId == 3322 }
     .then { trade(this, 1, Add) }
 
 on(WidgetItemFirstClickEvent::class)
-    .condition { widgetId == 3415 }
+    .filter { widgetId == 3415 }
     .then { trade(this, 1, Remove) }
 
 /**
  * Offer 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 3322 }
+    .filter { widgetId == 3322 }
     .then { trade(this, 5, Add) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { widgetId == 3415 }
+    .filter { widgetId == 3415 }
     .then { trade(this, 5, Remove) }
 
 /**
  * Offer 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 3322 }
+    .filter { widgetId == 3322 }
     .then { trade(this, 10, Add) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { widgetId == 3415 }
+    .filter { widgetId == 3415 }
     .then { trade(this, 10, Remove) }
 
 /**
  * Offer all.
  */
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 3322 }
+    .filter { widgetId == 3322 }
     .then { trade(this, -1, Add) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { widgetId == 3415 }
+    .filter { widgetId == 3415 }
     .then { trade(this, -1, Remove) }
 
 /**
  * Offer (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .condition { widgetId == 3322 }
+    .filter { widgetId == 3322 }
     .then {
         plr.interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Add)
@@ -91,7 +91,7 @@ on(WidgetItemFifthClickEvent::class)
     }
 
 on(WidgetItemFifthClickEvent::class)
-    .condition { widgetId == 3415 }
+    .filter { widgetId == 3415 }
     .then {
         plr.interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Remove)

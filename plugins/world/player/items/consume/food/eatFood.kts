@@ -79,5 +79,5 @@ fun lookup(msg: ItemFirstClickEvent) {
  * Forwards to [tryEat] if the item clicked was food.
  */
 on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Eat") }
+    .condition { itemDef(id).hasInventoryAction(0, "Eat") }
     .then { lookup(this) }

@@ -37,7 +37,7 @@ fun buryBone(plr: Player, bone: Bone) {
  * If the item being clicked is a bone, attempt to bury it.
  */
 on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Bury") }
+    .condition { itemDef(id).hasInventoryAction(0, "Bury") }
     .then {
         val bone = Bone.BONE_MAP[id]
         if (bone != null) {
