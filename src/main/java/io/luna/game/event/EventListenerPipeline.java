@@ -26,7 +26,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * The type of the traversing event.
      */
-    private final Class<?> eventType;
+    private final Class<E> eventType;
 
     /**
      * The pipeline of listeners.
@@ -48,7 +48,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      *
      * @param eventType The type of the traversing event.
      */
-    public EventListenerPipeline(Class<?> eventType) {
+    public EventListenerPipeline(Class<E> eventType) {
         this.eventType = eventType;
 
         // Default match listener, does nothing.
@@ -95,8 +95,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * Terminates an active traversal of this pipeline.
      *
-     * @return {@code true} if termination was successful, {@code false} if this pipeline was
-     * already terminated.
+     * @return {@code true} if termination was successful, {@code false} if this pipeline was already terminated.
      */
     public boolean terminate() {
         if (!terminated) {
@@ -111,9 +110,8 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      *
      * @param listener The listener.
      */
-    @SuppressWarnings("unchecked")
-    public void add(EventListener<?> listener) {
-        listeners.add((EventListener<E>) listener);
+    public void add(EventListener<E> listener) {
+        listeners.add(listener);
     }
 
     /**
@@ -137,7 +135,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * @return The type of the traversing event.
      */
-    public Class<?> getEventType() {
+    public Class<E> getEventType() {
         return eventType;
     }
 }

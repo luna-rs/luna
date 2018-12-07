@@ -107,17 +107,16 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      */
     private fun addListener() {
         val type = eventType.java
-        val pipeline = plugins.pipelines.getTyped(type)
         val eventListener = EventListener<E>(type) {
-            val key = key(it)
-            val action = actions[key]
+            val actionKey = key(it)
+            val action = actions[actionKey]
             if (action != null) {
                 action(it)
                 it.terminate()
             }
         }
         eventListener.script = SCRIPT
-        pipeline.setMatcher(eventListener)
+        pipelines.get(type).setMatcher(eventListener)
     }
 
     /**

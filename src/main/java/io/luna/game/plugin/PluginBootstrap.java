@@ -161,9 +161,7 @@ public final class PluginBootstrap {
      * @param context The context instance.
      */
     private static void setBindings(LunaContext context) {
-        if (bindings == null) {
-            bindings = new KotlinBindings(context);
-        }
+        bindings = new KotlinBindings(context);
     }
 
     /**
@@ -180,11 +178,6 @@ public final class PluginBootstrap {
      * The bindings. Has to be global in order for Kotlin scripts to access it.
      */
     private static KotlinBindings bindings;
-
-    /**
-     * The pipeline set.
-     */
-    private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
     /**
      * A map of plugin names to instances.
@@ -215,13 +208,15 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
-        PluginManager pluginManager = context.getPlugins();
+        PluginManager plugins = context.getPlugins();
         GameService service = context.getService();
 
         initFiles();
         Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
 
-        service.sync(() -> pluginManager.getPipelines().replaceAll(pipelines));
+        EventListenerPipelineSet oldPipelines = plugins.getPipelines();
+        EventListenerPipelineSet newPipelines = bindings.getPipelines();
+        service.sync(() -> oldPipelines.replaceAll(newPipelines));
         return pluginCount;
     }
 
@@ -319,7 +314,7 @@ public final class PluginBootstrap {
             // Add all of its listeners, reflectively set the listener script name.
             for (EventListener<?> evtListener : bindings.getListeners()) {
                 evtListener.setScript(script);
-                pipelines.add(evtListener);
+                bindings.getPipelines().add(evtListener);
             }
             bindings.getListeners().clear();
         }

@@ -25,7 +25,7 @@ public final class EventListener<E extends Event> {
     /**
      * The type of event being intercepted.
      */
-    private final Class<?> eventType;
+    private final Class<E> eventType;
 
     /**
      * The listener function.
@@ -38,7 +38,7 @@ public final class EventListener<E extends Event> {
      * @param eventType The type of event being intercepted.
      * @param listener The listener function.
      */
-    public EventListener(Class<?> eventType, Consumer<E> listener) {
+    public EventListener(Class<E> eventType, Consumer<E> listener) {
         this.eventType = eventType;
         this.listener = listener;
 
@@ -86,7 +86,7 @@ public final class EventListener<E extends Event> {
     /**
      * @return The type of event being intercepted.
      */
-    public Class<?> getEventType() {
+    public Class<E> getEventType() {
         return eventType;
     }
 

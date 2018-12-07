@@ -17,17 +17,17 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * The map of pipelines.
      */
-    private final Map<Class<?>, EventListenerPipeline<?>> pipelines = new HashMap<>();
+    private final Map<String, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
      * Adds a new event listener to a pipeline within this set.
      *
      * @param listener The listener to add.
      */
-    public void add(EventListener<?> listener) {
-        Class<?> eventType = listener.getEventType();
+    public <E extends Event> void add(EventListener<E> listener) {
+        Class<E> eventType = listener.getEventType();
         if (Event.class.isAssignableFrom(eventType)) {
-            EventListenerPipeline<?> pipeline = get(eventType);
+            EventListenerPipeline<E> pipeline = get(eventType);
             pipeline.add(listener);
         }
     }
@@ -38,20 +38,11 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
      * @param eventType The event class to retrieve the pipeline of.
      * @return The pipeline that accepts {@code eventType}.
      */
-    public EventListenerPipeline<?> get(Class<?> eventType) {
-        return pipelines.computeIfAbsent(eventType, EventListenerPipeline::new);
-    }
-
-    /**
-     * Retrieves a pipeline with type {@code E} from this set.
-     *
-     * @param eventType The event class to retrieve the pipeline of.
-     * @param <E> The event type.
-     * @return The pipeline.
-     */
-    public <E extends Event> EventListenerPipeline<E> getTyped(Class<E> eventType) {
+    public <E extends Event> EventListenerPipeline<E> get(Class<E> eventType) {
+        EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType.getSimpleName(),
+                key -> new EventListenerPipeline<>(eventType));
         //noinspection unchecked
-        return (EventListenerPipeline<E>) get(eventType);
+        return (EventListenerPipeline<E>) pipeline;
     }
 
     /**

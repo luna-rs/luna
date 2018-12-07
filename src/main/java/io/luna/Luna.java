@@ -25,6 +25,9 @@ public final class Luna  {
         try {
             Thread.currentThread().setName("LunaInitializationThread");
 
+            // Disable Jansi instantiation warning.
+            System.setProperty("log4j.skipJansi", "true");
+
             if (LunaConstants.ASYNCHRONOUS_LOGGING) {
                 // Enables asynchronous, garbage-free logging.
                 System.setProperty("Log4jContextSelector",

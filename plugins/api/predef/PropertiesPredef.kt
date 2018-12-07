@@ -34,6 +34,11 @@ val logger = bindings.logger!!
 val scriptListeners: MutableList<EventListener<*>> = bindings.listeners!!
 
 /**
+ * The [EventListenerPipelineSet] instance.
+ */
+val pipelines = bindings.pipelines!!
+
+/**
  * The [PluginManger] instance.
  */
 val plugins = ctx.plugins!!
