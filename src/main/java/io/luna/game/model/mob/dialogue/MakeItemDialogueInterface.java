@@ -49,7 +49,7 @@ public class MakeItemDialogueInterface extends DialogueInterface {
      * @param forAmount The amount clicked.
      */
     public void makeItem(Player player, int id, int index, int forAmount) {
-
+// TODO Change id, index, forAmount to IndexedItem?
     }
 
     @Override

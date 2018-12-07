@@ -72,9 +72,7 @@ fun removeIgnore(plr: Player, name: Long) {
  * Record friend and ignore list changes.
  */
 on(PrivateChatListChangeEvent::class) {
-    val plr = it.plr
-    val name = it.name
-    when (it.type!!) {
+    when (type!!) {
         ADD_FRIEND -> addFriend(plr, name)
         ADD_IGNORE -> addIgnore(plr, name)
         REMOVE_FRIEND -> removeFriend(plr, name)
@@ -85,13 +83,12 @@ on(PrivateChatListChangeEvent::class) {
 /**
  * Update friends lists on logout.
  */
-on(LogoutEvent::class) { updateOtherLists(it.plr, false) }
+on(LogoutEvent::class) { updateOtherLists(plr, false) }
 
 /**
  * Update friends lists on login.
  */
 on(LoginEvent::class) {
-    val plr = it.plr
     plr.queue(FriendsListStatusMessageWriter(2))
     update(plr)
     updateOtherLists(plr, true)

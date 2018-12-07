@@ -7,7 +7,7 @@ import io.luna.game.model.mob.dialogue.OptionDialogueInterface
  */
 fun clickOption(msg: ButtonClickEvent, option: Int) {
     val plr = msg.plr
-    val inter = plr.getInterface(OptionDialogueInterface::class)
+    val inter = plr.interfaces.get(OptionDialogueInterface::class)
     if (inter != null) {
         when (option) {
             1 -> inter.firstOption(plr)
@@ -19,7 +19,7 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
         }
 
         if (inter.isOpen && !plr.dialogues.isPresent) {
-            plr.closeInterfaces()
+            plr.interfaces.close()
         } else {
             plr.advanceDialogues()
         }
@@ -29,36 +29,36 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
 /**
  * The first option dialogue (2 options).
  */
-button(14445) { clickOption(it, 1) }
+button(14445) { clickOption(this, 1) }
 
-button(14446) { clickOption(it, 2) }
+button(14446) { clickOption(this, 2) }
 
-button(2471) { clickOption(it, 1) }
+button(2471) { clickOption(this, 1) }
 
-button(2472) { clickOption(it, 2) }
+button(2472) { clickOption(this, 2) }
 
-button(2473) { clickOption(it, 3) }
+button(2473) { clickOption(this, 3) }
 
 /**
  * The third option dialogue (4 options).
  */
-button(8209) { clickOption(it, 1) }
+button(8209) { clickOption(this, 1) }
 
-button(8210) { clickOption(it, 2) }
+button(8210) { clickOption(this, 2) }
 
-button(8211) { clickOption(it, 3) }
+button(8211) { clickOption(this, 3) }
 
-button(8212) { clickOption(it, 4) }
+button(8212) { clickOption(this, 4) }
 
 /**
  * The fourth option dialogue (5 options).
  */
-button(8221) { clickOption(it, 1) }
+button(8221) { clickOption(this, 1) }
 
-button(8222) { clickOption(it, 2) }
+button(8222) { clickOption(this, 2) }
 
-button(8223) { clickOption(it, 3) }
+button(8223) { clickOption(this, 3) }
 
-button(8224) { clickOption(it, 4) }
+button(8224) { clickOption(this, 4) }
 
-button(8225) { clickOption(it, 5) }
+button(8225) { clickOption(this, 5) }

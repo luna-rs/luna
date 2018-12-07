@@ -26,12 +26,12 @@ fun equipmentUpdate(plr: Player, newItem: Item?) {
 /**
  * Forward to [loginUpdate].
  */
-on(LoginEvent::class) { loginUpdate(it.plr) }
+on(LoginEvent::class) { loginUpdate(plr) }
 
 /**
  * Forward to [equipmentUpdate] if the changed equipment was in the head slot.
  */
 on(EquipmentChangeEvent::class)
-    .filter { it.index == Equipment.HEAD }
-    .then { equipmentUpdate(it.plr, it.newItem) }
+    .filter { index == Equipment.HEAD }
+    .then { equipmentUpdate(plr, newItem) }
 

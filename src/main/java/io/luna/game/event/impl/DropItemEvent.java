@@ -1,7 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
-import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -9,7 +7,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class DropItemEvent extends PlayerEvent implements IdBasedEvent {
+public final class DropItemEvent extends PlayerEvent {
 
     /**
      * The item identifier.
@@ -35,15 +33,10 @@ public final class DropItemEvent extends PlayerEvent implements IdBasedEvent {
      * @param index The index of the item.
      */
     public DropItemEvent(Player player, int itemId, int widgetId, int index) {
-        super(player, itemId);
+        super(player);
         this.itemId = itemId;
         this.widgetId = widgetId;
         this.index = index;
-    }
-
-    @Override
-    public boolean matches(EventArguments args) {
-        return args.equals(0, itemId);
     }
 
     /**

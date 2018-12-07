@@ -25,7 +25,7 @@ object Remove : Mod()
  */
 fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.getInterface(OfferTradeInterface::class)
+    val inter = plr.interfaces.get(OfferTradeInterface::class)
     if (inter != null) {
         val newAmount = if (amount == -1) plr.inventory.computeAmountForId(msg.itemId) else amount
         when (mod) {
@@ -39,63 +39,61 @@ fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
  * Offer 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 3322 }
-    .then { trade(it, 1, Add) }
+    .condition { widgetId == 3322 }
+    .then { trade(this, 1, Add) }
 
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 3415 }
-    .then { trade(it, 1, Remove) }
+    .condition { widgetId == 3415 }
+    .then { trade(this, 1, Remove) }
 
 /**
  * Offer 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 3322 }
-    .then { trade(it, 5, Add) }
+    .condition { widgetId == 3322 }
+    .then { trade(this, 5, Add) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 3415 }
-    .then { trade(it, 5, Remove) }
+    .condition { widgetId == 3415 }
+    .then { trade(this, 5, Remove) }
 
 /**
  * Offer 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 3322 }
-    .then { trade(it, 10, Add) }
+    .condition { widgetId == 3322 }
+    .then { trade(this, 10, Add) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 3415 }
-    .then { trade(it, 10, Remove) }
+    .condition { widgetId == 3415 }
+    .then { trade(this, 10, Remove) }
 
 /**
  * Offer all.
  */
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 3322 }
-    .then { trade(it, -1, Add) }
+    .condition { widgetId == 3322 }
+    .then { trade(this, -1, Add) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 3415 }
-    .then { trade(it, -1, Remove) }
+    .condition { widgetId == 3415 }
+    .then { trade(this, -1, Remove) }
 
 /**
  * Offer (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .condition { it.widgetId == 3322 }
+    .condition { widgetId == 3322 }
     .then {
-        it.plr.openInterface(object : AmountInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) =
-                trade(it, value, Add)
+        plr.interfaces.open(object : AmountInputInterface() {
+            override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Add)
         })
     }
 
 on(WidgetItemFifthClickEvent::class)
-    .condition { it.widgetId == 3415 }
+    .condition { widgetId == 3415 }
     .then {
-        it.plr.openInterface(object : AmountInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) =
-                trade(it, value, Remove)
+        plr.interfaces.open(object : AmountInputInterface() {
+            override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Remove)
         })
     }

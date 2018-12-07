@@ -62,9 +62,9 @@ class StringBowAction(plr: Player,
 fun openInterface(msg: ItemOnItemEvent, id: Int) {
     val bow = Bow.UNSTRUNG_TO_BOW[id]
     if (bow != null) {
-        val plr = msg.plr
-        plr.openInterface(object : MakeItemDialogueInterface(bow.strung) {
-            override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+        val interfaces = msg.plr.interfaces
+        interfaces.open(object : MakeItemDialogueInterface(bow.strung) {
+            override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(StringBowAction(plr, bow, forAmount))
         })
         msg.terminate()
@@ -76,7 +76,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
  */
 on(ItemOnItemEvent::class) {
     when (Bow.BOW_STRING) {
-        it.targetId -> openInterface(it, it.usedId)
-        it.usedId -> openInterface(it, it.targetId)
+        targetId -> openInterface(this, usedId)
+        usedId -> openInterface(this, targetId)
     }
 }

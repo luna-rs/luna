@@ -51,12 +51,11 @@ val waterSources: Set<Int> = hashSetOf(153, 879, 880, 34579, 2864, 6232, 878, 88
 /**
  * Opens the [MakeItemDialogueInterface] for selecting how many items to fill.
  */
-fun openInterface(msg: ItemOnObjectEvent, fill: Fill) {
-    val inter = object : MakeItemDialogueInterface(fill.filled) {
-        override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
+fun openInterface(msg: ItemOnObjectEvent, plr: Player, fill: Fill) {
+    plr.interfaces.open(object : MakeItemDialogueInterface(fill.filled) {
+        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
             plr.submitAction(FillAction(msg, fill, forAmount))
-    }
-    msg.plr.openInterface(inter)
+    })
 }
 
 /**
@@ -65,7 +64,7 @@ fun openInterface(msg: ItemOnObjectEvent, fill: Fill) {
 fun tryFill(msg: ItemOnObjectEvent) {
     val fill = Fill.EMPTY_TO_FILL[msg.itemId]
     if (fill != null) {
-        openInterface(msg, fill)
+        openInterface(msg, msg.plr, fill)
         msg.terminate()
     }
 }
@@ -74,5 +73,5 @@ fun tryFill(msg: ItemOnObjectEvent) {
  * Fills items if they are fillable and if the object used with is a water source.
  */
 on(ItemOnObjectEvent::class)
-    .filter { waterSources.contains(it.objectId) }
-    .then { tryFill(it) }
+    .filter { waterSources.contains(objectId) }
+    .then { tryFill(this) }

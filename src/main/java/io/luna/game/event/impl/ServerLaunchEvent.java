@@ -20,4 +20,9 @@ public final class ServerLaunchEvent extends Event {
     private ServerLaunchEvent() {
         super();
     }
+
+    @Override
+    public boolean terminate() {
+        throw new IllegalStateException("This event type (ServerLaunchEvent) cannot be terminated.");
+    }
 }

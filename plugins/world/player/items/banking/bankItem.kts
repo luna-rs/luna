@@ -22,20 +22,22 @@ fun deposit(msg: WidgetItemClickEvent, amount: Int) {
 /**
  * Withdraw an item.
  */
-fun withdraw(msg: WidgetItemClickEvent, amount: Int) {
+fun withdraw(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
-    val inv = plr.inventory
+    val id = msg.itemId
     val bank = plr.bank
     if (bank.isOpen) {
+        val index = msg.index
         when (amount) {
-            -1 -> bank.withdraw(msg.index, bank.computeAmountForId(msg.itemId))
-            else -> bank.withdraw(msg.index, amount)
+            null -> bank.withdraw(index, bank.computeAmountForId(id))
+            else -> bank.withdraw(index, amount)
         }
     } else if (plr.rights >= RIGHTS_DEV) {
         // For the "::search_item" command (it uses the banking interface).
+        val inv = plr.inventory
         when (amount) {
-            -1 -> inv.add(Item(msg.itemId, 1_000_000))
-            else -> inv.add(Item(msg.itemId, amount))
+            null -> inv.add(Item(id, 1_000_000))
+            else -> inv.add(Item(id, amount))
         }
     }
 }
@@ -44,62 +46,60 @@ fun withdraw(msg: WidgetItemClickEvent, amount: Int) {
  * Withdraw/deposit 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 5064 }
-    .then { deposit(it, 1) }
+    .condition { widgetId == 5064 }
+    .then { deposit(this, 1) }
 
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 5382 }
-    .then { withdraw(it, 1) }
+    .condition { widgetId == 5382 }
+    .then { withdraw(this, 1) }
 
 /**
  * Withdraw/deposit 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 5064 }
-    .then { deposit(it, 5) }
+    .condition { widgetId == 5064 }
+    .then { deposit(this, 5) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 5382 }
-    .then { withdraw(it, 5) }
+    .condition { widgetId == 5382 }
+    .then { withdraw(this, 5) }
 
 /**
  * Withdraw/deposit 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 5064 }
-    .then { deposit(it, 10) }
+    .condition { widgetId == 5064 }
+    .then { deposit(this, 10) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 5382 }
-    .then { withdraw(it, 10) }
+    .condition { widgetId == 5382 }
+    .then { withdraw(this, 10) }
 
 
 /* Withdraw/deposit all. */
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 5064 }
-    .then { deposit(it, -1) }
+    .condition { widgetId == 5064 }
+    .then { deposit(this, -1) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 5382 }
-    .then { withdraw(it, -1) }
+    .condition { widgetId == 5382 }
+    .then { withdraw(this, -1) }
 
 /**
  * Withdraw/deposit (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .condition { it.widgetId == 5064 }
+    .condition { widgetId == 5064 }
     .then {
-        val interfaces = it.plr.interfaces
-        interfaces.open(object : AmountInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) = deposit(it, value)
+        plr.interfaces.open(object : AmountInputInterface() {
+            override fun onAmountInput(player: Player, value: Int) = deposit(this@then, value)
         })
     }
 
 on(WidgetItemFifthClickEvent::class)
-    .condition { it.widgetId == 5382 }
+    .condition { widgetId == 5382 }
     .then {
-        val interfaces = it.plr.interfaces
-        interfaces.open(object : AmountInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) = withdraw(it, value)
+        plr.interfaces.open(object : AmountInputInterface() {
+            override fun onAmountInput(player: Player, value: Int) = withdraw(this@then, value)
         })
     }

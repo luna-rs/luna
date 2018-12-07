@@ -1,7 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
-import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -9,7 +7,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class PickupItemEvent extends PlayerEvent  implements IdBasedEvent {
+public final class PickupItemEvent extends PlayerEvent {
 
     /**
      * The item's x coordinate.
@@ -34,15 +32,10 @@ public final class PickupItemEvent extends PlayerEvent  implements IdBasedEvent 
      * @param id The item identifier.
      */
     public PickupItemEvent(Player player, int x, int y, int id) {
-        super(player, id);
+        super(player);
         this.x = x;
         this.y = y;
         this.id = id;
-    }
-
-    @Override
-    public boolean matches(EventArguments args) {
-        return args.contains(id);
     }
 
     /**

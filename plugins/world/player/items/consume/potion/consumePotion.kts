@@ -95,5 +95,5 @@ fun lookup(msg: ItemFirstClickEvent) {
  * Forwards to [lookup] if the item clicked was a consumable.
  */
 on(ItemFirstClickEvent::class)
-    .filter { itemDef(it.id).isInventoryAction(0, "Drink") }
-    .then { lookup(it) }
+    .filter { itemDef(id).hasInventoryAction(0, "Drink") }
+    .then { lookup(this) }

@@ -17,4 +17,9 @@ public final class LogoutEvent extends PlayerEvent {
     public LogoutEvent(Player player) {
         super(player);
     }
+
+    @Override
+    public boolean terminate() {
+        throw new IllegalStateException("This event type (LogoutEvent) cannot be terminated.");
+    }
 }

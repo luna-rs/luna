@@ -105,7 +105,7 @@ public final class ObjectDefinition implements Definition {
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */
-    public boolean isAction(int index, String action) {
+    public boolean hasAction(int index, String action) {
         return action.equals(actions.get(index));
     }
 

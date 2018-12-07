@@ -13,9 +13,9 @@ import io.luna.game.model.mob.PlayerRights
 import kotlin.reflect.KClass
 
 /**
- * The event listener consumer alias.
+ * The player dedicated event listener consumer alias.
  */
-private typealias Action<E> = (E) -> Unit
+private typealias Action<E> = E.() -> Unit
 
 /**
  * The main event interception function. Forwards to the [InterceptBy].
@@ -25,8 +25,10 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
 /**
  * The main event interception function. Runs the action without any forwarding.
  */
-fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) =
+fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) {
     scriptListeners.add(EventListener(eventClass.java, action))
+
+}
 
 /**
  * The [CommandEvent] interception function.
@@ -34,8 +36,8 @@ fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) =
 fun cmd(name: String, rights: PlayerRights, action: Action<CommandEvent>) {
     val matcher = Matcher.get<CommandEvent, String>()
     matcher[name] = {
-        if (it.plr.rights >= rights) {
-            action(it)
+        if (plr.rights >= rights) {
+            action(this)
         }
     }
 }

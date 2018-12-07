@@ -27,7 +27,7 @@ public final class PluginMetadata {
     private final String description;
 
     /**
-     * The version.
+     * The Luna version.
      */
     private final String version;
 

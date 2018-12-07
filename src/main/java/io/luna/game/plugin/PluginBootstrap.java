@@ -319,7 +319,7 @@ public final class PluginBootstrap {
             // Add all of its listeners, reflectively set the listener script name.
             for (EventListener<?> evtListener : bindings.getListeners()) {
                 evtListener.setScript(script);
-                pipelines.add(evtListener.getEventType(), evtListener);
+                pipelines.add(evtListener);
             }
             bindings.getListeners().clear();
         }

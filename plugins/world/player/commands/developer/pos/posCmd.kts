@@ -40,8 +40,8 @@ fun localRegionPos(plr: Player) {
 /**
  * A listener for the "pos" command.
  */
-cmd("pos", RIGHTS_DEV) { msg ->
-    msg.plr.newDialogue().options(
+cmd("pos", RIGHTS_DEV) {
+    plr.newDialogue().options(
             "Position", { currentPos(it) },
             "ChunkPosition", { chunkPos(it) },
             "ChunkPosition (local)", { localChunkPos(it) },
@@ -52,4 +52,4 @@ cmd("pos", RIGHTS_DEV) { msg ->
 /**
  * A listener for the "mypos" command.
  */
-cmd("mypos", RIGHTS_DEV) { currentPos(it.plr) }
+cmd("mypos", RIGHTS_DEV) { currentPos(plr) }

@@ -12,17 +12,17 @@ import kotlin.reflect.KClass
  * @author lare96
  */
 class InterceptCondition<E : Event>(private val eventType: KClass<E>,
-                                    private val condition: (E) -> Boolean,
+                                    private val condition: E.() -> Boolean,
                                     private val terminate: Boolean) {
 
     /**
      * Test condition, and run if satisfied!
      */
-    fun then(action: (E) -> Unit) {
-        val wrappedAction: (E) -> Unit = {
-            if (condition(it)) {
-                action(it)
-                it.terminate()
+    fun then(action: E.() -> Unit) {
+        val wrappedAction: E.() -> Unit = {
+            if (condition(this)) {
+                action(this)
+                terminate()
             }
         }
         scriptListeners.add(EventListener(eventType.java, wrappedAction))

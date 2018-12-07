@@ -1,6 +1,6 @@
 package api.attr
 
-import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Mob
 import kotlin.reflect.KProperty
 
 /**
@@ -23,12 +23,12 @@ class Attr<T>(private val name: String) {
     /**
      * Retrieve attribute value.
      */
-    operator fun getValue(player: Player, property: KProperty<*>): T =
-        player.attributes.get<T>(name).get()
+    operator fun getValue(mob: Mob, property: KProperty<*>): T =
+        mob.attributes.get<T>(name).get()
 
     /**
      * Set attribute value.
      */
-    operator fun setValue(player: Player, property: KProperty<*>, value: T) =
-        player.attributes.get<T>(name).set(value)
+    operator fun setValue(mob: Mob, property: KProperty<*>, value: T) =
+        mob.attributes.get<T>(name).set(value)
 }

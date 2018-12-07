@@ -85,7 +85,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * The map of event keys to action function instances. Will be used to match arguments.
      */
-    private val actions = mutableMapOf<K, (E) -> Unit>()
+    private val actions = mutableMapOf<K, E.() -> Unit>()
 
     /**
      * Computes a lookup key from the event instance.
@@ -95,7 +95,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * Adds or replaces an optimized listener key -> value pair.
      */
-    operator fun set(key: K, value: (E) -> Unit) {
+    operator fun set(key: K, value: E.() -> Unit) {
         val previous = actions.put(key, value)
         if (previous != null) {
             logger.warn("Key <$key> has overridden a $eventType listener.")

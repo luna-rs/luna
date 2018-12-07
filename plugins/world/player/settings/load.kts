@@ -13,13 +13,11 @@ fun Player.sendConfig(id: Int, state: Boolean) {
 /**
  * The run button config id.
  */
-val RUN_BUTTON = 173
+val runButton = 173
 
 /**
  * Sends all config messages on login.
  */
 on(LoginEvent::class) {
-    val plr = it.plr
-
-    plr.sendConfig(RUN_BUTTON, plr.walking.isRunning)
+    plr.sendConfig(runButton, plr.walking.isRunning)
 }

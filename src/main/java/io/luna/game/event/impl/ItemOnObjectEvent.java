@@ -1,6 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -60,11 +59,6 @@ public final class ItemOnObjectEvent extends PlayerEvent {
         this.objectId = objectId;
         this.objectX = objectX;
         this.objectY = objectY;
-    }
-
-    @Override
-    public boolean matches(EventArguments args) {
-        return args.equals(0, itemId) && args.equals(1, objectId);
     }
 
     /**

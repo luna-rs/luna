@@ -23,7 +23,7 @@ object Sell : Mod()
  */
 fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.getInterface(ShopInterface::class)
+    val inter = plr.interfaces.get(ShopInterface::class)
     if (inter != null) {
         when (mod) {
             Buy -> inter.shop.buy(plr, msg.index, amount)
@@ -36,33 +36,33 @@ fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
  * Buy/sell 1.
  */
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 3900 }
-    .then { modify(it, 1, Buy) }
+    .condition { widgetId == 3900 }
+    .then { modify(this, 1, Buy) }
 
 on(WidgetItemSecondClickEvent::class)
-    .condition { it.widgetId == 3823 }
-    .then { modify(it, 1, Sell) }
+    .condition { widgetId == 3823 }
+    .then { modify(this, 1, Sell) }
 
 /**
  * Buy/sell 5.
  */
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 3900 }
-    .then { modify(it, 5, Buy) }
+    .condition { widgetId == 3900 }
+    .then { modify(this, 5, Buy) }
 
 on(WidgetItemThirdClickEvent::class)
-    .condition { it.widgetId == 3823 }
-    .then { modify(it, 5, Sell) }
+    .condition { widgetId == 3823 }
+    .then { modify(this, 5, Sell) }
 
 /**
  * Buy/sell 10.
  */
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 3900 }
-    .then { modify(it, 10, Buy) }
+    .condition { widgetId == 3900 }
+    .then { modify(this, 10, Buy) }
 
 on(WidgetItemFourthClickEvent::class)
-    .condition { it.widgetId == 3823 }
-    .then { modify(it, 10, Sell) }
+    .condition { widgetId == 3823 }
+    .then { modify(this, 10, Sell) }
 
 

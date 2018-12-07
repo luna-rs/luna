@@ -14,4 +14,4 @@ fun sendMessage(plr: Player, name: Long, msg: ByteArray) {
 /**
  * Listens for a  chat event, and sends the message.
  */
-on(PrivateChatEvent::class) { sendMessage(it.plr, it.name, it.message) }
+on(PrivateChatEvent::class) { sendMessage(plr, name, message) }

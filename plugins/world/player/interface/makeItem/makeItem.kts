@@ -38,16 +38,16 @@ class MakeItemOption(val amount: Int, var index: Int) {
     fun run(plr: Player, inter: MakeItemDialogueInterface) {
         if (amount == -1) {
             // Make <x> option.
-            plr.openInterface(object : AmountInputInterface() {
+            plr.interfaces.open(object : AmountInputInterface() {
                 override fun onAmountInput(player: Player, value: Int) {
                     inter.makeItemIndex(plr, index, value)
-                    plr.closeInterfaces()
+                    plr.interfaces.close()
                 }
             })
         } else {
             // Make specific amount option.
             inter.makeItemIndex(plr, index, amount)
-            plr.closeInterfaces()
+            plr.interfaces.close()
         }
     }
 }
@@ -100,12 +100,12 @@ fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogueInterface, action: Ma
  * Listens for button clicks on the [MakeItemDialogueInterface].
  */
 on(ButtonClickEvent::class)
-    .filter { it.plr.isInterfaceOpen(MakeItemDialogueInterface::class) }
+    .filter { plr.interfaces.isOpen(MakeItemDialogueInterface::class) }
     .then {
-        val action = buttonMap[it.id]
+        val action = buttonMap[id]
         if (action != null) {
-            val inter = it.plr.getInterface(MakeItemDialogueInterface::class)!!
-            makeItem(it, inter, action)
-            it.terminate()
+            val inter = plr.interfaces.get(MakeItemDialogueInterface::class)!!
+            makeItem(this, inter, action)
+            terminate()
         }
     }

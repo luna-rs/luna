@@ -56,7 +56,7 @@ fun firstLogin(plr: Player) {
 
     plr.inventory.addAll(inventoryStarter)
     plr.equipment.addAll(equipmentStarter)
-    plr.openInterface(DesignPlayerInterface())
+    plr.interfaces.open(DesignPlayerInterface())
 }
 
 /**
@@ -104,7 +104,7 @@ fun checkMute(plr: Player) {
  * Listens for login events, initializes [Player]s.
  */
 on(LoginEvent::class) {
-    val plr = it.plr
+    val plr = plr
     init(plr)
     checkMute(plr)
     if (plr.firstLogin) {

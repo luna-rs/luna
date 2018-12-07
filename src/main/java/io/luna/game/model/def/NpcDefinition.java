@@ -91,6 +91,18 @@ public final class NpcDefinition implements Definition {
         this.actions = ImmutableList.copyOf(actions);
     }
 
+
+    /**
+     * Determines if the NPC action at {@code index} is equal to {@code action}.
+     *
+     * @param index The action index.
+     * @param action The action to compare.
+     * @return {@code true} if the actions are equal.
+     */
+    public boolean hasAction(int index, String action) {
+        return action.equals(actions.get(index));
+    }
+
     /**
      * @return The identifier.
      */

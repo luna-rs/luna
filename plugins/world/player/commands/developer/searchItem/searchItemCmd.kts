@@ -61,10 +61,9 @@ class SearchResultInterface(val searchToken: String) : StandardInterface(5292) {
  * A command that displays items on the banking interface, for easier item spawning.
  */
 cmd("search_item", RIGHTS_DEV) {
-    val plr = it.plr
-    val search = it.replace(0, '_', ' ')
+    val search = replace(0, '_', ' ')
     if (search.length > 1) {
-        plr.openInterface(SearchResultInterface(search))
+        plr.interfaces.open(SearchResultInterface(search))
     } else {
         plr.sendMessage("Search term must be more than 1 character.")
     }

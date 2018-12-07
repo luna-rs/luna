@@ -12,8 +12,7 @@ import io.luna.net.msg.out.SoundMessageWriter
  * A command that allows for attribute values to be retrieved.
  */
 cmd("attr", RIGHTS_DEV) {
-    val plr = it.plr
-    val name = it.args[0]
+    val name = args[0]
     if (plr.attributes.contains(name)) {
         val value = plr.attributes.get<String>(name).get()
         plr.sendMessage("attribute{name=$name, current_value=$value}")
@@ -26,12 +25,10 @@ cmd("attr", RIGHTS_DEV) {
  * A command that moves a player to a different position.
  */
 cmd("move", RIGHTS_DEV) {
-    val plr = it.plr
-    val args = it.args
-    val x = it.asInt(0)
-    val y = it.asInt(1)
+    val x = asInt(0)
+    val y = asInt(1)
     val z = when {
-        args.size == 3 -> it.asInt(2)
+        args.size == 3 -> asInt(2)
         else -> plr.position.z
     }
     plr.teleport(Position(x, y, z))
@@ -41,7 +38,7 @@ cmd("move", RIGHTS_DEV) {
  * A command that shuts the the server down after 60 seconds.
  */
 cmd("shutdown", RIGHTS_DEV) {
-    it.plr.newDialogue().options(
+    plr.newDialogue().options(
             "2 Minutes", { service.scheduleSystemUpdate(200) },
             "4 Minutes", { service.scheduleSystemUpdate(400) },
             "8 Minutes", { service.scheduleSystemUpdate(800) },
@@ -51,13 +48,13 @@ cmd("shutdown", RIGHTS_DEV) {
 /**
  * A command that opens the player's bank.
  */
-cmd("bank", RIGHTS_DEV) { it.plr.bank.open() }
+cmd("bank", RIGHTS_DEV) { plr.bank.open() }
 
 /**
  * A command that spawns a non-player character.
  */
 cmd("npc", RIGHTS_DEV) {
-    val npc = Npc(ctx, it.asInt(0), it.plr.position)
+    val npc = Npc(ctx, asInt(0), plr.position)
     world.npcs.add(npc)
 }
 
@@ -65,64 +62,64 @@ cmd("npc", RIGHTS_DEV) {
  * A command that will play music.
  */
 cmd("music", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.queue(MusicMessageWriter(id))
+    val id = asInt(0)
+    plr.queue(MusicMessageWriter(id))
 }
 
 /**
  * A command that opens an interface.
  */
 cmd("interface", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.openInterface(StandardInterface(id))
+    val id = asInt(0)
+    plr.interfaces.open(StandardInterface(id))
 }
 
 /**
  * A command that plays a sound.
  */
 cmd("sound", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.queue(SoundMessageWriter(id, 0, 0))
+    val id = asInt(0)
+    plr.queue(SoundMessageWriter(id, 0, 0))
 }
 
 /**
  * A command that plays a graphic.
  */
 cmd("graphic", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.graphic(Graphic(id))
+    val id = asInt(0)
+    plr.graphic(Graphic(id))
 }
 
 /**
  * A command that plays an animation.
  */
 cmd("animation", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.animation(Animation(id))
+    val id = asInt(0)
+    plr.animation(Animation(id))
 }
 
 /**
  * A command that turns the player into a non-player character.
  */
 cmd("to_npc", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    it.plr.transform(id)
+    val id = asInt(0)
+    plr.transform(id)
 }
 
 /**
  *  A command that spawns an item.
  */
 cmd("item", RIGHTS_DEV) {
-    val id = it.asInt(0)
-    val amount = if (it.args.size == 2) it.asInt(1) else 1
-    it.plr.inventory.add(Item(id, amount))
+    val id = asInt(0)
+    val amount = if (args.size == 2) asInt(1) else 1
+    plr.inventory.add(Item(id, amount))
 }
 
 /**
  * A command that clears the inventory, bank, and equipment of a player.
  */
-cmd("empty", RIGHTS_DEV) { msg ->
-    msg.plr.newDialogue().options(
+cmd("empty", RIGHTS_DEV) {
+    plr.newDialogue().options(
             "Empty inventory.", { it.inventory.clear() },
             "Empty bank.", { it.bank.clear() },
             "Empty equipment.", { it.equipment.clear() }).open()

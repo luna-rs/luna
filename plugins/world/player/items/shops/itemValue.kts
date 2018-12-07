@@ -2,12 +2,13 @@ import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface
+import io.luna.game.model.mob.Player
 
 /**
  * Runs [action] if a [ShopInterface] is currently open.
  */
-fun getShop(msg: WidgetItemFirstClickEvent, action: Shop.() -> Unit) {
-    val inter = msg.plr.getInterface(ShopInterface::class)
+fun getShop(plr: Player, action: (Shop) -> Unit) {
+    val inter = plr.interfaces.get(ShopInterface::class)
     if (inter != null) {
         action(inter.shop)
     }
@@ -17,16 +18,16 @@ fun getShop(msg: WidgetItemFirstClickEvent, action: Shop.() -> Unit) {
  * Send the item's shop value.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 3900 }
+    .condition { widgetId == 3900 }
     .then {
-        getShop(it) { sendBuyValue(it.plr, it.index) }
+        getShop(plr) { it.sendBuyValue(plr, index) }
     }
 
 /**
  * Send the item's sell value.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 3823 }
+    .condition { widgetId == 3823 }
     .then {
-        getShop(it) { sendSellValue(it.plr, it.index) }
+        getShop(plr) { it.sendSellValue(plr, index) }
     }

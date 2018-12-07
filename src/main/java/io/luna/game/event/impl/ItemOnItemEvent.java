@@ -1,6 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -52,7 +51,7 @@ public final class ItemOnItemEvent extends PlayerEvent {
      * @param targetInterfaceId The target interface identifier.
      */
     public ItemOnItemEvent(Player player, int usedId, int targetId, int usedIndex, int targetIndex,
-        int usedInterfaceId, int targetInterfaceId) {
+                           int usedInterfaceId, int targetInterfaceId) {
         super(player);
         this.usedId = usedId;
         this.targetId = targetId;
@@ -62,10 +61,16 @@ public final class ItemOnItemEvent extends PlayerEvent {
         this.targetInterfaceId = targetInterfaceId;
     }
 
-    @Override
-    public boolean matches(EventArguments args) {
-        return args.equals(0, usedId) && args.equals(1, targetId) || args.equals(0, targetId) && args
-            .equals(1, usedId);
+    /**
+     * Determines if {@code item1} and {@code item2} are equal to {@code usedId} and {@code targetId}, and
+     * vice-versa.
+     *
+     * @param item1 The first item.
+     * @param item2 The second item.
+     * @return {@code true} if the values are equal to the items used.
+     */
+    public boolean matches(int item1, int item2) {
+        return item1 == usedId && item2 == targetId || item1 == targetId && item2 == usedId;
     }
 
     /**

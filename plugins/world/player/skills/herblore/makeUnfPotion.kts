@@ -57,10 +57,10 @@ class MakeUnfAction(plr: Player,
  * Opens a [MakeItemDialogueInterface] to make unfinished potions.
  */
 fun makeUnf(msg: ItemOnItemEvent, herb: Int) {
+    val plr = msg.plr
     val unfPotion = UnfPotion.HERB_TO_UNF[herb]
     if (unfPotion != null) {
-        val plr = msg.plr
-        plr.openInterface(object : MakeItemDialogueInterface(unfPotion.id) {
+        plr.interfaces.open(object : MakeItemDialogueInterface(unfPotion.id) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeUnfAction(plr, unfPotion, forAmount))
         })
@@ -73,7 +73,7 @@ fun makeUnf(msg: ItemOnItemEvent, herb: Int) {
  */
 on(ItemOnItemEvent::class) {
     when (UnfPotion.VIAL_OF_WATER) {
-        it.targetId -> makeUnf(it, it.usedId)
-        it.usedId -> makeUnf(it, it.targetId)
+        targetId -> makeUnf(this, usedId)
+        usedId -> makeUnf(this, targetId)
     }
 }

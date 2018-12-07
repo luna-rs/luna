@@ -57,9 +57,9 @@ class GrindAction(plr: Player,
 fun grind(msg: ItemOnItemEvent, id: Int) {
     val ingredient = Ingredient.OLD_TO_INGREDIENT[id]
     if (ingredient != null) {
-        val plr = msg.plr
-        plr.openInterface(object : MakeItemDialogueInterface(ingredient.newId) {
-            override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+        val interfaces = msg.plr.interfaces
+        interfaces.open(object : MakeItemDialogueInterface(ingredient.newId) {
+            override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(GrindAction(plr, ingredient, forAmount))
         })
         msg.terminate()
@@ -71,7 +71,7 @@ fun grind(msg: ItemOnItemEvent, id: Int) {
  */
 on(ItemOnItemEvent::class) {
     when (Ingredient.PESTLE_AND_MORTAR) {
-        it.usedId -> grind(it, it.targetId)
-        it.targetId -> grind(it, it.usedId)
+        usedId -> grind(this, targetId)
+        targetId -> grind(this, usedId)
     }
 }

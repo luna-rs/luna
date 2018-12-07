@@ -1,7 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
-import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -9,7 +7,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class ObjectClickEvent extends PlayerEvent implements IdBasedEvent {
+public class ObjectClickEvent extends PlayerEvent {
 
     /**
      * An event sent when a player clicks an object's first index.
@@ -80,15 +78,10 @@ public class ObjectClickEvent extends PlayerEvent implements IdBasedEvent {
      * @param y The object's y coordinate.
      */
     private ObjectClickEvent(Player player, int id, int x, int y) {
-        super(player, id);
+        super(player);
         this.id = id;
         this.x = x;
         this.y = y;
-    }
-
-    @Override
-    public final boolean matches(EventArguments args) {
-        return args.contains(id);
     }
 
     /**

@@ -14,9 +14,9 @@ fun setWithdrawMode(msg: ButtonClickEvent, value: Boolean) {
 /**
  * Withdraw items as unnoted.
  */
-button(5387) { setWithdrawMode(it, false) }
+button(5387) { setWithdrawMode(this, false) }
 
 /**
  * Withdraw items as noted.
  */
-button(5386) { setWithdrawMode(it, true) }
+button(5386) { setWithdrawMode(this, true) }

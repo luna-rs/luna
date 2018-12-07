@@ -39,5 +39,5 @@ fun tryIdentify(msg: ItemFirstClickEvent) {
  * Listen for an unidentified herb clicks.
  */
 on(ItemFirstClickEvent::class)
-    .filter { itemDef(it.id).isInventoryAction(0, "Identify") }
-    .then { tryIdentify(it) }
+    .filter { itemDef(id).hasInventoryAction(0, "Identify") }
+    .then { tryIdentify(this) }

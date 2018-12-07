@@ -50,7 +50,7 @@ public final class Shop {
     /**
      * The sell policy.
      */
-    private final SellPolicy sellPolicy;
+    private final BuyPolicy buyPolicy;
 
     /**
      * The currency used to buy items.
@@ -77,14 +77,14 @@ public final class Shop {
      *
      * @param name The shop name.
      * @param restockPolicy The restock policy.
-     * @param sellPolicy The sell policy.
+     * @param buyPolicy The sell policy.
      * @param currency The currency used to buy items.
      */
-    public Shop(World world, String name, RestockPolicy restockPolicy, SellPolicy sellPolicy, Currency currency) {
+    public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy, Currency currency) {
         this.world = world;
         this.name = name;
         this.restockPolicy = restockPolicy;
-        this.sellPolicy = sellPolicy;
+        this.buyPolicy = buyPolicy;
         this.currency = currency;
         restockTask = new RestockTask(this);
 
@@ -277,7 +277,7 @@ public final class Shop {
      */
     private boolean computeCanSell(Item item) {
         if (!Currency.IDENTIFIERS.contains(item.getId()) && item.getItemDef().isTradeable()) {
-            switch (sellPolicy) {
+            switch (buyPolicy) {
                 case ALL:
                     // All trading items can be sold.
                     return true;
@@ -345,8 +345,8 @@ public final class Shop {
     /**
      * @return The sell policy.
      */
-    public SellPolicy getSellPolicy() {
-        return sellPolicy;
+    public BuyPolicy getBuyPolicy() {
+        return buyPolicy;
     }
 
     /**

@@ -96,13 +96,11 @@ fun buttonClick(id: Int, interfaces: AbstractInterfaceSet) {
 /**
  * A command that sets skill levels.
  */
-cmd("set_skill", RIGHTS_DEV) { it.plr.openInterface(SetLevelInterface()) }
+cmd("set_skill", RIGHTS_DEV) { plr.interfaces.open(SetLevelInterface()) }
 
 /**
  * Listens for button clicks on the [SetLevelInterface].
  */
 on(ButtonClickEvent::class)
-    .condition { it.plr.rights >= RIGHTS_DEV && it.plr.isInterfaceOpen(SetLevelInterface::class) }
-    .then {
-        buttonClick(it.id, it.plr.interfaces)
-    }
+    .condition { plr.rights >= RIGHTS_DEV && plr.interfaces.isOpen(SetLevelInterface::class) }
+    .then { buttonClick(id, plr.interfaces) }

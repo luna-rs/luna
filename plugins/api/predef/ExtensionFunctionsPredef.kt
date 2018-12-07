@@ -4,7 +4,6 @@ import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AbstractInterface
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.task.Task
@@ -23,26 +22,6 @@ import kotlin.reflect.KClass
  * Queues a [ConfigMessageWriter] message.
  */
 fun Player.sendConfig(id: Int, state: Int) = queue(ConfigMessageWriter(id, state))
-
-/**
- * Forwards to the [AbstractInterfaceSet.get] function.
- */
-fun <T : StandardInterface> Player.getInterface(interClass: KClass<T>): T? = interfaces.get(interClass)
-
-/**
- * Forwards to the [AbstractInterfaceSet.isOpen] function.
- */
-fun <T : StandardInterface> Player.isInterfaceOpen(interClass: KClass<T>) = interfaces.isOpen(interClass)
-
-/**
- * Forwards to the [AbstractInterfaceSet.open] function.
- */
-fun Player.openInterface(inter: AbstractInterface) = interfaces.open(inter)
-
-/**
- * Forwards to the [AbstractInterfaceSet.close] function.
- */
-fun Player.closeInterfaces() = interfaces.close()
 
 
 /*****************************

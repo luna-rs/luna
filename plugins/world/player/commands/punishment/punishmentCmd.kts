@@ -8,7 +8,7 @@ import java.time.LocalDate
 /**
  * Performs a lookup for the person we're punishing.
  */
-fun getPlayer(msg: CommandEvent, action: Player.() -> Unit) =
+fun getPlayer(msg: CommandEvent, action: (Player) -> Unit) =
     world.getPlayer(msg.name).ifPresent(action)
 
 /**
@@ -31,12 +31,12 @@ fun punishDuration(msg: CommandEvent): String {
  * Perform an IP ban on a player.
  */
 cmd("ip_ban", RIGHTS_ADMIN) {
-    getPlayer(it) {
+    getPlayer(this) {
         async {
-            val writeString = System.lineSeparator() + client.ipAddress
+            val writeString = System.lineSeparator() + it.client.ipAddress
             Files.write(writeString.toByteArray(), File("./data/players/blacklist.txt"))
         }
-        logout()
+        it.logout()
     }
 }
 
@@ -44,9 +44,9 @@ cmd("ip_ban", RIGHTS_ADMIN) {
  * Perform a permanent ban on a player.
  */
 cmd("perm_ban", RIGHTS_ADMIN) {
-    getPlayer(it) {
-        unbanDate = "never"
-        logout()
+    getPlayer(this) {
+        it.unbanDate = "never"
+        it.logout()
     }
 }
 
@@ -54,9 +54,9 @@ cmd("perm_ban", RIGHTS_ADMIN) {
  * Perform a permanent mute on a player.
  */
 cmd("perm_mute", RIGHTS_MOD) {
-    getPlayer(it) {
-        unmuteDate = "never"
-        logout()
+    getPlayer(this) {
+        it.unmuteDate = "never"
+        it.logout()
     }
 }
 
@@ -64,9 +64,9 @@ cmd("perm_mute", RIGHTS_MOD) {
  * Perform a temporary ban on a player.
  */
 cmd("ban", RIGHTS_MOD) {
-    getPlayer(it) {
-        unbanDate = punishDuration(it)
-        logout()
+    getPlayer(this) {
+        it.unbanDate = punishDuration(this)
+        it.logout()
     }
 }
 
@@ -74,9 +74,9 @@ cmd("ban", RIGHTS_MOD) {
  * Perform a temporary mute on a player.
  */
 cmd("mute", RIGHTS_MOD) {
-    getPlayer(it) {
-        unmuteDate = punishDuration(it)
-        logout()
+    getPlayer(this) {
+        it.unmuteDate = punishDuration(this)
+        it.logout()
     }
 }
 
@@ -84,5 +84,5 @@ cmd("mute", RIGHTS_MOD) {
  * Perform a forced disconnect on a player.
  */
 cmd("kick", RIGHTS_MOD) {
-    getPlayer(it) { logout() }
+    getPlayer(this) { it.logout() }
 }

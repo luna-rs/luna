@@ -22,12 +22,12 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * Adds a new event listener to a pipeline within this set.
      *
-     * @param eventType The event type.
      * @param listener The listener to add.
      */
-    public void add(Class<?> eventType, EventListener<?> listener) {
+    public void add(EventListener<?> listener) {
+        Class<?> eventType = listener.getEventType();
         if (Event.class.isAssignableFrom(eventType)) {
-            EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType, EventListenerPipeline::new);
+            EventListenerPipeline<?> pipeline = get(eventType);
             pipeline.add(listener);
         }
     }
@@ -35,10 +35,23 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     /**
      * Retrieves a pipeline from this set.
      *
+     * @param eventType The event class to retrieve the pipeline of.
      * @return The pipeline that accepts {@code eventType}.
      */
     public EventListenerPipeline<?> get(Class<?> eventType) {
-        return pipelines.get(eventType);
+        return pipelines.computeIfAbsent(eventType, EventListenerPipeline::new);
+    }
+
+    /**
+     * Retrieves a pipeline with type {@code E} from this set.
+     *
+     * @param eventType The event class to retrieve the pipeline of.
+     * @param <E> The event type.
+     * @return The pipeline.
+     */
+    public <E extends Event> EventListenerPipeline<E> getTyped(Class<E> eventType) {
+        //noinspection unchecked
+        return (EventListenerPipeline<E>) get(eventType);
     }
 
     /**

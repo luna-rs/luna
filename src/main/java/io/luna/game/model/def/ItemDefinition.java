@@ -125,7 +125,7 @@ public final class ItemDefinition implements Definition {
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */
-    public boolean isInventoryAction(int index, String action) {
+    public boolean hasInventoryAction(int index, String action) {
         return action.equals(inventoryActions.get(index));
     }
 
@@ -136,7 +136,7 @@ public final class ItemDefinition implements Definition {
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */
-    public boolean isGroundAction(int index, String action) {
+    public boolean hasGroundAction(int index, String action) {
         return action.equals(groundActions.get(index));
     }
 

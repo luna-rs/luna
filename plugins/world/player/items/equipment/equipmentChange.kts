@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
 fun equip(plr: Player, index: Int) {
     plr.interruptAction()
     plr.resetInteractingWith()
-    plr.closeInterfaces()
+    plr.interfaces.close()
     plr.equipment.equip(index)
 }
 
@@ -21,11 +21,11 @@ fun unequip(plr: Player, index: Int) = plr.equipment.unequip(index)
 /**
  * Listen for equip events.
  */
-on(EquipItemEvent::class) { equip(it.plr, it.index) }
+on(EquipItemEvent::class) { equip(plr, index) }
 
 /**
  * Listen for unequip events.
  */
 on(WidgetItemFirstClickEvent::class)
-    .condition { it.widgetId == 1688 }
-    .then { unequip(it.plr, it.index) }
+    .condition { widgetId == 1688 }
+    .then { unequip(plr, index) }

@@ -1,8 +1,6 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerRights;
 import io.luna.util.StringUtils;
 
 /**
@@ -42,12 +40,6 @@ public final class CommandEvent extends PlayerEvent {
      */
     public CommandEvent(Player player, String name) {
         this(player, name, StringUtils.EMPTY_ARRAY);
-    }
-
-    @Override
-    public boolean matches(EventArguments args) {
-        PlayerRights rights = plr.getRights();
-        return args.equals(0, name) && rights.equalOrGreater((PlayerRights) args.get(1));
     }
 
     /**

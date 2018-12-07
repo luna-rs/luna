@@ -1,7 +1,7 @@
 package api.attr
 
 import api.predef.*
-import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Mob
 import kotlin.reflect.KProperty
 
 /**
@@ -29,8 +29,8 @@ class Stopwatch(private val name: String) {
     /**
      * Retrieves the difference between now and the last call to [setValue].
      */
-    operator fun getValue(player: Player, property: KProperty<*>): Long {
-        val attrValue = player.attributes.get<Long>(name).get()
+    operator fun getValue(mob: Mob, property: KProperty<*>): Long {
+        val attrValue = mob.attributes.get<Long>(name).get()
         return when (attrValue) {
             0L -> Long.MAX_VALUE // There was never a last call.
             else -> currentTimeMs() - attrValue
@@ -41,8 +41,8 @@ class Stopwatch(private val name: String) {
      * Resets the value to [currentTimeMs], regardless of the [value] argument. The recommended convention
      * is to simply assign -1.
      */
-    operator fun setValue(player: Player, property: KProperty<*>, value: Long) {
-        val attr = player.attributes.get<Long>(name)
+    operator fun setValue(mob: Mob, property: KProperty<*>, value: Long) {
+        val attr = mob.attributes.get<Long>(name)
         attr.set(currentTimeMs())
     }
 }

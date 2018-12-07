@@ -11,4 +11,4 @@ val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
  */
 on(ObjectFirstClickEvent::class)
     .match(bankObjects)
-    .then { it.plr.bank.open() }
+    .then { plr.bank.open() }

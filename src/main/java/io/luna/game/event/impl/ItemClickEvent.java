@@ -1,7 +1,5 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
-import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -9,7 +7,7 @@ import io.luna.game.model.mob.Player;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class ItemClickEvent extends PlayerEvent implements IdBasedEvent {
+public class ItemClickEvent extends PlayerEvent {
 
     /**
      * An event sent when a player clicks an item's first index.
@@ -110,15 +108,10 @@ public class ItemClickEvent extends PlayerEvent implements IdBasedEvent {
      * @param interfaceId The identifier of the interface the item was clicked on.
      */
     private ItemClickEvent(Player player, int id, int index, int interfaceId) {
-        super(player, id);
+        super(player);
         this.id = id;
         this.index = index;
         this.interfaceId = interfaceId;
-    }
-
-    @Override
-    public final boolean matches(EventArguments args) {
-        return args.contains(id);
     }
 
     /**

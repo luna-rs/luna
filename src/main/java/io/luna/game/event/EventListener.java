@@ -1,7 +1,6 @@
 package io.luna.game.event;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Iterables;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
@@ -29,11 +28,6 @@ public final class EventListener<E extends Event> {
     private final Class<?> eventType;
 
     /**
-     * The arguments.
-     */
-    private final EventArguments args;
-
-    /**
      * The listener function.
      */
     private final Consumer<E> listener;
@@ -42,13 +36,11 @@ public final class EventListener<E extends Event> {
      * Creates a new {@link EventListener}.
      *
      * @param eventType The type of event being intercepted.
-     * @param args The arguments.
      * @param listener The listener function.
      */
-    public EventListener(Class<?> eventType, EventArguments args, Consumer<E> listener) {
+    public EventListener(Class<?> eventType, Consumer<E> listener) {
         this.eventType = eventType;
         this.listener = listener;
-        this.args = args;
 
         // Value injected with reflection.
         script = null;
@@ -57,8 +49,7 @@ public final class EventListener<E extends Event> {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).
-                add("eventType", eventType.getSimpleName()).
-                add("args", Iterables.toString(args)).toString();
+                add("eventType", eventType.getSimpleName()).toString();
     }
 
     /**
@@ -68,12 +59,7 @@ public final class EventListener<E extends Event> {
      */
     public void apply(E msg) {
         try {
-            if (args == EventArguments.NO_ARGS) {
-                listener.accept(msg);
-            } else if (msg.matches(args)) {
-                listener.accept(msg);
-                msg.terminate();
-            }
+            listener.accept(msg);
         } catch (Exception failure) {
             throw new ScriptExecutionException(this, failure);
         }
@@ -109,12 +95,5 @@ public final class EventListener<E extends Event> {
      */
     public Consumer<E> getListener() {
         return listener;
-    }
-
-    /**
-     * @return The arguments.
-     */
-    public EventArguments getArgs() {
-        return args;
     }
 }

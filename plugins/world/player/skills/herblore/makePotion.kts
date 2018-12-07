@@ -59,21 +59,20 @@ class MakePotionAction(plr: Player,
 /**
  * Opens a [MakeItemDialogueInterface] to make finished potions.
  */
-fun makePotion(msg: ItemOnItemEvent, potion: Potion) {
-    val plr = msg.plr
-    plr.openInterface(object : MakeItemDialogueInterface(potion.id) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+fun makePotion(plr: Player, potion: Potion) {
+    plr.interfaces.open(object : MakeItemDialogueInterface(potion.id) {
+        override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
             plr.submitAction(MakePotionAction(plr, potion, forAmount))
     })
-    msg.terminate()
 }
 
 /**
  * Start a [MakePotionAction] if the intercepted event contains the required items.
  */
 on(ItemOnItemEvent::class) {
-    val potion = Potion.getPotion(it.usedId, it.targetId)
+    val potion = Potion.getPotion(usedId, targetId)
     if (potion != null) {
-        makePotion(it, potion)
+        makePotion(plr, potion)
+        terminate()
     }
 }

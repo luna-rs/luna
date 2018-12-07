@@ -75,7 +75,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
         }
 
         val levelUpData = levelUpTable[skillId]
-        plr.openInterface(LevelUpInterface(skillId, newLevel, levelUpData))
+        plr.interfaces.open(LevelUpInterface(skillId, newLevel, levelUpData))
         plr.graphic(fireworksGraphic)
 
         if (Skill.isCombatSkill(skillId)) {
@@ -90,13 +90,11 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
  * level.
  */
 on(SkillChangeEvent::class) {
-    val plr = it.mob as? Player
+    val plr = mob as? Player
     if (plr != null) {
-        val skill = it.id
-        val staticLevel = it.oldStaticLvl
-        plr.queue(SkillUpdateMessageWriter(skill))
-        if (staticLevel < 99) {
-            advanceLevel(plr, skill, staticLevel)
+        plr.queue(SkillUpdateMessageWriter(id))
+        if (oldStaticLvl < 99) {
+            advanceLevel(plr, id, oldStaticLvl)
         }
     }
 }

@@ -22,8 +22,8 @@ class RequestAction(val plr: Player,
             plr.walking.clear()
             other.walking.clear()
 
-            plr.openInterface(OfferTradeInterface(other))
-            other.openInterface(OfferTradeInterface(plr))
+            plr.interfaces.open(OfferTradeInterface(other))
+            other.interfaces.open(OfferTradeInterface(plr))
 
             plr.interact(other)
             other.interact(plr)
@@ -58,5 +58,5 @@ fun request(msg: PlayerFourthClickEvent) {
  *  Send request if the [Player] has the trade interaction option.
  */
 on(PlayerFourthClickEvent::class)
-    .condition { it.plr.interactions.contains(INTERACTION_TRADE) }
-    .then { request(it) }
+    .condition { plr.interactions.contains(INTERACTION_TRADE) }
+    .then { request(this) }

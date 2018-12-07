@@ -76,9 +76,9 @@ class CutLogAction(plr: Player,
 fun openInterface(msg: ItemOnItemEvent, id: Int) {
     val log = Log.ID_TO_LOG[id]
     if (log != null) {
-        val plr = msg.plr
-        plr.openInterface(object : MakeItemDialogueInterface(*log.unstrungIds) {
-            override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+        val interfaces = msg.plr.interfaces
+        interfaces.open(object : MakeItemDialogueInterface(*log.unstrungIds) {
+            override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(CutLogAction(plr, log.id, log.bows[index], forAmount))
         })
         msg.terminate()
@@ -90,7 +90,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
  */
 on(ItemOnItemEvent::class) {
     when (Log.KNIFE) {
-        it.targetId -> openInterface(it, it.usedId)
-        it.usedId -> openInterface(it, it.targetId)
+        targetId -> openInterface(this, usedId)
+        usedId -> openInterface(this, targetId)
     }
 }

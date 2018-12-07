@@ -32,5 +32,5 @@ fun restore(plr: Player) {
  */
 on(ObjectFirstClickEvent::class)
     .match(altars)
-    .then { restore(it.plr) }
+    .then { restore(plr) }
 

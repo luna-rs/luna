@@ -24,7 +24,7 @@ class MakeArrowAction(plr: Player,
      */
     var setAmount = 0
 
-    override fun add() = arrayOf(Item(arrow.arrow, setAmount))
+    override fun add() = arrayOf(Item(arrow.id, setAmount))
     override fun remove(): Array<Item> {
         val tipItem = Item(arrow.tip, setAmount)
         val withItem = Item(arrow.with, setAmount)
@@ -76,9 +76,9 @@ class MakeArrowAction(plr: Player,
  */
 fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
     if (arrow != null) {
-        val plr = msg.plr
-        plr.openInterface(object : MakeItemDialogueInterface(arrow.arrow) {
-            override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
+        val interfaces = msg.plr.interfaces
+        interfaces.open(object : MakeItemDialogueInterface(arrow.id) {
+            override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeArrowAction(plr, arrow, forAmount))
         })
         msg.terminate()
@@ -90,8 +90,8 @@ fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
  */
 on(ItemOnItemEvent::class) {
     when (Arrow.HEADLESS) {
-        it.targetId -> openInterface(it, Arrow.TIP_TO_ARROW[it.usedId])
-        it.usedId -> openInterface(it, Arrow.TIP_TO_ARROW[it.targetId])
+        targetId -> openInterface(this, Arrow.TIP_TO_ARROW[usedId])
+        usedId -> openInterface(this, Arrow.TIP_TO_ARROW[targetId])
     }
 }
 
@@ -100,6 +100,6 @@ on(ItemOnItemEvent::class) {
  */
 Arrow.HEADLESS_ARROW.apply {
     on(ItemOnItemEvent::class)
-        .condition { it.matches(tip, with) }
-        .then { openInterface(it, this) }
+        .condition { matches(tip, with) }
+        .then { openInterface(this, this@apply) }
 }

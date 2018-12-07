@@ -17,12 +17,12 @@ val runeEssence = 1436
 val pureEssence = 7936
 
 /**
- * The runecrafting animation.
+ * The Runecrafting animation.
  */
 val craftAnimation = Animation(791)
 
 /**
- * The runecrafting graphic.
+ * The Runecrafting graphic.
  */
 val craftGraphic = Graphic(186, 100)
 
@@ -71,11 +71,11 @@ fun craft(plr: Player, rune: Rune) {
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
 on(ObjectFirstClickEvent::class)
-    .filter { objectDef(it.id).isAction(0, "Craft-rune") }
+    .filter { objectDef(id).hasAction(0, "Craft-rune") }
     .then {
-        val altar = Rune.ALTAR_TO_RUNE[it.id]
+        val altar = Rune.ALTAR_TO_RUNE[id]
         if (altar != null) {
-            craft(it.plr, altar)
-            it.terminate()
+            craft(plr, altar)
+            terminate()
         }
     }

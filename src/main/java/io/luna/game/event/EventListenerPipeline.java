@@ -1,6 +1,5 @@
 package io.luna.game.event;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.plugin.ScriptExecutionException;
@@ -8,18 +7,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
 
 /**
  * A pipeline-like model of listeners contained within a pipeline set. It allows for the traversal of events
  * through it, in order to be intercepted by listeners.
- * <p>
- * For performance, event listeners that listen for events that are instances of {@link IdBasedEvent} can be mapped
- * by their identifiers.
  *
  * @param <E> The type of event that will traverse this pipeline.
  * @author lare96 <http://github.org/lare96>
@@ -42,9 +34,9 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     private final List<EventListener<E>> listeners = new ArrayList<>();
 
     /**
-     * The map of listeners.
+     * The Kotlin match listener. Serves as an optimization for key-based events.
      */
-    private final Map<Integer, EventListener<E>> listenerMap;
+    private EventListener<E> matcher;
 
     /**
      * A flag determining if a traversal terminated.
@@ -58,15 +50,15 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     public EventListenerPipeline(Class<?> eventType) {
         this.eventType = eventType;
-        listenerMap = IdBasedEvent.class.isAssignableFrom(eventType) ?
-                new HashMap<>() : ImmutableMap.of();
+
+        // Default match listener, does nothing.
+        matcher = new EventListener<>(eventType, msg -> {
+        });
     }
 
     @Override
     public UnmodifiableIterator<EventListener<E>> iterator() {
-        Iterator<EventListener<E>> listIterator = listeners.iterator();
-        Iterator<EventListener<E>> mapIterator = listenerMap.values().iterator();
-        return Iterators.unmodifiableIterator(Iterators.concat(listIterator, mapIterator));
+        return Iterators.unmodifiableIterator(listeners.iterator());
     }
 
     /**
@@ -76,49 +68,27 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     public void post(E msg) {
         try {
+            // Reset pipeline for next event.
             terminated = false;
             msg.pipeline(this);
 
-            OptionalInt mapId = msg.getMapId();
-            if (mapId.isPresent()) {
-                postToMap(msg, mapId.getAsInt());
-            } else {
-                postToList(msg);
+            // Apply match listener.
+            matcher.apply(msg);
+
+            // Match listener didn't terminate event, post to other listeners.
+            if (!terminated) {
+                for (EventListener<E> listener : listeners) {
+                    if (terminated) {
+                        break;
+                    }
+                    listener.apply(msg);
+                }
             }
         } catch (ScriptExecutionException e) {
             terminate();
             LOGGER.error(e);
         } finally {
             msg.pipeline(null);
-        }
-    }
-
-    /**
-     * Posts this event to the backing map.
-     *
-     * @param msg The event.
-     * @param msgId The event identifier.
-     */
-    private void postToMap(E msg, int msgId) {
-        EventListener<E> listener = listenerMap.get(msgId);
-        if (listener != null) {
-            listener.apply(msg);
-        } else {
-            postToList(msg);
-        }
-    }
-
-    /**
-     * Posts this event to the backing list.
-     *
-     * @param msg The event.
-     */
-    private void postToList(E msg) {
-        for (EventListener<E> listener : listeners) {
-            if (terminated) {
-                break;
-            }
-            listener.apply(msg);
         }
     }
 
@@ -143,34 +113,16 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     @SuppressWarnings("unchecked")
     public void add(EventListener<?> listener) {
-        EventListener<E> toAdd = (EventListener<E>) listener;
-        if(listenerMap instanceof ImmutableMap ||
-                listener.getArgs().size() == 0) {
-            addToList(toAdd);
-        } else {
-            addToMap(toAdd);
-        }
-    }
-
-
-    /**
-     * Adds a listener to the backing map.
-     *
-     * @param listener The listener.
-     */
-    private void addToMap(EventListener<E> listener) {
-        for (Object arg : listener.getArgs()) {
-            listenerMap.put((Integer) arg, listener);
-        }
+        listeners.add((EventListener<E>) listener);
     }
 
     /**
-     * Adds a listener to the backing list.
+     * Sets the match listener optimization.
      *
-     * @param listener The listener.
+     * @param matcher The new match listener.
      */
-    private void addToList(EventListener<E> listener) {
-        listeners.add(listener);
+    public void setMatcher(EventListener<E> matcher) {
+        this.matcher = matcher;
     }
 
     /**
@@ -179,7 +131,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      * @return The pipeline's size.
      */
     public int size() {
-        return listeners.size() + listenerMap.size();
+        return listeners.size();
     }
 
     /**

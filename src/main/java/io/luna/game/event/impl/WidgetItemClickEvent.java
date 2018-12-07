@@ -1,17 +1,13 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.event.EventArguments;
-import io.luna.game.event.IdBasedEvent;
 import io.luna.game.model.mob.Player;
-
-import java.util.Objects;
 
 /**
  * An item widget-click based event. Not intended for interception.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class WidgetItemClickEvent extends PlayerEvent implements IdBasedEvent {
+public class WidgetItemClickEvent extends PlayerEvent {
 
     /**
      * An event sent when a player clicks a widget item's first index.
@@ -137,15 +133,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements IdBasedEvent {
      * @param itemId The item identifier.
      */
     public WidgetItemClickEvent(Player player, int index, int widgetId, int itemId) {
-        super(player, widgetId);
+        super(player);
         this.index = index;
         this.widgetId = widgetId;
         this.itemId = itemId;
-    }
-
-    @Override
-    public boolean matches(EventArguments args) {
-        return Objects.equals(args.get(0), widgetId);
     }
 
     /**
