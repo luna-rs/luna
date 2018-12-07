@@ -24,8 +24,7 @@
                         </goals>
                         <configuration>
                             <sourceDirs>
-                                <source>src/main/java</source>
-                                <source>src/main/kotlin</source>
+                                <source>plugins</source>
                             </sourceDirs>
                         </configuration>
                     </execution>
