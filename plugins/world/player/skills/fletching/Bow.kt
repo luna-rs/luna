@@ -79,7 +79,7 @@ enum class Bow(val level: Int,
     /**
      * The strung item.
      */
-    val strungItem = Item(strung)
+    val strungItem = if (strung == -1) null else Item(strung)
 
     /**
      * The unstrung item.

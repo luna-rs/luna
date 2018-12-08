@@ -7,7 +7,7 @@ import world.player.skills.fletching.Bow.*
  */
 enum class Log(val id: Int, val bows: List<Bow>) {
 
-    NORMAL(id = 1151,
+    NORMAL(id = 1511,
            bows = listOf(ARROW_SHAFT, SHORTBOW, LONGBOW)),
     OAK(id = 1521,
         bows = listOf(OAK_SHORTBOW, OAK_LONGBOW)),
