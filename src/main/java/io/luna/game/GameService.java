@@ -3,23 +3,19 @@ package io.luna.game;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
+import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,7 +49,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * A thread pool for low-priority tasks.
      */
-    private final ListeningExecutorService threadPool;
+    private final ListeningExecutorService threadPool = ExecutorUtils.newCachedThreadPool(5, "LunaWorkerThread");
 
     /**
      * Creates a new {@link GameService}.
@@ -63,13 +59,6 @@ public final class GameService extends AbstractScheduledService {
     public GameService(LunaContext context) {
         this.context = context;
         world = context.getWorld();
-    }
-
-    { // Initialize low-priority cached thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().
-                setNameFormat("LunaWorkerThread").build();
-        ExecutorService delegate = Executors.newCachedThreadPool(tf);
-        threadPool = MoreExecutors.listeningDecorator(delegate);
     }
 
     @Override
@@ -139,7 +128,7 @@ public final class GameService extends AbstractScheduledService {
         // Disconnect and save all players.
         world.getPlayers().clear();
 
-        // Wait for any last minute low-priority tasks to complete.
+        // Wait for any last minute tasks to complete.
         threadPool.shutdown();
         while (!threadPool.isTerminated()) {
             Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
@@ -177,7 +166,9 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a result-bearing and listening asynchronous task.
+     * Runs a result-bearing and listening asynchronous task. <strong>Warning: Tasks may not be ran right
+     * away, as there is a limit to how large the backing pool can grow to.</strong> This is to prevent DOS type
+     * attacks.
      *
      * @param t The task to run.
      * @return The result of {@code t}.
@@ -187,7 +178,8 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a listening asynchronous task.
+     * Runs a listening asynchronous task. <strong>Warning: Tasks may not be ran right away, as there is a limit
+     * to how large the backing pool can grow to.</strong> This is to prevent DOS type attacks.
      *
      * @param t The task to run.
      * @return The result of {@code t}.
