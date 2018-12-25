@@ -5,9 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * A static-utility class that contains functions for Google GSON.
@@ -39,8 +39,8 @@ public final class GsonUtils {
     /**
      * Shortcut to function {@link Gson#toJson(JsonElement, Appendable)}.
      */
-    public static void writeJson(JsonElement element, File file) throws IOException {
-        try (FileWriter fw = new FileWriter(file)) {
+    public static void writeJson(JsonElement element, Path path) throws IOException {
+        try (FileWriter fw = new FileWriter(path.toFile())) {
             fw.append(GSON.toJson(element));
         }
     }
