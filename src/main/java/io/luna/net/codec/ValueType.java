@@ -5,7 +5,7 @@ package io.luna.net.codec;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public enum ByteTransform {
+public enum ValueType {
 
     /**
      * Do nothing to the value.
@@ -15,15 +15,15 @@ public enum ByteTransform {
     /**
      * Add {@code 128} to the value.
      */
-    A,
+    ADD,
 
     /**
      * Invert the sign of the value.
      */
-    C,
+    NEGATE,
 
     /**
      * Subtract {@code 128} from the value.
      */
-    S
+    SUBTRACT
 }

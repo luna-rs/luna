@@ -260,15 +260,15 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return This buffer instance.
      */
-    public ByteMessage put(int value, ByteTransform transform) {
+    public ByteMessage put(int value, ValueType transform) {
         switch (transform) {
-            case A:
+            case ADD:
                 value += 128;
                 break;
-            case C:
+            case NEGATE:
                 value = -value;
                 break;
-            case S:
+            case SUBTRACT:
                 value = 128 - value;
                 break;
             case NORMAL:
@@ -285,7 +285,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage put(int value) {
-        put(value, ByteTransform.NORMAL);
+        put(value, ValueType.NORMAL);
         return this;
     }
 
@@ -298,7 +298,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
-    public ByteMessage putShort(int value, ByteTransform transform, ByteOrder order) {
+    public ByteMessage putShort(int value, ValueType transform, ByteOrder order) {
         switch (order) {
             case BIG:
                 put(value >> 8);
@@ -323,7 +323,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putShort(int value) {
-        putShort(value, ByteTransform.NORMAL, ByteOrder.BIG);
+        putShort(value, ValueType.NORMAL, ByteOrder.BIG);
         return this;
     }
 
@@ -334,7 +334,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return This buffer instance.
      */
-    public ByteMessage putShort(int value, ByteTransform transform) {
+    public ByteMessage putShort(int value, ValueType transform) {
         putShort(value, transform, ByteOrder.BIG);
         return this;
     }
@@ -347,7 +347,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putShort(int value, ByteOrder order) {
-        putShort(value, ByteTransform.NORMAL, order);
+        putShort(value, ValueType.NORMAL, order);
         return this;
     }
 
@@ -359,7 +359,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param order The byte order.
      * @return This buffer instance.
      */
-    public ByteMessage putInt(int value, ByteTransform transform, ByteOrder order) {
+    public ByteMessage putInt(int value, ValueType transform, ByteOrder order) {
         switch (order) {
             case BIG:
                 put(value >> 24);
@@ -396,7 +396,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putInt(int value) {
-        putInt(value, ByteTransform.NORMAL, ByteOrder.BIG);
+        putInt(value, ValueType.NORMAL, ByteOrder.BIG);
         return this;
     }
 
@@ -407,7 +407,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return This buffer instance.
      */
-    public ByteMessage putInt(int value, ByteTransform transform) {
+    public ByteMessage putInt(int value, ValueType transform) {
         putInt(value, transform, ByteOrder.BIG);
         return this;
     }
@@ -420,7 +420,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putInt(int value, ByteOrder order) {
-        putInt(value, ByteTransform.NORMAL, order);
+        putInt(value, ValueType.NORMAL, order);
         return this;
     }
 
@@ -433,7 +433,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
-    public ByteMessage putLong(long value, ByteTransform transform, ByteOrder order) {
+    public ByteMessage putLong(long value, ValueType transform, ByteOrder order) {
         switch (order) {
             case BIG:
                 put((int) (value >> 56));
@@ -470,7 +470,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putLong(long value) {
-        putLong(value, ByteTransform.NORMAL, ByteOrder.BIG);
+        putLong(value, ValueType.NORMAL, ByteOrder.BIG);
         return this;
     }
 
@@ -481,7 +481,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return This buffer instance.
      */
-    public ByteMessage putLong(long value, ByteTransform transform) {
+    public ByteMessage putLong(long value, ValueType transform) {
         putLong(value, transform, ByteOrder.BIG);
         return this;
     }
@@ -494,7 +494,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putLong(long value, ByteOrder order) {
-        putLong(value, ByteTransform.NORMAL, order);
+        putLong(value, ValueType.NORMAL, order);
         return this;
     }
 
@@ -519,16 +519,16 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int get(boolean signed, ByteTransform transform) {
+    public int get(boolean signed, ValueType transform) {
         int value = buf.readByte();
         switch (transform) {
-            case A:
+            case ADD:
                 value = value - 128;
                 break;
-            case C:
+            case NEGATE:
                 value = -value;
                 break;
-            case S:
+            case SUBTRACT:
                 value = 128 - value;
                 break;
             case NORMAL:
@@ -543,7 +543,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int get() {
-        return get(true, ByteTransform.NORMAL);
+        return get(true, ValueType.NORMAL);
     }
 
     /**
@@ -553,7 +553,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int get(boolean signed) {
-        return get(signed, ByteTransform.NORMAL);
+        return get(signed, ValueType.NORMAL);
     }
 
     /**
@@ -562,7 +562,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int get(ByteTransform transform) {
+    public int get(ValueType transform) {
         return get(true, transform);
     }
 
@@ -575,7 +575,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
-    public int getShort(boolean signed, ByteTransform transform, ByteOrder order) {
+    public int getShort(boolean signed, ValueType transform, ByteOrder order) {
         int value = 0;
         switch (order) {
             case BIG:
@@ -600,7 +600,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getShort() {
-        return getShort(true, ByteTransform.NORMAL, ByteOrder.BIG);
+        return getShort(true, ValueType.NORMAL, ByteOrder.BIG);
     }
 
     /**
@@ -610,7 +610,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getShort(boolean signed) {
-        return getShort(signed, ByteTransform.NORMAL, ByteOrder.BIG);
+        return getShort(signed, ValueType.NORMAL, ByteOrder.BIG);
     }
 
     /**
@@ -619,7 +619,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int getShort(ByteTransform transform) {
+    public int getShort(ValueType transform) {
         return getShort(true, transform, ByteOrder.BIG);
     }
 
@@ -630,7 +630,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int getShort(boolean signed, ByteTransform transform) {
+    public int getShort(boolean signed, ValueType transform) {
         return getShort(signed, transform, ByteOrder.BIG);
     }
 
@@ -641,7 +641,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getShort(ByteOrder order) {
-        return getShort(true, ByteTransform.NORMAL, order);
+        return getShort(true, ValueType.NORMAL, order);
     }
 
     /**
@@ -652,7 +652,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getShort(boolean signed, ByteOrder order) {
-        return getShort(signed, ByteTransform.NORMAL, order);
+        return getShort(signed, ValueType.NORMAL, order);
     }
 
     /**
@@ -662,7 +662,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param order The byte order.
      * @return The read value.
      */
-    public int getShort(ByteTransform transform, ByteOrder order) {
+    public int getShort(ValueType transform, ByteOrder order) {
         return getShort(true, transform, order);
     }
 
@@ -674,7 +674,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param order The byte order.
      * @return The read value.
      */
-    public int getInt(boolean signed, ByteTransform transform, ByteOrder order) {
+    public int getInt(boolean signed, ValueType transform, ByteOrder order) {
         long value = 0;
         switch (order) {
             case BIG:
@@ -711,7 +711,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getInt() {
-        return getInt(true, ByteTransform.NORMAL, ByteOrder.BIG);
+        return getInt(true, ValueType.NORMAL, ByteOrder.BIG);
     }
 
     /**
@@ -721,7 +721,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getInt(boolean signed) {
-        return getInt(signed, ByteTransform.NORMAL, ByteOrder.BIG);
+        return getInt(signed, ValueType.NORMAL, ByteOrder.BIG);
     }
 
     /**
@@ -730,7 +730,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int getInt(ByteTransform transform) {
+    public int getInt(ValueType transform) {
         return getInt(true, transform, ByteOrder.BIG);
     }
 
@@ -741,7 +741,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public int getInt(boolean signed, ByteTransform transform) {
+    public int getInt(boolean signed, ValueType transform) {
         return getInt(signed, transform, ByteOrder.BIG);
     }
 
@@ -752,7 +752,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getInt(ByteOrder order) {
-        return getInt(true, ByteTransform.NORMAL, order);
+        return getInt(true, ValueType.NORMAL, order);
     }
 
     /**
@@ -763,7 +763,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public int getInt(boolean signed, ByteOrder order) {
-        return getInt(signed, ByteTransform.NORMAL, order);
+        return getInt(signed, ValueType.NORMAL, order);
     }
 
     /**
@@ -773,7 +773,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param order The byte order.
      * @return The read value.
      */
-    public int getInt(ByteTransform transform, ByteOrder order) {
+    public int getInt(ValueType transform, ByteOrder order) {
         return getInt(true, transform, order);
     }
 
@@ -785,7 +785,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
-    public long getLong(ByteTransform transform, ByteOrder order) {
+    public long getLong(ValueType transform, ByteOrder order) {
         long value = 0;
         switch (order) {
             case BIG:
@@ -821,7 +821,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public long getLong() {
-        return getLong(ByteTransform.NORMAL, ByteOrder.BIG);
+        return getLong(ValueType.NORMAL, ByteOrder.BIG);
     }
 
     /**
@@ -830,7 +830,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The transformation type.
      * @return The read value.
      */
-    public long getLong(ByteTransform transform) {
+    public long getLong(ValueType transform) {
         return getLong(transform, ByteOrder.BIG);
     }
 
@@ -841,7 +841,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read value.
      */
     public long getLong(ByteOrder order) {
-        return getLong(ByteTransform.NORMAL, order);
+        return getLong(ValueType.NORMAL, order);
     }
 
     /**
@@ -865,7 +865,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return The read bytes.
      */
     public byte[] getBytes(int amount) {
-        return getBytes(amount, ByteTransform.NORMAL);
+        return getBytes(amount, ValueType.NORMAL);
     }
 
     /**
@@ -875,7 +875,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The byte transformation.
      * @return The read bytes.
      */
-    public byte[] getBytes(int amount, ByteTransform transform) {
+    public byte[] getBytes(int amount, ValueType transform) {
         byte[] data = new byte[amount];
         for (int i = 0; i < amount; i++) {
             data[i] = (byte) get(transform);
@@ -891,19 +891,19 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param transform The byte transformation.
      * @return The read bytes.
      */
-    public byte[] getBytesReverse(int amount, ByteTransform transform) {
+    public byte[] getBytesReverse(int amount, ValueType transform) {
         byte[] data = new byte[amount];
         int dataPosition = 0;
         for (int i = buf.readerIndex() + amount - 1; i >= buf.readerIndex(); i--) {
             int value = buf.getByte(i);
             switch (transform) {
-                case A:
+                case ADD:
                     value -= 128;
                     break;
-                case C:
+                case NEGATE:
                     value = -value;
                     break;
-                case S:
+                case SUBTRACT:
                     value = 128 - value;
                     break;
                 case NORMAL:
