@@ -2,6 +2,10 @@ package api.predef
 
 import io.luna.game.model.Position
 import io.luna.game.model.World
+import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.`object`.ObjectDirection
+import io.luna.game.model.`object`.ObjectType
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
@@ -33,10 +37,74 @@ fun Player.sendConfig(id: Int, state: Int) = queue(ConfigMessageWriter(id, state
 /**
  * Spawns an [Npc].
  */
-fun World.spawnNpc(id: Int, x: Int, y: Int, z: Int = 0): Npc {
-    val spawn = Npc(ctx, id, Position(x, y, z))
-    npcs.add(spawn)
-    return spawn
+fun World.addNpc(id: Int, x: Int, y: Int, z: Int = 0): Npc {
+    val npc = Npc(ctx, id, Position(x, y, z))
+    npcs.add(npc)
+    return npc
+}
+
+/**
+ * Spawns a local [GameObject] for [plr].
+ */
+fun World.addLocalObject(id: Int,
+                         x: Int,
+                         y: Int,
+                         z: Int = 0,
+                         type: ObjectType = ObjectType.DEFAULT,
+                         direction: ObjectDirection = ObjectDirection.WEST,
+                         plr: Player): GameObject {
+    val localObject = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.of(plr))
+    return when {
+        objects.add(localObject) -> localObject
+        else -> throw IllegalStateException("$localObject Could not be spawned!");
+    }
+}
+
+/**
+ * Spawns a global [GameObject].
+ */
+fun World.addGlobalObject(id: Int,
+                          x: Int,
+                          y: Int,
+                          z: Int = 0,
+                          type: ObjectType = ObjectType.DEFAULT,
+                          direction: ObjectDirection = ObjectDirection.WEST): GameObject {
+    val globalObject = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.empty())
+    return when {
+        objects.add(globalObject) -> globalObject
+        else -> throw IllegalStateException("$globalObject Could not be spawned!");
+    }
+}
+
+/**
+ * Spawns a local [GroundItem] for [plr].
+ */
+fun World.addLocalItem(id: Int,
+                       amount: Int,
+                       x: Int,
+                       y: Int,
+                       z: Int = 0,
+                       plr: Player): GroundItem {
+    val localItem = GroundItem(ctx, id, amount, Position(x, y, z), Optional.of(plr))
+    return when {
+        items.add(localItem) -> localItem
+        else -> throw IllegalStateException("$localItem Could not be spawned!");
+    }
+}
+
+/**
+ * Spawns a global [GroundItem].
+ */
+fun World.addGlobalItem(id: Int,
+                        amount: Int,
+                        x: Int,
+                        y: Int,
+                        z: Int = 0): GroundItem {
+    val globalItem = GroundItem(ctx, id, amount, Position(x, y, z), Optional.empty())
+    return when {
+        items.add(globalItem) -> globalItem
+        else -> throw IllegalStateException("$globalItem Could not be spawned!");
+    }
 }
 
 /**
