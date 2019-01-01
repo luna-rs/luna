@@ -134,11 +134,11 @@ const val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
  *  [Rational] property aliases.  *
  *                                *
  *********************************/
-
-val CHANCE_ALWAYS = Rational.ALWAYS
-val CHANCE_VERY_COMMON = Rational.VERY_COMMON
-val CHANCE_COMMON = Rational.COMMON
-val CHANCE_UNCOMMON = Rational.UNCOMMON
-val CHANCE_VERY_UNCOMMON = Rational.VERY_UNCOMMON
-val CHANCE_RARE = Rational.RARE
-val CHANCE_VERY_RARE = Rational.VERY_RARE
+val ALWAYS = Rational.ALWAYS
+val VERY_COMMON = Rational.VERY_COMMON
+val COMMON = Rational.COMMON
+val UNCOMMON = Rational.UNCOMMON
+val VERY_UNCOMMON = Rational.VERY_UNCOMMON
+val RARE = Rational.RARE
+val VERY_RARE = Rational.VERY_RARE
+val NEVER = Rational(0, 1)
