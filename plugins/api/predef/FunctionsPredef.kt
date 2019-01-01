@@ -30,6 +30,11 @@ inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
     }
 
 /**
+ * A shortcut to the lazy delegate property. Initializations are **not** thread safe!
+ */
+fun <T> lazyVal(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
+
+/**
  * Computes and returns the [ItemDefinition] for [id].
  */
 fun itemDef(id: Int): ItemDefinition = ItemDefinition.ALL.get(id)
@@ -78,7 +83,7 @@ fun rand(lower: Int, upper: Int): Int = rand().nextInt((upper - lower) + 1) + lo
 fun rand(upper: Int): Int = rand().nextInt(upper + 1)
 
 /**
- * Creates an emtpy mutable table of [entries].
+ * Creates an empty mutable table of [entries].
  */
 fun <R, C, V> emptyTable(size: Int = 16): Table<R, C, V> = HashBasedTable.create(size, size)
 
