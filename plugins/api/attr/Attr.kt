@@ -18,17 +18,20 @@ import kotlin.reflect.KProperty
  *
  * @author lare96
  */
-class Attr<T>(private val name: String) {
+open class Attr<T>(private val name: String) {
 
     /**
      * Retrieve attribute value.
      */
-    operator fun getValue(mob: Mob, property: KProperty<*>): T =
-        mob.attributes.get<T>(name).get()
+    open operator fun getValue(mob: Mob, property: KProperty<*>): T = attr(mob).get()
 
     /**
      * Set attribute value.
      */
-    operator fun setValue(mob: Mob, property: KProperty<*>, value: T) =
-        mob.attributes.get<T>(name).set(value)
+    open operator fun setValue(mob: Mob, property: KProperty<*>, value: T) = attr(mob).set(value)
+
+    /**
+     * Retrieves the attribute value instance.
+     */
+    protected fun attr(mob: Mob) = mob.attributes.get<T>(name)!!
 }
