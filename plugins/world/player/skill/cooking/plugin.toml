@@ -1,0 +1,7 @@
+[metadata]
+name = "Cooking"
+description = "A plugin that enables the Cooking skill."
+version = "1.0"
+authors = [
+  "lare96"
+]
