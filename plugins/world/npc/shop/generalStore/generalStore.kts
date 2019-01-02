@@ -10,16 +10,16 @@ shop {
     currency = Currency.COINS
 
     sell {
-        item("Pot") x 10
-        item("Jug") x 15
-        item("Tinderbox") x 15
-        item("Chisel") x 15
-        item("Hammer") x 15
-        item("Newcomer map") x 15
-        item("Bucket") x 15
-        item("Bowl") x 15
-        item("Anti-dragon shield") x 50
-        item("Lobster") x 150
+        "Pot" x 15
+        "Jug" x 15
+        "Tinderbox" x 15
+        "Chisel" x 15
+        "Hammer" x 15
+        "Newcomer map" x 15
+        "Bucket" x 15
+        "Bowl" x 15
+        "Anti-dragon shield" x 50
+        "Lobster" x 150
     }
 
     open {

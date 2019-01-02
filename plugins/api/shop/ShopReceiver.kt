@@ -1,6 +1,7 @@
 package api.shop
 
 import api.predef.*
+import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
@@ -34,9 +35,19 @@ class ShopReceiver {
     var currency = Currency.COINS
 
     /**
+     * The next index to add an item to.
+     */
+    private var index = 0
+
+    /**
+     * The added items.
+     */
+    private val items = ArrayList<IndexedItem>()
+
+    /**
      * The [SellReceiver] instance.
      */
-    private val sellReceiver = SellReceiver(this)
+    private val sellReceiver = SellReceiver(this, false)
 
     /**
      * The [OpenReceiver] instance.
@@ -64,12 +75,19 @@ class ShopReceiver {
 
         // Create and initialize shop.
         val shop = Shop(world, name, restock, buy, currency)
-        shop.init(sellReceiver.getItems())
+        shop.init(items.toTypedArray())
 
         // Add event listeners from the OpenReceiver.
         openReceiver.addListeners(shop)
 
         // Register shop!
         world.shops.register(shop)
+    }
+
+    /**
+     * Adds an item to this shop. Is invoked implicitly through [sell].
+     */
+    fun addItem(id: Int, amount: Int) {
+        items += IndexedItem(index++, id, amount)
     }
 }
