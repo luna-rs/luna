@@ -1,4 +1,4 @@
-package world.player.items.consume.potion
+package world.player.item.consume.potion
 
 import api.predef.*
 import io.luna.game.model.mob.Player

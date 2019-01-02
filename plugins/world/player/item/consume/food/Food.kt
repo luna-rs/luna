@@ -1,4 +1,4 @@
-package world.player.items.consume.food
+package world.player.item.consume.food
 
 import io.luna.game.model.mob.Player
 

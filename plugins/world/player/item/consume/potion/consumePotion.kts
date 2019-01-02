@@ -4,7 +4,7 @@ import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.items.consume.potion.Potion
+import world.player.item.consume.potion.Potion
 
 /**
  * The "last_drink_timer" stopwatch.

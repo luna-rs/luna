@@ -4,7 +4,7 @@ import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.items.consume.food.Food
+import world.player.item.consume.food.Food
 
 /**
  * The "last_eat_timer" stopwatch.

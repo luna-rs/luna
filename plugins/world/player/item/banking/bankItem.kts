@@ -34,6 +34,7 @@ fun withdraw(msg: WidgetItemClickEvent, amount: Int? = null) {
         }
     } else if (plr.rights >= RIGHTS_DEV) {
         // For the "::search_item" command (it uses the banking interface).
+        // TODO decouple from this, add to searchItem
         val inv = plr.inventory
         when (amount) {
             null -> inv.add(Item(id, 1_000_000))
