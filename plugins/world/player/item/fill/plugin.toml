@@ -1,6 +1,6 @@
 [metadata]
 name = "Fill items"
-description = "A plugin that enables players to fill items from various sources."
+description = "A plugin that enables players to fill items with various resources."
 version = "1.0"
 authors = [
   "lare96"

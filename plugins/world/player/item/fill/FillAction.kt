@@ -5,17 +5,22 @@ import io.luna.game.action.ProducingAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
+/**
+ * A [ProducingAction] that fills [emptyId] with a [Resource].
+ *
+ * @author lare96
+ */
 class FillAction(plr: Player,
-                 val objectId: Int?,
                  val emptyId: Item,
+                 val objectId: Int?,
                  val filledId: Item,
-                 val source: Source,
+                 val resource: Resource,
                  var amount: Int) : ProducingAction(plr, true, 2) {
 
     override fun remove() = arrayOf(emptyId)
     override fun add() = arrayOf(filledId)
     override fun onProduce() {
-        source.onFill(mob)
+        resource.onFill(mob)
         amount--
         if (amount == 0) {
             interrupt()
@@ -24,7 +29,7 @@ class FillAction(plr: Player,
 
     override fun isEqual(other: Action<*>): Boolean {
         return when (other) {
-            is FillAction -> source == other.source &&
+            is FillAction -> resource == other.resource &&
                     objectId == other.objectId &&
                     emptyId == other.emptyId &&
                     filledId == other.filledId

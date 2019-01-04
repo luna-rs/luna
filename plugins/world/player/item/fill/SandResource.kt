@@ -4,10 +4,15 @@ import io.luna.game.model.def.ObjectDefinition
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 
-object SandSource : Source() {
+/**
+ * A [Resource] implementation for sand.
+ *
+ * @author lare96
+ */
+object SandResource : Resource() {
 
-    override fun matchesDef(def: ObjectDefinition): Boolean {
-        return when (def.name) {
+    override fun matches(obj: ObjectDefinition): Boolean {
+        return when (obj.name) {
             "Sand pit", "Sandpit", "Sand pile" -> true
             else -> false
         }
