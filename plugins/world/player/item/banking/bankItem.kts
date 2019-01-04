@@ -8,12 +8,12 @@ import io.luna.game.model.mob.inter.AmountInputInterface
 /**
  * Deposit an item.
  */
-fun deposit(msg: WidgetItemClickEvent, amount: Int) {
+fun deposit(msg: WidgetItemClickEvent, amount: Int? = null) {
     val inv = msg.plr.inventory
     val bank = msg.plr.bank
     if (bank.isOpen) {
         when (amount) {
-            -1 -> bank.deposit(msg.index, inv.computeAmountForId(msg.itemId))
+            null -> bank.deposit(msg.index, inv.computeAmountForId(msg.itemId))
             else -> bank.deposit(msg.index, amount)
         }
     }
@@ -76,15 +76,16 @@ on(WidgetItemThirdClickEvent::class)
     .filter { widgetId == 5382 }
     .then { withdraw(this, 10) }
 
-
-/* Withdraw/deposit all. */
+/**
+ * Withdraw/deposit all.
+ */
 on(WidgetItemFourthClickEvent::class)
     .filter { widgetId == 5064 }
-    .then { deposit(this, -1) }
+    .then { deposit(this) }
 
 on(WidgetItemFourthClickEvent::class)
     .filter { widgetId == 5382 }
-    .then { withdraw(this, -1) }
+    .then { withdraw(this) }
 
 /**
  * Withdraw/deposit (x).
