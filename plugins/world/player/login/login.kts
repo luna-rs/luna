@@ -88,14 +88,13 @@ fun init(plr: Player) {
  * If the player is muted, send the mute details.
  */
 fun checkMute(plr: Player) {
-    val date = plr.unmuteDate
-    when (date) {
-        "n/a" -> { // Do nothing, we aren't muted.
-        }
-        "never" -> plr.sendMessage("You are permanently muted. It can only be overturned by an Admin.")
-        else -> {
-            val localDate = LocalDate.parse(date)
-            plr.sendMessage("You are muted. You will be unmuted on ${dateFormatter.format(localDate)}.")
+    if (plr.isMuted) {
+        when (plr.unmuteDate) {
+            "never" -> plr.sendMessage("You are permanently muted. It can only be overturned by an Admin.")
+            else -> {
+                val lift = LocalDate.parse(plr.unmuteDate)
+                plr.sendMessage("You are muted. You will be unmuted on ${dateFormatter.format(lift)}.")
+            }
         }
     }
 }
