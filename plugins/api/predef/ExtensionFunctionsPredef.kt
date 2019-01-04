@@ -37,74 +37,128 @@ fun Player.sendConfig(id: Int, state: Int) = queue(ConfigMessageWriter(id, state
 /**
  * Spawns an [Npc].
  */
-fun World.addNpc(id: Int, x: Int, y: Int, z: Int = 0): Npc {
-    val npc = Npc(ctx, id, Position(x, y, z))
+fun World.addNpc(npc: Npc): Npc {
     npcs.add(npc)
     return npc
 }
 
 /**
- * Spawns a local [GameObject] for [plr].
+ * Spawns an [Npc].
  */
-fun World.addLocalObject(id: Int,
-                         x: Int,
-                         y: Int,
-                         z: Int = 0,
-                         type: ObjectType = ObjectType.DEFAULT,
-                         direction: ObjectDirection = ObjectDirection.WEST,
-                         plr: Player): GameObject {
-    val localObject = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.of(plr))
+fun World.addNpc(id: Int, x: Int, y: Int, z: Int = 0): Npc {
+    val npc = Npc(ctx, id, Position(x, y, z))
+    return addNpc(npc)
+}
+
+/**
+ * Despawns an [Npc].
+ */
+fun World.removeNpc(npc: Npc) = npcs.remove(npc)
+
+/**
+ * Spawns a [GameObject].
+ */
+fun World.addObject(obj: GameObject): GameObject {
     return when {
-        objects.add(localObject) -> localObject
-        else -> throw IllegalStateException("$localObject Could not be spawned!");
+        objects.add(obj) -> obj
+        else -> throw IllegalStateException("$obj Could not be spawned!");
     }
 }
 
 /**
- * Spawns a global [GameObject].
+ * Spawns a [GameObject] for [plr].
  */
-fun World.addGlobalObject(id: Int,
-                          x: Int,
-                          y: Int,
-                          z: Int = 0,
-                          type: ObjectType = ObjectType.DEFAULT,
-                          direction: ObjectDirection = ObjectDirection.WEST): GameObject {
-    val globalObject = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.empty())
+fun World.addObject(id: Int,
+                    x: Int,
+                    y: Int,
+                    z: Int = 0,
+                    type: ObjectType = ObjectType.DEFAULT,
+                    direction: ObjectDirection = ObjectDirection.WEST,
+                    plr: Player? = null): GameObject {
+    val obj = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.ofNullable(plr))
+    return addObject(obj)
+}
+
+/**
+ * Spawns a [GameObject] for [plr] that will be removed after [ticks].
+ */
+fun World.addObject(id: Int,
+                    x: Int,
+                    y: Int,
+                    z: Int = 0,
+                    type: ObjectType = ObjectType.DEFAULT,
+                    direction: ObjectDirection = ObjectDirection.WEST,
+                    plr: Player? = null,
+                    ticks: Int): GameObject {
+    val obj = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.ofNullable(plr))
+    scheduleOnce(ticks) {
+        removeObject(obj)
+    }
+    return addObject(obj)
+}
+
+/**
+ * Despawns a [GameObject].
+ */
+fun World.removeObject(obj: GameObject): Boolean = objects.remove(obj)
+
+/**
+ * Despawns all [GameObject]s on [pos] that match [filter].
+ */
+fun World.removeObject(pos: Position, filter: GameObject.() -> Boolean = { true }): Boolean {
+    return objects.removeFromPosition(pos, filter)
+}
+
+/**
+ * Spawns a [GroundItem].
+ */
+fun World.addItem(item: GroundItem): GroundItem {
     return when {
-        objects.add(globalObject) -> globalObject
-        else -> throw IllegalStateException("$globalObject Could not be spawned!");
+        items.add(item) -> item
+        else -> throw IllegalStateException("$item Could not be spawned!");
     }
 }
 
 /**
- * Spawns a local [GroundItem] for [plr].
+ * Spawns a [GroundItem] for [plr].
  */
-fun World.addLocalItem(id: Int,
-                       amount: Int,
-                       x: Int,
-                       y: Int,
-                       z: Int = 0,
-                       plr: Player): GroundItem {
-    val localItem = GroundItem(ctx, id, amount, Position(x, y, z), Optional.of(plr))
-    return when {
-        items.add(localItem) -> localItem
-        else -> throw IllegalStateException("$localItem Could not be spawned!");
-    }
+fun World.addItem(id: Int,
+                  amount: Int = 1,
+                  x: Int,
+                  y: Int,
+                  z: Int = 0,
+                  plr: Player? = null): GroundItem {
+    val item = GroundItem(ctx, id, amount, Position(x, y, z), Optional.ofNullable(plr))
+    return addItem(item)
 }
 
 /**
- * Spawns a global [GroundItem].
+ * Spawns a [GroundItem] for [plr] that will be removed after [ticks].
  */
-fun World.addGlobalItem(id: Int,
-                        amount: Int,
-                        x: Int,
-                        y: Int,
-                        z: Int = 0): GroundItem {
-    val globalItem = GroundItem(ctx, id, amount, Position(x, y, z), Optional.empty())
-    return when {
-        items.add(globalItem) -> globalItem
-        else -> throw IllegalStateException("$globalItem Could not be spawned!");
+fun World.addItem(id: Int,
+                  amount: Int = 1,
+                  x: Int,
+                  y: Int,
+                  z: Int = 0,
+                  plr: Player? = null,
+                  ticks: Int): GroundItem {
+    val item = GroundItem(ctx, id, amount, Position(x, y, z), Optional.ofNullable(plr))
+    scheduleOnce(ticks) {
+        removeItem(item)
     }
+    return addItem(item)
+}
+
+/**
+ * Despawns a [GroundItem].
+ */
+fun World.removeItem(item: GroundItem): Boolean = items.remove(item)
+
+/**
+ * Despawns all [GroundItem]s on [pos] that match [filter].
+ */
+fun World.removeItem(pos: Position, filter: GroundItem.() -> Boolean = { true }): Boolean {
+    return items.removeFromPosition(pos, filter)
 }
 
 /**
