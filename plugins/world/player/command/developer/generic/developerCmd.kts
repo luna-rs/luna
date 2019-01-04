@@ -1,3 +1,4 @@
+
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -55,7 +56,19 @@ cmd("bank", RIGHTS_DEV) { plr.bank.open() }
  */
 cmd("npc", RIGHTS_DEV) {
     val npc = Npc(ctx, asInt(0), plr.position)
-    world.npcs.add(npc)
+    world.addNpc(npc)
+}
+
+/**
+ * A command that spawns a object.
+ */
+cmd("object", RIGHTS_DEV) {
+    val pos = plr.position
+    world.addObject(id = asInt(0),
+                    x = pos.x,
+                    y = pos.y,
+                    z = pos.z,
+                    plr = plr)
 }
 
 /**
