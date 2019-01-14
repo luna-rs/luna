@@ -1,0 +1,7 @@
+[metadata]
+name = "Restore skills"
+description = "A plugin that enables restoration of depleted and enhanced skills."
+version = "1.0"
+authors = [
+  "lare96"
+]
