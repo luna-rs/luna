@@ -1,7 +1,9 @@
 package io.luna.game.event;
 
-import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.util.Optional;
 /**
  * An Object passed through a pipeline to be intercepted by event listeners. Events should
  * <strong>always</strong> be immutable to ensure that they cannot be modified while being passed
@@ -10,6 +12,11 @@ import java.util.Optional;
  * @author lare96 <http://github.org/lare96>
  */
 public class Event {
+
+    /**
+     * The asynchronous logger.
+     */
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The pipeline this event is passing through.
