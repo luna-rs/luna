@@ -114,6 +114,14 @@ public abstract class Mob extends Entity {
      *
      * @param context The context instance.
      */
+    public Mob(LunaContext context, Position position, EntityType type) {
+        super(context, position, type);
+    }
+    /**
+     * Creates a new {@link Mob}.
+     *
+     * @param context The context instance.
+     */
     public Mob(LunaContext context, EntityType type) {
         super(context, type);
     }

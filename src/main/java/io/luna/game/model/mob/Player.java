@@ -1,7 +1,7 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.collect.ImmutableMap;
 import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
@@ -10,6 +10,7 @@ import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.World;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Inventory;
@@ -19,6 +20,7 @@ import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
+import io.luna.game.model.mob.persistence.SqlPlayerSerializer;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
@@ -33,6 +35,7 @@ import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -40,8 +43,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing a player-controlled mob.
@@ -122,12 +127,12 @@ public final class Player extends Mob {
     /**
      * A set of local players.
      */
-    private final Set<Player> localPlayers = new LinkedHashSet<>();
+    private final Set<Player> localPlayers = new LinkedHashSet<>(255);
 
     /**
      * A set of local npcs.
      */
-    private final Set<Npc> localNpcs = new LinkedHashSet<>();
+    private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
 
     /**
      * The appearance.
@@ -168,12 +173,11 @@ public final class Player extends Mob {
      * The text cache.
      */
     private final Map<Integer, String> textCache =
-            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : new HashMap<>(0);
+            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : ImmutableMap.of();
 
     /**
      * The cached update block.
      */
-    // TODO Might have to be volatile? Or atomic?
     private ByteMessage cachedBlock;
 
     /**
@@ -195,11 +199,6 @@ public final class Player extends Mob {
      * If the region has changed.
      */
     private boolean regionChanged;
-
-    /**
-     * The serializer.
-     */
-    private final PlayerSerializer serializer;
 
     /**
      * The running direction.
@@ -242,6 +241,11 @@ public final class Player extends Mob {
     private int privateMsgCounter = 1;
 
     /**
+     * The database identifier. Will always be -1 unless the {@link SqlPlayerSerializer} is being used.
+     */
+    private long databaseId = -1;
+
+    /**
      * If a teleportation is in progress.
      */
     private boolean teleporting;
@@ -270,7 +274,6 @@ public final class Player extends Mob {
     public Player(LunaContext context, PlayerCredentials credentials) {
         super(context, EntityType.PLAYER);
         this.credentials = credentials;
-        serializer = new PlayerSerializer(this);
     }
 
     @Override
@@ -313,8 +316,10 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        world.getItems().removeLocal(this);
+        world.getObjects().removeLocal(this);
         plugins.post(new LogoutEvent(this));
-        asyncSave();
+        save();
         LOGGER.info("{} has logged out.", this);
     }
 
@@ -361,18 +366,10 @@ public final class Player extends Mob {
     }
 
     /**
-     * Saves this player's data. <strong>Warning: It is more preferable to use {@link #asyncSave()} in
-     * general-use cases.</strong>
+     * Forwards to {@link World#savePlayer(Player)}.
      */
-    public void save() {
-        serializer.save();
-    }
-
-    /**
-     * Asynchronously saves this player's data.
-     */
-    public ListenableFuture<?> asyncSave() {
-        return serializer.asyncSave();
+    public Future<Boolean> save() {
+        return world.savePlayer(this);
     }
 
     /**
@@ -381,7 +378,7 @@ public final class Player extends Mob {
      *
      * @param msg The message to send.
      */
-    public void sendMessage(String msg) {
+    public void sendMessage(Object msg) {
         queue(new GameChatboxMessageWriter(msg));
     }
 
@@ -392,8 +389,13 @@ public final class Player extends Mob {
      * @param text The text to send.
      * @param id The widget identifier.
      */
-    public void sendText(String text, int id) {//TODO rename
-        queue(new WidgetTextMessageWriter(text, id));
+    public void sendText(String text, int id) {
+        requireNonNull(text);
+
+        String previous = LunaConstants.PACKET_126_CACHING ? null : textCache.put(id, text);
+        if (!text.equals(previous)) {
+            queue(new WidgetTextMessageWriter(text, id));
+        }
     }
 
     /**
@@ -472,7 +474,7 @@ public final class Player extends Mob {
      *
      * @param withdrawAsNote The value to set to.
      */
-    // No point in this being an attribute. Migrate to boolean within "Bank" class
+    // TODO No point in this being an attribute. Migrate to boolean within "Bank" class
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         if (attr.get() != withdrawAsNote) {
@@ -594,14 +596,42 @@ public final class Player extends Mob {
      * @return {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
      */
     public boolean isMuted() {
-        return !getUnmuteDate().equals("n/a");
+        String date = getUnmuteDate();
+        switch (date) {
+            case "never":
+                return true;
+            case "n/a":
+                return false;
+            default:
+                LocalDate lift = LocalDate.parse(date);
+                LocalDate now = LocalDate.now();
+                if (now.isAfter(lift)) {
+                    setUnmuteDate("n/a");
+                    return false;
+                }
+                return true;
+        }
     }
 
     /**
      * @return {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
      */
     public boolean isBanned() {
-        return !getUnbanDate().equals("n/a");
+        String date = getUnbanDate();
+        switch (date) {
+            case "never":
+                return true;
+            case "n/a":
+                return false;
+            default:
+                LocalDate lift = LocalDate.parse(date);
+                LocalDate now = LocalDate.now();
+                if (now.isAfter(lift)) {
+                    setUnbanDate("n/a");
+                    return false;
+                }
+                return true;
+        }
     }
 
     /**
@@ -659,14 +689,14 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return The set of local players.
+     * @return A set of local players.
      */
     public Set<Player> getLocalPlayers() {
         return localPlayers;
     }
 
     /**
-     * @return The set of local npcs.
+     * @return A set of local npcs.
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
@@ -837,13 +867,6 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return The text cache.
-     */
-    public Map<Integer, String> getTextCache() {
-        return textCache;
-    }
-
-    /**
      * @return The model animation.
      */
     public ModelAnimation getModelAnimation() {
@@ -911,6 +934,22 @@ public final class Player extends Mob {
      */
     public int newPrivateMessageId() {
         return privateMsgCounter++;
+    }
+
+    /**
+     * Sets the database identifier.
+     *
+     * @param databaseId The new value.
+     */
+    public void setDatabaseId(long databaseId) {
+        this.databaseId = databaseId;
+    }
+
+    /**
+     * @return The database identifier.
+     */
+    public long getDatabaseId() {
+        return databaseId;
     }
 
     /**
