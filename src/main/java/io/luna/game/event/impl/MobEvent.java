@@ -13,7 +13,7 @@ class MobEvent extends Event {
     /**
      * The mob.
      */
-    private final Mob mob;
+    protected final Mob mob;
 
     /**
      * Creates a new {@link MobEvent}.

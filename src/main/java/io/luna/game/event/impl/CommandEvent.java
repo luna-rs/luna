@@ -48,8 +48,12 @@ public final class CommandEvent extends PlayerEvent {
      * @param index The index.
      * @return The converted integer.
      */
-    public int asInt(int index) {
-        return Integer.parseInt(args[index]);
+    public Integer asInt(int index) {
+        try {
+            return Integer.valueOf(args[index]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

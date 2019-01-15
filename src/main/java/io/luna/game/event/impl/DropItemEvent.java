@@ -39,6 +39,11 @@ public final class DropItemEvent extends PlayerEvent {
         this.index = index;
     }
 
+    @Override
+    public boolean terminate() {
+        throw new IllegalStateException("This event type (DropItemEvent) cannot be terminated.");
+    }
+
     /**
      * @return The item identifier.
      */

@@ -74,6 +74,16 @@ public final class ItemOnItemEvent extends PlayerEvent {
     }
 
     /**
+     * Determines if {@code item} is equal to {@code usedId} or {@code targetId}.
+     *
+     * @param item The item.
+     * @return {@code true} if {@code item} is equal to any of the items used.
+     */
+    public boolean matches(int item) {
+        return item == usedId && item == targetId;
+    }
+
+    /**
      * @return The used item identifier.
      */
     public int getUsedId() {

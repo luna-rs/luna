@@ -51,7 +51,7 @@ public final class ItemOnObjectEvent extends PlayerEvent {
      * @param objectY The object's y coordinate.
      */
     public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId,
-        int objectX, int objectY) {
+                             int objectX, int objectY) {
         super(player);
         this.itemId = itemId;
         this.itemIndex = itemIndex;

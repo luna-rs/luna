@@ -1,5 +1,6 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -82,6 +83,13 @@ public class ObjectClickEvent extends PlayerEvent {
         this.id = id;
         this.x = x;
         this.y = y;
+    }
+
+    /**
+     * Retrieves the object's definition.
+     */
+    public ObjectDefinition def() {
+        return ObjectDefinition.ALL.retrieve(id);
     }
 
     /**
