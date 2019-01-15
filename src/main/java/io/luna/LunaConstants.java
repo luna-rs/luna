@@ -34,6 +34,7 @@ public final class LunaConstants {
             EXPERIENCE_MULTIPLIER = gameConstants.get("experience_multiplier").getAsDouble();
             PACKET_126_CACHING = gameConstants.get("packet_126_caching").getAsBoolean();
             PASSWORD_HASHING = gameConstants.get("password_hashing").getAsBoolean();
+            SERIALIZER = gameConstants.get("player_serializer").getAsString();
 
             JsonObject utilityConstants = tomlReader.getTable("utility").to(JsonObject.class);
             ASYNCHRONOUS_LOGGING = utilityConstants.get("asynchronous_logging").getAsBoolean();
@@ -73,7 +74,7 @@ public final class LunaConstants {
      * If staggered updating should be enabled. This feature is disabled by default because it introduces a slight
      * performance regression. It should only be enabled by highly populated servers.
      * <p>
-     * Only {@code 15} players and npcs are updated for a player per cycle regardless of how many are technically
+     * Only {@code 15} players and npc are updated for a player per cycle regardless of how many are technically
      * present around them. A mob that hasn't yet been updated for a player won't even be visible. This can pose
      * potential problems if a large volume of players are in one place.
      * <p>
@@ -119,4 +120,10 @@ public final class LunaConstants {
      * should always be enabled when in a production environment for security reasons.
      */
     public static final boolean PASSWORD_HASHING;
+
+    /**
+     * The serializer from the {@code io.luna.game.model.mob.persistence} package that will be used to serialize and
+     * deserialize player data.
+     */
+    public static final String SERIALIZER;
 }
