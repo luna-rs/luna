@@ -5,9 +5,14 @@ import io.luna.LunaContext;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.mob.Player;
+import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.AddGroundItemMessageWriter;
+import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
-import java.util.Objects;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -16,7 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class GroundItem extends Entity {
+public final class GroundItem extends StationaryEntity {
 
     /**
      * The item identifier.
@@ -36,8 +41,8 @@ public class GroundItem extends Entity {
      * @param amount The item amount.
      * @param position The position of the item.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position) {
-        super(context, EntityType.ITEM);
+    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) {
+        super(context, position, EntityType.ITEM, player);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
 
@@ -48,30 +53,26 @@ public class GroundItem extends Entity {
 
         this.id = id;
         this.amount = amount;
-
-        setPosition(position);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof GroundItem) {
-            GroundItem other = (GroundItem) obj;
-            return id == other.id && amount == other.amount;
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).add("amount", amount).toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, amount);
+        return System.identityHashCode(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj == this;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).
+                add("id", id).
+                add("amount", amount).
+                add("x", position.getX()).
+                add("y", position.getY()).
+                add("z", position.getZ()).toString();
     }
 
     @Override
@@ -79,13 +80,14 @@ public class GroundItem extends Entity {
         return 1;
     }
 
-    /**
-     * Returns this ground item as an {@link Item}.
-     *
-     * @return The converted ground item.
-     */
-    public Item toItem() {
-        return new Item(id, amount);
+    @Override
+    protected GameMessageWriter showMessage(int offset) {
+        return new AddGroundItemMessageWriter(id, amount, offset);
+    }
+
+    @Override
+    protected GameMessageWriter hideMessage(int offset) {
+        return new RemoveGroundItemMessageWriter(id, offset);
     }
 
     /**
