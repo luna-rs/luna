@@ -80,8 +80,11 @@ public final class LunaServer {
 
         initNetwork();
 
-        PluginManager plugins = context.getPlugins();
-        plugins.post(ServerLaunchEvent.INSTANCE); // Post an event for launch.
+        // Synchronize a launch event.
+        context.getService().sync(() -> {
+            PluginManager plugins = context.getPlugins();
+            plugins.post(ServerLaunchEvent.INSTANCE);
+        });
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
         LOGGER.info("Luna is now online on port {} (took {}s).", box(LunaConstants.PORT), box(elapsedTime));
