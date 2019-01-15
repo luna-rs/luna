@@ -15,21 +15,21 @@ public final class GameChatboxMessageWriter extends GameMessageWriter {
     /**
      * The message.
      */
-    private final String message;
+    private final Object message;
 
     /**
      * Creates a new {@link GameChatboxMessageWriter}.
      *
      * @param message The message.
      */
-    public GameChatboxMessageWriter(String message) {
+    public GameChatboxMessageWriter(Object message) {
         this.message = message;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(253, MessageType.VAR);
-        msg.putString(message);
+        msg.putString(message.toString());
         return msg;
     }
 }

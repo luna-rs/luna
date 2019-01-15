@@ -3,7 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -38,7 +38,7 @@ public final class InventoryOverlayMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(248);
-        msg.putShort(interfaceId, ByteTransform.A);
+        msg.putShort(interfaceId, ValueType.ADD);
         msg.putShort(overlayInterfaceId);
         return msg;
     }

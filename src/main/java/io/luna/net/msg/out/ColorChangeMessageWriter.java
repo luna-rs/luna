@@ -3,7 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -11,7 +11,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class ColorChangeMessageWriter extends GameMessageWriter {
+public final class ColorChangeMessageWriter extends GameMessageWriter {
 
     // TODO Find all color values and make enumeration of standard colors.
 
@@ -39,8 +39,8 @@ public class ColorChangeMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(122);
-        msg.putShort(id, ByteTransform.A, ByteOrder.LITTLE);
-        msg.putShort(color, ByteTransform.A, ByteOrder.LITTLE);
+        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(color, ValueType.ADD, ByteOrder.LITTLE);
         return msg;
     }
 }

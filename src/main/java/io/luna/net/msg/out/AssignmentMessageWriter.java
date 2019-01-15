@@ -3,7 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -30,8 +30,8 @@ public final class AssignmentMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(249);
-        msg.put(members ? 1 : 0, ByteTransform.A);
-        msg.putShort(player.getIndex(), ByteTransform.A, ByteOrder.LITTLE);
+        msg.put(members ? 1 : 0, ValueType.ADD);
+        msg.putShort(player.getIndex(), ValueType.ADD, ByteOrder.LITTLE);
         return msg;
     }
 }

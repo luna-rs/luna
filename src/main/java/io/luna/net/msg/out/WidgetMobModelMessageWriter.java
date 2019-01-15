@@ -3,7 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.util.OptionalInt;
@@ -51,11 +51,11 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
         ByteMessage msg;
         if (npcId.isPresent()) {
             msg = ByteMessage.message(75);
-            msg.putShort(npcId.getAsInt(), ByteTransform.A, ByteOrder.LITTLE);
-            msg.putShort(widgetId, ByteTransform.A, ByteOrder.LITTLE);
+            msg.putShort(npcId.getAsInt(), ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
         } else {
             msg = ByteMessage.message(185);
-            msg.putShort(widgetId, ByteTransform.A, ByteOrder.LITTLE);
+            msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
         }
         return msg;
     }

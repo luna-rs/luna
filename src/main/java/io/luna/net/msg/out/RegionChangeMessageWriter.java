@@ -2,7 +2,7 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -15,7 +15,7 @@ public final class RegionChangeMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(73);
-        msg.putShort(player.getPosition().getBottomLeftChunkX() + 6, ByteTransform.A);
+        msg.putShort(player.getPosition().getBottomLeftChunkX() + 6, ValueType.ADD);
         msg.putShort(player.getPosition().getBottomLeftChunkY() + 6);
         return msg;
     }

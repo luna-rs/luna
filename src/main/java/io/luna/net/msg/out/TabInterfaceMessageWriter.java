@@ -3,7 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -38,7 +38,7 @@ public final class TabInterfaceMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(71);
         msg.putShort(id);
-        msg.put(index.getId(), ByteTransform.A);
+        msg.put(index.getId(), ValueType.ADD);
         return msg;
     }
 }

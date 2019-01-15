@@ -1,10 +1,9 @@
 package io.luna.net.msg.out;
 
-import io.luna.LunaConstants;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -37,23 +36,9 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        if (!isTextCached(player)) {
-            ByteMessage msg = ByteMessage.message(126, MessageType.VAR_SHORT);
-            msg.putString(text);
-            msg.putShort(id, ByteTransform.A);
-            return msg;
-        }
-        return null;
-    }
-
-    /**
-     * Returns if the text about to be written is cached.
-     */
-    private boolean isTextCached(Player player) {
-        if (LunaConstants.PACKET_126_CACHING) {
-            String current = player.getTextCache().putIfAbsent(id, text);
-            return text.equals(current);
-        }
-        return false;
+        ByteMessage msg = ByteMessage.message(126, MessageType.VAR_SHORT);
+        msg.putString(text);
+        msg.putShort(id, ValueType.ADD);
+        return msg;
     }
 }

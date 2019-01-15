@@ -11,7 +11,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class SystemUpdateMessageWriter extends GameMessageWriter {
+public final class SystemUpdateMessageWriter extends GameMessageWriter {
 
     /**
      * The amount of ticks to show the message for.

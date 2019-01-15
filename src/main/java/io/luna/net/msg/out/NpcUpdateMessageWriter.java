@@ -39,7 +39,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             while (iterator.hasNext()) {
                 Npc other = iterator.next();
 
-                if (other.isViewable(player) &&
+                if (other.isViewableFrom(player) &&
                         other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
@@ -53,11 +53,11 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             ChunkManager chunks = player.getWorld().getChunks();
             int npcsAdded = 0;
 
-            for (Npc other : chunks.getViewableNpcs(player)) {
+            for (Npc other : chunks.npcUpdateSet(player)) {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }
-                if (other.isViewable(player) &&
+                if (other.isViewableFrom(player) &&
                         other.getState() == EntityState.ACTIVE &&
                         player.getLocalNpcs().add(other)) {
                     addNpc(player, other, msg);

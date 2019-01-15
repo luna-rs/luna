@@ -4,8 +4,8 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
 import io.luna.net.codec.MessageType;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Arrays;
@@ -58,7 +58,7 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
         for (Item item : items) {
             if (item == null) {
                 msg.put(0);
-                msg.putShort(0, ByteTransform.A, ByteOrder.LITTLE);
+                msg.putShort(0, ValueType.ADD, ByteOrder.LITTLE);
                 continue;
             }
 
@@ -68,7 +68,7 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
             } else {
                 msg.put(item.getAmount());
             }
-            msg.putShort(item.getId() + 1, ByteTransform.A, ByteOrder.LITTLE);
+            msg.putShort(item.getId() + 1, ValueType.ADD, ByteOrder.LITTLE);
         }
         return msg;
     }

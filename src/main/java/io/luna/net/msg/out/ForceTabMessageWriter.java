@@ -2,7 +2,7 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
@@ -42,7 +42,7 @@ public final class ForceTabMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(106);
-        msg.put(id, ByteTransform.C);
+        msg.put(id, ValueType.NEGATE);
         return msg;
     }
 }

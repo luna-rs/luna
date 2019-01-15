@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public class WalkableInterfaceMessageWriter extends GameMessageWriter {
+public final class WalkableInterfaceMessageWriter extends GameMessageWriter {
 
     /**
      * The interface identifier.

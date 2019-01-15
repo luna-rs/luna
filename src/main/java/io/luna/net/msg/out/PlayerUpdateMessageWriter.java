@@ -42,7 +42,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             while (iterator.hasNext()) {
                 Player other = iterator.next();
 
-                if (other.isViewable(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
+                if (other.isViewableFrom(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
@@ -55,7 +55,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             ChunkManager chunks = player.getWorld().getChunks();
             int playersAdded = 0;
 
-            for (Player other : chunks.getViewablePlayers(player)) {
+            for (Player other : chunks.playerUpdateSet(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
