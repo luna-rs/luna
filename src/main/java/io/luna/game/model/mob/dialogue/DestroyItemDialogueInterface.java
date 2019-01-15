@@ -6,7 +6,6 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
-import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.OptionalInt;
 
@@ -56,12 +55,12 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
         IndexedItem item = new IndexedItem(0, itemId, 1);
         player.queue(new WidgetIndexedItemsMessageWriter(14171, item));
 
-        player.queue(new WidgetTextMessageWriter("Are you sure you want to destroy this item?", 14174));
-        player.queue(new WidgetTextMessageWriter("Yes", 14175));
-        player.queue(new WidgetTextMessageWriter("No", 14176));
-        player.queue(new WidgetTextMessageWriter("There is no way to get items", 14182));
-        player.queue(new WidgetTextMessageWriter("back after you have destroyed them.", 14183));
-        player.queue(new WidgetTextMessageWriter(getDestroyItemName(), 14184));
+        player.sendText("Are you sure you want to destroy this item?", 14174);
+        player.sendText("Yes", 14175);
+        player.sendText("No", 14176);
+        player.sendText("There is no way to get items", 14182);
+        player.sendText("back after you have destroyed them.", 14183);
+        player.sendText(getDestroyItemName(), 14184);
         return true;
     }
 

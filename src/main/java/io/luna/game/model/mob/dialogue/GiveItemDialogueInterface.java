@@ -4,7 +4,6 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
-import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.util.StringUtils;
 
 /**
@@ -50,7 +49,7 @@ public final class GiveItemDialogueInterface extends DialogueInterface {
     @Override
     public boolean init(Player player) {
         if (player.getInventory().add(item)) {
-            player.queue(new WidgetTextMessageWriter(displayText, 308));
+            player.sendText(displayText, 308);
             player.queue(new WidgetItemModelMessageWriter(307, 200, item.getId()));
             return true;
         }

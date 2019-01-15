@@ -4,7 +4,6 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
-import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.util.DialogueUtils;
 
 /**
@@ -45,11 +44,11 @@ public class MakeItemDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      * @param id The identifier of the item clicked.
-     * @param index
+     * @param index The item index.
      * @param forAmount The amount clicked.
      */
     public void makeItem(Player player, int id, int index, int forAmount) {
-// TODO Change id, index, forAmount to IndexedItem?
+
     }
 
     @Override
@@ -59,8 +58,8 @@ public class MakeItemDialogueInterface extends DialogueInterface {
 
         if (items.length == 1) {
             // Because 1 & 3 share the same interface, for some reason.
-            player.queue(new WidgetTextMessageWriter("", 8889));
-            player.queue(new WidgetTextMessageWriter("", 8897));
+            player.sendText("", 8889);
+            player.sendText("", 8897);
             player.queue(new WidgetItemModelMessageWriter(8883, 100, -1));
             player.queue(new WidgetItemModelMessageWriter(8885, 100, -1));
         }
@@ -68,7 +67,7 @@ public class MakeItemDialogueInterface extends DialogueInterface {
         int index = 0;
         for (int id : items) {
             String itemName = ItemDefinition.ALL.retrieve(id).getName();
-            player.queue(new WidgetTextMessageWriter(itemName, textWidgets[index]));
+            player.sendText(itemName, textWidgets[index]);
             player.queue(new WidgetItemModelMessageWriter(modelWidgets[index], 175 - (items.length * 15), id));
             index++;
         }
