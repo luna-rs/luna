@@ -21,7 +21,7 @@ public final class ScriptExecutionException extends RuntimeException {
      * @param cause The cause of the failure.
      */
     public ScriptExecutionException(EventListener<?> listener, Exception cause) {
-        super("Listener failed to execute: " + listener.getScript(), cause);
+        super("Listener failed to execute for script: " + listener.getScript().getName(), cause);
         this.listener = listener;
     }
 
