@@ -13,8 +13,10 @@ import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * An {@link Entity} implementation representing an item on a tile.
@@ -32,6 +34,11 @@ public final class GroundItem extends StationaryEntity {
      * The item amount.
      */
     private final int amount;
+
+    /**
+     * The current amount of expiration minutes.
+     */
+    private OptionalInt expireMinutes = OptionalInt.of(0);
 
     /**
      * Creates a new {@link GroundItem}.
@@ -62,7 +69,7 @@ public final class GroundItem extends StationaryEntity {
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this;
+        return this == obj;
     }
 
     @Override
@@ -88,6 +95,52 @@ public final class GroundItem extends StationaryEntity {
     @Override
     protected GameMessageWriter hideMessage(int offset) {
         return new RemoveGroundItemMessageWriter(id, offset);
+    }
+
+    /**
+     * Sets whether or not this item will expire or not.
+     *
+     * @param expire The value.
+     */
+    public void setExpire(boolean expire) {
+        if (expire && !expireMinutes.isPresent()) {
+            expireMinutes = OptionalInt.of(0);
+        } else if (!expire && expireMinutes.isPresent()) {
+            expireMinutes = OptionalInt.empty();
+        }
+    }
+
+    /**
+     * Sets the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
+     * does not expire.
+     */
+    public void setExpireMinutes(int minutes) {
+        checkState(isExpire(), "This item does not expire.");
+        expireMinutes = OptionalInt.of(minutes);
+    }
+
+    /**
+     * Retrieves the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
+     * does not expire.
+     */
+    public int getExpireMinutes() {
+        return expireMinutes.getAsInt();
+    }
+
+    /**
+     * Determines if this item expires.
+     *
+     * @return {@code true} if this item expires.
+     */
+    public boolean isExpire() {
+        return expireMinutes.isPresent();
+    }
+
+    /**
+     * Retrieves the item definition instance.
+     */
+    public ItemDefinition def() {
+        return ItemDefinition.ALL.retrieve(id);
     }
 
     /**
