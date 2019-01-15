@@ -7,7 +7,6 @@ import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
-import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import java.util.BitSet;
 import java.util.Optional;
@@ -152,7 +151,7 @@ public final class Equipment extends ItemContainer {
                             append(value);
 
                     // Queue the packet to display it.
-                    player.queue(new WidgetTextMessageWriter(sb.toString(), widget));
+                    player.sendText(sb.toString(), widget);
                     sb.setLength(0);
                 }
             }

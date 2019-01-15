@@ -543,6 +543,37 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Replaces {@code amount} occurrences of {@code oldId} with {@code newId}.
+     *
+     * @param oldId The old item identifier.
+     * @param newId The new item identifier.
+     * @param amount The amount of occurrences to replace.
+     * @return {@code true} if at least one replace occurred.
+     */
+    public final boolean replace(int oldId, int newId, int amount) {
+        checkArgument(!isStackable(oldId) && !isStackable(newId), "Cannot replace stackable items.");
+
+        int times = 0;
+        startBulkUpdate();
+        try {
+            for (int index = 0; index < capacity; index++) {
+                if (times >= amount) {
+                    break;
+                }
+                Item item = get(index);
+                if (item != null && item.getId() == oldId) {
+                    Item newItem = item.withId(newId);
+                    set(index, newItem);
+                    times++;
+                }
+            }
+        } finally {
+            finishBulkUpdate();
+        }
+        return times > 0;
+    }
+
+    /**
      * Replaces all occurrences of {@code oldId} with {@code newId}. Returns {@code true} if at least one
      * was replaced.
      *
@@ -551,23 +582,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true}  if at least one item was replaced.
      */
     public final boolean replaceAll(int oldId, int newId) {
-        checkArgument(!isStackable(oldId) && !isStackable(newId), "Cannot replace stackable items.");
-
-        boolean replaced = false;
-        startBulkUpdate();
-        try {
-            for (int index = 0; index < capacity; index++) {
-                Item item = get(index);
-                if (item != null && item.getId() == oldId) {
-                    Item newItem = item.withId(newId);
-                    set(index, newItem);
-                    replaced = true;
-                }
-            }
-        } finally {
-            finishBulkUpdate();
-        }
-        return replaced;
+        return replace(oldId, newId, Integer.MAX_VALUE);
     }
 
     /**
