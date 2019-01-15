@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 /**
  * An {@link UpdateBlock} implementation for the {@code PRIMARY_HIT} update block.
@@ -26,18 +26,18 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Hit hit = unwrap(player.getPrimaryHit());
         msg.put(hit.getDamage());
-        msg.put(hit.getType().getOpcode(), ByteTransform.A);
-        msg.put(player.getCurrentHealth(), ByteTransform.C);
+        msg.put(hit.getType().getOpcode(), ValueType.ADD);
+        msg.put(player.getCurrentHealth(), ValueType.NEGATE);
         msg.put(player.getTotalHealth());
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         Hit hit = unwrap(npc.getPrimaryHit());
-        msg.put(hit.getDamage(), ByteTransform.C);
-        msg.put(hit.getType().getOpcode(), ByteTransform.S);
-        msg.put(npc.getCurrentHealth(), ByteTransform.S);
-        msg.put(npc.getTotalHealth(), ByteTransform.C);
+        msg.put(hit.getDamage(), ValueType.NEGATE);
+        msg.put(hit.getType().getOpcode(), ValueType.SUBTRACT);
+        msg.put(npc.getCurrentHealth(), ValueType.SUBTRACT);
+        msg.put(npc.getTotalHealth(), ValueType.NEGATE);
     }
 
     @Override

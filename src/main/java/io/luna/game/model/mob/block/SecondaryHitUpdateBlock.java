@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 /**
  * An {@link UpdateBlock} implementation for the {@code SECONDARY_HIT} update block.
@@ -25,17 +25,17 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Hit hit = unwrap(player.getSecondaryHit());
         msg.put(hit.getDamage());
-        msg.put(hit.getType().getOpcode(), ByteTransform.S);
+        msg.put(hit.getType().getOpcode(), ValueType.SUBTRACT);
         msg.put(player.getCurrentHealth());
-        msg.put(player.getTotalHealth(), ByteTransform.C);
+        msg.put(player.getTotalHealth(), ValueType.NEGATE);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         Hit hit = unwrap(npc.getSecondaryHit());
-        msg.put(hit.getDamage(), ByteTransform.A);
-        msg.put(hit.getType().getOpcode(), ByteTransform.C);
-        msg.put(npc.getCurrentHealth(), ByteTransform.A);
+        msg.put(hit.getDamage(), ValueType.ADD);
+        msg.put(hit.getType().getOpcode(), ValueType.NEGATE);
+        msg.put(npc.getCurrentHealth(), ValueType.ADD);
         msg.put(npc.getTotalHealth());
     }
 

@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 /**
  * An {@link UpdateBlock} implementation for the {@code CHAT} update block.
@@ -26,7 +26,7 @@ public final class ChatUpdateBlock extends UpdateBlock {
         Chat chat = unwrap(player.getChat());
         msg.putShort(chat.getColor() + chat.getEffects(), ByteOrder.LITTLE);
         msg.put(player.getRights().getClientValue());
-        msg.put(chat.getMessage().length, ByteTransform.C);
+        msg.put(chat.getMessage().length, ValueType.NEGATE);
         msg.putBytesReverse(chat.getMessage());
     }
 

@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 /**
  * An {@link UpdateBlock} implementation for the {@code ANIMATION} update block.
@@ -26,7 +26,7 @@ public final class AnimationUpdateBlock extends UpdateBlock {
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Animation animation = unwrap(player.getAnimation());
         msg.putShort(animation.getId(), ByteOrder.LITTLE);
-        msg.put(animation.getDelay(), ByteTransform.C);
+        msg.put(animation.getDelay(), ValueType.NEGATE);
     }
 
     @Override

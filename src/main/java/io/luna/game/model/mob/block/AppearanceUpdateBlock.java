@@ -8,7 +8,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 import java.util.OptionalInt;
 import java.util.function.Function;
@@ -54,7 +54,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
             // Append appearance block to block set buffer.
             int currentIndex = buf.getBuffer().writerIndex();
-            msg.put(currentIndex, ByteTransform.C);
+            msg.put(currentIndex, ValueType.NEGATE);
             msg.putBytes(buf);
         } finally {
             buf.release();

@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 
 /**
  * An {@link UpdateBlock} implementation for the {@code FACE_POSITION} update block.
@@ -25,7 +25,7 @@ public final class FacePositionUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Position position = unwrap(player.getFacePosition());
-        msg.putShort((position.getX() + 1) << 1, ByteTransform.A, ByteOrder.LITTLE);
+        msg.putShort((position.getX() + 1) << 1, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort((position.getY() + 1) << 1, ByteOrder.LITTLE);
     }
 
