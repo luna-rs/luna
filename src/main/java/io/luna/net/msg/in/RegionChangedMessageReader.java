@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.RegionChangedEvent;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -17,8 +18,13 @@ public final class RegionChangedMessageReader extends GameMessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         if (player.isRegionChanged()) {
             player.setRegionChanged(false);
+
+            World world = player.getWorld();
+            world.getChunks().resetEntities(player);
             return new RegionChangedEvent(player);
         }
         return null;
     }
+
+
 }

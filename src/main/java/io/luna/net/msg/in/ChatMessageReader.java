@@ -4,7 +4,7 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.ChatEvent;
 import io.luna.game.model.mob.Chat;
 import io.luna.game.model.mob.Player;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -19,10 +19,10 @@ public final class ChatMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
-        int effects = msg.getPayload().get(false, ByteTransform.S);
-        int color = msg.getPayload().get(false, ByteTransform.S);
+        int effects = msg.getPayload().get(false, ValueType.SUBTRACT);
+        int color = msg.getPayload().get(false, ValueType.SUBTRACT);
         int size = (msg.getSize() - 2);
-        byte[] message = msg.getPayload().getBytesReverse(size, ByteTransform.A);
+        byte[] message = msg.getPayload().getBytesReverse(size, ValueType.ADD);
 
         checkState(effects >= 0, "invalid effects value");
         checkState(color >= 0, "invalid color value");

@@ -9,10 +9,14 @@ import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectDirection;
+import io.luna.game.model.object.ObjectType;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -27,9 +31,9 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         int itemInterfaceId = msg.getPayload().getShort(false);
         int objectId = msg.getPayload().getShort(true, ByteOrder.LITTLE);
-        int objectY = msg.getPayload().getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int objectY = msg.getPayload().getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int itemIndexId = msg.getPayload().getShort(true, ByteOrder.LITTLE);
-        int objectX = msg.getPayload().getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int objectX = msg.getPayload().getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int itemId = msg.getPayload().getShort(false);
         int size = ObjectDefinition.ALL.retrieve(objectId).getSize();
 
@@ -37,7 +41,9 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
             return null;
         }
         Position position = new Position(objectX, objectY, player.getPosition().getZ());
-        GameObject object = new GameObject(player.getContext(), objectId, position); // TODO temporary
+
+        // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
+        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
         Event event = new ItemOnObjectEvent(player, itemId, itemIndexId,
                 itemInterfaceId, objectId, objectX, objectY);
         player.submitAction(new InteractionAction(player, object, event));
@@ -66,7 +72,6 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         checkState(objectX > 0, "objectX out of range");
         checkState(ItemDefinition.isIdValid(itemId), "itemId out of range");
 
-        // TODO make sure object exists
         switch (itemInterfaceId) {
             case 3214:
                 Inventory inventory = player.getInventory();

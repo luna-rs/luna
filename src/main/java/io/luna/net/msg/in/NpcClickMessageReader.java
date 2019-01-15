@@ -13,7 +13,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -84,7 +84,7 @@ public final class NpcClickMessageReader extends GameMessageReader {
      * @param msg The buffer to read from.
      */
     private void secondIndex(Player player, ByteMessage msg) {
-        int index = msg.getShort(ByteTransform.A, ByteOrder.LITTLE);
+        int index = msg.getShort(ValueType.ADD, ByteOrder.LITTLE);
         handleClick(player, index, NpcSecondClickEvent::new);
     }
 
@@ -95,7 +95,7 @@ public final class NpcClickMessageReader extends GameMessageReader {
      * @param msg The buffer to read from.
      */
     private void thirdIndex(Player player, ByteMessage msg) {
-        int index = msg.getShort(ByteTransform.A);
+        int index = msg.getShort(ValueType.ADD);
         handleClick(player, index, NpcThirdClickEvent::new);
     }
 

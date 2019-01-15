@@ -4,7 +4,7 @@ import io.luna.game.event.Event;
 import io.luna.game.event.impl.EquipItemEvent;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -20,8 +20,8 @@ public final class EquipItemMessageReader extends GameMessageReader {
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int itemId = msg.getPayload().getShort(false);
-        int index = msg.getPayload().getShort(false, ByteTransform.A);
-        int interfaceId = msg.getPayload().getShort(false, ByteTransform.A);
+        int index = msg.getPayload().getShort(false, ValueType.ADD);
+        int interfaceId = msg.getPayload().getShort(false, ValueType.ADD);
 
         checkState(itemId > 0, "itemId <= 0");
         checkState(index >= 0, "index < 0");

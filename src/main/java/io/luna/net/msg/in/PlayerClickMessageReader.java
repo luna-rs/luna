@@ -38,8 +38,8 @@ public final class PlayerClickMessageReader extends GameMessageReader {
         World world = player.getWorld();
         Player other = world.getPlayers().get(index);
         // TODO Change isViewable to canFindPath, after pathfinding
-        if (other == null || !other.isViewable(player) || other.equals(player)) {
-            throw new IllegalStateException("Invalid requested player.");
+        if (other == null || !other.isViewableFrom(player) || other.equals(player)) {
+            return null;
         }
         return new PlayerFourthClickEvent(player, index, other);
     }

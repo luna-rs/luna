@@ -7,7 +7,7 @@ import io.luna.game.model.mob.WalkingQueue;
 import io.luna.game.model.mob.WalkingQueue.Step;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -44,13 +44,13 @@ public final class WalkingMessageReader extends GameMessageReader {
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];
 
-        int x = payload.getShort(false, ByteTransform.A, ByteOrder.LITTLE);
+        int x = payload.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
         for (int i = 0; i < pathSize; i++) {
             path[i][0] = payload.get();
             path[i][1] = payload.get();
         }
         int y = payload.getShort(false, ByteOrder.LITTLE);
-        boolean running = payload.get(false, ByteTransform.S) == 1;
+        boolean running = payload.get(false, ValueType.SUBTRACT) == 1;
 
         walkingQueue.setRunningPath(running);
         walkingQueue.clear();

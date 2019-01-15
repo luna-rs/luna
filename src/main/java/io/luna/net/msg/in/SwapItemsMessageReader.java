@@ -4,7 +4,7 @@ import io.luna.game.event.Event;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -21,9 +21,9 @@ public final class SwapItemsMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
-        int interfaceId = msg.getPayload().getShort(ByteTransform.A, ByteOrder.LITTLE);
-        int insertionMode = msg.getPayload().get(ByteTransform.C);
-        int fromIndex = msg.getPayload().getShort(ByteTransform.A, ByteOrder.LITTLE);
+        int interfaceId = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int insertionMode = msg.getPayload().get(ValueType.NEGATE);
+        int fromIndex = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
         int toIndex = msg.getPayload().getShort(ByteOrder.LITTLE);
 
         checkState(interfaceId > 0, "interfaceId <= 0");

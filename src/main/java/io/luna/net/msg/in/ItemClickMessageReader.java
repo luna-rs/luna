@@ -11,7 +11,7 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -73,8 +73,8 @@ public final class ItemClickMessageReader extends GameMessageReader {
      * @return The event to post.
      */
     private Event firstIndex(Player player, ByteMessage msg) {
-        int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
-        int index = msg.getShort(false, ByteTransform.A);
+        int interfaceId = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int index = msg.getShort(false, ValueType.ADD);
         int id = msg.getShort(true, ByteOrder.LITTLE);
 
         if (!validate(player, id, index, interfaceId)) {
@@ -92,8 +92,8 @@ public final class ItemClickMessageReader extends GameMessageReader {
      */
     private Event secondIndex(Player player, ByteMessage msg) {
         int id = msg.getShort(false);
-        int index = msg.getShort(false, ByteTransform.A);
-        int interfaceId = msg.getShort(false, ByteTransform.A);
+        int index = msg.getShort(false, ValueType.ADD);
+        int interfaceId = msg.getShort(false, ValueType.ADD);
 
         if (!validate(player, id, index, interfaceId)) {
             return null;
@@ -109,9 +109,9 @@ public final class ItemClickMessageReader extends GameMessageReader {
      * @return The event to post.
      */
     private Event thirdIndex(Player player, ByteMessage msg) {
-        int id = msg.getShort(false, ByteTransform.A);
-        int index = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
-        int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int id = msg.getShort(false, ValueType.ADD);
+        int index = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int interfaceId = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
 
         if (!validate(player, id, index, interfaceId)) {
             return null;
@@ -127,9 +127,9 @@ public final class ItemClickMessageReader extends GameMessageReader {
      * @return The event to post.
      */
     private Event fourthIndex(Player player, ByteMessage msg) {
-        int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
-        int index = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
-        int id = msg.getShort(false, ByteTransform.A);
+        int interfaceId = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int index = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int id = msg.getShort(false, ValueType.ADD);
 
         if (!validate(player, id, index, interfaceId)) {
             return null;
@@ -145,9 +145,9 @@ public final class ItemClickMessageReader extends GameMessageReader {
      * @return The event to post.
      */
     private Event fifthIndex(Player player, ByteMessage msg) {
-        int id = msg.getShort(false, ByteTransform.A);
+        int id = msg.getShort(false, ValueType.ADD);
         int interfaceId = msg.getShort(false);
-        int index = msg.getShort(false, ByteTransform.A);
+        int index = msg.getShort(false, ValueType.ADD);
 
         if (!validate(player, id, index, interfaceId)) {
             return null;

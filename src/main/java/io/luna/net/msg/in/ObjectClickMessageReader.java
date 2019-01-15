@@ -9,11 +9,15 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.model.object.ObjectDirection;
+import io.luna.game.model.object.ObjectType;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -52,9 +56,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         checkState(evt.getY() >= 0, "y coordinate out of range");
         checkState(evt.getId() > 0, "id out of range");
 
-        // TODO: Make sure object really exists
+        // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
         Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
-        GameObject object = new GameObject(player.getContext(), evt.getId(), position);
+        GameObject object = new GameObject(player.getContext(), evt.getId(), position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
         player.submitAction(new InteractionAction(player, object, evt));
     }
 
@@ -62,9 +66,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * Handle an object click for the first index.
      */
     private void firstIndex(Player player, ByteMessage msg) {
-        int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int id = msg.getShort(false);
-        int y = msg.getShort(false, ByteTransform.A);
+        int y = msg.getShort(false, ValueType.ADD);
         handleClick(player, new ObjectFirstClickEvent(player, id, x, y));
     }
 
@@ -72,9 +76,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * Handle an object click for the second index.
      */
     private void secondIndex(Player player, ByteMessage msg) {
-        int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int id = msg.getShort(false);
-        int y = msg.getShort(false, ByteTransform.A);
+        int y = msg.getShort(false, ValueType.ADD);
         handleClick(player, new ObjectSecondClickEvent(player, id, x, y));
     }
 
@@ -82,9 +86,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * Handle an object click for the third index.
      */
     private void thirdIndex(Player player, ByteMessage msg) {
-        int x = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int id = msg.getShort(false);
-        int y = msg.getShort(false, ByteTransform.A);
+        int y = msg.getShort(false, ValueType.ADD);
         handleClick(player, new ObjectThirdClickEvent(player, id, x, y));
     }
 }

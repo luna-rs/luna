@@ -9,7 +9,7 @@ import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemThirdClickEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
-import io.luna.net.codec.ByteTransform;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
@@ -47,9 +47,9 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
      * @param msg The buffer to read from.
      */
     private Event firstIndex(Player player, ByteMessage msg) {
-        int interfaceId = msg.getShort(ByteTransform.A);
-        int index = msg.getShort(ByteTransform.A);
-        int itemId = msg.getShort(ByteTransform.A);
+        int interfaceId = msg.getShort(ValueType.ADD);
+        int index = msg.getShort(ValueType.ADD);
+        int itemId = msg.getShort(ValueType.ADD);
 
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
@@ -64,8 +64,8 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
      * @param msg The buffer to read from.
      */
     private Event secondIndex(Player player, ByteMessage msg) {
-        int interfaceId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
-        int itemId = msg.getShort(true, ByteTransform.A, ByteOrder.LITTLE);
+        int interfaceId = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int itemId = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int index = msg.getShort(true, ByteOrder.LITTLE);
 
         checkState(interfaceId > 0, "interfaceId <= 0");
@@ -82,8 +82,8 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
      */
     private Event thirdIndex(Player player, ByteMessage msg) {
         int interfaceId = msg.getShort(ByteOrder.LITTLE);
-        int itemId = msg.getShort(ByteTransform.A);
-        int index = msg.getShort(ByteTransform.A);
+        int itemId = msg.getShort(ValueType.ADD);
+        int index = msg.getShort(ValueType.ADD);
 
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
@@ -98,9 +98,9 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
      * @param msg The buffer to read from.
      */
     private Event fourthIndex(Player player, ByteMessage msg) {
-        int index = msg.getShort(ByteTransform.A);
+        int index = msg.getShort(ValueType.ADD);
         int interfaceId = msg.getShort();
-        int itemId = msg.getShort(ByteTransform.A);
+        int itemId = msg.getShort(ValueType.ADD);
 
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
@@ -116,7 +116,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
      */
     private Event fifthIndex(Player player, ByteMessage msg) {
         int index = msg.getShort(ByteOrder.LITTLE);
-        int interfaceId = msg.getShort(false, ByteTransform.A);
+        int interfaceId = msg.getShort(false, ValueType.ADD);
         int itemId = msg.getShort(ByteOrder.LITTLE);
 
         checkState(interfaceId > 0, "interfaceId <= 0");
