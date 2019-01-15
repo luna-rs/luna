@@ -5,10 +5,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,34 +25,21 @@ public final class ExecutorUtils {
      * @return The new cached thread pool.
      */
     public static ListeningExecutorService newCachedThreadPool(int maxThreads) {
-        return newCachedThreadPool(maxThreads, Executors.defaultThreadFactory());
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build();
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(0, maxThreads, 60L,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        executor.setThreadFactory(threadFactory);
+        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
+        return MoreExecutors.listeningDecorator(executor);
     }
 
     /**
-     * Create a new cached thread pool with a capacity of {@code maxThreads}.
+     * Create a new cached thread pool with a capacity of {@code ThreadUtils.cpuCount() * 2}.
      *
-     * @param maxThreads The thread pool capacity.
-     * @param defaultName The default name for the threads in this pool.
      * @return The new cached thread pool.
      */
-    public static ListeningExecutorService newCachedThreadPool(int maxThreads, String defaultName) {
-        ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat(defaultName).build();
-        return newCachedThreadPool(maxThreads, tf);
-    }
-
-    /**
-     * Create a new cached thread pool with a capacity of {@code maxThreads} that uses {@code tf} to instantiate
-     * new threads.
-     *
-     * @param maxThreads The thread pool capacity.
-     * @param tf The thread factory.
-     * @return The new cached thread pool.
-     */
-    public static ListeningExecutorService newCachedThreadPool(int maxThreads, ThreadFactory tf) {
-        ThreadPoolExecutor delegate =
-                new ThreadPoolExecutor(0, maxThreads, 1, TimeUnit.MINUTES, new SynchronousQueue<>());
-        delegate.setThreadFactory(tf);
-        return MoreExecutors.listeningDecorator(delegate);
+    public static ListeningExecutorService newCachedThreadPool() {
+        return newCachedThreadPool(ThreadUtils.cpuCount() * 2);
     }
 
     /**
