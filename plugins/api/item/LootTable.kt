@@ -14,10 +14,21 @@ class LootTable(private val items: List<LootTableItem>) : Iterable<LootTableItem
     override fun iterator(): Iterator<LootTableItem> = items.iterator()
 
     /**
-     * Picks [amount] items from this loot table.
+     * Rolls on one item from this loot table.
      */
-    fun pick(amount: Int): List<Item> {
-        val lootItems = ArrayList<Item>(amount)
+    fun pick(): Item? {
+        val all = pickAll()
+        return when (all.isEmpty()) {
+            true -> null
+            false -> all.random()
+        }
+    }
+
+    /**
+     * Rolls on all items from this loot table.
+     */
+    fun pickAll(): List<Item> {
+        val lootItems = ArrayList<Item>(items.size)
         for (loot in items) {
             if (roll(loot)) {
                 lootItems += loot.getItem()
@@ -25,16 +36,6 @@ class LootTable(private val items: List<LootTableItem>) : Iterable<LootTableItem
         }
         return lootItems
     }
-
-    /**
-     * Picks one item from this loot table.
-     */
-    fun pick(): Item = pickAll().random()
-
-    /**
-     * Picks all items from this loot table.
-     */
-    fun pickAll(): List<Item> = pick(items.size)
 
     /**
      * Determines if [loot] will be picked based on its rarity.
