@@ -20,7 +20,7 @@ val messages = listOf(
  */
 fun sendMessages() {
     world.players.stream()
-        .filter { it.rights < RIGHTS_ADMIN } // Only send if < Admin rank.
+        .filter { it.rights < RIGHTS_ADMIN }
         .forEach { it.sendMessage(messages.random()) }
 }
 
