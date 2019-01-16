@@ -20,7 +20,7 @@ public final class RegionChangedMessageReader extends GameMessageReader {
             player.setRegionChanged(false);
 
             World world = player.getWorld();
-            world.getChunks().resetEntities(player);
+            world.getChunks().updateEntities(player);
             return new RegionChangedEvent(player);
         }
         return null;
