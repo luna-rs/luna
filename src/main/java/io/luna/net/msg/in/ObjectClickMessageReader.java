@@ -76,9 +76,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * Handle an object click for the second index.
      */
     private void secondIndex(Player player, ByteMessage msg) {
-        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
-        int id = msg.getShort(false);
-        int y = msg.getShort(false, ValueType.ADD);
+        int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+        int y = msg.getShort(true, ByteOrder.LITTLE);
+        int x = msg.getShort(false, ValueType.ADD);
         handleClick(player, new ObjectSecondClickEvent(player, id, x, y));
     }
 
@@ -86,9 +86,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
      * Handle an object click for the third index.
      */
     private void thirdIndex(Player player, ByteMessage msg) {
-        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
-        int id = msg.getShort(false);
-        int y = msg.getShort(false, ValueType.ADD);
+        int x = msg.getShort(true, ByteOrder.LITTLE);
+        int y = msg.getShort(false);
+        int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
         handleClick(player, new ObjectThirdClickEvent(player, id, x, y));
     }
 }

@@ -1045,7 +1045,8 @@
   },
   {
     "opcode": 252,
-    "size": 6
+    "size": 6,
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 253,
