@@ -5,6 +5,7 @@ import io.luna.game.model.World
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
+import io.luna.game.model.chunk.ChunkManager
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -80,24 +81,6 @@ fun World.addObject(id: Int,
 }
 
 /**
- * Spawns a [GameObject] for [plr] that will be removed after [ticks].
- */
-fun World.addObject(id: Int,
-                    x: Int,
-                    y: Int,
-                    z: Int = 0,
-                    type: ObjectType = ObjectType.DEFAULT,
-                    direction: ObjectDirection = ObjectDirection.WEST,
-                    plr: Player? = null,
-                    ticks: Int): GameObject {
-    val obj = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.ofNullable(plr))
-    scheduleOnce(ticks) {
-        removeObject(obj)
-    }
-    return addObject(obj)
-}
-
-/**
  * Despawns a [GameObject].
  */
 fun World.removeObject(obj: GameObject): Boolean = objects.remove(obj)
@@ -133,23 +116,6 @@ fun World.addItem(id: Int,
 }
 
 /**
- * Spawns a [GroundItem] for [plr] that will be removed after [ticks].
- */
-fun World.addItem(id: Int,
-                  amount: Int = 1,
-                  x: Int,
-                  y: Int,
-                  z: Int = 0,
-                  plr: Player? = null,
-                  ticks: Int): GroundItem {
-    val item = GroundItem(ctx, id, amount, Position(x, y, z), Optional.ofNullable(plr))
-    scheduleOnce(ticks) {
-        removeItem(item)
-    }
-    return addItem(item)
-}
-
-/**
  * Despawns a [GroundItem].
  */
 fun World.removeItem(item: GroundItem): Boolean = items.remove(item)
@@ -181,6 +147,33 @@ fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
         it.cancel()
     }
 }
+
+
+/*******************************************
+ *                                         *
+ *  [ChunkManager] ext. functions  *
+ *                                         *
+ ******************************************/
+
+/**
+ * Shortcut to [ChunkManager.getViewableEntities] for [Player]s.
+ */
+fun ChunkManager.getViewablePlayers(position: Position) = getViewableEntities<Player>(position, TYPE_PLAYER)
+
+/**
+ * Shortcut to [ChunkManager.getViewableEntities] for [Npc]s.
+ */
+fun ChunkManager.getViewableNpcs(position: Position) = getViewableEntities<Npc>(position, TYPE_NPC)
+
+/**
+ * Shortcut to [ChunkManager.getViewableEntities] for [GroundItem]s.
+ */
+fun ChunkManager.getViewableItems(position: Position) = getViewableEntities<GroundItem>(position, TYPE_ITEM)
+
+/**
+ * Shortcut to [ChunkManager.getViewableEntities] for [GameObject]s.
+ */
+fun ChunkManager.getViewableObjects(position: Position) = getViewableEntities<GameObject>(position, TYPE_OBJECT)
 
 
 /*******************************************
