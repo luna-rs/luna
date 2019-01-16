@@ -1,16 +1,20 @@
 package io.luna.game.model;
 
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.model.chunk.ChunkManager;
+import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.persistence.PlayerPersistence;
+import io.luna.game.model.object.GameObjectList;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
+import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
@@ -23,8 +27,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A model that performs world processing and synchronization for mobs.
@@ -85,12 +91,12 @@ public final class World {
     private final MobList<Player> playerList = new MobList<>(2048);
 
     /**
-     * A list of active npcs.
+     * A list of active npc.
      */
     private final MobList<Npc> npcList = new MobList<>(16384);
 
     /**
-     * A queue of players awaiting login.
+     * A queue of login requests.
      */
     private final Queue<Player> logins = new ConcurrentLinkedQueue<>();
 
@@ -115,6 +121,21 @@ public final class World {
     private final ShopManager shops = new ShopManager();
 
     /**
+     * The game object manager.
+     */
+    private final GameObjectList objects = new GameObjectList(this);
+
+    /**
+     * The ground item manager.
+     */
+    private final GroundItemList items = new GroundItemList(this);
+
+    /**
+     * The player persistence manager.
+     */
+    private final PlayerPersistence persistence = new PlayerPersistence();
+
+    /**
      * A synchronization barrier.
      */
     private final Phaser barrier = new Phaser(1);
@@ -125,6 +146,11 @@ public final class World {
     private final ExecutorService service;
 
     /**
+     * The current tick.
+     */
+    private AtomicLong currentTick = new AtomicLong();
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -133,11 +159,11 @@ public final class World {
         this.context = context;
     }
 
-    { // Initialize synchronization thread pool.
+    {
+        // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().
                 setNameFormat("WorldSynchronizationThread").build();
-        ExecutorService delegate = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
-        service = MoreExecutors.listeningDecorator(delegate);
+        service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
     }
 
     /**
@@ -219,6 +245,9 @@ public final class World {
 
         // Handle logouts.
         dequeueLogouts();
+
+        // Increment tick counter.
+        currentTick.incrementAndGet();
     }
 
     /**
@@ -282,6 +311,26 @@ public final class World {
     }
 
     /**
+     * Asynchronously saves persistent data for {@code player}.
+     *
+     * @param player The player.
+     * @return A future returning {@code true} if the save was successful.
+     */
+    public Future<Boolean> savePlayer(Player player) {
+        return persistence.save(player);
+    }
+
+    /**
+     * Loads persistent data for {@code player}.
+     *
+     * @param player The player.
+     * @return A future returning the login response.
+     */
+    public ListenableFuture<LoginResponse> loadPlayer(Player player) {
+        return persistence.load(player);
+    }
+
+    /**
      * Retrieves a player by their username hash. Faster than {@link World#getPlayer(String)}
      *
      * @param username The username hash.
@@ -330,10 +379,24 @@ public final class World {
     }
 
     /**
-     * @return A list of active npcs.
+     * @return A list of active npc.
      */
     public MobList<Npc> getNpcs() {
         return npcList;
+    }
+
+    /**
+     * @return The game object manager.
+     */
+    public GameObjectList getObjects() {
+        return objects;
+    }
+
+    /**
+     * @return The ground item manager.
+     */
+    public GroundItemList getItems() {
+        return items;
     }
 
     /**
@@ -341,5 +404,19 @@ public final class World {
      */
     public ShopManager getShops() {
         return shops;
+    }
+
+    /**
+     * @return The player persistence manager.
+     */
+    public PlayerPersistence getPersistence() {
+        return persistence;
+    }
+
+    /**
+     * @return The current tick.
+     */
+    public AtomicLong getCurrentTick() {
+        return currentTick;
     }
 }
