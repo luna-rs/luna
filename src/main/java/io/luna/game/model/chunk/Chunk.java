@@ -3,13 +3,15 @@ package io.luna.game.model.chunk;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Position;
 
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * A model containing entities and updates for those entities within a chunk.
@@ -31,8 +33,8 @@ public final class Chunk {
     {
         Map<EntityType, Set<Entity>> map = new EnumMap<>(EntityType.class);
         for (EntityType type : EntityType.ALL) {
-            // Create concurrent sets for each entity type.
-            map.put(type, Sets.newConcurrentHashSet());
+            // Create sets for each entity type.
+            map.put(type, new HashSet<>(4));
         }
         entities = Maps.immutableEnumMap(map);
     }
@@ -114,9 +116,28 @@ public final class Chunk {
     }
 
     /**
+     * Returns a stream over {@code type} entities in this chunk.
+     *
+     * @param type The entity type.
+     * @param <E> The type.
+     * @return The stream.
+     */
+    public <E extends Entity> Stream<E> stream(EntityType type) {
+        //noinspection unchecked
+        return (Stream<E>) entities.get(type).stream();
+    }
+
+    /**
      * @return The position.
      */
     public ChunkPosition getPosition() {
         return position;
+    }
+
+    /**
+     * @return This chunk's absolute position.
+     */
+    public Position getAbsolutePosition() {
+        return new Position(position.getAbsX(), position.getAbsY());
     }
 }

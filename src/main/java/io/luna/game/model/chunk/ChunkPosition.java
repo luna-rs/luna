@@ -70,6 +70,18 @@ public final class ChunkPosition {
     }
 
     /**
+     * Returns the offset of {@code position} from this chunk.
+     *
+     * @param position The position.
+     * @return The offset.
+     */
+    public int offset(Position position) {
+        int deltaX = position.getX() - getAbsX();
+        int deltaY = position.getY() - getAbsY();
+        return deltaX << 4 + deltaY;
+    }
+
+    /**
      * Returns a new {@link ChunkPosition} translated by {@code addX} and {@code addY}.
      *
      * @param addX The x translation.
@@ -81,6 +93,20 @@ public final class ChunkPosition {
             return this;
         }
         return new ChunkPosition(x + addX, y + addY);
+    }
+
+    /**
+     * @return The absolute {@code x} coordinate.
+     */
+    public int getAbsX() {
+        return (x + 6) * 8;
+    }
+
+    /**
+     * @return The absolute {@code y} coordinate.
+     */
+    public int getAbsY() {
+        return (y + 6) * 8;
     }
 
     /**
@@ -101,28 +127,6 @@ public final class ChunkPosition {
      */
     public int getLocalY(Position position) {
         return position.getY() % ChunkPosition.SIZE;
-    }
-
-    /**
-     * Converts this {@link ChunkPosition} into a {@link Position}.
-     *
-     * @return The absolute position, from this chunk.
-     */
-    public Position getAbsolute() {
-        return new Position((x + 6) * 8, (y + 6) * 8);
-    }
-
-    /**
-     * Returns the offset of {@code position} from this chunk.
-     *
-     * @param position The position.
-     * @return The offset.
-     */
-    public int computeOffset(Position position) {
-        Position abs = getAbsolute();
-        int deltaX = position.getX() - abs.getX();
-        int deltaY = position.getY() - abs.getY();
-        return deltaX << 4 | deltaY;
     }
 
     /**
