@@ -28,7 +28,7 @@ public final class ActionSet {
             if (current.isRunning()) {
                 if (current.isEqual(pending)) {
                     current.onEquals(pending);
-                    return; // Ignore repeated clicks.
+                    return;
                 }
                 current.interrupt();
             }

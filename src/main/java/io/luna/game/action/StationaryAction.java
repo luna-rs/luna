@@ -36,7 +36,7 @@ public abstract class StationaryAction<T extends Mob> extends Action<T> {
      *
      * @return {@code false} to interrupt the action.
      */
-    protected boolean canInit() {
+    protected boolean canInit() { // TODO let canproduce, etc. delegate to this
         return true;
     }
 }
