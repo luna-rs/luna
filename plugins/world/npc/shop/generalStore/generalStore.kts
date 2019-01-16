@@ -1,7 +1,9 @@
 import api.predef.*
+import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.item.shop.ShopInterface
 
 shop {
     name = "General Store"
@@ -15,7 +17,6 @@ shop {
         "Tinderbox" x 15
         "Chisel" x 15
         "Hammer" x 15
-        "Newcomer map" x 15
         "Bucket" x 15
         "Bowl" x 15
         "Anti-dragon shield" x 50
@@ -25,4 +26,22 @@ shop {
     open {
         npc2 = 520
     }
+}
+
+/**
+ * Dialogue for "Talk" option.
+ */
+npc1(520) {
+    plr.newDialogue()
+        .npc(npc.id, "Hi, here's what I have in stock for today!")
+        .then { it.interfaces.open(ShopInterface(world, "General Store")) }
+}
+
+/**
+ * Spawn general store NPC.
+ */
+on(ServerLaunchEvent::class) {
+    world.addNpc(id = 520,
+                 x = 3091,
+                 y = 3250)
 }
