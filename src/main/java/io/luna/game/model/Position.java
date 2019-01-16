@@ -36,6 +36,11 @@ public final class Position {
     private final int z;
 
     /**
+     * The chunk position.
+     */
+    private transient final ChunkPosition chunkPosition;
+
+    /**
      * Creates a new {@link Position}.
      *
      * @param x The x coordinate.
@@ -50,6 +55,7 @@ public final class Position {
         this.x = x;
         this.y = y;
         this.z = z;
+        chunkPosition = new ChunkPosition(this);
     }
 
     /**
@@ -206,7 +212,7 @@ public final class Position {
      * @return The chunk position.
      */
     public ChunkPosition getChunkPosition() {
-        return new ChunkPosition(this);
+        return chunkPosition;
     }
 
     /**
