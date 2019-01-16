@@ -49,7 +49,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * A thread pool for low-priority tasks.
      */
-    private final ListeningExecutorService threadPool = ExecutorUtils.newCachedThreadPool(5, "LunaWorkerThread");
+    private final ListeningExecutorService threadPool = ExecutorUtils.newCachedThreadPool();
 
     /**
      * Creates a new {@link GameService}.
@@ -166,9 +166,9 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a result-bearing and listening asynchronous task. <strong>Warning: Tasks may not be ran right
-     * away, as there is a limit to how large the backing pool can grow to.</strong> This is to prevent DOS type
-     * attacks.
+     * Runs a result-bearing and listening asynchronous task. <strong>Warning: Tasks may not be ran right away, as
+     * there is a limit to how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you
+     * require a faster pool for higher priority tasks, consider using a dedicated pool from {@link ExecutorUtils}.
      *
      * @param t The task to run.
      * @return The result of {@code t}.
@@ -178,8 +178,9 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a listening asynchronous task. <strong>Warning: Tasks may not be ran right away, as there is a limit
-     * to how large the backing pool can grow to.</strong> This is to prevent DOS type attacks.
+     * Runs a listening asynchronous task.  <strong>Warning: Tasks may not be ran right away, as there is a limit to
+     * how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you require a faster
+     * pool for higher priority tasks, consider using a dedicated pool from {@link ExecutorUtils}.
      *
      * @param t The task to run.
      * @return The result of {@code t}.
