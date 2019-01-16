@@ -4,6 +4,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.Queue;
+import java.util.function.Consumer;
 
 /**
  * A model representing a queue of {@link DialogueInterface}s that will be shown in sequential order. New
@@ -24,6 +25,11 @@ public final class DialogueQueue {
     private final Queue<DialogueInterface> dialogues;
 
     /**
+     * The action to execute at the tail of the dialogue.
+     */
+    private Consumer<Player> tailAction;
+
+    /**
      * Creates a new {@link DialogueQueue}.
      *
      * @param player The player.
@@ -35,6 +41,15 @@ public final class DialogueQueue {
     }
 
     /**
+     * Sets a new action to execute at the tail of the dialogue.
+     *
+     * @param tailAction The new value.
+     */
+    public void setTailAction(Consumer<Player> tailAction) {
+        this.tailAction = tailAction;
+    }
+
+    /**
      * Advances this dialogue queue by {@code 1}, and displays the next dialogue.
      */
     public void advance() {
@@ -43,7 +58,11 @@ public final class DialogueQueue {
             player.getInterfaces().open(nextDialogue);
         } else {
             // Dialogues are finished.
-            player.getInterfaces().close();
+            if (tailAction == null) {
+                player.getInterfaces().close();
+            } else {
+                tailAction.accept(player);
+            }
             player.resetDialogues();
         }
     }

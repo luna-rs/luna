@@ -243,7 +243,7 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Attaches the argued consumer to the last appended dialogue.
+     * Attaches the argued consumer to the last appended dialogue, to be ran when the dialogue opens.
      *
      * @param action The action to run.
      * @return This builder, for chaining.
@@ -266,11 +266,31 @@ public final class DialogueQueueBuilder {
     }
 
     /**
+     * Attaches the argued consumer to the dialogue queue, to be ran when the dialogue is forwarded.
+     *
+     * @param action The action to run.
+     * @return This builder, for chaining.
+     */
+    public void then(Consumer<Player> action) {
+        checkLocked();
+        if (dialogues.isEmpty()) {
+            action.accept(player);
+        } else {
+            DialogueQueue queue = new DialogueQueue(player, dialogues);
+            queue.advance();
+            queue.setTailAction(action);
+
+            player.setDialogues(queue);
+        }
+        locked = true;
+    }
+
+    /**
      * Creates and advances a new dialogue queue. Sets this builder's internal queue as the Player's current
      * dialogue queue.
      */
     public void open() {
-        if(dialogues.size() == 1) {
+        if (dialogues.size() == 1) {
             // Optimization for single-entry dialogues.
             player.getInterfaces().open(dialogues.peekFirst());
         } else {
