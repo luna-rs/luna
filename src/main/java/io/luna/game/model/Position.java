@@ -38,7 +38,7 @@ public final class Position {
     /**
      * The chunk position.
      */
-    private transient final ChunkPosition chunkPosition;
+    private transient ChunkPosition chunkPosition;
 
     /**
      * Creates a new {@link Position}.
@@ -55,7 +55,6 @@ public final class Position {
         this.x = x;
         this.y = y;
         this.z = z;
-        chunkPosition = new ChunkPosition(this);
     }
 
     /**
@@ -212,6 +211,9 @@ public final class Position {
      * @return The chunk position.
      */
     public ChunkPosition getChunkPosition() {
+        if (chunkPosition == null) {
+            chunkPosition = new ChunkPosition(this);
+        }
         return chunkPosition;
     }
 
