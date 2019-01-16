@@ -4,6 +4,7 @@ import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.impl.PositionChangeEvent;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.plugin.PluginManager;
 
@@ -61,6 +62,23 @@ public abstract class Entity {
      * Creates a new {@link Entity}.
      *
      * @param context The context instance.
+     * @param position The current position.
+     * @param type The type.
+     */
+    public Entity(LunaContext context, Position position, EntityType type) {
+        this.context = context;
+        this.position = position;
+        this.type = type;
+
+        plugins = context.getPlugins();
+        service = context.getService();
+        world = context.getWorld();
+    }
+
+    /**
+     * Creates a new {@link Entity}.
+     *
+     * @param context The context instance.
      * @param type The type.
      */
     public Entity(LunaContext context, EntityType type) {
@@ -103,7 +121,7 @@ public abstract class Entity {
      * @param other The entity to compare.
      * @return {@code true} if {@code other} is viewable.
      */
-    public boolean isViewable(Entity other) {
+    public boolean isViewableFrom(Entity other) {
         return position.isViewable(other.position);
     }
 
@@ -142,14 +160,17 @@ public abstract class Entity {
         state = newState;
         switch (state) {
             case ACTIVE:
-                checkState(position != null, "ACTIVE entity must have position set.");
+                checkState(position != null, "Cannot be ACTIVE until position is set.");
 
                 setCurrentChunk();
                 onActive();
                 break;
             case INACTIVE:
-                onInactive();
-                removeCurrentChunk();
+                try {
+                    onInactive();
+                } finally {
+                    removeCurrentChunk();
+                }
                 break;
         }
     }
@@ -160,13 +181,12 @@ public abstract class Entity {
      * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
-        checkState(state != EntityState.INACTIVE, "Cannot set position for INACTIVE entity.");
         if (!newPosition.equals(position)) {
             Position old = position;
             position = newPosition;
-            plugins.post(new PositionChangeEvent(this, old, newPosition));
 
             if (state == EntityState.ACTIVE) {
+                plugins.post(new PositionChangeEvent(this, old, newPosition));
                 setCurrentChunk();
             }
         }
@@ -246,6 +266,20 @@ public abstract class Entity {
      */
     public final Position getPosition() {
         return position;
+    }
+
+    /**
+     * @return A new instance of the chunk position.
+     */
+    public final ChunkPosition getChunkPosition() {
+        return position.getChunkPosition();
+    }
+
+    /**
+     * @return The chunk manager.
+     */
+    public ChunkManager getChunks() {
+        return world.getChunks();
     }
 
     /**
