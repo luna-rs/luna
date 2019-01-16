@@ -13,7 +13,8 @@ val messages = listOf(
         "Luna is a Runescape  server designed for the #317 protocol.",
         "Luna can be found on GitHub under luna-rs/luna",
         "Change these messages in the 'Announcements' plugin.",
-        "Any bugs found using Luna should be reported to the GitHub page.")
+        "Any bugs found using Luna should be reported to the GitHub page.",
+        "Did you know? Chili peppers are awesome!")
 
 /**
  * Sends one global message, randomly selected from the list of messages.
