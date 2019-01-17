@@ -5,6 +5,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
@@ -20,6 +21,14 @@ cmd("attr", RIGHTS_DEV) {
     } else {
         plr.sendMessage("Attribute '$name' does not exist.")
     }
+}
+
+/**
+ * A command that makes all stats 99.
+ */
+cmd("master", RIGHTS_DEV) {
+    plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
+    plr.sendMessage("You have set all your skills to level 99.")
 }
 
 /**
