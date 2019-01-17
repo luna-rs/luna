@@ -65,6 +65,17 @@ public final class DialogueQueueBuilder {
     }
 
     /**
+     * Shortcut to {@link NpcDialogueInterface#NpcDialogueInterface(int, int, String...)}.
+     *
+     * @return This builder, for chaining.
+     */
+    public DialogueQueueBuilder npc(int npcId, int expression, String... text) {
+        checkLocked();
+        dialogues.add(new NpcDialogueInterface(npcId, expression, text));
+        return this;
+    }
+
+    /**
      * Shortcut to {@link NpcDialogueInterface#NpcDialogueInterface(int, Expression, String...)}.
      *
      * @return This builder, for chaining.
