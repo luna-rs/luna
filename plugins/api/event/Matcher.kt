@@ -93,6 +93,11 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     abstract fun key(msg: E): K
 
     /**
+     * A set containing all keys in this matcher.
+     */
+    fun keys(): Set<K> = actions.keys
+
+    /**
      * Adds or replaces an optimized listener key -> value pair.
      */
     operator fun set(key: K, value: E.() -> Unit) {
