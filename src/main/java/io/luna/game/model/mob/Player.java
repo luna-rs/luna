@@ -392,7 +392,7 @@ public final class Player extends Mob {
     public void sendText(String text, int id) {
         requireNonNull(text);
 
-        String previous = LunaConstants.PACKET_126_CACHING ? null : textCache.put(id, text);
+        String previous = LunaConstants.PACKET_126_CACHING ? textCache.put(id, text) : null;
         if (!text.equals(previous)) {
             queue(new WidgetTextMessageWriter(text, id));
         }
