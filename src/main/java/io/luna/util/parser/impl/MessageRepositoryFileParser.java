@@ -8,6 +8,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.parser.JsonFileParser;
+
 import java.lang.reflect.Field;
 
 /**

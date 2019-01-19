@@ -2,6 +2,7 @@ package io.luna.game.event;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
