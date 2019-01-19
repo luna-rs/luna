@@ -21,7 +21,7 @@ public abstract class Client<I> {
     /**
      * An attribute key used to retrieve the client instance.
      */
-    public static final AttributeKey<Client<?>> KEY = AttributeKey.valueOf("Client.KEY");
+    public static final AttributeKey<Client<?>> KEY = AttributeKey.valueOf("Client.key");
 
     /**
      * The underlying channel.

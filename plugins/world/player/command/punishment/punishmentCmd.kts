@@ -1,8 +1,10 @@
+
 import api.predef.*
-import com.google.common.io.Files
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
+import io.luna.net.LunaChannelFilter
 import java.io.File
+import java.io.FileWriter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -10,6 +12,11 @@ import java.time.format.DateTimeFormatter
  * The date formatter.
  */
 val df = DateTimeFormatter.ofPattern("MMMM d, uuuu")!!
+
+/**
+ * The blacklist file.
+ */
+val blacklistFile = File("./data/punishment/blacklist.txt")
 
 /**
  * Performs a lookup for the person we're punishing.
@@ -38,8 +45,11 @@ fun punishDuration(msg: CommandEvent): LocalDate {
 cmd("ip_ban", RIGHTS_ADMIN) {
     getPlayer(this) {
         async {
-            val writeString = System.lineSeparator() + it.client.ipAddress
-            Files.write(writeString.toByteArray(), File("./data/players/blacklist.txt"))
+            val client = it.client
+            FileWriter(blacklistFile, true).use { fw -> fw.write(client.ipAddress) }
+
+            val channelFilter = client.channel.attr(LunaChannelFilter.KEY).get()
+            channelFilter.blacklist.add(client.ipAddress)
         }
         it.logout()
         plr.sendMessage("You have IP banned ${it.username}.")

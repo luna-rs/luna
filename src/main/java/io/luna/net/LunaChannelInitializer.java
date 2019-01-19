@@ -1,11 +1,11 @@
 package io.luna.net;
 
 import io.luna.LunaContext;
+import io.luna.net.client.Client;
+import io.luna.net.client.IdleClient;
 import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.net.client.Client;
-import io.luna.net.client.IdleClient;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
@@ -63,6 +63,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
+        ch.attr(LunaChannelFilter.KEY).setIfAbsent(channelFilter);
 
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
         ch.pipeline().addLast("channel-filter", channelFilter);

@@ -35,6 +35,11 @@ import static io.luna.LunaConstants.CONNECTION_LIMIT;
 public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSocketAddress> {
 
     /**
+     * An attribute key used to retrieve this channel filter.
+     */
+    public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
+
+    /**
      * An immutable set containing whitelisted (filter bypassing) addresses.
      */
     public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
@@ -42,7 +47,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     /**
      * An attribute describing the login response for rejected channels.
      */
-    private static final AttributeKey<LoginResponse> KEY = AttributeKey.valueOf("LunaChannelFilter.KEY");
+    private static final AttributeKey<LoginResponse> LOGIN_RESPONSE_KEY = AttributeKey.valueOf("LunaChannelFilter.loginResponseKey");
 
     /**
      * A concurrent multiset containing active connection counts.
@@ -93,7 +98,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         Channel channel = ctx.channel();
 
         // Retrieve the response message.
-        LoginResponse response = channel.attr(KEY).get();
+        LoginResponse response = channel.attr(LOGIN_RESPONSE_KEY).get();
         LoginResponseMessage msg = new LoginResponseMessage(response);
 
         // Write initial message.
@@ -127,7 +132,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      */
     private void response(ChannelHandlerContext ctx, LoginResponse response) {
         Channel channel = ctx.channel();
-        channel.attr(KEY).set(response);
+        channel.attr(LOGIN_RESPONSE_KEY).set(response);
     }
 
     /**
