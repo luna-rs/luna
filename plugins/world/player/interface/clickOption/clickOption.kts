@@ -17,12 +17,7 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
             5 -> inter.fifthOption(plr)
             else -> throw IllegalArgumentException("'option' must be between 1-5 inclusive.")
         }
-
-        if (inter.isOpen && !plr.dialogues.isPresent) {
-            plr.interfaces.close()
-        } else {
-            plr.advanceDialogues()
-        }
+        plr.advanceDialogues()
     }
 }
 

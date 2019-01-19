@@ -62,7 +62,7 @@ public final class World {
         public void run() {
             synchronized (player) {
                 try {
-                    player.queue(new PlayerUpdateMessageWriter()); // Must be first!
+                    player.queue(new PlayerUpdateMessageWriter());
                     player.queue(new NpcUpdateMessageWriter());
                     player.getClient().flush();
                 } catch (Exception e) {
@@ -196,6 +196,7 @@ public final class World {
                 break;
             }
             try {
+                // TODO Ensure playerlist doesn't contain the queued player.
                 playerList.add(player);
             } catch (Exception e) {
                 LOGGER.catching(e);

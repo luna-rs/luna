@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.Queue;
@@ -27,7 +28,7 @@ public final class DialogueQueue {
     /**
      * The action to execute at the tail of the dialogue.
      */
-    private Consumer<Player> tailAction;
+    private Consumer<Player> tailAction; // TODO rename
 
     /**
      * Creates a new {@link DialogueQueue}.
@@ -57,11 +58,12 @@ public final class DialogueQueue {
         if (nextDialogue != null) {
             player.getInterfaces().open(nextDialogue);
         } else {
-            // Dialogues are finished.
-            if (tailAction == null) {
-                player.getInterfaces().close();
-            } else {
+            if (tailAction != null) {
                 tailAction.accept(player);
+            }
+            AbstractInterfaceSet interfaces = player.getInterfaces();
+            if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
+                interfaces.close();
             }
             player.resetDialogues();
         }
