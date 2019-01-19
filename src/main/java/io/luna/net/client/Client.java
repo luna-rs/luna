@@ -5,7 +5,6 @@ import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.TypeParameterMatcher;
-
 import java.util.Objects;
 
 /**
@@ -102,6 +101,7 @@ public abstract class Client<I> {
      * @param msg The message to forward.
      * @throws Exception If any errors occur.
      */
+    @SuppressWarnings("unchecked")
     public final void messageReceived(Object msg) throws Exception {
         // parameterMatcher makes the following cast type-safe.
         if (parameterMatcher.match(msg)) {

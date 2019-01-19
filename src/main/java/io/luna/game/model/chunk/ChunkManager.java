@@ -11,7 +11,6 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,7 +87,7 @@ public final class ChunkManager implements Iterable<Chunk> {
      */
     private <T extends Mob> Set<T> updateSet(Player player, EntityType type) {
         Set<T> updateSet = LunaConstants.STAGGERED_UPDATING ?
-                new TreeSet<>(new ChunkMobComparator(player)) : new HashSet();
+                new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>();
         ChunkPosition position = player.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
@@ -145,7 +144,7 @@ public final class ChunkManager implements Iterable<Chunk> {
      */
     private void updateEntity(Player player, StationaryEntity entity) {
         Optional<Player> updatePlr = entity.getPlayer();
-        boolean isUpdate = !updatePlr.isPresent() || updatePlr.map(player::equals).orElse(false);
+        boolean isUpdate = updatePlr.isEmpty() || updatePlr.map(player::equals).orElse(false);
         if (isUpdate) {
             entity.show();
         }

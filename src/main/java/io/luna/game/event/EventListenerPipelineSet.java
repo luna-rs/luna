@@ -2,7 +2,6 @@ package io.luna.game.event;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +37,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
      * @param eventType The event class to retrieve the pipeline of.
      * @return The pipeline that accepts {@code eventType}.
      */
+    @SuppressWarnings("unchecked")
     public <E extends Event> EventListenerPipeline<E> get(Class<E> eventType) {
         EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType.getSimpleName(),
                 key -> new EventListenerPipeline<>(eventType));
