@@ -37,7 +37,7 @@ public final class PlayerDialogueInterface extends DialogueInterface {
 
     @Override
     public boolean init(Player player) {
-        int textWidgetId = unsafeGetId() + 2;
+        int textWidgetId = getId() + 2;
         int modelWidgetId = textWidgetId - 1;
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId)); // Display player head model.

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.net.InetAddresses;
 import io.luna.net.LunaChannelFilter;
 import io.luna.util.parser.NewLineFileParser;
+import java.util.List;
 
 /**
  * A {@link NewLineFileParser} implementation that parses blacklisted addresses.
@@ -28,7 +29,7 @@ public final class BlacklistFileParser extends NewLineFileParser {
     }
 
     @Override
-    public void onCompleted(ImmutableList<String> tokenObjects) {
+    public void onCompleted(List<String> tokenObjects) {
         tokenObjects.stream().filter(InetAddresses::isInetAddress).forEach(channelFilter.getBlacklist()::add);
     }
 }

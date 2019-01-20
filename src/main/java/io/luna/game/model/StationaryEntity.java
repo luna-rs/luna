@@ -118,8 +118,8 @@ public abstract class StationaryEntity extends Entity {
     /**
      * @return The player to update for.
      */
-    public final Optional<Player> getPlayer() {
-        return Optional.ofNullable(player);
+    public final Player getPlayer() {
+        return player;
     }
 
     /**

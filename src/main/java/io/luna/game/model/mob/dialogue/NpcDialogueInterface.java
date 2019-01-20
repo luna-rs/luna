@@ -76,7 +76,7 @@ public final class NpcDialogueInterface extends DialogueInterface {
     @Override
     public boolean init(Player player) {
         var npcName = NpcDefinition.ALL.retrieve(npcId).getName();
-        int textWidgetId = unsafeGetId() + 2;
+        int textWidgetId = getId() + 2;
         int modelWidgetId = textWidgetId - 1;
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId, npcId)); // Display NPC head model.

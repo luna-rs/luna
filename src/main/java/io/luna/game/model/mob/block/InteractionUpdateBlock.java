@@ -22,14 +22,12 @@ public final class InteractionUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        int index = unwrap(player.getInteractionIndex());
-        msg.putShort(index, ByteOrder.LITTLE);
+        msg.putShort(player.getInteractionIndex(), ByteOrder.LITTLE);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
-        int index = unwrap(npc.getInteractionIndex());
-        msg.putShort(index);
+        msg.putShort(npc.getInteractionIndex());
     }
 
     @Override

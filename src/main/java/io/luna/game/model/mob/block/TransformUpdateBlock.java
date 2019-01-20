@@ -22,8 +22,7 @@ public final class TransformUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
-        int transformId = unwrap(npc.getTransformId());
-        msg.putShort(transformId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(npc.getTransformId(), ValueType.ADD, ByteOrder.LITTLE);
     }
 
     @Override

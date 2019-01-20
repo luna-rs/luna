@@ -70,10 +70,16 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @return {@code true} if {@code entity} was registered.
      */
     protected final boolean register(E entity) {
+        var player = entity.getPlayer();
+        
         if (entity.getType() == type && entity.getState() == EntityState.NEW &&
-                entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
+                (player == null || local.remove(player, entity))) {
             size++;
-            entity.getPlayer().ifPresent(plr -> local.put(plr, entity));
+            
+            if (player != null) {
+                local.put(player, entity);
+            }
+            
             entity.setState(EntityState.ACTIVE);
             entity.show();
             return true;
@@ -96,8 +102,10 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @return {@code true} if {@code entity} was unregistered.
      */
     protected final boolean unregister(E entity) {
+        var player = entity.getPlayer();
+        
         if (entity.getType() == type && entity.getState() == EntityState.ACTIVE &&
-                entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
+                (player == null || local.remove(player, entity))) {
             size--;
             entity.setState(EntityState.INACTIVE);
             entity.hide();

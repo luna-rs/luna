@@ -1126,14 +1126,11 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final void fireUpdateEvent(int index, Item oldItem, Item newItem) {
         if (firingEvents && !Objects.equals(oldItem, newItem)) {
-            Optional<Item> oldOptional = Optional.ofNullable(oldItem);
-            Optional<Item> newOptional = Optional.ofNullable(newItem);
-
             for (var listener : listeners) {
                 if (inBulkUpdate) {
-                    listener.onBulkUpdate(index, this, oldOptional, newOptional);
+                    listener.onBulkUpdate(index, this, oldItem, newItem);
                 } else {
-                    listener.onSingleUpdate(index, this, oldOptional, newOptional);
+                    listener.onSingleUpdate(index, this, oldItem, newItem);
                 }
             }
         }

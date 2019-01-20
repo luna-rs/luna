@@ -2,8 +2,8 @@
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.DestructionAction
-import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.event.impl.PlayerEvent
+import io.luna.game.event.item.ItemOnItemEvent
+import io.luna.game.event.entity.player.PlayerEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 //import world.player.skills.firemaking.Log.Companion.ID_TO_LOG

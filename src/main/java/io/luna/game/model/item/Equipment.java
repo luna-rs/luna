@@ -7,6 +7,7 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -92,8 +93,8 @@ public final class Equipment extends ItemContainer {
          * @return {@code true} if the identifiers are unequal.
          */
         private boolean isIdUnequal(Item oldItem, Item newItem) {
-            OptionalInt oldId = mapToInt(oldItem, Item::getId);
-            OptionalInt newId = mapToInt(newItem, Item::getId);
+            OptionalInt oldId = mapToInt(Optional.ofNullable(oldItem), Item::getId);
+            OptionalInt newId = mapToInt(Optional.ofNullable(newItem), Item::getId);
             return !oldId.equals(newId);
         }
 

@@ -10,6 +10,7 @@ import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.parser.JsonFileParser;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  * A {@link JsonFileParser} implementation that parses incoming message listener metadata.
@@ -58,7 +59,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     }
 
     @Override
-    public void onCompleted(ImmutableList<GameMessageReader> tokenObjects) throws Exception {
+    public void onCompleted(List<GameMessageReader> tokenObjects) {
         tokenObjects.forEach(repository::put);
         repository.lock();
     }

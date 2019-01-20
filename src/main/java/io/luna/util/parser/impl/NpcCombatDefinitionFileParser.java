@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+import java.util.List;
 
 /**
  * A {@link JsonFileParser} implementation that reads NPC combat definitions.
@@ -40,7 +41,7 @@ public class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefin
     }
 
     @Override
-    public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) {
+    public void onCompleted(List<NpcCombatDefinition> tokenObjects) {
         NpcCombatDefinition.ALL.storeAndLock(tokenObjects);
     }
 }

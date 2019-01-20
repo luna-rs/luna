@@ -28,7 +28,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        ByteMessage buf = ByteMessage.raw();
+        var buf = ByteMessage.raw();
         
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
@@ -36,11 +36,11 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.put(player.getSkullIcon().getId()); // Skull icon.
 
             // Transform the player if needed.
-            OptionalInt transformId = player.getTransformId();
+            int transformId = player.getTransformId();
             
-            if (transformId.isPresent()) {
+            if (transformId != -1) {
                 buf.putShort(-1);
-                buf.putShort(transformId.getAsInt());
+                buf.putShort(transformId);
             } else {
                 // Otherwise encode equipment.
                 encodeEquipment(buf, player);

@@ -149,9 +149,7 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param entity The entity.
      */
     private void updateEntity(Player player, StationaryEntity entity) {
-        Optional<Player> updatePlayer = entity.getPlayer();
-        
-        boolean isUpdate = updatePlayer.filter(player::equals).isPresent();
+        boolean isUpdate = player.equals(entity.getPlayer());
         
         if (isUpdate) {
             entity.show();

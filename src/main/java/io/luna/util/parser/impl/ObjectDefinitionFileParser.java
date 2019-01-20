@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.def.ObjectDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+import java.util.List;
 
 /**
  * A {@link JsonFileParser} implementation that reads Object definitions.
@@ -36,7 +37,7 @@ public final class ObjectDefinitionFileParser extends JsonFileParser<ObjectDefin
     }
 
     @Override
-    public void onCompleted(ImmutableList<ObjectDefinition> tokenObjects) {
+    public void onCompleted(List<ObjectDefinition> tokenObjects) {
         tokenObjects.forEach(ObjectDefinition.ALL::storeDefinition);
     }
 }
