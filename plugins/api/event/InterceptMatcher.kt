@@ -9,7 +9,7 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-class InterceptMatcher<E : Event, K>(private val eventType: KClass<E>, private val args: Array<K>) {
+class InterceptMatcher<E : Event, K>(private val eventType: KClass<E>, private val args: Iterable<K>) {
 
     /**
      * If a matcher exists for [eventType], map [args] to [action].
@@ -17,6 +17,7 @@ class InterceptMatcher<E : Event, K>(private val eventType: KClass<E>, private v
     fun then(action: E.() -> Unit) {
         // Use the matcher, instead of registering (n) listeners.
         val matcher: Matcher<E, K> = Matcher.get(eventType)
+
         args.forEach { matcher[it] = action }
     }
 }
