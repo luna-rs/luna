@@ -12,12 +12,7 @@ import world.player.item.consume.food.Food
 var Player.lastEat by Stopwatch("last_eat_timer")
 
 /**
- * Mappings of [Food.id] to [Food].
- */
-val foodMap = Food.values().map { it.id to it }.toMap()
-
-/**
- * The animation played when eating food.
+ * The food eating animation.
  */
 val eatAnimation = Animation(829)
 
@@ -45,7 +40,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
     if (inv.remove(index, eatItem)) {
         // Add next portion of item, if applicable.
         val nextId = food.getNextId(eatItem.id)
-        if (nextId != -1) {
+        if (nextId != null) {
             inv.add(index, Item(nextId))
         }
 
@@ -56,9 +51,9 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
         food.effect(plr)
 
         // Increase HP.
-        val skill = plr.skill(SKILL_HITPOINTS)
-        if (skill.level < skill.staticLevel) {
-            skill.addLevels(food.heal, false)
+        val hp = plr.hitpoints
+        if (hp.level < hp.staticLevel) {
+            hp.addLevels(food.heal, false)
             plr.sendMessage(food.healMessage(consumeName))
         }
     }
@@ -68,7 +63,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
  * Performs a lookup for the potion and forwards to [tryDrink].
  */
 fun lookup(msg: ItemFirstClickEvent) {
-    val food = foodMap[msg.id]
+    val food = Food.ID_TO_FOOD[msg.id]
     if (food != null) {
         tryEat(msg.plr, food, msg.index)
         msg.terminate()

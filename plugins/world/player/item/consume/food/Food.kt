@@ -8,9 +8,9 @@ import io.luna.game.model.mob.Player
 enum class Food(val heal: Int,
                 val delay: Int,
                 val id: Int,
-                val id2: Int = -1,
-                val id3: Int = -1,
-                val id4: Int = -1) {
+                val id2: Int? = null,
+                val id3: Int? = null,
+                val id4: Int? = null) {
 
     MEAT(heal = 2,
          delay = 1800,
@@ -107,6 +107,30 @@ enum class Food(val heal: Int,
         override fun healMessage(name: String) = "The sugary goodness heals some energy."
     };
 
+    companion object {
+
+        /**
+         * Mappings of [Food.ids] to [Food].
+         */
+        val ID_TO_FOOD: Map<Int, Food>
+
+        init {
+            val idToFood = mutableMapOf<Int, Food>()
+            for (food in values()) {
+                for (id in food.ids) {
+                    idToFood[id] = food
+                }
+            }
+            ID_TO_FOOD = idToFood
+        }
+
+    }
+
+    /**
+     * The identifier set.
+     */
+    val ids = newIdSet()
+
     /**
      * Invoked when the food is eaten.
      */
@@ -130,8 +154,26 @@ enum class Food(val heal: Int,
             id -> id2
             id2 -> id3
             id3 -> id4
-            else -> -1
+            else -> null
         }
+
+    /**
+     * Computes and returns a new set of this food's identifiers.
+     */
+    private fun newIdSet(): Set<Int> {
+        val ids = HashSet<Int>(4)
+        ids += id
+        if (id2 != null) {
+            ids += id2
+        }
+        if (id3 != null) {
+            ids += id3
+        }
+        if (id4 != null) {
+            ids += id4
+        }
+        return ids
+    }
 
     /**
      * Computes and returns the eating delay, as a long.
