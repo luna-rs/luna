@@ -14,10 +14,6 @@ import world.player.skill.crafting.Gem.Companion.UNCUT_TO_GEM
  */
 class CutGemAction(val plr: Player, val gem: Gem, var amount: Int) : ProducingAction(plr, true, 3) {
 
-    /**
-     * The crafting skill.
-     */
-    val skill = plr.skill(SKILL_CRAFTING)!!
 
     override fun remove() = arrayOf(gem.uncutItem)
     override fun add() = arrayOf(gem.cutItem)
@@ -25,7 +21,7 @@ class CutGemAction(val plr: Player, val gem: Gem, var amount: Int) : ProducingAc
     override fun canInit(): Boolean = canProduce()
     override fun canProduce(): Boolean =
         when {
-            skill.level < gem.level -> {
+            mob.crafting.level < gem.level -> {
                 plr.sendMessage("You need a Crafting level of ${gem.level} to cut this.")
                 false
             }
@@ -37,7 +33,7 @@ class CutGemAction(val plr: Player, val gem: Gem, var amount: Int) : ProducingAc
         plr.animation(gem.animation)
         plr.sendMessage("You cut the ${itemDef(gem.cut).name}.")
 
-        skill.addExperience(gem.exp)
+        mob.crafting.addExperience(gem.exp)
         amount--
     }
 

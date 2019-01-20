@@ -14,11 +14,6 @@ class FishAction(private val msg: NpcClickEvent,
                  private val tool: Tool) : HarvestingAction(msg.plr) {
 
     /**
-     * The fishing skill.
-     */
-    val skill = mob.skill(SKILL_FISHING)!!
-
-    /**
      * The messages to send on harvest.
      */
     val messages = mutableListOf<String>()
@@ -32,7 +27,7 @@ class FishAction(private val msg: NpcClickEvent,
      * Determines if the [Player] can fish.
      */
     private fun canFish(): Boolean {
-        return if (skill.level < tool.level) {
+        return if (mob.fishing.level < tool.level) {
             // Check if we have required level.
             mob.sendMessage("You need a Fishing level of ${tool.level} to fish here.")
             false
@@ -67,7 +62,7 @@ class FishAction(private val msg: NpcClickEvent,
         messages.clear()
 
         // Add experience.
-        skill.addExperience(exp)
+        mob.fishing.addExperience(exp)
         exp = 0.0
     }
 
@@ -76,7 +71,7 @@ class FishAction(private val msg: NpcClickEvent,
 
     override fun add(): Array<Item?> {
         val amount = tool.catchAmount.random()
-        val availableFish = tool.fish.filter { it.level <= skill.level }
+        val availableFish = tool.fish.filter { it.level <= mob.fishing.level }
         val addItems = arrayOfNulls<Item>(amount)
         var index = 0
 

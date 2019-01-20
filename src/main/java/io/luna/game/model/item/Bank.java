@@ -17,7 +17,7 @@ public final class Bank extends ItemContainer {
     /**
      * The interface that will be displayed when the bank opens.
      */
-    private final class BankInterface extends InventoryOverlayInterface {
+    public final class BankInterface extends InventoryOverlayInterface {
 
         /**
          * Creates a new {@link BankInterface}.

@@ -250,7 +250,6 @@ public final class Skill {
         if (set.isFiringEvents()) {
             Mob mob = set.getMob();
             PluginManager plugins = mob.getPlugins();
-
             plugins.post(new SkillChangeEvent(mob, oldExperience, oldStaticLevel, oldLevel, id));
         }
     }
@@ -349,14 +348,13 @@ public final class Skill {
         } else if (newExperience > SkillSet.MAXIMUM_EXPERIENCE) {
             newExperience = SkillSet.MAXIMUM_EXPERIENCE;
         }
+        if (experience == newExperience) {
+            return;
+        }
         int oldStaticLevel = getStaticLevel();
         double oldExperience = experience;
         experience = newExperience;
         staticLevel = -1;
-
-        if (oldExperience == newExperience) {
-            return;
-        }
         notifyListeners(oldExperience, oldStaticLevel, level);
     }
 }

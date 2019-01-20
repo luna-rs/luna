@@ -17,7 +17,7 @@ val altars: Set<Int> = hashSetOf(409, 3243)
  * Restores the player's prayer points.
  */
 fun restore(plr: Player) {
-    val prayer = plr.skill(SKILL_PRAYER)
+    val prayer = plr.prayer
     if (prayer.level < prayer.staticLevel) {
         prayer.level = prayer.staticLevel
         plr.animation(prayerAnimation)

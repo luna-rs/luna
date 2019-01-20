@@ -14,7 +14,7 @@ enum class Fish(val id: Int,
                 level = 5,
                 exp = 5.0) {
         override fun toItem(action: FishAction): Item? {
-            val level = action.skill.level / 5
+            val level = action.mob.fishing.level / 5
             val extraCount = Math.floor(level.toDouble())
             return Item(id, (1 + extraCount).toInt())
         }

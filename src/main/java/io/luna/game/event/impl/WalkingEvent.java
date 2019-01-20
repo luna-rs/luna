@@ -33,6 +33,11 @@ public final class WalkingEvent extends PlayerEvent {
         this.running = running;
     }
 
+    @Override
+    public boolean terminate() {
+        throw new IllegalStateException("This event type (WalkingEvent) cannot be terminated.");
+    }
+
     /**
      * @return The walking path.
      */

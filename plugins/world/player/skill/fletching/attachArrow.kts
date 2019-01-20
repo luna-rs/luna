@@ -15,11 +15,6 @@ class MakeArrowAction(plr: Player,
                       var makeTimes: Int) : ProducingAction(plr, true, 3) {
 
     /**
-     * The fletching skill.
-     */
-    val fletching = mob.skill(SKILL_FLETCHING)!!
-
-    /**
      * The amount of arrows to make in this set.
      */
     var setAmount = 0
@@ -35,7 +30,7 @@ class MakeArrowAction(plr: Player,
         return when {
 
             // Check fletching level.
-            fletching.level < arrow.level -> {
+            mob.fletching.level < arrow.level -> {
                 mob.sendMessage("You need a Fletching level of ${arrow.level} to attach this.")
                 false
             }
@@ -60,7 +55,7 @@ class MakeArrowAction(plr: Player,
         val tipName = itemDef(arrow.tip).name
         mob.sendMessage("You attach the $tipName to the $withName.")
 
-        fletching.addExperience(arrow.exp * setAmount)
+        mob.fletching.addExperience(arrow.exp * setAmount)
         makeTimes--
     }
 

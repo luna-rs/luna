@@ -8,7 +8,7 @@ import io.luna.game.model.mob.Mob;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class MobEvent extends Event {
+public class MobEvent extends Event {
 
     /**
      * The mob.

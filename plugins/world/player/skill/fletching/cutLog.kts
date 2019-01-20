@@ -26,11 +26,6 @@ class CutLogAction(plr: Player,
         val ANIMATION = Animation(6782)
     }
 
-    /**
-     * The fletching skill.
-     */
-    val fletching = mob.skill(SKILL_FLETCHING)!!
-
     override fun add(): Array<Item> {
         val unstrungItem =
             when (bow) {
@@ -44,7 +39,7 @@ class CutLogAction(plr: Player,
 
     override fun canProduce() =
         when {
-            fletching.level < bow.level -> {
+            mob.fletching.level < bow.level -> {
                 mob.sendMessage("You need a Fletching level of ${bow.level} to cut this.")
                 false
             }
@@ -58,7 +53,7 @@ class CutLogAction(plr: Player,
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
         mob.animation(ANIMATION)
-        fletching.addExperience(bow.exp)
+        mob.fletching.addExperience(bow.exp)
 
         makeTimes--
     }

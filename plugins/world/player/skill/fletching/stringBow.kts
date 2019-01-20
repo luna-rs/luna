@@ -23,17 +23,12 @@ class StringBowAction(plr: Player,
         val ANIMATION = Animation(713)
     }
 
-    /**
-     * The fletching skill.
-     */
-    val fletching = mob.skill(SKILL_FLETCHING)!!
-
     override fun add() = arrayOf(bow.strungItem)
     override fun remove() = arrayOf(bow.unstrungItem, Item(Bow.BOW_STRING))
 
     override fun canProduce() =
         when {
-            fletching.level < bow.level -> {
+            mob.fletching.level < bow.level -> {
                 mob.sendMessage("You need a Fletching level of ${bow.level} to string this bow.")
                 false
             }
@@ -45,7 +40,7 @@ class StringBowAction(plr: Player,
     override fun onProduce() {
         mob.sendMessage("You add a string to the bow.")
         mob.animation(ANIMATION)
-        fletching.addExperience(bow.exp)
+        mob.fletching.addExperience(bow.exp)
         count--
     }
 
