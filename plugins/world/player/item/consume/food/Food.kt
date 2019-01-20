@@ -112,18 +112,13 @@ enum class Food(val heal: Int,
         /**
          * Mappings of [Food.ids] to [Food].
          */
-        val ID_TO_FOOD: Map<Int, Food>
-
-        init {
-            val idToFood = mutableMapOf<Int, Food>()
+        val ID_TO_FOOD = HashMap<Int, Food>().apply {
             for (food in values()) {
                 for (id in food.ids) {
-                    idToFood[id] = food
+                    this[id] = food
                 }
             }
-            ID_TO_FOOD = idToFood
         }
-
     }
 
     /**
