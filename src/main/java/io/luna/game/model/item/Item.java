@@ -47,14 +47,13 @@ public final class Item {
      */
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Item)) {
+            return false;
         }
-        if (obj instanceof Item) {
-            Item other = (Item) obj;
-            return id == other.id && amount == other.amount;
-        }
-        return false;
+        
+        var other = (Item) obj;
+        
+        return id == other.id && amount == other.amount;
     }
 
     @Override
@@ -64,9 +63,10 @@ public final class Item {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("id", id).
-                add("amount", amount).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("amount", amount)
+                .toString();
     }
 
     /**
@@ -106,6 +106,7 @@ public final class Item {
         if (id == newId) {
             return this;
         }
+        
         return new Item(newId, amount);
     }
 
@@ -127,9 +128,10 @@ public final class Item {
         int newAmount = amount + add;
 
         // Handle potential overflows and underflows.
-        if(newAmount < 0) {
+        if (newAmount < 0) {
             newAmount = positive ? Integer.MAX_VALUE : 0;
         }
+        
         return new Item(id, newAmount);
     }
 
@@ -143,6 +145,7 @@ public final class Item {
         if (amount == newAmount) {
             return this;
         }
+        
         return new Item(id, newAmount);
     }
 

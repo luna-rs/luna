@@ -1,6 +1,5 @@
 package io.luna.net.client;
 
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -48,7 +47,7 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onInactive() {
-        World world = player.getWorld();
+        var world = player.getWorld();
         world.queueLogout(player);
     }
 
@@ -62,14 +61,13 @@ public class GameClient extends Client<GameMessage> {
      * Fires a region update afterwards, if needed.
      */
     public void handleDecodedMessages() {
-        for (; ; ) {
-            GameMessage msg = decodedMessages.poll();
-            if (msg == null) {
-                break;
-            }
-            GameMessageReader reader = repository.get(msg.getOpcode());
-            reader.postEvent(player, msg);
+        GameMessage message;
+        
+        while ((message = decodedMessages.poll()) != null) {
+            GameMessageReader reader = repository.get(message.getOpcode());
+            reader.postEvent(player, message);
         }
+    
         player.sendRegionUpdate();
     }
 
@@ -80,7 +78,7 @@ public class GameClient extends Client<GameMessage> {
      * @param msg The message to queue.
      */
     public void queue(GameMessageWriter msg) {
-        Channel channel = getChannel();
+        var channel = getChannel();
 
         if (channel.isActive()) {
             channel.write(msg.toGameMsg(player), channel.voidPromise());
@@ -92,7 +90,7 @@ public class GameClient extends Client<GameMessage> {
      * {@link #queue(GameMessageWriter)}. Calls to this method are expensive and should be done sparingly.
      */
     public void flush() {
-        Channel channel = getChannel();
+        var channel = getChannel();
 
         if (channel.isActive()) {
             channel.flush();

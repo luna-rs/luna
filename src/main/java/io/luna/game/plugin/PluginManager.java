@@ -39,9 +39,11 @@ public final class PluginManager {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void post(Event msg) {
         EventListenerPipeline pipeline = pipelines.get(msg.getClass());
+        
         if (pipeline == null) {
             return;
         }
+        
         pipeline.post(msg);
     }
 

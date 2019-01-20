@@ -1,7 +1,6 @@
 package io.luna.game.action;
 
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.WalkingQueue;
 
 /**
  * An {@link Action} implementation that details actions related specifically to standing still.
@@ -24,8 +23,7 @@ public abstract class StationaryAction<T extends Mob> extends Action<T> {
     @Override
     protected final void onInit() {
         if (canInit()) {
-            WalkingQueue walking = mob.getWalking();
-            walking.clear();
+            mob.getWalking().clear();
         } else {
             interrupt();
         }

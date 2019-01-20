@@ -47,6 +47,7 @@ public abstract class PlayerSerializer {
         if (LunaConstants.PASSWORD_HASHING) {
             return BCrypt.checkpw(enteredPassword, savedPassword);
         }
+        
         return enteredPassword.equals(savedPassword);
     }
 

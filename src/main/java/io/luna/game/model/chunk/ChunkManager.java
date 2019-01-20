@@ -89,13 +89,19 @@ public final class ChunkManager implements Iterable<Chunk> {
     private <T extends Mob> Set<T> updateSet(Player player, EntityType type) {
         Set<T> updateSet = LunaConstants.STAGGERED_UPDATING ?
                 new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>();
+        
         ChunkPosition position = player.getChunkPosition();
+        
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
                 // Synchronize over the chunks so that the updating threads cannot modify them at the
                 // same time.
+                //
+                // TODO: It would be preferable to synchronize on `chunks` outside of the for-loops, or just
+                //       use a ConcurrentMap implementation. - Jacob
                 synchronized (chunks) {
                     Set<T> players = getChunk(position.translate(x, y)).getAll(type);
+                    
                     for (T inside : players) {
                         if (inside.isViewableFrom(player)) {
                             updateSet.add(inside);
@@ -104,6 +110,7 @@ public final class ChunkManager implements Iterable<Chunk> {
                 }
             }
         }
+        
         return updateSet;
     }
 
@@ -113,26 +120,24 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param player The player.
      */
     public void updateEntities(Player player) {
-        ChunkPosition position = player.getChunkPosition();
+        var position = player.getChunkPosition();
+        
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(position.translate(x, y));
+                var chunk = getChunk(position.translate(x, y));
 
                 // Clear chunk.
-                Position chunkPos = chunk.getAbsolutePosition();
+                var chunkPos = chunk.getAbsolutePosition();
                 player.queue(new ClearChunkMessageWriter(chunkPos));
 
                 // Repopulate chunk entities.
                 Set<GameObject> objectSet = chunk.getAll(EntityType.OBJECT);
-                for (GameObject object : objectSet) {
-                    // TODO Do not update cache loaded objects!
-                    updateEntity(player, object);
-                }
+                
+                // TODO Do not update cache loaded objects!
+                objectSet.forEach(object -> updateEntity(player, object));
 
                 Set<GroundItem> itemSet = chunk.getAll(EntityType.ITEM);
-                for (GroundItem item : itemSet) {
-                    updateEntity(player, item);
-                }
+                itemSet.forEach(item -> updateEntity(player, item));
             }
         }
     }
@@ -144,8 +149,10 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param entity The entity.
      */
     private void updateEntity(Player player, StationaryEntity entity) {
-        Optional<Player> updatePlr = entity.getPlayer();
-        boolean isUpdate = updatePlr.isEmpty() || updatePlr.map(player::equals).orElse(false);
+        Optional<Player> updatePlayer = entity.getPlayer();
+        
+        boolean isUpdate = updatePlayer.filter(player::equals).isPresent();
+        
         if (isUpdate) {
             entity.show();
         }
@@ -160,12 +167,15 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @return The set.
      */
     public <T extends Entity> Set<T> getViewableEntities(Position position, EntityType type) {
-        Set<T> viewable = new HashSet<>();
-        ChunkPosition chunkPos = position.getChunkPosition();
+        var viewable = new HashSet<T>();
+        var chunkPos = position.getChunkPosition();
+        
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(chunkPos.translate(x, y));
+                var chunk = getChunk(chunkPos.translate(x, y));
+                
                 Set<T> entities = chunk.getAll(type);
+                
                 for (T inside : entities) {
                     if (inside.getPosition().isViewable(position)) {
                         viewable.add(inside);
@@ -173,10 +183,10 @@ public final class ChunkManager implements Iterable<Chunk> {
                 }
             }
         }
+        
         return viewable;
     }
-
-
+    
     /**
      * Returns a list of viewable chunks.
      *
@@ -184,14 +194,15 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @return The list.
      */
     public List<Chunk> getViewableChunks(Position position) {
-        List<Chunk> viewable = new ArrayList<>(16);
-        ChunkPosition chunkPos = position.getChunkPosition();
+        var viewable = new ArrayList<Chunk>(16);
+        var chunkPos = position.getChunkPosition();
+        
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(chunkPos.translate(x, y));
-                viewable.add(chunk);
+                viewable.add(getChunk(chunkPos.translate(x, y)));
             }
         }
+        
         return viewable;
     }
 

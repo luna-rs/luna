@@ -29,10 +29,10 @@ public class DialogueInterface extends StandardInterface {
     @Override
     public final void open(Player player) {
         boolean shouldOpen = init(player);
+        
         if (shouldOpen) {
-            int id = unsafeGetId();
+            int id = getId();
             player.queue(new DialogueInterfaceMessageWriter(id));
-
             applyOpenAction(player);
         } else {
             player.getInterfaces().close();

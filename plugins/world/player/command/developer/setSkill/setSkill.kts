@@ -1,6 +1,6 @@
 import SetSkill.SetLevelInterface
 import api.predef.*
-import io.luna.game.event.impl.ButtonClickEvent
+import io.luna.game.event.button.ButtonClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet

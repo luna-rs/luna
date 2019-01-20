@@ -6,6 +6,7 @@ package io.luna.game.model.object;
  * @author lare96 <http://github.com/lare96>
  */
 public enum ObjectType {
+    
     // TODO Better naming!
     STRAIGHT_WALL(0, ObjectGroup.WALL),
     DIAGONAL_CORNER_WALL(1, ObjectGroup.WALL),

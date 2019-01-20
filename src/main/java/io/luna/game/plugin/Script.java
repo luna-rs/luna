@@ -40,14 +40,13 @@ public final class Script {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Script)) {
+            return false;
         }
-        if (obj instanceof Script) {
-            Script other = (Script) obj;
-            return name.equals(other.name) && path.equals(other.path);
-        }
-        return false;
+        
+        var other = (Script) obj;
+    
+        return name.equals(other.name) && path.equals(other.path);
     }
 
     @Override

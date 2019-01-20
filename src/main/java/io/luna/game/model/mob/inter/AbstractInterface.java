@@ -14,7 +14,7 @@ public abstract class AbstractInterface {
     /**
      * The interface identifier.
      */
-    final OptionalInt id;
+    final int id;
 
     /**
      * The interface type.
@@ -32,19 +32,9 @@ public abstract class AbstractInterface {
      * @param id The interface identifier.
      * @param type The interface type.
      */
-    private AbstractInterface(OptionalInt id, InterfaceType type) {
+    AbstractInterface(int id, InterfaceType type) {
         this.id = id;
         this.type = type;
-    }
-
-    /**
-     * Creates a new {@link AbstractInterface} with {@code id} wrapped in an optional.
-     *
-     * @param id The interface identifier.
-     * @param type The interface type.
-     */
-    AbstractInterface(int id, InterfaceType type) {
-        this(OptionalInt.of(id), type);
     }
 
     /**
@@ -53,7 +43,7 @@ public abstract class AbstractInterface {
      * @param type The interface type.
      */
     AbstractInterface(InterfaceType type) {
-        this(OptionalInt.empty(), type);
+        this(-1, type);
     }
 
     /**
@@ -77,6 +67,7 @@ public abstract class AbstractInterface {
      * @param player The player to apply to listener for.
      */
     public void onClose(Player player) {
+    
     }
 
     /**
@@ -108,6 +99,7 @@ public abstract class AbstractInterface {
     final void setClosed(Player player, AbstractInterface replace) {
         if (isOpen()) {
             state = InterfaceState.CLOSED;
+            
             if (replace != null) {
                 onReplace(player, replace);
             } else {
@@ -167,18 +159,9 @@ public abstract class AbstractInterface {
     }
 
     /**
-     * Retrieves the identifier within {@link #id}. If it doesn't exist, returns {@code -1}.
-     *
-     * @return The identifier, or {@code -1} if none exist.
-     */
-    public final int unsafeGetId() {
-        return id.orElse(-1);
-    }
-
-    /**
      * @return The interface identifier.
      */
-    public final OptionalInt getId() {
+    public final int getId() {
         return id;
     }
 

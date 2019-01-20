@@ -21,17 +21,17 @@ public final class AbstractInterfaceSet {
     /**
      * The current standard interface.
      */
-    private Optional<StandardInterface> currentStandard = Optional.empty();
+    private StandardInterface currentStandard;
 
     /**
      * The current input interface.
      */
-    private Optional<InputInterface> currentInput = Optional.empty();
+    private InputInterface currentInput;
 
     /**
      * The current walkable interface.
      */
-    private Optional<WalkableInterface> currentWalkable = Optional.empty();
+    private WalkableInterface currentWalkable;
 
     /**
      * Creates a new {@link AbstractInterfaceSet}.
@@ -55,6 +55,7 @@ public final class AbstractInterfaceSet {
         } else if (inter.isWalkable()) {
             setCurrentWalkable((WalkableInterface) inter);
         }
+        
         inter.setOpened(player);
     }
 
@@ -92,7 +93,6 @@ public final class AbstractInterfaceSet {
      * Closes all necessary interfaces on movement or action initialization.
      */
     public void applyActionClose() {
-
         // Close standard and input interfaces if needed.
         if (isAutoClose(currentStandard) || isAutoClose(currentInput)) {
             close();
@@ -110,11 +110,11 @@ public final class AbstractInterfaceSet {
     /**
      * Determines if an interface needs to close on movement or action initialization.
      *
-     * @param optional The interface optional.
+     * @param abstractInterface The interface.
      * @return {@code true} if the interface needs to close.
      */
-    private boolean isAutoClose(Optional<? extends AbstractInterface> optional) {
-        return optional.filter(inter -> inter.isAutoClose(player)).isPresent();
+    private <I extends AbstractInterface> boolean isAutoClose(I abstractInterface) {
+        return abstractInterface != null && abstractInterface.isAutoClose(player);
     }
 
     /**
@@ -123,7 +123,7 @@ public final class AbstractInterfaceSet {
      * @return {@code true} if a walkable interface is open.
      */
     public boolean isWalkableOpen() {
-        return currentWalkable.isPresent();
+        return currentWalkable != null;
     }
 
     /**
@@ -132,7 +132,7 @@ public final class AbstractInterfaceSet {
      * @return {@code true} if an input interface is open.
      */
     public boolean isInputOpen() {
-        return currentInput.isPresent();
+        return currentInput != null;
     }
 
     /**
@@ -141,7 +141,7 @@ public final class AbstractInterfaceSet {
      * @return {@code true} if a standard interface is open.
      */
     public boolean isStandardOpen() {
-        return currentStandard.isPresent();
+        return currentStandard != null;
     }
 
     /**
@@ -150,15 +150,18 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentStandard(StandardInterface inter) {
-        currentStandard.ifPresent(curr -> curr.setClosed(player, inter));
-        currentStandard = Optional.ofNullable(inter);
+        if (currentStandard != null) {
+            currentStandard.setClosed(player, inter);
+        }
+        
+        currentStandard = inter;
     }
 
     /**
      * @return The current standard interface.
      */
     public Optional<StandardInterface> getCurrentStandard() {
-        return currentStandard;
+        return Optional.ofNullable(currentStandard);
     }
 
     /**
@@ -169,16 +172,15 @@ public final class AbstractInterfaceSet {
      * @return The casted interface.
      */
     public <I extends StandardInterface> Optional<I> standardTo(Class<I> type) {
-        if (!currentStandard.isPresent()) {
+        if (currentStandard == null) {
             return Optional.empty();
         }
 
-        StandardInterface inter = currentStandard.get();
-        if (type.isInstance(inter)) {
-            return Optional.of(type.cast(inter));
-        } else {
-            return Optional.empty();
+        if (type.isInstance(currentStandard)) {
+            return Optional.of(type.cast(currentStandard));
         }
+    
+        return Optional.empty();
     }
 
     /**
@@ -194,15 +196,18 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentInput(InputInterface inter) {
-        currentInput.ifPresent(curr -> curr.setClosed(player, inter));
-        currentInput = Optional.ofNullable(inter);
+        if (currentInput != null) {
+            currentInput.setClosed(player, inter);
+        }
+        
+        currentInput = inter;
     }
 
     /**
      * @return The current input interface.
      */
     public Optional<InputInterface> getCurrentInput() {
-        return currentInput;
+        return Optional.ofNullable(currentInput);
     }
 
     /**
@@ -213,16 +218,15 @@ public final class AbstractInterfaceSet {
      * @return The casted interface.
      */
     public <I extends InputInterface> Optional<I> inputTo(Class<I> type) {
-        if (!currentInput.isPresent()) {
+        if (currentInput == null) {
             return Optional.empty();
         }
 
-        InputInterface inter = currentInput.get();
-        if (type.isInstance(inter)) {
-            return Optional.of(type.cast(inter));
-        } else {
-            return Optional.empty();
+        if (type.isInstance(currentInput)) {
+            return Optional.of(type.cast(currentInput));
         }
+    
+        return Optional.empty();
     }
 
     /**
@@ -231,15 +235,18 @@ public final class AbstractInterfaceSet {
      * @param inter The new interface.
      */
     private void setCurrentWalkable(WalkableInterface inter) {
-        currentWalkable.ifPresent(curr -> curr.setClosed(player, inter));
-        currentWalkable = Optional.ofNullable(inter);
+        if (currentWalkable != null) {
+            currentWalkable.setClosed(player, inter);
+        }
+        
+        currentWalkable = inter;
     }
 
     /**
      * @return The current walkable interface.
      */
     public Optional<WalkableInterface> getCurrentWalkable() {
-        return currentWalkable;
+        return Optional.ofNullable(currentWalkable);
     }
 
     /**
@@ -250,15 +257,14 @@ public final class AbstractInterfaceSet {
      * @return The casted interface.
      */
     public <I extends WalkableInterface> Optional<I> walkableTo(Class<I> type) {
-        if (!currentWalkable.isPresent()) {
+        if (currentWalkable == null) {
             return Optional.empty();
         }
-
-        WalkableInterface inter = currentWalkable.get();
-        if (type.isInstance(inter)) {
-            return Optional.of(type.cast(inter));
-        } else {
-            return Optional.empty();
+        
+        if (type.isInstance(currentWalkable)) {
+            return Optional.of(type.cast(currentWalkable));
         }
+    
+        return Optional.empty();
     }
 }

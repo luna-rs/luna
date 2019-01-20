@@ -161,8 +161,7 @@ public final class World {
 
     {
         // Initialize synchronization thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().
-                setNameFormat("WorldSynchronizationThread").build();
+        ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
         service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
     }
 
@@ -192,9 +191,11 @@ public final class World {
     public void dequeueLogins() {
         for (int amount = 0; amount < EntityConstants.LOGIN_THRESHOLD; amount++) {
             Player player = logins.poll();
+            
             if (player == null) {
                 break;
             }
+            
             try {
                 // TODO Ensure playerlist doesn't contain the queued player.
                 playerList.add(player);
@@ -221,9 +222,11 @@ public final class World {
     public void dequeueLogouts() {
         for (int amount = 0; amount < EntityConstants.LOGOUT_THRESHOLD; amount++) {
             Player player = logouts.poll();
+            
             if (player == null) {
                 break;
             }
+            
             playerList.remove(player);
         }
     }
@@ -281,9 +284,11 @@ public final class World {
      */
     private void synchronize() {
         barrier.bulkRegister(playerList.size());
+        
         for (Player player : playerList) {
             service.execute(new PlayerSynchronizationTask(player));
         }
+
         barrier.arriveAndAwaitAdvance();
     }
 

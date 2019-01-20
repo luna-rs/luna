@@ -73,7 +73,6 @@ public final class Rational extends Number {
 
         if (numerator != 0) {
             int gcd = gcd(Math.abs(numerator), denominator);
-
             numerator = numerator / gcd;
             denominator = denominator / gcd;
         }
@@ -102,16 +101,13 @@ public final class Rational extends Number {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Rational)) {
+            return false;
         }
-
-        if (obj instanceof Rational) {
-            Rational other = (Rational) obj;
-            return numerator == other.numerator && denominator == other.denominator;
-        }
-
-        return false;
+        
+        var other = (Rational) obj;
+    
+        return numerator == other.numerator && denominator == other.denominator;
     }
 
     /**
@@ -146,12 +142,12 @@ public final class Rational extends Number {
 
     @Override
     public float floatValue() {
-        return ((float) numerator / (float) denominator);
+        return (float) numerator / (float) denominator;
     }
 
     @Override
     public double doubleValue() {
-        return ((double) numerator / (double) denominator);
+        return (double) numerator / (double) denominator;
     }
 
     /**
@@ -174,7 +170,6 @@ public final class Rational extends Number {
         int numeratorOne = numerator * other.denominator;
         int numeratorTwo = other.numerator * denominator;
         int numeratorSum = numeratorOne + numeratorTwo;
-
         return new Rational(numeratorSum, commonDenominator);
     }
 
@@ -189,7 +184,6 @@ public final class Rational extends Number {
         int numeratorOne = numerator * other.denominator;
         int numeratorTwo = other.numerator * denominator;
         int numeratorDifference = numeratorOne - numeratorTwo;
-
         return new Rational(numeratorDifference, commonDenominator);
     }
 
@@ -202,7 +196,6 @@ public final class Rational extends Number {
     public Rational multiply(Rational other) {
         int n = numerator * other.numerator;
         int d = denominator * other.denominator;
-
         return new Rational(n, d);
     }
 
@@ -223,8 +216,8 @@ public final class Rational extends Number {
      * @param numeratorTwo The second numerator.
      */
     private int gcd(int numeratorOne, int numeratorTwo) {
-        BigInteger numOne = BigInteger.valueOf(numeratorOne);
-        BigInteger numTwo = BigInteger.valueOf(numeratorTwo);
+        var numOne = BigInteger.valueOf(numeratorOne);
+        var numTwo = BigInteger.valueOf(numeratorTwo);
         return numOne.gcd(numTwo).intValue();
     }
 

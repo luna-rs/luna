@@ -1,14 +1,15 @@
 package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.luna.util.StringUtils.addArticle;
 
@@ -52,10 +53,11 @@ public final class EquipmentDefinition implements Definition {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).
-                    add("name", name).
-                    add("id", id).
-                    add("level", level).toString();
+            return MoreObjects.toStringHelper(this)
+                    .add("name", name)
+                    .add("id", id)
+                    .add("level", level)
+                    .toString();
         }
 
         /**
@@ -74,7 +76,7 @@ public final class EquipmentDefinition implements Definition {
          * @param player The player to send the message to.
          */
         public void sendFailureMessage(Player player) {
-            Skill skill = player.skill(id);
+            var skill = player.skill(id);
             String article = addArticle(skill);
             player.sendMessage("You need " + article + " level of " + level + " to equip this.");
         }
@@ -136,12 +138,12 @@ public final class EquipmentDefinition implements Definition {
     /**
      * A list of equipment requirements.
      */
-    private final ImmutableList<Requirement> requirements;
+    private final List<Requirement> requirements;
 
     /**
      * A list of equipment bonuses.
      */
-    private final ImmutableList<Integer> bonuses;
+    private final List<Integer> bonuses;
 
     /**
      * Creates a new {@link EquipmentDefinition}.
@@ -161,8 +163,8 @@ public final class EquipmentDefinition implements Definition {
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = ImmutableList.copyOf(requirements);
-        this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
+        this.requirements = List.of(requirements);
+        this.bonuses = Arrays.stream(bonuses).boxed().collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -173,11 +175,12 @@ public final class EquipmentDefinition implements Definition {
      * meets all requirements.
      */
     public Optional<Requirement> getFailedRequirement(Player player) {
-        for(Requirement req : requirements) {
-            if(!req.meets(player)) {
+        for (Requirement req : requirements) {
+            if (!req.meets(player)) {
                 return Optional.of(req);
             }
         }
+        
         return Optional.empty();
     }
 
@@ -188,7 +191,7 @@ public final class EquipmentDefinition implements Definition {
      * @return {@code true} if {@code player} meets all requirements.
      */
     public boolean meetsAllRequirements(Player player) {
-        return !getFailedRequirement(player).isPresent();
+        return getFailedRequirement(player).isEmpty();
     }
 
     @Override
@@ -227,14 +230,14 @@ public final class EquipmentDefinition implements Definition {
     /**
      * @return A list of the requirements.
      */
-    public ImmutableList<Requirement> getRequirements() {
+    public List<Requirement> getRequirements() {
         return requirements;
     }
 
     /**
      * @return A list of equipment bonuses.
      */
-    public ImmutableList<Integer> getBonuses() {
+    public List<Integer> getBonuses() {
         return bonuses;
     }
 }

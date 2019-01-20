@@ -30,7 +30,7 @@ public final class DialogueInterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(164);
+        var msg = ByteMessage.message(164);
         msg.putShort(id, ByteOrder.LITTLE);
         return msg;
     }

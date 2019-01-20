@@ -41,22 +41,21 @@ public final class Tuple<T, U> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Tuple<?, ?>)) {
+            return false;
         }
-        if (obj instanceof Tuple) {
-            Tuple other = (Tuple) obj;
-            return Objects.equals(first, other.first) &&
-                    Objects.equals(second, other.second);
-        }
-        return false;
+        
+        var other = (Tuple<?, ?>) obj;
+    
+        return Objects.equals(first, other.first) && Objects.equals(second, other.second);
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("1", first).
-                add("2", second).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("1", first)
+                .add("2", second)
+                .toString();
     }
 
     /**

@@ -32,7 +32,6 @@ public final class GameMessageRepository implements Iterable<GameMessageReader> 
      */
     public void put(GameMessageReader messageReader) throws IllegalStateException {
         checkState(!locked, "This repository is locked.");
-
         int opcode = messageReader.getOpcode();
         checkState(get(opcode) == null, "Reader already exists for opcode [" + opcode + "].");
         readers[opcode] = messageReader;

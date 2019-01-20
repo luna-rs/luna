@@ -2,8 +2,6 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
-import io.luna.game.model.Position;
-import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateBlockSet;
@@ -28,17 +26,17 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
-        ByteMessage blockMsg = ByteMessage.raw();
+        var msg = ByteMessage.message(81, MessageType.VAR_SHORT);
+        var blockMsg = ByteMessage.raw();
 
         try {
             msg.startBitAccess();
 
             handleMovement(player, msg);
             blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
-
             msg.putBits(8, player.getLocalPlayers().size());
             Iterator<Player> iterator = player.getLocalPlayers().iterator();
+            
             while (iterator.hasNext()) {
                 Player other = iterator.next();
 
@@ -51,14 +49,15 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                     iterator.remove();
                 }
             }
-
-            ChunkManager chunks = player.getWorld().getChunks();
+    
+            var chunkManager = player.getWorld().getChunks();
             int playersAdded = 0;
 
-            for (Player other : chunks.playerUpdateSet(player)) {
+            for (Player other : chunkManager.playerUpdateSet(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }
+                
                 if (player.equals(other) || other.getState() != EntityState.ACTIVE) {
                     continue;
                 }
@@ -83,6 +82,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
         } finally {
             blockMsg.release();
         }
+        
         return msg;
     }
 
@@ -107,24 +107,23 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
         boolean needsUpdate = !player.getFlags().isEmpty();
 
         if (player.isTeleporting()) {
-            Position position = player.getPosition();
-
+            var position = player.getPosition();
             msg.putBit(true);
             msg.putBits(2, 3);
             msg.putBits(2, position.getZ());
             msg.putBit(!player.isRegionChanged());
             msg.putBit(needsUpdate);
-
             msg.putBits(7, position.getLocalY(player.getLastRegion()));
             msg.putBits(7, position.getLocalX(player.getLastRegion()));
             return;
         }
-
-        Direction walkingDirection = player.getWalkingDirection();
-        Direction runningDirection = player.getRunningDirection();
+    
+        var walkingDirection = player.getWalkingDirection();
+        var runningDirection = player.getRunningDirection();
 
         if (walkingDirection != Direction.NONE) {
             msg.putBit(true);
+            
             if (runningDirection != Direction.NONE) {
                 msg.putBits(2, 2);
                 msg.putBits(3, walkingDirection.getId());

@@ -48,6 +48,7 @@ public final class PlayerDialogueInterface extends DialogueInterface {
         for (String line : text) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }
+        
         return true;
     }
 }

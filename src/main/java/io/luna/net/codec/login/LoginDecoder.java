@@ -30,9 +30,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
     static {
         try {
             // Initializes RSA modulus and exponent values.
-            Toml tomlReader = new Toml().
-                    read(new File("./data/rsa/rsapriv.toml")).
-                    getTable("key");
+            Toml tomlReader = new Toml().read(new File("./data/rsa/rsapriv.toml")).getTable("key");
             RSA_MOD = new BigInteger(tomlReader.getString("modulus"));
             RSA_EXP = new BigInteger(tomlReader.getString("exponent"));
         } catch (Exception e) {
@@ -97,7 +95,6 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             case HANDSHAKE:
                 Attribute<Client<?>> attribute = ctx.channel().attr(Client.KEY);
                 attribute.set(new LoginClient(ctx.channel(), context, repository));
-
                 decodeHandshake(ctx, in);
                 break;
             case LOGIN_TYPE:
@@ -105,8 +102,8 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 break;
             case RSA_BLOCK:
                 return decodeRsaBlock(ctx, in);
-
         }
+        
         return null;
     }
 
@@ -124,12 +121,10 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
     private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= 2) {
             int opcode = in.readUnsignedByte(); // TODO Ondemand?
-
-            @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
-
+            in.readUnsignedByte(); // Name hash
             checkState(opcode == 14, "opcode != 14");
-
             ByteBuf msg = ByteMessage.pooledBuffer(17);
+            
             try {
                 msg.writeLong(0);
                 msg.writeByte(0);
@@ -152,10 +147,8 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
         if (in.readableBytes() >= 2) {
             int loginType = in.readUnsignedByte();
             checkState(loginType == 16 || loginType == 18, "loginType != 16 or 18");
-
             rsaBlockSize = in.readUnsignedByte();
             checkState((rsaBlockSize - 40) > 0, "(rsaBlockSize - 40) <= 0");
-
             checkpoint(DecodeState.RSA_BLOCK);
         }
     }
@@ -169,14 +162,13 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      */
     private Object decodeRsaBlock(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= rsaBlockSize) {
-
             int magicId = in.readUnsignedByte();
             checkState(magicId == 255, "magicId != 255");
 
             int clientVersion = in.readUnsignedShort();
             checkState(clientVersion == 317, "clientVersion != 317");
-
-            @SuppressWarnings("unused") int memoryVersion = in.readUnsignedByte();
+            
+            in.readUnsignedByte(); // Memory version
 
             for (int i = 0; i < 9; i++) {
                 in.readInt();
@@ -186,10 +178,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             rsaBlockSize -= 41;
             checkState(expectedSize == rsaBlockSize, "expectedSize != rsaBlockSize");
 
-            byte[] rsaBytes = new byte[rsaBlockSize];
+            var rsaBytes = new byte[rsaBlockSize];
             in.readBytes(rsaBytes);
 
             ByteBuf rsaBuffer = ByteMessage.pooledBuffer();
+            
             try {
                 rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXP, RSA_MOD).toByteArray());
 
@@ -199,27 +192,30 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 long clientHalf = rsaBuffer.readLong();
                 long serverHalf = rsaBuffer.readLong();
 
-                int[] isaacSeed = {(int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32),
-                        (int) serverHalf};
+                int[] isaacSeed = {
+                    (int) (clientHalf >> 32), (int) clientHalf, (int) (serverHalf >> 32), (int) serverHalf
+                };
 
-                IsaacCipher decryptor = new IsaacCipher(isaacSeed);
+                var decryptor = new IsaacCipher(isaacSeed);
+                
                 for (int i = 0; i < isaacSeed.length; i++) {
                     isaacSeed[i] += 50;
                 }
-                IsaacCipher encryptor = new IsaacCipher(isaacSeed);
+                
+                var encryptor = new IsaacCipher(isaacSeed);
 
-                @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
+                rsaBuffer.readInt(); // uid
 
                 ByteMessage msg = ByteMessage.wrap(rsaBuffer);
                 String username = msg.getString().toLowerCase();
                 String password = msg.getString().toLowerCase();
 
-                return new LoginCredentialsMessage(username,
-                        password, encryptor, decryptor, ctx.channel().pipeline());
+                return new LoginCredentialsMessage(username, password, encryptor, decryptor, ctx.channel().pipeline());
             } finally {
                 rsaBuffer.release();
             }
         }
+        
         return null;
     }
 

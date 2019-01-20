@@ -65,12 +65,15 @@ public class MakeItemDialogueInterface extends DialogueInterface {
         }
 
         int index = 0;
+        
         for (int id : items) {
             String itemName = ItemDefinition.ALL.retrieve(id).getName();
             player.sendText(itemName, textWidgets[index]);
-            player.queue(new WidgetItemModelMessageWriter(modelWidgets[index], 175 - (items.length * 15), id));
+            player.queue(new WidgetItemModelMessageWriter(modelWidgets[index],
+                    175 - (items.length * 15), id));
             index++;
         }
+        
         return true;
     }
 

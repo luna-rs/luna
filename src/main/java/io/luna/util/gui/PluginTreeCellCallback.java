@@ -37,10 +37,10 @@ final class PluginTreeCellCallback implements Callback<TreeView<String>, TreeCel
          * Sets the mouse clicked listener to display the plugin description.
          */
         private void setMouseClickedListener() {
-            setOnMouseClicked(evt -> Optional.ofNullable(getTreeItem()).
-                    map(TreeItem::getValue).
-                    map(pluginItems::get).
-                    ifPresent(PluginTreeItem::displayGuiDescription));
+            setOnMouseClicked(evt -> Optional.ofNullable(getTreeItem())
+                    .map(TreeItem::getValue)
+                    .map(pluginItems::get)
+                    .ifPresent(PluginTreeItem::displayGuiDescription));
         }
     }
 

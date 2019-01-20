@@ -7,8 +7,10 @@ import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -24,7 +26,7 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * An immutable list containing the experience needed for each level.
      */
-    public static final ImmutableList<Integer> EXPERIENCE_TABLE;
+    public static final List<Integer> EXPERIENCE_TABLE;
 
     /**
      * A range containing valid skill identifiers.
@@ -44,6 +46,7 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public static int experienceForLevel(int level) {
         checkArgument(level >= 1 && level <= 99, "level < 1 || level > 99");
+        
         return EXPERIENCE_TABLE.get(level);
     }
 
@@ -70,20 +73,24 @@ public final class SkillSet implements Iterable<Skill> {
             if (EXPERIENCE_TABLE.get(index) > experience) {
                 continue;
             }
+            
             return index;
         }
+        
         throw new IllegalStateException("unable to compute level for experience amount, " + experience);
     }
 
     static { /* Initialize experience table cache. */
         int[] experienceTable = new int[100];
         int points = 0, output = 0;
+        
         for (int lvl = 1; lvl <= 99; lvl++) {
             experienceTable[lvl] = output;
-            points += Math.floor(lvl + 300.0 * Math.pow(2.0, lvl / 7.0));
-            output = (int) Math.floor(points / 4);
+            points += Math.floor(lvl + 300D * Math.pow(2D, lvl / 7D));
+            output = (int) Math.floor(points / 4D);
         }
-        EXPERIENCE_TABLE = ImmutableList.copyOf(Ints.asList(experienceTable));
+        
+        EXPERIENCE_TABLE = Arrays.stream(experienceTable).boxed().collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -116,6 +123,7 @@ public final class SkillSet implements Iterable<Skill> {
 
         // Populate the skill set.
         skills = new Skill[size()];
+        
         for (int index = 0; index < skills.length; index++) {
             skills[index] = new Skill(index, this);
         }
@@ -128,8 +136,7 @@ public final class SkillSet implements Iterable<Skill> {
 
     @Override
     public Spliterator<Skill> spliterator() {
-        return Spliterators.spliterator(skills,
-                Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED);
+        return Spliterators.spliterator(skills, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
     /**
@@ -163,12 +170,13 @@ public final class SkillSet implements Iterable<Skill> {
      * array. The argued array must have a capacity equal to that of the backing array.
      */
     public void setSkills(Skill[] newSkills) {
-        checkArgument(newSkills.length == skills.length,
-                "newSkills.length must equal skills.length");
+        checkArgument(newSkills.length == skills.length, "newSkills.length must equal skills.length");
 
         firingEvents = false;
+        
         try {
             int index = 0;
+            
             for (Skill newSkill : newSkills) {
                 Skill skill = new Skill(index, this);
                 skill.setExperience(newSkill.getExperience());
@@ -204,32 +212,25 @@ public final class SkillSet implements Iterable<Skill> {
 
             double defenceCalc = defence * 0.25;
             double hitpointsCalc = hitpoints * 0.25;
-            double prayerCalc = (prayer / 2) * 0.25;
+            double prayerCalc = (prayer / 2D) * 0.25;
 
             double mag = magic * 1.5;
             double ran = ranged * 1.5;
             double attstr = attack + strength;
 
             double combatLvl;
+            
             if (ran > attstr && ran > mag) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (ranged * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (ranged * 0.4875);
             } else if (mag > attstr) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (magic * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (magic * 0.4875);
             } else {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (attack * 0.325) +
-                        (strength * 0.325);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (attack * 0.325) + (strength * 0.325);
             }
+            
             combatLevel = (int) combatLvl;
         }
+        
         return combatLevel;
     }
 

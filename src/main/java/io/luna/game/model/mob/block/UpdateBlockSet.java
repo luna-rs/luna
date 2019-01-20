@@ -1,9 +1,7 @@
 package io.luna.game.model.mob.block;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
@@ -26,14 +24,14 @@ public abstract class UpdateBlockSet<E extends Mob> {
     /**
      * The update blocks.
      */
-    private final ImmutableList<UpdateBlock> updateBlocks;
+    private final List<UpdateBlock> updateBlocks;
 
     /**
      * Creates a new {@link UpdateBlockSet}.
      *
      * @param updateBlocks The update blocks.
      */
-    public UpdateBlockSet(ImmutableList<UpdateBlock> updateBlocks) {
+    public UpdateBlockSet(List<UpdateBlock> updateBlocks) {
         this.updateBlocks = updateBlocks;
     }
 
@@ -64,12 +62,13 @@ public abstract class UpdateBlockSet<E extends Mob> {
      */
     final void encodeBlockSet(E mob, ByteMessage blockMsg, UpdateState state) {
         List<UpdateBlock> encodeBlocks = new ArrayList<>(updateBlocks.size());
+        
         int mask = 0;
+        
         for (UpdateBlock block : updateBlocks) {
-            UpdateFlag updateFlag = block.getFlag();
+            var updateFlag = block.getFlag();
 
             if(mob.getType() == EntityType.PLAYER) {
-
                 // We are adding local players, so we need to force the appearance block.
                 if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
                     mask |= block.getMask(mob);

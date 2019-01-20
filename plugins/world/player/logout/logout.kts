@@ -1,5 +1,5 @@
 import api.predef.*
-import io.luna.game.event.impl.LogoutEvent
+import io.luna.game.event.entity.player.LogoutEvent
 import io.luna.game.model.mob.Player
 
 /**

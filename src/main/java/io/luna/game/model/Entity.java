@@ -2,7 +2,7 @@ package io.luna.game.model;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
-import io.luna.game.event.impl.PositionChangeEvent;
+import io.luna.game.event.entity.PositionChangeEvent;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
@@ -139,12 +139,14 @@ public abstract class Entity {
      * Invoked when entering an {@code ACTIVE} state.
      */
     protected void onActive() {
+    
     }
 
     /**
      * Invoked when entering an {@code INACTIVE} state.
      */
     protected void onInactive() {
+    
     }
 
     /**
@@ -158,10 +160,10 @@ public abstract class Entity {
         checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");
 
         state = newState;
+        
         switch (state) {
             case ACTIVE:
                 checkState(position != null, "Cannot be ACTIVE until position is set.");
-
                 setCurrentChunk();
                 onActive();
                 break;
@@ -196,7 +198,8 @@ public abstract class Entity {
      * Sets the chunk depending on the current position.
      */
     private void setCurrentChunk() {
-        ChunkPosition next = position.getChunkPosition();
+        var next = position.getChunkPosition();
+        
         if (currentChunk == null) {
             // We have no current chunk.
             currentChunk = world.getChunks().getChunk(next);
@@ -204,7 +207,6 @@ public abstract class Entity {
         } else if (!currentChunk.getPosition().equals(next)) {
             // We have a chunk, and it's not equal to the new one.
             currentChunk.remove(this);
-
             currentChunk = world.getChunks().getChunk(next);
             currentChunk.add(this);
         }

@@ -6,8 +6,6 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.util.OptionalInt;
-
 /**
  * A {@link GameMessageWriter} implementation that writes a Player or NPC head model on a widget.
  *
@@ -23,7 +21,7 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
     /**
      * The NPC identifier.
      */
-    private final OptionalInt npcId;
+    private final int npcId;
 
     /**
      * Creates a new {@link WidgetMobModelMessageWriter} that will display an NPC head model on a widget.
@@ -33,7 +31,7 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
      */
     public WidgetMobModelMessageWriter(int widgetId, int npcId) {
         this.widgetId = widgetId;
-        this.npcId = OptionalInt.of(npcId);
+        this.npcId = npcId;
     }
 
     /**
@@ -43,20 +41,22 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
      */
     public WidgetMobModelMessageWriter(int widgetId) {
         this.widgetId = widgetId;
-        this.npcId = OptionalInt.empty();
+        this.npcId = -1;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg;
-        if (npcId.isPresent()) {
+        
+        if (npcId != -1) {
             msg = ByteMessage.message(75);
-            msg.putShort(npcId.getAsInt(), ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(npcId, ValueType.ADD, ByteOrder.LITTLE);
             msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
         } else {
             msg = ByteMessage.message(185);
             msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
         }
+        
         return msg;
     }
 }

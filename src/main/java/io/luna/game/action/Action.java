@@ -1,7 +1,6 @@
 package io.luna.game.action;
 
 import io.luna.game.model.EntityState;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
@@ -93,7 +92,7 @@ public abstract class Action<T extends Mob> {
      * Initializes this action by scheduling the {@link ActionTask}.
      */
     protected final void init() {
-        World world = mob.getWorld();
+        var world = mob.getWorld();
         world.schedule(runner);
     }
 

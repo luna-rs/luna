@@ -88,7 +88,6 @@ public final class AsyncExecutor implements Executor {
     @Override
     public void execute(Runnable command) {
         checkState(isRunning(), "No workers available to run tasks.");
-
         ListenableFuture<?> pending = threadPool.submit(command);
         pendingTasks.offer(pending);
     }
@@ -103,13 +102,9 @@ public final class AsyncExecutor implements Executor {
     public void await(boolean terminate) throws ExecutionException {
         checkState(isRunning(), "Backing thread pool has already been terminated.");
 
-        for (;;) {
-            Future<?> pending = pendingTasks.poll();
-
-            if (pending == null) {
-                break;
-            }
-
+        Future<?> pending;
+        
+        while ((pending = pendingTasks.poll()) != null) {
             Uninterruptibles.getUninterruptibly(pending);
         }
 

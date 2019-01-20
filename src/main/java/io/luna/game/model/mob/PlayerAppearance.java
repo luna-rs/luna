@@ -1,17 +1,16 @@
 package io.luna.game.model.mob;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
-import com.google.common.primitives.Ints;
 import io.luna.game.model.mob.inter.StandardInterface;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -113,8 +112,7 @@ public final class PlayerAppearance {
     /**
      * The default appearance set.
      */
-    public static final ImmutableList<Integer> DEFAULT_APPEARANCE = ImmutableList
-            .of(0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0);
+    public static final List<Integer> DEFAULT_APPEARANCE = List.of(0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0);
 
     /**
      * The valid gender values.
@@ -129,11 +127,12 @@ public final class PlayerAppearance {
     /**
      * The valid color values.
      */
-    private static final ImmutableMap<Integer, Range<Integer>> VALID_COLORS;
+    private static final Map<Integer, Range<Integer>> VALID_COLORS;
 
     static {
         // Initialize and cache valid appearance values.
         Table<Integer, Integer, Range<Integer>> models = HashBasedTable.create();
+        
         models.put(GENDER_MALE, HEAD, Range.closed(0, 8));
         models.put(GENDER_FEMALE, HEAD, Range.closed(45, 54));
 
@@ -154,15 +153,18 @@ public final class PlayerAppearance {
 
         models.put(GENDER_MALE, FEET, Range.closed(42, 43));
         models.put(GENDER_FEMALE, FEET, Range.closed(79, 80));
+        
         VALID_MODELS = ImmutableTable.copyOf(models);
 
         Map<Integer, Range<Integer>> colors = new HashMap<>();
+        
         colors.put(HAIR_COLOR, Range.closed(0, 11));
         colors.put(TORSO_COLOR, Range.closed(0, 15));
         colors.put(LEG_COLOR, Range.closed(0, 15));
         colors.put(FEET_COLOR, Range.closed(0, 5));
         colors.put(SKIN_COLOR, Range.closed(0, 7));
-        VALID_COLORS = ImmutableMap.copyOf(colors);
+        
+        VALID_COLORS = Map.copyOf(colors);
     }
 
     /**
@@ -194,8 +196,7 @@ public final class PlayerAppearance {
      * @param model The body part identifier.
      * @param gender The gender value.
      * @param value The model value.
-     * @return {@code true} if {@code value} is a valid model for {@code gender} and body part
-     * {@code model}.
+     * @return {@code true} if {@code value} is a valid model for {@code gender} and body part {@code model}.
      */
     public static boolean isModelValid(int model, int gender, int value) {
         Range<Integer> validModels = VALID_MODELS.get(gender, model);
@@ -215,11 +216,16 @@ public final class PlayerAppearance {
     public static boolean isAnyValid(int index, int gender, int value) {
         if (index == 0) {
             return isGenderValid(value);
-        } else if (index >= 1 && index <= 7) {
+        }
+    
+        if (index >= 1 && index <= 7) {
             return isModelValid(index, gender, value);
-        } else if (index >= 8 && index <= 12) {
+        }
+        
+        if (index >= 8 && index <= 12) {
             return isColorValid(index, value);
         }
+        
         throw new IllegalArgumentException("Invalid id value, must be >= 0 || <= 12.");
     }
 
@@ -237,6 +243,7 @@ public final class PlayerAppearance {
                 return false;
             }
         }
+        
         return true;
     }
 
@@ -249,7 +256,6 @@ public final class PlayerAppearance {
      * Creates a new {@link PlayerAppearance}.
      */
     public PlayerAppearance() {
-
         // Populate the appearance array with the default values.
         for (int index = 0; index < appearance.length; index++) {
             appearance[index] = DEFAULT_APPEARANCE.get(index);
@@ -306,8 +312,8 @@ public final class PlayerAppearance {
      *
      * @return An immutable list copy of the backing array.
      */
-    public ImmutableList<Integer> toList() {
-        return ImmutableList.copyOf(Ints.asList(appearance));
+    public List<Integer> toList() {
+        return Arrays.stream(appearance).boxed().collect(Collectors.toUnmodifiableList());
     }
 
     /**

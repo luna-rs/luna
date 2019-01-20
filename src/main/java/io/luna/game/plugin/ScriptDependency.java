@@ -33,14 +33,13 @@ public final class ScriptDependency {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof ScriptDependency)) {
+            return false;
         }
-        if (obj instanceof ScriptDependency) {
-            ScriptDependency other = (ScriptDependency) obj;
-            return name.equals(other.name) && path.equals(other.path);
-        }
-        return false;
+        
+        var other = (ScriptDependency) obj;
+    
+        return name.equals(other.name) && path.equals(other.path);
     }
 
     @Override

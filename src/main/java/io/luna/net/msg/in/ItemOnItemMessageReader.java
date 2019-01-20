@@ -1,9 +1,8 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ItemOnItemEvent;
+import io.luna.game.event.item.ItemOnItemEvent;
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
@@ -20,19 +19,18 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ItemOnItemMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int targetIndex = msg.getPayload().getShort(false);
         int usedIndex = msg.getPayload().getShort(false, ValueType.ADD);
-
         int targetId = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
         int targetInterfaceId = msg.getPayload().getShort(false);
-
         int usedId = msg.getPayload().getShort(ByteOrder.LITTLE);
         int usedInterfaceId = msg.getPayload().getShort(false);
 
         if (!validate(player, usedId, targetId, usedIndex, targetIndex, usedInterfaceId, targetInterfaceId)) {
             return null;
         }
+        
         return new ItemOnItemEvent(player, usedId, targetId, usedIndex, targetIndex, usedInterfaceId,
                 targetInterfaceId);
     }
@@ -51,7 +49,6 @@ public final class ItemOnItemMessageReader extends GameMessageReader {
      */
     private boolean validate(Player player, int usedId, int targetId, int usedIndex, int targetIndex,
                              int usedInterfaceId, int targetInterfaceId) {
-
         checkState(targetIndex >= 0, "targetIndex is out of range");
         checkState(usedIndex >= 0, "usedIndex is out of range");
         checkState(ItemDefinition.isIdValid(targetId), "targetId is out of range");
@@ -61,15 +58,16 @@ public final class ItemOnItemMessageReader extends GameMessageReader {
 
         switch (usedInterfaceId) {
             case 3214:
-                Inventory inventory = player.getInventory();
+                var inventory = player.getInventory();
                 return inventory.computeIdForIndex(usedIndex).orElse(-1) == usedId;
         }
 
         switch (targetInterfaceId) {
             case 3214:
-                Inventory inventory = player.getInventory();
+                var inventory = player.getInventory();
                 return inventory.computeIdForIndex(targetIndex).orElse(-1) == targetId;
         }
+        
         return false;
     }
 }

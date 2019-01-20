@@ -51,14 +51,11 @@ public abstract class Client<I> {
 
     @Override
     public final boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Client<?>)) {
+            return false;
         }
-        if (obj instanceof Client<?>) {
-            Client<?> other = (Client<?>) obj;
-            return ipAddress.equals(other.ipAddress);
-        }
-        return false;
+        
+        return ipAddress.equalsIgnoreCase(((Client<?>) obj).ipAddress);
     }
 
     @Override

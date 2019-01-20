@@ -27,7 +27,7 @@ public class InventoryOverlayInterface extends StandardInterface {
 
     @Override
     public final void open(Player player) {
-        player.queue(new InventoryOverlayMessageWriter(unsafeGetId(), overlayId));
+        player.queue(new InventoryOverlayMessageWriter(getId(), overlayId));
     }
 
     /**

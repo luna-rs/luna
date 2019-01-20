@@ -11,6 +11,7 @@ public final class Hit {
      * An enum representing hitsplat types.
      */
     public enum HitType {
+        
         BLOCKED(0),
         NORMAL(1),
         POISON(2),

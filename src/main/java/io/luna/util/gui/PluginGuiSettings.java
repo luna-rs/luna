@@ -93,6 +93,7 @@ final class PluginGuiSettings {
             gui.openErrorAlert(e);
             return false;
         }
+        
         return true;
     }
 
@@ -150,6 +151,7 @@ final class PluginGuiSettings {
 
         // Apply selected plugins.
         controller.getChangeListener().setFiringEvents(false);
+        
         if (selected.size() > 0) {
             gui.getPluginItems().forEach((k, v) -> {
                 if (selected.contains(k)) {
@@ -161,6 +163,7 @@ final class PluginGuiSettings {
         } else {
             gui.getPluginItems().forEach((k, v) -> v.setSelected(false));
         }
+        
         controller.getChangeListener().setFiringEvents(true);
 
         // Rebuild plugin interface using new settings.
@@ -177,8 +180,7 @@ final class PluginGuiSettings {
         saveOnExit = settings.get("save_on_exit").getAsBoolean();
         retainSelection = settings.get("retain_selection").getAsBoolean();
         flattenPackages = settings.get("flatten_packages").getAsBoolean();
-        settings.getAsJsonArray("selected").
-                forEach(e -> selected.add(e.getAsString()));
+        settings.getAsJsonArray("selected").forEach(e -> selected.add(e.getAsString()));
     }
 
     /**
@@ -257,6 +259,7 @@ final class PluginGuiSettings {
      */
     private final class Settings {
         private final Map<String, Object> settings;
+        
         private Settings(Map<String, Object> settings) {
             this.settings = settings;
         }

@@ -29,15 +29,16 @@ public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> 
     }
 
     @Override
-    public void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) throws Exception {
+    public void encode(ChannelHandlerContext ctx, GameMessage msg, ByteBuf out) {
         out.writeByte(msg.getOpcode() + encryptor.nextInt());
+        
         if (msg.getType() == MessageType.VAR) {
             out.writeByte(msg.getSize());
         } else if (msg.getType() == MessageType.VAR_SHORT) {
             out.writeShort(msg.getSize());
         }
+        
         out.writeBytes(msg.getPayload().getBuffer());
-
         msg.getPayload().release();
     }
 }

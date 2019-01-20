@@ -3,7 +3,6 @@ package io.luna.game.model.mob.block;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Item;
-import io.luna.game.model.mob.ModelAnimation;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -30,6 +29,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         ByteMessage buf = ByteMessage.raw();
+        
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
             buf.put(player.getPrayerIcon().getId()); // Prayer icon.
@@ -37,6 +37,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
             // Transform the player if needed.
             OptionalInt transformId = player.getTransformId();
+            
             if (transformId.isPresent()) {
                 buf.putShort(-1);
                 buf.putShort(transformId.getAsInt());
@@ -72,10 +73,9 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
      * @param buf The update block buffer.
      * @param player The player.
      */
-    @SuppressWarnings("ConstantConditions")
     private void encodeEquipment(ByteMessage buf, Player player) {
-        Equipment equipment = player.getEquipment();
-        PlayerAppearance appearance = player.getAppearance();
+        var equipment = player.getEquipment();
+        var appearance = player.getAppearance();
 
         buf.putShort(512 + getId(equipment, Equipment.HEAD)); // Helmet model.
         buf.putShort(512 + getId(equipment, Equipment.CAPE)); // Cape model.
@@ -93,6 +93,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Arms model.
         boolean isFullBody = getDef(equipment, Equipment.CHEST, EquipmentDefinition::isFullBody);
+        
         if (isFullBody) {
             buf.put(0);
         } else {
@@ -108,6 +109,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Head model.
         boolean isFullHelmet = getDef(equipment, Equipment.HEAD, EquipmentDefinition::isFullHelmet);
+        
         if (isFullHelmet) {
             buf.put(0);
         } else {
@@ -143,7 +145,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
      * @param player The player.
      */
     private void encodeModelColors(ByteMessage buf, Player player) {
-        PlayerAppearance appearance = player.getAppearance();
+        var appearance = player.getAppearance();
         buf.put(appearance.get(PlayerAppearance.HAIR_COLOR));
         buf.put(appearance.get(PlayerAppearance.TORSO_COLOR));
         buf.put(appearance.get(PlayerAppearance.LEG_COLOR));
@@ -158,7 +160,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
      * @param player The player.
      */
     private void encodeAnimations(ByteMessage buf, Player player) {
-        ModelAnimation model = player.getModelAnimation();
+        var model = player.getModelAnimation();
         buf.putShort(model.getStandingId());
         buf.putShort(model.getStandingTurnId());
         buf.putShort(model.getWalkingId());

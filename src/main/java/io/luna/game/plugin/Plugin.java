@@ -32,12 +32,12 @@ public final class Plugin {
     /**
      * A set of script dependencies.
      */
-    private final ImmutableSet<ScriptDependency> dependencies;
+    private final Set<ScriptDependency> dependencies;
 
     /**
      * A set of scripts.
      */
-    private final ImmutableSet<Script> scripts;
+    private final Set<Script> scripts;
 
     /**
      * Creates a new {@link Plugin}.
@@ -50,8 +50,8 @@ public final class Plugin {
                   Set<ScriptDependency> dependencies, Set<Script> scripts) {
         this.metadata = metadata;
         this.packageName = packageName;
-        this.scripts = ImmutableSet.copyOf(scripts);
-        this.dependencies = ImmutableSet.copyOf(dependencies);
+        this.scripts = Set.copyOf(scripts);
+        this.dependencies = Set.copyOf(dependencies);
     }
 
     /**
@@ -69,16 +69,16 @@ public final class Plugin {
     }
 
     /**
-     * @return A set of script dependencies.
+     * @return An unmodifiable set of script dependencies.
      */
-    public ImmutableSet<ScriptDependency> getDependencies() {
+    public Set<ScriptDependency> getDependencies() {
         return dependencies;
     }
 
     /**
-     * @return A set of scripts.
+     * @return An unmodifiable set of scripts.
      */
-    public ImmutableSet<Script> getScripts() {
+    public Set<Script> getScripts() {
         return scripts;
     }
 }

@@ -1,7 +1,6 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.Skill;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
@@ -29,8 +28,8 @@ public final class SkillUpdateMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        Skill skill = player.skill(id);
-        ByteMessage msg = ByteMessage.message(134);
+        var skill = player.skill(id);
+        var msg = ByteMessage.message(134);
         msg.put(id);
         msg.putInt((int) skill.getExperience(), ByteOrder.MIDDLE);
         msg.put(skill.getLevel());

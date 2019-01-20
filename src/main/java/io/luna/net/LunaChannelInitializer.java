@@ -61,10 +61,9 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     }
 
     @Override
-    protected void initChannel(SocketChannel ch) throws Exception {
+    protected void initChannel(SocketChannel ch) {
         ch.attr(Client.KEY).setIfAbsent(new IdleClient(ch));
         ch.attr(LunaChannelFilter.KEY).setIfAbsent(channelFilter);
-
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
         ch.pipeline().addLast("channel-filter", channelFilter);
         ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository));

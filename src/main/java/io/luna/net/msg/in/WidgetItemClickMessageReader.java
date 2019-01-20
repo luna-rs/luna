@@ -1,11 +1,11 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFifthClickEvent;
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFourthClickEvent;
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemSecondClickEvent;
-import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemThirdClickEvent;
+import io.luna.game.event.item.WidgetItemClickEvent.WidgetItemFifthClickEvent;
+import io.luna.game.event.item.WidgetItemClickEvent.WidgetItemFirstClickEvent;
+import io.luna.game.event.item.WidgetItemClickEvent.WidgetItemFourthClickEvent;
+import io.luna.game.event.item.WidgetItemClickEvent.WidgetItemSecondClickEvent;
+import io.luna.game.event.item.WidgetItemClickEvent.WidgetItemThirdClickEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
@@ -23,8 +23,9 @@ import static com.google.common.base.Preconditions.checkState;
 public final class WidgetItemClickMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
+        
         switch (opcode) {
             case 145:
                 return firstIndex(player, msg.getPayload());
@@ -37,6 +38,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
             case 135:
                 return fifthIndex(player, msg.getPayload());
         }
+        
         return null;
     }
 
@@ -54,6 +56,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
         checkState(itemId > 0, "itemId <= 0");
+        
         return new WidgetItemFirstClickEvent(player, index, interfaceId, itemId);
     }
 
@@ -71,6 +74,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
         checkState(itemId > 0, "itemId <= 0");
+        
         return new WidgetItemSecondClickEvent(player, index, interfaceId, itemId);
     }
 
@@ -88,6 +92,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
         checkState(itemId > 0, "itemId <= 0");
+        
         return new WidgetItemThirdClickEvent(player, index, interfaceId, itemId);
     }
 
@@ -105,6 +110,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
         checkState(itemId > 0, "itemId <= 0");
+        
         return new WidgetItemFourthClickEvent(player, index, interfaceId, itemId);
     }
 
@@ -121,6 +127,7 @@ public final class WidgetItemClickMessageReader extends GameMessageReader {
 
         checkState(interfaceId > 0, "interfaceId <= 0");
         checkState(index >= 0, "index < 0");
+        
         return new WidgetItemFifthClickEvent(player, index, interfaceId, itemId);
     }
 }

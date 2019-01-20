@@ -1,4 +1,4 @@
-package io.luna.game.event.impl;
+package io.luna.game.event.entity;
 
 import io.luna.game.model.Entity;
 import io.luna.game.model.Position;

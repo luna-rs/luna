@@ -2,7 +2,7 @@ import MakePotion.MakePotionAction
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
-import io.luna.game.event.impl.ItemOnItemEvent
+import io.luna.game.event.item.ItemOnItemEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface

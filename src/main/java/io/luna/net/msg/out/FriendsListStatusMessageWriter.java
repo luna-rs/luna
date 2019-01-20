@@ -33,7 +33,7 @@ public final class FriendsListStatusMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(221);
+        var msg = ByteMessage.message(221);
         msg.put(status);
         return msg;
     }

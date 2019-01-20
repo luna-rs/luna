@@ -14,7 +14,7 @@ import io.luna.net.msg.GameMessageReader;
 public final class CloseWindowMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         player.getInterfaces().close();
         return null;
     }

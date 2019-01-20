@@ -7,9 +7,10 @@ import io.luna.game.GameService;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.util.AsyncExecutor;
+import io.luna.util.IntTuple;
 import io.luna.util.ThreadUtils;
-import io.luna.util.Tuple;
 import io.luna.util.gui.PluginGui;
+import java.util.concurrent.ConcurrentMap;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +23,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,9 +91,9 @@ public final class PluginBootstrap {
         @Override
         public void run() {
             //noinspection ConstantConditions
-            Set<String> fileList = Arrays.stream(dir.toFile().list()).
-                    filter(f -> f.endsWith(".kt") || f.endsWith(".kts")).
-                    collect(Collectors.toSet());
+            Set<String> fileList = Arrays.stream(dir.toFile().list())
+                    .filter(f -> f.endsWith(".kt") || f.endsWith(".kts"))
+                    .collect(Collectors.toSet());
 
             // Metadata TOML -> Java
             PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).
@@ -101,6 +101,7 @@ public final class PluginBootstrap {
 
             // Check for duplicate plugins.
             String pluginName = metadata.getName();
+            
             if (plugins.containsKey(pluginName)) {
                 LOGGER.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
                 return;
@@ -113,6 +114,7 @@ public final class PluginBootstrap {
                 LOGGER.catching(Level.WARN, e);
                 return;
             }
+            
             plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
         }
 
@@ -122,14 +124,14 @@ public final class PluginBootstrap {
          * @return The package name.
          */
         private String computePackageName() {
-            String packageDir = dir.toString().
-                    replace(File.separator, ".").
-                    substring(2);
+            String packageDir = dir.toString().replace(File.separator, ".").substring(2);
             int firstIndex = packageDir.indexOf('.');
             int lastIndex = packageDir.lastIndexOf('.');
+            
             if (firstIndex == lastIndex) {
                 return "";
             }
+            
             return packageDir.substring(firstIndex + 1, lastIndex);
         }
 
@@ -141,6 +143,7 @@ public final class PluginBootstrap {
         private void loadFile(String fileName) {
             try {
                 Path path = dir.resolve(fileName);
+                
                 if (fileName.endsWith(".kts")) {
                     // Load script file.
                     String scriptContents = new String(Files.readAllBytes(path));
@@ -182,7 +185,7 @@ public final class PluginBootstrap {
     /**
      * A map of plugin names to instances.
      */
-    private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Plugin> plugins = new ConcurrentHashMap<>();
 
     /**
      * The context instance.
@@ -207,13 +210,11 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
+    public IntTuple init(boolean displayGui) throws IOException {
         PluginManager plugins = context.getPlugins();
         GameService service = context.getService();
-
         initFiles();
-        Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
-
+        IntTuple pluginCount = initPlugins(displayGui);
         EventListenerPipelineSet oldPipelines = plugins.getPipelines();
         EventListenerPipelineSet newPipelines = bindings.getPipelines();
         service.sync(() -> oldPipelines.replaceAll(newPipelines));
@@ -228,9 +229,11 @@ public final class PluginBootstrap {
 
         // Traverse all paths and sub-paths.
         Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
+        
         for (Path dir : directories) {
             if (Files.isDirectory(dir)) {
                 Path pluginMetadata = dir.resolve("plugin.toml");
+                
                 if (Files.exists(pluginMetadata)) {
                     // Submit file tasks.
                     executor.execute(new PluginDirLoader(dir, pluginMetadata));
@@ -254,20 +257,20 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
-
+    private IntTuple initPlugins(boolean displayGui) throws IOException {
         // Launch the GUI, determine selected plugins.
         int totalCount = plugins.size();
         selectPlugins(displayGui);
 
         // Load all plugins.
-        KotlinInterpreter interpreter = new KotlinInterpreter();
+        var interpreter = new KotlinInterpreter();
+        
         for (Plugin other : plugins.values()) {
             loadPlugin(other, interpreter);
         }
 
         int selectedCount = plugins.size();
-        return new Tuple<>(selectedCount, totalCount);
+        return new IntTuple(selectedCount, totalCount);
     }
 
     /**
@@ -278,17 +281,16 @@ public final class PluginBootstrap {
      */
     private void selectPlugins(boolean displayGui) throws IOException {
         final Set<String> selectedPlugins = new HashSet<>();
+        
         if (displayGui) {
             // Displays the GUI, grabs the plugin selection from the interface.
             PluginGui gui = new PluginGui(plugins);
             selectedPlugins.addAll(gui.launch());
         } else {
             // Loads the plugin selection from the GUI settings file.
-            Toml guiSettings = new Toml().
-                    read(new File("./data/gui/settings.toml")).
-                    getTable("settings");
-
+            Toml guiSettings = new Toml().read(new File("./data/gui/settings.toml")).getTable("settings");
             boolean retainSelection = guiSettings.getBoolean("retain_selection");
+            
             if (retainSelection) {
                 // Load only selected plugins.
                 selectedPlugins.addAll(guiSettings.getList("selected"));
@@ -297,6 +299,7 @@ public final class PluginBootstrap {
                 selectedPlugins.addAll(plugins.keySet());
             }
         }
+        
         plugins.keySet().retainAll(selectedPlugins);
     }
 
@@ -316,6 +319,7 @@ public final class PluginBootstrap {
                 evtListener.setScript(script);
                 bindings.getPipelines().add(evtListener);
             }
+            
             bindings.getListeners().clear();
         }
     }

@@ -1,6 +1,5 @@
 package io.luna.game.action;
 
-import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 
@@ -34,7 +33,7 @@ public abstract class DestructionAction extends StationaryAction<Player> {
             return;
         }
 
-        Inventory inventory = mob.getInventory();
+        var inventory = mob.getInventory();
         currentRemove = remove();
 
         if (inventory.containsAll(currentRemove)) {

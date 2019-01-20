@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.block;
 
-import io.luna.game.model.mob.Animation;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -24,14 +23,14 @@ public final class AnimationUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        Animation animation = unwrap(player.getAnimation());
+        var animation = unwrap(player.getAnimation());
         msg.putShort(animation.getId(), ByteOrder.LITTLE);
         msg.put(animation.getDelay(), ValueType.NEGATE);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
-        Animation animation = unwrap(npc.getAnimation());
+        var animation = unwrap(npc.getAnimation());
         msg.putShort(animation.getId(), ByteOrder.LITTLE);
         msg.put(animation.getDelay());
     }

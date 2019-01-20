@@ -30,7 +30,7 @@ public final class PlayerInteractionMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(104, MessageType.VAR);
+        var msg = ByteMessage.message(104, MessageType.VAR);
         msg.put(interaction.getIndex(), ValueType.NEGATE);
         msg.put(interaction.isPinned() ? 1 : 0, ValueType.ADD);
         msg.putString(interaction.getName());

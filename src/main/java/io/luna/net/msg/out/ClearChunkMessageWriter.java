@@ -29,10 +29,10 @@ public final class ClearChunkMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(64);
-        Position plrPos = player.getPosition();
-        msg.put(pos.getLocalX(plrPos), ValueType.NEGATE);
-        msg.put(pos.getLocalY(plrPos), ValueType.NEGATE);
+        var msg = ByteMessage.message(64);
+        var position = player.getPosition();
+        msg.put(pos.getLocalX(position), ValueType.NEGATE);
+        msg.put(pos.getLocalY(position), ValueType.NEGATE);
         return msg;
     }
 }

@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.block;
 
 import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * A model that manages update flags for mobs.
@@ -29,7 +30,7 @@ public final class UpdateFlagSet {
     /**
      * A set that tracks flagged update blocks.
      */
-    private final EnumSet<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
+    private final Set<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
 
     /**
      * Flag an update block.

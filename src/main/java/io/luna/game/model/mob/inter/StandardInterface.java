@@ -26,7 +26,6 @@ public class StandardInterface extends AbstractInterface {
 
     @Override
     public void open(Player player) {
-        int id = unsafeGetId();
-        player.queue(new InterfaceMessageWriter(id));
+        player.queue(new InterfaceMessageWriter(getId()));
     }
 }

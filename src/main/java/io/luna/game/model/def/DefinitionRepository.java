@@ -18,7 +18,6 @@ import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkState;
 
-
 /**
  * A model representing a repository for a definition implementation. Definition repositories are immutable
  * after they are locked and ordered by definition identifier.
@@ -107,8 +106,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
 
     @Override
     public Spliterator<T> spliterator() {
-        return Spliterators.spliterator(iterator(), size,
-                Spliterator.ORDERED | Spliterator.IMMUTABLE);
+        return Spliterators.spliterator(iterator(), size, Spliterator.ORDERED | Spliterator.IMMUTABLE);
     }
 
     /**
@@ -153,14 +151,17 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      * @param predicate The predicate.
      * @return The matching definition.
      */
-    public Optional<T> lookup(Predicate<T> predicate) {
-        Iterator<T> it = newIterator();
-        while (it.hasNext()) {
-            T next = it.next();
+    public Optional<T> lookup(Predicate<? super T> predicate) {
+        var iterator = newIterator();
+        
+        while (iterator.hasNext()) {
+            T next = iterator.next();
+            
             if (next != null && predicate.test(next)) {
                 return Optional.of(next);
             }
         }
+        
         return Optional.empty();
     }
 
@@ -171,10 +172,8 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
      */
     public final void storeDefinition(T definition) {
         checkState(!locked, "Cannot add definitions to a locked repository.");
-
         int id = definition.getId();
-        checkState(!get(id).isPresent(), "Cannot have two definitions mapped to the same identifier.");
-
+        checkState(get(id).isEmpty(), "Cannot have two definitions mapped to the same identifier.");
         put(id, definition);
         size++;
     }

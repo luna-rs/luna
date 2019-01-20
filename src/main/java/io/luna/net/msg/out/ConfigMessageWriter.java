@@ -42,7 +42,7 @@ public final class ConfigMessageWriter extends GameMessageWriter {
      * Returns a {@link ByteMessage} containing the {@code short} version of this message.
      */
     private ByteMessage writeByteConfig() {
-        ByteMessage msg = ByteMessage.message(36);
+        var msg = ByteMessage.message(36);
         msg.putShort(id, ByteOrder.LITTLE);
         msg.put(state);
         return msg;
@@ -52,7 +52,7 @@ public final class ConfigMessageWriter extends GameMessageWriter {
      * Returns a {@link ByteMessage} containing the {@code byte} version of this message.
      */
     private ByteMessage writeShortConfig() {
-        ByteMessage msg = ByteMessage.message(87);
+        var msg = ByteMessage.message(87);
         msg.putShort(id, ByteOrder.LITTLE);
         msg.putInt(state, ByteOrder.MIDDLE);
         return msg;

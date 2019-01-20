@@ -1,11 +1,11 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ItemClickEvent.ItemFifthClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemFourthClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemSecondClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemThirdClickEvent;
+import io.luna.game.event.item.ItemClickEvent.ItemFifthClickEvent;
+import io.luna.game.event.item.ItemClickEvent.ItemFirstClickEvent;
+import io.luna.game.event.item.ItemClickEvent.ItemFourthClickEvent;
+import io.luna.game.event.item.ItemClickEvent.ItemSecondClickEvent;
+import io.luna.game.event.item.ItemClickEvent.ItemThirdClickEvent;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
@@ -25,21 +25,24 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ItemClickMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
+        
         player.interruptAction();
+        
         switch (opcode) {
-        case 122:
-            return firstIndex(player, msg.getPayload());
-        case 41:
-            return secondIndex(player, msg.getPayload());
-        case 16:
-            return thirdIndex(player, msg.getPayload());
-        case 75:
-            return fourthIndex(player, msg.getPayload());
-        case 87:
-            return fifthIndex(player, msg.getPayload());
+            case 122:
+                return firstIndex(player, msg.getPayload());
+            case 41:
+                return secondIndex(player, msg.getPayload());
+            case 16:
+                return thirdIndex(player, msg.getPayload());
+            case 75:
+                return fourthIndex(player, msg.getPayload());
+            case 87:
+                return fifthIndex(player, msg.getPayload());
         }
+        
         return null;
     }
 
@@ -58,10 +61,11 @@ public final class ItemClickMessageReader extends GameMessageReader {
         checkState(interfaceId > 0, "interfaceId out of range");
 
         switch (interfaceId) {
-        case 3214:
-            Inventory inventory = player.getInventory();
-            return inventory.computeIdForIndex(index).orElse(-1) == id;
+            case 3214:
+                Inventory inventory = player.getInventory();
+                return inventory.computeIdForIndex(index).orElse(-1) == id;
         }
+        
         return true;
     }
 
@@ -80,6 +84,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
+        
         return new ItemFirstClickEvent(player, id, index, interfaceId);
     }
 
@@ -98,6 +103,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
+        
         return new ItemSecondClickEvent(player, id, index, interfaceId);
     }
 
@@ -116,6 +122,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
+        
         return new ItemThirdClickEvent(player, id, index, interfaceId);
     }
 
@@ -134,6 +141,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
+        
         return new ItemFourthClickEvent(player, id, index, interfaceId);
     }
 
@@ -152,6 +160,7 @@ public final class ItemClickMessageReader extends GameMessageReader {
         if (!validate(player, id, index, interfaceId)) {
             return null;
         }
+        
         return new ItemFifthClickEvent(player, id, index, interfaceId);
     }
 }

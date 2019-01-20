@@ -88,6 +88,7 @@ public final class IsaacCipher {
         int i, j, x, y;
 
         last += ++counter;
+        
         for (i = 0, j = SIZE / 2; i < SIZE / 2; ) {
             x = state[i];
             accumulator ^= accumulator << 13;
@@ -145,8 +146,8 @@ public final class IsaacCipher {
      * Initializes this random number generator.
      */
     private void init() {
-        int i;
-        int a, b, c, d, e, f, g, h;
+        int a, b, c, d, e, f, g, h, i;
+        
         a = b = c = d = e = f = g = h = GOLDEN_RATIO;
 
         for (i = 0; i < 4; ++i) {
@@ -276,6 +277,7 @@ public final class IsaacCipher {
             isaac();
             count = SIZE - 1;
         }
+        
         return results[count];
     }
 

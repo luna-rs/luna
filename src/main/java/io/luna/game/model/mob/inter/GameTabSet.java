@@ -1,16 +1,13 @@
 package io.luna.game.model.mob.inter;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 
-import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 /**
  * A model representing a collection of sidebar tabs on the Player's game screen.
@@ -23,6 +20,7 @@ public final class GameTabSet {
      * An enumerated type representing the sidebar tab indexes.
      */
     public enum TabIndex {
+        
         COMBAT(0),
         SKILL(1),
         QUEST(2),
@@ -39,10 +37,9 @@ public final class GameTabSet {
         MUSIC(13);
 
         /**
-         * An immutable set containing all elements in this enumerated type.
+         * An unmodifiable set containing all elements in this enumerated type.
          */
-        public static final ImmutableSet<TabIndex> ALL =
-                Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
+        public static final Set<TabIndex> ALL = Set.copyOf(EnumSet.allOf(TabIndex.class));
 
         /**
          * The index.
@@ -69,6 +66,7 @@ public final class GameTabSet {
     // Initialize map of default tabs.
     static {
         Map<TabIndex, Integer> defaultTabs = new EnumMap<>(TabIndex.class);
+        
         defaultTabs.put(TabIndex.COMBAT, 2423);
         defaultTabs.put(TabIndex.SKILL, 3917);
         defaultTabs.put(TabIndex.QUEST, 638);
@@ -84,13 +82,13 @@ public final class GameTabSet {
         defaultTabs.put(TabIndex.EMOTE, 147);
         defaultTabs.put(TabIndex.MUSIC, 962);
 
-        DEFAULT = ImmutableMap.copyOf(defaultTabs);
+        DEFAULT = Map.copyOf(defaultTabs);
     }
 
     /**
      * The immutable map of default tabs.
      */
-    private static final ImmutableMap<TabIndex, Integer> DEFAULT;
+    private static final Map<TabIndex, Integer> DEFAULT;
 
     /**
      * The Player instance.
@@ -120,11 +118,13 @@ public final class GameTabSet {
      */
     public boolean set(TabIndex index, int id) {
         OptionalInt currentId = get(index);
-        if (!currentId.isPresent() || currentId.getAsInt() != id) {
+        
+        if (currentId.isEmpty() || currentId.getAsInt() != id) {
             player.queue(new TabInterfaceMessageWriter(index, id));
             tabs.put(index, id);
             return true;
         }
+        
         return false;
     }
 
@@ -136,9 +136,11 @@ public final class GameTabSet {
      */
     public OptionalInt get(TabIndex index) {
         Integer current = tabs.get(index);
+        
         if (current == null) {
             return OptionalInt.empty();
         }
+        
         return OptionalInt.of(current);
     }
 
@@ -179,9 +181,9 @@ public final class GameTabSet {
      * Returns a <strong>copy</strong> of the backing enum map. A new copy is created on each invocation of
      * this method.
      *
-     * @return An immutable copy of the backing enum map.
+     * @return An unmodifiable copy of the backing enum map.
      */
-    public ImmutableMap<TabIndex, Integer> getAll() {
-        return Maps.immutableEnumMap(tabs);
+    public Map<TabIndex, Integer> getAll() {
+        return Map.copyOf(tabs);
     }
 }

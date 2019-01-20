@@ -50,7 +50,7 @@ public final class SoundMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(174);
+        var msg = ByteMessage.message(174);
         msg.putShort(id);
         msg.put(loops);
         msg.putShort(delay);

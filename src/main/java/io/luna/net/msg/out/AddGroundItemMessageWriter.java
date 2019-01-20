@@ -43,7 +43,7 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(44);
+        var msg = ByteMessage.message(44);
         msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort(amount);
         msg.put(offset);

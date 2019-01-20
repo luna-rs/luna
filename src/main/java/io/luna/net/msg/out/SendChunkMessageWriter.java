@@ -29,9 +29,10 @@ public final class SendChunkMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(85);
-        msg.put(position.getLocalY(player.getPosition()), ValueType.NEGATE);
-        msg.put(position.getLocalX(player.getPosition()), ValueType.NEGATE);
+        var position = player.getPosition();
+        var msg = ByteMessage.message(85);
+        msg.put(this.position.getLocalY(position), ValueType.NEGATE);
+        msg.put(this.position.getLocalX(position), ValueType.NEGATE);
         return msg;
     }
 }

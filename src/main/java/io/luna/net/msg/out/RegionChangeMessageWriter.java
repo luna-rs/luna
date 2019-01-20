@@ -14,9 +14,10 @@ public final class RegionChangeMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(73);
-        msg.putShort(player.getPosition().getBottomLeftChunkX() + 6, ValueType.ADD);
-        msg.putShort(player.getPosition().getBottomLeftChunkY() + 6);
+        var position = player.getPosition();
+        var msg = ByteMessage.message(73);
+        msg.putShort(position.getBottomLeftChunkX() + 6, ValueType.ADD);
+        msg.putShort(position.getBottomLeftChunkY() + 6);
         return msg;
     }
 }

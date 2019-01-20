@@ -5,8 +5,6 @@ import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 
-import java.util.OptionalInt;
-
 /**
  * An item container model representing a player's bank.
  *
@@ -56,7 +54,6 @@ public final class Bank extends ItemContainer {
         super(352, StackPolicy.ALWAYS, 5382);
         this.player = player;
         inventory = player.getInventory();
-
         setListeners(new PlayerRefreshListener(player, "You do not have enough bank space to deposit that."));
     }
 
@@ -66,6 +63,7 @@ public final class Bank extends ItemContainer {
     public void open() {
         if (!isOpen()) {
             disableEvents();
+            
             try {
                 player.setWithdrawAsNote(false);
 
@@ -91,21 +89,24 @@ public final class Bank extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean deposit(int inventoryIndex, int amount) {
-
         // Return if item doesn't exist or invalid amount.
-        Item item = inventory.get(inventoryIndex);
+        var item = inventory.get(inventoryIndex);
+        
         if (item == null || amount < 1) {
             return false;
         }
 
         // Get correct item identifier and amount to deposit.
-        int id = item.getItemDef().getUnnotedId().orElse(item.getId());
+        int unnotedId = item.getItemDef().getUnnotedId();
+        int id = unnotedId != -1 ? unnotedId : item.getId();
+        
         int existingAmount = inventory.computeAmountForId(item.getId());
         amount = amount > existingAmount ? existingAmount : amount;
         item = item.withAmount(amount);
 
         // Determine if enough space in bank.
-        Item depositItem = new Item(id, amount);
+        var depositItem = new Item(id, amount);
+        
         if (!hasSpaceFor(depositItem)) {
             fireCapacityExceededEvent();
             return false;
@@ -115,6 +116,7 @@ public final class Bank extends ItemContainer {
         if (inventory.remove(item)) {
             return add(depositItem);
         }
+        
         return false;
     }
 
@@ -126,15 +128,16 @@ public final class Bank extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean withdraw(int bankIndex, int amount) {
-
         // Return if item doesn't exist or invalid amount.
-        Item item = get(bankIndex);
+        var item = get(bankIndex);
+        
         if (item == null || amount < 1) {
             return false;
         }
 
         // No free spaces in inventory.
         int remaining = inventory.computeRemainingSize();
+        
         if (remaining < 1) {
             inventory.fireCapacityExceededEvent();
             return false;
@@ -143,29 +146,34 @@ public final class Bank extends ItemContainer {
         // Get correct item identifier and amount to withdraw.
         int id = item.getId();
         int existingAmount = item.getAmount();
+        
         amount = amount > existingAmount ? existingAmount : amount;
 
         if (player.isWithdrawAsNote()) {
-            OptionalInt notedId = item.getItemDef().getNotedId();
-            if (notedId.isPresent()) {
-                id = notedId.getAsInt();
+            int notedId = item.getItemDef().getNotedId();
+            
+            if (notedId != -1) {
+                id = notedId;
             } else {
                 player.sendMessage("This item cannot be withdrawn as a note.");
             }
         }
 
         // For non-stackable items, make the amount equal to free slots left if necessary.
-        ItemDefinition withdrawItemDef = ItemDefinition.ALL.retrieve(id);
+        var withdrawItemDef = ItemDefinition.ALL.retrieve(id);
+        
         if (!withdrawItemDef.isStackable()) {
             amount = amount > remaining ? remaining : amount;
         }
 
         // Withdraw the item.
         item = item.withAmount(amount);
+        
         if (remove(item)) {
             Item withdrawItem = new Item(id, amount);
             return inventory.add(withdrawItem);
         }
+        
         return false;
     }
 

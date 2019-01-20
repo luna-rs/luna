@@ -10,7 +10,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.AttributeKey;
-import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.GsonUtils;
 
@@ -49,7 +48,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
 
     @Override
     public LoginResponse load(Player player, String enteredPassword) {
-        Path filePath = computePath(player);
+        var filePath = computePath(player);
 
         // File doesn't exist, new player.
         if (!Files.exists(filePath)) {
@@ -68,13 +67,15 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
 
     @Override
     public boolean save(Player player) {
-        Path filePath = computePath(player);
+        var filePath = computePath(player);
+        
         try {
             GsonUtils.writeJson(toJson(player), filePath);
         } catch (Exception e) {
             LOGGER.catching(e);
             return false;
         }
+        
         return true;
     }
 
@@ -89,42 +90,44 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public LoginResponse fromJson(Player player, JsonObject data, String enteredPassword)
             throws ClassNotFoundException {
-        String password = data.get("password").getAsString();
+        var password = data.get("password").getAsString();
+        
         if (!checkPw(enteredPassword, password)) {
             return LoginResponse.INVALID_CREDENTIALS;
         }
 
-        Position position = getAsType(data.get("position"), Position.class);
+        var position = getAsType(data.get("position"), Position.class);
         player.setPosition(position);
 
-        PlayerRights rights = PlayerRights.valueOf(data.get("rights").getAsString());
+        var rights = PlayerRights.valueOf(data.get("rights").getAsString());
         player.setRights(rights);
 
-        boolean running = data.get("running").getAsBoolean();
+        var running = data.get("running").getAsBoolean();
         player.getWalking().setRunning(running);
 
-        int[] appearance = getAsType(data.get("appearance"), int[].class);
+        var appearance = getAsType(data.get("appearance"), int[].class);
         player.getAppearance().setValues(appearance);
 
-        IndexedItem[] inventory = getAsType(data.get("inventory"), IndexedItem[].class);
+        var inventory = getAsType(data.get("inventory"), IndexedItem[].class);
         player.getInventory().init(inventory);
 
-        IndexedItem[] bank = getAsType(data.get("bank"), IndexedItem[].class);
+        var bank = getAsType(data.get("bank"), IndexedItem[].class);
         player.getBank().init(bank);
 
-        IndexedItem[] equipment = getAsType(data.get("equipment"), IndexedItem[].class);
+        var equipment = getAsType(data.get("equipment"), IndexedItem[].class);
         player.getEquipment().init(equipment);
 
-        Skill[] skills = getAsType(data.get("skills"), Skill[].class);
+        var skills = getAsType(data.get("skills"), Skill[].class);
         player.getSkills().setSkills(skills);
 
-        long[] friends = getAsType(data.get("friends"), long[].class);
+        var friends = getAsType(data.get("friends"), long[].class);
         player.setFriends(friends);
 
-        long[] ignores = getAsType(data.get("ignores"), long[].class);
+        var ignores = getAsType(data.get("ignores"), long[].class);
         player.setIgnores(ignores);
 
-        JsonObject attributes = data.get("attributes").getAsJsonObject();
+        var attributes = data.get("attributes").getAsJsonObject();
+        
         for (Entry<String, JsonElement> entry : attributes.entrySet()) {
             JsonObject attr = entry.getValue().getAsJsonObject();
 
@@ -132,6 +135,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             Object value = getAsType(attr.get("value"), type);
             player.getAttributes().get(entry.getKey()).set(value);
         }
+        
         return LoginResponse.NORMAL;
     }
 
@@ -147,8 +151,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public LoginResponse parseFromJson(Player player, Path path, String enteredPassword)
             throws ClassNotFoundException, IOException {
-        String jsonString = new String(Files.readAllBytes(path));
-        JsonObject data = new JsonParser().parse(jsonString).getAsJsonObject();
+        var jsonString = new String(Files.readAllBytes(path));
+        var data = new JsonParser().parse(jsonString).getAsJsonObject();
         return fromJson(player, data, enteredPassword);
     }
 
@@ -159,7 +163,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      * @return The serialization object.
      */
     public JsonObject toJson(Player player) {
-        JsonObject data = new JsonObject();
+        var data = new JsonObject();
+        
         data.addProperty("password", computePw(player));
         data.add("position", toJsonTree(player.getPosition()));
         data.addProperty("rights", player.getRights().name());
@@ -172,19 +177,20 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         data.add("friends", toJsonTree(player.getFriends().toArray()));
         data.add("ignores", toJsonTree(player.getIgnores().toArray()));
 
-        JsonObject attributes = new JsonObject();
-        for (Entry<String, AttributeValue> it : player.getAttributes()) {
-            AttributeKey key = AttributeKey.ALIASES.get(it.getKey());
-            AttributeValue value = it.getValue();
+        var attributes = new JsonObject();
+        
+        for (var entry : player.getAttributes()) {
+            var key = AttributeKey.ALIASES.get(entry.getKey());
+            var value = entry.getValue();
 
             if (key.isPersistent()) {
-                JsonObject attr = new JsonObject();
+                var attr = new JsonObject();
                 attr.addProperty("type", key.getTypeName());
                 attr.add("value", toJsonTree(value.get()));
-
                 attributes.add(key.getName(), attr);
             }
         }
+        
         data.add("attributes", attributes);
         return data;
     }

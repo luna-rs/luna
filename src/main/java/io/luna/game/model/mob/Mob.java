@@ -12,7 +12,6 @@ import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static io.luna.game.model.mob.Skill.HITPOINTS;
@@ -67,47 +66,47 @@ public abstract class Mob extends Entity {
     /**
      * The current animation.
      */
-    private Optional<Animation> animation = Optional.empty();
+    private Animation animation;
 
     /**
      * The current position being faced.
      */
-    private Optional<Position> facePosition = Optional.empty();
+    private Position facePosition;
 
     /**
      * The current message being forced.
      */
-    private Optional<String> forcedChat = Optional.empty();
+    private String forcedChat;
 
     /**
      * The current graphic.
      */
-    private Optional<Graphic> graphic = Optional.empty();
+    private Graphic graphic;
 
     /**
      * The current interaction index.
      */
-    private OptionalInt interactionIndex = OptionalInt.empty();
+    private int interactionIndex = -1;
 
     /**
      * The current primary hitsplat.
      */
-    private Optional<Hit> primaryHit = Optional.empty();
+    private Hit primaryHit;
 
     /**
      * The current secondary hitsplat.
      */
-    private Optional<Hit> secondaryHit = Optional.empty();
+    private Hit secondaryHit;
 
     /**
      * The entity being interacted with.
      */
-    private Optional<Entity> interactingWith = Optional.empty();
+    private Entity interactingWith;
 
     /**
      * The transformation identifier.
      */
-    OptionalInt transformId = OptionalInt.empty();
+    int transformId = -1;
 
     /**
      * Creates a new {@link Mob}.
@@ -117,6 +116,7 @@ public abstract class Mob extends Entity {
     public Mob(LunaContext context, Position position, EntityType type) {
         super(context, position, type);
     }
+    
     /**
      * Creates a new {@link Mob}.
      *
@@ -228,9 +228,8 @@ public abstract class Mob extends Entity {
      * @param newAnimation The animation to perform.
      */
     public final void animation(Animation newAnimation) {
-        if (!animation.isPresent() ||
-                animation.filter(newAnimation::overrides).isPresent()) {
-            animation = Optional.of(newAnimation);
+        if (animation == null || newAnimation.overrides(animation)) {
+            animation = newAnimation;
             flags.flag(UpdateFlag.ANIMATION);
         }
     }
@@ -241,7 +240,7 @@ public abstract class Mob extends Entity {
      * @param position The position.
      */
     public final void face(Position position) {
-        facePosition = Optional.of(position);
+        facePosition = position;
         flags.flag(UpdateFlag.FACE_POSITION);
     }
 
@@ -287,7 +286,7 @@ public abstract class Mob extends Entity {
      * @param message The message to force.
      */
     public final void forceChat(String message) {
-        forcedChat = Optional.of(message);
+        forcedChat = message;
         flags.flag(UpdateFlag.FORCED_CHAT);
     }
 
@@ -297,7 +296,7 @@ public abstract class Mob extends Entity {
      * @param newGraphic The graphic to perform.
      */
     public final void graphic(Graphic newGraphic) {
-        graphic = Optional.of(newGraphic);
+        graphic = newGraphic;
         flags.flag(UpdateFlag.GRAPHIC);
     }
 
@@ -307,19 +306,19 @@ public abstract class Mob extends Entity {
     public final void interact(Entity entity) {
         if (entity == null) {
             // Reset the current interaction.
-            interactionIndex = OptionalInt.of(65535);
+            interactionIndex = 65535;
             flags.flag(UpdateFlag.INTERACTION);
         } else if (entity instanceof Mob) {
             // Interact with player or npc.
             Mob mob = (Mob) entity;
-            interactionIndex = mob.type == EntityType.PLAYER ?
-                    OptionalInt.of(mob.index + 32768) : OptionalInt.of(mob.index);
+            interactionIndex = mob.type == EntityType.PLAYER ? mob.index + 32768 : mob.index;
             flags.flag(UpdateFlag.INTERACTION);
         } else {
             // Interact with a non-movable entity.
             face(entity.getPosition());
         }
-        interactingWith = Optional.ofNullable(entity);
+        
+        interactingWith = entity;
     }
 
     /**
@@ -327,7 +326,7 @@ public abstract class Mob extends Entity {
      */
     public final void resetInteractingWith() {
         // Only reset if we're currently interacting.
-        if (interactingWith.isPresent()) {
+        if (interactingWith != null) {
             interact(null);
         }
     }
@@ -338,7 +337,7 @@ public abstract class Mob extends Entity {
      * @param hit The hit to display.
      */
     private void primaryHit(Hit hit) {
-        primaryHit = Optional.of(hit);
+        primaryHit = hit;
         flags.flag(UpdateFlag.PRIMARY_HIT);
     }
 
@@ -348,7 +347,7 @@ public abstract class Mob extends Entity {
      * @param hit The hit to display.
      */
     private void secondaryHit(Hit hit) {
-        secondaryHit = Optional.of(hit);
+        secondaryHit = hit;
         flags.flag(UpdateFlag.SECONDARY_HIT);
     }
 
@@ -368,6 +367,7 @@ public abstract class Mob extends Entity {
         if (index != -1) {
             checkArgument(index >= 1, "index < 1");
         }
+        
         this.index = index;
     }
 
@@ -376,12 +376,12 @@ public abstract class Mob extends Entity {
      */
     public final void resetFlags() {
         reset();
-        animation = Optional.empty();
-        forcedChat = Optional.empty();
-        facePosition = Optional.empty();
-        interactionIndex = OptionalInt.empty();
-        primaryHit = Optional.empty();
-        secondaryHit = Optional.empty();
+        animation = null;
+        forcedChat = null;
+        facePosition = null;
+        interactionIndex = -1;
+        primaryHit = null;
+        secondaryHit = null;
         flags.clear();
     }
 
@@ -458,34 +458,34 @@ public abstract class Mob extends Entity {
      * @return The current animation.
      */
     public final Optional<Animation> getAnimation() {
-        return animation;
+        return Optional.ofNullable(animation);
     }
 
     /**
      * @return The current position being faced.
      */
     public final Optional<Position> getFacePosition() {
-        return facePosition;
+        return Optional.ofNullable(facePosition);
     }
 
     /**
      * @return The current message being forced.
      */
     public final Optional<String> getForcedChat() {
-        return forcedChat;
+        return Optional.ofNullable(forcedChat);
     }
 
     /**
      * @return The current graphic.
      */
     public final Optional<Graphic> getGraphic() {
-        return graphic;
+        return Optional.ofNullable(graphic);
     }
 
     /**
      * @return The current interaction index.
      */
-    public final OptionalInt getInteractionIndex() {
+    public final int getInteractionIndex() {
         return interactionIndex;
     }
 
@@ -493,14 +493,14 @@ public abstract class Mob extends Entity {
      * @return The current primary hitsplat.
      */
     public final Optional<Hit> getPrimaryHit() {
-        return primaryHit;
+        return Optional.ofNullable(primaryHit);
     }
 
     /**
      * @return The current secondary hitsplat.
      */
     public final Optional<Hit> getSecondaryHit() {
-        return secondaryHit;
+        return Optional.ofNullable(secondaryHit);
     }
 
     /**
@@ -521,13 +521,13 @@ public abstract class Mob extends Entity {
      * @return The entity being interacted with.
      */
     public final Optional<Entity> getInteractingWith() {
-        return interactingWith;
+        return Optional.ofNullable(interactingWith);
     }
 
     /**
      * @return The transformation identifier.
      */
-    public OptionalInt getTransformId() {
+    public int getTransformId() {
         return transformId;
     }
 }

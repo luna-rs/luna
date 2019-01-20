@@ -1,10 +1,7 @@
 package io.luna.game.model;
 
-
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * An enum representing different entity types.
@@ -36,6 +33,5 @@ public enum EntityType {
     /**
      * An immutable enum set of these values.
      */
-    public static final ImmutableSet<EntityType> ALL =
-            Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
+    public static final Set<EntityType> ALL = Set.copyOf(EnumSet.allOf(EntityType.class));
 }

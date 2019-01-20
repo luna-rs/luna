@@ -1,12 +1,10 @@
 package io.luna.game.model.item;
 
-import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A listener that updates a Player's weight.
@@ -35,12 +33,12 @@ public final class WeightListener implements ItemContainerListener {
     }
 
     @Override
-    public void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
+    public void onSingleUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
         updateWeight(oldItem, newItem);
     }
 
     @Override
-    public void onBulkUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
+    public void onBulkUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
         weightChanges.add(computeWeightDifference(oldItem, newItem));
     }
 
@@ -53,6 +51,7 @@ public final class WeightListener implements ItemContainerListener {
             currentWeight += iterator.next();
             iterator.remove();
         }
+        
         player.setWeight(currentWeight);
     }
 
@@ -62,7 +61,7 @@ public final class WeightListener implements ItemContainerListener {
      * @param oldItem The old item.
      * @param newItem The new item.
      */
-    private void updateWeight(Optional<Item> oldItem, Optional<Item> newItem) {
+    private void updateWeight(Item oldItem, Item newItem) {
         player.setWeight(player.getWeight() + computeWeightDifference(oldItem, newItem));
     }
 
@@ -73,7 +72,7 @@ public final class WeightListener implements ItemContainerListener {
      * @param newItem The new item.
      * @return The difference in weight between {@code oldItem} and {@code newItem}.
      */
-    private double computeWeightDifference(Optional<Item> oldItem, Optional<Item> newItem) {
+    private double computeWeightDifference(Item oldItem, Item newItem) {
         double subtract = computeWeight(oldItem);
         double add = computeWeight(newItem);
         return add - subtract;
@@ -85,9 +84,7 @@ public final class WeightListener implements ItemContainerListener {
      * @param item The item to compute for.
      * @return The weight.
      */
-    private double computeWeight(Optional<Item> item) {
-        return item.map(Item::getItemDef).
-                map(ItemDefinition::getWeight).
-                orElse(0.0);
+    private double computeWeight(Item item) {
+        return item == null ? 0D : item.getItemDef().getWeight();
     }
 }

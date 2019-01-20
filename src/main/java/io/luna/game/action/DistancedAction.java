@@ -42,7 +42,8 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
 
     @Override
     protected final void call() {
-        Position mobPosition = mob.getPosition();
+        var mobPosition = mob.getPosition();
+        
         if (mobPosition.isWithinDistance(position, radius)) {
             execute();
 
@@ -62,12 +63,14 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
         if (other == this) {
             return true;
         }
+        
         if (other instanceof DistancedAction<?>) {
             Position otherPosition = ((DistancedAction<?>) other).position;
             return position.getX() == otherPosition.getX() &&
                     position.getY() == otherPosition.getY() &&
                     position.getZ() == otherPosition.getZ();
         }
+        
         return false;
     }
 

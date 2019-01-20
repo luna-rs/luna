@@ -25,19 +25,19 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
     }
 
     @Override
-    public JsonObject parse(JsonArray parser) throws Exception {
+    public JsonObject parse(JsonArray parser) {
         JsonElement element = parser.get(currentIndex);
         return element.getAsJsonObject();
     }
 
     @Override
-    public JsonArray newParser(BufferedReader reader) throws Exception {
+    public JsonArray newParser(BufferedReader reader) {
         JsonElement jsonReader = new JsonParser().parse(reader);
         return jsonReader.getAsJsonArray();
     }
 
     @Override
-    public boolean hasNext(JsonArray parser) throws Exception {
+    public boolean hasNext(JsonArray parser) {
         return currentIndex + 1 != parser.size();
     }
 }

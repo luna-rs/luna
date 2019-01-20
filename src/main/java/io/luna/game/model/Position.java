@@ -79,14 +79,13 @@ public final class Position {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Position)) {
+            return false;
         }
-        if (obj instanceof Position) {
-            Position other = (Position) obj;
-            return x == other.x && y == other.y && z == other.z;
-        }
-        return false;
+        
+        var other = (Position) obj;
+    
+        return x == other.x && y == other.y && z == other.z;
     }
 
     /**
@@ -100,6 +99,7 @@ public final class Position {
         if (z != other.z) {
             return false;
         }
+        
         int deltaX = Math.abs(other.x - x);
         int deltaY = Math.abs(other.y - y);
         return deltaX <= distance && deltaY <= distance;
@@ -214,6 +214,7 @@ public final class Position {
         if (chunkPosition == null) {
             chunkPosition = new ChunkPosition(this);
         }
+        
         return chunkPosition;
     }
 

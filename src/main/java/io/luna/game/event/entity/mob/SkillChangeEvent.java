@@ -1,4 +1,4 @@
-package io.luna.game.event.impl;
+package io.luna.game.event.entity.mob;
 
 import io.luna.game.model.mob.Mob;
 

@@ -42,7 +42,6 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
      */
     @SuppressWarnings("unchecked")
     public <T> AttributeValue<T> get(String key) throws AttributeTypeException {
-
         //noinspection StringEquality
         if (lastKey == requireNonNull(key)) { // Check if we can use our cached value.
             return lastValue;
@@ -55,8 +54,8 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
         try {
             // Cache key and new attribute value, return cached value.
             lastKey = alias.getName();
-            lastValue = attributes
-                    .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
+            lastValue = attributes.computeIfAbsent(alias.getName(), it ->
+                    new AttributeValue<>(alias.getInitialValue()));
             return lastValue;
         } catch (ClassCastException e) {
             // Throw an exception on type mismatch.
@@ -76,12 +75,12 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
 
     /**
      * Retrieves the {@link AttributeKey} instance from a String {@code key}.
+     *
      * @param key The key.
      * @return The attribute key instance.
      */
     private AttributeKey<?> getAttributeKey(String key) {
-        return Optional.ofNullable(AttributeKey.ALIASES.get(key)).
-                orElse(AttributeKey.ALIASES.get(key.intern()));
+        return Optional.ofNullable(AttributeKey.ALIASES.get(key)).orElse(AttributeKey.ALIASES.get(key.intern()));
     }
 
     @Override

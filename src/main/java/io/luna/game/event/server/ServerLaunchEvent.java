@@ -1,4 +1,4 @@
-package io.luna.game.event.impl;
+package io.luna.game.event.server;
 
 import io.luna.game.event.Event;
 

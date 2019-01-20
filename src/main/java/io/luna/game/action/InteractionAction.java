@@ -41,18 +41,18 @@ public final class InteractionAction extends DistancedAction<Player> {
         if (interact.getType() != EntityType.ITEM) {
             mob.interact(interact);
         }
+        
         mob.getWalking().clear();
-
         PluginManager plugins = mob.getPlugins();
         plugins.post(event);
     }
 
     @Override
     protected boolean isEqual(Action<?> other) {
-        if (other instanceof InteractionAction) {
-            InteractionAction action = (InteractionAction) other;
-            return interact.equals(action.interact);
+        if (!(other instanceof InteractionAction)) {
+            return false;
         }
-        return false;
+        
+        return interact.equals(((InteractionAction) other).interact);
     }
 }

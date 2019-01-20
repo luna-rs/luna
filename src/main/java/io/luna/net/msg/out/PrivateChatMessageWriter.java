@@ -35,7 +35,7 @@ public final class PrivateChatMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(196, MessageType.VAR);
+        var msg = ByteMessage.message(196, MessageType.VAR);
         msg.putLong(name);
         msg.putInt(player.newPrivateMessageId());
         msg.put(player.getRights().getClientValue());

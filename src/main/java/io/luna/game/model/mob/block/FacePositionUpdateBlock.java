@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.block;
 
-import io.luna.game.model.Position;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -24,14 +23,14 @@ public final class FacePositionUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        Position position = unwrap(player.getFacePosition());
+        var position = unwrap(player.getFacePosition());
         msg.putShort((position.getX() + 1) << 1, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort((position.getY() + 1) << 1, ByteOrder.LITTLE);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
-        Position position = unwrap(npc.getFacePosition());
+        var position = unwrap(npc.getFacePosition());
         msg.putShort(position.getX(), ByteOrder.LITTLE);
         msg.putShort(position.getY(), ByteOrder.LITTLE);
     }

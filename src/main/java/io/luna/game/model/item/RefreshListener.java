@@ -1,13 +1,10 @@
 package io.luna.game.model.item;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 /**
  * A listener that tracks indexes that need to be refreshed and forwards the resulting display update
@@ -63,13 +60,13 @@ public abstract class RefreshListener implements ItemContainerListener {
     private final List<IndexedItem> refreshUpdates = new ArrayList<>();
 
     @Override
-    public final void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
-        ImmutableList<IndexedItem> updateItem = ImmutableList.of(getItem(index, newItem));
+    public final void onSingleUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
+        List<IndexedItem> updateItem = List.of(getItem(index, newItem));
         sendMsg(items, updateItem);
     }
 
     @Override
-    public final void onBulkUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
+    public final void onBulkUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
         refreshUpdates.add(getItem(index, newItem));
     }
 
@@ -96,9 +93,8 @@ public abstract class RefreshListener implements ItemContainerListener {
      * @param item The item to convert.
      * @return The indexed item.
      */
-    private IndexedItem getItem(int index, Optional<Item> item) {
-        return item.map(it -> new IndexedItem(index, it)).
-                orElse(new IndexedItem(index, -1, 0));
+    private IndexedItem getItem(int index, Item item) {
+        return item == null ? new IndexedItem(index, -1, 0) : new IndexedItem(index, item);
     }
 
     /**
@@ -108,14 +104,12 @@ public abstract class RefreshListener implements ItemContainerListener {
      * @param updateItems The items to create messages for.
      */
     private void sendMsg(ItemContainer items, List<IndexedItem> updateItems) {
-        displayUpdate(items, updateItems,
-                new WidgetIndexedItemsMessageWriter(items.getPrimaryRefresh(), updateItems));
+        displayUpdate(items, updateItems, new WidgetIndexedItemsMessageWriter(items.getPrimaryRefresh(), updateItems));
 
-        OptionalInt secondaryRefresh = items.getSecondaryRefresh();
-        if (secondaryRefresh.isPresent()) {
-            int id = secondaryRefresh.getAsInt();
-            displayUpdate(items, updateItems,
-                    new WidgetIndexedItemsMessageWriter(id, updateItems));
+        int secondaryRefresh = items.getSecondaryRefresh();
+        
+        if (secondaryRefresh != -1) {
+            displayUpdate(items, updateItems, new WidgetIndexedItemsMessageWriter(secondaryRefresh, updateItems));
         }
     }
 }

@@ -15,7 +15,7 @@ import io.luna.net.msg.GameMessageReader;
 public final class DesignPlayerMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int gender = msg.getPayload().get();
         byte[] models = msg.getPayload().getBytes(7);
         byte[] colors = msg.getPayload().getBytes(5);
@@ -23,12 +23,15 @@ public final class DesignPlayerMessageReader extends GameMessageReader {
         int index = 0;
 
         values[index++] = gender;
+        
         for (byte model : models) {
             values[index++] = model;
         }
+        
         for (byte color : colors) {
             values[index++] = color;
         }
+        
         player.getAppearance().setValues(values);
         player.getFlags().flag(UpdateFlag.APPEARANCE);
         player.getInterfaces().close();

@@ -1,6 +1,5 @@
 package io.luna.game.action;
 
-import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.util.Rational;
@@ -45,18 +44,20 @@ public abstract class HarvestingAction extends StationaryAction<Player> {
             return;
         }
 
-        double harvestChance = harvestChance().doubleValue();
-        double currentRoll = ThreadLocalRandom.current().nextDouble();
+        var harvestChance = harvestChance().doubleValue();
+        var currentRoll = ThreadLocalRandom.current().nextDouble();
+        
         if (harvestChance >= currentRoll) {
-            Inventory inventory = mob.getInventory();
-
+            var inventory = mob.getInventory();
             currentRemove = remove();
+            
             if (!inventory.containsAll(currentRemove)) {
                 interrupt();
                 return;
             }
 
             currentAdd = add();
+            
             if (!inventory.hasSpaceForAll(currentAdd)) {
                 mob.sendMessage("You do not have enough space in your inventory.");
                 interrupt();

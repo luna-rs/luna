@@ -75,22 +75,25 @@ public final class NpcDialogueInterface extends DialogueInterface {
 
     @Override
     public boolean init(Player player) {
-        String npcName = NpcDefinition.ALL.retrieve(npcId).getName();
+        var npcName = NpcDefinition.ALL.retrieve(npcId).getName();
         int textWidgetId = unsafeGetId() + 2;
         int modelWidgetId = textWidgetId - 1;
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId, npcId)); // Display NPC head model.
+        
         if (expression != null) {
             player.queue(expression.buildMsgWriter(modelWidgetId)); // Predefined expression animation identifier
         } else {
             player.queue(new WidgetAnimationMessageWriter(modelWidgetId, expressionAnimationId)); // Unique expression animation identifier
         }
+        
         player.queue(new WidgetTextMessageWriter(npcName, textWidgetId++)); // Display NPC name.
 
         // Display the supplied text on the dialogue.
         for (String line : text) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }
+        
         return true;
     }
 }

@@ -1,7 +1,5 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -28,7 +26,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
     }
 
     @Override
-    public EquipmentDefinition convert(JsonObject token) throws Exception {
+    public EquipmentDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int index = token.get("index").getAsInt();
         boolean twoHanded = token.get("two_handed?").getAsBoolean();
@@ -40,7 +38,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
     }
 
     @Override
-    public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) throws Exception {
+    public void onCompleted(List<EquipmentDefinition> tokenObjects) {
         EquipmentDefinition.ALL.storeAndLock(tokenObjects);
     }
 
@@ -52,9 +50,11 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
      */
     private Requirement[] jsonReqToArray(JsonArray requirements) {
         List<Requirement> reqList = new ArrayList<>(requirements.size());
+        
         for(JsonElement jsonReq : requirements) {
             reqList.add(new Requirement(jsonReq.getAsJsonObject()));
         }
-        return Iterables.toArray(reqList, Requirement.class);
+        
+        return reqList.toArray(Requirement[]::new);
     }
 }

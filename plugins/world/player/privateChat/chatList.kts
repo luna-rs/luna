@@ -1,8 +1,8 @@
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
-import io.luna.game.event.impl.LogoutEvent
-import io.luna.game.event.impl.PrivateChatListChangeEvent
-import io.luna.game.event.impl.PrivateChatListChangeEvent.ChangeType.*
+import io.luna.game.event.entity.player.LoginEvent
+import io.luna.game.event.entity.player.LogoutEvent
+import io.luna.game.event.chat.PrivateChatListChangeEvent
+import io.luna.game.event.chat.PrivateChatListChangeEvent.ChangeType.*
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.FriendsListStatusMessageWriter
 import io.luna.net.msg.out.UpdateFriendsListMessageWriter

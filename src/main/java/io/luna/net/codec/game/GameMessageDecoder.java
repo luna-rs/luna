@@ -76,6 +76,7 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
             case PAYLOAD:
                 return payload(in);
         }
+        
         return null;
     }
 
@@ -94,30 +95,26 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
      */
     private Object opcode(ByteBuf in) {
         if (in.isReadable()) {
-
             // Decode the message opcode.
             opcode = in.readUnsignedByte();
             opcode = (opcode - decryptor.nextInt()) & 0xFF;
 
             // Handle the message size.
             size = repository.getSize(opcode);
+            
             switch (size) {
-
                 // No size, don't have to decode size or payload.
                 case 0:
                     type = MessageType.FIXED;
                     return createDecodedMessage(Unpooled.EMPTY_BUFFER);
-
                 // Variable sized packet.
                 case -1:
                     type = MessageType.VAR;
                     break;
-
                 // Variable short sized packet.
                 case -2:
                     type = MessageType.VAR_SHORT;
                     break;
-
                 // Fixed size packet, only need to decode payload.
                 default:
                     type = MessageType.FIXED;
@@ -125,9 +122,9 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
             }
 
             // Set the new checkpoint state.
-            checkpoint(type == MessageType.FIXED ?
-                    DecodeState.PAYLOAD : DecodeState.SIZE);
+            checkpoint(type == MessageType.FIXED ? DecodeState.PAYLOAD : DecodeState.SIZE);
         }
+        
         return null;
     }
 
@@ -138,10 +135,11 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
      */
     private void size(ByteBuf in) {
         int bytes = size == -1 ? Byte.BYTES : Short.BYTES;
+        
         if (in.isReadable(bytes)) {
-
             // Decode size based on amount of bytes to read.
             size = 0;
+            
             for (int i = 0; i < bytes; i++) {
                 size |= in.readUnsignedByte() << 8 * (bytes - 1 - i);
             }
@@ -159,11 +157,10 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
      */
     private Object payload(ByteBuf in) {
         if (in.isReadable(size)) {
-
             // Create payload using decoded size.
-            ByteBuf newBuffer = in.readBytes(size);
-            return createDecodedMessage(newBuffer);
+            return createDecodedMessage(in.readBytes(size));
         }
+        
         return null;
     }
 

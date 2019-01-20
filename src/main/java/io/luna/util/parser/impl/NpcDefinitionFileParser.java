@@ -21,7 +21,7 @@ public final class NpcDefinitionFileParser extends JsonFileParser<NpcDefinition>
     }
 
     @Override
-    public NpcDefinition convert(JsonObject token) throws Exception {
+    public NpcDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         String name = token.get("name").getAsString();
         String examine = token.get("examine").getAsString();
@@ -36,7 +36,7 @@ public final class NpcDefinitionFileParser extends JsonFileParser<NpcDefinition>
     }
 
     @Override
-    public void onCompleted(ImmutableList<NpcDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<NpcDefinition> tokenObjects) {
         tokenObjects.forEach(NpcDefinition.ALL::storeDefinition);
     }
 }

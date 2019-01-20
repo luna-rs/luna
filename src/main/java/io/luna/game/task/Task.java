@@ -3,8 +3,6 @@ package io.luna.game.task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -43,7 +41,7 @@ public abstract class Task {
     /**
      * The attachment.
      */
-    private Optional<Object> key = Optional.empty();
+    private Object key;
 
     /**
      * Creates a new {@link Task}.
@@ -53,6 +51,7 @@ public abstract class Task {
      */
     public Task(boolean instant, int delay) {
         checkArgument(delay > 0);
+        
         this.instant = instant;
         this.delay = delay;
     }
@@ -81,6 +80,7 @@ public abstract class Task {
             executionCounter = 0;
             return true;
         }
+        
         return false;
     }
 
@@ -138,8 +138,8 @@ public abstract class Task {
      * @return This task instance, for chaining.
      */
     public Task attach(Object newKey) {
-        checkState(!key.isPresent(), "Task already has an attachment.");
-        key = Optional.ofNullable(newKey);
+        checkState(key == null, "Task already has an attachment.");
+        key = newKey;
         return this;
     }
 
@@ -183,9 +183,9 @@ public abstract class Task {
     }
 
     /**
-     * @return An optional attachment.
+     * @return The attachment.
      */
-    public Optional<Object> getAttachment() {
+    public Object getAttachment() {
         return key;
     }
 }

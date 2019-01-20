@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.block;
 
-import io.luna.game.model.mob.ForcedMovement;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
@@ -22,7 +21,7 @@ public final class ForcedMovementUpdateBlock extends UpdateBlock {
 
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
-        ForcedMovement movement = unwrap(player.getForcedMovement());
+        var movement = unwrap(player.getForcedMovement());
         msg.put(movement.getStartPosition().getX(), ValueType.ADD);
         msg.put(movement.getStartPosition().getY(), ValueType.NEGATE);
         msg.put(movement.getEndPosition().getX(), ValueType.SUBTRACT);

@@ -49,6 +49,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
         if (item.def().isStackable()) {
             return addStackable(item);
         }
+        
         return addNonStackable(item);
     }
 
@@ -59,17 +60,20 @@ public final class GroundItemList extends EntityList<GroundItem> {
      * @return {@code true} if successful.
      */
     private boolean addStackable(GroundItem item) {
-        Optional<Boolean> added = findExisting(item).
-                map(existing -> {
+        Optional<Boolean> added = findExisting(item)
+                .map(existing -> {
                     int newAmount = item.getAmount() + existing.getAmount();
+                    
                     if (newAmount < 0) { // Overflow.
                         return false;
                     }
+                    
                     remove(existing); // Remove existing.
                     GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
                             item.getPosition(), item.getPlayer());
                     return items.add(newItem) && register(newItem); // Add with new amount.
                 });
+        
         return added.orElse(false);
     }
 
@@ -82,18 +86,21 @@ public final class GroundItemList extends EntityList<GroundItem> {
     private boolean addNonStackable(GroundItem item) {
         int amount = item.getAmount();
         int amountOnTile = world.getChunks().getChunk(item.getChunkPosition()).getAll(type).size();
+        
         if (amountOnTile + amount > 255) { // Too many items on one tile.
             return false;
         }
 
         boolean failed = true;
+        
         for (int i = 0; i < amount; i++) { // Add items 1 by 1.
-            item = new GroundItem(item.getContext(), item.getId(), 1,
-                    item.getPosition(), item.getPlayer());
+            item = new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getPlayer());
+            
             if (items.add(item) && register(item)) {
                 failed = false;
             }
         }
+        
         return !failed;
     }
 
@@ -104,18 +111,23 @@ public final class GroundItemList extends EntityList<GroundItem> {
             return findExisting(item).map(it ->
                     items.remove(it) && unregister(it)).orElse(false);
         }
+        
         boolean failed = true;
+        
         for (int i = 0; i < item.getAmount(); i++) {
             Optional<GroundItem> foundItem = findExisting(item);
-            if (!foundItem.isPresent()) {
+            
+            if (foundItem.isEmpty()) {
                 break; // No more items left to remove.
             }
 
             GroundItem found = foundItem.get();
+            
             if (items.remove(found) && unregister(found)) {
                 failed = false;
             }
         }
+        
         return !failed;
     }
 
@@ -126,9 +138,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
      * @return The found item.
      */
     private Optional<GroundItem> findExisting(GroundItem item) {
-        Stream<GroundItem> localItems = world.getChunks().
-                getChunk(item.getChunkPosition()).
-                stream(type);
+        Stream<GroundItem> localItems = world.getChunks().getChunk(item.getChunkPosition()).stream(type);
         return localItems.filter(it -> it.getId() == item.getId()).findFirst();
     }
 }

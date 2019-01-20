@@ -1,6 +1,5 @@
 package io.luna.game.action;
 
-import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 
@@ -34,23 +33,27 @@ public abstract class ProducingAction extends StationaryAction<Player> {
             interrupt();
             return;
         }
+        
         currentRemove = remove();
-
-        Inventory inventory = mob.getInventory();
+        var inventory = mob.getInventory();
+        
         if (!inventory.containsAll(currentRemove)) {
             interrupt();
             return;
         }
+        
         currentAdd = add();
 
         int addSpaces = inventory.computeSpaceForAll(currentRemove);
         int removeSpaces = inventory.computeSpaceForAll(currentAdd);
         int requiredSpaces = removeSpaces - addSpaces;
+        
         if (requiredSpaces > inventory.computeRemainingSize()) {
             mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();
             return;
         }
+        
         inventory.removeAll(currentRemove);
         inventory.addAll(currentAdd);
         onProduce();

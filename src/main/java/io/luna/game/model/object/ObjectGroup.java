@@ -6,6 +6,7 @@ package io.luna.game.model.object;
  * @author lare96 <http://github.com/lare96>
  */
 public enum ObjectGroup {
+    
     WALL,
     WALL_DECORATION,
     INTERACTABLE,

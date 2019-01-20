@@ -36,6 +36,7 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
     @Override
     public void handle(TreeModificationEvent<String> evt) {
         CheckBoxTreeItem<String> treeItem = evt.getTreeItem();
+        
         if (firingEvents && treeItem instanceof PluginTreeItem) {
             handleSelectionChange(evt, (PluginTreeItem) evt.getTreeItem());
         }
@@ -58,6 +59,7 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
      */
     private void handleSelectionChange(TreeModificationEvent<String> evt, PluginTreeItem item) {
         String name = item.getValue();
+        
         if (evt.wasSelectionChanged()) {
             if (item.isSelected()) {
                 selectedPlugins.add(name);

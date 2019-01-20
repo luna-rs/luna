@@ -1,6 +1,6 @@
 import api.predef.*
 import io.luna.game.action.DistancedAction
-import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
+import io.luna.game.event.entity.player.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
 import world.player.item.trading.OfferTradeInterface
 import world.player.item.trading.OfferTradeInterface.Companion.tradingWith

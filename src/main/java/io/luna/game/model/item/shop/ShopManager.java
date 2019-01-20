@@ -32,7 +32,9 @@ public final class ShopManager {
      * @param shop The shop.
      */
     public void register(Shop shop) {
+        // TODO: I don't believe it's necessary to intern the String here. - Jacob
         String name = shop.getName().intern();
+        
         if (shops.put(name, shop) != null) {
             LOGGER.warn("Shop with name '" + name + "' was overwritten because it already exists.");
         }

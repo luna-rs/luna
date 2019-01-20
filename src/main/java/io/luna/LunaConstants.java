@@ -22,7 +22,6 @@ public final class LunaConstants {
     static {
         try {
             Toml tomlReader = new Toml().read(new File("./data/luna.toml"));
-
             JsonObject networkConstants = tomlReader.getTable("network").to(JsonObject.class);
             PORT = networkConstants.get("port").getAsInt();
             RESOURCE_LEAK_DETECTION = Level.valueOf(networkConstants.get("resource_leak_detection").getAsString());
@@ -47,7 +46,9 @@ public final class LunaConstants {
     /**
      * A private constructor.
      */
-    private LunaConstants() {}
+    private LunaConstants() {
+    
+    }
 
     /**
      * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code

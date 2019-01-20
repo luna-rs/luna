@@ -1,6 +1,5 @@
 package io.luna.util;
 
-
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;

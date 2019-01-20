@@ -11,6 +11,7 @@ public final class Animation {
      * An enum representing animation priority levels.
      */
     public enum AnimationPriority {
+        
         LOW(-1),
         NORMAL(0),
         HIGH(1);

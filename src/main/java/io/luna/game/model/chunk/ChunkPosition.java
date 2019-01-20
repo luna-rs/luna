@@ -59,14 +59,13 @@ public final class ChunkPosition {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof ChunkPosition)) {
+            return false;
         }
-        if (obj instanceof ChunkPosition) {
-            ChunkPosition other = (ChunkPosition) obj;
-            return x == other.x && y == other.y;
-        }
-        return false;
+    
+        ChunkPosition other = (ChunkPosition) obj;
+        
+        return x == other.x && y == other.y;
     }
 
     /**
@@ -92,6 +91,7 @@ public final class ChunkPosition {
         if (addX == 0 && addY == 0) {
             return this;
         }
+        
         return new ChunkPosition(x + addX, y + addY);
     }
 

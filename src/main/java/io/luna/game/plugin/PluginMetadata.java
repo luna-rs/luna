@@ -46,6 +46,7 @@ public final class PluginMetadata {
      */
     public PluginMetadata(String name, String description, String version, String[] authors) {
         checkArgument(VERSION.matcher(version).matches(), "Invalid version for plugin ["+ name+"].");
+        
         this.name = name;
         this.description = description;
         this.version = version;

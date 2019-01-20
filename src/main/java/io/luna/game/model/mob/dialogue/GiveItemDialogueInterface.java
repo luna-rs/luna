@@ -53,6 +53,7 @@ public final class GiveItemDialogueInterface extends DialogueInterface {
             player.queue(new WidgetItemModelMessageWriter(307, 200, item.getId()));
             return true;
         }
+        
         player.sendMessage("You do not have enough space in your inventory.");
         return false;
     }
@@ -63,16 +64,17 @@ public final class GiveItemDialogueInterface extends DialogueInterface {
      * @return The default display text.
      */
     private String computeDisplayText() {
-        String name = item.getItemDef().getName();
-
-        StringBuilder sb = new StringBuilder("You have received");
-        sb.append(' ');
+        var name = item.getItemDef().getName();
+        var sb = new StringBuilder("You have received ");
+        
         if (item.getAmount() > 1) {
             sb.append("some");
         } else {
             sb.append(StringUtils.computeArticle(name));
         }
+        
         sb.append(' ').append(name);
+        
         return sb.toString();
     }
 }

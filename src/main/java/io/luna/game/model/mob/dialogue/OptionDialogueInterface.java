@@ -75,9 +75,11 @@ public class OptionDialogueInterface extends DialogueInterface {
     @Override
     public final boolean init(Player player) {
         int textWidgetId = unsafeGetId() + 2;
+        
         for (String line : options) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }
+        
         return true;
     }
 }

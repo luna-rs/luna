@@ -1,6 +1,7 @@
-package io.luna.game.event.impl;
+package io.luna.game.event.entity;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.entity.mob.MobEvent;
 import io.luna.game.model.Entity;
 
 /**
@@ -8,7 +9,7 @@ import io.luna.game.model.Entity;
  *
  * @author lare96 <http://github.org/lare96>
  */
-class EntityEvent extends Event {
+public class EntityEvent extends Event {
 
     /**
      * The entity.

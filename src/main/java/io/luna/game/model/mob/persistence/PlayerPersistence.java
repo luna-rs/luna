@@ -8,10 +8,10 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.ReflectionUtils;
+import java.util.concurrent.ConcurrentMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
@@ -33,7 +33,7 @@ public final class PlayerPersistence {
     /**
      * The map that will track pending saves.
      */
-    private final Map<String, Future<Boolean>> pendingSaves = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Future<Boolean>> pendingSaves = new ConcurrentHashMap<>();
 
     /**
      * The default serializer.
@@ -56,16 +56,18 @@ public final class PlayerPersistence {
      * @return A future returning {@code true} if the save was successful.
      */
     public Future<Boolean> save(Player player) {
-        String key = player.getUsername();
+        var key = player.getUsername();
+        
         // TODO Needs testing!
         // Cancel any in-progress saves.
-        Future<Boolean> pending = pendingSaves.get(key);
+        var pending = pendingSaves.get(key);
+        
         if (pending != null && pending.cancel(true)) {
             LOGGER.warn(player + " an in-progress save was interrupted.");
         }
 
         // Submit new save task.
-        ListenableFuture<Boolean> loadFuture = threadPool.submit(() -> {
+        var loadFuture = threadPool.submit(() -> {
             synchronized (player) {
                 return serializer.save(player);
             }
@@ -76,6 +78,7 @@ public final class PlayerPersistence {
             pendingSaves.put(key, loadFuture);
             loadFuture.addListener(() -> pendingSaves.remove(key), threadPool);
         }
+        
         return loadFuture;
     }
 
@@ -87,7 +90,8 @@ public final class PlayerPersistence {
      */
     public ListenableFuture<LoginResponse> load(Player player) {
         // TODO Needs testing!
-        String enteredPassword = player.getPassword();
+        var enteredPassword = player.getPassword();
+        
         if (serializer instanceof SqlPlayerSerializer) {
             // Loading players from a database needs to be done on another thread.
             return threadPool.submit(() -> {
@@ -95,12 +99,11 @@ public final class PlayerPersistence {
                     return serializer.load(player, enteredPassword);
                 }
             });
-        } else {
-            // Otherwise, it's fast enough to do right on the networking thread.
-            synchronized (player) {
-                LoginResponse response = serializer.load(player, enteredPassword);
-                return Futures.immediateFuture(response);
-            }
+        }
+    
+        // Otherwise, it's fast enough to do right on the networking thread.
+        synchronized (player) {
+            return Futures.immediateFuture(serializer.load(player, enteredPassword));
         }
     }
 
@@ -121,9 +124,10 @@ public final class PlayerPersistence {
      * @throws ClassCastException If the argued serializer is the wrong type.
      */
     private PlayerSerializer newSerializer() throws ClassCastException {
-        String name = LunaConstants.SERIALIZER;
+        var name = LunaConstants.SERIALIZER;
+        
         try {
-            String fullName = "io.luna.game.model.mob.persistence." + name;
+            var fullName = "io.luna.game.model.mob.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName);
         } catch (ClassCastException e) {
             LOGGER.fatal(name + " not an instance of PlayerSerializer.");

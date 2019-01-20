@@ -52,12 +52,8 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> implements Comparabl
         super(plugin.getMetadata().getName());
         this.plugin = plugin;
         this.controller = controller;
-        dependencyNames = plugin.getDependencies().stream().
-                map(ScriptDependency::getName).
-                collect(Collectors.toSet());
-        scriptNames = plugin.getScripts().stream().
-                map(Script::getName).
-                collect(Collectors.toSet());
+        dependencyNames = plugin.getDependencies().stream().map(ScriptDependency::getName).collect(Collectors.toSet());
+        scriptNames = plugin.getScripts().stream().map(Script::getName).collect(Collectors.toSet());
         addTreeItemIcons(this, PLUGIN_IMG);
     }
 
@@ -70,13 +66,8 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> implements Comparabl
      * Adds all scripts and dependencies as leaf child nodes.
      */
     void addScriptChildren() {
-        plugin.getScripts().stream().
-                map(Script::getName).
-                forEach(this::addChild);
-
-        plugin.getDependencies().stream().
-                map(ScriptDependency::getName).
-                forEach(this::addChild);
+        plugin.getScripts().stream().map(Script::getName).forEach(this::addChild);
+        plugin.getDependencies().stream().map(ScriptDependency::getName).forEach(this::addChild);
     }
 
     /**
@@ -85,8 +76,7 @@ final class PluginTreeItem extends CheckBoxTreeItem<String> implements Comparabl
     void displayGuiDescription() {
         String none = "None";
         StringBuilder description = new StringBuilder();
-        BiConsumer<String, Object> appendData = (t, u) -> description.
-                append(t).append(": ").append(u).append("\n\n");
+        BiConsumer<String, Object> appendData = (t, u) -> description.append(t).append(": ").append(u).append("\n\n");
 
         appendData.accept("Name", getMetadata().getName());
         appendData.accept("Version", getMetadata().getVersion());

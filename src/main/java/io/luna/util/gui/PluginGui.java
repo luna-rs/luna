@@ -1,7 +1,6 @@
 package io.luna.util.gui;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.game.plugin.Plugin;
@@ -57,7 +56,7 @@ public final class PluginGui {
                 loader.setController(controller);
 
                 Scene newScene = new Scene(loader.load());
-                scene = Optional.of(newScene);
+                scene = newScene;
                 mainPanel.setScene(newScene);
 
                 // Update settings on Javafx components.
@@ -112,12 +111,12 @@ public final class PluginGui {
     /**
      * The Javafx scene.
      */
-    private Optional<Scene> scene = Optional.empty();
+    private Scene scene;
 
     /**
      * A map of plugin names -> tree items.
      */
-    private final ImmutableMap<String, PluginTreeItem> pluginItems;
+    private final Map<String, PluginTreeItem> pluginItems;
 
     /**
      * Creates a new {@link PluginGui}.
@@ -147,6 +146,7 @@ public final class PluginGui {
 
         // Wait here until user input is received.
         Uninterruptibles.awaitUninterruptibly(barrier);
+        
         return settings.getSelected();
     }
 
@@ -156,17 +156,18 @@ public final class PluginGui {
      * those plugins as tree items.
      *
      * @param plugins The plugins in the plugin dir.
-     * @return The immutable map of tree items.
+     * @return The unmodifiable map of tree items.
      */
-    private ImmutableMap<String, PluginTreeItem> buildPluginItems(Map<String, Plugin> plugins) {
+    private Map<String, PluginTreeItem> buildPluginItems(Map<String, Plugin> plugins) {
         Map<String, PluginTreeItem> treeItems = new LinkedHashMap<>();
+        
         for (Plugin plugin : plugins.values()) {
             PluginTreeItem item = new PluginTreeItem(plugin, controller);
             item.addScriptChildren();
-
             treeItems.put(item.getValue(), item);
         }
-        return ImmutableMap.copyOf(treeItems);
+        
+        return Map.copyOf(treeItems);
     }
 
     /**
@@ -207,10 +208,12 @@ public final class PluginGui {
      */
     Alert createAlert(AlertType alertType, ButtonType... buttons) {
         Alert alert = new Alert(alertType, "", buttons);
+        
         if (settings.isDarkMode()) {
             DialogPane dialogPane = alert.getDialogPane();
             dialogPane.getStylesheets().add("dark_theme.css");
         }
+        
         return alert;
     }
 
@@ -222,7 +225,6 @@ public final class PluginGui {
      */
     Optional<ButtonType> openErrorAlert(Throwable error) {
         error.printStackTrace();
-
         Alert errorAlert = createAlert(AlertType.ERROR);
         errorAlert.setContentText(Throwables.getStackTraceAsString(error));
         return errorAlert.showAndWait();
@@ -257,6 +259,7 @@ public final class PluginGui {
                 mainFrame.setVisible(false);
                 mainFrame.dispose();
             };
+            
             if (EventQueue.isDispatchThread()) {
                 swingTask.run();
             } else {
@@ -304,22 +307,28 @@ public final class PluginGui {
      * @return The Javafx scene.
      */
     Scene getScene() {
-        return scene.orElseThrow(() ->
-                new IllegalStateException("getScene() can only be called once the GUI finishes loading."));
+        if (scene == null) {
+            throw new IllegalStateException("getScene() can only be called once the GUI finishes loading.");
+        }
+        
+        return scene;
     }
 
     /**
      * @return The Javafx window.
      */
     Window getWindow() {
-        return scene.map(Scene::getWindow).orElseThrow(() ->
-                new IllegalStateException("getWindow() can only be called once the GUI finishes loading."));
+        if (scene == null) {
+            throw new IllegalStateException("getWindow() can only be called once the GUI finishes loading.");
+        }
+        
+        return scene.getWindow();
     }
 
     /**
-     * @return A map of plugin names -> tree items.
+     * @return An unmodifiable map of plugin names -> tree items.
      */
-    ImmutableMap<String, PluginTreeItem> getPluginItems() {
+    Map<String, PluginTreeItem> getPluginItems() {
         return pluginItems;
     }
 }

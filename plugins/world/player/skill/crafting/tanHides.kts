@@ -1,6 +1,6 @@
 import api.predef.*
-import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.event.impl.ServerLaunchEvent
+import io.luna.game.event.button.ButtonClickEvent
+import io.luna.game.event.server.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface

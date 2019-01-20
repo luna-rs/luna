@@ -107,12 +107,13 @@ public final class Area {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("southWestX", southWestX).
-                add("southWestY", southWestY).
-                add("northEastX", northEastX).
-                add("northEastY", northEastY).
-                add("z", z).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("southWestX", southWestX)
+                .add("southWestY", southWestY)
+                .add("northEastX", northEastX)
+                .add("northEastY", northEastY)
+                .add("z", z)
+                .toString();
     }
 
     @Override
@@ -122,18 +123,14 @@ public final class Area {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Area)) {
+            return false;
         }
-        if (obj instanceof Area) {
-            Area other = (Area) obj;
-            return southWestX == other.southWestX &&
-                    southWestY == other.southWestY &&
-                    northEastX == other.northEastX &&
-                    northEastY == other.northEastY &&
-                    z.equals(other.z);
-        }
-        return false;
+        
+        var other = (Area) obj;
+    
+        return southWestX == other.southWestX && southWestY == other.southWestY &&
+                northEastX == other.northEastX && northEastY == other.northEastY && z.equals(other.z);
     }
 
     /**
@@ -143,11 +140,8 @@ public final class Area {
      * @return {@code true} if {@code position} is within the bounds of this area.
      */
     public boolean contains(Position position) {
-        return position.getX() >= southWestX &&
-                position.getX() <= northEastX &&
-                position.getY() >= southWestY &&
-                position.getY() <= northEastY &&
-                z.contains(position.getZ());
+        return position.getX() >= southWestX && position.getX() <= northEastX &&
+                position.getY() >= southWestY && position.getY() <= northEastY && z.contains(position.getZ());
     }
 
     /**
@@ -167,6 +161,7 @@ public final class Area {
      */
     public List<Position> toList() {
         List<Position> toList = new ArrayList<>(size());
+        
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
                 for (int z : zIterable) {
@@ -174,6 +169,7 @@ public final class Area {
                 }
             }
         }
+        
         return toList;
     }
 
@@ -229,9 +225,11 @@ public final class Area {
     public int size() {
         int area = length() * width();
         int size = area;
+        
         for (int z : zIterable) {
             size = size + area;
         }
+        
         return size;
     }
 

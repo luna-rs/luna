@@ -1,5 +1,6 @@
-package io.luna.game.event.impl;
+package io.luna.game.event.command;
 
+import io.luna.game.event.entity.player.PlayerEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.util.StringUtils;
 
@@ -44,6 +45,8 @@ public final class CommandEvent extends PlayerEvent {
 
     /**
      * Retrieves the argument at {@code index} as an integer.
+     *
+     * TODO: Change return type to {@code int} or {@link java.util.OptionalInt}.
      *
      * @param index The index.
      * @return The converted integer.

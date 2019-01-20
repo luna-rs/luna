@@ -1,7 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ChatEvent;
+import io.luna.game.event.chat.ChatEvent;
 import io.luna.game.model.mob.Chat;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ValueType;
@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ChatMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int effects = msg.getPayload().get(false, ValueType.SUBTRACT);
         int color = msg.getPayload().get(false, ValueType.SUBTRACT);
         int size = (msg.getSize() - 2);

@@ -1,12 +1,11 @@
 package io.luna.game.model.mob;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 import io.luna.LunaConstants;
-import io.luna.game.event.impl.SkillChangeEvent;
+import io.luna.game.event.entity.mob.SkillChangeEvent;
 import io.luna.game.plugin.PluginManager;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -23,10 +22,12 @@ public final class Skill {
     /**
      * The names of all skills.
      */
-    public static final ImmutableList<String> NAMES = ImmutableList.of("Attack", "Defence", "Strength",
-            "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting", "Fletching", "Fishing",
-            "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer",
-            "Farming", "Runecrafting");
+    public static final List<String> NAMES = List.of(
+        "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
+        "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting",
+        "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming",
+        "Runecrafting"
+    );
 
     /**
      * The combat skill identifiers.
@@ -36,7 +37,7 @@ public final class Skill {
     /**
      * A map of names to identifiers.
      */
-    public static final ImmutableMap<String, Integer> NAME_TO_ID;
+    public static final Map<String, Integer> NAME_TO_ID;
 
     /**
      * The Attack identifier.
@@ -175,9 +176,7 @@ public final class Skill {
 
     static {
         // Build and set [name -> identifier] cache.
-        Map<String, Integer> skills = IntStream.range(0, NAMES.size()).
-                boxed().collect(Collectors.toMap(NAMES::get, it -> it));
-        NAME_TO_ID = ImmutableMap.copyOf(skills);
+        NAME_TO_ID = IntStream.range(0, NAMES.size()).boxed().collect(Collectors.toUnmodifiableMap(NAMES::get, v -> v));
     }
 
     /**
@@ -234,7 +233,7 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
-
+        
         amount = amount * LunaConstants.EXPERIENCE_MULTIPLIER;
         setExperience(experience + amount);
     }
@@ -250,7 +249,6 @@ public final class Skill {
         if (set.isFiringEvents()) {
             Mob mob = set.getMob();
             PluginManager plugins = mob.getPlugins();
-
             plugins.post(new SkillChangeEvent(mob, oldExperience, oldStaticLevel, oldLevel, id));
         }
     }
@@ -277,6 +275,7 @@ public final class Skill {
             // The value hasn't been computed yet, do it now.
             staticLevel = SkillSet.levelForExperience((int) experience);
         }
+        
         return staticLevel;
     }
 
@@ -298,11 +297,12 @@ public final class Skill {
         }
 
         int oldLevel = level;
-
         level = newLevel;
+        
         if (oldLevel == level) {
             return;
         }
+        
         notifyListeners(experience, getStaticLevel(), oldLevel);
     }
 
@@ -326,8 +326,7 @@ public final class Skill {
      */
     public void removeLevels(int amount) {
         int newAmount = getLevel() - amount;
-
-        newAmount = newAmount < 0 ? 0 : newAmount;
+        newAmount = Math.max(0, newAmount);
         setLevel(newAmount);
     }
 
@@ -349,6 +348,7 @@ public final class Skill {
         } else if (newExperience > SkillSet.MAXIMUM_EXPERIENCE) {
             newExperience = SkillSet.MAXIMUM_EXPERIENCE;
         }
+        
         int oldStaticLevel = getStaticLevel();
         double oldExperience = experience;
         experience = newExperience;
@@ -357,6 +357,7 @@ public final class Skill {
         if (oldExperience == newExperience) {
             return;
         }
+        
         notifyListeners(oldExperience, oldStaticLevel, level);
     }
 }

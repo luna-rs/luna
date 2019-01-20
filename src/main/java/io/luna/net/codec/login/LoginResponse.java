@@ -9,6 +9,7 @@ import io.luna.net.client.Client;
  * @author lare96 <http://github.com/lare96>
  */
 public enum LoginResponse {
+    
     NORMAL(2),
     INVALID_CREDENTIALS(3),
     ACCOUNT_BANNED(4),

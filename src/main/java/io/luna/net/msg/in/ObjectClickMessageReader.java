@@ -2,10 +2,10 @@ package io.luna.net.msg.in;
 
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ObjectClickEvent;
-import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
-import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
-import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
+import io.luna.game.event.entity.player.ObjectClickEvent;
+import io.luna.game.event.entity.player.ObjectClickEvent.ObjectFirstClickEvent;
+import io.luna.game.event.entity.player.ObjectClickEvent.ObjectSecondClickEvent;
+import io.luna.game.event.entity.player.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
@@ -17,8 +17,6 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -29,19 +27,21 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ObjectClickMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
+        
         switch (opcode) {
-        case 132:
-            firstIndex(player, msg.getPayload());
-            break;
-        case 252:
-            secondIndex(player, msg.getPayload());
-            break;
-        case 70:
-            thirdIndex(player, msg.getPayload());
-            break;
+            case 132:
+                firstIndex(player, msg.getPayload());
+                break;
+            case 252:
+                secondIndex(player, msg.getPayload());
+                break;
+            case 70:
+                thirdIndex(player, msg.getPayload());
+                break;
         }
+        
         return null;
     }
 
@@ -57,8 +57,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         checkState(evt.getId() > 0, "id out of range");
 
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
-        GameObject object = new GameObject(player.getContext(), evt.getId(), position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
+        var position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
+        var object = new GameObject(player.getContext(), evt.getId(), position, ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
         player.submitAction(new InteractionAction(player, object, evt));
     }
 

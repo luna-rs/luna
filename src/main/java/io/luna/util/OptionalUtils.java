@@ -26,8 +26,7 @@ public final class OptionalUtils {
      * @return The {@link OptionalInt}.
      */
     public static <T> OptionalInt mapToInt(Optional<T> optional, ToIntFunction<T> mapper) {
-        return optional.map(value -> OptionalInt.of(mapper.applyAsInt(value)))
-                       .orElseGet(OptionalInt::empty);
+        return optional.map(value -> OptionalInt.of(mapper.applyAsInt(value))).orElseGet(OptionalInt::empty);
     }
 
     /**
@@ -40,10 +39,12 @@ public final class OptionalUtils {
     public static OptionalInt filter(OptionalInt optional, IntPredicate predicate) {
         if (optional.isPresent()) {
             int value = optional.getAsInt();
+            
             if (predicate.test(value)) {
                 return optional;
             }
         }
+        
         return OptionalInt.empty();
     }
 
@@ -68,9 +69,10 @@ public final class OptionalUtils {
      * @return {@code true} if the two values are equal.
      */
     public static <T> boolean matches(Optional<T> optional, Supplier<T> value) {
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             return false;
         }
+        
         Object optionalValue = optional.get();
         Object supplierValue = value.get();
         return Objects.equals(optionalValue, supplierValue);
@@ -122,6 +124,7 @@ public final class OptionalUtils {
             consumer.accept(optional.get());
             return true;
         }
+        
         return false;
     }
 

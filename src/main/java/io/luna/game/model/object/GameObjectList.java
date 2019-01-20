@@ -33,8 +33,7 @@ public class GameObjectList extends EntityList<GameObject> {
 
     @Override
     public Spliterator<GameObject> spliterator() {
-        return Spliterators.spliterator(iterator(), size(),
-                Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.DISTINCT);
+        return Spliterators.spliterator(iterator(), size(), Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.DISTINCT);
     }
 
     /**
@@ -47,12 +46,15 @@ public class GameObjectList extends EntityList<GameObject> {
     @Override
     public UnmodifiableIterator<GameObject> iterator() {
         List<Iterator<GameObject>> iteratorList = new ArrayList<>();
+        
         for (Chunk chunk : world.getChunks()) {
             Set<GameObject> objects = chunk.getAll(type);
+            
             if (!objects.isEmpty()) { // Retrieve iterators from chunk.
                 iteratorList.add(objects.iterator());
             }
         }
+        
         Iterator[] iteratorArray = Iterators.toArray(iteratorList.iterator(), Iterator.class);
         Iterator<GameObject> all = Iterators.concat(iteratorArray); // Combine them.
         return Iterators.unmodifiableIterator(all); // Make them immutable.

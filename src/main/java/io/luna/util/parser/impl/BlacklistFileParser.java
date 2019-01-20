@@ -28,9 +28,7 @@ public final class BlacklistFileParser extends NewLineFileParser {
     }
 
     @Override
-    public void onCompleted(ImmutableList<String> tokenObjects) throws Exception {
-        tokenObjects.stream().
-                filter(InetAddresses::isInetAddress).
-                forEach(channelFilter.getBlacklist()::add);
+    public void onCompleted(ImmutableList<String> tokenObjects) {
+        tokenObjects.stream().filter(InetAddresses::isInetAddress).forEach(channelFilter.getBlacklist()::add);
     }
 }

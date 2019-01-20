@@ -28,7 +28,7 @@ public final class GameChatboxMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(253, MessageType.VAR);
+        var msg = ByteMessage.message(253, MessageType.VAR);
         msg.putString(message.toString());
         return msg;
     }

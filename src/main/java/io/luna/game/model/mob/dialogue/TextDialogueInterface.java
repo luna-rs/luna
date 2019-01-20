@@ -30,9 +30,11 @@ public final class TextDialogueInterface extends DialogueInterface {
     @Override
     public boolean init(Player player) {
         int textWidgetId = unsafeGetId() + 1;
+        
         for (String line : text) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }
+        
         return true;
     }
 }

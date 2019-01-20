@@ -6,7 +6,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
-import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import io.luna.util.ExecutorUtils;
@@ -91,6 +90,7 @@ public final class GameService extends AbstractScheduledService {
         } catch (Exception e) {
             LOGGER.fatal("Luna could not be terminated gracefully.");
         }
+        
         System.exit(0);
     }
 
@@ -99,14 +99,11 @@ public final class GameService extends AbstractScheduledService {
      * game logic on the main game thread.
      */
     private void runSynchronizationTasks() {
-        for (; ; ) {
-            Runnable t = syncTasks.poll();
-            if (t == null) {
-                break;
-            }
-
+        Runnable task;
+        
+        while ((task = syncTasks.poll()) != null) {
             try {
-                t.run();
+                task.run();
             } catch (Exception e) {
                 LOGGER.catching(e);
             }
@@ -130,6 +127,7 @@ public final class GameService extends AbstractScheduledService {
 
         // Wait for any last minute tasks to complete.
         threadPool.shutdown();
+        
         while (!threadPool.isTerminated()) {
             Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
         }
@@ -141,11 +139,10 @@ public final class GameService extends AbstractScheduledService {
      * @param ticks The amount of ticks to schedule for.
      */
     public void scheduleSystemUpdate(int ticks) {
-
+        var packet = new SystemUpdateMessageWriter(ticks);
+        
         // Send out system update messages.
-        for (Player player : world.getPlayers()) {
-            player.queue(new SystemUpdateMessageWriter(ticks));
-        }
+        world.getPlayers().forEach(player -> player.queue(packet));
 
         // Schedule a graceful shutdown once the system update timer completes.
         world.schedule(new Task(ticks + 5) {
@@ -178,7 +175,7 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a listening asynchronous task.  <strong>Warning: Tasks may not be ran right away, as there is a limit to
+     * Runs a listening asynchronous task. <strong>Warning: Tasks may not be ran right away, as there is a limit to
      * how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you require a faster
      * pool for higher priority tasks, consider using a dedicated pool from {@link ExecutorUtils}.
      *

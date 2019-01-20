@@ -37,6 +37,7 @@ public final class LazyVal<T> implements Supplier<T> {
             // Initialize and cache value.
             value = delegate.get();
         }
+        
         return value;
     }
 }

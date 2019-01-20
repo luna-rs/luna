@@ -1,6 +1,6 @@
 import api.attr.Stopwatch
 import api.predef.*
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
+import io.luna.game.event.item.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import world.player.skill.prayer.Bone

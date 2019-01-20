@@ -1,7 +1,5 @@
 package io.luna.game.model.item;
 
-import java.util.Optional;
-
 /**
  * A model representing a listener for an item container.
  *
@@ -17,7 +15,8 @@ public interface ItemContainerListener {
      * @param oldItem The old item.
      * @param newItem The new item.
      */
-    default void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
+    default void onSingleUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
+    
     }
 
     /**
@@ -28,7 +27,8 @@ public interface ItemContainerListener {
      * @param oldItem The old item.
      * @param newItem The new item.
      */
-    default void onBulkUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
+    default void onBulkUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
+    
     }
 
     /**
@@ -37,6 +37,7 @@ public interface ItemContainerListener {
      * @param items The container that fired the event.
      */
     default void onBulkUpdateCompleted(ItemContainer items) {
+    
     }
 
     /**
@@ -45,6 +46,7 @@ public interface ItemContainerListener {
      * @param items The container that fired the event.
      */
     default void onCapacityExceeded(ItemContainer items) {
+    
     }
 
     /**

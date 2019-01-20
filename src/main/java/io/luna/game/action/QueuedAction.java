@@ -2,8 +2,6 @@ package io.luna.game.action;
 
 import io.luna.game.model.mob.Mob;
 
-import java.util.Optional;
-
 /**
  * An {@link Action} implementation which queues up to {@code 1} additional queued action upon equality. Any subsequent
  * equal actions submitted are ignored. This behaviour is required for content such as alchemy and thieving.
@@ -15,7 +13,7 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     /**
      * The queued action.
      */
-    protected Optional<Runnable> queuedAction = Optional.empty();
+    protected Runnable queuedAction;
 
     /**
      * Creates a new {@link QueuedAction}.
@@ -35,23 +33,27 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     @Override
     protected final void call() {
         onDuration();
-        queuedAction.ifPresent(Runnable::run);
+        
+        if (queuedAction != null) {
+            queuedAction.run();
+        }
+        
         interrupt();
     }
 
     @Override
     protected final boolean isEqual(Action<?> other) {
-        if (other instanceof QueuedAction<?>) {
-            return isQueued((QueuedAction<?>) other);
+        if (!(other instanceof QueuedAction<?>)) {
+            return false;
         }
-        return false;
+        
+        return isQueued((QueuedAction<?>) other);
     }
 
     @Override
     protected final void onEquals(Action<?> other) {
-        if (!queuedAction.isPresent()) {
-            QueuedAction<?> queued = (QueuedAction<?>) other;
-            queuedAction = Optional.of(queued::execute);
+        if (queuedAction == null) {
+            queuedAction = ((QueuedAction<?>) other)::execute;
         }
     }
 

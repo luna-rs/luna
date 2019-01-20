@@ -36,7 +36,7 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(126, MessageType.VAR_SHORT);
+        var msg = ByteMessage.message(126, MessageType.VAR_SHORT);
         msg.putString(text);
         msg.putShort(id, ValueType.ADD);
         return msg;

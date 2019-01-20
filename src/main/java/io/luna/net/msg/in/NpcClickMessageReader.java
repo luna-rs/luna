@@ -2,13 +2,12 @@ package io.luna.net.msg.in;
 
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.NpcClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcFifthClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcFourthClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcThirdClickEvent;
-import io.luna.game.model.World;
+import io.luna.game.event.entity.player.NpcClickEvent;
+import io.luna.game.event.entity.player.NpcClickEvent.NpcFifthClickEvent;
+import io.luna.game.event.entity.player.NpcClickEvent.NpcFirstClickEvent;
+import io.luna.game.event.entity.player.NpcClickEvent.NpcFourthClickEvent;
+import io.luna.game.event.entity.player.NpcClickEvent.NpcSecondClickEvent;
+import io.luna.game.event.entity.player.NpcClickEvent.NpcThirdClickEvent;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -29,25 +28,27 @@ import static com.google.common.base.Preconditions.checkState;
 public final class NpcClickMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
+        
         switch (opcode) {
-        case 155:
-            firstIndex(player, msg.getPayload());
-            break;
-        case 17:
-            secondIndex(player, msg.getPayload());
-            break;
-        case 72:
-            thirdIndex(player, msg.getPayload());
-            break;
-        case 21:
-            fourthIndex(player, msg.getPayload());
-            break;
-        case 18:
-            fifthIndex(player, msg.getPayload());
-            break;
+            case 155:
+                firstIndex(player, msg.getPayload());
+                break;
+            case 17:
+                secondIndex(player, msg.getPayload());
+                break;
+            case 72:
+                thirdIndex(player, msg.getPayload());
+                break;
+            case 21:
+                fourthIndex(player, msg.getPayload());
+                break;
+            case 18:
+                fifthIndex(player, msg.getPayload());
+                break;
         }
+        
         return null;
     }
 
@@ -59,9 +60,8 @@ public final class NpcClickMessageReader extends GameMessageReader {
      * @param evt The interaction event.
      */
     private void handleClick(Player player, int index, BiFunction<Player, Npc, NpcClickEvent> evt) {
-        World world = player.getWorld();
+        var world = player.getWorld();
         checkState(index >= 0 && index < world.getNpcs().capacity(), "index[" + index + "] out of range");
-
         Npc npc = world.getNpcs().get(index);
         player.submitAction(new InteractionAction(player, npc, evt.apply(player, npc)));
     }

@@ -21,7 +21,7 @@ public final class ObjectDefinitionFileParser extends JsonFileParser<ObjectDefin
     }
 
     @Override
-    public ObjectDefinition convert(JsonObject token) throws Exception {
+    public ObjectDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         String name = token.get("name").getAsString();
         String examine = token.get("examine").getAsString();
@@ -36,7 +36,7 @@ public final class ObjectDefinitionFileParser extends JsonFileParser<ObjectDefin
     }
 
     @Override
-    public void onCompleted(ImmutableList<ObjectDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<ObjectDefinition> tokenObjects) {
         tokenObjects.forEach(ObjectDefinition.ALL::storeDefinition);
     }
 }

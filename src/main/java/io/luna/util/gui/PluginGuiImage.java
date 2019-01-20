@@ -66,7 +66,6 @@ final class PluginGuiImage {
         view.setFitWidth(SCALE_WIDTH);
         view.setPreserveRatio(true);
         view.setSmooth(true);
-
         treeItem.setGraphic(view);
     }
 

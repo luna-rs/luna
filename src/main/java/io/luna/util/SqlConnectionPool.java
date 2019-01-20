@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
@@ -68,7 +67,7 @@ public final class SqlConnectionPool {
         /**
          * The login timeout seconds.
          */
-        private OptionalInt timeout;
+        private int timeout;
 
         /**
          * Sets the pool's name.
@@ -99,7 +98,7 @@ public final class SqlConnectionPool {
          * @return This builder.
          */
         public Builder timeout(int timeout) {
-            this.timeout = OptionalInt.of(timeout);
+            this.timeout = timeout;
             return this;
         }
 
@@ -110,20 +109,22 @@ public final class SqlConnectionPool {
          * @throws SQLException If the pool cannot be created.
          */
         public SqlConnectionPool build() throws SQLException {
-            HikariConfig config = new HikariConfig();
+            var config = new HikariConfig();
+           
             config.setJdbcUrl("jdbc:postgresql://" + HOST + ":" + PORT + "/" + database);
             config.setUsername(USERNAME);
             config.setPassword(PASSWORD);
             config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-
-            HikariDataSource dataSource = new HikariDataSource(config);
-            dataSource.setPoolName(poolName);
-            if (timeout.isPresent()) {
-                dataSource.setLoginTimeout(timeout.getAsInt());
+            config.setPoolName(poolName);
+            
+            var dataSource = new HikariDataSource(config);
+            
+            if (timeout != -1) {
+                dataSource.setLoginTimeout(timeout);
             }
+            
             return new SqlConnectionPool(dataSource);
         }
-
     }
 
     /**

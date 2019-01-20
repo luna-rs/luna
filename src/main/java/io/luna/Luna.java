@@ -19,6 +19,7 @@ public final class Luna  {
      * A private constructor.
      */
     private Luna() {
+    
     }
 
     static {
@@ -33,6 +34,7 @@ public final class Luna  {
                 System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
             }
+            
             LOGGER = LogManager.getLogger();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);

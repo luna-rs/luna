@@ -1,6 +1,6 @@
 import api.predef.*
-import io.luna.game.event.impl.WidgetItemClickEvent
-import io.luna.game.event.impl.WidgetItemClickEvent.*
+import io.luna.game.event.item.WidgetItemClickEvent
+import io.luna.game.event.item.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
 import world.player.item.trading.OfferTradeInterface

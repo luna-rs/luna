@@ -21,8 +21,7 @@ public class WalkableInterface extends AbstractInterface {
 
     @Override
     public final void open(Player player) {
-        int id = unsafeGetId();
-        player.queue(new WalkableInterfaceMessageWriter(id));
+        player.queue(new WalkableInterfaceMessageWriter(getId()));
     }
 
     @Override

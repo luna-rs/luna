@@ -2,7 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ItemOnObjectEvent;
+import io.luna.game.event.item.ItemOnObjectEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ObjectDefinition;
@@ -16,8 +16,6 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -28,7 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
 public final class ItemOnObjectMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         int itemInterfaceId = msg.getPayload().getShort(false);
         int objectId = msg.getPayload().getShort(true, ByteOrder.LITTLE);
         int objectY = msg.getPayload().getShort(true, ValueType.ADD, ByteOrder.LITTLE);
@@ -40,10 +38,12 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         if (!validate(player, itemId, itemIndexId, itemInterfaceId, objectId, objectX, objectY)) {
             return null;
         }
+        
         Position position = new Position(objectX, objectY, player.getPosition().getZ());
 
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
+        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
         Event event = new ItemOnObjectEvent(player, itemId, itemIndexId,
                 itemInterfaceId, objectId, objectX, objectY);
         player.submitAction(new InteractionAction(player, object, event));
@@ -77,6 +77,7 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
                 Inventory inventory = player.getInventory();
                 return inventory.get(itemIndex).getId() == itemId;
         }
+        
         return false;
     }
 }

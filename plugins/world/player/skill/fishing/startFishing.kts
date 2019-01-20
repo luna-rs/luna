@@ -1,7 +1,7 @@
 import api.predef.*
-import io.luna.game.event.impl.NpcClickEvent
-import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
-import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
+import io.luna.game.event.entity.player.NpcClickEvent
+import io.luna.game.event.entity.player.NpcClickEvent.NpcFirstClickEvent
+import io.luna.game.event.entity.player.NpcClickEvent.NpcSecondClickEvent
 import world.player.skill.fishing.FishAction
 import world.player.skill.fishing.Tool
 

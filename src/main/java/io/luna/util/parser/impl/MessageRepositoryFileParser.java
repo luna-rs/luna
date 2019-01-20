@@ -24,7 +24,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     private static final class DefaultMessageReader extends GameMessageReader {
 
         @Override
-        public Event read(Player player, GameMessage msg) throws Exception {
+        public Event read(Player player, GameMessage msg) {
             return null;
         }
     }
@@ -72,9 +72,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
      * @return The message listener instance.
      * @throws ReflectiveOperationException If any errors occur while creating the listener instance.
      */
-    private GameMessageReader createReader(int opcode, int size, String className)
-            throws ReflectiveOperationException {
-
+    private GameMessageReader createReader(int opcode, int size, String className) throws ReflectiveOperationException {
         // Create class and instance from qualified name.
         Object readerInstance = className != null ?
                 Class.forName(DIR + className).getDeclaredConstructor().newInstance() : new DefaultMessageReader();

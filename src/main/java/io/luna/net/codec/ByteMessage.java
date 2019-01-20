@@ -138,7 +138,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public void startBitAccess() {
         checkState(bitIndex == -1, "This ByteMessage instance is already in bit access mode.");
-
         bitIndex = buf.writerIndex() << 3;
     }
 
@@ -147,7 +146,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public void endBitAccess() {
         checkState(bitIndex != -1, "This ByteMessage instance is not in bit access mode.");
-
         buf.writerIndex((bitIndex + 7) >> 3);
         bitIndex = -1;
     }
@@ -194,6 +192,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
         for (int i = from.length - 1; i >= 0; i--) {
             put(from[i]);
         }
+        
         return this;
     }
 
@@ -239,6 +238,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
             tmp |= (value & BIT_MASK[amount]) << (bitOffset - amount);
             buf.setByte(bytePos, tmp);
         }
+        
         return this;
     }
 
@@ -274,6 +274,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
             case NORMAL:
                 break;
         }
+        
         buf.writeByte((byte) value);
         return this;
     }
@@ -386,6 +387,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 put(value >> 24);
                 break;
         }
+        
         return this;
     }
 
@@ -460,6 +462,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 put((int) (value >> 56));
                 break;
         }
+        
         return this;
     }
 
@@ -508,6 +511,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
         for (byte charValue : value.getBytes()) {
             put(charValue);
         }
+        
         put(10);
         return this;
     }
@@ -521,6 +525,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public int get(boolean signed, ValueType transform) {
         int value = buf.readByte();
+        
         switch (transform) {
             case ADD:
                 value = value - 128;
@@ -534,7 +539,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
             case NORMAL:
                 break;
         }
-        return signed ? value : value & 0xff;
+        
+        return signed ? value : value & 0xFF;
     }
 
     /**
@@ -577,6 +583,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public int getShort(boolean signed, ValueType transform, ByteOrder order) {
         int value = 0;
+        
         switch (order) {
             case BIG:
                 value |= get(false) << 8;
@@ -591,7 +598,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 value |= get(false) << 8;
                 break;
         }
-        return signed ? value : value & 0xffff;
+        
+        return signed ? value : value & 0xFFFF;
     }
 
     /**
@@ -676,6 +684,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public int getInt(boolean signed, ValueType transform, ByteOrder order) {
         long value = 0;
+        
         switch (order) {
             case BIG:
                 value |= get(false) << 24;
@@ -702,7 +711,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 value |= get(false) << 24;
                 break;
         }
-        return (int) (signed ? value : value & 0xffffffffL);
+        
+        return (int) (signed ? value : value & 0xFFFFFFFFL);
     }
 
     /**
@@ -787,6 +797,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public long getLong(ValueType transform, ByteOrder order) {
         long value = 0;
+        
         switch (order) {
             case BIG:
                 value |= (long) get(false) << 56L;
@@ -812,6 +823,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 value |= (long) get(false) << 56L;
                 break;
         }
+        
         return value;
     }
 
@@ -851,11 +863,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public String getString() {
         byte temp;
-        StringBuilder b = new StringBuilder();
+        
+        var sb = new StringBuilder();
+        
         while ((temp = (byte) get()) != 10) {
-            b.append((char) temp);
+            sb.append((char) temp);
         }
-        return b.toString();
+        
+        return sb.toString();
     }
 
     /**
@@ -877,9 +892,11 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public byte[] getBytes(int amount, ValueType transform) {
         byte[] data = new byte[amount];
+        
         for (int i = 0; i < amount; i++) {
             data[i] = (byte) get(transform);
         }
+        
         return data;
     }
 
@@ -894,8 +911,10 @@ public final class ByteMessage extends DefaultByteBufHolder {
     public byte[] getBytesReverse(int amount, ValueType transform) {
         byte[] data = new byte[amount];
         int dataPosition = 0;
+        
         for (int i = buf.readerIndex() + amount - 1; i >= buf.readerIndex(); i--) {
             int value = buf.getByte(i);
+            
             switch (transform) {
                 case ADD:
                     value -= 128;
@@ -909,8 +928,10 @@ public final class ByteMessage extends DefaultByteBufHolder {
                 case NORMAL:
                     break;
             }
+            
             data[dataPosition++] = (byte) value;
         }
+        
         return data;
     }
 

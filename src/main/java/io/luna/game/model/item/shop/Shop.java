@@ -87,7 +87,6 @@ public final class Shop {
         this.buyPolicy = buyPolicy;
         this.currency = currency;
         restockTask = new RestockTask(this);
-
         container.setListeners(new ShopListener(this));
     }
 
@@ -98,12 +97,12 @@ public final class Shop {
      * @param index The index of the item.
      */
     public void sendSellValue(Player player, int index) {
-        Item item = player.getInventory().get(index);
+        var item = player.getInventory().get(index);
+        
         if (item != null && computeCanSell(item)) {
             int value = computeSellValue(item, false);
-            String itemName = item.getItemDef().getName();
-            String currencyName = currency.computeName(value);
-
+            var itemName = item.getItemDef().getName();
+            var currencyName = currency.computeName(value);
             player.sendMessage(itemName + ": shop will buy for " + FORMAT.format(value) + " " + currencyName + ".");
         } else {
             player.sendMessage("You cannot sell that item here.");
@@ -117,12 +116,12 @@ public final class Shop {
      * @param index The index of the item.
      */
     public void sendBuyValue(Player player, int index) {
-        Item item = container.get(index);
+        var item = container.get(index);
+        
         if (item != null && item.getAmount() > 0) {
-            String itemName = item.getItemDef().getName();
             int value = computeBuyValue(item, false);
-            String currencyName = currency.computeName(value);
-
+            var itemName = item.getItemDef().getName();
+            var currencyName = currency.computeName(value);
             player.sendMessage(itemName + ": currently costs " + FORMAT.format(value) + " " + currencyName + ".");
         } else {
             player.sendMessage("The shop has run out of stock.");
@@ -138,15 +137,14 @@ public final class Shop {
      * @return {@code true} if the item was bought.
      */
     public boolean buy(Player player, int index, int buyAmount) {
-        Inventory inventory = player.getInventory();
-        Item shopItem = container.get(index);
+        var inventory = player.getInventory();
+        var shopItem = container.get(index);
 
         // Invalid index or nothing left in stock.
         if (shopItem == null || shopItem.getAmount() <= 0) {
             player.sendMessage("The shop has run out of stock.");
             return false;
         }
-        ItemDefinition itemDef = shopItem.getItemDef();
 
         // Adjust the buy amount if it's greater than the amount in stock.
         if (buyAmount > shopItem.getAmount()) {
@@ -156,11 +154,14 @@ public final class Shop {
         // Adjust buy amount if it's greater than available inventory space.
         int spacesNeeded = inventory.computeSpaceFor(shopItem.withAmount(buyAmount));
         int spacesAvailable = inventory.computeRemainingSize();
+        var itemDef = shopItem.getItemDef();
+        
         if (spacesNeeded > spacesAvailable) {
             if (itemDef.isStackable() || spacesAvailable == 0) {
                 inventory.fireCapacityExceededEvent();
                 return false;
             }
+            
             buyAmount = spacesAvailable;
         }
 
@@ -168,10 +169,12 @@ public final class Shop {
         int hasValue = inventory.computeAmountForId(currency.getId());
         int singleValue = computeBuyValue(shopItem, false);
         int totalValue = singleValue * buyAmount;
+        
         if (hasValue < totalValue) {
             // They don't, buy as many as they can afford.
             buyAmount = hasValue / singleValue;
             totalValue = singleValue * buyAmount;
+            
             player.sendMessage("You do not have enough " + currency.getPluralName() + " to buy this item.");
 
             if (buyAmount == 0) {
@@ -181,18 +184,20 @@ public final class Shop {
         }
 
         // Buy the item.
-        Item buyItem = shopItem.withAmount(buyAmount);
-        Item currencyItem = new Item(currency.getId(), totalValue);
+        var buyItem = shopItem.withAmount(buyAmount);
+        var currencyItem = new Item(currency.getId(), totalValue);
+        
         if (inventory.remove(currencyItem) && inventory.add(buyItem)) {
             if (amountMap[index] == OptionalInt.empty()) {
                 // Item was never originally in shop, remove it.
                 return container.remove(buyItem);
-            } else {
-                // Decrement item on shop window.
-                container.set(index, shopItem.changeAmount(-buyAmount));
-                return true;
             }
+    
+            // Decrement item on shop window.
+            container.set(index, shopItem.changeAmount(-buyAmount));
+            return true;
         }
+        
         return false;
     }
 
@@ -205,8 +210,8 @@ public final class Shop {
      * @return {@code true} if the item was sold.
      */
     public boolean sell(Player player, int index, int sellAmount) {
-        Inventory inventory = player.getInventory();
-        Item inventoryItem = inventory.get(index);
+        var inventory = player.getInventory();
+        var inventoryItem = inventory.get(index);
 
         // Invalid index or cannot sell item.
         if (inventoryItem == null || !computeCanSell(inventoryItem)) {
@@ -216,13 +221,15 @@ public final class Shop {
 
         // Adjust the sell amount if it's greater than what's in the inventory.
         int inventoryAmount = inventory.computeAmountForId(inventoryItem.getId());
+        
         if (sellAmount > inventoryAmount) {
             sellAmount = inventoryAmount;
         }
 
         // Check if the shop has the space to hold the item being sold.
-        Item sellItem = inventoryItem.withAmount(sellAmount);
-        boolean exceedsCapacity = !container.hasSpaceFor(sellItem);
+        var sellItem = inventoryItem.withAmount(sellAmount);
+        var exceedsCapacity = !container.hasSpaceFor(sellItem);
+        
         if (exceedsCapacity) {
             player.sendMessage("This shop is currently full.");
             return false;
@@ -230,7 +237,8 @@ public final class Shop {
 
         // Ensure that the currency can fit into the inventory.
         int totalValue = computeSellValue(sellItem, true);
-        Item currencyItem = new Item(currency.getId(), totalValue);
+        var currencyItem = new Item(currency.getId(), totalValue);
+        
         if (!inventory.hasSpaceFor(currencyItem)) {
             inventory.fireCapacityExceededEvent();
             return false;
@@ -240,6 +248,7 @@ public final class Shop {
         if (inventory.remove(sellItem) && inventory.add(currencyItem)) {
             return container.add(sellItem);
         }
+        
         return false;
     }
 
@@ -251,8 +260,8 @@ public final class Shop {
      * @return The sell value.
      */
     private int computeSellValue(Item item, boolean total) {
-        int value = (int) Math.floor(item.getItemDef().getValue() / 2);
-        value = value <= 0 ? 1 : value;
+        int value = (int) Math.floor(item.getItemDef().getValue() / 2D);
+        value = Math.max(1, value);
         return total ? value * item.getAmount() : value;
     }
 
@@ -265,7 +274,7 @@ public final class Shop {
      */
     private int computeBuyValue(Item item, boolean total) {
         int value = item.getItemDef().getValue();
-        value = value <= 0 ? 1 : value;
+        value = Math.max(1, value);
         return total ? value * item.getAmount() : value;
     }
 
@@ -317,6 +326,7 @@ public final class Shop {
                     restockTask = new RestockTask(this);
                     break;
             }
+            
             world.schedule(restockTask);
         }
     }

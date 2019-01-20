@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -25,7 +26,7 @@ public final class DialogueQueueBuilder {
     /**
      * The queue of dialogues.
      */
-    private final ArrayDeque<DialogueInterface> dialogues;
+    private final Deque<DialogueInterface> dialogues;
 
     /**
      * If this builder is locked.
@@ -115,6 +116,7 @@ public final class DialogueQueueBuilder {
     public DialogueQueueBuilder options(String option0, Consumer<Player> action0,
                                         String option1, Consumer<Player> action1) {
         checkLocked();
+        
         dialogues.add(new OptionDialogueInterface(option0, option1) {
             @Override
             public void firstOption(Player player) {
@@ -126,6 +128,7 @@ public final class DialogueQueueBuilder {
                 action1.accept(player);
             }
         });
+        
         return this;
     }
 
@@ -138,6 +141,7 @@ public final class DialogueQueueBuilder {
                                         String option1, Consumer<Player> action1,
                                         String option2, Consumer<Player> action2) {
         checkLocked();
+        
         dialogues.add(new OptionDialogueInterface(option0, option1, option2) {
             @Override
             public void firstOption(Player player) {
@@ -154,6 +158,7 @@ public final class DialogueQueueBuilder {
                 action2.accept(player);
             }
         });
+        
         return this;
     }
 
@@ -167,6 +172,7 @@ public final class DialogueQueueBuilder {
                                         String option2, Consumer<Player> action2,
                                         String option3, Consumer<Player> action3) {
         checkLocked();
+        
         dialogues.add(new OptionDialogueInterface(option0, option1, option2, option3) {
             @Override
             public void firstOption(Player player) {
@@ -188,6 +194,7 @@ public final class DialogueQueueBuilder {
                 action3.accept(player);
             }
         });
+        
         return this;
     }
 
@@ -202,6 +209,7 @@ public final class DialogueQueueBuilder {
                                         String option3, Consumer<Player> action3,
                                         String option4, Consumer<Player> action4) {
         checkLocked();
+        
         dialogues.add(new OptionDialogueInterface(option0, option1, option2, option3, option4) {
             @Override
             public void firstOption(Player player) {
@@ -228,6 +236,7 @@ public final class DialogueQueueBuilder {
                 action4.accept(player);
             }
         });
+        
         return this;
     }
 
@@ -262,8 +271,8 @@ public final class DialogueQueueBuilder {
     public DialogueQueueBuilder openAction(Consumer<Player> action) {
         checkLocked();
 
-        DialogueInterface lastDialogue = dialogues.peekLast();
-
+        var lastDialogue = dialogues.peekLast();
+        
         checkState(lastDialogue != null, "No past dialogue to attach action to.");
         lastDialogue.setOpenAction(action);
         return this;
@@ -284,15 +293,18 @@ public final class DialogueQueueBuilder {
      */
     public void then(Consumer<Player> action) {
         checkLocked();
+        
         if (dialogues.isEmpty()) {
             action.accept(player);
         } else {
-            DialogueQueue queue = new DialogueQueue(player, dialogues);
+            var queue = new DialogueQueue(player, dialogues);
+            
             queue.advance();
             queue.setTailAction(action);
 
             player.setDialogues(queue);
         }
+        
         locked = true;
     }
 
@@ -305,7 +317,8 @@ public final class DialogueQueueBuilder {
             // Optimization for single-entry dialogues.
             player.getInterfaces().open(dialogues.peekFirst());
         } else {
-            DialogueQueue queue = new DialogueQueue(player, dialogues);
+            var queue = new DialogueQueue(player, dialogues);
+            
             queue.advance();
 
             player.setDialogues(queue);

@@ -12,7 +12,7 @@ public final class ActionSet {
     /**
      * The current action being processed.
      */
-    private Optional<Action> currentAction = Optional.empty();
+    private Action<?> currentAction;
 
     /**
      * Attempts to submit a new action to this set.
@@ -22,18 +22,18 @@ public final class ActionSet {
     public void submit(Action<?> pending) {
         pending.getMob().onSubmitAction(pending);
 
-        if (currentAction.isPresent()) {
-            Action<?> current = currentAction.get();
-
-            if (current.isRunning()) {
-                if (current.isEqual(pending)) {
-                    current.onEquals(pending);
+        if (currentAction != null) {
+            if (currentAction.isRunning()) {
+                if (currentAction.isEqual(pending)) {
+                    currentAction.onEquals(pending);
                     return;
                 }
-                current.interrupt();
+    
+                currentAction.interrupt();
             }
         }
-        currentAction = Optional.of(pending);
+        
+        currentAction = pending;
         pending.init();
     }
 
@@ -41,18 +41,16 @@ public final class ActionSet {
      * Interrupts and discards the current action being processed.
      */
     public void interrupt() {
-        if (currentAction.isPresent()) {
-            Action current = currentAction.get();
-            current.interrupt();
-
-            currentAction = Optional.empty();
+        if (currentAction != null) {
+            currentAction.interrupt();
+            currentAction = null;
         }
     }
 
     /**
      * @return The currently processing action.
      */
-    public Optional<Action> current() {
-        return currentAction;
+    public Optional<Action<?>> current() {
+        return Optional.ofNullable(currentAction);
     }
 }

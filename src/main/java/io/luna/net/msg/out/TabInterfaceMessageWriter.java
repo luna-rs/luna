@@ -36,7 +36,7 @@ public final class TabInterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(71);
+        var msg = ByteMessage.message(71);
         msg.putShort(id);
         msg.put(index.getId(), ValueType.ADD);
         return msg;

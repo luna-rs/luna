@@ -37,7 +37,7 @@ public final class InventoryOverlayMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(248);
+        var msg = ByteMessage.message(248);
         msg.putShort(interfaceId, ValueType.ADD);
         msg.putShort(overlayInterfaceId);
         return msg;

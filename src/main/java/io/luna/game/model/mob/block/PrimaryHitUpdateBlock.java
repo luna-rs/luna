@@ -20,8 +20,7 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
     public PrimaryHitUpdateBlock() {
         super(UpdateFlag.PRIMARY_HIT);
     }
-
-
+    
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Hit hit = unwrap(player.getPrimaryHit());

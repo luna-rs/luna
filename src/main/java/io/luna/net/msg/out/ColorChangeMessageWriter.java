@@ -38,7 +38,7 @@ public final class ColorChangeMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(122);
+        var msg = ByteMessage.message(122);
         msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort(color, ValueType.ADD, ByteOrder.LITTLE);
         return msg;

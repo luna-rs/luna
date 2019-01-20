@@ -1,5 +1,5 @@
 import api.predef.*
-import io.luna.game.event.impl.LoginEvent
+import io.luna.game.event.entity.player.LoginEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.ConfigMessageWriter
 

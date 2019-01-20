@@ -45,7 +45,7 @@ public final class LoginCredentialsMessage {
      * @param pipeline The channel pipeline.
      */
     public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
-        ChannelPipeline pipeline) {
+                                   ChannelPipeline pipeline) {
         this.username = username;
         this.password = password;
         this.encryptor = encryptor;

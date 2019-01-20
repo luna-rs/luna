@@ -10,6 +10,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96 <http://github.org/lare96>
  */
 public enum PlayerRights {
+    
     // Order matters, for Kotlin scripts!
     PLAYER(0, 0),
     MODERATOR(1, 1),

@@ -3,7 +3,6 @@ package io.luna.game.model.mob.persistence;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.luna.LunaConstants;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.GsonUtils;
@@ -64,7 +63,8 @@ public class SqlPlayerSerializer extends PlayerSerializer {
 
     @Override
     public boolean save(Player player) {
-        World world = player.getWorld();
+        var world = player.getWorld();
+        
         try {
             // Save to database.
             try (Connection connection = connectionPool.take()) {
@@ -79,6 +79,7 @@ public class SqlPlayerSerializer extends PlayerSerializer {
             // Normal exception, cannot be retried.
             throw new RuntimeException(e);
         }
+        
         return true;
     }
 
@@ -94,20 +95,19 @@ public class SqlPlayerSerializer extends PlayerSerializer {
             throws SQLException, ClassNotFoundException {
 
         // Lookup database id.
-        ResultSet playerId = statement.executeQuery("SELECT player_id " +
-                "FROM players " +
+        ResultSet resultSet = statement.executeQuery("SELECT player_id FROM players " +
                 "WHERE name = '" + player.getUsername() + "';");
-        if (!playerId.next()) {
+        
+        if (!resultSet.next()) {
             // They don't have one, so they're a new player.
             player.setPosition(LunaConstants.STARTING_POSITION);
             return LoginResponse.NORMAL;
         }
-        long databaseId = playerId.getLong("player_id");
-        player.setDatabaseId(databaseId);
+        
+        player.setDatabaseId(resultSet.getLong("player_id"));
 
         // Set JSON data.
-        ResultSet data = statement.executeQuery("SELECT data " +
-                "FROM players " +
+        ResultSet data = statement.executeQuery("SELECT data FROM players " +
                 "WHERE player_id = " + player.getDatabaseId() + ";");
         checkState(data.next(), "There was no result for 'data' in the database.");
         JsonObject jsonData = new JsonParser().parse(data.getString("data")).getAsJsonObject();
@@ -128,8 +128,7 @@ public class SqlPlayerSerializer extends PlayerSerializer {
             statement.executeUpdate("INSERT INTO players(name, data) " +
                     "VALUES('" + player.getUsername() + "', '" + jsonString + "');");
         } else {
-            statement.executeUpdate("UPDATE players " +
-                    "SET data = '" + jsonString + "' " +
+            statement.executeUpdate("UPDATE players SET data = '" + jsonString + "' " +
                     "WHERE player_id = " + player.getDatabaseId() + ";");
         }
     }

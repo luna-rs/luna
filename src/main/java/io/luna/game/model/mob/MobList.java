@@ -84,6 +84,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
                     return false;
                 }
             }
+            
             return true;
         }
     }
@@ -135,6 +136,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
                 return Optional.of(e);
             }
         }
+        
         return Optional.empty();
     }
 
@@ -148,13 +150,16 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         // Iterator doesn't support reverse iteration.
         for (int index = capacity(); index > 1; index--) {
             E mob = mobs[index];
+            
             if (mob == null) {
                 continue;
             }
+            
             if (filter.test(mob)) {
                 return Optional.of(mob);
             }
         }
+        
         return Optional.empty();
     }
 
@@ -165,12 +170,14 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @return A list of matching elements.
      */
     public List<E> findAll(Predicate<? super E> filter) {
-        List<E> list = new ArrayList<>();
+        var list = new ArrayList<E>();
+        
         for (E e : this) {
             if (filter.test(e)) {
                 list.add(e);
             }
         }
+        
         return list;
     }
 
@@ -201,9 +208,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         int index = indexes.remove();
         mobs[index] = mob;
         mob.setIndex(index);
-
         mob.setState(EntityState.ACTIVE);
-
         size++;
     }
 
@@ -218,12 +223,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         // Put back index, so other mobs can use it.
         indexes.add(mob.getIndex());
-
         mob.setState(EntityState.INACTIVE);
-
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
-
         size--;
     }
 

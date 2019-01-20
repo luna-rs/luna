@@ -44,9 +44,8 @@ public final class ForcedMovement {
      * @return The forced movement instance.
      */
     public static ForcedMovement forceMoveX(Player player, int amount, int duration) {
-        Position destination = player.getPosition().translate(amount, 0);
-        Direction direction = amount < 0 ? Direction.WEST : Direction.EAST;
-
+        var destination = player.getPosition().translate(amount, 0);
+        var direction = amount < 0 ? Direction.WEST : Direction.EAST;
         return new ForcedMovement(player.getPosition(), destination, duration, 0, direction);
     }
 
@@ -59,9 +58,8 @@ public final class ForcedMovement {
      * @return The forced movement instance.
      */
     public static ForcedMovement forceMoveY(Player player, int amount, int duration) {
-        Position destination = player.getPosition().translate(0, amount);
-        Direction direction = amount < 0 ? Direction.SOUTH : Direction.NORTH;
-
+        var destination = player.getPosition().translate(0, amount);
+        var direction = amount < 0 ? Direction.SOUTH : Direction.NORTH;
         return new ForcedMovement(player.getPosition(), destination, 0, duration, direction);
     }
 
@@ -75,7 +73,7 @@ public final class ForcedMovement {
      * @param direction The movement direction.
      */
     public ForcedMovement(Position startPosition, Position endPosition, int durationX, int durationY,
-        Direction direction) {
+                          Direction direction) {
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.durationX = durationX;

@@ -29,7 +29,7 @@ public final class InterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(97);
+        var msg = ByteMessage.message(97);
         msg.putShort(id);
         return msg;
     }

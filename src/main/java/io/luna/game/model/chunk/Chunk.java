@@ -1,8 +1,6 @@
 package io.luna.game.model.chunk;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -28,15 +26,12 @@ public final class Chunk {
     /**
      * A map of entities.
      */
-    private final ImmutableMap<EntityType, Set<Entity>> entities;
+    private final Map<EntityType, Set<Entity>> entities;
 
     {
         Map<EntityType, Set<Entity>> map = new EnumMap<>(EntityType.class);
-        for (EntityType type : EntityType.ALL) {
-            // Create sets for each entity type.
-            map.put(type, new HashSet<>(4));
-        }
-        entities = Maps.immutableEnumMap(map);
+        EntityType.ALL.forEach(type -> map.put(type, new HashSet<>(4)));
+        entities = Map.copyOf(map);
     }
 
     /**
@@ -50,20 +45,18 @@ public final class Chunk {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("position", position).
-                add("entities", entities).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("position", position)
+                .add("entities", entities).toString();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Chunk)) {
+            return false;
         }
-        if (obj instanceof Chunk) {
-            Chunk other = (Chunk) obj;
-            return position.equals(other.position);
-        }
-        return false;
+        
+        return position.equals(((Chunk) obj).position);
     }
 
     @Override

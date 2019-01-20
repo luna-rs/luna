@@ -9,6 +9,7 @@ import io.luna.game.model.mob.WalkingQueue.Step;
  * @author Graham
  */
 public enum Direction {
+    
     NONE(-1),
     NORTH_WEST(0),
     NORTH(1),
@@ -72,6 +73,7 @@ public enum Direction {
                 return WEST;
             }
         }
+        
         throw new IllegalArgumentException("difference between coordinates must be [-1, 1].");
     }
 

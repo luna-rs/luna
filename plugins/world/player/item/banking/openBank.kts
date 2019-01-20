@@ -1,5 +1,5 @@
 import api.predef.*
-import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
+import io.luna.game.event.entity.player.ObjectClickEvent.ObjectFirstClickEvent
 
 /**
  * A set of objects used for banking.

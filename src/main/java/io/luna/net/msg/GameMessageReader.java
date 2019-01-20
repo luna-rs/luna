@@ -59,24 +59,22 @@ public abstract class GameMessageReader {
      */
     public final void postEvent(Player player, GameMessage msg) {
         try {
-
             // Retrieve event and post it, if possible.
             Event event = read(player, msg);
+            
             if (event != null) {
                 player.getPlugins().post(event);
             }
         } catch (Exception e) {
-
             // Disconnect on exception.
             LOGGER.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
             player.logout();
         } finally {
-
             // Release pooled buffer.
-            ByteMessage payload = msg.getPayload();
-            boolean isPooled = Unpooled.EMPTY_BUFFER != payload.getBuffer();
-            if(isPooled && !payload.release()) {
-
+            var payload = msg.getPayload();
+            var isPooled = Unpooled.EMPTY_BUFFER != payload.getBuffer();
+            
+            if (isPooled && !payload.release()) {
                 // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
                 // section of the code means that a buffer was not released (or retained) when it was supposed to
                 // be, so we log a warning.

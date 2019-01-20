@@ -1,12 +1,11 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableMap;
 import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
-import io.luna.game.event.impl.LoginEvent;
-import io.luna.game.event.impl.LogoutEvent;
+import io.luna.game.event.entity.player.LoginEvent;
+import io.luna.game.event.entity.player.LogoutEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -31,7 +30,6 @@ import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
-import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,7 +39,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -59,6 +56,7 @@ public final class Player extends Mob {
      * An enum representing prayer icons.
      */
     public enum PrayerIcon {
+        
         NONE(-1),
         PROTECT_FROM_MELEE(0),
         PROTECT_FROM_MISSILES(1),
@@ -93,6 +91,7 @@ public final class Player extends Mob {
      * An enum representing skull icons.
      */
     public enum SkullIcon {
+        
         NONE(-1),
         WHITE(0),
         RED(1);
@@ -172,8 +171,7 @@ public final class Player extends Mob {
     /**
      * The text cache.
      */
-    private final Map<Integer, String> textCache =
-            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : ImmutableMap.of();
+    private final Map<Integer, String> textCache = LunaConstants.PACKET_126_CACHING ? new HashMap<>() : Map.of();
 
     /**
      * The cached update block.
@@ -208,12 +206,12 @@ public final class Player extends Mob {
     /**
      * The chat message.
      */
-    private Optional<Chat> chat = Optional.empty();
+    private Chat chat;
 
     /**
      * The forced movement route.
      */
-    private Optional<ForcedMovement> forcedMovement = Optional.empty();
+    private ForcedMovement forcedMovement;
 
     /**
      * The prayer icon.
@@ -233,7 +231,7 @@ public final class Player extends Mob {
     /**
      * The dialogue queue.
      */
-    private Optional<DialogueQueue> dialogues = Optional.empty();
+    private DialogueQueue dialogues;
 
     /**
      * The private message counter.
@@ -278,14 +276,11 @@ public final class Player extends Mob {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof Player)) {
+            return false;
         }
-        if (obj instanceof Player) {
-            Player other = (Player) obj;
-            return getUsernameHash() == other.getUsernameHash();
-        }
-        return false;
+        
+        return getUsernameHash() == ((Player) obj).getUsernameHash();
     }
 
     @Override
@@ -300,10 +295,11 @@ public final class Player extends Mob {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("username", getUsername()).
-                add("index", getIndex()).
-                add("rights", rights).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("username", getUsername())
+                .add("index", getIndex())
+                .add("rights", rights)
+                .toString();
     }
 
     @Override
@@ -331,8 +327,8 @@ public final class Player extends Mob {
     @Override
     public void reset() {
         teleporting = false;
-        chat = Optional.empty();
-        forcedMovement = Optional.empty();
+        chat = null;
+        forcedMovement = null;
         regionChanged = false;
     }
 
@@ -343,14 +339,14 @@ public final class Player extends Mob {
 
     @Override
     public void transform(int id) {
-        transformId = OptionalInt.of(id);
+        transformId = id;
         flags.flag(UpdateFlag.APPEARANCE);
     }
 
     @Override
     public void resetTransform() {
-        if (transformId.isPresent()) {
-            transformId = OptionalInt.empty();
+        if (transformId != -1) {
+            transformId = -1;
             flags.flag(UpdateFlag.APPEARANCE);
         }
     }
@@ -391,8 +387,9 @@ public final class Player extends Mob {
      */
     public void sendText(String text, int id) {
         requireNonNull(text);
-
+        
         String previous = LunaConstants.PACKET_126_CACHING ? textCache.put(id, text) : null;
+        
         if (!text.equals(previous)) {
             queue(new WidgetTextMessageWriter(text, id));
         }
@@ -402,7 +399,8 @@ public final class Player extends Mob {
      * Disconnects this player.
      */
     public void logout() {
-        Channel channel = client.getChannel();
+        var channel = client.getChannel();
+        
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
         }
@@ -414,7 +412,7 @@ public final class Player extends Mob {
      * @param chat The chat instance.
      */
     public void chat(Chat chat) {
-        this.chat = Optional.of(chat);
+        this.chat = chat;
         flags.flag(UpdateFlag.CHAT);
     }
 
@@ -424,7 +422,7 @@ public final class Player extends Mob {
      * @param forcedMovement The forced movement path.
      */
     public void forceMovement(ForcedMovement forcedMovement) {
-        this.forcedMovement = Optional.of(forcedMovement);
+        this.forcedMovement = forcedMovement;
         flags.flag(UpdateFlag.FORCED_MOVEMENT);
     }
 
@@ -456,7 +454,6 @@ public final class Player extends Mob {
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
         int deltaY = position.getLocalY(lastRegion);
-
         return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88; // TODO does last y need >= ?
     }
 
@@ -477,6 +474,7 @@ public final class Player extends Mob {
     // TODO No point in this being an attribute. Migrate to boolean within "Bank" class
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
+        
         if (attr.get() != withdrawAsNote) {
             attr.set(withdrawAsNote);
             queue(new ConfigMessageWriter(115, withdrawAsNote ? 1 : 0));
@@ -502,6 +500,7 @@ public final class Player extends Mob {
         }
 
         AttributeValue<Double> attr = attributes.get("run_energy");
+        
         if (attr.get() != runEnergy) {
             attr.set(runEnergy);
             queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
@@ -520,11 +519,13 @@ public final class Player extends Mob {
 
         AttributeValue<Double> attr = attributes.get("run_energy");
         double newEnergy = attr.get() + runEnergy;
+        
         if (newEnergy > 100.0) {
             newEnergy = 100.0;
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
+        
         attr.set(newEnergy);
         queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
@@ -597,6 +598,7 @@ public final class Player extends Mob {
      */
     public boolean isMuted() {
         String date = getUnmuteDate();
+        
         switch (date) {
             case "never":
                 return true;
@@ -605,10 +607,12 @@ public final class Player extends Mob {
             default:
                 LocalDate lift = LocalDate.parse(date);
                 LocalDate now = LocalDate.now();
+                
                 if (now.isAfter(lift)) {
                     setUnmuteDate("n/a");
                     return false;
                 }
+                
                 return true;
         }
     }
@@ -618,6 +622,7 @@ public final class Player extends Mob {
      */
     public boolean isBanned() {
         String date = getUnbanDate();
+        
         switch (date) {
             case "never":
                 return true;
@@ -626,10 +631,12 @@ public final class Player extends Mob {
             default:
                 LocalDate lift = LocalDate.parse(date);
                 LocalDate now = LocalDate.now();
+                
                 if (now.isAfter(lift)) {
                     setUnbanDate("n/a");
                     return false;
                 }
+                
                 return true;
         }
     }
@@ -787,14 +794,14 @@ public final class Player extends Mob {
      * @return The chat message.
      */
     public Optional<Chat> getChat() {
-        return chat;
+        return Optional.ofNullable(chat);
     }
 
     /**
      * @return The forced movement route.
      */
     public Optional<ForcedMovement> getForcedMovement() {
-        return forcedMovement;
+        return Optional.ofNullable(forcedMovement);
     }
 
     /**
@@ -807,7 +814,7 @@ public final class Player extends Mob {
     /**
      * @return The transformation identifier.
      */
-    public OptionalInt getTransformId() {
+    public int getTransformId() {
         return transformId;
     }
 
@@ -908,7 +915,9 @@ public final class Player extends Mob {
      * Advances the current dialogue queue.
      */
     public void advanceDialogues() {
-        dialogues.ifPresent(DialogueQueue::advance);
+        if (dialogues != null) {
+            dialogues.advance();
+        }
     }
 
     /**
@@ -917,14 +926,14 @@ public final class Player extends Mob {
      * @param dialogues The new value.
      */
     public void setDialogues(DialogueQueue dialogues) {
-        this.dialogues = Optional.ofNullable(dialogues);
+        this.dialogues = dialogues;
     }
 
     /**
      * @return The dialogue queue.
      */
     public Optional<DialogueQueue> getDialogues() {
-        return dialogues;
+        return Optional.ofNullable(dialogues);
     }
 
     /**
@@ -959,6 +968,7 @@ public final class Player extends Mob {
      */
     public void setFriends(long[] newFriends) {
         friends.clear();
+        
         for (long name : newFriends) {
             friends.add(name);
         }
@@ -978,6 +988,7 @@ public final class Player extends Mob {
      */
     public void setIgnores(long[] newIgnores) {
         ignores.clear();
+        
         for (long name : newIgnores) {
             ignores.add(name);
         }

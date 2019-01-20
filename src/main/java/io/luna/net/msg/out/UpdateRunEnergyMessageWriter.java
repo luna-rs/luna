@@ -4,8 +4,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.util.OptionalInt;
-
 /**
  * A {@link GameMessageWriter} implementation that displays the run energy value.
  *
@@ -16,7 +14,7 @@ public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
     /**
      * The run energy.
      */
-    private final OptionalInt energy;
+    private final int energy;
 
     /**
      * Creates a new {@link UpdateRunEnergyMessageWriter}.
@@ -24,18 +22,17 @@ public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
      * @param energy The run energy.
      */
     public UpdateRunEnergyMessageWriter(int energy) {
-        this.energy = OptionalInt.of(energy);
+        this.energy = energy;
     }
 
     public UpdateRunEnergyMessageWriter() {
-        energy = OptionalInt.empty();
+        energy = -1;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        int runEnergy = energy.orElse((int) player.getRunEnergy());
-        ByteMessage msg = ByteMessage.message(110);
-        msg.put(runEnergy);
+        var msg = ByteMessage.message(110);
+        msg.put(energy != -1 ? energy : (int) player.getRunEnergy());
         return msg;
     }
 }

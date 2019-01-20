@@ -21,15 +21,16 @@ import java.util.OptionalInt;
 public final class NameInputMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         String string = StringUtils.decodeFromBase37(msg.getPayload().getLong());
         AbstractInterfaceSet interfaces = player.getInterfaces();
-
         Optional<InputInterface> inputOptional = interfaces.getCurrentInput();
+        
         if (inputOptional.isPresent()) {
             inputOptional.get().applyInput(player, OptionalInt.empty(), Optional.of(string));
             interfaces.resetCurrentInput();
         }
+        
         return null;
     }
 }

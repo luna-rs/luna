@@ -12,9 +12,6 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
-import java.util.Optional;
-import java.util.OptionalInt;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -38,7 +35,7 @@ public final class GroundItem extends StationaryEntity {
     /**
      * The current amount of expiration minutes.
      */
-    private OptionalInt expireMinutes = OptionalInt.of(0);
+    private int expireMinutes;
 
     /**
      * Creates a new {@link GroundItem}.
@@ -48,14 +45,14 @@ public final class GroundItem extends StationaryEntity {
      * @param amount The item amount.
      * @param position The position of the item.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) {
+    public GroundItem(LunaContext context, int id, int amount, Position position, Player player) {
         super(context, position, EntityType.ITEM, player);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
 
         // Non-stackable ground items are placed one by one.
-        ItemDefinition def = ItemDefinition.ALL.retrieve(id);
-        checkArgument(def.isStackable() || amount == 1,
+        var definition = ItemDefinition.ALL.retrieve(id);
+        checkArgument(definition.isStackable() || amount == 1,
                 "Non-stackable ground items have a maximum amount of 1.");
 
         this.id = id;
@@ -74,12 +71,13 @@ public final class GroundItem extends StationaryEntity {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("id", id).
-                add("amount", amount).
-                add("x", position.getX()).
-                add("y", position.getY()).
-                add("z", position.getZ()).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("amount", amount)
+                .add("x", position.getX())
+                .add("y", position.getY())
+                .add("z", position.getZ())
+                .toString();
     }
 
     @Override
@@ -103,10 +101,10 @@ public final class GroundItem extends StationaryEntity {
      * @param expire The value.
      */
     public void setExpire(boolean expire) {
-        if (expire && !expireMinutes.isPresent()) {
-            expireMinutes = OptionalInt.of(0);
-        } else if (!expire && expireMinutes.isPresent()) {
-            expireMinutes = OptionalInt.empty();
+        if (expire && expireMinutes == -1) {
+            expireMinutes = 0;
+        } else if (!expire && expireMinutes != -1) {
+            expireMinutes = -1;
         }
     }
 
@@ -116,7 +114,7 @@ public final class GroundItem extends StationaryEntity {
      */
     public void setExpireMinutes(int minutes) {
         checkState(isExpire(), "This item does not expire.");
-        expireMinutes = OptionalInt.of(minutes);
+        expireMinutes = minutes;
     }
 
     /**
@@ -124,7 +122,7 @@ public final class GroundItem extends StationaryEntity {
      * does not expire.
      */
     public int getExpireMinutes() {
-        return expireMinutes.getAsInt();
+        return expireMinutes;
     }
 
     /**
@@ -133,7 +131,7 @@ public final class GroundItem extends StationaryEntity {
      * @return {@code true} if this item expires.
      */
     public boolean isExpire() {
-        return expireMinutes.isPresent();
+        return expireMinutes != -1;
     }
 
     /**

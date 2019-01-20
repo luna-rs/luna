@@ -35,7 +35,7 @@ public final class RemoveGroundItemMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(156);
+        var msg = ByteMessage.message(156);
         msg.put(offset, ValueType.SUBTRACT);
         msg.putShort(id);
         return msg;

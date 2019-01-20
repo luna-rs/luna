@@ -21,7 +21,7 @@ public class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefin
     }
 
     @Override
-    public NpcCombatDefinition convert(JsonObject token) throws Exception {
+    public NpcCombatDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int respawnTicks = token.get("respawn_ticks").getAsInt();
         boolean aggressive = token.get("aggressive?").getAsBoolean();
@@ -40,7 +40,7 @@ public class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefin
     }
 
     @Override
-    public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) {
         NpcCombatDefinition.ALL.storeAndLock(tokenObjects);
     }
 }

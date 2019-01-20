@@ -42,17 +42,17 @@ public abstract class NewLineFileParser extends FileParser<Scanner, String, Stri
     }
 
     @Override
-    public String parse(Scanner parser) throws Exception {
+    public String parse(Scanner parser) {
         return parser.nextLine();
     }
 
     @Override
-    public Scanner newParser(BufferedReader reader) throws Exception {
+    public Scanner newParser(BufferedReader reader) {
         return new Scanner(reader);
     }
 
     @Override
-    public boolean hasNext(Scanner parser) throws Exception {
+    public boolean hasNext(Scanner parser) {
         return parser.hasNextLine();
     }
 
@@ -60,13 +60,16 @@ public abstract class NewLineFileParser extends FileParser<Scanner, String, Stri
     public String convert(String token) {
         if (token.isEmpty()) {
             EmptyLinePolicy linePolicy = emptyLinePolicy();
+            
             if (linePolicy == EmptyLinePolicy.SKIP) {
                 return null;
-            } else if (linePolicy == EmptyLinePolicy.EXCEPTION) {
-                throw new IllegalStateException("[@ index: " +
-                        currentIndex + "] Parser does not allow empty lines!");
+            }
+    
+            if (linePolicy == EmptyLinePolicy.EXCEPTION) {
+                throw new IllegalStateException("[@ index: " + currentIndex + "] Parser does not allow empty lines!");
             }
         }
+        
         return token;
     }
 

@@ -17,7 +17,6 @@ import io.luna.net.codec.login.LoginResponseMessage;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelPipeline;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
@@ -102,18 +101,18 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
 
         @Override
         public void operationComplete(Future<Void> future) {
-            ChannelPipeline pipeline = msg.getPipeline();
+            var pipeline = msg.getPipeline();
 
             // Replace message encoder.
-            GameMessageEncoder messageEncoder = new GameMessageEncoder(msg.getEncryptor());
+            var messageEncoder = new GameMessageEncoder(msg.getEncryptor());
             pipeline.replace("login-encoder", "game-encoder", messageEncoder);
 
             // Replace message decoder.
-            GameMessageDecoder messageDecoder = new GameMessageDecoder(msg.getDecryptor(), repository);
+            var messageDecoder = new GameMessageDecoder(msg.getDecryptor(), repository);
             pipeline.replace("login-decoder", "game-decoder", messageDecoder);
 
             // Set new client values.
-            GameClient gameClient = new GameClient(channel, player, repository);
+            var gameClient = new GameClient(channel, player, repository);
             channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 
@@ -152,14 +151,14 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
 
     @Override
     void onMessageReceived(LoginCredentialsMessage msg) {
-
         // Validate username and password.
         String username = msg.getUsername();
         String password = msg.getPassword();
         checkState(username.matches("^[a-z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
 
         // Create player and assign rights.
-        Player player = new Player(context, new PlayerCredentials(username, password));
+        var player = new Player(context, new PlayerCredentials(username, password));
+        
         if (LunaChannelFilter.WHITELIST.contains(ipAddress)) {
             player.setRights(PlayerRights.DEVELOPER);
         }

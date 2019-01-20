@@ -1,7 +1,8 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
+
+import java.util.List;
 
 /**
  * A definition model describing in-game objects.
@@ -48,7 +49,7 @@ public final class ObjectDefinition implements Definition {
     /**
      * A set of actions.
      */
-    private final ImmutableList<String> actions;
+    private final List<String> actions;
 
     /**
      * If the object is impenetrable.
@@ -95,7 +96,7 @@ public final class ObjectDefinition implements Definition {
         this.isInteractive = isInteractive;
         this.isObstructive = isObstructive;
         this.isSolid = isSolid;
-        this.actions = ImmutableList.copyOf(actions);
+        this.actions = List.of(actions);
     }
 
     /**
@@ -182,7 +183,7 @@ public final class ObjectDefinition implements Definition {
     /**
      * @return A set of actions.
      */
-    public ImmutableList<String> getActions() {
+    public List<String> getActions() {
         return actions;
     }
 }

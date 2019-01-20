@@ -20,15 +20,16 @@ import java.util.OptionalInt;
 public final class AmountInputMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         OptionalInt number = OptionalInt.of(msg.getPayload().getInt());
         AbstractInterfaceSet interfaces = player.getInterfaces();
-
         Optional<InputInterface> inputOptional = interfaces.getCurrentInput();
+        
         if (inputOptional.isPresent()) {
             inputOptional.get().applyInput(player, number, Optional.empty());
             interfaces.resetCurrentInput();
         }
+        
         return null;
     }
 }

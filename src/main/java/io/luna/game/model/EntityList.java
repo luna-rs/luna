@@ -3,7 +3,6 @@ package io.luna.game.model;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.UnmodifiableIterator;
-import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
 
 import java.util.Set;
@@ -71,16 +70,15 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @return {@code true} if {@code entity} was registered.
      */
     protected final boolean register(E entity) {
-        if (entity.getType() == type &&
-                entity.getState() == EntityState.NEW &&
+        if (entity.getType() == type && entity.getState() == EntityState.NEW &&
                 entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
-
             size++;
             entity.getPlayer().ifPresent(plr -> local.put(plr, entity));
             entity.setState(EntityState.ACTIVE);
             entity.show();
             return true;
         }
+        
         return false;
     }
 
@@ -98,14 +96,14 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @return {@code true} if {@code entity} was unregistered.
      */
     protected final boolean unregister(E entity) {
-        if (entity.getType() == type &&
-                entity.getState() == EntityState.ACTIVE &&
+        if (entity.getType() == type && entity.getState() == EntityState.ACTIVE &&
                 entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
             size--;
             entity.setState(EntityState.INACTIVE);
             entity.hide();
             return true;
         }
+        
         return false;
     }
 
@@ -139,13 +137,13 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      */
     public final boolean removeFromPosition(Position position, Predicate<E> filter) {
         boolean removed = false;
+        
         for (E entity : getFromPosition(position)) {
-            if (position.equals(entity.position) &&
-                    filter.test(entity) &&
-                    unregister(entity)) {
+            if (position.equals(entity.position) && filter.test(entity) && unregister(entity)) {
                 removed = true;
             }
         }
+        
         return removed;
     }
 
@@ -156,8 +154,8 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @return The set of entities.
      */
     public final Set<E> getFromPosition(Position position) {
-        ChunkManager chunks = world.getChunks();
-        return chunks.getChunk(position.getChunkPosition()).getAll(type);
+        var chunkManager = world.getChunks();
+        return chunkManager.getChunk(position.getChunkPosition()).getAll(type);
     }
 
     /**

@@ -2,7 +2,6 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
-import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.NpcUpdateBlockSet;
@@ -28,19 +27,19 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(65, MessageType.VAR_SHORT);
-        ByteMessage blockMsg = ByteMessage.raw();
+        var msg = ByteMessage.message(65, MessageType.VAR_SHORT);
+        var blockMsg = ByteMessage.raw();
 
         try {
             msg.startBitAccess();
             msg.putBits(8, player.getLocalNpcs().size());
 
             Iterator<Npc> iterator = player.getLocalNpcs().iterator();
+            
             while (iterator.hasNext()) {
                 Npc other = iterator.next();
 
-                if (other.isViewableFrom(player) &&
-                        other.getState() == EntityState.ACTIVE) {
+                if (other.isViewableFrom(player) && other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
@@ -49,16 +48,16 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                     iterator.remove();
                 }
             }
-
-            ChunkManager chunks = player.getWorld().getChunks();
+    
+            var chunkManager = player.getWorld().getChunks();
             int npcsAdded = 0;
 
-            for (Npc other : chunks.npcUpdateSet(player)) {
+            for (Npc other : chunkManager.npcUpdateSet(player)) {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }
-                if (other.isViewableFrom(player) &&
-                        other.getState() == EntityState.ACTIVE &&
+                
+                if (other.isViewableFrom(player) && other.getState() == EntityState.ACTIVE &&
                         player.getLocalNpcs().add(other)) {
                     addNpc(player, other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
@@ -79,6 +78,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
         } finally {
             blockMsg.release();
         }
+        
         return msg;
     }
 
@@ -86,15 +86,14 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
      * Adds {@code addNpc} in the view of {@code player}.
      */
     private void addNpc(Player player, Npc addNpc, ByteMessage msg) {
-        boolean updateRequired = !addNpc.getFlags().isEmpty();
-
+        var isUpdateRequired = !addNpc.getFlags().isEmpty();
         int deltaX = addNpc.getPosition().getX() - player.getPosition().getX();
         int deltaY = addNpc.getPosition().getY() - player.getPosition().getY();
 
         msg.putBits(14, addNpc.getIndex());
         msg.putBits(5, deltaY);
         msg.putBits(5, deltaX);
-        msg.putBit(updateRequired);
+        msg.putBit(isUpdateRequired);
         msg.putBits(12, addNpc.getId());
         msg.putBit(true);
     }
@@ -103,10 +102,10 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
      * Handles walking movement for {@code npc}.
      */
     private void handleMovement(Npc npc, ByteMessage msg) {
-        boolean updateRequired = !npc.getFlags().isEmpty();
+        var isUpdateRequired = !npc.getFlags().isEmpty();
 
         if (npc.getWalkingDirection() == Direction.NONE) {
-            if (updateRequired) {
+            if (isUpdateRequired) {
                 msg.putBit(true);
                 msg.putBits(2, 0);
             } else {
@@ -116,7 +115,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             msg.putBit(true);
             msg.putBits(2, 1);
             msg.putBits(3, npc.getWalkingDirection().getId());
-            msg.putBit(updateRequired);
+            msg.putBit(isUpdateRequired);
         }
     }
 }

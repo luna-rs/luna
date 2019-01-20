@@ -42,7 +42,7 @@ public final class RemoveObjectMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(101);
+        var msg = ByteMessage.message(101);
         msg.put(type + direction, ValueType.NEGATE);
         msg.put(offset);
         return msg;

@@ -37,6 +37,7 @@ public final class TaskManager {
             if (task.isInstant()) {
                 task.runTask();
             }
+            
             pending.add(task);
         }
     }
@@ -45,9 +46,9 @@ public final class TaskManager {
      * A function that runs an iteration of task processing.
      */
     public void runTaskIteration() {
-
         // Run through all tasks awaiting execution.
         Iterator<Task> iterator = pending.iterator();
+        
         while (iterator.hasNext()) {
             Task task = iterator.next();
 
@@ -65,11 +66,9 @@ public final class TaskManager {
         }
 
         // Poll execution queue and run all tasks.
-        for (; ; ) {
-            Task task = executing.poll();
-            if (task == null) {
-                break;
-            }
+        Task task;
+        
+        while ((task = executing.poll()) != null) {
             task.runTask();
         }
     }
@@ -82,7 +81,8 @@ public final class TaskManager {
      */
     public void forEachAttachment(Object attachment, Consumer<Task> action) {
         for (Task task : pending) {
-            Object taskAttachment = task.getAttachment().orElse(null);
+            Object taskAttachment = task.getAttachment();
+            
             if (Objects.equals(taskAttachment, attachment)) {
                 action.accept(task);
             }

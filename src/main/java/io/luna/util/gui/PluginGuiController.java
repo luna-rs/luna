@@ -92,7 +92,6 @@ final class PluginGuiController {
      * Builds the tree within the plugin viewer. Should only be called once.
      */
     void buildPluginViewer() {
-
         // Create root and event listener for root.
         CheckBoxTreeItem<String> rootItem = new CheckBoxTreeItem<>("Plugins");
         rootItem.addEventHandler(CheckBoxTreeItem.checkBoxSelectionChangedEvent(), getChangeListener());
@@ -103,6 +102,7 @@ final class PluginGuiController {
 
         // And add plugins to the tree.
         PluginTreeItemView packages = new PluginTreeItemView(rootItem, gui.getPluginItems());
+        
         if (gui.getSettings().isFlattenPackages()) {
             packages.buildFlat();
         } else {
@@ -135,6 +135,7 @@ final class PluginGuiController {
             // Cannot be instantiated in constructor or will throw NPE.
             changeListener = new PluginTreeChangeListener(gui.getSettings().getSelected());
         }
+        
         return changeListener;
     }
 
@@ -188,6 +189,7 @@ final class PluginGuiController {
     @FXML
     private void onDarkTheme(ActionEvent evt) {
         CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
+        
         if (menuItem.isSelected()) {
             gui.getSettings().setDarkMode(true);
             gui.getScene().getStylesheets().add("dark_theme.css");
@@ -247,8 +249,7 @@ final class PluginGuiController {
      */
     @FXML
     private void onExport(ActionEvent evt) {
-        gui.getFileManager().saveFile(file ->
-                gui.getSettings().save(file.toPath()));
+        gui.getFileManager().saveFile(file -> gui.getSettings().save(file.toPath()));
     }
 
     /**
@@ -259,7 +260,6 @@ final class PluginGuiController {
     @FXML
     private void onInfo(ActionEvent evt) {
         String infoContent = gui.getFileManager().getInfoFile();
-
         Alert infoAlert = gui.createAlert(AlertType.INFORMATION);
         infoAlert.setTitle("Information");
         infoAlert.setContentText(infoContent);
@@ -275,7 +275,6 @@ final class PluginGuiController {
     @FXML
     private void onLicense(ActionEvent evt) {
         String licenseContent = gui.getFileManager().getLicenseFile();
-
         Alert licenseAlert = gui.createAlert(AlertType.INFORMATION);
         licenseAlert.setTitle("License");
         licenseAlert.setContentText(licenseContent);
@@ -300,6 +299,7 @@ final class PluginGuiController {
     private void onExit(ActionEvent evt) {
         ButtonType buttonClicked = gui.openConfirmAlert("Are you sure you would like to exit?",
                 ButtonType.YES, ButtonType.NO).orElse(ButtonType.NO);
+        
         if (buttonClicked == ButtonType.YES) {
             gui.close();
         }
@@ -335,7 +335,6 @@ final class PluginGuiController {
     private void onFlattenPackages(ActionEvent evt) {
         CheckMenuItem menuItem = (CheckMenuItem) evt.getSource();
         gui.getSettings().setFlattenPackages(menuItem.isSelected());
-
         buildPluginViewer();
     }
 
@@ -351,13 +350,14 @@ final class PluginGuiController {
 
         if (menuItem.isSelected()) {
             String text = "Are you sure you would like to retain your plugin selection, even if the GUI is inactive?";
-            ButtonType buttonClicked = gui.openConfirmAlert(text,
-                    ButtonType.YES, ButtonType.NO).orElse(ButtonType.NO);
+            ButtonType buttonClicked = gui.openConfirmAlert(text, ButtonType.YES, ButtonType.NO).orElse(ButtonType.NO);
+            
             if (buttonClicked == ButtonType.YES) {
                 settings.setRetainSelection(true);
                 return;
             }
         }
+        
         menuItem.setSelected(false);
         settings.setRetainSelection(false);
     }

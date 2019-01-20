@@ -33,8 +33,10 @@ public final class ShopListener extends RefreshListener {
     @Override
     public void onInit(ItemContainer items) {
         OptionalInt[] amountMap = shop.getAmountMap();
+        
         for (int index = 0; index < items.capacity(); index++) {
             int amount = items.computeAmountForIndex(index);
+            
             if (amount == 0) {
                 amountMap[index] = OptionalInt.empty();
             } else {
@@ -44,12 +46,9 @@ public final class ShopListener extends RefreshListener {
     }
 
     @Override
-    public void displayUpdate(ItemContainer items, List<IndexedItem> updateItems,
-                              WidgetIndexedItemsMessageWriter msg) {
-
-        // Determine if a restock is needed. Will usually only loop once.
-        for (int index = 0; index < updateItems.size(); index++) {
-            IndexedItem item = updateItems.get(index);
+    public void displayUpdate(ItemContainer items, List<IndexedItem> updateItems, WidgetIndexedItemsMessageWriter msg) {
+        // Determine if a restock is needed; will usually only loop once.
+        for (IndexedItem item : updateItems) {
             if (item != null && item.getAmount() == 0) {
                 shop.restockItems();
                 break;

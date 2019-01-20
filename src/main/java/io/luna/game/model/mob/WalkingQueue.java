@@ -60,14 +60,13 @@ public final class WalkingQueue {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
+            if (!(obj instanceof Step)) {
+                return false;
             }
-            if (obj instanceof Step) {
-                Step other = (Step) obj;
-                return x == other.x && y == other.y;
-            }
-            return false;
+            
+            var other = (Step) obj;
+    
+            return x == other.x && y == other.y;
         }
 
         @Override
@@ -147,6 +146,7 @@ public final class WalkingQueue {
         }
 
         Step next = this.current.poll();
+        
         if (next != null) {
             previous.add(next);
             walkingDirection = Direction.between(current, next);
@@ -191,20 +191,24 @@ public final class WalkingQueue {
         runningPath = false;
 
         Queue<Step> backtrack = new ArrayDeque<>();
-        for(;;) {
+        
+        while (true) {
             Step prev = previous.pollLast();
-            if(prev == null) {
+    
+            if (prev == null) {
                 break;
             }
+    
             backtrack.add(prev);
+    
             if (prev.equals(step)) {
                 backtrack.forEach(this::add);
                 previous.clear();
                 return;
             }
         }
+        
         previous.clear();
-
         add(step);
     }
 
@@ -215,6 +219,7 @@ public final class WalkingQueue {
      */
     public void add(Step next) {
         Step last = current.peekLast();
+        
         if (last == null) {
             last = new Step(mob.getPosition());
         }
@@ -223,7 +228,7 @@ public final class WalkingQueue {
         int nextY = next.getY();
         int deltaX = nextX - last.getX();
         int deltaY = nextY - last.getY();
-
+        
         int max = Math.max(Math.abs(deltaX), Math.abs(deltaY));
 
         for (int count = 0; count < max; count++) {
@@ -238,6 +243,7 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
+            
             current.add(new Step(nextX - deltaX, nextY - deltaY));
         }
     }
@@ -259,6 +265,7 @@ public final class WalkingQueue {
         Player player = (Player) mob;
 
         double runEnergy = player.getRunEnergy();
+        
         if (runEnergy <= 0) {
             running = false;
             runningPath = false;
@@ -270,8 +277,7 @@ public final class WalkingQueue {
         double energyReduction = 0.117 * 2 * Math
             .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
         double newValue = runEnergy - energyReduction;
-        newValue = newValue < 0.0 ? 0.0 : newValue;
-
+        newValue = Math.max(0D, newValue);
         player.setRunEnergy(newValue);
         return true;
     }
@@ -283,6 +289,7 @@ public final class WalkingQueue {
         Player player = (Player) mob;
 
         double runEnergy = player.getRunEnergy();
+        
         if (runEnergy >= 100.0) {
             return;
         }
@@ -291,8 +298,7 @@ public final class WalkingQueue {
         double energyRestoration = 0.096 * Math
             .pow(Math.E, 0.0162569486104454583293005993255170468638949631744294 * agilityLevel);
         double newValue = runEnergy + energyRestoration;
-        newValue = newValue > 100.0 ? 100.0 : newValue;
-
+        newValue = Math.min(100D, newValue);
         player.setRunEnergy(newValue);
     }
 
@@ -328,6 +334,7 @@ public final class WalkingQueue {
      */
     public void setRunning(boolean running) {
         checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
+        
         this.running = running;
     }
 
@@ -345,6 +352,7 @@ public final class WalkingQueue {
      */
     public void setRunningPath(boolean runningPath) {
         checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
+        
         this.runningPath = runningPath;
     }
 

@@ -26,14 +26,11 @@ public final class AttributeValue<T> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof AttributeValue<?>)) {
+            return false;
         }
-        if (obj instanceof AttributeValue) {
-            AttributeValue other = (AttributeValue) obj;
-            return Objects.equals(value, other.value);
-        }
-        return false;
+        
+        return Objects.equals(value, ((AttributeValue<?>) obj).value);
     }
 
     @Override

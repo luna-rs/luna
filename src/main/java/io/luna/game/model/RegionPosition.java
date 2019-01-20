@@ -52,7 +52,11 @@ public final class RegionPosition {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id).add("x", x).add("y", y).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("x", x)
+                .add("y", y)
+                .toString();
     }
 
     @Override
@@ -62,14 +66,11 @@ public final class RegionPosition {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof RegionPosition)) {
+            return false;
         }
-        if (obj instanceof RegionPosition) {
-            RegionPosition other = (RegionPosition) obj;
-            return id == other.id;
-        }
-        return false;
+        
+        return id == ((RegionPosition) obj).id;
     }
 
     /**

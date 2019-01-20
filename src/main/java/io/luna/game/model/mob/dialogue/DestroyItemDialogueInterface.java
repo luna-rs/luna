@@ -2,12 +2,9 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.IndexedItem;
-import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
-
-import java.util.OptionalInt;
 
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which allows Players to destroy
@@ -20,7 +17,7 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
     /**
      * The inventory index.
      */
-    private final OptionalInt index;
+    private final int index;
 
     /**
      * The item identifier.
@@ -35,7 +32,7 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
      */
     public DestroyItemDialogueInterface(int index, int itemId) {
         super(14170);
-        this.index = index == -1 ? OptionalInt.empty() : OptionalInt.of(index);
+        this.index = index;
         this.itemId = itemId;
     }
 
@@ -50,11 +47,9 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
 
     @Override
     public boolean init(Player player) {
-
         // Send packets that build the interface.
-        IndexedItem item = new IndexedItem(0, itemId, 1);
+        var item = new IndexedItem(0, itemId, 1);
         player.queue(new WidgetIndexedItemsMessageWriter(14171, item));
-
         player.sendText("Are you sure you want to destroy this item?", 14174);
         player.sendText("Yes", 14175);
         player.sendText("No", 14176);
@@ -70,9 +65,9 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
      * @param player The Player to destroy the item for.
      */
     public void destroyItem(Player player) {
-        Inventory inventory = player.getInventory();
-
-        int destroyIndex = index.orElse(inventory.computeIndexForId(itemId).orElse(-1));
+        var inventory = player.getInventory();
+        int destroyIndex = index != -1 ? index : inventory.computeIndexForId(itemId).orElse(-1);
+        
         if (destroyIndex == -1 || inventory.get(destroyIndex).getId() != itemId) {
             player.getInterfaces().close();
             return;

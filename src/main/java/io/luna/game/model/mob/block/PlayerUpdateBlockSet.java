@@ -1,8 +1,9 @@
 package io.luna.game.model.mob.block;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+
+import java.util.List;
 
 import static io.luna.game.model.mob.block.UpdateState.UPDATE_LOCAL;
 
@@ -17,17 +18,18 @@ public class PlayerUpdateBlockSet extends UpdateBlockSet<Player> {
     /**
      * An immutable list of update blocks.
      */
-    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-            new GraphicUpdateBlock(),
-            new AnimationUpdateBlock(),
-            new ForcedChatUpdateBlock(),
-            new ChatUpdateBlock(),
-            new ForcedMovementUpdateBlock(),
-            new InteractionUpdateBlock(),
-            new AppearanceUpdateBlock(),
-            new FacePositionUpdateBlock(),
-            new PrimaryHitUpdateBlock(),
-            new SecondaryHitUpdateBlock());
+    private static final List<UpdateBlock> UPDATE_BLOCKS = List.of(
+        new GraphicUpdateBlock(),
+        new AnimationUpdateBlock(),
+        new ForcedChatUpdateBlock(),
+        new ChatUpdateBlock(),
+        new ForcedMovementUpdateBlock(),
+        new InteractionUpdateBlock(),
+        new AppearanceUpdateBlock(),
+        new FacePositionUpdateBlock(),
+        new PrimaryHitUpdateBlock(),
+        new SecondaryHitUpdateBlock()
+    );
 
     /**
      * Creates a new {@link PlayerUpdateBlockSet}.
@@ -38,16 +40,17 @@ public class PlayerUpdateBlockSet extends UpdateBlockSet<Player> {
 
     @Override
     public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
-
         // If we can use a cached update block and the player has one, do it here.
         boolean isCachingBlocks = state == UPDATE_LOCAL;
+        
         if (isCachingBlocks && player.hasCachedBlock()) {
             msg.putBytes(player.getCachedBlock());
             return;
         }
 
         // Otherwise, encode and cache a new set of update blocks.
-        ByteMessage blockMsg = ByteMessage.raw();
+        var blockMsg = ByteMessage.raw();
+        
         try {
             encodeBlockSet(player, blockMsg, state);
             msg.putBytes(blockMsg);

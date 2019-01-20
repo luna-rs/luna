@@ -4,11 +4,11 @@ import api.event.InterceptBy
 import api.event.Matcher
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
-import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.event.impl.CommandEvent
-import io.luna.game.event.impl.ItemClickEvent.*
-import io.luna.game.event.impl.NpcClickEvent.*
-import io.luna.game.event.impl.ObjectClickEvent.*
+import io.luna.game.event.button.ButtonClickEvent
+import io.luna.game.event.command.CommandEvent
+import io.luna.game.event.item.ItemClickEvent.*
+import io.luna.game.event.entity.player.NpcClickEvent.*
+import io.luna.game.event.entity.player.ObjectClickEvent.*
 import io.luna.game.model.mob.PlayerRights
 import kotlin.reflect.KClass
 

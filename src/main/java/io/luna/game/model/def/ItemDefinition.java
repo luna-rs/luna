@@ -1,9 +1,8 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
-import java.util.OptionalInt;
+import java.util.List;
 
 /**
  * A definition model describing an item.
@@ -55,12 +54,12 @@ public final class ItemDefinition implements Definition {
     /**
      * The noted identifier.
      */
-    private final OptionalInt notedId;
+    private final int notedId;
 
     /**
      * The unnoted identifier.
      */
-    private final OptionalInt unnotedId;
+    private final int unnotedId;
 
     /**
      * If this item is members only.
@@ -80,12 +79,12 @@ public final class ItemDefinition implements Definition {
     /**
      * A set of inventory actions.
      */
-    private final ImmutableList<String> inventoryActions;
+    private final List<String> inventoryActions;
 
     /**
      * A set of ground actions.
      */
-    private final ImmutableList<String> groundActions;
+    private final List<String> groundActions;
 
     /**
      * Creates a new {@link ItemDefinition}.
@@ -109,13 +108,13 @@ public final class ItemDefinition implements Definition {
         this.name = name;
         this.stackable = stackable;
         this.value = value;
-        this.notedId = notedId == -1 ? OptionalInt.empty() : OptionalInt.of(notedId);
-        this.unnotedId = unnotedId == -1 ? OptionalInt.empty() : OptionalInt.of(unnotedId);
+        this.notedId = notedId;
+        this.unnotedId = unnotedId;
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
-        this.inventoryActions = ImmutableList.copyOf(inventoryActions);
-        this.groundActions = ImmutableList.copyOf(groundActions);
+        this.inventoryActions = List.of(inventoryActions);
+        this.groundActions = List.of(groundActions);
     }
 
     /**
@@ -144,14 +143,14 @@ public final class ItemDefinition implements Definition {
      * Returns {@code true} if the item can be noted.
      */
     public boolean isNoteable() {
-        return notedId.isPresent();
+        return notedId != -1;
     }
 
     /**
      * Returns {@code true} if the item is noted.
      */
     public boolean isNoted() {
-        return unnotedId.isPresent();
+        return unnotedId != -1;
     }
 
     /**
@@ -186,14 +185,14 @@ public final class ItemDefinition implements Definition {
     /**
      * @return The noted identifier.
      */
-    public OptionalInt getNotedId() {
+    public int getNotedId() {
         return notedId;
     }
 
     /**
      * @return The unnoted identifier.
      */
-    public OptionalInt getUnnotedId() {
+    public int getUnnotedId() {
         return unnotedId;
     }
 
@@ -221,14 +220,14 @@ public final class ItemDefinition implements Definition {
     /**
      * @return A set of inventory actions.
      */
-    public ImmutableList<String> getInventoryActions() {
+    public List<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
      * @return A set of ground actions.
      */
-    public ImmutableList<String> getGroundActions() {
+    public List<String> getGroundActions() {
         return groundActions;
     }
 }

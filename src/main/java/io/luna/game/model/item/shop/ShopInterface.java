@@ -1,8 +1,6 @@
 package io.luna.game.model.item.shop;
 
 import io.luna.game.model.World;
-import io.luna.game.model.item.Inventory;
-import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
 
@@ -42,15 +40,16 @@ public final class ShopInterface extends InventoryOverlayInterface {
 
     @Override
     public void onOpen(Player player) {
-        ItemContainer container = shop.getContainer();
+        var container = shop.getContainer();
         checkState(container.isInitialized(), "This shop has not been initialized.");
 
         // Refresh inventory onto shop.
-        Inventory inventory = player.getInventory();
+        var inventory = player.getInventory();
         inventory.setSecondaryRefresh(3823);
         inventory.refreshSecondary(player);
-
-        container.refreshPrimary(player); // Refresh shop.
+    
+        // Refresh shop.
+        container.refreshPrimary(player);
         shop.getViewing().add(player);
         player.sendText(shop.getName(), 3901);
     }

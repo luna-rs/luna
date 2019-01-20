@@ -16,13 +16,15 @@ import java.util.Optional;
 public final class ContinueDialogueMessageReader extends GameMessageReader {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public Event read(Player player, GameMessage msg) {
         Optional<DialogueQueue> dialogues = player.getDialogues();
+        
         if (dialogues.isPresent()) {
             dialogues.get().advance();
         } else {
             player.getInterfaces().close();
         }
+        
         return null;
     }
 }

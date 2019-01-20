@@ -30,7 +30,7 @@ public final class WalkableInterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(208);
+        var msg = ByteMessage.message(208);
         msg.putShort(id, ByteOrder.LITTLE);
         return msg;
     }

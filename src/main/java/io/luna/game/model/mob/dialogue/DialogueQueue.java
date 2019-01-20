@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.Queue;
@@ -54,17 +53,21 @@ public final class DialogueQueue {
      * Advances this dialogue queue by {@code 1}, and displays the next dialogue.
      */
     public void advance() {
-        DialogueInterface nextDialogue = dialogues.poll();
+        var nextDialogue = dialogues.poll();
+        
         if (nextDialogue != null) {
             player.getInterfaces().open(nextDialogue);
         } else {
             if (tailAction != null) {
                 tailAction.accept(player);
             }
-            AbstractInterfaceSet interfaces = player.getInterfaces();
-            if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
-                interfaces.close();
+            
+            var interfaceSet = player.getInterfaces();
+            
+            if (interfaceSet.standardTo(DialogueInterface.class).isPresent()) {
+                interfaceSet.close();
             }
+            
             player.resetDialogues();
         }
     }

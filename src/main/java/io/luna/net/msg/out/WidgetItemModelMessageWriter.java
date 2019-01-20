@@ -42,7 +42,7 @@ public final class WidgetItemModelMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(246);
+        var msg = ByteMessage.message(246);
         msg.putShort(widgetId, ByteOrder.LITTLE);
         msg.putShort(scale);
         msg.putShort(itemId);

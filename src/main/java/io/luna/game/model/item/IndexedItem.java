@@ -49,21 +49,18 @@ public final class IndexedItem {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof IndexedItem)) {
+            return false;
         }
-        if (obj instanceof IndexedItem) {
-            IndexedItem other = (IndexedItem) obj;
-            return index == other.index &&
-                    id == other.id &&
-                    amount == other.amount;
-        }
-        return false;
+        
+        var other = (IndexedItem) obj;
+        
+        return index == other.index && id == other.id && amount == other.amount;
     }
 
     @Override
     public int hashCode() {
-         return Objects.hash(index, id, amount);
+        return Objects.hash(index, id, amount);
     }
 
     /**

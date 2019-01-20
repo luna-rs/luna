@@ -10,6 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
 public final class UpdateFriendsListMessageWriter extends GameMessageWriter {
 
     private final long name;
+    
     private final boolean online;
 
     public UpdateFriendsListMessageWriter(long name, boolean online) {
@@ -19,7 +20,7 @@ public final class UpdateFriendsListMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(50);
+        var msg = ByteMessage.message(50);
         msg.putLong(name);
         msg.put(online ? 10 : 0);
         return msg;

@@ -60,6 +60,7 @@ public final class PlayerInteraction {
     public PlayerInteraction(int index, String name, boolean pinned) {
         checkArgument(index >= 1 && index <= 5, "Index must be >= 1 and <= 5.");
         checkArgument(name != null, "Name cannot be null. Use \"null\" instead.");
+        
         this.index = index;
         this.name = name;
         this.pinned = pinned;
@@ -72,16 +73,13 @@ public final class PlayerInteraction {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        if (!(obj instanceof PlayerInteraction)) {
+            return false;
         }
-        if (obj instanceof PlayerInteraction) {
-            PlayerInteraction other = (PlayerInteraction) obj;
-            return index == other.index &&
-                    name.equals(other.name) &&
-                    pinned == other.pinned;
-        }
-        return false;
+        
+        var other = (PlayerInteraction) obj;
+    
+        return index == other.index && name.equals(other.name) && pinned == other.pinned;
     }
 
     /**

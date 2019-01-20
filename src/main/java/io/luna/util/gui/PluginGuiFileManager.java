@@ -50,6 +50,7 @@ final class PluginGuiFileManager {
      */
     void saveFile(Consumer<File> action) {
         File file = getFileChooser("Save File").showSaveDialog(gui.getWindow());
+        
         if (file != null) {
             action.accept(file);
         }
@@ -62,6 +63,7 @@ final class PluginGuiFileManager {
      */
     void openFile(Consumer<File> action) {
         File file = getFileChooser("Open File").showOpenDialog(gui.getWindow());
+        
         if (file != null) {
             action.accept(file);
         }
@@ -77,8 +79,8 @@ final class PluginGuiFileManager {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         fileChooser.setInitialDirectory(new File("./data/"));
-        fileChooser.getExtensionFilters().
-                add(new FileChooser.ExtensionFilter("Luna Settings File", "*.toml"));
+        fileChooser.getExtensionFilters()
+                .add(new FileChooser.ExtensionFilter("Luna Settings File", "*.toml"));
         return fileChooser;
     }
 
@@ -90,11 +92,13 @@ final class PluginGuiFileManager {
      */
     private String loadFile(String name) {
         Path filePath = Paths.get("./data/gui/").resolve(name);
+        
         try {
             return new String(Files.readAllBytes(filePath));
         } catch (IOException e) {
             gui.openErrorAlert(e);
         }
+        
         return null;
     }
 

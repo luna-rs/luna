@@ -3,6 +3,8 @@ package io.luna.util;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -157,15 +159,23 @@ public final class RandomUtils {
     public static int random(Range<Integer> range) {
         int low = range.hasLowerBound() ? range.lowerEndpoint() : Integer.MIN_VALUE;
         int high = range.hasUpperBound() ? range.upperEndpoint() : Integer.MAX_VALUE;
+        
         if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.CLOSED) {
             return inclusive(low - 1, high);
-        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN) {
+        }
+        
+        if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN) {
             return inclusive(low, high - 1);
-        } else if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN) {
+        }
+        
+        if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN) {
             return inclusive(low, high);
-        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.CLOSED) {
+        }
+        
+        if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.CLOSED) {
             return inclusive(low - 1, high - 1);
         }
+        
         throw new Error("impossible");
     }
 
@@ -176,12 +186,7 @@ public final class RandomUtils {
      * @return The shuffled array.
      */
     public static <T> T[] shuffle(T[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            T a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
+        Collections.shuffle(Arrays.asList(array), ThreadLocalRandom.current());
         return array;
     }
 
@@ -198,6 +203,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -214,6 +220,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -230,6 +237,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -246,6 +254,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -262,6 +271,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -278,6 +288,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -294,6 +305,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 
@@ -310,6 +322,7 @@ public final class RandomUtils {
             array[index] = array[i];
             array[i] = a;
         }
+        
         return array;
     }
 

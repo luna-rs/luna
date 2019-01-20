@@ -3,7 +3,7 @@ package world.player.skill.fishing
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.HarvestingAction
-import io.luna.game.event.impl.NpcClickEvent
+import io.luna.game.event.entity.player.NpcClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 

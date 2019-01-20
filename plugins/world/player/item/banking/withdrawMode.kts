@@ -1,5 +1,5 @@
 import api.predef.*
-import io.luna.game.event.impl.ButtonClickEvent
+import io.luna.game.event.button.ButtonClickEvent
 
 /**
  * Sets the withdraw mode if the banking interface is open.

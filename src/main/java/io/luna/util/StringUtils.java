@@ -1,7 +1,8 @@
 package io.luna.util;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -20,10 +21,13 @@ public final class StringUtils {
     /**
      * An array containing valid {@code char}s.
      */
-    public static final ImmutableList<Character> VALID_CHARACTERS = ImmutableList.of('_', 'a', 'b', 'c', 'd', 'e',
-            'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-',
-            '+', '=', ':', ';', '.', '>', '<', ',', '"', '[', ']', '|', '?', '/', '`');
+    public static final List<Character> VALID_CHARACTERS = List.of(
+        '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
+        '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '$', '%', '^', '&', '*',
+        '(', ')', '-', '+', '=', ':', ';', '.', '>', '<', ',', '"', '[', ']', '|',
+        '?', '/', '`'
+    );
 
     /**
      * A {@link Joiner} that joins strings together with a ",".
@@ -68,9 +72,12 @@ public final class StringUtils {
      */
     public static long encodeToBase37(String string) {
         long l = 0L;
+        
         for (int i = 0; i < string.length() && i < 12; i++) {
             char c = string.charAt(i);
+            
             l *= 37L;
+            
             if (c >= 'A' && c <= 'Z') {
                 l += (1 + c) - 65;
             } else if (c >= 'a' && c <= 'z') {
@@ -79,9 +86,11 @@ public final class StringUtils {
                 l += (27 + c) - 48;
             }
         }
+        
         while (l % 37L == 0L && l != 0L) {
             l /= 37L;
         }
+        
         return l;
     }
 
@@ -92,17 +101,18 @@ public final class StringUtils {
      * @return The decoded long.
      */
     public static String decodeFromBase37(long value) {
-        checkArgument(value > 0L &&
-                value < 6582952005840035281L &&
+        checkArgument(value > 0L && value < 6582952005840035281L &&
                 value % 37L != 0L, "Invalid long value.");
 
         int offset = 0;
-        char name[] = new char[12];
+        char[] name = new char[12];
+        
         while (value != 0L) {
             long n = value;
             value /= 37L;
             name[11 - offset++] = VALID_CHARACTERS.get((int) (n - value * 37L));
         }
+        
         return new String(name, 12 - offset, offset);
     }
 
@@ -115,12 +125,12 @@ public final class StringUtils {
      */
     public static String capitalize(String s) {
         if (!s.isEmpty()) {
-            String capital = s.substring(0, 1).toUpperCase();
-            StringBuilder builder = new StringBuilder(s);
-
-            builder.setCharAt(0, capital.charAt(0));
+            char capital = Character.toUpperCase(s.charAt(0));
+            var builder = new StringBuilder(s);
+            builder.setCharAt(0, capital);
             return builder.toString();
         }
+        
         return s;
     }
 

@@ -1,7 +1,6 @@
 package io.luna.game.model.item.shop;
 
 import io.luna.game.model.item.Item;
-import io.luna.game.model.item.ItemContainer;
 import io.luna.game.task.Task;
 
 /**
@@ -38,16 +37,20 @@ public final class RestockTask extends Task {
             setDelay(restockPolicy.getTickRate());
             return true;
         }
+        
         return false;
     }
 
     @Override
     protected void execute() {
         // TODO Find a way to do this without looping through entire shop (Maybe use a bitset?)
-        ItemContainer container = shop.getContainer();
+        var container = shop.getContainer();
+        
         boolean cancelTask = true;
+        
         for (int index = 0; index < container.capacity(); index++) {
-            Item item = container.get(index);
+            var item = container.get(index);
+            
             if (item != null && restock(index, item)) {
                 // We had to restock an item, so don't cancel.
                 cancelTask = false;
@@ -69,12 +72,14 @@ public final class RestockTask extends Task {
      */
     private boolean restock(int index, Item item) {
         int initialAmount = shop.getAmountMap()[index].orElse(-1);
+        
         if (item.getAmount() < initialAmount) {
             // Increase by restock amount, to a maximum of the initial amount.
             int newAmount = Math.min(restockPolicy.getStockAmount() + item.getAmount(), initialAmount);
             shop.getContainer().set(index, item.withAmount(newAmount));
             return true;
         }
+        
         return false;
     }
 }

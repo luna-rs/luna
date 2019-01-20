@@ -1,8 +1,10 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A definition model describing an attackable non-player.
@@ -149,12 +151,12 @@ public final class NpcCombatDefinition implements Definition {
     /**
      * A list of skills.
      */
-    private final ImmutableList<Integer> skills;
+    private final List<Integer> skills;
 
     /**
      * A list of bonuses.
      */
-    private final ImmutableList<Integer> bonuses;
+    private final List<Integer> bonuses;
 
     /**
      * Creates a new {@link NpcCombatDefinition}.
@@ -187,8 +189,8 @@ public final class NpcCombatDefinition implements Definition {
         this.attackAnimation = attackAnimation;
         this.defenceAnimation = defenceAnimation;
         this.deathAnimation = deathAnimation;
-        this.skills = ImmutableList.copyOf(Ints.asList(skills));
-        this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
+        this.skills = Arrays.stream(skills).boxed().collect(Collectors.toUnmodifiableList());
+        this.bonuses = Arrays.stream(bonuses).boxed().collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -269,14 +271,14 @@ public final class NpcCombatDefinition implements Definition {
     /**
      * @return A list of skills.
      */
-    public ImmutableList<Integer> getSkills() {
+    public List<Integer> getSkills() {
         return skills;
     }
 
     /**
      * @return A list of bonuses.
      */
-    public ImmutableList<Integer> getBonuses() {
+    public List<Integer> getBonuses() {
         return bonuses;
     }
 }

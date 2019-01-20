@@ -41,7 +41,7 @@ public final class ForceTabMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(106);
+        var msg = ByteMessage.message(106);
         msg.put(id, ValueType.NEGATE);
         return msg;
     }

@@ -188,7 +188,7 @@ public final class ModelAnimation {
      * @param runningId The running animation.
      */
     private ModelAnimation(int standingId, int standingTurnId, int walkingId, int turning180DegreesId,
-                          int turning90DegreesCwId, int turning90DegreesCcwId, int runningId) {
+                           int turning90DegreesCwId, int turning90DegreesCcwId, int runningId) {
         this.standingId = standingId;
         this.standingTurnId = standingTurnId;
         this.walkingId = walkingId;

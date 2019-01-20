@@ -50,6 +50,7 @@ public final class PlayerInteractionMenu implements Iterable<PlayerInteraction> 
                 return Optional.of(interaction);
             }
         }
+        
         return Optional.empty();
     }
 

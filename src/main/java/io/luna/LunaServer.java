@@ -2,15 +2,15 @@ package io.luna;
 
 import com.google.common.base.Stopwatch;
 import io.luna.game.GameService;
-import io.luna.game.event.impl.ServerLaunchEvent;
+import io.luna.game.event.server.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
+import io.luna.util.IntTuple;
 import io.luna.util.ThreadUtils;
-import io.luna.util.Tuple;
 import io.luna.util.parser.impl.BlacklistFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.ItemDefinitionFileParser;
@@ -64,6 +64,7 @@ public final class LunaServer {
      * A package-private constructor.
      */
     LunaServer() {
+    
     }
 
     /**
@@ -77,7 +78,6 @@ public final class LunaServer {
         initLaunchTasks();
         initPlugins();
         initGame();
-
         initNetwork();
 
         // Synchronize a launch event.
@@ -121,9 +121,9 @@ public final class LunaServer {
      */
     private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
+        IntTuple pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
-        String fractionString = pluginCount.first() + "/" + pluginCount.second();
+        String fractionString = pluginCount.getKey() + "/" + pluginCount.getValue();
         LOGGER.info("[{}] Kotlin plugins have been loaded into memory.", fractionString);
     }
 
@@ -132,6 +132,7 @@ public final class LunaServer {
      **/
     private void initLaunchTasks() {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
+        
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
         executor.execute(new ItemDefinitionFileParser());
@@ -142,6 +143,7 @@ public final class LunaServer {
 
         try {
             int count = executor.size();
+            
             if (count > 0) {
                 LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
                 executor.await(true);

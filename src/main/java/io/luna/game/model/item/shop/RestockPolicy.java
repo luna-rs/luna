@@ -48,6 +48,7 @@ public final class RestockPolicy {
     public RestockPolicy(int stockAmount, int tickRate) {
         checkArgument(stockAmount > 0, "Stock amount must be > 0.");
         checkArgument(tickRate > 0, "Tick rate must be > 0.");
+        
         this.stockAmount = stockAmount;
         this.tickRate = tickRate;
     }
