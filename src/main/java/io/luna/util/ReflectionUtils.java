@@ -78,10 +78,10 @@ public final class ReflectionUtils {
      * @param className The fully qualified class name.
      * @param parameters The parameters, if any.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T newInstanceOf(String className, Object... parameters) throws ClassCastException, ReflectionException {
         try {
-            Class[] parameterTypes = Arrays.stream(parameters).
-                    map(Object::getClass).toArray(Class[]::new);
+            Class[] parameterTypes = Arrays.stream(parameters).map(Object::getClass).toArray(Class[]::new);
             Class forClass = Class.forName(className);
             Constructor<T> constructor = forClass.getConstructor(parameterTypes);
             return constructor.newInstance(parameters);

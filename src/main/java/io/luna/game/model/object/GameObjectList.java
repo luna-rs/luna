@@ -43,12 +43,13 @@ public class GameObjectList extends EntityList<GameObject> {
      * <strong>Warning:</strong> This function can run pretty slow and therefore shouldn't be relied on in
      * performance critical code.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public UnmodifiableIterator<GameObject> iterator() {
         List<Iterator<GameObject>> iteratorList = new ArrayList<>();
         for (Chunk chunk : world.getChunks()) {
             Set<GameObject> objects = chunk.getAll(type);
-            if (objects.size() > 0) { // Retrieve iterators from chunk.
+            if (!objects.isEmpty()) { // Retrieve iterators from chunk.
                 iteratorList.add(objects.iterator());
             }
         }

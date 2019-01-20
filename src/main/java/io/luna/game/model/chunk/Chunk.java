@@ -110,6 +110,7 @@ public final class Chunk {
      * @return A set of entities casted to {@code <E>}. As long as {@code <E>} matches {@code type}, no errors will
      * be thrown.
      */
+    @SuppressWarnings("unchecked")
     public <E extends Entity> Set<E> getAll(EntityType type) {
         //noinspection unchecked
         return (Set<E>) entities.get(type);
@@ -122,6 +123,7 @@ public final class Chunk {
      * @param <E> The type.
      * @return The stream.
      */
+    @SuppressWarnings("unchecked")
     public <E extends Entity> Stream<E> stream(EntityType type) {
         //noinspection unchecked
         return (Stream<E>) entities.get(type).stream();
