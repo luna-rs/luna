@@ -27,7 +27,6 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
  */
 fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) {
     scriptListeners.add(EventListener(eventClass.java, action))
-
 }
 
 /**
