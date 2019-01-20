@@ -12,12 +12,7 @@ import io.luna.game.model.item.shop.Shop
  *
  * @author lare96
  */
-class ShopReceiver {
-
-    /**
-     * The name.
-     */
-    var name: String = "Shop"
+class ShopReceiver(val name: String) {
 
     /**
      * The buy policy.

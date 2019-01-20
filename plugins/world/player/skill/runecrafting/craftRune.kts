@@ -30,8 +30,7 @@ val craftGraphic = Graphic(186, 100)
  * Attempts to craft [rune] for [plr].
  */
 fun craft(plr: Player, rune: Rune) {
-    val skill = plr.skill(SKILL_RUNECRAFTING)
-    if (skill.level < rune.level) {
+    if (plr.runecrafting.level < rune.level) {
         plr.sendMessage("You need a Runecrafting level of ${rune.level} to craft these runes.")
         return
     }
@@ -54,7 +53,7 @@ fun craft(plr: Player, rune: Rune) {
     }
 
     // Now we can craft runes!
-    val craftAmt = essenceAmt * (skill.level / rune.multiplier)
+    val craftAmt = essenceAmt * (plr.runecrafting.level / rune.multiplier)
 
     inv.remove(Item(essenceId, essenceAmt))
     inv.add(Item(rune.id, craftAmt))
@@ -64,7 +63,7 @@ fun craft(plr: Player, rune: Rune) {
     plr.animation(craftAnimation)
     plr.graphic(craftGraphic)
 
-    skill.addExperience(rune.exp * essenceAmt)
+    plr.runecrafting.addExperience(rune.exp * essenceAmt)
 }
 
 /**

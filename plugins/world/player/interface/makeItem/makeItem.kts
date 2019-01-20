@@ -1,4 +1,3 @@
-
 import MakeItem.MakeItemOption
 import api.predef.*
 import io.luna.game.event.button.ButtonClickEvent
@@ -15,6 +14,8 @@ class ButtonIndex(val make1: Int,
                   val makeX: Int,
                   val index: Int) {
 
+    constructor(make1: Int, index: Int) :
+            this(make1, make1 - 1, make1 - 2, make1 - 3, index)
 
     /**
      * Computes a list of [MakeItemOption] instances from this item.
@@ -56,21 +57,21 @@ class MakeItemOption(val amount: Int, var index: Int) {
  * A list of button ids and the indexes that they correspond to.
  */
 val buttonList = listOf(
-        ButtonIndex(8893, 8892, 8891, 8890, 0),
-        ButtonIndex(8874, 8873, 8872, 8871, 0),
-        ButtonIndex(8878, 8877, 8876, 8875, 1),
-        ButtonIndex(8889, 8888, 8887, 8886, 0),
-        ButtonIndex(8893, 8892, 8891, 8890, 1),
-        ButtonIndex(8897, 8896, 8895, 8894, 2),
-        ButtonIndex(8909, 8908, 8907, 8906, 0),
-        ButtonIndex(8913, 8912, 8911, 8910, 1),
-        ButtonIndex(8917, 8916, 8915, 8914, 2),
-        ButtonIndex(8921, 8920, 8919, 8918, 3),
-        ButtonIndex(8949, 8948, 8947, 8946, 0),
-        ButtonIndex(8953, 8952, 8951, 8950, 1),
-        ButtonIndex(8957, 8956, 8955, 8954, 2),
-        ButtonIndex(8961, 8960, 8959, 8958, 3),
-        ButtonIndex(8965, 8964, 8963, 8962, 4))
+        ButtonIndex(make1 = 8893, index = 0),
+        ButtonIndex(make1 = 8874, index = 0),
+        ButtonIndex(make1 = 8878, index = 1),
+        ButtonIndex(make1 = 8889, index = 0),
+        ButtonIndex(make1 = 8893, index = 1),
+        ButtonIndex(make1 = 8897, index = 2),
+        ButtonIndex(make1 = 8909, index = 0),
+        ButtonIndex(make1 = 8913, index = 1),
+        ButtonIndex(make1 = 8917, index = 2),
+        ButtonIndex(make1 = 8921, index = 3),
+        ButtonIndex(make1 = 8949, index = 0),
+        ButtonIndex(make1 = 8953, index = 1),
+        ButtonIndex(make1 = 8957, index = 2),
+        ButtonIndex(make1 = 8961, index = 3),
+        ButtonIndex(make1 = 8965, index = 4))
 
 /**
  * A mapping of every option's button to its [MakeItemOption].

@@ -19,10 +19,12 @@ class InterceptCondition<E : Event>(private val eventType: KClass<E>,
      * Test condition, and run if satisfied!
      */
     fun then(action: E.() -> Unit) {
-        val wrappedAction: E.() -> Unit = {
-            if (condition(this)) {
-                action(this)
-                terminate()
+        val wrappedAction: (E) -> Unit = {
+            if (condition(it)) {
+                action(it)
+                if (terminate) {
+                    it.terminate()
+                }
             }
         }
         scriptListeners.add(EventListener(eventType.java, wrappedAction))

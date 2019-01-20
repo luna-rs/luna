@@ -23,7 +23,7 @@ fun buryBone(plr: Player, bone: Bone) {
         plr.interruptAction()
         plr.animation(buryAnimation)
 
-        plr.skill(SKILL_PRAYER).addExperience(bone.exp)
+        plr.prayer.addExperience(bone.exp)
         plr.inventory.remove(bone.boneItem)
 
         plr.sendMessage("You dig a hole in the ground.")

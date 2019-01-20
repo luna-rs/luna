@@ -23,14 +23,9 @@ class MakePotionAction(plr: Player,
         val ANIMATION = Animation(363)
     }
 
-    /**
-     * The herblore skill.
-     */
-    val skill = plr.skill(SKILL_HERBLORE)
-
     override fun canInit() =
         when {
-            skill.level < potion.level -> {
+            mob.herblore.level < potion.level -> {
                 mob.sendMessage("You need a Herblore level of ${potion.level} to make this potion.")
                 false
             }
@@ -42,7 +37,7 @@ class MakePotionAction(plr: Player,
     override fun onProduce() {
         mob.sendMessage("You mix the ${itemDef(potion.secondary).name} into your potion.")
         mob.animation(ANIMATION)
-        skill.addExperience(potion.exp)
+        mob.herblore.addExperience(potion.exp)
     }
 
     override fun add() = arrayOf(potion.idItem)

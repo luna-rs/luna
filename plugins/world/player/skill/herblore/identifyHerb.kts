@@ -7,15 +7,14 @@ import world.player.skill.herblore.Herb
  * Identifies [herb] for [player].
  */
 fun identify(plr: Player, herb: Herb) {
-    val herblore = plr.skill(SKILL_HERBLORE)
     val level = herb.level
 
-    if (herblore.level >= level) {
+    if (plr.herblore.level >= level) {
 
         plr.inventory.remove(herb.idItem)
         plr.inventory.add(herb.identifiedItem)
 
-        herblore.addExperience(herb.exp)
+        plr.herblore.addExperience(herb.exp)
 
         val herbName = herb.identifiedItem.itemDef.name
         plr.sendMessage("You identify the $herbName.")

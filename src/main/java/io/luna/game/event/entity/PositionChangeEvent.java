@@ -37,6 +37,11 @@ public final class PositionChangeEvent extends EntityEvent {
         this.newPos = newPos;
     }
 
+    @Override
+    public boolean terminate() {
+        throw new IllegalStateException("This event type (PositionChangeEvent) cannot be terminated.");
+    }
+
     /**
      * @return The old position.
      */

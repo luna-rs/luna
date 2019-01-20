@@ -75,8 +75,9 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
             // Apply match listener.
             matcher.apply(msg);
 
-            // Match listener didn't terminate event, post to other listeners.
             if (!terminated) {
+
+                // Match listener didn't terminate event, post to other listeners.
                 for (EventListener<E> listener : listeners) {
                     if (terminated) {
                         break;

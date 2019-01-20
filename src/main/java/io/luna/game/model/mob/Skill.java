@@ -233,7 +233,7 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
-        
+
         amount = amount * LunaConstants.EXPERIENCE_MULTIPLIER;
         setExperience(experience + amount);
     }
@@ -348,16 +348,15 @@ public final class Skill {
         } else if (newExperience > SkillSet.MAXIMUM_EXPERIENCE) {
             newExperience = SkillSet.MAXIMUM_EXPERIENCE;
         }
+    
+        if (experience == newExperience) {
+            return;
+        }
         
         int oldStaticLevel = getStaticLevel();
         double oldExperience = experience;
         experience = newExperience;
         staticLevel = -1;
-
-        if (oldExperience == newExperience) {
-            return;
-        }
-        
         notifyListeners(oldExperience, oldStaticLevel, level);
     }
 }

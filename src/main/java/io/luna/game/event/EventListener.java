@@ -61,6 +61,7 @@ public final class EventListener<E extends Event> {
         try {
             listener.accept(msg);
         } catch (Exception failure) {
+            failure.printStackTrace();
             throw new ScriptExecutionException(this, failure);
         }
     }

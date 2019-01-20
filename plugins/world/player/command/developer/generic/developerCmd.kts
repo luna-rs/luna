@@ -24,10 +24,11 @@ cmd("attr", RIGHTS_DEV) {
 }
 
 /**
- * A command that makes all stats 99.
+ * A command fthat makes all stats 99.
  */
 cmd("master", RIGHTS_DEV) {
     plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
+    plr.hitpoints.level = 99
     plr.sendMessage("You have set all your skills to level 99.")
 }
 

@@ -23,8 +23,20 @@ class InterceptBy<E : Event>(private val eventType: KClass<E>) {
     fun condition(cond: E.() -> Boolean) = InterceptCondition(eventType, cond, false)
 
     /**
-     * Use a [Matcher] to test the event. This function only works for event types that have a dedicated
+     * Use a [Matcher] to test the event on [args]. This function only works for event types that have a dedicated
      * matcher. Forwards to [InterceptMatcher].
      */
-    fun <K> match(vararg args: K) = InterceptMatcher(eventType, args)
+    fun <K> match(args: Iterable<K>) = InterceptMatcher(eventType, args)
+
+    /**
+     * Use a [Matcher] to test the event on [arg0], [arg1], and [argOther]. Forwards to the other [InterceptBy.match]
+     * function under the hood.
+     */
+    fun <K> match(arg0: K, arg1: K, vararg argOther: K): InterceptMatcher<E, K> {
+        val args = HashSet<K>(2 + argOther.size)
+        args += arg0
+        args += arg1
+        args += argOther
+        return InterceptMatcher(eventType, args)
+    }
 }

@@ -29,18 +29,13 @@ class CookingAction(plr: Player,
     }
 
     /**
-     * The cooking skill.
-     */
-    private val cooking = mob.skill(SKILL_COOKING)!!
-
-    /**
      * The experience.
      */
     private var experience: Double? = null
 
     override fun canProduce(): Boolean =
         when {
-            cooking.level < food.reqLevel -> {
+            mob.cooking.level < food.reqLevel -> {
                 mob.sendMessage("You need a Cooking level of ${food.reqLevel} to cook this.")
                 false
             }
@@ -54,7 +49,7 @@ class CookingAction(plr: Player,
 
         if (experience != null) {
             mob.sendMessage("You successfully cook the ${itemDef(cooked).name}.")
-            cooking.addExperience(experience!!)
+            mob.cooking.addExperience(experience!!)
         } else {
             mob.sendMessage("You accidentally burn the ${itemDef(cooked).name}.")
         }
@@ -84,13 +79,13 @@ class CookingAction(plr: Player,
      * Determines if the food will be burnt this action cycle.
      */
     private fun computeIsBurnt(): Boolean {
-        return if (cooking.level >= food.masterLevel) {
+        return if (mob.cooking.level >= food.masterLevel) {
             true
         } else {
             val rangeBonus = if (usingFire) 0.0 else 5.0
             val baseChance = 55.0 - rangeBonus
             val burnLvlFactor = food.masterLevel - food.reqLevel
-            val reqLvlFactor = cooking.level - food.reqLevel
+            val reqLvlFactor = mob.cooking.level - food.reqLevel
             val burnChance = baseChance - (reqLvlFactor * (baseChance / burnLvlFactor))
 
             burnChance > (rand().nextDouble() * 100.0)

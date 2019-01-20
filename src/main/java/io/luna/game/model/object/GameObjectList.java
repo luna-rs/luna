@@ -33,7 +33,8 @@ public class GameObjectList extends EntityList<GameObject> {
 
     @Override
     public Spliterator<GameObject> spliterator() {
-        return Spliterators.spliterator(iterator(), size(), Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.DISTINCT);
+        return Spliterators.spliterator(iterator(), size(),
+                Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.DISTINCT);
     }
 
     /**

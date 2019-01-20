@@ -15,11 +15,10 @@ import world.player.skill.crafting.Battlestaff.Companion.ORB_TO_BATTLESTAFF
  */
 class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, var amount: Int) :
         ProducingAction(plr, true, 2) {
-    val skill = plr.skill(SKILL_CRAFTING)
 
     override fun canProduce(): Boolean =
         when {
-            skill.level < battlestaff.level -> {
+            mob.crafting.level < battlestaff.level -> {
                 plr.sendMessage("You need a Crafting level of ${battlestaff.level} to craft this.")
                 false
             }
@@ -28,7 +27,7 @@ class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, var a
         }
 
     override fun onProduce() {
-        skill.addExperience(battlestaff.exp)
+        mob.crafting.addExperience(battlestaff.exp)
         amount--
     }
 
