@@ -2,6 +2,7 @@ package api.predef
 
 import io.luna.game.event.EventListener
 import io.luna.game.model.EntityType
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerInteraction
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
@@ -127,6 +128,73 @@ const val SKILL_THIEVING = Skill.THIEVING
 const val SKILL_SLAYER = Skill.SLAYER
 const val SKILL_FARMING = Skill.FARMING
 const val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
+
+
+/***********************************
+ *                                 *
+ *  [Skill] extension properties.  *
+ *                                 *
+ **********************************/
+
+val Player.attack: Skill
+    get() = skill(SKILL_ATTACK)
+
+val Player.defence: Skill
+    get() = skill(SKILL_DEFENCE)
+
+val Player.hitpoints: Skill
+    get() = skill(SKILL_HITPOINTS)
+
+val Player.ranged: Skill
+    get() = skill(SKILL_RANGED)
+
+val Player.prayer: Skill
+    get() = skill(SKILL_PRAYER)
+
+val Player.magic: Skill
+    get() = skill(SKILL_MAGIC)
+
+val Player.cooking: Skill
+    get() = skill(SKILL_COOKING)
+
+val Player.woodcutting: Skill
+    get() = skill(SKILL_WOODCUTTING)
+
+val Player.fletching: Skill
+    get() = skill(SKILL_FLETCHING)
+
+val Player.fishing: Skill
+    get() = skill(SKILL_FISHING)
+
+val Player.firemaking: Skill
+    get() = skill(SKILL_FIREMAKING)
+
+val Player.crafting: Skill
+    get() = skill(SKILL_CRAFTING)
+
+val Player.smithing: Skill
+    get() = skill(SKILL_SMITHING)
+
+val Player.mining: Skill
+    get() = skill(SKILL_MINING)
+
+val Player.herblore: Skill
+    get() = skill(SKILL_HERBLORE)
+
+val Player.agility: Skill
+    get() = skill(SKILL_AGILITY)
+
+val Player.thieving: Skill
+    get() = skill(SKILL_THIEVING)
+
+val Player.slayer: Skill
+    get() = skill(SKILL_SLAYER)
+
+val Player.farming: Skill
+    get() = skill(SKILL_FARMING)
+
+val Player.runecrafting: Skill
+    get() = skill(SKILL_RUNECRAFTING)
 
 
 /**********************************
