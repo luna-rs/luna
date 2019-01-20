@@ -22,7 +22,9 @@ class InterceptCondition<E : Event>(private val eventType: KClass<E>,
         val wrappedAction: E.() -> Unit = {
             if (condition(this)) {
                 action(this)
-                terminate()
+                if (terminate) {
+                    terminate()
+                }
             }
         }
         scriptListeners.add(EventListener(eventType.java, wrappedAction))
