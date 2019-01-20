@@ -8,8 +8,8 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * A {@link GameMessageWriter} implementation that displays a group of items on a widget.
@@ -35,7 +35,7 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
      * @param items The items.
      */
     public WidgetItemsMessageWriter(int id, Item[] items) {
-        this(id, List.of(items));
+        this(id, Arrays.asList(items));
     }
 
     /**
