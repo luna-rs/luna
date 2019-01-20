@@ -5,8 +5,7 @@ import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 import io.luna.game.model.item.shop.ShopInterface
 
-shop {
-    name = "General Store"
+shop("General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.FAST
     currency = Currency.COINS
