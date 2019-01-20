@@ -134,6 +134,11 @@ enum class Potion(val fourDose: Int,
     }
 
     /**
+     * The formatted name.
+     */
+    val formattedName = itemDef(fourDose).name.dropLast(3)
+
+    /**
      * Computes and returns the next potion dose identifier.
      */
     fun getNextDose(current: Int) =
@@ -141,7 +146,7 @@ enum class Potion(val fourDose: Int,
             fourDose -> threeDose
             threeDose -> twoDose
             twoDose -> oneDose
-            else -> -1
+            else -> null
         }
 
     /**

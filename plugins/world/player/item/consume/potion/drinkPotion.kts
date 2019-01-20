@@ -60,18 +60,18 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
         // Add next dose, or empty vial.
         val nextId = potion.getNextDose(id)
         when (nextId) {
-            -1 -> inv.add(index, Item(nextId))
-            else -> inv.add(vialItem)
+            null -> inv.add(vialItem)
+            else -> inv.add(index, Item(nextId))
         }
 
         // Send consume messages.
-        val name = itemDef(id).name
-        plr.sendMessage("You drink some of your $name.")
+        plr.sendMessage("You drink some of your ${potion.formattedName}.")
 
         val dosesLeft = potion.getDosesLeft(id)
-        when {
-            dosesLeft > 0 -> plr.sendMessage("You have $dosesLeft doses of potion left.")
-            else -> plr.sendMessage("You have finished your potion.")
+        when (dosesLeft) {
+            0 -> plr.sendMessage("You have finished your potion.")
+            1 -> plr.sendMessage("You have 1 dose left.")
+            else -> plr.sendMessage("You have $dosesLeft doses left.")
         }
 
         // Invoke effects.
