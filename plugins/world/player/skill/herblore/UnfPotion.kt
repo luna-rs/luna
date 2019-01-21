@@ -54,7 +54,7 @@ enum class UnfPotion(val id: Int, val herb: Int, val level: Int) {
         /**
          * Mappings of [UnfPotion.herb] to [UnfPotion] instances.
          */
-        val HERB_TO_UNF = values().map { it.herb to it }.toMap()
+        val HERB_TO_UNF = values().associateBy { it.herb }
 
         /**
          * The vial of water identifier.

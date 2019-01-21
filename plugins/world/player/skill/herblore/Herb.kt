@@ -72,7 +72,7 @@ enum class Herb(val id: Int,
         /**
          * Mappings of [Herb.id] to [Herb] instances.
          */
-        val UNID_TO_HERB = values().map { it.id to it }.toMap()
+        val UNID_TO_HERB = values().associateBy { it.id }
     }
 
     /**

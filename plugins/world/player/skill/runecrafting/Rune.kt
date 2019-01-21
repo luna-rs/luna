@@ -80,6 +80,6 @@ enum class Rune(val id: Int,
         /**
          * Mappings of [Rune.altar] to [Rune] instances.
          */
-        val ALTAR_TO_RUNE = values().map { it.altar to it }.toMap()
+        val ALTAR_TO_RUNE = values().associateBy { it.altar }
     }
 }

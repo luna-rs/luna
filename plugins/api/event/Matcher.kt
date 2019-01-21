@@ -75,7 +75,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
                          ObjectMatcher(ObjectFirstClickEvent::class),
                          ObjectMatcher(ObjectSecondClickEvent::class),
                          ObjectMatcher(ObjectThirdClickEvent::class))
-                .map { it.eventType to it }.toMap()
+                .associateBy { it.eventType }
 
             // Add all of the matcher's listeners.
             ALL.values.forEach { it.addListener() }

@@ -84,16 +84,16 @@ enum class Altar(val id: Int,
         /**
          * Mappings of [Altar.talisman] to [Altar] instances.
          */
-        val TALISMAN_TO_ALTAR = values().map { it.talisman to it }.toMap()
+        val TALISMAN_TO_ALTAR = values().associateBy { it.talisman }
 
         /**
          * Mappings of [Altar.tiara] to [Altar] instances.
          */
-        val TIARA_TO_ALTAR = values().map { it.tiara to it }.toMap()
+        val TIARA_TO_ALTAR = values().associateBy { it.tiara }
 
         /**
          * Mappings of [Altar.portal] to [Altar] instances.
          */
-        val PORTAL_TO_ALTAR = values().map { it.portal to it }.toMap()
+        val PORTAL_TO_ALTAR = values().associateBy { it.portal }
     }
 }

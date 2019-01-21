@@ -30,7 +30,7 @@ enum class Log(val id: Int, val bows: List<Bow>) {
         /**
          * Mappings of [Log.id] to [Log] instances.
          */
-        val ID_TO_LOG = values().map { it.id to it }.toMap()
+        val ID_TO_LOG = values().associateBy { it.id }
     }
 
     /**

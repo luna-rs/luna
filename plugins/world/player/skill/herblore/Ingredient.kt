@@ -25,7 +25,7 @@ enum class Ingredient(val id: Int, val newId: Int) {
         /**
          * Mappings of [Ingredient.id] to [Ingredient] instances.
          */
-        val OLD_TO_INGREDIENT = values().map { it.id to it }.toMap()
+        val OLD_TO_INGREDIENT = values().associateBy { it.id }
     }
 
     /**

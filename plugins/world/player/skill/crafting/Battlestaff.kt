@@ -42,7 +42,7 @@ enum class Battlestaff(val staff: Int,
         /**
          * Mappings of [Battlestaff.orb] to [Battlestaff].
          */
-        val ORB_TO_BATTLESTAFF = Battlestaff.values().map { it.orb to it }.toMap()
+        val ORB_TO_BATTLESTAFF = values().associateBy { it.orb }
     }
 
     /**

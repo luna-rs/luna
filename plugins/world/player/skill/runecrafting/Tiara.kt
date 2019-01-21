@@ -32,6 +32,6 @@ enum class Tiara(val id: Int, val config: Int) {
         /**
          * Mappings of [Tiara.id] to [Tiara] instances.
          */
-        val ID_TO_TIARA = Tiara.values().map { it.id to it }.toMap()
+        val ID_TO_TIARA = values().associateBy { it.id }
     }
 }

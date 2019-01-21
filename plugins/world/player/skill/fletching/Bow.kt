@@ -68,7 +68,7 @@ enum class Bow(val level: Int,
         /**
          * Mappings of [Bow.unstrung] to [Bow].
          */
-        val UNSTRUNG_TO_BOW = values().map { it.unstrung to it }.toMap()
+        val UNSTRUNG_TO_BOW = values().associateBy { it.unstrung }
 
         /**
          * The bow string identifier.

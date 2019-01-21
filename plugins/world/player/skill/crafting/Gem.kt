@@ -68,7 +68,7 @@ enum class Gem(val uncut: Int,
         /**
          * Mappings of [Gem.uncut] to [Gem].
          */
-        val UNCUT_TO_GEM = Gem.values().map { it.uncut to it }.toMap()
+        val UNCUT_TO_GEM = values().associateBy { it.uncut }
     }
 
     /**

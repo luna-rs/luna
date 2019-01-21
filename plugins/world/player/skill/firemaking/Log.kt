@@ -40,6 +40,6 @@ enum class Log(val id: Int, val level: Int, val exp: Double, val ticks: Int) {
           ticks = 7);
 
     companion object {
-        val ID_TO_LOG = values().map { it.id to it }.toMap()
+        val ID_TO_LOG = values().associateBy { it.id }
     }
 }

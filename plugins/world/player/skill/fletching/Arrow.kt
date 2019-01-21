@@ -54,6 +54,6 @@ enum class Arrow(val level: Int,
         /**
          * Mappings of [Arrow.tip] to [Arrow] instances.
          */
-        val TIP_TO_ARROW = values().map { it.tip to it }.toMap()
+        val TIP_TO_ARROW = values().associateBy { it.tip }
     }
 }

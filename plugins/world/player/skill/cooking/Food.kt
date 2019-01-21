@@ -161,7 +161,7 @@ enum class Food(val raw: Int,
         /**
          * A map of raw food identifiers to food.
          */
-        val RAW_TO_FOOD = values().map { it.raw to it }.toMap()
+        val RAW_TO_FOOD = values().associateBy { it.raw }
     }
 
     /**
