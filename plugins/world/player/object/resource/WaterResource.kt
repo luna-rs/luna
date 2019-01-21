@@ -1,4 +1,4 @@
-package world.player.item.fill
+package world.player.`object`.resource
 
 import io.luna.game.model.def.ObjectDefinition
 import io.luna.game.model.mob.Animation

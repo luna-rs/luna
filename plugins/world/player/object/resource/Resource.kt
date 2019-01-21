@@ -1,4 +1,4 @@
-package world.player.item.fill
+package world.player.`object`.resource
 
 import api.predef.*
 import io.luna.game.event.impl.ItemOnObjectEvent
@@ -29,10 +29,18 @@ abstract class Resource {
 
     }
 
+    open fun onRegister() {
+
+    }
+
+    open fun onMatch(obj: ObjectDefinition) {
+
+    }
+
     /**
      * Open an interface that allows for filling [emptyId] with this resource, for [plr].
      */
-    private fun fill(plr: Player, emptyId: Int, objectId: Int? = null, msg: ItemOnObjectEvent? = null) {
+    fun fill(plr: Player, emptyId: Int, objectId: Int? = null, msg: ItemOnObjectEvent? = null) {
         val filled = getFilled(emptyId)
         if (filled != null) {
             plr.interfaces.open(object : MakeItemDialogueInterface(filled) {
@@ -56,7 +64,9 @@ abstract class Resource {
                 on(ItemOnObjectEvent::class)
                     .condition { objectId == obj.id }
                     .then { fill(plr, itemId, objectId, this) }
+                onMatch(obj)
             }
         }
+        onRegister()
     }
 }

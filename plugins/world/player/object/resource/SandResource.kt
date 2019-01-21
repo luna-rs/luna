@@ -1,28 +1,28 @@
-package world.player.item.fill
+package world.player.`object`.resource
 
 import io.luna.game.model.def.ObjectDefinition
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 
 /**
- * A [Resource] implementation for cow's milk.
+ * A [Resource] implementation for sand.
  *
  * @author lare96
  */
-object MilkResource : Resource() {
+object SandResource : Resource() {
 
     override fun matches(obj: ObjectDefinition): Boolean {
         return when (obj.name) {
-            "Dairy Cow" -> true
+            "Sand pit", "Sandpit", "Sand pile" -> true
             else -> false
         }
     }
 
     override fun getFilled(empty: Int): Int? =
         when (empty) {
-            1925 -> 1927 // Empty bucket -> Bucket of milk
+            1925 -> 1783 // Empty bucket -> Bucket of sand
             else -> null
         }
 
-    override fun onFill(plr: Player) = plr.animation(Animation(2292))
+    override fun onFill(plr: Player) = plr.animation(Animation(832))
 }
