@@ -1,6 +1,6 @@
 [metadata]
 name = "Settings"
-description = "A plugin enables the settings tab."
+description = "A plugin that enables settings on the control tabs."
 version = "1.0"
 authors = [
   "lare96"

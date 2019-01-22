@@ -8,6 +8,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
+import io.luna.game.model.mob.PlayerSettings;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.AttributeKey;
 import io.luna.game.model.mob.attr.AttributeValue;
@@ -100,11 +101,11 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         PlayerRights rights = PlayerRights.valueOf(data.get("rights").getAsString());
         player.setRights(rights);
 
-        boolean running = data.get("running").getAsBoolean();
-        player.getWalking().setRunning(running);
-
         int[] appearance = getAsType(data.get("appearance"), int[].class);
         player.getAppearance().setValues(appearance);
+
+        PlayerSettings settings = getAsType(data.get("settings"), PlayerSettings.class);
+        player.setSettings(settings);
 
         IndexedItem[] inventory = getAsType(data.get("inventory"), IndexedItem[].class);
         player.getInventory().init(inventory);
@@ -163,8 +164,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         data.addProperty("password", computePw(player));
         data.add("position", toJsonTree(player.getPosition()));
         data.addProperty("rights", player.getRights().name());
-        data.addProperty("running", player.getWalking().isRunning());
         data.add("appearance", toJsonTree(player.getAppearance().toArray()));
+        data.add("settings", toJsonTree(player.getSettings()));
         data.add("inventory", toJsonTree(player.getInventory().toIndexedArray()));
         data.add("bank", toJsonTree(player.getBank().toIndexedArray()));
         data.add("equipment", toJsonTree(player.getEquipment().toIndexedArray()));

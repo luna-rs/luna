@@ -13,6 +13,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.World;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -21,6 +22,7 @@ import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
 import io.luna.game.model.mob.persistence.SqlPlayerSerializer;
+import io.luna.game.model.object.GameObject;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -135,6 +138,16 @@ public final class Player extends Mob {
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
 
     /**
+     * A set of local objects.
+     */
+    private final Set<GameObject> localObjects = new HashSet<>(4);
+
+    /**
+     * A set of local items.
+     */
+    private final Set<GroundItem> localItems = new HashSet<>(4);
+
+    /**
      * The appearance.
      */
     private final PlayerAppearance appearance = new PlayerAppearance();
@@ -174,6 +187,11 @@ public final class Player extends Mob {
      */
     private final Map<Integer, String> textCache =
             LunaConstants.PACKET_126_CACHING ? new HashMap<>() : ImmutableMap.of();
+
+    /**
+     * The settings.
+     */
+    private PlayerSettings settings = new PlayerSettings();
 
     /**
      * The cached update block.
@@ -316,8 +334,8 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        world.getItems().removeLocal(this);
-        world.getObjects().removeLocal(this);
+        removeLocalItems();
+        removeLocalObjects();
         plugins.post(new LogoutEvent(this));
         save();
         LOGGER.info("{} has logged out.", this);
@@ -363,6 +381,24 @@ public final class Player extends Mob {
     @Override
     public void onSubmitAction(Action action) {
         interfaces.applyActionClose();
+    }
+
+    public void removeLocalObjects() {
+        if (localObjects.size() > 0) {
+            for (GameObject object : localObjects) {
+                world.getObjects().unregister(object);
+            }
+            localObjects.clear();
+        }
+    }
+
+    public void removeLocalItems() {
+        if (localItems.size() > 0) {
+            for (GroundItem item : localItems) {
+                world.getItems().unregister(item);
+            }
+            localItems.clear();
+        }
     }
 
     /**
@@ -700,6 +736,36 @@ public final class Player extends Mob {
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
+    }
+
+    /**
+     * @return A set of local objects.
+     */
+    public Set<GameObject> getLocalObjects() {
+        return localObjects;
+    }
+
+    /**
+     * @return A set of local items.
+     */
+    public Set<GroundItem> getLocalItems() {
+        return localItems;
+    }
+
+    public void setSettings(PlayerSettings settings) {
+        this.settings = settings;
+    }
+
+    public PlayerSettings getSettings() {
+        return settings;
+    }
+
+    public void setRunning(boolean running) {
+        settings.setRunning(running);
+    }
+
+    public boolean isRunning() {
+        return settings.isRunning();
     }
 
     /**
