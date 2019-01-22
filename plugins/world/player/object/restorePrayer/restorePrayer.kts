@@ -21,9 +21,9 @@ fun restore(plr: Player) {
     if (prayer.level < prayer.staticLevel) {
         prayer.level = prayer.staticLevel
         plr.animation(prayerAnimation)
-        plr.sendMessage("You restore your Prayer points.")
+        plr.sendMessage("You restore your prayer points.")
     } else {
-        plr.sendMessage("You already have full Prayer points.")
+        plr.sendMessage("You already have full prayer points.")
     }
 }
 
