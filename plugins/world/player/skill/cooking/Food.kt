@@ -1,5 +1,6 @@
 package world.player.skill.cooking
 
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**
@@ -178,4 +179,9 @@ enum class Food(val raw: Int,
      * The burnt item.
      */
     val burntItem = Item(burnt)
+
+    /**
+     * The formatted name.
+     */
+    val formattedName = itemDef(cooked).name.toLowerCase()
 }

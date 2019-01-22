@@ -20,12 +20,12 @@ class CookingAction(plr: Player,
         /**
          * The fire cooking animation.
          */
-        private val FIRE_ANIM = Animation(897)
+        private val FIRE_ANIMATION = Animation(897)
 
         /**
-         * The stovetop cooking animation.
+         * The range cooking animation.
          */
-        private val RANGE_ANIM = Animation(896)
+        private val RANGE_ANIMATION = Animation(896)
     }
 
     /**
@@ -45,28 +45,27 @@ class CookingAction(plr: Player,
 
     override fun onProduce() {
         val cooked = food.cooked
-        mob.animation(if (usingFire) FIRE_ANIM else RANGE_ANIM)
+        mob.animation(if (usingFire) FIRE_ANIMATION else RANGE_ANIMATION)
 
         if (experience != null) {
-            mob.sendMessage("You successfully cook the ${itemDef(cooked).name}.")
+            mob.sendMessage("You cook the ${food.formattedName}.")
             mob.cooking.addExperience(experience!!)
         } else {
-            mob.sendMessage("You accidentally burn the ${itemDef(cooked).name}.")
+            mob.sendMessage("Oops! You accidentally burn the ${food.formattedName}.")
         }
         amount--
     }
 
     override fun remove() = arrayOf(food.rawItem)
 
-    override fun add(): Array<Item> {
-        return if (computeIsBurnt()) {
-            experience = food.exp
-            arrayOf(food.cookedItem)
-        } else {
+    override fun add(): Array<Item> =
+        if (computeIsBurnt()) {
             experience = null
             arrayOf(food.burntItem)
+        } else {
+            experience = food.exp
+            arrayOf(food.cookedItem)
         }
-    }
 
     override fun isEqual(other: Action<*>?): Boolean =
         when (other) {
@@ -78,9 +77,9 @@ class CookingAction(plr: Player,
     /**
      * Determines if the food will be burnt this action cycle.
      */
-    private fun computeIsBurnt(): Boolean {
-        return if (mob.cooking.level >= food.masterLevel) {
-            true
+    private fun computeIsBurnt(): Boolean =
+        if (mob.cooking.level >= food.masterLevel) {
+            false
         } else {
             val rangeBonus = if (usingFire) 0.0 else 5.0
             val baseChance = 55.0 - rangeBonus
@@ -88,7 +87,6 @@ class CookingAction(plr: Player,
             val reqLvlFactor = mob.cooking.level - food.reqLevel
             val burnChance = baseChance - (reqLvlFactor * (baseChance / burnLvlFactor))
 
-            burnChance > (rand().nextDouble() * 100.0)
+            burnChance <= (rand().nextDouble() * 100.0)
         }
-    }
 }
