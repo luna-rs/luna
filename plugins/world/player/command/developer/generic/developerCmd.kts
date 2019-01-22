@@ -1,4 +1,3 @@
-
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -7,6 +6,7 @@ import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.net.msg.out.ConfigMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
 
@@ -21,6 +21,16 @@ cmd("attr", RIGHTS_DEV) {
     } else {
         plr.sendMessage("Attribute '$name' does not exist.")
     }
+}
+
+/**
+ * A command that sends a client config.
+ */
+cmd("config", RIGHTS_DEV) {
+    val id = asInt(0)
+    val value = if (args.size == 1) 0 else asInt(1)
+    plr.sendMessage("config[$id] = $value")
+    plr.queue(ConfigMessageWriter(id, value))
 }
 
 /**
