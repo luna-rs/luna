@@ -11,7 +11,8 @@ enum class Potion(val fourDose: Int,
                   val twoDose: Int,
                   val oneDose: Int,
                   val effect: (Player) -> Unit) {
-
+    // TODO All potions that remove HP should inflict damage instead.
+    // TODO this still needs to be tested, and some things implemented
     ZAMORAK_BREW(fourDose = 2450,
                  threeDose = 189,
                  twoDose = 191,
@@ -223,7 +224,7 @@ private fun Player.onSkillPotion(skillId: Int) {
  * Invoked when a energy or super energy potion is sipped.
  */
 private fun Player.onEnergyPotion(superPotion: Boolean) {
-    val amount = if (superPotion) 0.20 else 0.10
+    val amount = if (superPotion) 20.0 else 10.0
     runEnergy += amount
 }
 

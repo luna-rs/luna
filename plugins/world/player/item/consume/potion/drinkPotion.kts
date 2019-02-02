@@ -34,7 +34,7 @@ val consumeDelay = 1800L
 /**
  * Forwards to [drink] if the [Player] is alive and not drinking too quickly.
  */
-fun tryDrink(plr: Player, potion: Potion, index: Int) {
+fun tryDrink(plr: Player, potion: Potion, id: Int, index: Int) {
     if (plr.lastDrink < consumeDelay || !plr.isAlive) {
         // TODO Confirm duel rule for no drinks.
         return
@@ -43,10 +43,7 @@ fun tryDrink(plr: Player, potion: Potion, index: Int) {
     plr.interruptAction()
     plr.lastDrink = -1
     plr.lastEat = -1
-
-    plr.inventory.computeIdForIndex(index)
-        .map { Item(it) }
-        .ifPresent { drink(plr, it, potion, index) }
+    drink(plr, Item(id), potion, index)
 }
 
 /**
@@ -86,7 +83,7 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
 fun lookup(msg: ItemFirstClickEvent) {
     val potion = Potion.DOSE_TO_POTION[msg.id]
     if (potion != null) {
-        tryDrink(msg.plr, potion, msg.index)
+        tryDrink(msg.plr, potion, msg.id, msg.index)
         msg.terminate()
     }
 }

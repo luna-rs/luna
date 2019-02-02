@@ -19,14 +19,14 @@ val eatAnimation = Animation(829)
 /**
  * Forwards to [eat] if the [Player] is alive and not eating too quickly.
  */
-fun tryEat(plr: Player, food: Food, eatItem: Item, index: Int) {
+fun tryEat(plr: Player, food: Food, id: Int, index: Int) {
     if (plr.lastEat < food.longDelay() || !plr.isAlive) {
         return
     }
 
     plr.interruptAction()
     plr.lastEat = -1
-    eat(plr, eatItem, food, index)
+    eat(plr, Item(id), food, index)
 }
 
 /**
@@ -60,13 +60,10 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
  * Performs a lookup for the potion and forwards to [tryDrink].
  */
 fun lookup(msg: ItemFirstClickEvent) {
-    val item = msg.plr.inventory.get(msg.index)
-    if (item != null) {
-        val food = Food.ID_TO_FOOD[item.id]
-        if (food != null) {
-            tryEat(msg.plr, food, item, msg.index)
-            msg.terminate()
-        }
+    val food = Food.ID_TO_FOOD[msg.id]
+    if (food != null) {
+        tryEat(msg.plr, food, msg.id, msg.index)
+        msg.terminate()
     }
 }
 
