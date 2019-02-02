@@ -58,6 +58,11 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
             }
         }
 
+        /**
+         * Determines if the [eventType] has a dedicated matcher.
+         */
+        fun <E : Event> has(eventType: KClass<E>) = ALL.containsKey(eventType)
+
         init {
             // Map all matchers to their matching event types.
             ALL = listOf(CommandMatcher,

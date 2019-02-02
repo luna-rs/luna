@@ -26,7 +26,12 @@ class InterceptBy<E : Event>(private val eventType: KClass<E>) {
      * Use a [Matcher] to test the event on [args]. This function only works for event types that have a dedicated
      * matcher. Forwards to [InterceptMatcher].
      */
-    fun <K> match(args: Iterable<K>) = InterceptMatcher(eventType, args)
+    fun <K> match(args: Iterable<K>): InterceptMatcher<E, K> {
+        if (!Matcher.has(eventType)) {
+            throw IllegalStateException("There is no dedicated matcher for event type: ${eventType.simpleName}. Use 'filter' instead of 'match'.")
+        }
+        return InterceptMatcher(eventType, args)
+    }
 
     /**
      * Use a [Matcher] to test the event on [arg0], [arg1], and [argOther]. Forwards to the other [InterceptBy.match]
@@ -37,6 +42,6 @@ class InterceptBy<E : Event>(private val eventType: KClass<E>) {
         args += arg0
         args += arg1
         args += argOther
-        return InterceptMatcher(eventType, args)
+        return match(args)
     }
 }
