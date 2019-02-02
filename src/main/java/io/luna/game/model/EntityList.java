@@ -1,11 +1,8 @@
 package io.luna.game.model;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.model.chunk.ChunkManager;
-import io.luna.game.model.mob.Player;
 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Predicate;
@@ -31,11 +28,6 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
     protected final EntityType type;
 
     /**
-     * The local entities, mapped to the player they're updating for.
-     */
-    protected final SetMultimap<Player, E> local = HashMultimap.create(64, 3);
-
-    /**
      * The amount of tracked entities.
      */
     private int size;
@@ -55,14 +47,29 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
     public abstract Spliterator<E> spliterator();
 
     @Override
-    public abstract UnmodifiableIterator<E> iterator();
+    public abstract Iterator<E> iterator();
 
     /**
-     * Forwards to {@link #register(StationaryEntity)} by default.
+     * Determines if this collection contains {@code entity}.
+     *
+     * @param entity The entity.
+     * @return {@code true} if this contains the entity.
      */
-    public boolean add(E entity) {
-        return register(entity);
-    }
+    public abstract boolean contains(E entity);
+
+    /**
+     * A function invoked when an entity is registered.
+     *
+     * @param entity The entity.
+     */
+    protected abstract void onRegister(E entity);
+
+    /**
+     * A function invoked when an entity is unregistered.
+     *
+     * @param entity The entity.
+     */
+    protected abstract void onUnregister(E entity);
 
     /**
      * Registers and shows {@code entity}.
@@ -70,25 +77,14 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @param entity The entity to register.
      * @return {@code true} if {@code entity} was registered.
      */
-    protected final boolean register(E entity) {
+    public final boolean register(E entity) {
         if (entity.getType() == type &&
-                entity.getState() == EntityState.NEW &&
-                entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
-
+                entity.getState() == EntityState.NEW) {
+            onRegister(entity);
             size++;
-            entity.getPlayer().ifPresent(plr -> local.put(plr, entity));
-            entity.setState(EntityState.ACTIVE);
-            entity.show();
             return true;
         }
         return false;
-    }
-
-    /**
-     * Forwards to {@link #unregister(StationaryEntity)} by default.
-     */
-    public boolean remove(E entity) {
-        return unregister(entity);
     }
 
     /**
@@ -97,37 +93,14 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @param entity The entity to unregister.
      * @return {@code true} if {@code entity} was unregistered.
      */
-    protected final boolean unregister(E entity) {
+    public final boolean unregister(E entity) {
         if (entity.getType() == type &&
-                entity.getState() == EntityState.ACTIVE &&
-                entity.getPlayer().map(plr -> local.remove(plr, entity)).orElse(true)) {
+                entity.getState() == EntityState.ACTIVE) {
+            onUnregister(entity);
             size--;
-            entity.setState(EntityState.INACTIVE);
-            entity.hide();
             return true;
         }
         return false;
-    }
-
-    /**
-     * Unregisters and hides all local entities updating for {@code player}.
-     *
-     * @param player The player.
-     */
-    public final void removeLocal(Player player) {
-        for (E entity : local.get(player)) {
-            unregister(entity);
-        }
-    }
-
-    /**
-     * Retrieves all local entities updating for {@code player}.
-     *
-     * @param player The player.
-     * @return The local entities.
-     */
-    public final Set<E> getLocal(Player player) {
-        return local.get(player);
     }
 
     /**
