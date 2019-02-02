@@ -19,17 +19,14 @@ val eatAnimation = Animation(829)
 /**
  * Forwards to [eat] if the [Player] is alive and not eating too quickly.
  */
-fun tryEat(plr: Player, food: Food, index: Int) {
+fun tryEat(plr: Player, food: Food, eatItem: Item, index: Int) {
     if (plr.lastEat < food.longDelay() || !plr.isAlive) {
-        // TODO Confirm duel rule for no food.
         return
     }
 
     plr.interruptAction()
     plr.lastEat = -1
-    plr.inventory.computeIdForIndex(index)
-        .map { Item(it) }
-        .ifPresent { eat(plr, it, food, index) }
+    eat(plr, eatItem, food, index)
 }
 
 /**
@@ -45,8 +42,8 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
         }
 
         // Send consume messages.
-        val consumeName = eatItem.itemDef.name
-        plr.sendMessage(food.consumeMessage(consumeName))
+        val name = food.formattedName
+        plr.sendMessage(food.consumeMessage(name))
         plr.animation(eatAnimation)
         food.effect(plr)
 
@@ -54,7 +51,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
         val hp = plr.hitpoints
         if (hp.level < hp.staticLevel) {
             hp.addLevels(food.heal, false)
-            plr.sendMessage(food.healMessage(consumeName))
+            plr.sendMessage(food.healMessage(name))
         }
     }
 }
@@ -63,10 +60,13 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
  * Performs a lookup for the potion and forwards to [tryDrink].
  */
 fun lookup(msg: ItemFirstClickEvent) {
-    val food = Food.ID_TO_FOOD[msg.id]
-    if (food != null) {
-        tryEat(msg.plr, food, msg.index)
-        msg.terminate()
+    val item = msg.plr.inventory.get(msg.index)
+    if (item != null) {
+        val food = Food.ID_TO_FOOD[item.id]
+        if (food != null) {
+            tryEat(msg.plr, food, item, msg.index)
+            msg.terminate()
+        }
     }
 }
 

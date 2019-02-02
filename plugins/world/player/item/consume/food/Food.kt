@@ -1,6 +1,8 @@
 package world.player.item.consume.food
 
+import api.predef.*
 import io.luna.game.model.mob.Player
+import kotlin.collections.set
 
 /**
  * An enum representing food that can be eaten.
@@ -125,6 +127,11 @@ enum class Food(val heal: Int,
      * The identifier set.
      */
     val ids = newIdSet()
+
+    /**
+     * The mappings of formatted names.
+     */
+    val formattedName = itemDef(id).name.toLowerCase()
 
     /**
      * Invoked when the food is eaten.
