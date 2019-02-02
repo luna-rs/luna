@@ -5,13 +5,11 @@ import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.Player
 
 /**
- * Runs [action] if a [ShopInterface] is currently open.
+ * Returns the currently open shop.
  */
-fun getShop(plr: Player, action: (Shop) -> Unit) {
+fun currentShop(plr: Player): Shop? {
     val inter = plr.interfaces.get(ShopInterface::class)
-    if (inter != null) {
-        action(inter.shop)
-    }
+    return inter?.shop
 }
 
 /**
@@ -19,15 +17,11 @@ fun getShop(plr: Player, action: (Shop) -> Unit) {
  */
 on(WidgetItemFirstClickEvent::class)
     .filter { widgetId == 3900 }
-    .then {
-        getShop(plr) { it.sendBuyValue(plr, index) }
-    }
+    .then { currentShop(plr)?.sendBuyValue(plr, index) }
 
 /**
  * Send the item's sell value.
  */
 on(WidgetItemFirstClickEvent::class)
     .filter { widgetId == 3823 }
-    .then {
-        getShop(plr) { it.sendSellValue(plr, index) }
-    }
+    .then { currentShop(plr)?.sendSellValue(plr, index) }
