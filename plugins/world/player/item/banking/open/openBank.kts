@@ -2,7 +2,7 @@ import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 
 /**
- * A set of objects used for banking.
+ * A set of banking objects.
  */
 val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
 

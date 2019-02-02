@@ -5,6 +5,15 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
 
 /**
+ * Sets the withdraw mode if the banking interface is open.
+ */
+fun setWithdrawMode(plr: Player, value: Boolean) {
+    if (plr.bank.isOpen) {
+        plr.isWithdrawAsNote = value
+    }
+}
+
+/**
  * Deposit an item.
  */
 fun deposit(msg: WidgetItemClickEvent, amount: Int? = null) {
@@ -28,6 +37,14 @@ fun withdraw(msg: WidgetItemClickEvent, amount: Int? = null) {
         else -> plr.bank.withdraw(index, amount)
     }
 }
+
+
+/**
+ * Withdraw items as noted/unnoted.
+ */
+button(5387) { setWithdrawMode(plr, false) }
+
+button(5386) { setWithdrawMode(plr, true) }
 
 /**
  * Withdraw/deposit 1.
