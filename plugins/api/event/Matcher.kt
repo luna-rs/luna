@@ -108,7 +108,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     operator fun set(key: K, value: E.() -> Unit) {
         val previous = actions.put(key, value)
         if (previous != null) {
-            logger.warn("Key <$key> has overridden a $eventType listener.")
+            logger.warn("Key [$key] has overridden a $eventType listener.")
         }
     }
 
