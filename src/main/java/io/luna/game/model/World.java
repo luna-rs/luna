@@ -257,8 +257,8 @@ public final class World {
     private void preSynchronize() {
         for (Player player : playerList) {
             try {
-                player.getWalking().process();
                 player.getClient().handleDecodedMessages();
+                player.getWalking().process();
                 player.getClient().flush();
             } catch (Exception e) {
                 player.logout();

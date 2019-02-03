@@ -41,8 +41,8 @@ public final class PlayerSettings {
      */
     public enum MouseType {
         NONE(0),
-        TWO_BUTTONS(1),
-        ONE_BUTTON(2);
+        ONE_BUTTON(1),
+        TWO_BUTTONS(2);
 
         /**
          * The client value.
@@ -156,10 +156,13 @@ public final class PlayerSettings {
     /**
      * Sets the brightness level.
      *
-     * @param brightnessLevel The new value.
+     * @param newBrightnessLevel The new value.
      */
-    public void setBrightnessLevel(BrightnessLevel brightnessLevel) {
-        this.brightnessLevel = requireNonNull(brightnessLevel);
+    public void setBrightnessLevel(BrightnessLevel newBrightnessLevel) {
+        if (brightnessLevel != newBrightnessLevel) {
+            brightnessLevel = requireNonNull(newBrightnessLevel);
+            showBrightnessLevel();
+        }
     }
 
     /**
@@ -179,10 +182,13 @@ public final class PlayerSettings {
     /**
      * Sets the mouse type.
      *
-     * @param mouseType The new value.
+     * @param newMouseType The new value.
      */
-    public void setMouseType(MouseType mouseType) {
-        this.mouseType = requireNonNull(mouseType);
+    public void setMouseType(MouseType newMouseType) {
+        if (mouseType != newMouseType) {
+            mouseType = requireNonNull(newMouseType);
+            showMouseType();
+        }
     }
 
     /**
@@ -202,10 +208,13 @@ public final class PlayerSettings {
     /**
      * Sets if chat effects should be shown.
      *
-     * @param chatEffects The new value.
+     * @param newChatEffects The new value.
      */
-    public void setChatEffects(boolean chatEffects) {
-        this.chatEffects = chatEffects;
+    public void setChatEffects(boolean newChatEffects) {
+        if (chatEffects != newChatEffects) {
+            chatEffects = newChatEffects;
+            showChatEffects();
+        }
     }
 
     public void showChatEffects() {
@@ -219,8 +228,11 @@ public final class PlayerSettings {
         return splitPrivateChat;
     }
 
-    public void setSplitPrivateChat(boolean splitPrivateChat) {
-        this.splitPrivateChat = splitPrivateChat;
+    public void setSplitPrivateChat(boolean newSplitPrivateChat) {
+        if (splitPrivateChat != newSplitPrivateChat) {
+            splitPrivateChat = newSplitPrivateChat;
+            showSplitPrivateChat();
+        }
     }
 
     public void showSplitPrivateChat() {
@@ -234,8 +246,11 @@ public final class PlayerSettings {
         return acceptAid;
     }
 
-    public void setAcceptAid(boolean acceptAid) {
-        this.acceptAid = acceptAid;
+    public void setAcceptAid(boolean newAcceptAid) {
+        if (acceptAid != newAcceptAid) {
+            acceptAid = newAcceptAid;
+            showAcceptAid();
+        }
     }
 
     public void showAcceptAid() {
@@ -249,8 +264,11 @@ public final class PlayerSettings {
         return musicVolume;
     }
 
-    public void setMusicVolume(VolumeLevel musicVolume) {
-        this.musicVolume = requireNonNull(musicVolume);
+    public void setMusicVolume(VolumeLevel newMusicVolume) {
+        if (musicVolume != newMusicVolume) {
+            musicVolume = requireNonNull(newMusicVolume);
+            showMusicVolume();
+        }
     }
 
     public void showMusicVolume() {
@@ -264,8 +282,11 @@ public final class PlayerSettings {
         return effectsVolume;
     }
 
-    public void setEffectsVolume(VolumeLevel effectsVolume) {
-        this.effectsVolume = requireNonNull(effectsVolume);
+    public void setEffectsVolume(VolumeLevel newEffectsVolume) {
+        if (effectsVolume != newEffectsVolume) {
+            effectsVolume = requireNonNull(newEffectsVolume);
+            showEffectsVolume();
+        }
     }
 
     public void showEffectsVolume() {
@@ -277,9 +298,11 @@ public final class PlayerSettings {
         return running;
     }
 
-    public void setRunning(boolean running) {
-        this.running = running;
-        showRunning();
+    public void setRunning(boolean newRunning) {
+        if (running != newRunning) {
+            running = newRunning;
+            showRunning();
+        }
     }
 
     public void showRunning() {
@@ -290,8 +313,11 @@ public final class PlayerSettings {
         return autoRetaliate;
     }
 
-    public void setAutoRetaliate(boolean autoRetaliate) {
-        this.autoRetaliate = autoRetaliate;
+    public void setAutoRetaliate(boolean newAutoRetaliate) {
+        if (autoRetaliate != newAutoRetaliate) {
+            autoRetaliate = newAutoRetaliate;
+            showAutoRetaliate();
+        }
     }
 
     public void showAutoRetaliate() {

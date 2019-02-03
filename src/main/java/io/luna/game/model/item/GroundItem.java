@@ -33,7 +33,7 @@ public final class GroundItem extends StationaryEntity {
     /**
      * The item amount.
      */
-    private final int amount;
+    private int amount;
 
     /**
      * The current amount of expiration minutes.
@@ -148,6 +148,12 @@ public final class GroundItem extends StationaryEntity {
      */
     public int getId() {
         return id;
+    }
+
+    public void setAmount(int amount) {
+        hide();
+        this.amount = amount;
+        show();
     }
 
     /**

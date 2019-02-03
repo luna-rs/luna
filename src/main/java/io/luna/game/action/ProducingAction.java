@@ -34,25 +34,31 @@ public abstract class ProducingAction extends StationaryAction<Player> {
             interrupt();
             return;
         }
+
         currentRemove = remove();
-
         Inventory inventory = mob.getInventory();
-        if (!inventory.containsAll(currentRemove)) {
-            interrupt();
-            return;
+        if (currentRemove.length > 0) {
+            if (!inventory.containsAll(currentRemove)) {
+                interrupt();
+                return;
+            }
         }
-        currentAdd = add();
 
-        int addSpaces = inventory.computeSpaceForAll(currentRemove);
-        int removeSpaces = inventory.computeSpaceForAll(currentAdd);
+        currentAdd = add();
+        int addSpaces = currentRemove.length > 0 ? inventory.computeSpaceForAll(currentRemove) : 0;
+        int removeSpaces = currentAdd.length > 0 ? inventory.computeSpaceForAll(currentAdd) : 0;
         int requiredSpaces = removeSpaces - addSpaces;
         if (requiredSpaces > inventory.computeRemainingSize()) {
             mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();
             return;
         }
-        inventory.removeAll(currentRemove);
-        inventory.addAll(currentAdd);
+        if (currentRemove.length > 0) {
+            inventory.removeAll(currentRemove);
+        }
+        if (currentAdd.length > 0) {
+            inventory.addAll(currentAdd);
+        }
         onProduce();
     }
 

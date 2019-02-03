@@ -2,6 +2,8 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
 
+import java.util.Map;
+
 /**
  * An event sent when a player uses an item on another item.
  *
@@ -81,6 +83,15 @@ public final class ItemOnItemEvent extends PlayerEvent {
      */
     public boolean matches(int item) {
         return item == usedId && item == targetId;
+    }
+
+    // TODO document and use in plugins
+    public <V> V lookup(Map<Integer, V> from) {
+        V value = from.get(usedId);
+        if (value != null) {
+            return value;
+        }
+        return from.get(targetId);
     }
 
     /**

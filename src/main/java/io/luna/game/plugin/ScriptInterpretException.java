@@ -7,6 +7,7 @@ package io.luna.game.plugin;
  */
 public final class ScriptInterpretException extends RuntimeException {
 
+    // TODO edit exception to show script name in message
     /**
      * The script that failed.
      */

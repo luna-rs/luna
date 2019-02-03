@@ -50,6 +50,7 @@ public final class AbstractInterfaceSet {
     public void open(AbstractInterface inter) {
         if (inter.isStandard()) {
             setCurrentStandard((StandardInterface) inter);
+            player.interruptAction();
         } else if (inter.isInput()) {
             setCurrentInput((InputInterface) inter);
         } else if (inter.isWalkable()) {

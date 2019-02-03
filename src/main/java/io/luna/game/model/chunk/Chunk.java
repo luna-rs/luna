@@ -28,6 +28,7 @@ public final class Chunk {
     /**
      * A map of entities.
      */
+    // TODO Map<Position, Entity> ??? if you're gonna use a set you might as well
     private final ImmutableMap<EntityType, Set<Entity>> entities;
 
     {

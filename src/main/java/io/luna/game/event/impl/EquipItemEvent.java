@@ -39,6 +39,8 @@ public final class EquipItemEvent extends PlayerEvent {
         this.interfaceId = interfaceId;
     }
 
+    // TODO don't terminate event
+
     /**
      * @return The clicked index.
      */

@@ -61,7 +61,7 @@ fun World.removeNpc(npc: Npc) = npcs.remove(npc)
  */
 fun World.addObject(obj: GameObject): GameObject {
     return when {
-        objects.add(obj) -> obj
+        objects.register(obj) -> obj
         else -> throw IllegalStateException("$obj Could not be spawned!");
     }
 }
@@ -83,7 +83,7 @@ fun World.addObject(id: Int,
 /**
  * Despawns a [GameObject].
  */
-fun World.removeObject(obj: GameObject): Boolean = objects.remove(obj)
+fun World.removeObject(obj: GameObject): Boolean = objects.unregister(obj)
 
 /**
  * Despawns all [GameObject]s on [pos] that match [filter].
@@ -97,8 +97,8 @@ fun World.removeObject(pos: Position, filter: GameObject.() -> Boolean = { true 
  */
 fun World.addItem(item: GroundItem): GroundItem {
     return when {
-        items.add(item) -> item
-        else -> throw IllegalStateException("$item Could not be spawned!");
+        items.register(item) -> item
+        else -> throw IllegalStateException("$item Could not be spawned!")
     }
 }
 
@@ -118,7 +118,7 @@ fun World.addItem(id: Int,
 /**
  * Despawns a [GroundItem].
  */
-fun World.removeItem(item: GroundItem): Boolean = items.remove(item)
+fun World.removeItem(item: GroundItem): Boolean = items.unregister(item)
 
 /**
  * Despawns all [GroundItem]s on [pos] that match [filter].

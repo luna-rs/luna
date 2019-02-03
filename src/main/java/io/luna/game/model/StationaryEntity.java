@@ -132,6 +132,13 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
+     * @return {@code true} if this entity is updating for just one player.
+     */
+    public final boolean isLocal() {
+        return player.isPresent();
+    }
+
+    /**
      * Returns an {@link ImmutableList} representing surrounding players. Each set represents players within a viewable
      * chunk.
      * <p>

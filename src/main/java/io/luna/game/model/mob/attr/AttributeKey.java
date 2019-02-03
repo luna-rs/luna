@@ -42,6 +42,7 @@ public final class AttributeKey<T> {
         forTransient("weight", 0.0);
         forTransient("trading_with", -1);
         forTransient("restoring_skills", false);
+        forTransient("thread_left", 0);
     }
 
     /**
