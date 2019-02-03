@@ -20,7 +20,7 @@ import java.util.Spliterators;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class GameObjectList extends EntityList<GameObject> {
+public final class GameObjectList extends EntityList<GameObject> {
 
     /**
      * Creates a new {@link EntityList}.
@@ -56,5 +56,20 @@ public class GameObjectList extends EntityList<GameObject> {
         Iterator[] iteratorArray = Iterators.toArray(iteratorList.iterator(), Iterator.class);
         Iterator<GameObject> all = Iterators.concat(iteratorArray); // Combine them.
         return Iterators.unmodifiableIterator(all); // Make them immutable.
+    }
+
+    @Override
+    public boolean contains(GameObject entity) {
+        return false;
+    }
+
+    @Override
+    protected void onRegister(GameObject entity) {
+
+    }
+
+    @Override
+    protected void onUnregister(GameObject entity) {
+
     }
 }

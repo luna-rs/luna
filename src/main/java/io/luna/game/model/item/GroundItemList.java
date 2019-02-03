@@ -1,12 +1,14 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.Iterators;
-import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.model.EntityList;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Position;
 import io.luna.game.model.World;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -19,6 +21,29 @@ import java.util.stream.Stream;
  * @author lare96 <http://github.com/lare96>
  */
 public final class GroundItemList extends EntityList<GroundItem> {
+
+    public final class GroundItemListIterator implements Iterator<GroundItem> {
+
+        private GroundItem lastItem;
+        private final Iterator<GroundItem> delegate = items.iterator();
+
+        @Override
+        public boolean hasNext() {
+            return delegate.hasNext();
+        }
+
+        @Override
+        public GroundItem next() {
+            lastItem = delegate.next();
+            return lastItem;
+        }
+
+        @Override
+        public void remove() {
+            delegate.remove();
+            unregister(lastItem);
+        }
+    }
 
     /**
      * The ground items.
@@ -36,20 +61,35 @@ public final class GroundItemList extends EntityList<GroundItem> {
 
     @Override
     public Spliterator<GroundItem> spliterator() {
-        return Spliterators.spliterator(items, size());
+        return Spliterators.spliterator(iterator(), size(), Spliterator.NONNULL | Spliterator.IMMUTABLE);
     }
 
     @Override
-    public UnmodifiableIterator<GroundItem> iterator() {
+    public Iterator<GroundItem> iterator() {
         return Iterators.unmodifiableIterator(items.iterator());
     }
 
     @Override
-    public boolean add(GroundItem item) {
+    protected void onRegister(GroundItem item) {
         if (item.def().isStackable()) {
-            return addStackable(item);
+            addStackable(item);
+        } else {
+            add(item);
         }
-        return addNonStackable(item);
+    }
+
+    @Override
+    protected void onUnregister(GroundItem item) {
+        if (item.def().isStackable()) {
+            removeStackable(item);
+        } else {
+            remove(item);
+        }
+    }
+
+    @Override
+    public boolean contains(GroundItem item) {
+        return items.contains(item);
     }
 
     /**
@@ -58,31 +98,65 @@ public final class GroundItemList extends EntityList<GroundItem> {
      * @param item The item.
      * @return {@code true} if successful.
      */
-    private boolean addStackable(GroundItem item) {
-        Optional<Boolean> added = findExisting(item).
-                map(existing -> {
-                    int newAmount = item.getAmount() + existing.getAmount();
-                    if (newAmount < 0) { // Overflow.
-                        return false;
-                    }
-                    remove(existing); // Remove existing.
-                    GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
-                            item.getPosition(), item.getPlayer());
-                    return items.add(newItem) && register(newItem); // Add with new amount.
-                });
-        return added.orElse(false);
+    private void addStackable(GroundItem item) {
+        Position position = item.getPosition();
+        Optional<GroundItem> foundItem = findExisting(item);
+        if (foundItem.isPresent()) {
+            GroundItem existing = foundItem.get();
+            int newAmount = item.getAmount() + existing.getAmount();
+            if (newAmount < 0) { // Overflow.
+                return;
+            }
+            unregister(existing); // Remove existing.
+
+            // Add with new amount.
+            GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
+                    position, item.getPlayer());
+            items.add(newItem);
+            newItem.setState(EntityState.ACTIVE);
+            newItem.show();
+        } else if (checkItemAmount(position, 1)) {
+            items.add(item);
+            item.setState(EntityState.ACTIVE);
+            item.show();
+        }
+    }
+
+    private void removeStackable(GroundItem item) {
+        int amount = item.getAmount();
+        Position position = item.getPosition();
+        Optional<GroundItem> foundItem = findExisting(item);
+        if (foundItem.isPresent()) {
+            GroundItem existing = foundItem.get();
+            int newAmount = item.getAmount() + existing.getAmount();
+            if (newAmount < 0) { // Overflow.
+                return;
+            }
+            unregister(existing); // Remove existing.
+
+            // Add with new amount.
+            GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
+                    position, item.getPlayer());
+            items.add(newItem);
+            newItem.show();
+        } else if (checkItemAmount(position, 1)) {
+            items.add(item);
+            item.show();
+        }
+        // Remove stackable item.
+        //       return findExisting(item).map(it ->
+        //             items.remove(it) && unregister(it)).orElse(false);
     }
 
     /**
-     * Adds a non-stackable ground item.
+     * Adds a unstackable ground item.
      *
      * @param item The item.
      * @return {@code true} if successful.
      */
-    private boolean addNonStackable(GroundItem item) {
+    private boolean add(GroundItem item) {
         int amount = item.getAmount();
-        int amountOnTile = world.getChunks().getChunk(item.getChunkPosition()).getAll(type).size();
-        if (amountOnTile + amount > 255) { // Too many items on one tile.
+        if (!checkItemAmount(item.getPosition(), amount)) { // Too many items on one tile.
             return false;
         }
 
@@ -97,13 +171,8 @@ public final class GroundItemList extends EntityList<GroundItem> {
         return !failed;
     }
 
-    @Override
-    public boolean remove(GroundItem item) {
-        if (item.def().isStackable()) {
-            // Remove stackable item.
-            return findExisting(item).map(it ->
-                    items.remove(it) && unregister(it)).orElse(false);
-        }
+    private void remove(GroundItem item) {
+
         boolean failed = true;
         for (int i = 0; i < item.getAmount(); i++) {
             Optional<GroundItem> foundItem = findExisting(item);
@@ -116,7 +185,11 @@ public final class GroundItemList extends EntityList<GroundItem> {
                 failed = false;
             }
         }
-        return !failed;
+    }
+
+    private boolean checkItemAmount(Position position, int addAmount) {
+        return world.getChunks().getChunk(position).stream(type).
+                filter(it -> it.getPosition().equals(position)).count() + addAmount <= 255;
     }
 
     /**
@@ -126,9 +199,11 @@ public final class GroundItemList extends EntityList<GroundItem> {
      * @return The found item.
      */
     private Optional<GroundItem> findExisting(GroundItem item) {
+        Position position = item.getPosition();
         Stream<GroundItem> localItems = world.getChunks().
-                getChunk(item.getChunkPosition()).
+                getChunk(position).
                 stream(type);
-        return localItems.filter(it -> it.getId() == item.getId()).findFirst();
+        return localItems.filter(it -> it.getId() == item.getId() &&
+                it.getPosition().equals(position)).findFirst();
     }
 }
