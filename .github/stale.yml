@@ -2,6 +2,7 @@ daysUntilStale: 60
 daysUntilClose: 7
 exemptLabels:
   - high priority
+  - medium priority
   - blocked
 staleLabel: wontfix
 markComment: >
