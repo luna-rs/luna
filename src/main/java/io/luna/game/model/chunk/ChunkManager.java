@@ -65,6 +65,16 @@ public final class ChunkManager implements Iterable<Chunk> {
     }
 
     /**
+     * Retrieves a chunk based on the argued position, constructing and loading a new one if needed.
+     *
+     * @param position The position to construct a new chunk with.
+     * @return The existing or newly loaded chunk.
+     */
+    public Chunk getChunk(Position position) {
+        return getChunk(position.getChunkPosition());
+    }
+
+    /**
      * A shortcut to {@link #updateSet(Player, EntityType)} for type {@code PLAYER}.
      */
     public Set<Player> playerUpdateSet(Player player) {

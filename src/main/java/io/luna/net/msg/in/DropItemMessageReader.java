@@ -39,10 +39,12 @@ public final class DropItemMessageReader extends GameMessageReader {
             // Open destroy interface.
             player.getInterfaces().open(new DestroyItemDialogueInterface(index, itemId));
         } else {
+            // TODO  Items may only be dropped from your inventory
+            // TODO Items must be checked to ensure they have a 'drop' option
             // Drop item.
             GroundItem dropItem = new GroundItem(player.getContext(), itemId, inventoryItem.getAmount(),
                     player.getPosition(), Optional.of(player));
-            world.getItems().add(dropItem);
+            world.getItems().register(dropItem);
 
             player.getInventory().set(index, null);
         }
