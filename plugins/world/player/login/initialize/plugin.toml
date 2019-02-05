@@ -1,5 +1,5 @@
 [metadata]
-name = "Login"
+name = "Initialize player"
 description = "A plugin that prepares players for gameplay."
 version = "1.0"
 authors = [
