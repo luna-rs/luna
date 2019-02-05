@@ -19,7 +19,7 @@ object WaterResource : Resource() {
             1935 to 1937 // Jug -> Jug of water
     )
 
-    private val NAMES = setOf("Fountain", "Well", "Pump", "Waterpump", "Water Barrel", "Water")
+    private val NAMES = setOf("Fountain", "Well", "Pump", "Waterpump", "Water Barrel", "Water", "Sink")
 
     override fun matches(obj: ObjectDefinition): Boolean = NAMES.contains(obj.name)
 

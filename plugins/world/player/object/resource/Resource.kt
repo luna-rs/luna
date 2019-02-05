@@ -55,7 +55,7 @@ abstract class Resource {
     }
 
     /**
-     * Register
+     * Register this resource with an [ItemOnObjectEvent] pipeline.
      */
     fun register() {
         for (obj in ObjectDefinition.ALL) {
