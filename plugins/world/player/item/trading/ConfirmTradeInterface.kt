@@ -105,6 +105,10 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         // Otherwise, iterate through items.
         val text = StringBuilder(size * 16 + 3)
         for (item in tradingItems) {
+            if (item == null) {
+                continue
+            }
+
             if (text.isNotEmpty()) {
                 // Newline if we're not on the first item.
                 text.append("\\n")
@@ -136,7 +140,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                     .append("K @whi@")
                     .append('(')
                     .append(FORMATTER.format(amount))
-                    .append(')').toString()
+                    .append(')')
+                    .toString()
             }
             amount >= 1_000_000 -> {
                 sb.append("@gre@")
