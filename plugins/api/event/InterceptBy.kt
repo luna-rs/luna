@@ -2,6 +2,7 @@ package api.event
 
 import api.predef.*
 import io.luna.game.event.Event
+import javax.script.ScriptException
 import kotlin.reflect.KClass
 
 /**
@@ -28,7 +29,7 @@ class InterceptBy<E : Event>(private val eventType: KClass<E>) {
      */
     fun <K> match(args: Iterable<K>): InterceptMatcher<E, K> {
         if (!Matcher.has(eventType)) {
-            throw IllegalStateException("There is no dedicated matcher for event type: ${eventType.simpleName}. Use 'filter' instead of 'match'.")
+            throw ScriptException("There is no dedicated matcher for event type: ${eventType.simpleName}. Use 'filter' instead of 'match'.")
         }
         return InterceptMatcher(eventType, args)
     }
