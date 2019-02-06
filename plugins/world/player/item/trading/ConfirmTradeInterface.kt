@@ -105,9 +105,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         // Otherwise, iterate through items.
         val text = StringBuilder(size * 16 + 3)
         for (item in tradingItems) {
-            if (item == null) {
-                continue
-            }
+            item ?: continue
 
             if (text.isNotEmpty()) {
                 // Newline if we're not on the first item.
@@ -116,7 +114,6 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
 
             // Append name and amount to the builder.
             text.append(item.itemDef.name)
-
             if (item.itemDef.isStackable) {
                 val amountText = computeAmountText(item.amount)
                 text.append(' ')
