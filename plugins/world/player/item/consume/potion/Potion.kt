@@ -167,16 +167,10 @@ enum class Potion(val fourDose: Int,
  * Invoked when a Zamorak brew is sipped.
  */
 private fun Player.onZamorakBrew() {
-    val attack = skill(SKILL_ATTACK)
-    val strength = skill(SKILL_STRENGTH)
-    val defence = skill(SKILL_DEFENCE)
-    val hp = skill(SKILL_HITPOINTS)
-    val prayer = skill(SKILL_PRAYER)
-
     attack.addLevels(2 + (0.20 * attack.staticLevel).toInt(), true)
     strength.addLevels(2 + (0.12 * strength.staticLevel).toInt(), true)
     defence.removeLevels(2 + (0.10 * defence.staticLevel).toInt())
-    hp.removeLevels(2 + (0.10 * hp.staticLevel).toInt())
+    hitpoints.removeLevels(2 + (0.10 * hitpoints.staticLevel).toInt())
     prayer.addLevels((0.10 * prayer.staticLevel).toInt(), true)
 }
 
@@ -184,15 +178,8 @@ private fun Player.onZamorakBrew() {
  * Invoked when a Saradomin brew is sipped.
  */
 private fun Player.onSaradominBrew() {
-    val attack = skill(SKILL_ATTACK)
-    val strength = skill(SKILL_STRENGTH)
-    val defence = skill(SKILL_DEFENCE)
-    val hp = skill(SKILL_HITPOINTS)
-    val ranged = skill(SKILL_RANGED)
-    val magic = skill(SKILL_MAGIC)
-
     defence.addLevels(2 + (0.20 * defence.staticLevel).toInt(), true)
-    hp.addLevels(2 + (0.15 * hp.staticLevel).toInt(), true)
+    hitpoints.addLevels(2 + (0.15 * hitpoints.staticLevel).toInt(), true)
     attack.removeLevels((0.10 * attack.staticLevel).toInt())
     strength.removeLevels((0.10 * strength.staticLevel).toInt())
     magic.removeLevels((0.10 * magic.staticLevel).toInt())
@@ -244,7 +231,6 @@ private fun Player.onRestorePotion(superPotion: Boolean) {
 
     if (superPotion) {
         // If super restore is being sipped, restore prayer as well.
-        val prayer = skill(SKILL_PRAYER)
         prayer.addLevels(8 + (prayer.staticLevel / 4), false)
     }
 }
