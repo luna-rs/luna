@@ -1,0 +1,7 @@
+[metadata]
+name = "Click logout"
+description = "A plugin that enables logout button."
+version = "1.0"
+authors = [
+  "lare96"
+]
