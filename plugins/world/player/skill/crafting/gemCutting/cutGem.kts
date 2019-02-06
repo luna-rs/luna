@@ -1,3 +1,5 @@
+package world.player.skill.crafting.gemCutting
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -5,9 +7,8 @@ import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.crafting.Gem
-import world.player.skill.crafting.Gem.Companion.CHISEL
-import world.player.skill.crafting.Gem.Companion.UNCUT_TO_GEM
+import world.player.skill.crafting.gemCutting.Gem.Companion.CHISEL
+import world.player.skill.crafting.gemCutting.Gem.Companion.UNCUT_TO_GEM
 
 /**
  * A [ProducingAction] that cuts precious gems.
@@ -58,6 +59,7 @@ fun cutGem(plr: Player, msg: Event, uncut: Int) {
     }
 }
 
+// Use chisel with gems.
 on(ItemOnItemEvent::class) {
     when (CHISEL) {
         usedId -> cutGem(plr, this, targetId)

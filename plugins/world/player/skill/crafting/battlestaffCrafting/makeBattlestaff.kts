@@ -1,3 +1,5 @@
+package world.player.skill.crafting.battlestaffCrafting
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -5,10 +7,9 @@ import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.crafting.Battlestaff
-import world.player.skill.crafting.Battlestaff.Companion.BATTLESTAFF
-import world.player.skill.crafting.Battlestaff.Companion.BATTLESTAFF_ITEM
-import world.player.skill.crafting.Battlestaff.Companion.ORB_TO_BATTLESTAFF
+import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF
+import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
+import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.ORB_TO_BATTLESTAFF
 
 /**
  * A [ProducingAction] implementation that makes battlestaves.
@@ -19,7 +20,7 @@ class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, var a
     override fun canProduce(): Boolean =
         when {
             mob.crafting.level < battlestaff.level -> {
-                plr.sendMessage("You need a Crafting level of ${battlestaff.level} to craft this.")
+                plr.sendMessage("You need a Crafting level of ${battlestaff.level} to make this.")
                 false
             }
             amount == 0 -> false
@@ -55,6 +56,7 @@ fun attachOrb(plr: Player, msg: Event, orb: Int) {
     }
 }
 
+// Use battlestaff with orb.
 on(ItemOnItemEvent::class) {
     when (BATTLESTAFF) {
         usedId -> attachOrb(plr, this, targetId)

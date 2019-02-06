@@ -1,4 +1,4 @@
-package world.player.skill.crafting
+package world.player.skill.crafting.gemCutting
 
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation

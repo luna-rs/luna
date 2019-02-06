@@ -1,9 +1,7 @@
-package world.player.skill.crafting
+package world.player.skill.crafting.hideTanning
 
 /**
- *
- *
- * @author lare96 <http://github.com/lare96>
+ * An enum representing all tannable hides.
  */
 enum class Hide(val hide: Int, val tan: Int, val cost: Int, val displayName: String) {
     SOFT_LEATHER(hide = 1739,
@@ -38,4 +36,12 @@ enum class Hide(val hide: Int, val tan: Int, val cost: Int, val displayName: Str
                     tan = 2509,
                     cost = 20,
                     displayName = "Black d'hide");
+
+    companion object {
+
+        /**
+         * Mappings of [Hide.tan] to [Hide].
+         */
+        val TAN_TO_HIDE = values().associateBy { it.tan }
+    }
 }

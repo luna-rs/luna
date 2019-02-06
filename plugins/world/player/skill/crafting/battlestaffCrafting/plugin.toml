@@ -1,0 +1,7 @@
+[metadata]
+name = "Make battlestaves"
+description = "A plugin that enables making battlestaves."
+version = "1.0"
+authors = [
+  "lare96"
+]

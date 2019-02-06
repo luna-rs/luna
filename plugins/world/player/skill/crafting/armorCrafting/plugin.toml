@@ -1,0 +1,7 @@
+[metadata]
+name = "Armor crafting"
+description = "A plugin that enables armor crafting."
+version = "1.0"
+authors = [
+  "lare96"
+]

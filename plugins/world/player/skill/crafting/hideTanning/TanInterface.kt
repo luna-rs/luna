@@ -1,9 +1,9 @@
-package world.player.skill.crafting
+package world.player.skill.crafting.hideTanning
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
-import world.player.skill.crafting.Hide.*
+import world.player.skill.crafting.hideTanning.Hide.*
 
 /**
  *

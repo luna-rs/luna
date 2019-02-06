@@ -4,8 +4,8 @@ import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
-import world.player.skill.crafting.Hide
-import world.player.skill.crafting.TanInterface
+import world.player.skill.crafting.hideTanning.Hide
+import world.player.skill.crafting.hideTanning.TanInterface
 
 /**
  * A data class representing the amount of a hide to tan.
@@ -68,16 +68,15 @@ fun tan(plr: Player, hide: Hide, amount: Int) {
  */
 fun open(plr: Player) = plr.interfaces.open(TanInterface())
 
-/**
- * Prepare tanning buttons and spawn tanner NPC.
- */
+// Prepare tanning buttons and spawn tanner NPC.
 on(ServerLaunchEvent::class) {
+
     // Spawn tanner at home.
     world.addNpc(804,
                  3093,
                  3250)
 
-    // Build button map.
+    // Register buttons 
     var button = 14817
     for (it in TanInterface.HIDES) {
         val make1 = button++
@@ -91,9 +90,7 @@ on(ServerLaunchEvent::class) {
     }
 }
 
-/**
- * Tanning button actions (1, 5, 10, X).
- */
+// Tanning button actions (1, 5, 10, X).
 on(ButtonClickEvent::class)
     .filter { plr.interfaces.isOpen(TanInterface::class) }
     .then {
@@ -101,9 +98,7 @@ on(ButtonClickEvent::class)
         tan?.forAmount(plr) { tan(plr, tan.hide, it) }
     }
 
-/**
- * "Talk" option for tanner NPC.
- */
+// "Talk" option for tanner NPC.
 npc1(804) {
     plr.newDialogue()
         .npc(npc.id, "Would you like me to tan some hides?")
