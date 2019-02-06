@@ -42,8 +42,6 @@ val equipmentStarter = listOf(
  * Called when the player logs in for the first time.
  */
 fun firstLogin(plr: Player) {
-    plr.sendMessage("This is your first login. Enjoy your starter package!")
-
     plr.inventory.addAll(inventoryStarter)
     plr.equipment.addAll(equipmentStarter)
     plr.interfaces.open(DesignPlayerInterface())
