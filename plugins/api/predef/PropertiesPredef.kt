@@ -139,6 +139,9 @@ const val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
 val Player.attack: Skill
     get() = skill(SKILL_ATTACK)
 
+val Player.strength: Skill
+    get() = skill(SKILL_STRENGTH)
+
 val Player.defence: Skill
     get() = skill(SKILL_DEFENCE)
 

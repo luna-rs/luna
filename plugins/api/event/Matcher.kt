@@ -7,6 +7,8 @@ import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.ItemClickEvent
 import io.luna.game.event.impl.ItemClickEvent.*
+import io.luna.game.event.impl.ItemOnItemEvent
+import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
@@ -68,6 +70,8 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
             // Map all matchers to their matching event types.
             ALL = listOf(CommandMatcher,
                          ButtonMatcher,
+                         ItemOnItemMatcher,
+                         ItemOnObjectMatcher,
                          NpcMatcher(NpcFirstClickEvent::class),
                          NpcMatcher(NpcSecondClickEvent::class),
                          NpcMatcher(NpcThirdClickEvent::class),
@@ -163,6 +167,20 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      */
     object CommandMatcher : Matcher<CommandEvent, String>(CommandEvent::class) {
         override fun key(msg: CommandEvent) = msg.name!!
+    }
+
+    /**
+     * A singleton [Matcher] instance for [ItemOnItemEvent]s.
+     */
+    object ItemOnItemMatcher : Matcher<ItemOnItemEvent, Pair<Int, Int>>(ItemOnItemEvent::class) {
+        override fun key(msg: ItemOnItemEvent) = Pair(msg.usedId, msg.targetId)
+    }
+
+    /**
+     * A singleton [Matcher] instance for [ItemOnObjectEvent]s.
+     */
+    object ItemOnObjectMatcher : Matcher<ItemOnObjectEvent, Pair<Int, Int>>(ItemOnObjectEvent::class) {
+        override fun key(msg: ItemOnObjectEvent) = Pair(msg.itemId, msg.objectId)
     }
 }
 

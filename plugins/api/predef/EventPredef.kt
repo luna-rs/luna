@@ -1,12 +1,15 @@
 package api.predef
 
 import api.event.InterceptBy
+import api.event.InterceptUseItem
 import api.event.Matcher
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.ItemClickEvent.*
+import io.luna.game.event.impl.ItemOnItemEvent
+import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.model.mob.PlayerRights
@@ -18,7 +21,7 @@ import kotlin.reflect.KClass
 private typealias Action<E> = E.() -> Unit
 
 /**
- * The main event interception function. Forwards to the [InterceptBy].
+ * The main event interception function. Forwards to [InterceptBy].
  */
 fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
 
@@ -30,7 +33,12 @@ fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) {
 }
 
 /**
- * The [CommandEvent] interception function.
+ * The [ItemOnItemEvent] and [ItemOnObjectEvent] matcher function. Forwards to [InterceptUseItem].
+ */
+fun useItem(id: Int) = InterceptUseItem(id)
+
+/**
+ * The [CommandEvent] matcher function.
  */
 fun cmd(name: String, rights: PlayerRights, action: Action<CommandEvent>) {
     val matcher = Matcher.get<CommandEvent, String>()
@@ -42,62 +50,62 @@ fun cmd(name: String, rights: PlayerRights, action: Action<CommandEvent>) {
 }
 
 /**
- * The [ButtonClickEvent] interception function.
+ * The [ButtonClickEvent] matcher function.
  */
 fun button(id: Int, action: Action<ButtonClickEvent>) =
     Matcher.get<ButtonClickEvent, Int>().set(id, action)
 
 
-/** The [NpcFirstClickEvent] interception function.*/
+/** The [NpcFirstClickEvent] matcher function.*/
 fun npc1(id: Int, action: Action<NpcFirstClickEvent>) =
     Matcher.get<NpcFirstClickEvent, Int>().set(id, action)
 
-/** The [NpcSecondClickEvent] interception function.*/
+/** The [NpcSecondClickEvent] matcher function.*/
 fun npc2(id: Int, action: Action<NpcSecondClickEvent>) =
     Matcher.get<NpcSecondClickEvent, Int>().set(id, action)
 
-/** The [NpcThirdClickEvent] interception function.*/
+/** The [NpcThirdClickEvent] matcher function.*/
 fun npc3(id: Int, action: Action<NpcThirdClickEvent>) =
     Matcher.get<NpcThirdClickEvent, Int>().set(id, action)
 
-/** The [NpcFourthClickEvent] interception function.*/
+/** The [NpcFourthClickEvent] matcher function.*/
 fun npc4(id: Int, action: Action<NpcFourthClickEvent>) =
     Matcher.get<NpcFourthClickEvent, Int>().set(id, action)
 
-/** The [NpcFifthClickEvent] interception function.*/
+/** The [NpcFifthClickEvent] matcher function.*/
 fun npc5(id: Int, action: Action<NpcFifthClickEvent>) =
     Matcher.get<NpcFifthClickEvent, Int>().set(id, action)
 
 
-/** The [ItemFirstClickEvent] interception function.*/
+/** The [ItemFirstClickEvent] matcher function.*/
 fun item1(id: Int, action: Action<ItemFirstClickEvent>) =
     Matcher.get<ItemFirstClickEvent, Int>().set(id, action)
 
-/** The [ItemSecondClickEvent] interception function.*/
+/** The [ItemSecondClickEvent] matcher function.*/
 fun item2(id: Int, action: Action<ItemSecondClickEvent>) =
     Matcher.get<ItemSecondClickEvent, Int>().set(id, action)
 
-/** The [ItemThirdClickEvent] interception function.*/
+/** The [ItemThirdClickEvent] matcher function.*/
 fun item3(id: Int, action: Action<ItemThirdClickEvent>) =
     Matcher.get<ItemThirdClickEvent, Int>().set(id, action)
 
-/** The [ItemFourthClickEvent] interception function.*/
+/** The [ItemFourthClickEvent] matcher function.*/
 fun item4(id: Int, action: Action<ItemFourthClickEvent>) =
     Matcher.get<ItemFourthClickEvent, Int>().set(id, action)
 
-/** The [ItemFifthClickEvent] interception function.*/
+/** The [ItemFifthClickEvent] matcher function.*/
 fun item5(id: Int, action: Action<ItemFifthClickEvent>) =
     Matcher.get<ItemFifthClickEvent, Int>().set(id, action)
 
 
-/** The [ObjectFirstClickEvent] interception function.*/
+/** The [ObjectFirstClickEvent] matcher function.*/
 fun object1(id: Int, action: Action<ObjectFirstClickEvent>) =
     Matcher.get<ObjectFirstClickEvent, Int>().set(id, action)
 
-/** The [ObjectSecondClickEvent] interception function.*/
+/** The [ObjectSecondClickEvent] matcher function.*/
 fun object2(id: Int, action: Action<ObjectSecondClickEvent>) =
     Matcher.get<ObjectSecondClickEvent, Int>().set(id, action)
 
-/** The [ObjectThirdClickEvent] interception function.*/
+/** The [ObjectThirdClickEvent] matcher function.*/
 fun object3(id: Int, action: Action<ObjectThirdClickEvent>) =
     Matcher.get<ObjectThirdClickEvent, Int>().set(id, action)
