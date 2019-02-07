@@ -18,7 +18,7 @@ import java.util.OptionalInt;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class Npc extends Mob {
+public class Npc extends Mob {
 
     /**
      * The base identifier. The one the class was created with.

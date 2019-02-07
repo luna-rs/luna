@@ -18,8 +18,8 @@ public final class ScriptInterpretException extends RuntimeException {
      *
      * @param script The script that failed.
      */
-    public ScriptInterpretException(Script script, Exception e) {
-        super(e);
+    public ScriptInterpretException(Script script, Throwable cause) {
+        super(cause);
         this.script = script;
     }
 

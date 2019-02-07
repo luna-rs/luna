@@ -16,8 +16,8 @@ import io.luna.net.msg.out.SoundMessageWriter
 cmd("attr", RIGHTS_DEV) {
     val name = args[0]
     if (plr.attributes.contains(name)) {
-        val value = plr.attributes.get<String>(name).get()
-        plr.sendMessage("attribute{name=$name, current_value=$value}")
+        val value = plr.attributes.get<Any>(name).get()
+        plr.sendMessage("attribute{$name} = $value")
     } else {
         plr.sendMessage("Attribute '$name' does not exist.")
     }

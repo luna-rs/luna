@@ -29,7 +29,7 @@ public final class ExecutorUtils {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(0, maxThreads, 60L,
                 TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         executor.setThreadFactory(threadFactory);
-        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(new CallerRunsPolicy()); // TODO custom exception that explains issue, if tasks have been blocked longer than x times
         return MoreExecutors.listeningDecorator(executor);
     }
 

@@ -2,9 +2,7 @@ package io.luna;
 
 import com.google.common.base.Stopwatch;
 import io.luna.game.GameService;
-import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.plugin.PluginBootstrap;
-import io.luna.game.plugin.PluginManager;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
@@ -79,12 +77,6 @@ public final class LunaServer {
         initGame();
 
         initNetwork();
-
-        // Synchronize a launch event.
-        context.getService().sync(() -> {
-            PluginManager plugins = context.getPlugins();
-            plugins.post(ServerLaunchEvent.INSTANCE);
-        });
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
         LOGGER.info("Luna is now online on port {} (took {}s).", box(LunaConstants.PORT), box(elapsedTime));

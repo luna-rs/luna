@@ -39,6 +39,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class World {
 
+    // TODO concurrent map that tracks player names to their instance. use for threaded online checks
+
     /**
      * A model that sends {@link Player} and {@link Npc} synchronization packets.
      */
@@ -332,7 +334,7 @@ public final class World {
     }
 
     /**
-     * Retrieves a player by their username hash. Faster than {@link World#getPlayer(String)}
+     * Retrieves a player by their username hash. Much faster than {@link World#getPlayer(String)}
      *
      * @param username The username hash.
      * @return The player, or no player.

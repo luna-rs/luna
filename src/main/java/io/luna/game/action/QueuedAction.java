@@ -42,14 +42,20 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     @Override
     protected final boolean isEqual(Action<?> other) {
         if (other instanceof QueuedAction<?>) {
-            return isQueued((QueuedAction<?>) other);
+            boolean is = isQueued((QueuedAction<?>) other);
+            System.out.println("here2: " + is);
+
+            return is;
         }
         return false;
     }
 
     @Override
     protected final void onEquals(Action<?> other) {
+        System.out.println("here3");
+
         if (!queuedAction.isPresent()) {
+            System.out.println("here4");
             QueuedAction<?> queued = (QueuedAction<?>) other;
             queuedAction = Optional.of(queued::execute);
         }

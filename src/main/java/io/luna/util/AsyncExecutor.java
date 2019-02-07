@@ -87,7 +87,7 @@ public final class AsyncExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
-        checkState(isRunning(), "No workers available to run tasks.");
+        checkState(isRunning(), "No workers available to run tasks."); // TODO change message
 
         ListenableFuture<?> pending = threadPool.submit(command);
         pendingTasks.offer(pending);
@@ -125,7 +125,7 @@ public final class AsyncExecutor implements Executor {
      *
      * @return The amount of pending tasks.
      */
-    public int size() {
+    public int size() { //TODO rename to getPendingCount or something
         pendingTasks.removeIf(Future::isDone);
         return pendingTasks.size();
     }

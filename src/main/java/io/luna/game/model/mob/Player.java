@@ -336,6 +336,7 @@ public final class Player extends Mob {
     protected void onInactive() {
         removeLocalItems();
         removeLocalObjects();
+        interfaces.close();
         plugins.post(new LogoutEvent(this));
         save();
         LOGGER.info("{} has logged out.", this);

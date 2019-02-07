@@ -86,10 +86,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
     }
 }
 
-/**
- * When a player's skills change, send the update to the client and check if they've advanced a
- * level.
- */
+// Check if they've advanced a level on skill change.
 on(SkillChangeEvent::class) {
     val plr = mob as? Player
     if (plr != null) {

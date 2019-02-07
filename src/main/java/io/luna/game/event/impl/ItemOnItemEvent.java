@@ -82,7 +82,7 @@ public final class ItemOnItemEvent extends PlayerEvent {
      * @return {@code true} if {@code item} is equal to any of the items used.
      */
     public boolean matches(int item) {
-        return item == usedId && item == targetId;
+        return item == usedId || item == targetId;
     }
 
     // TODO document and use in plugins

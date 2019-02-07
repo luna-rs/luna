@@ -102,9 +102,11 @@ public final class PluginBootstrap {
             // Check for duplicate plugins.
             String pluginName = metadata.getName();
             if (plugins.containsKey(pluginName)) {
+                // TODO Track plugins by path to plugin.toml... not name lmao
                 LOGGER.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
                 return;
             }
+            // TODO throw exception instead?
 
             // Load all non-metadata plugin files.
             try {

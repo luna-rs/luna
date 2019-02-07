@@ -8,11 +8,16 @@ import java.util.Optional;
  * @author lare96 <http://github.org/lare96>
  */
 public final class ActionSet {
-
+// TODO rewrite action system to work with queued actions
     /**
      * The current action being processed.
      */
     private Optional<Action> currentAction = Optional.empty();
+
+    /**
+     * The currently queued action.
+     */
+    private Optional<QueuedAction<?>> queuedAction = Optional.empty();
 
     /**
      * Attempts to submit a new action to this set.
@@ -37,6 +42,14 @@ public final class ActionSet {
         pending.init();
     }
 
+    protected void setQueuedAction(QueuedAction<?> action) {
+        queuedAction = Optional.of(action);
+    }
+
+    protected void fireQueuedAction() {
+        queuedAction.ifPresent(QueuedAction::execute);
+    }
+
     /**
      * Interrupts and discards the current action being processed.
      */
@@ -54,5 +67,12 @@ public final class ActionSet {
      */
     public Optional<Action> current() {
         return currentAction;
+    }
+
+    /**
+     * @return The currently queued action.
+     */
+    public Optional<QueuedAction<?>> queued() {
+        return queuedAction;
     }
 }
