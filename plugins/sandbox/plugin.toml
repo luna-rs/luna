@@ -1,0 +1,7 @@
+[metadata]
+name = "Sandbox"
+description = "A sandbox script for testing or simulation of any processes."
+version = "1.0"
+authors = [
+  "lare96"
+]

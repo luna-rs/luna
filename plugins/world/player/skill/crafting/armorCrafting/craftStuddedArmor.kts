@@ -9,7 +9,7 @@ import world.player.skill.crafting.armorCrafting.HideArmor
  * A [ProducingAction] implementation that will make studded armor.
  */
 class MakeStuddedAction(val plr: Player, val armor: HideArmor, val removeId: Int) :
-        ProducingAction(plr, true, 2) {
+        ProducingAction(plr, true, 2, Int.MAX_VALUE) {
 
     companion object {
 

@@ -30,7 +30,7 @@ public final class ActionSet {
         if (currentAction.isPresent()) {
             Action<?> current = currentAction.get();
 
-            if (current.isRunning()) {
+            if (!current.isInterrupted()) {
                 if (current.isEqual(pending)) {
                     current.onEquals(pending);
                     return;

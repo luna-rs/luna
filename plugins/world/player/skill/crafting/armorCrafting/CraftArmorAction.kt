@@ -13,7 +13,7 @@ import io.luna.game.model.mob.Player
  */
 class CraftArmorAction(private val plr: Player,
                        private val armor: HideArmor,
-                       private var amount: Int) : ProducingAction(plr, true, 4) {
+                       amount: Int) : ProducingAction(plr, true, 4, amount) {
 
     companion object {
 
@@ -48,14 +48,12 @@ class CraftArmorAction(private val plr: Player,
                 plr.sendMessage("You need a needle and thread in order to craft armor.")
                 false
             }
-            amount <= 0 -> false
             else -> true
         }
 
     override fun onProduce() {
         mob.animation(ANIM)
         mob.sendMessage("You craft the hide into armor.")
-        amount--
     }
 
     override fun add(): Array<Item> = arrayOf(armor.armorItem)

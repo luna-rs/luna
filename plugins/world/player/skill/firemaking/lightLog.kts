@@ -8,7 +8,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 // TODO Blocked until stationary entity system is complete
-class LightLogAction(plr: Player) : DestructionAction(plr, true, 1) {
+class LightLogAction(plr: Player) : DestructionAction(plr, true, 1, 1) {
     override fun remove(): Array<Item> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

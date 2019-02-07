@@ -15,16 +15,12 @@ class FillAction(plr: Player,
                  val objectId: Int?,
                  val filledId: Item,
                  val resource: Resource,
-                 var amount: Int) : ProducingAction(plr, true, 2) {
+                 amount: Int) : ProducingAction(plr, true, 2, amount) {
 
     override fun remove() = arrayOf(emptyId)
     override fun add() = arrayOf(filledId)
     override fun onProduce() {
         resource.onFill(mob)
-        amount--
-        if (amount == 0) {
-            interrupt()
-        }
     }
 
     override fun isEqual(other: Action<*>): Boolean {

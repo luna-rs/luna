@@ -14,8 +14,8 @@ import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.ORB
 /**
  * A [ProducingAction] implementation that makes battlestaves.
  */
-class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, var amount: Int) :
-        ProducingAction(plr, true, 2) {
+class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, amount: Int) :
+        ProducingAction(plr, true, 2, amount) {
 
     override fun canProduce(): Boolean =
         when {
@@ -23,13 +23,11 @@ class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, var a
                 plr.sendMessage("You need a Crafting level of ${battlestaff.level} to make this.")
                 false
             }
-            amount == 0 -> false
             else -> true
         }
 
     override fun onProduce() {
         mob.crafting.addExperience(battlestaff.exp)
-        amount--
     }
 
     override fun add() = arrayOf(battlestaff.staffItem)

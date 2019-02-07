@@ -13,7 +13,7 @@ import io.luna.game.model.mob.Player
 class CookingAction(plr: Player,
                     val food: Food,
                     val usingFire: Boolean,
-                    var amount: Int) : ProducingAction(plr, true, 4) {
+                    amount: Int) : ProducingAction(plr, true, 4, amount) {
 
     companion object {
 
@@ -39,7 +39,6 @@ class CookingAction(plr: Player,
                 mob.sendMessage("You need a Cooking level of ${food.reqLevel} to cook this.")
                 false
             }
-            amount == 0 -> false
             else -> true
         }
 
@@ -53,7 +52,6 @@ class CookingAction(plr: Player,
         } else {
             mob.sendMessage("Oops! You accidentally burn the ${food.formattedName}.")
         }
-        amount--
     }
 
     override fun remove() = arrayOf(food.rawItem)

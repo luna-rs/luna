@@ -17,7 +17,7 @@ import world.player.skill.fletching.stringBow.Bow
 class CutLogAction(plr: Player,
                    val log: Int,
                    val bow: Bow,
-                   var makeTimes: Int) : ProducingAction(plr, true, 3) {
+                   makeTimes: Int) : ProducingAction(plr, true, 3, makeTimes) {
 
     companion object {
 
@@ -44,7 +44,6 @@ class CutLogAction(plr: Player,
                 mob.sendMessage("You need a Fletching level of ${bow.level} to cut this.")
                 false
             }
-            makeTimes == 0 -> false
             else -> true
         }
 
@@ -55,8 +54,6 @@ class CutLogAction(plr: Player,
 
         mob.animation(ANIMATION)
         mob.fletching.addExperience(bow.exp)
-
-        makeTimes--
     }
 
     override fun isEqual(other: Action<*>) =
