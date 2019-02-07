@@ -26,7 +26,7 @@ enum class Bone(val id: Int, val exp: Double) {
         /**
          * A mapping of bones identifiers to instances.
          */
-        val BONE_MAP = values().map { it.id to it }.toMap()
+        val ID_TO_BONE = values().associateBy { it.id }
     }
 
     /**

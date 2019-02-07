@@ -39,7 +39,7 @@ fun buryBone(plr: Player, bone: Bone) {
 on(ItemFirstClickEvent::class)
     .condition { itemDef(id).hasInventoryAction(0, "Bury") }
     .then {
-        val bone = Bone.BONE_MAP[id]
+        val bone = Bone.ID_TO_BONE[id]
         if (bone != null) {
             buryBone(plr, bone)
             terminate()
