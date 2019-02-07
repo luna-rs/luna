@@ -1,6 +1,6 @@
 [metadata]
-name = "Herblore"
-description = "A plugin that enables the Herblore skill."
+name = "Identify herbs"
+description = "A plugin that enables identifying herbs."
 version = "1.0"
 authors = [
   "lare96"
