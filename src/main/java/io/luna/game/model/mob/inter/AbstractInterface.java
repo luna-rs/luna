@@ -89,14 +89,12 @@ public abstract class AbstractInterface {
     }
 
     /**
-     * A function called when this interface is replaced with another interface. The default behaviour forwards
-     * to {@link #onClose(Player)}.
+     * A function called when this interface is replaced with another interface.
      *
      * @param player The player to apply to listener for.
      * @param replace The interface replacing this one.
      */
     public void onReplace(Player player, AbstractInterface replace) {
-        onClose(player);
     }
 
     /**
@@ -110,9 +108,8 @@ public abstract class AbstractInterface {
             state = InterfaceState.CLOSED;
             if (replace != null) {
                 onReplace(player, replace);
-            } else {
-                onClose(player);
             }
+            onClose(player);
         }
     }
 
