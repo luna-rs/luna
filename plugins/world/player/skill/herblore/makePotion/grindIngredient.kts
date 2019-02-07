@@ -5,7 +5,7 @@ import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.herblore.Ingredient
+import world.player.skill.herblore.makePotion.Ingredient
 
 /**
  * A [ProducingAction] that will grind all ingredients in an inventory.

@@ -1,4 +1,5 @@
-import MakePotion.MakePotionAction
+package world.player.skill.herblore.makePotion
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -6,7 +7,7 @@ import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.herblore.Potion
+import world.player.skill.herblore.makePotion.MakePotion.MakePotionAction
 
 /**
  * A [ProducingAction] that will make potions.
@@ -29,6 +30,7 @@ class MakePotionAction(plr: Player,
                 mob.sendMessage("You need a Herblore level of ${potion.level} to make this potion.")
                 false
             }
+            makeTimes == 0 -> false
             else -> true
         }
 
@@ -38,6 +40,7 @@ class MakePotionAction(plr: Player,
         mob.sendMessage("You mix the ${itemDef(potion.secondary).name} into your potion.")
         mob.animation(ANIMATION)
         mob.herblore.addExperience(potion.exp)
+        makeTimes--
     }
 
     override fun add() = arrayOf(potion.idItem)

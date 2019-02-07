@@ -1,4 +1,4 @@
-package world.player.skill.herblore
+package world.player.skill.herblore.makePotion
 
 import io.luna.game.model.item.Item
 

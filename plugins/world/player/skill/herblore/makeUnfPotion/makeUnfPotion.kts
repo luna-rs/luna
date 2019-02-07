@@ -1,3 +1,5 @@
+package world.player.skill.herblore.makeUnfPotion
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -6,7 +8,6 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.herblore.UnfPotion
 
 /**
  * A [ProducingAction] that will make unfinished potions.
@@ -23,14 +24,9 @@ class MakeUnfAction(plr: Player,
         val ANIMATION = Animation(363)
     }
 
-    /**
-     * The herblore skill.
-     */
-    val herblore = mob.skill(SKILL_HERBLORE)
-
     override fun canInit() =
         when {
-            herblore.level < unfPotion.level -> {
+            mob.herblore.level < unfPotion.level -> {
                 mob.sendMessage("You need a Herblore level of ${unfPotion.level} to make this potion.")
                 false
             }

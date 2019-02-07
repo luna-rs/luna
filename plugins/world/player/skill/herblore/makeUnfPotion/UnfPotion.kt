@@ -1,10 +1,10 @@
-package world.player.skill.herblore
+package world.player.skill.herblore.makeUnfPotion
 
 import io.luna.game.model.item.Item
 
 /**
  * An enum representing an unfinished potion.
- */
+ */ // TODO??? you get exp for this?
 enum class UnfPotion(val id: Int, val herb: Int, val level: Int) {
     GUAM(id = 91,
          herb = 249,
