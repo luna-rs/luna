@@ -6,8 +6,8 @@ import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.event.impl.PlayerEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-//import world.player.skills.firemaking.Log.Companion.ID_TO_LOG
 
+// TODO Blocked until stationary entity system is complete
 class LightLogAction(plr: Player) : DestructionAction(plr, true, 1) {
     override fun remove(): Array<Item> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

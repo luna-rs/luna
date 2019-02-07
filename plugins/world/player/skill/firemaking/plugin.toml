@@ -1,0 +1,7 @@
+[metadata]
+name = "Firemaking"
+description = "A plugin that enables firemaking."
+version = "1.0"
+authors = [
+  "lare96"
+]
