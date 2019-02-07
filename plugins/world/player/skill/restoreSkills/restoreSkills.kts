@@ -3,9 +3,7 @@ import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.SkillSet
 import io.luna.game.task.Task
-import java.util.*
 
 /**
  * The "restoring_skills" attribute.
@@ -13,14 +11,9 @@ import java.util.*
 var Player.restoringSkills by Attr<Boolean>("restoring_skills")
 
 /**
- * A [Task] that will restore boosted and depleted skills every 50 ticks.
+ * A [Task] that will restore boosted and depleted skills every 100 ticks.
  */
-class RestoreSkills(val plr: Player) : Task(false, 50) {
-
-    /**
-     * The restore counter. Determines when skills will be restored.
-     */
-    val restore = BitSet(SkillSet.size())
+class RestoreSkills(val plr: Player) : Task(false, 100) {
 
     /**
      * If all skills have been restored.
@@ -53,22 +46,14 @@ class RestoreSkills(val plr: Player) : Task(false, 50) {
     }
 
     fun doRestore(skill: Skill) {
-        val id = skill.id
+        // TODO Prayers for increased restoration.
 
-        /* if (plr.prayers.contains(Prayer.RAPID_RESTORE) && id != SKILL_HITPOINTS ||
-                 plr.prayers.contains(Prayer.RAPID_RESTORE) && id == SKILL_HITPOINTS ) {
-             counter[id] = true
-         }*/
-
-        if (restore[id]) {
-            // Skill is ready to be restored!
-            finished = false
-            when {
-                skill.level < skill.staticLevel -> skill.level += 1
-                skill.level > skill.staticLevel -> skill.level -= 1
-            }
+        // Skill is ready to be restored!
+        finished = false
+        when {
+            skill.level < skill.staticLevel -> skill.level += 1
+            skill.level > skill.staticLevel -> skill.level -= 1
         }
-        restore.flip(id)
     }
 }
 
@@ -84,6 +69,7 @@ fun restore(plr: Player, id: Int) {
     }
 }
 
+// Start restore task when skills change.
 on(SkillChangeEvent::class)
     .condition { mob is Player }
     .then { restore(mob as Player, id) }
