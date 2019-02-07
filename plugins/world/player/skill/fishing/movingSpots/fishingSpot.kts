@@ -6,24 +6,17 @@ import io.luna.game.model.mob.Npc
 /**
  * A model representing a fishing spot.
  */
-class FishingSpot(val id: Int, val moveRange: IntRange, val home: Position, val away: Position) {
+class FishingSpot(id: Int,
+                  val home: Position,
+                  val away: Position) : Npc(ctx, id, home) {
 
-    /**
-     * The [FishingSpot] companion object.
-     */
     companion object {
 
         /**
-         * A range of how often fishing spots can move, in minutes. Lower bound cannot be lower
-         * than 1.
+         * A range of how often fishing spots can move, in minutes.
          */
         val MOVE_INTERVAL = 1..7 // 1-7 minutes.
     }
-
-    /**
-     * The NPC instance.
-     */
-    val npc = Npc(ctx, id, home)
 
     /**
      * The countdown timer. This spot will move when it reaches 0.
@@ -35,7 +28,7 @@ class FishingSpot(val id: Int, val moveRange: IntRange, val home: Position, val 
      */
     fun countdown(): Boolean {
         countdown--
-        if (countdown == 0) {
+        if (countdown <= 0) {
             countdown = MOVE_INTERVAL.random()
             return true
         }
@@ -55,10 +48,9 @@ fun moveSpots() {
     fishingSpots.stream()
         .filter { it.countdown() }
         .forEach {
-            val npc = it.npc
-            when (npc.position) {
-                it.home -> npc.teleport(it.away)
-                it.away -> npc.teleport(it.home)
+            when (it.position) {
+                it.home -> it.teleport(it.away)
+                it.away -> it.teleport(it.home)
             }
         }
 }
@@ -66,17 +58,13 @@ fun moveSpots() {
 /**
  * Spawns fishing spots.
  */
-fun addSpots() = fishingSpots.forEach { world.npcs.add(it.npc) }
+fun addSpots() = fishingSpots.forEach { world.npcs.add(it) }
 
-/**
- * Schedules a task that spawns fishing spots, and attempts to move them every minute.
- */
+// Schedules a task that spawns fishing spots, and attempts to move them every minute.
 on(ServerLaunchEvent::class) {
     if (fishingSpots.isNotEmpty()) {
-        // Spawn fishing spots.
         addSpots()
 
-        // Check to move fishing spots every minute.
         world.schedule(100) {
             moveSpots()
         }

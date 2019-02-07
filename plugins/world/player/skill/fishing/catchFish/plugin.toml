@@ -1,0 +1,7 @@
+[metadata]
+name = "Catch fish"
+description = "A plugin that enables catching fish with tools."
+version = "1.0"
+authors = [
+  "lare96"
+]
