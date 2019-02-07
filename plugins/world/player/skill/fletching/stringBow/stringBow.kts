@@ -1,3 +1,5 @@
+package world.player.skill.fletching.stringBow
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -6,7 +8,6 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.fletching.Bow
 
 /**
  * A [ProducingAction] implementation that strings bows.
@@ -66,9 +67,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
     }
 }
 
-/**
- * Intercept item on item event to open interface.
- */
+// Intercept item on item event to open interface.
 on(ItemOnItemEvent::class) {
     when (Bow.BOW_STRING) {
         targetId -> openInterface(this, usedId)

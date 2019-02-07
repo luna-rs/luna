@@ -1,0 +1,7 @@
+[metadata]
+name = "Fletch logs"
+description = "A plugin that enables fletching of logs."
+version = "1.0"
+authors = [
+  "lare96"
+]

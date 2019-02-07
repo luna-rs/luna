@@ -1,4 +1,4 @@
-package world.player.skill.fletching
+package world.player.skill.fletching.stringBow
 
 import io.luna.game.model.item.Item
 
@@ -9,7 +9,6 @@ enum class Bow(val level: Int,
                val exp: Double,
                val unstrung: Int,
                val strung: Int) {
-
     ARROW_SHAFT(level = 1,
                 exp = 5.0,
                 unstrung = 52,

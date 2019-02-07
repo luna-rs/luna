@@ -1,0 +1,7 @@
+[metadata]
+name = "String bow"
+description = "A plugin that enables bow stringing."
+version = "1.0"
+authors = [
+  "lare96"
+]

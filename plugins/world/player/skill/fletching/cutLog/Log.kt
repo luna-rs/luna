@@ -1,12 +1,12 @@
-package world.player.skill.fletching
+package world.player.skill.fletching.cutLog
 
-import world.player.skill.fletching.Bow.*
+import world.player.skill.fletching.stringBow.Bow
+import world.player.skill.fletching.stringBow.Bow.*
 
 /**
  * An enum representing an item that can be cut into a [Bow].
  */
 enum class Log(val id: Int, val bows: List<Bow>) {
-
     NORMAL(id = 1511,
            bows = listOf(ARROW_SHAFT, SHORTBOW, LONGBOW)),
     OAK(id = 1521,

@@ -1,3 +1,5 @@
+package world.player.skill.fletching.cutLog
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ProducingAction
@@ -6,9 +8,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.fletching.Arrow
-import world.player.skill.fletching.Bow
-import world.player.skill.fletching.Log
+import world.player.skill.fletching.attachArrow.Arrow
+import world.player.skill.fletching.stringBow.Bow
 
 /**
  * A [ProducingAction] implementation that cuts logs.
@@ -80,9 +81,7 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
     }
 }
 
-/**
- * Intercept item on item event to open interface.
- */
+// Intercept item on item event to open interface.
 on(ItemOnItemEvent::class) {
     when (Log.KNIFE) {
         targetId -> openInterface(this, usedId)
