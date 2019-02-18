@@ -2,7 +2,6 @@ package io.luna.game.model;
 
 import io.luna.LunaContext;
 import io.luna.game.GameService;
-import io.luna.game.event.impl.PositionChangeEvent;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
@@ -186,7 +185,6 @@ public abstract class Entity {
             position = newPosition;
 
             if (state == EntityState.ACTIVE) {
-                plugins.post(new PositionChangeEvent(this, old, newPosition));
                 setCurrentChunk();
             }
         }
