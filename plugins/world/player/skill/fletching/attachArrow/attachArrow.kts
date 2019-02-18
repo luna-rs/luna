@@ -13,7 +13,7 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
  */
 class MakeArrowAction(plr: Player,
                       val arrow: Arrow,
-                      var makeTimes: Int) : ProducingAction(plr, true, 3) {
+                      makeTimes: Int) : ProducingAction(plr, true, 3, makeTimes) {
 
     /**
      * The amount of arrows to make in this set.
@@ -36,9 +36,6 @@ class MakeArrowAction(plr: Player,
                 false
             }
 
-            // No more actions to execute.
-            makeTimes == 0 -> false
-
             // Check if there's enough materials.
             else -> {
                 val withCount = mob.inventory.computeAmountForId(arrow.with)
@@ -57,7 +54,6 @@ class MakeArrowAction(plr: Player,
         mob.sendMessage("You attach the $tipName to the $withName.")
 
         mob.fletching.addExperience(arrow.exp * setAmount)
-        makeTimes--
     }
 
     override fun isEqual(other: Action<*>) =

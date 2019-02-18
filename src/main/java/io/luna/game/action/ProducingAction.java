@@ -5,11 +5,11 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 
 /**
- * A {@link StationaryAction} implementation that will remove items from and add items to the inventory.
+ * A {@link FixedAction} implementation that will remove items from and add items to the inventory.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class ProducingAction extends StationaryAction<Player> {
+public abstract class ProducingAction extends FixedAction<Player> {
 
     /**
      * The items being added.
@@ -23,18 +23,23 @@ public abstract class ProducingAction extends StationaryAction<Player> {
 
     /**
      * Creates a new {@link ProducingAction}.
+     *
+     * @param player The player.
+     * @param instant If this action executes instantly.
+     * @param delay The delay of this action.
+     * @param times The amount of times to produce.
      */
-    public ProducingAction(Player player, boolean instant, int delay) {
-        super(player, instant, delay);
+    public ProducingAction(Player player, boolean instant, int delay, int times) {
+        super(player, instant, delay, times);
     }
 
     @Override
-    protected final void call() {
-        if (!canProduce()) {
-            interrupt();
-            return;
-        }
+    protected final boolean canExecute() {
+        return canProduce();
+    }
 
+    @Override
+    protected final void execute() {
         currentRemove = remove();
         Inventory inventory = mob.getInventory();
         if (currentRemove.length > 0) {
@@ -63,6 +68,16 @@ public abstract class ProducingAction extends StationaryAction<Player> {
     }
 
     /**
+     * @return The items that will be removed.
+     */
+    protected abstract Item[] remove();
+
+    /**
+     * @return The items that will be added.
+     */
+    protected abstract Item[] add();
+
+    /**
      * Function invoked at the beginning of every action loop.
      *
      * @return {@code false} to interrupt the action.
@@ -77,14 +92,4 @@ public abstract class ProducingAction extends StationaryAction<Player> {
     protected void onProduce() {
 
     }
-
-    /**
-     * @return The items that will be removed.
-     */
-    protected abstract Item[] remove();
-
-    /**
-     * @return The items that will be added.
-     */
-    protected abstract Item[] add();
 }

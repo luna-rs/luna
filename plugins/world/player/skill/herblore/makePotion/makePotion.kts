@@ -14,7 +14,7 @@ import world.player.skill.herblore.makePotion.MakePotion.MakePotionAction
  */
 class MakePotionAction(plr: Player,
                        val potion: Potion,
-                       var makeTimes: Int) : ProducingAction(plr, true, 2) {
+                       makeTimes: Int) : ProducingAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -24,23 +24,19 @@ class MakePotionAction(plr: Player,
         val ANIMATION = Animation(363)
     }
 
-    override fun canInit() =
+    override fun canProduce() =
         when {
             mob.herblore.level < potion.level -> {
                 mob.sendMessage("You need a Herblore level of ${potion.level} to make this potion.")
                 false
             }
-            makeTimes == 0 -> false
             else -> true
         }
-
-    override fun canProduce() = canInit()
 
     override fun onProduce() {
         mob.sendMessage("You mix the ${itemDef(potion.secondary).name} into your potion.")
         mob.animation(ANIMATION)
         mob.herblore.addExperience(potion.exp)
-        makeTimes--
     }
 
     override fun add() = arrayOf(potion.idItem)

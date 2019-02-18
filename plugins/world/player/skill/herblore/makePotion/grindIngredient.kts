@@ -12,7 +12,7 @@ import world.player.skill.herblore.makePotion.Ingredient
  */
 class GrindAction(plr: Player,
                   val ingredient: Ingredient,
-                  var makeTimes: Int) : ProducingAction(plr, true, 2) {
+                  makeTimes: Int) : ProducingAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -25,7 +25,6 @@ class GrindAction(plr: Player,
     override fun canProduce() =
         when {
             !mob.inventory.contains(Ingredient.PESTLE_AND_MORTAR) -> false
-            makeTimes == 0 -> false
             else -> true
         }
 
@@ -37,7 +36,6 @@ class GrindAction(plr: Player,
         mob.sendMessage("You grind the $oldName into $nextWord $newName.")
 
         mob.animation(ANIMATION)
-        makeTimes--
     }
 
     override fun remove() = arrayOf(ingredient.oldItem)

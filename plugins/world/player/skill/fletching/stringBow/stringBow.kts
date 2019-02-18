@@ -14,7 +14,7 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
  */
 class StringBowAction(plr: Player,
                       val bow: Bow,
-                      var count: Int) : ProducingAction(plr, true, 2) {
+                      count: Int) : ProducingAction(plr, true, 2, count) {
 
     companion object {
 
@@ -33,7 +33,6 @@ class StringBowAction(plr: Player,
                 mob.sendMessage("You need a Fletching level of ${bow.level} to string this bow.")
                 false
             }
-            count == 0 -> false
             !mob.inventory.containsAll(Bow.BOW_STRING, bow.unstrung) -> false
             else -> true
         }
@@ -42,7 +41,6 @@ class StringBowAction(plr: Player,
         mob.sendMessage("You add a string to the bow.")
         mob.animation(ANIMATION)
         mob.fletching.addExperience(bow.exp)
-        count--
     }
 
     override fun isEqual(other: Action<*>) =

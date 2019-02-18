@@ -14,7 +14,7 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
  */
 class MakeUnfAction(plr: Player,
                     val unfPotion: UnfPotion,
-                    var makeTimes: Int) : ProducingAction(plr, true, 2) {
+                    makeTimes: Int) : ProducingAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -24,7 +24,7 @@ class MakeUnfAction(plr: Player,
         val ANIMATION = Animation(363)
     }
 
-    override fun canInit() =
+    override fun canProduce() =
         when {
             mob.herblore.level < unfPotion.level -> {
                 mob.sendMessage("You need a Herblore level of ${unfPotion.level} to make this potion.")

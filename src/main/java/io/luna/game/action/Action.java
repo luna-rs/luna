@@ -141,10 +141,17 @@ public abstract class Action<T extends Mob> {
     protected abstract boolean isEqual(Action<?> other);
 
     /**
-     * @return {@code true} if this Action hasn't been interrupted, {@code false} otherwise.
+     * The true state of this action, dictated by the internal task.
      */
-    public final boolean isRunning() {
-        return runner.getState() != TaskState.CANCELLED;
+    public final TaskState getState() {
+        return runner.getState();
+    }
+
+    /**
+     * @return {@code true} if this Action has been interrupted, {@code false} otherwise.
+     */
+    public final boolean isInterrupted() {
+        return getState() == TaskState.CANCELLED;
     }
 
     /**
