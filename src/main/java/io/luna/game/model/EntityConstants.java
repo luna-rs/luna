@@ -27,13 +27,6 @@ public final class EntityConstants {
     public static final int VIEWING_DISTANCE = 15;
 
     /**
-     * The wilderness areas.
-     */
-    public static final ImmutableList<Area> WILDERNESS = ImmutableList.of(
-            Area.create(2941, 3518, 3392, 3966, HEIGHT_LEVELS)
-    );
-
-    /**
      * A private constructor.
      */
     private EntityConstants() {
