@@ -24,19 +24,6 @@ public class Event {
     private Optional<EventListenerPipeline> pipeline = Optional.empty();
 
     /**
-     * Terminates the passing of this event through a pipeline.
-     *
-     * @return {@code false} if the event was not terminated.
-     */
-    public boolean terminate() {
-        if (pipeline.isPresent()) {
-            EventListenerPipeline current = pipeline.get();
-            return current.terminate();
-        }
-        return false;
-    }
-
-    /**
      * @return The pipeline this event is passing through.
      */
     public Optional<EventListenerPipeline> pipeline() {
