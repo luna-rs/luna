@@ -12,7 +12,6 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -61,15 +60,13 @@ public final class GameObject extends StationaryEntity {
     }
 
     @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
+    @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof GameObject) {
-            GameObject other = (GameObject) obj;
-            return objectType == other.objectType && Objects.equals(position, other.position);
-        }
-        return false;
+        return obj == this;
     }
 
     @Override
@@ -79,11 +76,6 @@ public final class GameObject extends StationaryEntity {
                 add("x", position.getX()).
                 add("y", position.getY()).
                 add("z", position.getZ()).toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, objectType, position);
     }
 
     @Override
