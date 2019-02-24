@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
  * A test that ensures that functions within the {@link AttributeKey} and {@link AttributeMap} class are functioning
  * correctly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
 public final class AttributeTest {
 

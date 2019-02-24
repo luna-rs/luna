@@ -13,8 +13,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * A test that ensures the {@link GameMessageEncoder} is functioning correctly.
  *
- * @author lare96 <http://github.org/lare96>
- * @author Graham
+ * @author lare96 <http://github.com/lare96>
  */
 public final class GameMessageEncoderTest {
 
@@ -24,13 +23,11 @@ public final class GameMessageEncoderTest {
     @Test
     public void testEncode() throws Exception {
         IsaacCipher isaac = new IsaacCipher(new int[] { 0, 0, 0, 0 });
-
         GameMessageEncoder encoder = new GameMessageEncoder(isaac);
-
         byte[] payload = "test".getBytes();
         ByteBuf buffer = Unpooled.buffer();
 
-        // fixed length messages
+        // Test fixed length messages.
         ByteMessage msg = ByteMessage.message(54, MessageType.FIXED);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
@@ -43,7 +40,7 @@ public final class GameMessageEncoderTest {
 
         buffer.clear();
 
-        // variable length messages
+        // Test variable length messages.
         msg = ByteMessage.message(54, MessageType.VAR);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
@@ -57,7 +54,7 @@ public final class GameMessageEncoderTest {
 
         buffer.clear();
 
-        // variable short length messages
+        // Test variable short length messages.
         msg = ByteMessage.message(54, MessageType.VAR_SHORT);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);

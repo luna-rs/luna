@@ -5,7 +5,7 @@ import org.junit.Test;
 /**
  * A test that ensures that functions within {@link Position} are functioning correctly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
 public final class PositionTest {
 
