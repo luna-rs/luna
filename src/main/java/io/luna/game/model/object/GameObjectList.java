@@ -3,9 +3,12 @@ package io.luna.game.model.object;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.model.EntityList;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkManager;
+import io.luna.game.model.chunk.ChunkPosition;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,12 +26,18 @@ import java.util.Spliterators;
 public final class GameObjectList extends EntityList<GameObject> {
 
     /**
+     * The chunk manager.
+     */
+    private final ChunkManager chunks;
+
+    /**
      * Creates a new {@link EntityList}.
      *
      * @param world The world.
      */
     public GameObjectList(World world) {
         super(world, EntityType.OBJECT);
+        chunks = world.getChunks();
     }
 
     @Override
@@ -47,7 +56,7 @@ public final class GameObjectList extends EntityList<GameObject> {
     @Override
     public UnmodifiableIterator<GameObject> iterator() {
         List<Iterator<GameObject>> iteratorList = new ArrayList<>();
-        for (Chunk chunk : world.getChunks()) {
+        for (Chunk chunk : chunks) {
             Set<GameObject> objects = chunk.getAll(type);
             if (!objects.isEmpty()) { // Retrieve iterators from chunk.
                 iteratorList.add(objects.iterator());
@@ -59,17 +68,28 @@ public final class GameObjectList extends EntityList<GameObject> {
     }
 
     @Override
-    public boolean contains(GameObject entity) {
-        return false;
-    }
-
-    @Override
     protected void onRegister(GameObject entity) {
+        ChunkPosition position = entity.getChunkPosition();
 
+        // Check if an object will be replaced by this registration, and remove it.
+        Iterator<GameObject> iterator = chunks.getChunk(position).iterator(type);
+        while (iterator.hasNext()) {
+            GameObject object = iterator.next();
+            if (object.getPosition().equals(entity.getPosition())
+                    && object.getObjectType() == entity.getObjectType()) {
+                object.setState(EntityState.INACTIVE);
+                iterator.remove();
+                break;
+            }
+        }
+
+        // Set entity as active.
+        entity.setState(EntityState.ACTIVE);
     }
 
     @Override
     protected void onUnregister(GameObject entity) {
-
+        // Set entity as inactive.
+        entity.setState(EntityState.INACTIVE);
     }
 }
