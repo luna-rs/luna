@@ -3,9 +3,9 @@ package io.luna.game.model;
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.ChunkPlacementMessageWriter;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +22,7 @@ public abstract class StationaryEntity extends Entity {
     /**
      * An enumerated type whose elements represent either a show or hide update.
      */
-    private enum UpdateType {
+    public enum UpdateType {
         SHOW, HIDE
     }
 
@@ -32,9 +32,19 @@ public abstract class StationaryEntity extends Entity {
     private final Optional<Player> player;
 
     /**
+     * The position used for placement.
+     */
+    private final Position placement;
+
+    /**
      * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
      */
     private ImmutableList<Set<Player>> surroundingPlayers;
+
+    /**
+     * If this entity is hidden.
+     */
+    private boolean hidden = true;
 
     /**
      * Creates a new local {@link StationaryEntity}.
@@ -47,6 +57,7 @@ public abstract class StationaryEntity extends Entity {
     public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> player) {
         super(context, position, type);
         this.player = player;
+        placement = new Position(getChunkPosition().getAbsX(), getChunkPosition().getAbsY());
     }
 
     /**
@@ -69,14 +80,18 @@ public abstract class StationaryEntity extends Entity {
      * Sends a packet to all applicable players to display this entity.
      */
     public final void show() {
-        applyUpdate(UpdateType.SHOW);
+        if (hidden) {
+            applyUpdate(UpdateType.SHOW);
+        }
     }
 
     /**
      * Sends a packet to all applicable players to hide this entity.
      */
     public final void hide() {
-        applyUpdate(UpdateType.HIDE);
+        if (!hidden) {
+            applyUpdate(UpdateType.HIDE);
+        }
     }
 
     /**
@@ -88,12 +103,14 @@ public abstract class StationaryEntity extends Entity {
         if (player.isPresent() && player.get().isViewableFrom(this)) {
 
             // We have a player to update for.
+            player.get().queue(new ChunkPlacementMessageWriter(placement));
             sendUpdateMessage(player.get(), updateType);
         } else {
             // We don't, so update for all viewable surrounding players.
             for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
                 for (Player inside : chunkPlayers) {
                     if (isViewableFrom(inside)) {
+                        inside.queue(new ChunkPlacementMessageWriter(placement));
                         sendUpdateMessage(inside, updateType);
                     }
                 }
@@ -107,13 +124,14 @@ public abstract class StationaryEntity extends Entity {
      * @param player The player.
      * @param updateType The update type to apply.
      */
-    private void sendUpdateMessage(Player player, UpdateType updateType) {
-        ChunkPosition chunkPosition = player.getChunkPosition();
-        int offset = chunkPosition.offset(position);
-        if (updateType == UpdateType.SHOW) {
+    public void sendUpdateMessage(Player player, UpdateType updateType) {
+        int offset = getChunkPosition().offset(position);
+        if (updateType == UpdateType.SHOW && hidden) {
             player.queue(showMessage(offset));
-        } else if (updateType == UpdateType.HIDE) {
+            hidden = false;
+        } else if (updateType == UpdateType.HIDE && !hidden) {
             player.queue(hideMessage(offset));
+            hidden = true;
         }
     }
 
@@ -136,6 +154,13 @@ public abstract class StationaryEntity extends Entity {
      */
     public final boolean isLocal() {
         return player.isPresent();
+    }
+
+    /**
+     * @return {@code true} if this entity is invisible, {@code false} otherwise.
+     */
+    public boolean isHidden() {
+        return hidden;
     }
 
     /**

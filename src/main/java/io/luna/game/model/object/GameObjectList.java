@@ -18,8 +18,8 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 
 /**
- * An {@link EntityList} implementation model for {@link GameObject}s. Iterating on instances of this should
- * be avoided because of the slow {@link #iterator()} implementation.
+ * An {@link EntityList} implementation model for {@link GameObject}s. Iterating on instances of this should be avoided
+ * because of the slow {@link #iterator()} implementation.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -72,24 +72,27 @@ public final class GameObjectList extends EntityList<GameObject> {
         ChunkPosition position = entity.getChunkPosition();
 
         // Check if an object will be replaced by this registration, and remove it.
-        Iterator<GameObject> iterator = chunks.getChunk(position).iterator(type);
+        Iterator<GameObject> iterator = chunks.load(position).iterator(type);
         while (iterator.hasNext()) {
             GameObject object = iterator.next();
             if (object.getPosition().equals(entity.getPosition())
                     && object.getObjectType() == entity.getObjectType()) {
-                object.setState(EntityState.INACTIVE);
+                object.clearCurrentChunk();
+                unregister(object);
                 iterator.remove();
                 break;
             }
         }
 
         // Set entity as active.
+        entity.show();
         entity.setState(EntityState.ACTIVE);
     }
 
     @Override
     protected void onUnregister(GameObject entity) {
         // Set entity as inactive.
+        entity.hide();
         entity.setState(EntityState.INACTIVE);
     }
 }

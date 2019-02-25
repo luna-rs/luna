@@ -40,6 +40,7 @@ import org.apache.logging.log4j.Logger;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -384,21 +385,29 @@ public final class Player extends Mob {
         interfaces.applyActionClose();
     }
 
+    /**
+     * Unregisters all assigned local objects.
+     */
     public void removeLocalObjects() {
         if (localObjects.size() > 0) {
-            for (GameObject object : localObjects) {
-                world.getObjects().unregister(object);
+            Iterator<GameObject> objectIterator = localObjects.iterator();
+            while (objectIterator.hasNext()) {
+                world.getObjects().unregister(objectIterator.next());
+                objectIterator.remove();
             }
-            localObjects.clear();
         }
     }
 
+    /**
+     * Unregisters all assigned local items.
+     */
     public void removeLocalItems() {
         if (localItems.size() > 0) {
-            for (GroundItem item : localItems) {
-                world.getItems().unregister(item);
+            Iterator<GroundItem> itemIterator = localItems.iterator();
+            while (itemIterator.hasNext()) {
+                world.getItems().unregister(itemIterator.next());
+                itemIterator.remove();
             }
-            localItems.clear();
         }
     }
 

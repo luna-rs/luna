@@ -2,8 +2,8 @@ package io.luna.game.model;
 
 import io.luna.game.model.chunk.ChunkManager;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -48,14 +48,6 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
 
     @Override
     public abstract Iterator<E> iterator();
-
-    /**
-     * Determines if this collection contains {@code entity}.
-     *
-     * @param entity The entity.
-     * @return {@code true} if this contains the entity.
-     */
-    public abstract boolean contains(E entity);
 
     /**
      * A function invoked when an entity is registered.
@@ -128,9 +120,9 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @param position The position to unregister entities on.
      * @return The set of entities.
      */
-    public final Set<E> getFromPosition(Position position) {
+    public final Collection<E> getFromPosition(Position position) {
         ChunkManager chunks = world.getChunks();
-        return chunks.getChunk(position.getChunkPosition()).getAll(type);
+        return chunks.load(position.getChunkPosition()).getAll(type);
     }
 
     /**

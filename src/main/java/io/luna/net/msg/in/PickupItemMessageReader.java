@@ -36,7 +36,7 @@ public final class PickupItemMessageReader extends GameMessageReader {
         }
 
         // Try to pickup the item (verification).
-        Stream<GroundItem> localItems = player.getChunks().getChunk(pos).stream(EntityType.ITEM);
+        Stream<GroundItem> localItems = player.getChunks().load(pos).stream(EntityType.ITEM);
 
         localItems.filter(item -> item.getPosition().equals(pos) && item.getId() == id).
                 findFirst().

@@ -22,8 +22,15 @@ import java.util.stream.Stream;
  */
 public final class GroundItemList extends EntityList<GroundItem> {
 
+    /**
+     * An {@link Iterator} that will unregister ground items on {@link #remove()}.
+     */
     public final class GroundItemListIterator implements Iterator<GroundItem> {
 
+        // TODO Unit tests for this.
+        /**
+         *
+         */
         private GroundItem lastItem;
         private final Iterator<GroundItem> delegate = items.iterator();
 
@@ -87,11 +94,6 @@ public final class GroundItemList extends EntityList<GroundItem> {
         }
     }
 
-    @Override
-    public boolean contains(GroundItem item) {
-        return items.contains(item);
-    }
-
     /**
      * Adds a stackable ground item.
      *
@@ -123,6 +125,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
     }
 
     private void removeStackable(GroundItem item) {
+        // TODO new item when items have different owners. that's it :) or look in client again?
         int amount = item.getAmount();
         Position position = item.getPosition();
         Optional<GroundItem> foundItem = findExisting(item);
@@ -188,7 +191,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
     }
 
     private boolean checkItemAmount(Position position, int addAmount) {
-        return world.getChunks().getChunk(position).stream(type).
+        return world.getChunks().load(position).stream(type).
                 filter(it -> it.getPosition().equals(position)).count() + addAmount <= 255;
     }
 
@@ -201,7 +204,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
     private Optional<GroundItem> findExisting(GroundItem item) {
         Position position = item.getPosition();
         Stream<GroundItem> localItems = world.getChunks().
-                getChunk(position).
+                load(position).
                 stream(type);
         return localItems.filter(it -> it.getId() == item.getId() &&
                 it.getPosition().equals(position)).findFirst();

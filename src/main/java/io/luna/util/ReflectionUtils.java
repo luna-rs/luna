@@ -83,7 +83,9 @@ public final class ReflectionUtils {
         try {
             Class[] parameterTypes = Arrays.stream(parameters).map(Object::getClass).toArray(Class[]::new);
             Class forClass = Class.forName(className);
-            Constructor<T> constructor = forClass.getConstructor(parameterTypes);
+
+            Constructor<T> constructor = forClass.getDeclaredConstructor(parameterTypes);
+            constructor.setAccessible(true);
             return constructor.newInstance(parameters);
         } catch (ReflectiveOperationException e) {
             throw new ReflectionException(e);

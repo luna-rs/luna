@@ -150,7 +150,13 @@ public final class GroundItem extends StationaryEntity {
         return id;
     }
 
+    /**
+     * Hides this item, changes its amount, and then shows it again.
+     *
+     * @param amount The amount to change to. Cannot be negative.
+     */
     public void setAmount(int amount) {
+        checkArgument(amount > 0, "amount cannot be < 0");
         hide();
         this.amount = amount;
         show();

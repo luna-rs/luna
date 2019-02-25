@@ -4,13 +4,9 @@ import io.luna.LunaConstants;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.object.GameObject;
-import io.luna.net.msg.out.ClearChunkMessageWriter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +14,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -27,22 +22,21 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * A model that loads new chunks and manages chunks that have already been loaded.
+ * A model that loads new chunks and manages loaded chunks.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ChunkManager implements Iterable<Chunk> {
 
     /**
-     * A value that determines how many layers of chunks will be loaded around the Player, when looking
-     * for viewable mobs.
+     * How many layers of chunks will be loaded around a player, when looking for viewable mobs.
      */
-    private static final int RADIUS = 2;
+    public static final int RADIUS = 2;
 
     /**
      * A map of loaded chunks.
      */
-    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128); // TODO Proper initial size after cache loading.
+    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128); // TODO Better initial size, cache loading.
 
     @Override
     public Spliterator<Chunk> spliterator() {
@@ -55,37 +49,37 @@ public final class ChunkManager implements Iterable<Chunk> {
     }
 
     /**
-     * Retrieves a chunk based on the argued chunk position, constructing and loading a new one if needed.
+     * Loads the chunk at {@code position}.
      *
-     * @param position The position to construct a new chunk with.
+     * @param position The position of the chunk to load.
      * @return The existing or newly loaded chunk.
      */
-    public Chunk getChunk(ChunkPosition position) {
+    public Chunk load(ChunkPosition position) {
         return chunks.computeIfAbsent(position, Chunk::new);
     }
 
     /**
-     * Retrieves a chunk based on the argued position, constructing and loading a new one if needed.
+     * Loads the chunk at {@code position}.
      *
-     * @param position The position to construct a new chunk with.
+     * @param position The position of the chunk to load.
      * @return The existing or newly loaded chunk.
      */
-    public Chunk getChunk(Position position) {
-        return getChunk(position.getChunkPosition());
+    public Chunk load(Position position) {
+        return load(position.getChunkPosition());
     }
 
     /**
-     * A shortcut to {@link #updateSet(Player, EntityType)} for type {@code PLAYER}.
+     * Shortcut to {@link #getUpdateMobs(Player, EntityType)} for type {@code PLAYER}.
      */
-    public Set<Player> playerUpdateSet(Player player) {
-        return updateSet(player, EntityType.PLAYER);
+    public Set<Player> getUpdatePlayers(Player player) {
+        return getUpdateMobs(player, EntityType.PLAYER);
     }
 
     /**
-     * A shortcut to {@link #updateSet(Player, EntityType)} for type {@code NPC}.
+     * Shortcut to {@link #getUpdateMobs(Player, EntityType)} for type {@code NPC}.
      */
-    public Set<Npc> npcUpdateSet(Player player) {
-        return updateSet(player, EntityType.NPC);
+    public Set<Npc> getUpdateNpcs(Player player) {
+        return getUpdateMobs(player, EntityType.NPC);
     }
 
     /**
@@ -96,17 +90,15 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param <T> The type.
      * @return The update set.
      */
-    private <T extends Mob> Set<T> updateSet(Player player, EntityType type) {
+    private <T extends Mob> Set<T> getUpdateMobs(Player player, EntityType type) {
         Set<T> updateSet = LunaConstants.STAGGERED_UPDATING ?
                 new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>();
         ChunkPosition position = player.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                // Synchronize over the chunks so that the updating threads cannot modify them at the
-                // same time.
                 synchronized (chunks) {
-                    Set<T> players = getChunk(position.translate(x, y)).getAll(type);
-                    for (T inside : players) {
+                    Set<T> mobs = load(position.translate(x, y)).getAll(type);
+                    for (T inside : mobs) {
                         if (inside.isViewableFrom(player)) {
                             updateSet.add(inside);
                         }
@@ -115,50 +107,6 @@ public final class ChunkManager implements Iterable<Chunk> {
             }
         }
         return updateSet;
-    }
-
-    /**
-     * Updates entities within this chunk.
-     *
-     * @param player The player.
-     */
-    public void updateEntities(Player player) {
-        ChunkPosition position = player.getChunkPosition();
-        for (int x = -RADIUS; x < RADIUS; x++) {
-            for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(position.translate(x, y));
-
-                // Clear chunk.
-                Position chunkPos = chunk.getAbsolutePosition();
-                player.queue(new ClearChunkMessageWriter(chunkPos));
-
-                // Repopulate chunk entities.
-                Set<GameObject> objectSet = chunk.getAll(EntityType.OBJECT);
-                for (GameObject object : objectSet) {
-                    // TODO Do not update cache loaded objects!
-                    updateEntity(player, object);
-                }
-
-                Set<GroundItem> itemSet = chunk.getAll(EntityType.ITEM);
-                for (GroundItem item : itemSet) {
-                    updateEntity(player, item);
-                }
-            }
-        }
-    }
-
-    /**
-     * Updates a single entity.
-     *
-     * @param player The player.
-     * @param entity The entity.
-     */
-    private void updateEntity(Player player, StationaryEntity entity) {
-        Optional<Player> updatePlr = entity.getPlayer();
-        boolean isUpdate = updatePlr.isEmpty() || updatePlr.map(player::equals).orElse(false);
-        if (isUpdate) {
-            entity.show();
-        }
     }
 
     /**
@@ -174,7 +122,7 @@ public final class ChunkManager implements Iterable<Chunk> {
         ChunkPosition chunkPos = position.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(chunkPos.translate(x, y));
+                Chunk chunk = load(chunkPos.translate(x, y));
                 Set<T> entities = chunk.getAll(type);
                 for (T inside : entities) {
                     if (inside.getPosition().isViewable(position)) {
@@ -185,7 +133,6 @@ public final class ChunkManager implements Iterable<Chunk> {
         }
         return viewable;
     }
-
 
     /**
      * Returns a list of viewable chunks.
@@ -198,7 +145,7 @@ public final class ChunkManager implements Iterable<Chunk> {
         ChunkPosition chunkPos = position.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = getChunk(chunkPos.translate(x, y));
+                Chunk chunk = load(chunkPos.translate(x, y));
                 viewable.add(chunk);
             }
         }

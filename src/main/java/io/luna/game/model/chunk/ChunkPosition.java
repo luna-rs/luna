@@ -76,9 +76,9 @@ public final class ChunkPosition {
      * @return The offset.
      */
     public int offset(Position position) {
-        int deltaX = position.getX() - getAbsX();
-        int deltaY = position.getY() - getAbsY();
-        return deltaX << 4 + deltaY;
+        int deltaX = getLocalX(position);
+        int deltaY = getLocalY(position);
+        return deltaX << 4 | deltaY;
     }
 
     /**
