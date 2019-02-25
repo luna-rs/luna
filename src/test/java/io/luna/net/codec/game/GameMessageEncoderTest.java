@@ -4,7 +4,6 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessage;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.junit.Test;
 
@@ -23,15 +22,14 @@ public final class GameMessageEncoderTest {
      */
     @Test
     public void testEncode() throws Exception {
-        IsaacCipher isaac = new IsaacCipher(new int[] { 0, 0, 0, 0 });
-
-        GameMessageEncoder encoder = new GameMessageEncoder(isaac);
+        var isaac = new IsaacCipher(new int[]{0, 0, 0, 0});
+        var encoder = new GameMessageEncoder(isaac);
 
         byte[] payload = "test".getBytes();
-        ByteBuf buffer = Unpooled.buffer();
+        var buffer = Unpooled.buffer();
 
         // fixed length messages
-        ByteMessage msg = ByteMessage.message(54, MessageType.FIXED);
+        var msg = ByteMessage.message(54, MessageType.FIXED);
         msg.putBytes(payload);
         encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 

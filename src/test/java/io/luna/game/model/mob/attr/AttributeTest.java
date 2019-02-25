@@ -19,11 +19,11 @@ public final class AttributeTest {
      */
     @Test
     public void testStringInterning() {
-        AttributeMap map = new AttributeMap();
+        var map = new AttributeMap();
 
         AttributeKey.forTransient("some_attribute_1", "some_value");
 
-        String key = "some_attribute_2";
+        var key = "some_attribute_2";
         AttributeKey.forTransient(key, 500);
 
         assertEquals(map.get("some_attribute_1").get(), "some_value");
@@ -37,7 +37,7 @@ public final class AttributeTest {
      */
     @Test
     public void testInternalCaching() {
-        AttributeMap map = new AttributeMap();
+        var map = new AttributeMap();
 
         AttributeKey.forTransient("some_attribute", "some_value");
         IntStream.rangeClosed(0, 5).forEach(it -> assertEquals(map.get("some_attribute").get(), "some_value"));
@@ -50,7 +50,7 @@ public final class AttributeTest {
      */
     @Test
     public void testForcedInterning() {
-        AttributeMap map = new AttributeMap();
+        var map = new AttributeMap();
 
         AttributeKey.forTransient("some_attribute", "some_value");
 
@@ -65,7 +65,7 @@ public final class AttributeTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testNonAliasedAttribute() {
-        AttributeMap map = new AttributeMap();
+        var map = new AttributeMap();
 
         map.get("some_attribute");
     }
