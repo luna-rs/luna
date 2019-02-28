@@ -28,6 +28,7 @@ public final class AttributeKey<T> {
     public static final Map<String, AttributeKey> ALIASES = new IdentityHashMap<>();
 
     static {
+        // TODO automatic aliasing
         // Persistent attributes. These are saved to the character file.
         forPersistent("run_energy", 100.0);
         forPersistent("first_login", true);
@@ -43,6 +44,7 @@ public final class AttributeKey<T> {
         forTransient("trading_with", -1);
         forTransient("restoring_skills", false);
         forTransient("thread_left", 0);
+        forTransient("wilderness_level", 0);
     }
 
     /**

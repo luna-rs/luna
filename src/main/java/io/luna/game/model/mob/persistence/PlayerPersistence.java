@@ -86,7 +86,7 @@ public final class PlayerPersistence {
      * @return A future returning the login response.
      */
     public ListenableFuture<LoginResponse> load(Player player) {
-        // TODO Needs testing!
+        // TODO Needs testing! and unit tests
         String enteredPassword = player.getPassword();
         if (serializer instanceof SqlPlayerSerializer) {
             // Loading players from a database needs to be done on another thread.

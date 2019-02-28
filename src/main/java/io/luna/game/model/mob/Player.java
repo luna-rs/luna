@@ -326,6 +326,8 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
+        world.getPlayerMap().put(getUsernameHash(), this);
+        world.getAreas().notifyLogin(this);
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
         plugins.post(new LoginEvent(this));
@@ -334,6 +336,8 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        world.getPlayerMap().remove(getUsernameHash());
+        world.getAreas().notifyLogout(this);
         removeLocalItems();
         removeLocalObjects();
         interfaces.close();
@@ -384,6 +388,11 @@ public final class Player extends Mob {
         interfaces.applyActionClose();
     }
 
+    @Override
+    protected void onPositionChange(Position oldPos) {
+        world.getAreas().notifyPositionChange(this, oldPos, position);
+    }
+
     public void removeLocalObjects() {
         if (localObjects.size() > 0) {
             for (GameObject object : localObjects) {
@@ -410,8 +419,7 @@ public final class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet. It's used enough where this
-     * is warranted.
+     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet.
      *
      * @param msg The message to send.
      */
@@ -420,17 +428,16 @@ public final class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. It's used enough where this
-     * is warranted.
+     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet.
      *
-     * @param text The text to send.
+     * @param msg The message to send.
      * @param id The widget identifier.
      */
-    public void sendText(String text, int id) {
-        requireNonNull(text);
-
+    public void sendText(Object msg, int id) {
+        requireNonNull(msg);
+        String text = msg.toString();
         String previous = LunaConstants.PACKET_126_CACHING ? textCache.put(id, text) : null;
-        if (!text.equals(previous)) {
+        if (!msg.equals(previous)) {
             queue(new WidgetTextMessageWriter(text, id));
         }
     }

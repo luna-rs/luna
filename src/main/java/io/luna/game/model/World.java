@@ -22,8 +22,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,8 +40,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author lare96 <http://github.org/lare96>
  */
 public final class World {
-
-    // TODO concurrent map that tracks player names to their instance. use for threaded online checks
 
     /**
      * A model that sends {@link Player} and {@link Npc} synchronization packets.
@@ -133,9 +133,19 @@ public final class World {
     private final GroundItemList items = new GroundItemList(this);
 
     /**
+     * The area manager.
+     */
+    private final AreaManager areas = new AreaManager(this);
+
+    /**
      * The player persistence manager.
      */
     private final PlayerPersistence persistence = new PlayerPersistence();
+
+    /**
+     * A concurrent map of online players, used to check online players from non-game threads.
+     */
+    private final Map<Long, Player> playerMap = new ConcurrentHashMap<>();
 
     /**
      * A synchronization barrier.
@@ -197,8 +207,8 @@ public final class World {
             if (player == null) {
                 break;
             }
+
             try {
-                // TODO Ensure playerlist doesn't contain the queued player.
                 playerList.add(player);
             } catch (Exception e) {
                 LOGGER.catching(e);
@@ -231,8 +241,8 @@ public final class World {
     }
 
     /**
-     * Runs one iteration of the main game loop. This method should <strong>never</strong> be called
-     * by anything other than the {@link GameService}.
+     * Runs one iteration of the main game loop. This method should <strong>never</strong> be called by anything other
+     * than the {@link GameService}.
      */
     public void loop() {
         // Handle logins.
@@ -334,13 +344,13 @@ public final class World {
     }
 
     /**
-     * Retrieves a player by their username hash. Much faster than {@link World#getPlayer(String)}
+     * Retrieves a player by their username hash. Much faster than {@link World#getPlayer(String)}.
      *
      * @param username The username hash.
      * @return The player, or no player.
      */
     public Optional<Player> getPlayer(long username) {
-        return playerList.findFirst(player -> player.getUsernameHash() == username);
+        return Optional.ofNullable(playerMap.get(username));
     }
 
     /**
@@ -403,6 +413,13 @@ public final class World {
     }
 
     /**
+     * @return The area manager.
+     */
+    public AreaManager getAreas() {
+        return areas;
+    }
+
+    /**
      * @return The shop manager.
      */
     public ShopManager getShops() {
@@ -414,6 +431,14 @@ public final class World {
      */
     public PlayerPersistence getPersistence() {
         return persistence;
+    }
+
+    /**
+     * @return A concurrent map of online players. <strong>Warning:</strong> Do not modify this collection
+     * unless you understand the implications. It must be in-sync with {@link #playerList}.
+     */
+    public Map<Long, Player> getPlayerMap() {
+        return playerMap;
     }
 
     /**

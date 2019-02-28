@@ -165,7 +165,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
         }
 
         // Determine login response and send it to the client.
-        if (world.getPlayers().isFull()) {
+        if (world.getPlayerMap().size() == world.getPlayers().capacity()) {
             // World is full.
             sendLoginResponse(player, LoginResponse.WORLD_FULL, msg);
         } else if (world.getPlayer(player.getUsernameHash()).isPresent() ||

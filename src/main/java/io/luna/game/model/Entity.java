@@ -72,6 +72,7 @@ public abstract class Entity {
         plugins = context.getPlugins();
         service = context.getService();
         world = context.getWorld();
+
     }
 
     /**
@@ -175,6 +176,15 @@ public abstract class Entity {
     }
 
     /**
+     * Invoked when this entity's position changes.
+     *
+     * @param oldPos The old position.
+     */
+    protected void onPositionChange(Position oldPos) {
+
+    }
+
+    /**
      * Sets the current position and performs chunk checking.
      *
      * @param newPosition The new position.
@@ -186,6 +196,7 @@ public abstract class Entity {
 
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
+                onPositionChange(old);
             }
         }
     }
