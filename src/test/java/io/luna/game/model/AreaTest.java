@@ -11,7 +11,7 @@ import org.junit.Test;
 final class AreaTest {
 
     /**
-     * Ensures the north east {@code x} coordinate cannot be smaller than the south west {@code x} coordinate.
+     * Ensures the north east {@code x} coordinate is larger than the south west {@code x} coordinate.
      */
     @Test(expected = IllegalArgumentException.class)
     void testNorthEastX() {
@@ -19,7 +19,7 @@ final class AreaTest {
     }
 
     /**
-     * Ensures the north east {@code y} coordinate cannot be smaller than the south west {@code y} coordinate.
+     * Ensures the north east {@code y} coordinate is larger than the south west {@code y} coordinate.
      */
     @Test(expected = IllegalArgumentException.class)
     void testNorthEastY() {
