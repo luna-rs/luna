@@ -8,13 +8,13 @@ import org.junit.Test;
  *
  * @author lare96 <http://github.com/lare96>
  */
-final class AreaTest {
+public final class AreaTest {
 
     /**
      * Ensures the north east {@code x} coordinate is larger than the south west {@code x} coordinate.
      */
     @Test(expected = IllegalArgumentException.class)
-    void testNorthEastX() {
+    public void testNorthEastX() {
         newArea(0, 0, -1, 0);
     }
 
@@ -22,7 +22,7 @@ final class AreaTest {
      * Ensures the north east {@code y} coordinate is larger than the south west {@code y} coordinate.
      */
     @Test(expected = IllegalArgumentException.class)
-    void testNorthEastY() {
+    public void testNorthEastY() {
         newArea(0, 0, 0, -1);
     }
 
