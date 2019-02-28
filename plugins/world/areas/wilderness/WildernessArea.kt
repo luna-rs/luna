@@ -38,14 +38,8 @@ class WildernessArea(swX: Int, swY: Int, neX: Int, neY: Int) : Area(swX, swY, ne
      * Sets and displys the wilderness level for [plr].
      */
     private fun setWildernessLevel(plr: Player): Int {
-
-        var newLevel = plr.position.y
-        if (newLevel > 6400) {
-            newLevel -= 6400
-        }
-        newLevel -= 3520
-        newLevel /= 8
-        newLevel++
+        var newLevel = if (plr.position.y > 6400) plr.position.y - 6400 else plr.position.y
+        newLevel = ((newLevel - 3520) / 8) + 1
         plr.wildernessLevel = newLevel
         plr.sendText("@yel@Level: $newLevel", 199)
         return newLevel
