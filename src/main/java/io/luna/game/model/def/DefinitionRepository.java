@@ -64,8 +64,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
     }
 
     /**
-     * An implementation of {@link DefinitionRepository} that is backed internally by a
-     * {@link LinkedHashMap}.
+     * An implementation of {@link DefinitionRepository} that is backed internally by a {@link LinkedHashMap}.
      */
     static final class MapDefinitionRepository<V extends Definition> extends DefinitionRepository<V> {
 
