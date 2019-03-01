@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Unit tests for {@link Position}.
+ * Unit tests for {@link AreaTest}.
  *
  * @author lare96 <http://github.com/lare96>
  */
