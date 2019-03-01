@@ -2,31 +2,40 @@ package io.luna.game.event;
 
 
 import io.luna.game.plugin.Script;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * A test that ensures that functions within {@link EventListener} are working correctly.
+ * Unit tests for {@link EventListener}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class EventListenerTest {
+final class EventListenerTest {
 
-    /**
-     * Ensures that a script cannot be set twice.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void testSetScript() {
-        var eventListener = new EventListener(null, null);
-        eventListener.setScript(new Script(null, null, null));
-        eventListener.setScript(new Script(null, null, null));
+    static Script script;
+    EventListener eventListener;
+
+    @BeforeAll
+    static void initScript() {
+        script = new Script(null, null, null);
     }
 
-    /**
-     * Ensures that a script cannot retrieved when there is no script set.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void testGetScript() {
-        var eventListener = new EventListener(null, null);
-        eventListener.getScript();
+    @BeforeEach
+    void initEventListener() {
+        eventListener = new EventListener(null, null);
+    }
+
+    @Test
+    void setScript() {
+        eventListener.setScript(script);
+        assertThrows(IllegalStateException.class, () -> eventListener.setScript(script));
+    }
+
+    @Test
+    void getScript() {
+        assertThrows(IllegalStateException.class, () -> eventListener.getScript());
     }
 }

@@ -2,50 +2,39 @@ package io.luna.game.model.def;
 
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * A test that ensures that functions within {@link DefinitionRepository} are working correctly.
+ * Unit tests for {@link DefinitionRepository}.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class DefinitionRepositoryTest {
+final class DefinitionRepositoryTest {
 
-    /**
-     * Ensure that definitions cannot be added to locked array repositories.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void testArrayRepository() {
-        var array = new ArrayDefinitionRepository<>(5);
-        for (int index = 0; index < 5; index++) {
-            array.storeDefinition(newDefinition(index));
-        }
-        array.lock();
-        array.storeDefinition(newDefinition(0));
+    Definition def;
+
+    @BeforeEach
+    void initDefinition() {
+        def = mock(Definition.class);
+        when(def.getId()).thenReturn(1);
     }
 
-    /**
-     * Ensure that definitions cannot be added to locked map repositories.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void testMapRepository() {
-        var map = new MapDefinitionRepository<>();
-        for (int index = 0; index < 5; index++) {
-            map.storeDefinition(newDefinition(index));
-        }
-        map.lock();
-        map.storeDefinition(newDefinition(0));
+    @Test
+    void lockedArrayRepository() {
+        var repository = new ArrayDefinitionRepository<>(0);
+        repository.lock();
+        assertThrows(IllegalStateException.class, () -> repository.storeDefinition(def));
     }
 
-    /**
-     * Instantiates a new mock definition.
-     */
-    private Definition newDefinition(int id) {
-        var def = mock(Definition.class);
-        when(def.getId()).thenReturn(id);
-        return def;
+    @Test
+    void lockedMapRepository() {
+        var repository = new MapDefinitionRepository<>();
+        repository.lock();
+        assertThrows(IllegalStateException.class, () -> repository.storeDefinition(def));
     }
 }
