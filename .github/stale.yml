@@ -1,6 +1,7 @@
 daysUntilStale: 60
 daysUntilClose: 7
 exemptLabels:
+  - easy
   - high priority
   - medium priority
   - blocked
