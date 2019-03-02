@@ -74,7 +74,6 @@ fun openInterface(msg: ItemOnItemEvent, id: Int) {
             override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(CutLogAction(plr, log.id, log.bows[index], forAmount))
         })
-        msg.terminate()
     }
 }
 

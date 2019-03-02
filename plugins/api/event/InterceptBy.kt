@@ -13,15 +13,17 @@ import kotlin.reflect.KClass
 class InterceptBy<E : Event>(private val eventType: KClass<E>) {
 
     /**
-     * Use a condition to test the event. This function **will terminate** the event if the condition is
-     * satisfied. Forwards to [InterceptCondition].
+     * Filtering function that executes the event listener if the condition is `true`. Forwards to
+     * [InterceptFilter].
      */
-    fun filter(cond: E.() -> Boolean) = InterceptCondition(eventType, cond, true)
+    fun filter(cond: E.() -> Boolean) = InterceptFilter(eventType, cond, true)
+
 
     /**
-     * Use a condition to test the event. Forwards to [InterceptCondition].
+     * Filtering function that executes the event listener if the condition is `false`. Forwards to
+     * [InterceptFilter].
      */
-    fun condition(cond: E.() -> Boolean) = InterceptCondition(eventType, cond, false)
+    fun filterNot(cond: E.() -> Boolean) = InterceptFilter(eventType, cond, false)
 
     /**
      * Use a [Matcher] to test the event on [args]. This function only works for event types that have a dedicated

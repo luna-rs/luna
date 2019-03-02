@@ -28,7 +28,7 @@ fun lightLog(id: Int, event: PlayerEvent) {
 }
 
 on(ItemOnItemEvent::class)
-    .condition { matches(tinderbox) }
+    .filter { matches(tinderbox) }
     .then {
         //  val log = ID_TO_LOG[id]
         //  if (log != null) {

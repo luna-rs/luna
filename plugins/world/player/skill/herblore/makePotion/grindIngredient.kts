@@ -60,7 +60,6 @@ fun grind(msg: ItemOnItemEvent, id: Int) {
             override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(GrindAction(plr, ingredient, forAmount))
         })
-        msg.terminate()
     }
 }
 

@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A pipeline-like model of listeners contained within a pipeline set. It allows for the traversal of events
- * through it, in order to be intercepted by listeners.
+ * A pipeline-like model of listeners contained within a pipeline set. It allows for the traversal of events through
+ * it, in order to be intercepted by listeners.
  *
  * @param <E> The type of event that will traverse this pipeline.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
 public final class EventListenerPipeline<E extends Event> implements Iterable<EventListener<E>> {
 
@@ -24,7 +24,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     private static final Logger LOGGER = LogManager.getLogger();
 
     /**
-     * The type of the traversing event.
+     * The type of event that traverses this pipeline.
      */
     private final Class<E> eventType;
 
@@ -36,12 +36,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * The Kotlin match listener. Serves as an optimization for key-based events.
      */
-    private EventListener<E> matcher;
-
-    /**
-     * A flag determining if a traversal terminated.
-     */
-    private boolean terminated;
+    private EventMatcher<E> matcher;
 
     /**
      * Creates a new {@link EventListenerPipeline}.
@@ -50,10 +45,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     public EventListenerPipeline(Class<E> eventType) {
         this.eventType = eventType;
-
-        // Default match listener, does nothing.
-        matcher = new EventListener<>(eventType, msg -> {
-        });
+        matcher = EventMatcher.defaultMatcher();
     }
 
     @Override
@@ -68,42 +60,35 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      */
     public void post(E msg) {
         try {
-            // Reset pipeline for next event.
-            terminated = false;
-            msg.pipeline(this);
+            msg.setPipeline(this);
 
-            // Apply match listener.
-            matcher.apply(msg);
+            // Attempt to match the event to a listener.
+            if (!matcher.match(msg)) {
 
-            if (!terminated) {
-
-                // Match listener didn't terminate event, post to other listeners.
+                // Event was not matched, post to other listeners.
                 for (EventListener<E> listener : listeners) {
-                    if (terminated) {
-                        break;
-                    }
                     listener.apply(msg);
                 }
             }
         } catch (ScriptExecutionException e) {
-            terminate();
-            LOGGER.error(e);
+            handleException(e);
         } finally {
-            msg.pipeline(null);
+            msg.setPipeline(null);
         }
     }
 
     /**
-     * Terminates an active traversal of this pipeline.
+     * Handles a thrown {@link ScriptExecutionException} from plugins.
      *
-     * @return {@code true} if termination was successful, {@code false} if this pipeline was already terminated.
+     * @param e The exception to handle.
      */
-    public boolean terminate() {
-        if (!terminated) {
-            terminated = true;
-            return true;
+    private void handleException(ScriptExecutionException e) {
+        var script = e.getScript();
+        if (script != null) {
+            LOGGER.warn("Failed to run a listener from script '" + script.getName() + "'", e);
+        } else {
+            LOGGER.catching(e);
         }
-        return false;
     }
 
     /**
@@ -116,12 +101,12 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     }
 
     /**
-     * Sets the match listener optimization.
+     * Sets the match listener.
      *
-     * @param matcher The new match listener.
+     * @param newMatcher The new match listener.
      */
-    public void setMatcher(EventListener<E> matcher) {
-        this.matcher = matcher;
+    public void setMatcher(EventMatcher<E> newMatcher) {
+        matcher = newMatcher;
     }
 
     /**
@@ -134,7 +119,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     }
 
     /**
-     * @return The type of the traversing event.
+     * @return The type of event that traverses this pipeline.
      */
     public Class<E> getEventType() {
         return eventType;

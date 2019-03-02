@@ -1,6 +1,7 @@
 package api.predef
 
 import io.luna.game.event.EventListener
+import io.luna.game.event.EventMatcherListener
 import io.luna.game.model.EntityType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerInteraction
@@ -33,6 +34,11 @@ val logger = bindings.logger!!
  * The script event listeners.
  */
 val scriptListeners: MutableList<EventListener<*>> = bindings.listeners!!
+
+/**
+ * The script event listeners.
+ */
+val scriptMatchers: MutableList<EventMatcherListener<*>> = bindings.matchers!!
 
 /**
  * The [EventListenerPipelineSet] instance.

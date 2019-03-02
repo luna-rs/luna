@@ -71,5 +71,5 @@ fun restore(plr: Player, id: Int) {
 
 // Start restore task when skills change.
 on(SkillChangeEvent::class)
-    .condition { mob is Player }
+    .filter { mob is Player }
     .then { restore(mob as Player, id) }

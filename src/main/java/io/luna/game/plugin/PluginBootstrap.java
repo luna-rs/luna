@@ -6,6 +6,7 @@ import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.game.event.EventMatcherListener;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
 import io.luna.util.Tuple;
@@ -313,11 +314,15 @@ public final class PluginBootstrap {
             // Evaluate the script.
             interpreter.eval(script);
 
-            // Add all of its listeners, reflectively set the listener script name.
-            for (EventListener<?> evtListener : bindings.getListeners()) {
-                evtListener.setScript(script);
-                bindings.getPipelines().add(evtListener);
+            // Add all of its listeners, reflectively set the listener script.
+            for (EventListener<?> listener : bindings.getListeners()) {
+                listener.setScript(script);
+                bindings.getPipelines().add(listener);
             }
+            for (EventMatcherListener<?> listener : bindings.getMatchers()) {
+                listener.setScript(script);
+            }
+            bindings.getMatchers().clear();
             bindings.getListeners().clear();
         }
     }

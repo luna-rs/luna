@@ -23,7 +23,6 @@ fun open(msg: ItemOnObjectEvent, food: Food?, usingFire: Boolean) {
     if (food != null) {
         val interfaces = msg.plr.interfaces
         interfaces.open(CookingInterface(food, usingFire))
-        msg.terminate()
     }
 }
 
@@ -44,11 +43,11 @@ fun cook(plr: Player, amount: Int? = null) {
  * Use raw food on fire and stove.
  */
 on(ItemOnObjectEvent::class)
-    .condition { fires.contains(objectId) }
+    .filter { fires.contains(objectId) }
     .then { open(this, Food.RAW_TO_FOOD[itemId], true) }
 
 on(ItemOnObjectEvent::class)
-    .condition { ranges.contains(objectId) }
+    .filter { ranges.contains(objectId) }
     .then { open(this, Food.RAW_TO_FOOD[itemId], false) }
 
 /**

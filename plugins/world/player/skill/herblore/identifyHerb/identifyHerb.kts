@@ -31,7 +31,6 @@ fun tryIdentify(msg: ItemFirstClickEvent) {
     val herb = Herb.UNID_TO_HERB[msg.id]
     if (herb != null) {
         identify(msg.plr, herb)
-        msg.terminate()
     }
 }
 
@@ -39,5 +38,5 @@ fun tryIdentify(msg: ItemFirstClickEvent) {
  * Listen for an unidentified herb clicks.
  */
 on(ItemFirstClickEvent::class)
-    .condition { itemDef(id).hasInventoryAction(0, "Identify") }
+    .filter { itemDef(id).hasInventoryAction(0, "Identify") }
     .then { tryIdentify(this) }

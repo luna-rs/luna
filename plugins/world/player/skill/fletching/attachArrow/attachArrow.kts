@@ -73,7 +73,6 @@ fun openInterface(msg: ItemOnItemEvent, arrow: Arrow?) {
             override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeArrowAction(plr, arrow, forAmount))
         })
-        msg.terminate()
     }
 }
 

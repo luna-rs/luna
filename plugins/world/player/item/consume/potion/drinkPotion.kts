@@ -84,7 +84,6 @@ fun lookup(msg: ItemFirstClickEvent) {
     val potion = Potion.DOSE_TO_POTION[msg.id]
     if (potion != null) {
         tryDrink(msg.plr, potion, msg.id, msg.index)
-        msg.terminate()
     }
 }
 
@@ -92,5 +91,5 @@ fun lookup(msg: ItemFirstClickEvent) {
  * Forwards to [lookup] if the item clicked was a consumable.
  */
 on(ItemFirstClickEvent::class)
-    .condition { itemDef(id).hasInventoryAction(0, "Drink") }
+    .filter { itemDef(id).hasInventoryAction(0, "Drink") }
     .then { lookup(this) }

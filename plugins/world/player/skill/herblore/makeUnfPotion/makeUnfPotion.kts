@@ -60,7 +60,6 @@ fun makeUnf(msg: ItemOnItemEvent, herb: Int) {
             override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeUnfAction(plr, unfPotion, forAmount))
         })
-        msg.terminate()
     }
 }
 

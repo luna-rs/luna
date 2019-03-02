@@ -42,11 +42,6 @@ public final class EquipmentChangeEvent extends PlayerEvent {
         this.newItem = newItem;
     }
 
-    @Override
-    public boolean terminate() {
-        throw new IllegalStateException("This event type (EquipmentChangeEvent) cannot be terminated.");
-    }
-
     /**
      * @return The index.
      */
