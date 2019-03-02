@@ -2,7 +2,6 @@ package api.event
 
 import api.predef.*
 import io.luna.game.event.Event
-import io.luna.game.event.EventListener
 import io.luna.game.event.EventMatcher
 import io.luna.game.event.EventMatcherListener
 import io.luna.game.event.impl.ButtonClickEvent
@@ -15,8 +14,6 @@ import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
-import io.luna.game.plugin.Script
-import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 /**
@@ -37,11 +34,6 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
          * Mappings of all matchers. The event type is the key.
          */
         val ALL: Map<KClass<out Event>, Matcher<*, *>>
-
-        /**
-         * The dummy script instance to use for [EventListener]s.
-         */
-        private val SCRIPT = Script("matcherScript", Paths.get(""), "")
 
         /**
          * Retrieves a [Matcher] from the backing map that is matching on events with [E].
@@ -174,8 +166,9 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * A singleton [Matcher] instance for [CommandEvent]s.
      */
-    object CommandMatcher : Matcher<CommandEvent, String>(CommandEvent::class) {
-        override fun key(msg: CommandEvent) = msg.name!!
+    object CommandMatcher : Matcher<CommandEvent, CommandKey>(CommandEvent::class) {
+        // Note: The rights value is ignored, the real key is 'msg.name'.
+        override fun key(msg: CommandEvent) = CommandKey(msg.name, msg.plr.rights)
     }
 
     /**

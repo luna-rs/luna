@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import com.google.common.collect.ImmutableSet;
 import io.luna.util.StringUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -10,11 +11,16 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96 <http://github.org/lare96>
  */
 public enum PlayerRights {
-    // Order matters, for Kotlin scripts!
+    // Order matters, because >=/<= use compareTo in Kotlin.
     PLAYER(0, 0),
     MODERATOR(1, 1),
     ADMINISTRATOR(2, 2),
     DEVELOPER(2, 3);
+
+    /**
+     * All of the elements in this enum.
+     */
+    public static final ImmutableSet<PlayerRights> ALL = ImmutableSet.copyOf(values());
 
     /**
      * The protocol value. May only be between 0-2 (player, moderator, administrator).

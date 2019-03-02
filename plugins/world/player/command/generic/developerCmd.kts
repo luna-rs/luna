@@ -1,10 +1,8 @@
+
 import api.predef.*
-import io.luna.game.model.Position
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Npc
-import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.ConfigMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
@@ -32,44 +30,6 @@ cmd("config", RIGHTS_DEV) {
     plr.sendMessage("config[$id] = $value")
     plr.queue(ConfigMessageWriter(id, value))
 }
-
-/**
- * A command fthat makes all stats 99.
- */
-cmd("master", RIGHTS_DEV) {
-    plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
-    plr.hitpoints.level = 99
-    plr.sendMessage("You have set all your skills to level 99.")
-}
-
-/**
- * A command that moves a player to a different position.
- */
-cmd("move", RIGHTS_DEV) {
-    val x = asInt(0)
-    val y = asInt(1)
-    val z = when {
-        args.size == 3 -> asInt(2)
-        else -> plr.position.z
-    }
-    plr.teleport(Position(x, y, z))
-}
-
-/**
- * A command that shuts the the server down after 60 seconds.
- */
-cmd("shutdown", RIGHTS_DEV) {
-    plr.newDialogue().options(
-            "2 Minutes", { service.scheduleSystemUpdate(200) },
-            "4 Minutes", { service.scheduleSystemUpdate(400) },
-            "8 Minutes", { service.scheduleSystemUpdate(800) },
-            "16 Minutes", { service.scheduleSystemUpdate(1600) }).open()
-}
-
-/**
- * A command that opens the player's bank.
- */
-cmd("bank", RIGHTS_DEV) { plr.bank.open() }
 
 /**
  * A command that spawns a non-player character.
@@ -129,31 +89,4 @@ cmd("graphic", RIGHTS_DEV) {
 cmd("animation", RIGHTS_DEV) {
     val id = asInt(0)
     plr.animation(Animation(id))
-}
-
-/**
- * A command that turns the player into a non-player character.
- */
-cmd("to_npc", RIGHTS_DEV) {
-    val id = asInt(0)
-    plr.transform(id)
-}
-
-/**
- *  A command that spawns an item.
- */
-cmd("item", RIGHTS_DEV) {
-    val id = asInt(0)
-    val amount = if (args.size == 2) asInt(1) else 1
-    plr.inventory.add(Item(id, amount))
-}
-
-/**
- * A command that clears the inventory, bank, and equipment of a player.
- */
-cmd("empty", RIGHTS_DEV) {
-    plr.newDialogue().options(
-            "Empty inventory.", { it.inventory.clear() },
-            "Empty bank.", { it.bank.clear() },
-            "Empty equipment.", { it.equipment.clear() }).open()
 }
