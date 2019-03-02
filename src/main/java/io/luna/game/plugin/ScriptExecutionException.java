@@ -1,7 +1,5 @@
 package io.luna.game.plugin;
 
-import io.luna.game.event.EventListener;
-
 /**
  * A {@link RuntimeException} implementation that is thrown when a script fails to execute one of its listeners.
  *
@@ -10,25 +8,25 @@ import io.luna.game.event.EventListener;
 public final class ScriptExecutionException extends RuntimeException {
 
     /**
-     * The failed listener.
+     * The failed script.
      */
-    private final EventListener<?> listener;
+    private final Script script;
 
     /**
      * Creates a new {@link ScriptExecutionException}.
      *
-     * @param listener The failed listener.
+     * @param script The failed script.
      * @param cause The cause of the failure.
      */
-    public ScriptExecutionException(EventListener<?> listener, Exception cause) {
-        super("Listener failed to execute for script: " + listener.getScript().getName(), cause);
-        this.listener = listener;
+    public ScriptExecutionException(Script script, Exception cause) {
+        super(cause);
+        this.script = script;
     }
 
     /**
-     * @return The failed listener.
+     * @return The failed script.
      */
-    public EventListener<?> getListener() {
-        return listener;
+    public Script getScript() {
+        return script;
     }
 }

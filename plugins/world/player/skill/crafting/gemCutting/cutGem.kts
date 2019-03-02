@@ -52,7 +52,6 @@ fun cutGem(plr: Player, msg: Event, uncut: Int) {
             override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(CutGemAction(plr, gem, forAmount))
         })
-        msg.terminate()
     }
 }
 

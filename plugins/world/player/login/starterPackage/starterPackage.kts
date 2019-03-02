@@ -49,5 +49,5 @@ fun firstLogin(plr: Player) {
 }
 
 on(LoginEvent::class)
-    .condition { plr.firstLogin }
+    .filter { plr.firstLogin }
     .then { firstLogin(plr) }

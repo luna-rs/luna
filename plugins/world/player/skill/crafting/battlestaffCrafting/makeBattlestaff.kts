@@ -50,7 +50,6 @@ fun attachOrb(plr: Player, msg: Event, orb: Int) {
             override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeBattlestaffAction(plr, battlestaff, forAmount))
         })
-        msg.terminate()
     }
 }
 

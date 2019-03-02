@@ -45,11 +45,6 @@ public final class SkillChangeEvent extends MobEvent {
         this.id = id;
     }
 
-    @Override
-    public boolean terminate() {
-        throw new IllegalStateException("This event type (SkillChangeEvent) cannot be terminated.");
-    }
-
     /**
      * @return The old amount of experience.
      */

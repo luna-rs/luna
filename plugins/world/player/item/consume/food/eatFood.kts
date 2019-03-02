@@ -63,7 +63,6 @@ fun lookup(msg: ItemFirstClickEvent) {
     val food = Food.ID_TO_FOOD[msg.id]
     if (food != null) {
         tryEat(msg.plr, food, msg.id, msg.index)
-        msg.terminate()
     }
 }
 
@@ -71,5 +70,5 @@ fun lookup(msg: ItemFirstClickEvent) {
  * Forwards to [tryEat] if the item clicked was food.
  */
 on(ItemFirstClickEvent::class)
-    .condition { itemDef(id).hasInventoryAction(0, "Eat") }
+    .filter { itemDef(id).hasInventoryAction(0, "Eat") }
     .then { lookup(this) }

@@ -67,6 +67,5 @@ on(ItemOnItemEvent::class) {
     val potion = Potion.getPotion(usedId, targetId)
     if (potion != null) {
         makePotion(plr, potion)
-        terminate()
     }
 }

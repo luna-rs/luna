@@ -29,7 +29,7 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
  * The main event interception function. Runs the action without any forwarding.
  */
 fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) {
-    scriptListeners.add(EventListener(eventClass.java, action))
+    scriptListeners += EventListener(eventClass.java, action)
 }
 
 /**

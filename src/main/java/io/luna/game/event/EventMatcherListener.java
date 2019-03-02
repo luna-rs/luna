@@ -1,6 +1,5 @@
 package io.luna.game.event;
 
-import com.google.common.base.MoreObjects;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
@@ -10,46 +9,30 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A listener that intercepts events.
+ * A model that can be matched to an event to by an {@link EventMatcher}.
  *
- * @param <E> The type of event being intercepted.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
-public final class EventListener<E extends Event> {
+public final class EventMatcherListener<E extends Event> {
 
     /**
-     * The encompassing script.
+     * The script containing this matcher listener.
      */
     private final Script script;
 
     /**
-     * The type of event being intercepted.
-     */
-    private final Class<E> eventType;
-
-    /**
-     * The listener function.
+     * The listener.
      */
     private final Consumer<E> listener;
 
     /**
-     * Creates a new {@link EventListener}.
+     * Creates a new {@link EventMatcherListener}.
      *
-     * @param eventType The type of event being intercepted.
-     * @param listener The listener function.
+     * @param listener The listener.
      */
-    public EventListener(Class<E> eventType, Consumer<E> listener) {
-        this.eventType = eventType;
+    public EventMatcherListener(Consumer<E> listener) {
         this.listener = listener;
-
-        // Value injected with reflection.
         script = null;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("eventType", eventType.getSimpleName()).toString();
     }
 
     /**
@@ -66,7 +49,7 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * Sets the encompassing script to {@code newScript}.
+     * Sets the script containing this matcher listener.
      *
      * @param newScript The script to set to.
      */
@@ -76,21 +59,14 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * @return The encompassing script. Possibly {@code null}.
+     * @return The script containing this matcher listener. Possibly {@code null}.
      */
     public Script getScript() {
         return script;
     }
 
     /**
-     * @return The type of event being intercepted.
-     */
-    public Class<E> getEventType() {
-        return eventType;
-    }
-
-    /**
-     * @return The listener function.
+     * @return The listener.
      */
     public Consumer<E> getListener() {
         return listener;
