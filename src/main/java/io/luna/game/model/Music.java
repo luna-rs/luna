@@ -84,9 +84,9 @@ public class Music {
         for (Music m : Music.repo) {
             if (m.music_tab_id!=-1)
             if (plr.unlockedSongs[m.song_id] == 1) {
-                plr.queue(new ColorChangeMessageWriter(m.music_tab_id, ColorChangeMessageWriter.GREEN));
+                plr.queue(new ColorChangeMessageWriter(m.music_tab_id, Color.GREEN));
             } else {
-                plr.queue(new ColorChangeMessageWriter(m.music_tab_id, ColorChangeMessageWriter.RED));
+                plr.queue(new ColorChangeMessageWriter(m.music_tab_id, Color.RED));
             }
         }
         Music startingSong = getSongForReqion(plr.getPosition().getRegionPosition().getId());
@@ -105,7 +105,7 @@ public class Music {
         if (plr.lastSong!=m.song_id) {
             plr.lastSong=m.song_id;
             plr.queue(new MusicMessageWriter(m.song_id));
-            plr.queue(new ColorChangeMessageWriter(m.music_tab_id, ColorChangeMessageWriter.GREEN));
+            plr.queue(new ColorChangeMessageWriter(m.music_tab_id, Color.GREEN));
             plr.unlockedSongs[m.song_id] = 1;
         }
     }
