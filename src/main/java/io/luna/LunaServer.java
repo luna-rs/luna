@@ -2,6 +2,7 @@ package io.luna;
 
 import com.google.common.base.Stopwatch;
 import io.luna.game.GameService;
+import io.luna.game.model.Music;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -131,6 +132,7 @@ public final class LunaServer {
         executor.execute(new NpcDefinitionFileParser());
         executor.execute(new ObjectDefinitionFileParser());
         executor.execute(new BlacklistFileParser(channelFilter));
+        Music.loadMusic();
 
         try {
             int count = executor.size();

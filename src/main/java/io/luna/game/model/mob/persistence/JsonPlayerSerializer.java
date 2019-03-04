@@ -133,6 +133,10 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             Object value = getAsType(attr.get("value"), type);
             player.getAttributes().get(entry.getKey()).set(value);
         }
+
+        int[] unlockedMusic = getAsType(data.get("unlockedMusic"), int[].class);
+        player.unlockedSongs = unlockedMusic;
+
         return LoginResponse.NORMAL;
     }
 
@@ -187,6 +191,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             }
         }
         data.add("attributes", attributes);
+        data.add("unlockedMusic", toJsonTree(player.unlockedSongs));
         return data;
     }
 

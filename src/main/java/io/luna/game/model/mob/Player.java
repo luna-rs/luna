@@ -59,6 +59,12 @@ import static java.util.Objects.requireNonNull;
 public final class Player extends Mob {
 
     /**
+     * Integer representing last song played, and Array of unlocked songs.
+     */
+    public int lastSong = -1;
+    public int[] unlockedSongs = new int[600];
+
+    /**
      * An enum representing prayer icons.
      */
     public enum PrayerIcon {
