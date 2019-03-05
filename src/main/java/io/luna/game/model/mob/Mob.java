@@ -27,6 +27,7 @@ public abstract class Mob extends Entity {
     /**
      * The attribute map.
      */
+    // TODO for players only...
     protected final AttributeMap attributes = new AttributeMap();
 
     /**

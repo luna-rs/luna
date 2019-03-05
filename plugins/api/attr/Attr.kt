@@ -1,37 +1,45 @@
 package api.attr
 
-import io.luna.game.model.mob.Mob
-import kotlin.reflect.KProperty
+import io.luna.game.model.mob.attr.Attribute
+import java.util.concurrent.TimeUnit
 
 /**
- * A model representing a delegate for the attribute with [name] and a type of [T]. It can be retrieved and
- * set through the set/get functions in this class. The syntax for usage is as follows
- * ```
+ * A factory class for instantiating attributes.
  *
- * var Player.myAttribute by Attr<Int>("attribute_name")
- *
- * fun doSomething(plr: Player) {
- *     plr.myAttribute = 10
- *     println(plr.myAttribute)
- * }
- * ```
- *
- * @author lare96
+ * @author lare96 <http://github.com/lare96>
  */
-open class Attr<T>(private val name: String) {
+object Attr {
 
     /**
-     * Retrieve attribute value.
+     * Creates a new [Int] attribute with [initialValue] (default `0`).
      */
-    open operator fun getValue(mob: Mob, property: KProperty<*>): T = attr(mob).get()
+    fun int(initialValue: Int = 0) = Attribute<Int>(initialValue)
 
     /**
-     * Set attribute value.
+     * Creates a [Long] attribute with [initialValue] (default `0L`).
      */
-    open operator fun setValue(mob: Mob, property: KProperty<*>, value: T) = attr(mob).set(value)
+    fun long(initialValue: Long = 0L) = Attribute<Long>(initialValue)
 
     /**
-     * Retrieves the attribute value instance.
+     * Creates a [String] attribute with [initialValue] (default `""`).
      */
-    protected fun attr(mob: Mob) = mob.attributes.get<T>(name)!!
+    fun string(initialValue: String = "") = Attribute<String>(initialValue)
+
+    /**
+     * Creates a [Double] attribute with [initialValue] (default `0.0`).
+     */
+    fun double(initialValue: Double = 0.0) = Attribute<Double>(initialValue)
+
+    /**
+     * Creates a [Boolean] attribute with [initialValue] (default `false`).
+     */
+    fun boolean(initialValue: Boolean = false) = Attribute<Boolean>(initialValue)
+
+    /**
+     * Creates a [Stopwatch] attribute with [initialDuration] in [timeUnit] (default `0ns`).
+     */
+    fun stopwatch(initialDuration: Long = 0L, timeUnit: TimeUnit = TimeUnit.NANOSECONDS): Attribute<Stopwatch> {
+        val newInitialDuration = TimeUnit.NANOSECONDS.convert(initialDuration, timeUnit)
+        return Attribute(Stopwatch(newInitialDuration))
+    }
 }

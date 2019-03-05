@@ -36,7 +36,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         /**
          * The "trading_with" attribute.
          */
-        var Player.tradingWith by Attr<Int>("trading_with")
+        var Player.tradingWith by Attr.int().persist("trading_with")
     }
 
     /**

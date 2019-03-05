@@ -10,8 +10,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.PlayerSettings;
 import io.luna.game.model.mob.Skill;
-import io.luna.game.model.mob.attr.AttributeKey;
-import io.luna.game.model.mob.attr.AttributeValue;
+import io.luna.game.model.mob.attr.Attribute;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.GsonUtils;
 
@@ -90,11 +89,14 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public LoginResponse fromJson(Player player, JsonObject data, String enteredPassword)
             throws ClassNotFoundException {
+
+        // Read and validate password.
         String password = data.get("password").getAsString();
         if (!checkPw(enteredPassword, password)) {
             return LoginResponse.INVALID_CREDENTIALS;
         }
 
+        // Read data from main table.
         Position position = getAsType(data.get("position"), Position.class);
         player.setPosition(position);
 
@@ -125,13 +127,17 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         long[] ignores = getAsType(data.get("ignores"), long[].class);
         player.setIgnores(ignores);
 
+        // Read data from attribute table.
         JsonObject attributes = data.get("attributes").getAsJsonObject();
         for (Entry<String, JsonElement> entry : attributes.entrySet()) {
-            JsonObject attr = entry.getValue().getAsJsonObject();
+            String persistenceKey = entry.getKey();
+            JsonObject attrData = entry.getValue().getAsJsonObject();
 
-            Class<?> type = Class.forName(attr.get("type").getAsString());
-            Object value = getAsType(attr.get("value"), type);
+            // Use attribute key type instead.
+            Class<?> type = Class.forName(attrData.get("type").getAsString());
+            Object value = getAsType(attrData.get("value"), type);
             player.getAttributes().get(entry.getKey()).set(value);
+            player.getAttributes().set();
         }
         return LoginResponse.NORMAL;
     }
@@ -160,34 +166,39 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      * @return The serialization object.
      */
     public JsonObject toJson(Player player) {
-        JsonObject data = new JsonObject();
-        data.addProperty("password", computePw(player));
-        data.add("position", toJsonTree(player.getPosition()));
-        data.addProperty("rights", player.getRights().name());
-        data.add("appearance", toJsonTree(player.getAppearance().toArray()));
-        data.add("settings", toJsonTree(player.getSettings()));
-        data.add("inventory", toJsonTree(player.getInventory().toIndexedArray()));
-        data.add("bank", toJsonTree(player.getBank().toIndexedArray()));
-        data.add("equipment", toJsonTree(player.getEquipment().toIndexedArray()));
-        data.add("skills", toJsonTree(player.getSkills().toArray()));
-        data.add("friends", toJsonTree(player.getFriends().toArray()));
-        data.add("ignores", toJsonTree(player.getIgnores().toArray()));
 
-        JsonObject attributes = new JsonObject();
-        for (Entry<String, AttributeValue> it : player.getAttributes()) {
-            AttributeKey key = AttributeKey.ALIASES.get(it.getKey());
-            AttributeValue value = it.getValue();
+        // Serialize the main table.
+        JsonObject mainData = new JsonObject();
+        mainData.addProperty("password", computePw(player));
+        mainData.add("position", toJsonTree(player.getPosition()));
+        mainData.addProperty("rights", player.getRights().name());
+        mainData.add("appearance", toJsonTree(player.getAppearance().toArray()));
+        mainData.add("settings", toJsonTree(player.getSettings()));
+        mainData.add("inventory", toJsonTree(player.getInventory().toIndexedArray()));
+        mainData.add("bank", toJsonTree(player.getBank().toIndexedArray()));
+        mainData.add("equipment", toJsonTree(player.getEquipment().toIndexedArray()));
+        mainData.add("skills", toJsonTree(player.getSkills().toArray()));
+        mainData.add("friends", toJsonTree(player.getFriends().toArray()));
+        mainData.add("ignores", toJsonTree(player.getIgnores().toArray()));
 
-            if (key.isPersistent()) {
-                JsonObject attr = new JsonObject();
-                attr.addProperty("type", key.getTypeName());
-                attr.add("value", toJsonTree(value.get()));
+        // Iterate through attributes.
+        JsonObject attributeData = new JsonObject();
+        for (Entry<Attribute<?>, Object> entry : player.getAttributes()) {
+            Attribute<?> attr = entry.getKey();
+            Object value = entry.getValue();
 
-                attributes.add(key.getName(), attr);
+            // Add all persistent ones to the attribute table.
+            if (attr.isPersistent()) {
+                JsonObject attrData = new JsonObject();
+                attrData.addProperty("type", attr.getValueType().getName());
+                attrData.add("value", toJsonTree(value));
+
+                attributeData.add(attr.getPersistenceKey(), attrData);
             }
         }
-        data.add("attributes", attributes);
-        return data;
+        // Add attribute table to main table.
+        mainData.add("attributes", attributeData);
+        return mainData;
     }
 
     /**

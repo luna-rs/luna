@@ -1,46 +1,37 @@
 package api.attr
 
-import api.predef.*
-import io.luna.game.model.mob.Mob
-import kotlin.reflect.KProperty
+import java.util.concurrent.TimeUnit
 
 /**
- * A model representing a delegate for an attribute timer with [name]. It includes functions for measuring
- * elapsed time and being reset. The syntax for usage is as follows
- * ```
+ * A model representing a stopwatch, used for measuring elapsed time. Uses {@link System#nanoTime()} for the best
+ * accuracy. Implements {@link Comparable} so comparative operators can be used on Kotlin instances.
  *
- * var Player.myWatch by Stopwatch("stopwatch_name")
- *
- * fun doSomething(plr: Player) {
- *     // Check if elapsed time > 2500ms
- *     if(plr.myWatch > 2500) {
- *         ...
- *
- *         // Reset the elapsed time to 0
- *         plr.myWatch = -1
- *     }
- * }
- * ```
- *
- * @author lare96
+ * @author lare96 <http://github.com/lare96>
  */
-class Stopwatch(name: String) : Attr<Long>(name) {
+class Stopwatch(initialDuration: Long) : Comparable<Long> {
 
     /**
-     * Retrieves the difference between now and the last call to [setValue].
+     * The point at which to begin measuring elapsed time.
      */
-    override operator fun getValue(mob: Mob, property: KProperty<*>): Long {
-        val value = attr(mob).get()
-        return when (value) {
-            0L -> Long.MAX_VALUE // TODO Workaround for timer initialization.
-            else -> currentTimeMs() - value
-        }
+    private var snapshot: Long = System.nanoTime() - initialDuration
+
+    override fun compareTo(other: Long): Int = java.lang.Long.compare(getDuration(), other)
+
+    /**
+     * Resets this stopwatch's [getDuration] to `0`.
+     */
+    fun reset(): Stopwatch {
+        snapshot = System.nanoTime()
+        return this
     }
 
     /**
-     * Resets the value to [currentTimeMs], regardless of the [value] argument. The recommended convention
-     * is to simply assign -1.
+     * Returns the duration between [snapshot] and now, in [timeUnit].
      */
-    override operator fun setValue(mob: Mob, property: KProperty<*>, value: Long) =
-        attr(mob).set(currentTimeMs())
+    fun getDuration(timeUnit: TimeUnit = TimeUnit.MILLISECONDS) = timeUnit.convert(System.nanoTime() - snapshot, TimeUnit.NANOSECONDS)
+
+    /**
+     * Determines if [duration] in [timeUnit] has elapsed.
+     */
+    fun hasDurationElapsed(duration: Long, timeUnit: TimeUnit = TimeUnit.MILLISECONDS) = getDuration(timeUnit) >= duration
 }

@@ -1,14 +1,15 @@
-import api.attr.Stopwatch
+import api.attr.Attr
 import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import world.player.skill.prayer.Bone
+import java.util.concurrent.TimeUnit
 
 /**
- * The "last_bone_bury" stopwatch.
+ * The delay in between burying bones.
  */
-var Player.buryTimer by Stopwatch("last_bone_bury")
+val buryDelay = 1200L
 
 /**
  * The bone bury animation.
@@ -16,10 +17,15 @@ var Player.buryTimer by Stopwatch("last_bone_bury")
 val buryAnimation = Animation(827)
 
 /**
+ * An attribute representing the bury timer.
+ */
+var Player.buryTimer by Attr.stopwatch(buryDelay, TimeUnit.MILLISECONDS)
+
+/**
  * Attempt to bury a bone, if we haven't recently just buried one.
  */
 fun buryBone(plr: Player, bone: Bone) {
-    if (plr.buryTimer >= 1200) {
+    if (plr.buryTimer >= buryDelay) {
         plr.interruptAction()
         plr.animation(buryAnimation)
 
@@ -29,7 +35,7 @@ fun buryBone(plr: Player, bone: Bone) {
         plr.sendMessage("You dig a hole in the ground.")
         plr.sendMessage("You bury the ${bone.itemName()}.")
 
-        plr.buryTimer = -1
+        plr.buryTimer.reset()
     }
 }
 

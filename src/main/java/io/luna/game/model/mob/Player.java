@@ -269,6 +269,11 @@ public final class Player extends Mob {
     private boolean teleporting;
 
     /**
+     * The current run energy level.
+     */
+    private double runEnergy;
+
+    /**
      * The friend list.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
@@ -536,49 +541,45 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'run_energy' attribute.
+     * Sets the current run energy level.
      *
-     * @param runEnergy The value to set to.
+     * @param newRunEnergy The value to set to.
      */
-    public void setRunEnergy(double runEnergy) {
-        if (runEnergy > 100.0) {
-            runEnergy = 100.0;
+    public void setRunEnergy(double newRunEnergy) {
+        if (newRunEnergy > 100.0) {
+            newRunEnergy = 100.0;
         }
 
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        if (attr.get() != runEnergy) {
-            attr.set(runEnergy);
+        if (runEnergy != newRunEnergy) {
+            runEnergy = newRunEnergy;
             queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
         }
     }
 
     /**
-     * Changes the 'run_energy' attribute.
+     * Changes the current run energy level.
      *
-     * @param runEnergy The value to change by.
+     * @param mod The value to change by.
      */
-    public void changeRunEnergy(double runEnergy) {
-        if (runEnergy <= 0.0) {
+    public void changeRunEnergy(double mod) {
+        if (mod <= 0.0) {
             return;
         }
-
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        double newEnergy = attr.get() + runEnergy;
+        double newEnergy = runEnergy + mod;
         if (newEnergy > 100.0) {
             newEnergy = 100.0;
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        attr.set(newEnergy);
+        runEnergy = newEnergy;
         queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
     /**
-     * @return The 'run_energy' attribute.
+     * @return The current run energy level.
      */
     public double getRunEnergy() {
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        return attr.get();
+        return runEnergy;
     }
 
     /**
