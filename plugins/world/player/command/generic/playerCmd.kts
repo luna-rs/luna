@@ -40,3 +40,11 @@ cmd("commands", RIGHTS_PLAYER) {
     // And finally, open the quest journal!
     plr.interfaces.open(questJournal)
 }
+
+/**
+ * A command that tell how many players are currently online.
+ */
+cmd("players", RIGHTS_PLAYER) {
+    plr.sendMessage("Player online: ${world.players.size()}.")
+}
+
