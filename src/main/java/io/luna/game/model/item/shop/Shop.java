@@ -19,6 +19,7 @@ import java.util.Set;
  * A model representing a single shop where items can be bought and sold.
  *
  * @author lare96 <http://github.com/lare96>
+ *
  */
 public final class Shop {
 
@@ -251,9 +252,43 @@ public final class Shop {
      * @return The sell value.
      */
     private int computeSellValue(Item item, boolean total) {
-        int value = (int) Math.floor(item.getItemDef().getValue() / 2);
-        value = value <= 0 ? 1 : value;
-        return total ? value * item.getAmount() : value;
+        int stockDiff = 0;
+
+        //Check if the shop already have this item in stock
+        if(container.contains(item)) {
+
+            //Find out how many of that item are currently in stock in the shop
+            int currentStock = container.computeAmountForId(item.getId());
+
+            //Find out how many of that item are in stock by default in the shop
+            var index = container.computeIndexForId(item.getId());
+            int defaultStock = index.isPresent() ? amountMap[index.getAsInt()].orElse(0): 0;
+
+            //The price decrement doesn't fall below 75%(10 * 7.5%) of the initial price.
+            if((currentStock - defaultStock) > 10) {
+                stockDiff = 10;
+            }
+            else if((currentStock - defaultStock) < -10) {
+                stockDiff = -10;
+            }
+            else {
+                stockDiff = currentStock - defaultStock;
+            }
+
+        }
+
+        double lowAlch = item.getItemDef().getValue() * 0.4;
+        int value = 0;
+
+        //Every overstocked item causes the selling price to decrease by 7.5% of the initial price
+        for(int i = 0; i < (total ? item.getAmount() : 1); i++) {
+
+            value += lowAlch - ((stockDiff * 0.075) * lowAlch);
+
+            if(stockDiff < 10)
+                stockDiff++;
+        }
+        return value <= 0 ? 1 : value;
     }
 
     /**
