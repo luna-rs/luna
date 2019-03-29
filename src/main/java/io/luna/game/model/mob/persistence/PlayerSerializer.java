@@ -44,10 +44,7 @@ public abstract class PlayerSerializer {
      * @return {@code true} if the passwords are equal.
      */
     final boolean checkPw(String enteredPassword, String savedPassword) {
-        if (LunaConstants.PASSWORD_HASHING) {
-            return BCrypt.checkpw(enteredPassword, savedPassword);
-        }
-        return enteredPassword.equals(savedPassword);
+        return BCrypt.checkpw(enteredPassword, savedPassword);
     }
 
     /**
@@ -56,7 +53,6 @@ public abstract class PlayerSerializer {
      * @return The password.
      */
     final String computePw(Player player) {
-        String pw = player.getPassword();
-        return LunaConstants.PASSWORD_HASHING ? BCrypt.hashpw(pw, BCrypt.gensalt()) : pw;
+        return BCrypt.hashpw(player.getPassword(), BCrypt.gensalt(12));
     }
 }
