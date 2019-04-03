@@ -4,11 +4,12 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 
 /**
- * An {@link Action} implementation that executes when the mob is within a certain range of a position.
+ * An {@link Action} implementation that executes when the mob is within a certain range of a position, and interrupts
+ * itself afterwards.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class DistancedAction<T extends Mob> extends Action<T> {
+public abstract class DistancedAction<T extends Mob> extends RepeatingAction<T> {
 
     /**
      * The position.
@@ -21,58 +22,34 @@ public abstract class DistancedAction<T extends Mob> extends Action<T> {
     protected final int radius;
 
     /**
-     * If the action should be interrupted after one execution.
-     */
-    protected final boolean interrupt;
-
-    /**
      * Creates a new {@link DistancedAction}.
      *
      * @param mob The mob this action is for.
      * @param position The position.
      * @param radius The radius to the position.
-     * @param interrupt If the action should be interrupted after one execution.
      */
-    public DistancedAction(T mob, Position position, int radius, boolean interrupt) {
+    public DistancedAction(T mob, Position position, int radius) {
         super(mob, true, 1);
         this.position = position;
         this.radius = radius;
-        this.interrupt = interrupt;
     }
 
     @Override
-    protected final void call() {
-        Position mobPosition = mob.getPosition();
+    public boolean start() {
+        return true;
+    }
+
+    @Override
+    public final void repeat() {
+        var mobPosition = mob.getPosition();
         if (mobPosition.isWithinDistance(position, radius)) {
-            execute();
-
-            if (interrupt) {
-                interrupt();
-            }
+            withinDistance();
+            actionManager.interrupt();
         }
     }
 
     /**
-     * {@inheritDoc}
-     * <p>
-     * This implementation checks if {@code other} is equal by comparing the position values.
+     * Function called every tick while the mob is within {@code radius} relative to {@code position}.
      */
-    @Override
-    protected boolean isEqual(Action<?> other) {
-        if (other == this) {
-            return true;
-        }
-        if (other instanceof DistancedAction<?>) {
-            Position otherPosition = ((DistancedAction<?>) other).position;
-            return position.getX() == otherPosition.getX() &&
-                    position.getY() == otherPosition.getY() &&
-                    position.getZ() == otherPosition.getZ();
-        }
-        return false;
-    }
-
-    /**
-     * Function called when the mob is within correct range of the position.
-     */
-    protected abstract void execute();
+    protected abstract void withinDistance();
 }

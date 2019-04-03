@@ -1,6 +1,8 @@
 package io.luna.game.action;
 
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.task.Task;
 
 import java.util.Optional;
 
@@ -18,55 +20,84 @@ import java.util.Optional;
 public abstract class QueuedAction<T extends Mob> extends Action<T> {
 
     /**
+     * A {@link Task} implementation that will execute the queued action.
+     */
+    private final class Worker extends Task {
+
+        public Worker() {
+            super(duration);
+        }
+
+        @Override
+        protected void execute() {
+            if (mob.getState() != EntityState.INACTIVE) {
+                queuedAction.ifPresent(QueuedAction::execute);
+                actionManager.resetQueued();
+            }
+            cancel();
+        }
+    }
+
+    /**
+     * The duration of this action.
+     */
+    private final int duration;
+
+    /**
+     * The worker processing this action.
+     */
+    private final Worker worker;
+
+    /**
      * The queued action.
      */
-    protected Optional<Action<?>> queuedAction = Optional.empty();
+    protected Optional<QueuedAction<?>> queuedAction = Optional.empty();
 
     /**
      * Creates a new {@link QueuedAction}.
      *
-     * @param mob The {@link Mob} assigned to this action.
-     * @param duration The duration of this action. All subsequent actions submitted within this duration will
-     * be queued.
+     * @param mob The mob assigned to this action.
+     * @param duration The duration of this action.
      */
     public QueuedAction(T mob, int duration) {
-        super(mob, false, duration);
+        super(mob);
+        this.duration = duration;
+        worker = new Worker();
     }
 
     @Override
-    protected void onInit() {
+    public void run() {
+        mob.getWalking().clear();
         execute();
-    }
-
-    @Override
-    protected final void call() {
-        onDuration();
-
-        // Interrupt this action and execute the queued action.
-        interrupt();
-        queuedAction.ifPresent(Action::call);
-    }
-
-    @Override
-    protected final boolean isEqual(Action<?> other) {
-        return true;
-    }
-
-    @Override
-    protected final void onEquals(Action<?> other) {
-        // Queue all incoming actions. The player is essentially "locked" from doing another action until this one
-        // completes (or this action is interrupted).
-        queuedAction = Optional.of(other);
+        world.schedule(worker);
     }
 
     /**
-     * Executes this action. Invoked when this action is submitted.
+     * Determines if {@code action} should be queued in the current action.
+     *
+     * @param action The action.
+     * @return {@code true} if {@code action} should be queued.
+     */
+    public abstract boolean queueIf(QueuedAction<?> action);
+
+    /**
+     * Executes this action.
      */
     protected abstract void execute();
 
     /**
-     * Executes when this action's duration elapses.
+     * Sets the backing queued action.
      */
-    protected void onDuration() {
+    void setQueuedAction(QueuedAction<?> pending) {
+        queuedAction = Optional.of(pending);
+    }
+
+    /**
+     * Retrieves the backing queued action.
+     */
+    void resetQueuedAction() {
+        // cancel task and clear queued action
+        worker.cancel();
+        queuedAction = Optional.empty();
     }
 }
