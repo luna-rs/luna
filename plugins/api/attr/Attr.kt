@@ -1,7 +1,6 @@
 package api.attr
 
 import io.luna.game.model.mob.attr.Attribute
-import java.util.concurrent.TimeUnit
 
 /**
  * A factory class for instantiating attributes.
@@ -13,33 +12,39 @@ object Attr {
     /**
      * Creates a new [Int] attribute with [initialValue] (default `0`).
      */
-    fun int(initialValue: Int = 0) = Attribute<Int>(initialValue)
+    fun int(initialValue: Int = 0) = delegate(Attribute<Int>(initialValue))
 
     /**
      * Creates a [Long] attribute with [initialValue] (default `0L`).
      */
-    fun long(initialValue: Long = 0L) = Attribute<Long>(initialValue)
+    fun long(initialValue: Long = 0L) = delegate(Attribute<Long>(initialValue))
 
     /**
      * Creates a [String] attribute with [initialValue] (default `""`).
      */
-    fun string(initialValue: String = "") = Attribute<String>(initialValue)
+    fun string(initialValue: String = "") = delegate(Attribute<String>(initialValue))
 
     /**
      * Creates a [Double] attribute with [initialValue] (default `0.0`).
      */
-    fun double(initialValue: Double = 0.0) = Attribute<Double>(initialValue)
+    fun double(initialValue: Double = 0.0) = delegate(Attribute<Double>(initialValue))
 
     /**
      * Creates a [Boolean] attribute with [initialValue] (default `false`).
      */
-    fun boolean(initialValue: Boolean = false) = Attribute<Boolean>(initialValue)
+    fun boolean(initialValue: Boolean = false) = delegate(Attribute<Boolean>(initialValue))
 
     /**
-     * Creates a [Stopwatch] attribute with [initialDuration] in [timeUnit] (default `0ns`).
+     * Creates a [Timer] attribute with [initialDuration] (default `0L`).
      */
-    fun stopwatch(initialDuration: Long = 0L, timeUnit: TimeUnit = TimeUnit.NANOSECONDS): Attribute<Stopwatch> {
-        val newInitialDuration = TimeUnit.NANOSECONDS.convert(initialDuration, timeUnit)
-        return Attribute(Stopwatch(newInitialDuration))
+    fun timer(initialDuration: Long = 0L): AttributeDelegate<Timer> {
+        val attr = Attribute<Timer>(Timer(initialDuration))
+        attr.useSerializer(TimerSerializer)
+        return delegate(attr)
     }
+
+    /**
+     * Wraps the attribute in a delegate so they can be used like Kotlin properties.
+     */
+    private fun <T> delegate(attribute: Attribute<T>) = AttributeDelegate(attribute)
 }
