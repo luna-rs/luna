@@ -142,6 +142,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
         return buf.release();
     }
 
+    @Override
+    public boolean release(int decrement) {
+        if (buf == Unpooled.EMPTY_BUFFER) {
+            return true;
+        }
+        return buf.release(decrement);
+    }
+
     /**
      * Prepares the buffer for writing bits.
      */
