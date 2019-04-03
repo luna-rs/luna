@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class Luna  {
+public final class Luna {
 
     /**
      * The asynchronous logger.
@@ -28,11 +28,9 @@ public final class Luna  {
             // Disable Jansi instantiation warning.
             System.setProperty("log4j.skipJansi", "true");
 
-            if (LunaConstants.ASYNCHRONOUS_LOGGING) {
-                // Enables asynchronous, garbage-free logging.
-                System.setProperty("Log4jContextSelector",
+            // Enables asynchronous, garbage-free logging.
+            System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-            }
             LOGGER = LogManager.getLogger();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);

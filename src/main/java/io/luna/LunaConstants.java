@@ -26,14 +26,14 @@ public final class LunaConstants {
             JsonObject networkConstants = tomlReader.getTable("network").to(JsonObject.class);
             PORT = networkConstants.get("port").getAsInt();
             RESOURCE_LEAK_DETECTION = Level.valueOf(networkConstants.get("resource_leak_detection").getAsString());
-            CONNECTION_LIMIT = networkConstants.get("connection_threshold").getAsInt();
+            CONNECTION_LIMIT = networkConstants.get("connection_limit").getAsInt();
 
             JsonObject gameConstants = tomlReader.getTable("game").to(JsonObject.class);
             STARTING_POSITION = getAsType(gameConstants.get("starting_position"), Position.class);
             EXPERIENCE_MULTIPLIER = gameConstants.get("experience_multiplier").getAsDouble();
-            SERIALIZER = gameConstants.get("player_serializer").getAsString();
+            SERIALIZER = gameConstants.get("serializer").getAsString();
 
-            JsonObject utilityConstants = tomlReader.getTable("utility").to(JsonObject.class);
+            JsonObject utilityConstants = tomlReader.getTable("util").to(JsonObject.class);
             PLUGIN_GUI = utilityConstants.get("plugin_gui").getAsBoolean();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);

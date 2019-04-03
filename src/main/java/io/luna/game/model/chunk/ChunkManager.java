@@ -97,8 +97,9 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @return The update set.
      */
     private <T extends Mob> Set<T> updateSet(Player player, EntityType type) {
-        Set<T> updateSet = LunaConstants.STAGGERED_UPDATING ?
-                new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>();
+        // TODO Automatically activate when player count is high?
+        Set<T> updateSet = /*LunaConstants.STAGGERED_UPDATING ?
+                new TreeSet<>(new ChunkMobComparator(player)) :*/ new HashSet<>();
         ChunkPosition position = player.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {

@@ -185,8 +185,7 @@ public final class Player extends Mob {
     /**
      * The text cache.
      */
-    private final Map<Integer, String> textCache =
-            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : ImmutableMap.of();
+    private final Map<Integer, String> textCache = new HashMap<>();
 
     /**
      * The settings.
@@ -434,11 +433,11 @@ public final class Player extends Mob {
      * @param id The widget identifier.
      */
     public void sendText(Object msg, int id) {
-        requireNonNull(msg);
-        String text = msg.toString();
-        String previous = LunaConstants.PACKET_126_CACHING ? textCache.put(id, text) : null;
-        if (!msg.equals(previous)) {
-            queue(new WidgetTextMessageWriter(text, id));
+        String pending = msg.toString();
+        String previous =  textCache.put(id, pending) ;
+        if (!pending.equals(previous)) {
+            // TODO give warning in widgettext class for caching
+            queue(new WidgetTextMessageWriter(pending, id));
         }
     }
 
