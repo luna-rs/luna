@@ -427,16 +427,18 @@ public final class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet.
+     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. This function makes use of caching mechanisms that
+     * can boost performance when invoked repetitively.
      *
      * @param msg The message to send.
      * @param id The widget identifier.
      */
     public void sendText(Object msg, int id) {
+        // Retrieve the text that's already on the interface.
         String pending = msg.toString();
-        String previous =  textCache.put(id, pending) ;
+        String previous = textCache.put(id, pending);
         if (!pending.equals(previous)) {
-            // TODO give warning in widgettext class for caching
+            // Only queue the packet if we're sending different text.
             queue(new WidgetTextMessageWriter(pending, id));
         }
     }

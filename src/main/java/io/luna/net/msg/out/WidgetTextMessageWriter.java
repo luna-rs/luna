@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.game.event.impl.PlayerEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
@@ -7,7 +8,8 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays text on a widget.
+ * A {@link GameMessageWriter} implementation that displays text on a widget. Keep in mind that this model does not make
+ * use of any caching mechanisms, which can interfere with {@link Player#sendText(Object, int)} functionality.
  *
  * @author lare96 <http://github.org/lare96>
  */
