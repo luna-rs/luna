@@ -5,6 +5,8 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * An {@link Action} implementation that automatically repeats for a specified duration, up until the maximum amount of
  * repetitions.
@@ -21,13 +23,12 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
         /**
          * Creates a new {@link Worker}.
          */
-        private Worker() {
+        private Worker(boolean instant, int delay) {
             super(instant, delay);
         }
 
         @Override
         protected boolean onSchedule() {
-            mob.getWalking().clear();
             return start();
         }
 
@@ -43,36 +44,26 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
                 return;
             }
             repeat();
-            if (times > 0 && ++executions == times) {
-                actionManager.interrupt();
+            if (maxRepeats > 0 && ++currentRepeats >= maxRepeats) {
+                cancel();
             }
         }
     }
 
     /**
-     * If this action executes instantly.
+     * The task processing this action.
      */
-    protected final boolean instant;
-
-    /**
-     * The delay of this action.
-     */
-    protected final int delay;
+    private final Worker worker;
 
     /**
      * The amount of times this action repeats.
      */
-    private final int times;
-
-    /**
-     * The task processing this action.
-     */
-    final Worker worker;
+    private int maxRepeats;
 
     /**
      * The current repetition counter.
      */
-    private int executions;
+    private int currentRepeats;
 
     /**
      * Creates a new {@link RepeatingAction}.
@@ -80,18 +71,20 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      * @param mob The mob assigned to this action.
      * @param instant If this action should execute instantly.
      * @param delay The initial and/or subsequent delay.
-     * @param times The amount of times to repeat.
      */
-    public RepeatingAction(T mob, boolean instant, int delay, int times) {
+    public RepeatingAction(T mob, boolean instant, int delay) {
         super(mob);
-        this.instant = instant;
-        this.delay = delay;
-        this.times = times;
-        worker = new Worker();
+        worker = new Worker(instant, delay);
     }
 
-    public RepeatingAction(T mob, boolean instant, int delay) {
-        this(mob, instant, delay, 0);
+    /**
+     * Creates a new {@link RepeatingAction} that repeats indefinitely at a delay of {@code 1}.
+     *
+     * @param mob The mob assigned to this action.
+     * @param instant If this action should execute instantly.
+     */
+    public RepeatingAction(T mob, boolean instant) {
+        this(mob, instant, 1);
     }
 
     @Override
@@ -100,9 +93,9 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     }
 
     /**
-     * Interrupts this action by cancelling the {@link Worker}.
+     * Interrupts this action by cancelling the backing {@link Worker}.
      */
-    final void cancelWorker() {
+    protected final void interrupt() {
         worker.cancel();
     }
 
@@ -134,6 +127,14 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     }
 
     /**
+     * Sets the maximum amount of times this action will repeat.
+     */
+    public final void setRepeat(int amount) {
+        checkArgument(amount > 0, "Amount of repetitions must be above 0.");
+        maxRepeats = amount;
+    }
+
+    /**
      * @return The current delay of this action.
      */
     public final int getDelay() {
@@ -144,8 +145,8 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      * Dynamically sets the current delay of this action. Will take effect immediately, and the pending execution time is
      * <strong>not</strong> reset.
      */
-    public final void setDelay(int delay) {
-        worker.setDelay(delay);
+    public final void setDelay(int newDelay) {
+        worker.setDelay(newDelay);
     }
 
     /**

@@ -2,18 +2,18 @@ package world.player.skill.cooking
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 
 /**
- * A [ProducingAction] that cooks food.
+ * An [InventoryAction] that cooks food.
  */
 class CookingAction(plr: Player,
                     val food: Food,
                     val usingFire: Boolean,
-                    amount: Int) : ProducingAction(plr, true, 4, amount) {
+                    amount: Int) : InventoryAction(plr, true, 4, amount) {
 
     companion object {
 
@@ -33,7 +33,7 @@ class CookingAction(plr: Player,
      */
     private var experience: Double? = null
 
-    override fun canProduce(): Boolean =
+    override fun executeIf(start: Boolean): Boolean =
         when {
             mob.cooking.level < food.reqLevel -> {
                 mob.sendMessage("You need a Cooking level of ${food.reqLevel} to cook this.")
@@ -42,7 +42,7 @@ class CookingAction(plr: Player,
             else -> true
         }
 
-    override fun onProduce() {
+    override fun execute() {
         val cooked = food.cooked
         mob.animation(if (usingFire) FIRE_ANIMATION else RANGE_ANIMATION)
 
@@ -54,18 +54,18 @@ class CookingAction(plr: Player,
         }
     }
 
-    override fun remove() = arrayOf(food.rawItem)
+    override fun remove() = listOf(food.rawItem)
 
-    override fun add(): Array<Item> =
+    override fun add(): List<Item> =
         if (computeIsBurnt()) {
             experience = null
-            arrayOf(food.burntItem)
+            listOf(food.burntItem)
         } else {
             experience = food.exp
-            arrayOf(food.cookedItem)
+            listOf(food.cookedItem)
         }
 
-    override fun isEqual(other: Action<*>?): Boolean =
+    override fun ignoreIf(other: Action<*>?): Boolean =
         when (other) {
             is CookingAction -> other.food == food &&
                     other.usingFire == usingFire

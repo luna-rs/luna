@@ -44,7 +44,7 @@ public abstract class DistancedAction<T extends Mob> extends RepeatingAction<T> 
         var mobPosition = mob.getPosition();
         if (mobPosition.isWithinDistance(position, radius)) {
             withinDistance();
-            actionManager.interrupt();
+            interrupt();
         }
     }
 

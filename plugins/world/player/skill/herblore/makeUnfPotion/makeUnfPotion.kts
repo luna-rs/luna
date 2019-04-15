@@ -2,7 +2,7 @@ package world.player.skill.herblore.makeUnfPotion
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
@@ -10,11 +10,11 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 
 /**
- * A [ProducingAction] that will make unfinished potions.
+ * An [InventoryAction] that will make unfinished potions.
  */
 class MakeUnfAction(plr: Player,
                     val unfPotion: UnfPotion,
-                    makeTimes: Int) : ProducingAction(plr, true, 2, makeTimes) {
+                    makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -24,7 +24,7 @@ class MakeUnfAction(plr: Player,
         val ANIMATION = Animation(363)
     }
 
-    override fun canProduce() =
+    override fun executeIf(start: Boolean) =
         when {
             mob.herblore.level < unfPotion.level -> {
                 mob.sendMessage("You need a Herblore level of ${unfPotion.level} to make this potion.")
@@ -33,16 +33,16 @@ class MakeUnfAction(plr: Player,
             else -> true
         }
 
-    override fun onProduce() {
-        mob.sendMessage("You put the ${itemDef(unfPotion.herb).name} into the vial of water.")
+    override fun execute() {
+        mob.sendMessage("You put the ${unfPotion.herbName} into the vial of water.")
         mob.animation(ANIMATION)
     }
 
-    override fun add() = arrayOf(unfPotion.idItem)
+    override fun add() = listOf(unfPotion.idItem)
 
-    override fun remove() = arrayOf(unfPotion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
+    override fun remove() = listOf(unfPotion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
 
-    override fun isEqual(other: Action<*>) =
+    override fun ignoreIf(other: Action<*>) =
         when (other) {
             is MakeUnfAction -> unfPotion == other.unfPotion
             else -> false

@@ -1,52 +1,49 @@
+package world.player.skill.prayer
+
 import api.attr.Attr
 import api.predef.*
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
+import io.luna.game.action.ThrottledAction
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.skill.prayer.Bone
-import java.util.concurrent.TimeUnit
+import java.util.*
 
 /**
- * The delay in between burying bones.
+ * Throttles bone burying.
  */
-val buryDelay = 1200L
+val Player.lastBury by Attr.timeSource()
 
 /**
- * The bone bury animation.
+ * The bone burying animation.
  */
 val buryAnimation = Animation(827)
 
 /**
- * An attribute representing the bury timer.
+ * Buries [bone] for [plr] and awards XP.
  */
-var Player.buryTimer by Attr.stopwatch(buryDelay, TimeUnit.MILLISECONDS)
+fun bury(plr: Player, bone: Bone) {
+    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastBury, 3) {
+        override fun execute() {
+            mob.animation(buryAnimation)
 
-/**
- * Attempt to bury a bone, if we haven't recently just buried one.
- */
-fun buryBone(plr: Player, bone: Bone) {
-    if (plr.buryTimer >= buryDelay) {
-        plr.interruptAction()
-        plr.animation(buryAnimation)
+            mob.prayer.addExperience(bone.exp)
+            mob.inventory.remove(bone.boneItem)
 
-        plr.prayer.addExperience(bone.exp)
-        plr.inventory.remove(bone.boneItem)
-
-        plr.sendMessage("You dig a hole in the ground.")
-        plr.sendMessage("You bury the ${bone.itemName()}.")
-
-        plr.buryTimer.reset()
-    }
+            mob.sendMessage("You dig a hole in the ground.")
+            mob.sendMessage("You bury the bones.")
+        }
+    })
 }
 
-/**
- * If the item being clicked is a bone, attempt to bury it.
- */
-on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Bury") }
-    .then {
-        val bone = Bone.ID_TO_BONE[id]
+// Initialize bone burying event listeners here.
+ItemDefinition.ALL
+    .stream()
+    .filter(Objects::nonNull)
+    .forEach {
+        val bone = Bone.ID_TO_BONE[it.id]
         if (bone != null) {
-            buryBone(plr, bone)
+            item1(it.id) {
+                bury(plr, bone)
+            }
         }
     }

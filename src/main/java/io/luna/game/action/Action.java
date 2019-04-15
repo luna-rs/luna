@@ -8,8 +8,9 @@ import io.luna.game.model.mob.Mob;
  * {@link QueuedAction}, and {@link ThrottledAction}. All actions are extensions of these types.
  * <p>
  * <p>
- * A mob can only be performing one action at a time, and it can be stopped (interrupted) by using {@link Mob#interruptAction()}. By
- * default, actions are interrupted in instances such as during walking, unregistering, teleporting, etc.
+ * A mob can only be performing one action at a time, and it can be stopped (interrupted) by using {@code interrupt()} within
+ * an action implementation or {@link Mob#interruptAction()} anywhere else. By default, actions are interrupted in instances
+ * such as during walking, unregistering, teleporting, etc.
  *
  * @param <T> The mob that this Action is dedicated to.
  * @author lare96 <http://github.org/lare96>

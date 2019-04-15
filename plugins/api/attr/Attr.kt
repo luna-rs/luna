@@ -1,6 +1,9 @@
 package api.attr
 
+import api.predef.*
+import io.luna.game.action.TimeSource
 import io.luna.game.model.mob.attr.Attribute
+import io.luna.util.TickTimer
 
 /**
  * A factory class for instantiating attributes.
@@ -35,16 +38,24 @@ object Attr {
     fun boolean(initialValue: Boolean = false) = delegate(Attribute<Boolean>(initialValue))
 
     /**
-     * Creates a [Timer] attribute with [initialDuration] (default `0L`).
+     * Creates a [TimeSource] attribute.
      */
-    fun timer(initialDuration: Long = 0L): AttributeDelegate<Timer> {
-        val attr = Attribute<Timer>(Timer(initialDuration))
-        attr.useSerializer(TimerSerializer)
+    fun timeSource(): AttributeDelegate<TimeSource> {
+        val attr = Attribute<TimeSource>(TimeSource(world))
+        return delegate(attr)
+    }
+
+    /**
+     * Creates a [TickTimer] attribute with [initialDuration] (default `0L`).
+     */
+    fun timer(initialDuration: Long = 0L): AttributeDelegate<TickTimer> {
+        val attr = Attribute<TickTimer>(TickTimer(world, initialDuration))
+        attr.useSerializer(TickTimerSerializer)
         return delegate(attr)
     }
 
     /**
      * Wraps the attribute in a delegate so they can be used like Kotlin properties.
      */
-    private fun <T> delegate(attribute: Attribute<T>) = AttributeDelegate(attribute)
+    private fun <T : Any> delegate(attribute: Attribute<T>) = AttributeDelegate(attribute)
 }

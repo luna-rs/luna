@@ -136,8 +136,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             // Use attribute key type instead.
             Class<?> type = Class.forName(attrData.get("type").getAsString());
             Object value = getAsType(attrData.get("value"), type);
-            player.getAttributes().get(entry.getKey()).set(value);
-            player.getAttributes().set();
+            player.getAttributes().load(persistenceKey, value);
         }
         return LoginResponse.NORMAL;
     }

@@ -25,23 +25,29 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     private final class Worker extends Task {
 
         public Worker() {
-            super(duration);
+            super(delay);
         }
 
         @Override
         protected void execute() {
-            if (mob.getState() != EntityState.INACTIVE) {
-                queuedAction.ifPresent(QueuedAction::execute);
-                actionManager.resetQueued();
+            if (mob.getState() != EntityState.INACTIVE && queuedAction.isPresent()) {
+                var action = queuedAction.get();
+                action.execute();
+                source.reset();
             }
-            cancel();
+            interrupt();
         }
     }
 
     /**
      * The duration of this action.
      */
-    private final int duration;
+    private final int delay;
+
+    /**
+     * The time source.
+     */
+    private final TimeSource source;
 
     /**
      * The worker processing this action.
@@ -51,26 +57,37 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     /**
      * The queued action.
      */
-    protected Optional<QueuedAction<?>> queuedAction = Optional.empty();
+    private Optional<QueuedAction<?>> queuedAction = Optional.empty();
 
     /**
      * Creates a new {@link QueuedAction}.
      *
      * @param mob The mob assigned to this action.
-     * @param duration The duration of this action.
+     * @param source The time source.
+     * @param delay The delay of this action. How long (in ticks) the mob must wait before executions of this action.
      */
-    public QueuedAction(T mob, int duration) {
+    public QueuedAction(T mob, TimeSource source, int delay) {
         super(mob);
-        this.duration = duration;
+        this.delay = delay;
+        this.source = source;
         worker = new Worker();
     }
 
     @Override
     public void run() {
         mob.getWalking().clear();
-        execute();
-        world.schedule(worker);
+        if (source.ready(delay)) {
+            execute();
+            world.schedule(worker);
+        } else {
+            actionManager.resetQueued();
+        }
     }
+
+    /**
+     * Executes this action.
+     */
+    public abstract void execute();
 
     /**
      * Determines if {@code action} should be queued in the current action.
@@ -78,26 +95,22 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
      * @param action The action.
      * @return {@code true} if {@code action} should be queued.
      */
-    public abstract boolean queueIf(QueuedAction<?> action);
-
-    /**
-     * Executes this action.
-     */
-    protected abstract void execute();
+    public boolean queueIf(QueuedAction<?> action) {
+        return source.equals(action.source);
+    }
 
     /**
      * Sets the backing queued action.
      */
     void setQueuedAction(QueuedAction<?> pending) {
-        queuedAction = Optional.of(pending);
+        queuedAction = Optional.ofNullable(pending);
     }
 
     /**
-     * Retrieves the backing queued action.
+     * Resets the internal queued action.
      */
-    void resetQueuedAction() {
-        // cancel task and clear queued action
+    final void interrupt() {
         worker.cancel();
-        queuedAction = Optional.empty();
+        actionManager.resetQueued();
     }
 }

@@ -160,7 +160,7 @@ public final class World {
     /**
      * The current tick.
      */
-    private AtomicLong currentTick = new AtomicLong();
+    private final AtomicLong currentTick = new AtomicLong();
 
     /**
      * Creates a new {@link World}.
@@ -444,7 +444,7 @@ public final class World {
     /**
      * @return The current tick.
      */
-    public AtomicLong getCurrentTick() {
-        return currentTick;
+    public long getCurrentTick() {
+        return currentTick.get();
     }
 }

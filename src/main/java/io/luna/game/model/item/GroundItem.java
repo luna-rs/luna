@@ -84,7 +84,7 @@ public final class GroundItem extends StationaryEntity {
 
     @Override
     public int size() {
-        return 1;
+        return 0;
     }
 
     @Override

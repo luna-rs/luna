@@ -42,7 +42,12 @@ public final class PickupItemMessageReader extends GameMessageReader {
                 findFirst().
                 ifPresent(item -> {
                     Event event = new PickupItemEvent(player, x, y, id);
-                    player.submitAction(new InteractionAction(player, item, event));
+                    player.submitAction(new InteractionAction(player, item) {
+                        @Override
+                        public void execute() {
+                            player.getPlugins().post(event);
+                        }
+                    });
                 });
         return null;
     }

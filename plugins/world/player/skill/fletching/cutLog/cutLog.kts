@@ -2,7 +2,7 @@ package world.player.skill.fletching.cutLog
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
@@ -12,12 +12,12 @@ import world.player.skill.fletching.attachArrow.Arrow
 import world.player.skill.fletching.stringBow.Bow
 
 /**
- * A [ProducingAction] implementation that cuts logs.
+ * An [InventoryAction] implementation that cuts logs.
  */
 class CutLogAction(plr: Player,
                    val log: Int,
                    val bow: Bow,
-                   makeTimes: Int) : ProducingAction(plr, true, 3, makeTimes) {
+                   makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
 
     companion object {
 
@@ -27,18 +27,18 @@ class CutLogAction(plr: Player,
         val ANIMATION = Animation(6782)
     }
 
-    override fun add(): Array<Item> {
+    override fun add(): List<Item> {
         val unstrungItem =
             when (bow) {
                 Bow.ARROW_SHAFT -> Item(bow.unstrung, Arrow.SET_AMOUNT)
                 else -> Item(bow.unstrung)
             }
-        return arrayOf(unstrungItem)
+        return listOf(unstrungItem)
     }
 
-    override fun remove() = arrayOf(Item(log))
+    override fun remove() = listOf(Item(log))
 
-    override fun canProduce() =
+    override fun executeIf(start: Boolean) =
         when {
             mob.fletching.level < bow.level -> {
                 mob.sendMessage("You need a Fletching level of ${bow.level} to cut this.")
@@ -48,7 +48,7 @@ class CutLogAction(plr: Player,
         }
 
 
-    override fun onProduce() {
+    override fun execute() {
         val unstrungName = itemDef(bow.unstrung).name
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
@@ -56,7 +56,7 @@ class CutLogAction(plr: Player,
         mob.fletching.addExperience(bow.exp)
     }
 
-    override fun isEqual(other: Action<*>) =
+    override fun ignoreIf(other: Action<*>) =
         when (other) {
             is CutLogAction -> log == other.log && bow == other.bow
             else -> false

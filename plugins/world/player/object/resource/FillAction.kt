@@ -1,12 +1,12 @@
 package world.player.`object`.resource
 
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
- * A [ProducingAction] that fills [emptyId] with a [Resource].
+ * An [InventoryAction] that fills [emptyId] with a [Resource].
  *
  * @author lare96
  */
@@ -15,15 +15,15 @@ class FillAction(plr: Player,
                  val objectId: Int?,
                  val filledId: Item,
                  val resource: Resource,
-                 amount: Int) : ProducingAction(plr, true, 2, amount) {
+                 amount: Int) : InventoryAction(plr, true, 2, amount) {
 
-    override fun remove() = arrayOf(emptyId)
-    override fun add() = arrayOf(filledId)
-    override fun onProduce() {
+    override fun remove() = listOf(emptyId)
+    override fun add() = listOf(filledId)
+    override fun execute() {
         resource.onFill(mob)
     }
 
-    override fun isEqual(other: Action<*>): Boolean {
+    override fun ignoreIf(other: Action<*>): Boolean {
         return when (other) {
             is FillAction -> resource == other.resource &&
                     objectId == other.objectId &&

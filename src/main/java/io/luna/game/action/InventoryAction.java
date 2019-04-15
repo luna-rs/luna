@@ -33,25 +33,38 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
      * @param times The amount of times to repeat.
      */
     public InventoryAction(Player player, boolean instant, int delay, int times) {
-        super(player, instant, delay, times);
+        super(player, instant, delay);
+        setRepeat(times);
+    }
+
+    /**
+     * Creates a new {@link InventoryAction} with a delay of {@code 1}.
+     *
+     * @param player The player.
+     * @param instant If this action executes instantly.
+     * @param times The amount of times to repeat.
+     */
+    public InventoryAction(Player player, boolean instant, int times) {
+        this(player, instant, 1, times);
     }
 
     @Override
     public final boolean start() {
-        return executeIf();
+        mob.getWalking().clear();
+        return executeIf(true);
     }
 
     @Override
     public final void repeat() {
-        if (!executeIf()) {
-            actionManager.interrupt();
+        if (!executeIf(false)) {
+            interrupt();
             return;
         }
 
         var inventory = mob.getInventory();
         currentRemove = remove();
         if (!inventory.containsAll(currentRemove)) {
-            actionManager.interrupt();
+            interrupt();
             return;
         }
 
@@ -61,7 +74,7 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
         int requiredSpaces = removeSpaces - addSpaces;
         if (requiredSpaces > inventory.computeRemainingSize()) {
             mob.sendMessage("You do not have enough space in your inventory.");
-            actionManager.interrupt();
+            interrupt();
             return;
         }
         inventory.removeAll(currentRemove);
@@ -92,9 +105,10 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
      * A function invoked every {@code delay} and on registration. Will stop the action and perform no processing if
      * {@code false} is returned.
      *
+     * @param start If this action is currently being registered.
      * @return {@code false} to interrupt the action.
      */
-    public boolean executeIf() {
+    public boolean executeIf(boolean start) {
         return true;
     }
 }

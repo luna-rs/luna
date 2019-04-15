@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.attr;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import io.luna.game.model.mob.Player;
 import io.luna.util.GsonUtils;
@@ -15,6 +16,8 @@ import static java.util.Objects.requireNonNull;
  * @author lare96 <http://github.com/lare96>
  */
 public final class Attribute<T> {
+
+    private static final ImmutableSet<Class<?>> DEFAULT_TYPES = ImmutableSet.of(Integer.class, Long.class, Double.class, Boolean.class, String.class);
 
     /**
      * The initial value.
@@ -89,6 +92,8 @@ public final class Attribute<T> {
                 "Persistent attribute key {" + persistenceKey + "} has whitespace characters, use underscores instead.");
         checkArgument(CharMatcher.forPredicate(Character::isUpperCase).matchesNoneOf(persistenceKey),
                 "Persistent attribute key {" + persistenceKey + "} has uppercase characters, use lowercase ones instead.");
+        checkState(serializer != null || DEFAULT_TYPES.contains(valueType),
+                valueType.getSimpleName() + " is not a default type, so it must have an attached AttributeSerializer.");
         this.persistenceKey = persistenceKey;
         return this;
     }
@@ -98,6 +103,10 @@ public final class Attribute<T> {
      */
     public void useSerializer(AttributeSerializer<T> serializer) {
         this.serializer = serializer;
+    }
+
+    public boolean hasSerializer() {
+        return serializer != null;
     }
 
     /**

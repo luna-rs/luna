@@ -29,10 +29,9 @@ public final class ActionManager {
         if (mob.getState() == EntityState.INACTIVE) {
             return;
         }
+
         mob.onSubmitAction(pending);
         if (pending.isRepeating()) {
-            // Clear the queued action before running.
-            interruptQueued();
             handleRepeating((RepeatingAction<?>) pending);
         } else if (pending.isQueued()) {
             // Stop the repeating action before running.
@@ -43,7 +42,7 @@ public final class ActionManager {
             interrupt();
             pending.run();
         } else {
-            throw new IllegalStateException("Invalid action type. Must be RepeatingAction, QueuedAction, or ThrottledAction.");
+            throw new IllegalStateException("Invalid action type. Must be a RepeatingAction, QueuedAction, or ThrottledAction.");
         }
     }
 
@@ -58,7 +57,12 @@ public final class ActionManager {
                 // Actions are equal, ignore duplicate.
                 return;
             }
-            repeating.cancelWorker();
+            repeating.interrupt();
+        }
+
+        // Stop any queued action from running. The action will silently interrupt itself once its duration elapses.
+        if (queued != null) {
+            queued.setQueuedAction(null);
         }
 
         // Set the new repeating action and run it.
@@ -78,7 +82,7 @@ public final class ActionManager {
                 queued.setQueuedAction(pending);
                 return;
             }
-            queued.resetQueuedAction();
+            queued.interrupt();
         }
 
         // Set the new queued action and run it.
@@ -87,7 +91,7 @@ public final class ActionManager {
     }
 
     /**
-     * Interrupts any repeating or queued actions.
+     * Interrupts any currently processing action.
      */
     public void interrupt() {
         interruptRepeating();
@@ -99,7 +103,7 @@ public final class ActionManager {
      */
     private void interruptRepeating() {
         if (repeating != null) {
-            repeating.cancelWorker();
+            repeating.interrupt();
             repeating = null;
         }
     }
@@ -108,10 +112,8 @@ public final class ActionManager {
      * Interrupts {@link #queued} by resetting the queued action.
      */
     private void interruptQueued() {
-        // Clear the current queued action.
         if (queued != null) {
-            // Clear queued action, so it doesn't fire.
-            queued.resetQueuedAction();
+            queued.interrupt();
         }
     }
 

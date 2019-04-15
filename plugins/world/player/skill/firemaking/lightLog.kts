@@ -1,23 +1,9 @@
 
 import api.predef.*
-import io.luna.game.action.Action
-import io.luna.game.action.DestructionAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.event.impl.PlayerEvent
-import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Player
 
 // TODO Blocked until stationary entity system is complete
-class LightLogAction(plr: Player) : DestructionAction(plr, true, 1, 1) {
-    override fun remove(): Array<Item> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun isEqual(other: Action<*>?): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-}
 
 
 val tinderbox = -1

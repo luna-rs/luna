@@ -13,39 +13,6 @@ import io.luna.game.model.mob.Mob;
 public abstract class ThrottledAction<T extends Mob> extends Action<T> {
 
     /**
-     * A model representing a time source that can be reset. Primarily acts as a proxy for Kotlin timer attributes.
-     */
-    public static abstract class TimeSource {
-
-        /**
-         * If this time source was checked. Used to disable throttling of the first execution.
-         */
-        private boolean checked;
-
-        /**
-         * Retrieve the current duration, in {@code MILLISECONDS}.
-         */
-        public abstract long getDuration();
-
-        /**
-         * Reset the current duration to {@code 0}.
-         */
-        protected abstract void resetDuration();
-
-        /**
-         * Determines if {@code duration} has elapsed, and if so resets the duration to 0.
-         */
-        private boolean ready(long duration) {
-            if (!checked || getDuration() >= duration) {
-                checked = true;
-                resetDuration();
-                return true;
-            }
-            return false;
-        }
-    }
-
-    /**
      * The time source.
      */
     private final TimeSource source;
@@ -71,7 +38,7 @@ public abstract class ThrottledAction<T extends Mob> extends Action<T> {
     @Override
     public void run() {
         mob.getWalking().clear();
-        if (source.ready(delay * 600)) {
+        if (source.ready(delay)) {
             execute();
         }
     }

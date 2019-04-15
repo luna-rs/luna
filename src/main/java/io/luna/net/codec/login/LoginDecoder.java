@@ -211,8 +211,8 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
 
                 ByteMessage msg = ByteMessage.wrap(rsaBuffer);
-                String username = msg.getString().toLowerCase();
-                String password = msg.getString().toLowerCase();
+                String username = msg.getString().toLowerCase().trim();
+                String password = msg.getString().toLowerCase().trim();
 
                 return new LoginCredentialsMessage(username,
                         password, encryptor, decryptor, ctx.channel().pipeline());

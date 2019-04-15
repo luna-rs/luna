@@ -15,7 +15,6 @@ import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -26,7 +25,6 @@ import io.luna.game.model.object.GameObject;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
@@ -289,6 +287,21 @@ public final class Player extends Mob {
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
 
     /**
+     * The unmute date.
+     */
+    private String unmuteDate = "n/a";
+
+    /**
+     * The unban date.
+     */
+    private String unbanDate = "n/a";
+
+    /**
+     * The combined weight of the {@link #inventory} and {@link #equipment}.
+     */
+    private double weight;
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context instance.
@@ -341,6 +354,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        actions.interrupt();
         world.getPlayerMap().remove(getUsernameHash());
         world.getAreas().notifyLogout(this);
         removeLocalItems();
@@ -519,28 +533,6 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'withdraw_as_note' attribute.
-     *
-     * @param withdrawAsNote The value to set to.
-     */
-    // TODO No point in this being an attribute. Migrate to boolean within "Bank" class
-    public void setWithdrawAsNote(boolean withdrawAsNote) {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        if (attr.get() != withdrawAsNote) {
-            attr.set(withdrawAsNote);
-            queue(new ConfigMessageWriter(115, withdrawAsNote ? 1 : 0));
-        }
-    }
-
-    /**
-     * @return The 'withdraw_as_note' attribute.
-     */
-    public boolean isWithdrawAsNote() {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        return attr.get();
-    }
-
-    /**
      * Sets the current run energy level.
      *
      * @param newRunEnergy The value to set to.
@@ -583,99 +575,89 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'unmute_date' attribute.
-     *
-     * @param unmuteDate The value to set to.
+     * Sets the unmute date.
      */
     public void setUnmuteDate(String unmuteDate) {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        attr.set(unmuteDate);
+        this.unmuteDate = unmuteDate;
     }
 
     /**
-     * @return The 'unmute_date' attribute.
+     * @return The unmute date.
      */
     public String getUnmuteDate() {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        return attr.get();
+        return unmuteDate;
     }
 
     /**
-     * Sets the 'unban_date' attribute.
-     *
-     * @param unbanDate The value to set to.
+     * Sets the unban date.
      */
     public void setUnbanDate(String unbanDate) {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        attr.set(unbanDate);
+        this.unbanDate = unbanDate;
     }
 
     /**
-     * @return The 'unban_date' attribute.
+     * @return The unban date.
      */
     public String getUnbanDate() {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        return attr.get();
+        return unbanDate;
     }
 
     /**
-     * Sets the 'weight' attribute.
-     *
-     * @param weight The value to set to.
+     * Sets the combined weight of the inventory and equipment.
      */
-    public void setWeight(double weight) {
-        AttributeValue<Double> attr = attributes.get("weight");
-        attr.set(weight);
-        queue(new UpdateWeightMessageWriter((int) weight));
-    }
-
-    /**
-     * @return The 'weight' attribute.
-     */
-    public double getWeight() {
-        AttributeValue<Double> attr = attributes.get("weight");
-        return attr.get();
-    }
-
-    /**
-     * @return {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
-     */
-    public boolean isMuted() {
-        String date = getUnmuteDate();
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnmuteDate("n/a");
-                    return false;
-                }
-                return true;
+    public void setWeight(double newWeight) {
+        if (weight != newWeight) {
+            weight = newWeight;
+            queue(new UpdateWeightMessageWriter((int) weight));
         }
     }
 
     /**
-     * @return {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
+     * @return The combined weight of the inventory and equipment.
+     */
+    public double getWeight() {
+        return weight;
+    }
+
+    /**
+     * @return {@code true} if this player is muted.
+     */
+    public boolean isMuted() {
+        Optional<LocalDate> liftDate = computeLiftDate(unmuteDate);
+        if (liftDate.isPresent()) {
+            if (liftDate.filter(date -> !LocalDate.now().isAfter(date)).isPresent()) {
+                return true;
+            }
+            unmuteDate = "n/a";
+        }
+        return false;
+    }
+
+    /**
+     * @return {@code true} if this player is banned.
      */
     public boolean isBanned() {
-        String date = getUnbanDate();
-        switch (date) {
+        Optional<LocalDate> liftDate = computeLiftDate(unbanDate);
+        if (liftDate.isPresent()) {
+            if (liftDate.filter(date -> !LocalDate.now().isAfter(date)).isPresent()) {
+                return true;
+            }
+            unbanDate = "n/a";
+        }
+        return false;
+    }
+
+    /**
+     * Returns an optional describing a punishment date.
+     */
+    private Optional<LocalDate> computeLiftDate(String punishmentDate) {
+        switch (punishmentDate) {
             case "never":
-                return true;
+                return Optional.of(LocalDate.now().plusYears(1));
             case "n/a":
-                return false;
+                return Optional.empty();
             default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnbanDate("n/a");
-                    return false;
-                }
-                return true;
+                return Optional.of(LocalDate.parse(punishmentDate));
         }
     }
 

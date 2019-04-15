@@ -1,6 +1,5 @@
 package world.areas.wilderness
 
-import api.attr.Attr
 import api.predef.*
 import io.luna.game.model.Area
 import io.luna.game.model.mob.Player
@@ -12,11 +11,6 @@ import io.luna.game.model.mob.inter.WalkableInterface
  * @author lare96 <http://github.com/lare96>
  */
 class WildernessArea(swX: Int, swY: Int, neX: Int, neY: Int) : Area(swX, swY, neX, neY) {
-
-    /**
-     * The "wilderness_level" attribute.
-     */
-    private var Player.wildernessLevel by Attr<Int>("wilderness_level")
 
     override fun enter(plr: Player) {
         setWildernessLevel(plr)
