@@ -1,6 +1,5 @@
 package io.luna.net.client;
 
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -48,8 +47,8 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onInactive() {
-        World world = player.getWorld();
-        world.queueLogout(player);
+        var logoutService = player.getWorld().getLogoutService();
+        logoutService.submit(player);
     }
 
     @Override

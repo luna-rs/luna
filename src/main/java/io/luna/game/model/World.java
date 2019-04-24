@@ -1,20 +1,19 @@
 package io.luna.game.model;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerPersistence;
 import io.luna.game.model.object.GameObjectList;
+import io.luna.game.service.GameService;
+import io.luna.game.service.LoginRequestService;
+import io.luna.game.service.LogoutRequestService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
-import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
@@ -22,14 +21,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -98,14 +92,14 @@ public final class World {
     private final MobList<Npc> npcList = new MobList<>(16384);
 
     /**
-     * A queue of login requests.
+     * The login service.
      */
-    private final Queue<Player> logins = new ConcurrentLinkedQueue<>();
+    private final LoginRequestService loginService = new LoginRequestService(this);
 
     /**
-     * A queue of players awaiting logout.
+     * The logout service.
      */
-    private final Queue<Player> logouts = new ConcurrentLinkedQueue<>();
+    private final LogoutRequestService logoutService = new LogoutRequestService(this);
 
     /**
      * The chunk manager.
@@ -136,16 +130,6 @@ public final class World {
      * The area manager.
      */
     private final AreaManager areas = new AreaManager(this);
-
-    /**
-     * The player persistence manager.
-     */
-    private final PlayerPersistence persistence = new PlayerPersistence();
-
-    /**
-     * A concurrent map of online players, used to check online players from non-game threads.
-     */
-    private final Map<Long, Player> playerMap = new ConcurrentHashMap<>();
 
     /**
      * A synchronization barrier.
@@ -188,65 +172,15 @@ public final class World {
     }
 
     /**
-     * Queues {@code player} for login on the next tick.
-     *
-     * @param player The player to queue.
-     */
-    public void queueLogin(Player player) {
-        if (player.getState() == EntityState.NEW && !logins.contains(player)) {
-            logins.add(player);
-        }
-    }
-
-    /**
-     * Adds players awaiting login to the world.
-     */
-    public void dequeueLogins() {
-        for (int amount = 0; amount < EntityConstants.LOGIN_THRESHOLD; amount++) {
-            Player player = logins.poll();
-            if (player == null) {
-                break;
-            }
-
-            try {
-                playerList.add(player);
-            } catch (Exception e) {
-                LOGGER.catching(e);
-            }
-        }
-    }
-
-    /**
-     * Queues {@code player} for logout on the next tick.
-     *
-     * @param player The player to queue.
-     */
-    public void queueLogout(Player player) {
-        if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
-            logouts.add(player);
-        }
-    }
-
-    /**
-     * Removes players awaiting logout from the world.
-     */
-    public void dequeueLogouts() {
-        for (int amount = 0; amount < EntityConstants.LOGOUT_THRESHOLD; amount++) {
-            Player player = logouts.poll();
-            if (player == null) {
-                break;
-            }
-            playerList.remove(player);
-        }
-    }
-
-    /**
      * Runs one iteration of the main game loop. This method should <strong>never</strong> be called by anything other
      * than the {@link GameService}.
      */
     public void loop() {
-        // Handle logins.
-        dequeueLogins();
+        // Add pending players that have just logged in.
+        loginService.finishPendingRequests();
+
+        // Remove pending players that have just logged out.
+        logoutService.finishPendingRequests();
 
         // Process all tasks.
         tasks.runTaskIteration();
@@ -255,9 +189,6 @@ public final class World {
         preSynchronize();
         synchronize();
         postSynchronize();
-
-        // Handle logouts.
-        dequeueLogouts();
 
         // Increment tick counter.
         currentTick.incrementAndGet();
@@ -324,33 +255,13 @@ public final class World {
     }
 
     /**
-     * Asynchronously saves persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return A future returning {@code true} if the save was successful.
-     */
-    public Future<Boolean> savePlayer(Player player) {
-        return persistence.save(player);
-    }
-
-    /**
-     * Loads persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return A future returning the login response.
-     */
-    public ListenableFuture<LoginResponse> loadPlayer(Player player) {
-        return persistence.load(player);
-    }
-
-    /**
-     * Retrieves a player by their username hash. Much faster than {@link World#getPlayer(String)}.
+     * Retrieves a player by their username hash. Faster than {@link World#getPlayer(String)}.
      *
      * @param username The username hash.
      * @return The player, or no player.
      */
     public Optional<Player> getPlayer(long username) {
-        return Optional.ofNullable(playerMap.get(username));
+        return playerList.findFirst(player -> player.getUsernameHash() == username);
     }
 
     /**
@@ -368,6 +279,20 @@ public final class World {
      */
     public LunaContext getContext() {
         return context;
+    }
+
+    /**
+     * @return The login service.
+     */
+    public LoginRequestService getLoginService() {
+        return loginService;
+    }
+
+    /**
+     * @return The logout service.
+     */
+    public LogoutRequestService getLogoutService() {
+        return logoutService;
     }
 
     /**
@@ -424,21 +349,6 @@ public final class World {
      */
     public ShopManager getShops() {
         return shops;
-    }
-
-    /**
-     * @return The player persistence manager.
-     */
-    public PlayerPersistence getPersistence() {
-        return persistence;
-    }
-
-    /**
-     * @return A concurrent map of online players. <strong>Warning:</strong> Do not modify this collection
-     * unless you understand the implications. It must be in-sync with {@link #playerList}.
-     */
-    public Map<Long, Player> getPlayerMap() {
-        return playerMap;
     }
 
     /**

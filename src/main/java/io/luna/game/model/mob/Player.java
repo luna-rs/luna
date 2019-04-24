@@ -10,7 +10,6 @@ import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.World;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
@@ -46,7 +45,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
@@ -325,7 +323,6 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
-        world.getPlayerMap().put(getUsernameHash(), this);
         world.getAreas().notifyLogin(this);
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
@@ -335,13 +332,11 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        world.getPlayerMap().remove(getUsernameHash());
         world.getAreas().notifyLogout(this);
         removeLocalItems();
         removeLocalObjects();
         interfaces.close();
         plugins.post(new LogoutEvent(this));
-        save();
         LOGGER.info("{} has logged out.", this);
     }
 
@@ -392,6 +387,9 @@ public final class Player extends Mob {
         world.getAreas().notifyPositionChange(this, oldPos, position);
     }
 
+    /**
+     * Removes all objects assigned to this player.
+     */
     public void removeLocalObjects() {
         if (localObjects.size() > 0) {
             for (GameObject object : localObjects) {
@@ -401,20 +399,17 @@ public final class Player extends Mob {
         }
     }
 
+    /**
+     * Removes all ground items assigned to this player.
+     */
     public void removeLocalItems() {
         if (localItems.size() > 0) {
             for (GroundItem item : localItems) {
+                // TODO If its a tickable item, don't remove.
                 world.getItems().unregister(item);
             }
             localItems.clear();
         }
-    }
-
-    /**
-     * Forwards to {@link World#savePlayer(Player)}.
-     */
-    public Future<Boolean> save() {
-        return world.savePlayer(this);
     }
 
     /**

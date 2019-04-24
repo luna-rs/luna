@@ -19,17 +19,17 @@ import java.util.concurrent.TimeUnit;
 public final class ExecutorUtils {
 
     /**
-     * Create a new cached thread pool with a capacity of {@code maxThreads}.
+     * Create a new cached thread pool with a capacity of {@code maxThreads}. It will queue tasks once the maximum amount
+     * of threads have been allocated.
      *
      * @param maxThreads The thread pool capacity.
      * @return The new cached thread pool.
      */
     public static ListeningExecutorService newCachedThreadPool(int maxThreads) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build();
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(0, maxThreads, 60L,
-                TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(0, maxThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         executor.setThreadFactory(threadFactory);
-        executor.setRejectedExecutionHandler(new CallerRunsPolicy()); // TODO custom exception that explains issue, if tasks have been blocked longer than x times
+        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
         return MoreExecutors.listeningDecorator(executor);
     }
 

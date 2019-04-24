@@ -21,7 +21,7 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginCredentialsMessage}.
+ * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginRequestMessage}.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -214,7 +214,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 String username = msg.getString().toLowerCase();
                 String password = msg.getString().toLowerCase();
 
-                return new LoginCredentialsMessage(username,
+                return new LoginRequestMessage(username,
                         password, encryptor, decryptor, ctx.channel().pipeline());
             } finally {
                 rsaBuffer.release();

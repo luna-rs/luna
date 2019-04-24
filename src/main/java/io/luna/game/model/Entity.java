@@ -1,11 +1,11 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.plugin.PluginManager;
+import io.luna.game.service.GameService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;

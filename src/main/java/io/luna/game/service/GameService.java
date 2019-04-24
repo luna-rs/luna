@@ -1,11 +1,10 @@
-package io.luna.game;
+package io.luna.game.service;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.model.World;
@@ -21,6 +20,8 @@ import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+
+import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -86,9 +87,9 @@ public final class GameService extends AbstractScheduledService {
     private final World world;
 
     /**
-     * A thread pool for low-priority tasks.
+     * A thread pool for general purpose low-overhead tasks.
      */
-    private final ListeningExecutorService threadPool = ExecutorUtils.newCachedThreadPool();
+    private final ListeningExecutorService fastPool = ExecutorUtils.newCachedThreadPool();
 
     /**
      * Creates a new {@link GameService}.
@@ -104,6 +105,11 @@ public final class GameService extends AbstractScheduledService {
     @Override
     protected String serviceName() {
         return "LunaGameThread";
+    }
+
+    @Override
+    protected void startUp() throws Exception {
+        super.startUp();
     }
 
     @Override
@@ -139,13 +145,13 @@ public final class GameService extends AbstractScheduledService {
      */
     private void runSynchronizationTasks() {
         for (; ; ) {
-            Runnable t = syncTasks.poll();
-            if (t == null) {
+            var runnable = syncTasks.poll();
+            if (runnable == null) {
                 break;
             }
 
             try {
-                t.run();
+                runnable.run();
             } catch (Exception e) {
                 LOGGER.catching(e);
             }
@@ -153,24 +159,34 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to properly save resources
-     * before the application exits. This method will block for as long as it needs to until all important threads
-     * have completed their tasks.
+     * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to properly save resources before the
+     * application exits. This method will block for as long as it needs to until all important threads have completed their tasks.
+     * <p>
+     * This function runs on the game thread, so players can be freely manipulated without synchronization.
      */
     private void gracefulShutdown() {
-        World world = context.getWorld();
+        var world = context.getWorld();
+        var loginService = world.getLoginService();
+        var logoutService = world.getLogoutService();
 
-        // Run any pending synchronization tasks.
+        // Will stop any current and future logins.
+        loginService.stopAsync().awaitTerminated();
+
+        // Run last minute game tasks from other threads.
         runSynchronizationTasks();
 
-        // Disconnect and save all players.
-        world.getPlayers().clear();
+        // Synchronously disconnect all players.
+        world.getPlayers().forEach(player -> {
+            var disconnectFuture = player.getClient().disconnect();
+            disconnectFuture.awaitUninterruptibly();
+        });
 
-        // Wait for any last minute tasks to complete.
-        threadPool.shutdown();
-        while (!threadPool.isTerminated()) {
-            Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
-        }
+        // Wait for the disconnected players to be saved.
+        logoutService.stopAsync().awaitTerminated();
+
+        // Wait for general-purpose tasks to complete.
+        fastPool.shutdown();
+        awaitTerminationUninterruptibly(fastPool);
     }
 
     /**
@@ -212,7 +228,7 @@ public final class GameService extends AbstractScheduledService {
      * @return The result of {@code t}.
      */
     public <T> ListenableFuture<T> submit(Callable<T> t) {
-        return threadPool.submit(t);
+        return fastPool.submit(t);
     }
 
     /**
@@ -224,7 +240,7 @@ public final class GameService extends AbstractScheduledService {
      * @return The result of {@code t}.
      */
     public ListenableFuture<?> submit(Runnable t) {
-        return threadPool.submit(t);
+        return fastPool.submit(t);
     }
 
     /**

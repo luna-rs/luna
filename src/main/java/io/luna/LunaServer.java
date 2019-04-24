@@ -1,7 +1,8 @@
 package io.luna;
 
 import com.google.common.base.Stopwatch;
-import io.luna.game.GameService;
+import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ServiceManager;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -25,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -74,7 +76,7 @@ public final class LunaServer {
 
         initLaunchTasks();
         initPlugins();
-        initGame();
+        initServices();
 
         initNetwork();
 
@@ -98,12 +100,15 @@ public final class LunaServer {
     }
 
     /**
-     * Initializes the {@link GameService}.
+     * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
-    private void initGame() {
-        GameService service = context.getService();
-        service.startAsync().awaitRunning();
-        LOGGER.info("The game thread is now running.");
+    private void initServices() {
+        var gameService = context.getService();
+        var loginService = context.getWorld().getLoginService();
+        var logoutService = context.getWorld().getLogoutService();
+        var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
+        allServices.startAsync().awaitHealthy();
+        LOGGER.info("All services are now running.");
     }
 
     /**

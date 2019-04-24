@@ -8,7 +8,7 @@ import io.netty.channel.ChannelPipeline;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class LoginCredentialsMessage {
+public final class LoginRequestMessage {
 
     /**
      * The username.
@@ -36,7 +36,7 @@ public final class LoginCredentialsMessage {
     private final ChannelPipeline pipeline;
 
     /**
-     * Creates a new {@link LoginCredentialsMessage}.
+     * Creates a new {@link LoginRequestMessage}.
      *
      * @param username The username.
      * @param password The password.
@@ -44,8 +44,8 @@ public final class LoginCredentialsMessage {
      * @param decryptor The decryptor.
      * @param pipeline The channel pipeline.
      */
-    public LoginCredentialsMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
-        ChannelPipeline pipeline) {
+    public LoginRequestMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
+                               ChannelPipeline pipeline) {
         this.username = username;
         this.password = password;
         this.encryptor = encryptor;

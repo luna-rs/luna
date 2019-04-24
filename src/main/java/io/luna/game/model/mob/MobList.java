@@ -201,9 +201,6 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         int index = indexes.remove();
         mobs[index] = mob;
         mob.setIndex(index);
-
-        mob.setState(EntityState.ACTIVE);
-
         size++;
     }
 
@@ -213,14 +210,10 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param mob The mob to remove.
      */
     public void remove(E mob) {
-        checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
         checkArgument(mob.getIndex() != -1, "index == -1");
 
         // Put back index, so other mobs can use it.
         indexes.add(mob.getIndex());
-
-        mob.setState(EntityState.INACTIVE);
-
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
 

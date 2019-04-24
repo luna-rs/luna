@@ -3,7 +3,6 @@ package io.luna.game.model.mob.persistence;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.luna.LunaConstants;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.GsonUtils;
@@ -64,7 +63,6 @@ public class SqlPlayerSerializer extends PlayerSerializer {
 
     @Override
     public boolean save(Player player) {
-        World world = player.getWorld();
         try {
             // Save to database.
             try (Connection connection = connectionPool.take()) {
@@ -72,8 +70,7 @@ public class SqlPlayerSerializer extends PlayerSerializer {
             }
         } catch (SQLTransientException e) {
             // Transient exception, we can retry it.
-            LOGGER.warn("Data for " + player + " could not be saved, retrying...", e);
-            world.savePlayer(player);
+            LOGGER.warn("Data for " + player + " could not be saved.", e);
             return false;
         } catch (SQLException e) {
             // Normal exception, cannot be retried.

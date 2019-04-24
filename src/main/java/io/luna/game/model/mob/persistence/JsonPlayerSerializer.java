@@ -133,6 +133,10 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             Object value = getAsType(attr.get("value"), type);
             player.getAttributes().get(entry.getKey()).set(value);
         }
+
+        if (player.isBanned()) {
+            return LoginResponse.ACCOUNT_BANNED;
+        }
         return LoginResponse.NORMAL;
     }
 
