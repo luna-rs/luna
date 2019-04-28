@@ -17,11 +17,11 @@ import java.util.Objects;
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
 
 /**
- * A {@link PersistenceService} implementation that handles login requests.
+ * A {@link PersistenceRequestService} implementation that handles login requests.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class LoginRequestService extends PersistenceService<LoginRequest> {
+public final class LoginRequestService extends PersistenceRequestService<LoginRequest> {
 
     /**
      * The login request model.

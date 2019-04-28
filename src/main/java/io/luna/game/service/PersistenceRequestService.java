@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author lare96 <http://github.com/lare96>
  */
-abstract class PersistenceService<T> extends AbstractIdleService {
+abstract class PersistenceRequestService<T> extends AbstractIdleService {
 
     /**
      * The player persistence manager.
@@ -43,11 +43,11 @@ abstract class PersistenceService<T> extends AbstractIdleService {
     final Queue<T> pending = new ConcurrentLinkedQueue<>();
 
     /**
-     * Creates a new {@link PersistenceService}.
+     * Creates a new {@link PersistenceRequestService}.
      *
      * @param world The world.
      */
-    PersistenceService(World world) {
+    PersistenceRequestService(World world) {
         this.world = world;
     }
 
@@ -62,6 +62,7 @@ abstract class PersistenceService<T> extends AbstractIdleService {
     public final void finishPendingRequests() {
         if (state() == State.RUNNING) {
             for (int loop = 0; loop < REQUESTS_THRESHOLD; loop++) {
+                // TODO Support for optional polling.
                 var next = pending.poll();
                 if (next == null) {
                     break;

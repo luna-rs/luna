@@ -1,8 +1,6 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableMap;
-import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
@@ -35,6 +33,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -47,7 +46,6 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing a player-controlled mob.
@@ -279,6 +277,11 @@ public final class Player extends Mob {
      * The interaction menu.
      */
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
+
+    /**
+     * The hashed password.
+     */
+    private String hashedPassword;
 
     /**
      * Creates a new {@link Player}.
@@ -695,6 +698,23 @@ public final class Player extends Mob {
      */
     public String getUsername() {
         return credentials.getUsername();
+    }
+
+    /**
+     * @return The hashed password. Will never be empty or {@code null}.
+     */
+    public String getHashedPassword() {
+        if (hashedPassword == null) {
+            hashedPassword = BCrypt.hashpw(getPassword(), BCrypt.gensalt());
+        }
+        return hashedPassword;
+    }
+
+    /**
+     * Sets the hashed password.
+     */
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
     }
 
     /**

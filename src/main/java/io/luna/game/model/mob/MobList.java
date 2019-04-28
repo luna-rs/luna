@@ -1,6 +1,7 @@
 package io.luna.game.model.mob;
 
 import io.luna.game.model.EntityState;
+import io.luna.game.model.EntityType;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -202,6 +203,10 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         mobs[index] = mob;
         mob.setIndex(index);
         size++;
+
+        if (mob.getType() == EntityType.NPC) {
+            mob.setState(EntityState.ACTIVE);
+        }
     }
 
     /**
@@ -212,11 +217,15 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     public void remove(E mob) {
         checkArgument(mob.getIndex() != -1, "index == -1");
 
+        if (mob.getType() == EntityType.NPC) {
+            mob.setState(EntityState.INACTIVE);
+        }
+
         // Put back index, so other mobs can use it.
         indexes.add(mob.getIndex());
+
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
-
         size--;
     }
 

@@ -90,10 +90,11 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public LoginResponse fromJson(Player player, JsonObject data, String enteredPassword)
             throws ClassNotFoundException {
-        String password = data.get("password").getAsString();
-        if (!checkPw(enteredPassword, password)) {
+        String hashedPassword = data.get("password").getAsString();
+        if (!checkPw(enteredPassword, hashedPassword)) {
             return LoginResponse.INVALID_CREDENTIALS;
         }
+        player.setHashedPassword(hashedPassword);
 
         Position position = getAsType(data.get("position"), Position.class);
         player.setPosition(position);
@@ -165,7 +166,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public JsonObject toJson(Player player) {
         JsonObject data = new JsonObject();
-        data.addProperty("password", computePw(player));
+        data.addProperty("password", player.getHashedPassword());
         data.add("position", toJsonTree(player.getPosition()));
         data.addProperty("rights", player.getRights().name());
         data.add("appearance", toJsonTree(player.getAppearance().toArray()));

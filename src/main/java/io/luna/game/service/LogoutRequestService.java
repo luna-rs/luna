@@ -7,11 +7,11 @@ import io.luna.game.model.mob.Player;
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
 
 /**
- * A {@link PersistenceService} implementation that handles logout requests.
+ * A {@link PersistenceRequestService} implementation that handles logout requests.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class LogoutRequestService extends PersistenceService<Player> {
+public final class LogoutRequestService extends PersistenceRequestService<Player> {
 
     /**
      * Creates a new {@link LogoutRequestService}.
@@ -51,6 +51,8 @@ public final class LogoutRequestService extends PersistenceService<Player> {
         workers.shutdown();
         awaitTerminationUninterruptibly(workers);
     }
+
+    // TODO save and mass save commands. track independent saves
 
     /**
      * Attempts to save this players data, independent of the backing service workers.

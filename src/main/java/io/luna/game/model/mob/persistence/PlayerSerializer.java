@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.LunaConstants;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.login.LoginResponse;
 import org.apache.logging.log4j.LogManager;
@@ -45,14 +44,5 @@ public abstract class PlayerSerializer {
      */
     final boolean checkPw(String enteredPassword, String savedPassword) {
         return BCrypt.checkpw(enteredPassword, savedPassword);
-    }
-
-    /**
-     * Returns either a hashed or plaintext password. Used when saving data.
-     *
-     * @return The password.
-     */
-    final String computePw(Player player) {
-        return BCrypt.hashpw(player.getPassword(), BCrypt.gensalt(12));
     }
 }
