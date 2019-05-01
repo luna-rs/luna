@@ -6,9 +6,8 @@ import io.luna.game.model.World;
 import java.time.Duration;
 
 /**
- * A model that computes the elapsed ticks between two points in time. This should be only used for all game and tick based
- * timing operations. Tick timing is highly dependant on the underlying CPU and server load, therefore it isn't reliable
- * for precision timing. If precise timing is required then {@link Stopwatch} should be used instead.
+ * A model that computes the elapsed ticks between two points in time. Tick timing should be used strictly for game based
+ * timing operations, otherwise {@link Stopwatch} should be used.
  *
  * @author lare96 <http://github.org/lare96>
  */
