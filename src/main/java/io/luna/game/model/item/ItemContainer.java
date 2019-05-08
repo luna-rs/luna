@@ -1,7 +1,6 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
@@ -878,7 +877,7 @@ public class ItemContainer implements Iterable<Item> {
      *
      * @param setItems The items to set.
      */
-    public final void init(IndexedItem[] setItems) {
+    public final void init(List<IndexedItem> setItems) {
         checkState(size == 0 && !initialized, "Containers can only be initialized once.");
 
         for (IndexedItem item : setItems) {
@@ -898,20 +897,20 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Creates and returns the backing array as an array of indexed items.
+     * Creates and returns the backing array as a list of indexed items.
      *
-     * @return The backing array, as indexed items.
+     * @return The backing list, as indexed items.
      */
-    public final IndexedItem[] toIndexedArray() {
-        List<IndexedItem> indexedItems = new ArrayList<>(size);
+    public final List<IndexedItem> toList() {
+        var list = new ArrayList<IndexedItem>(size);
         for (int index = 0; index < capacity; index++) {
             Item item = get(index);
             if (item == null) {
                 continue;
             }
-            indexedItems.add(new IndexedItem(index, item));
+            list.add(new IndexedItem(index, item));
         }
-        return Iterables.toArray(indexedItems, IndexedItem.class);
+        return list;
     }
 
     /**

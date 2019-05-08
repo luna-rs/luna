@@ -162,7 +162,7 @@ public final class SkillSet implements Iterable<Skill> {
      * Sets the backing array of skills. The backing array will not hold any references to the argued
      * array. The argued array must have a capacity equal to that of the backing array.
      */
-    public void setSkills(Skill[] newSkills) {
+    public void set(Skill[] newSkills) {
         checkArgument(newSkills.length == skills.length,
                 "newSkills.length must equal skills.length");
 

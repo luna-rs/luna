@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player;
 
 import java.text.NumberFormat;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -334,7 +335,7 @@ public final class Shop {
      *
      * @param shopItems The items to include in this shop.
      */
-    public void init(IndexedItem[] shopItems) {
+    public void init(List<IndexedItem> shopItems) {
         container.init(shopItems);
     }
 

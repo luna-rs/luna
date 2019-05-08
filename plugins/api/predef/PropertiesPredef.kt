@@ -58,7 +58,7 @@ val world = ctx.world!!
 /**
  * The [GameService] instance.
  */
-val service = ctx.service!!
+val game = ctx.game!!
 
 
 /*******************

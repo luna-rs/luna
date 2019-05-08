@@ -70,7 +70,7 @@ class ShopReceiver(val name: String) {
 
         // Create and initialize shop.
         val shop = Shop(world, name, restock, buy, currency)
-        shop.init(items.toTypedArray())
+        shop.init(items)
 
         // Add event listeners from the OpenReceiver.
         openReceiver.addListeners(shop)

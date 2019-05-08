@@ -30,10 +30,10 @@ cmd("move", RIGHTS_ADMIN) {
  */
 cmd("shutdown", RIGHTS_ADMIN) {
     plr.newDialogue().options(
-            "2 Minutes", { service.scheduleSystemUpdate(200) },
-            "4 Minutes", { service.scheduleSystemUpdate(400) },
-            "8 Minutes", { service.scheduleSystemUpdate(800) },
-            "16 Minutes", { service.scheduleSystemUpdate(1600) }).open()
+            "2 Minutes", { game.scheduleSystemUpdate(200) },
+            "4 Minutes", { game.scheduleSystemUpdate(400) },
+            "8 Minutes", { game.scheduleSystemUpdate(800) },
+            "16 Minutes", { game.scheduleSystemUpdate(1600) }).open()
 }
 
 /**

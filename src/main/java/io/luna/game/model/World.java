@@ -1,5 +1,6 @@
 package io.luna.game.model;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkManager;
@@ -10,8 +11,8 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObjectList;
 import io.luna.game.service.GameService;
-import io.luna.game.service.LoginRequestService;
-import io.luna.game.service.LogoutRequestService;
+import io.luna.game.service.LoginService;
+import io.luna.game.service.LogoutService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -94,12 +95,12 @@ public final class World {
     /**
      * The login service.
      */
-    private final LoginRequestService loginService = new LoginRequestService(this);
+    private final LoginService loginService = new LoginService(this);
 
     /**
      * The logout service.
      */
-    private final LogoutRequestService logoutService = new LogoutRequestService(this);
+    private final LogoutService logoutService = new LogoutService(this);
 
     /**
      * The chunk manager.
@@ -200,6 +201,10 @@ public final class World {
     private void preSynchronize() {
         for (Player player : playerList) {
             try {
+                if (player.isPendingLogout()) {
+                    player.cleanUp();
+                    continue;
+                }
                 player.getClient().handleDecodedMessages();
                 player.getWalking().process();
                 player.getClient().flush();
@@ -275,6 +280,15 @@ public final class World {
     }
 
     /**
+     * Asynchronously saves all players using a {@link LogoutService} worker.
+     *
+     * @return The result of the mass save.
+     */
+    public ListenableFuture<Void> saveAll() {
+        return logoutService.saveAll();
+    }
+
+    /**
      * @return The context instance.
      */
     public LunaContext getContext() {
@@ -284,14 +298,14 @@ public final class World {
     /**
      * @return The login service.
      */
-    public LoginRequestService getLoginService() {
+    public LoginService getLoginService() {
         return loginService;
     }
 
     /**
      * @return The logout service.
      */
-    public LogoutRequestService getLogoutService() {
+    public LogoutService getLogoutService() {
         return logoutService;
     }
 

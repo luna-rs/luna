@@ -17,7 +17,7 @@ public final class PlayerCredentials {
     /**
      * The password.
      */
-    private final String password;
+    private String password;
 
     /**
      * The username hash.
@@ -37,10 +37,26 @@ public final class PlayerCredentials {
     }
 
     /**
+     * Creates a new {@link PlayerCredentials}.
+     *
+     * @param username The username.
+     */
+    public PlayerCredentials(String username) {
+        this(username, null);
+    }
+
+    /**
      * @return The username.
      */
     public String getUsername() {
         return username;
+    }
+
+    /**
+     * Sets the new password.
+     */
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     /**

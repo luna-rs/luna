@@ -21,7 +21,7 @@ fun currentTimeMs() = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.
  * Executes a block of code asynchronously.
  */
 inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
-    service.submit {
+    game.submit {
         try {
             func()
         } catch (e: Exception) {

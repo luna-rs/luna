@@ -2,10 +2,10 @@ package io.luna.game.model.mob.persistence;
 
 import io.luna.LunaConstants;
 import io.luna.game.model.mob.Player;
-import io.luna.net.codec.login.LoginResponse;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * A model responsible for creating the serializer, and performing synchronous loads and saves.
@@ -34,33 +34,33 @@ public final class PlayerPersistence {
     }
 
     /**
-     * Saves persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return {@code true} if the save completed successfully.
+     * Shortcut to {@link #save(String, PlayerData)}.
      */
-    public boolean save(Player player) {
-        try {
-            return serializer.save(player);
-        } catch (Exception e) {
-            LOGGER.catching(e);
-            return false;
-        }
+    public void save(Player player) throws Exception {
+        save(player.getUsername(), player.getSaveData());
     }
 
     /**
-     * Loads persistent data for {@code player} and returns a {@link LoginResponse}.
+     * Synchronously saves persistent data.
      *
-     * @param player The player.
-     * @return The login response.
+     * @param username The username of the player to save.
+     * @param data The data to save.
      */
-    public LoginResponse load(Player player) {
-        try {
-            return serializer.load(player, player.getPassword());
-        } catch (Exception e) {
-            LOGGER.catching(e);
-            return LoginResponse.COULD_NOT_COMPLETE_LOGIN;
+    public void save(String username, PlayerData data) throws Exception {
+        if (data.needsHash) {
+            data.password = BCrypt.hashpw(data.enteredPassword, BCrypt.gensalt());
         }
+        serializer.save(username, data);
+    }
+
+    /**
+     * Synchronously loads persistent data for {@code username}.
+     *
+     * @param username The username of the player to load.
+     * @return The loaded data.
+     */
+    public PlayerData load(String username) throws Exception {
+        return serializer.load(username);
     }
 
     /**

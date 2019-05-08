@@ -47,8 +47,7 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onInactive() {
-        var logoutService = player.getWorld().getLogoutService();
-        logoutService.submit(player);
+        player.setPendingLogout(true);
     }
 
     @Override

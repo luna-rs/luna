@@ -3,7 +3,9 @@ import api.inter.QuestJournalInterface
 import api.predef.*
 import com.google.common.collect.HashMultimap
 import io.luna.game.event.impl.CommandEvent
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
+import io.luna.game.model.mob.inter.NameInputInterface
 
 /**
  * A command that clears the inventory, bank, or equipment of a player.
@@ -13,6 +15,19 @@ cmd("empty", RIGHTS_PLAYER) {
             "Empty inventory.", { it.inventory.clear() },
             "Empty bank.", { it.bank.clear() },
             "Empty equipment.", { it.equipment.clear() }).open()
+}
+
+/**
+ * A command that changes the password of a player.
+ */
+cmd("changepass", RIGHTS_PLAYER) {
+    // TODO Is there a general purpose "enter string" packet that can be used instead?
+    plr.interfaces.open(object : NameInputInterface() {
+        override fun onNameInput(player: Player?, value: String?) {
+            plr.password = value
+            plr.sendMessage("Your password has been changed to $value.")
+        }
+    })
 }
 
 /**

@@ -70,7 +70,7 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getService();
+        service = context.getGame();
         world = context.getWorld();
 
     }
@@ -86,7 +86,7 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getService();
+        service = context.getGame();
         world = context.getWorld();
     }
 
@@ -153,6 +153,7 @@ public abstract class Entity {
      * @param newState The new state.
      */
     public final void setState(EntityState newState) {
+        // TODO Might need to be volatile/atomic "state"
         checkArgument(newState != EntityState.NEW, "Cannot set state to NEW.");
         checkArgument(newState != state, "State already equal to " + newState + ".");
         checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");

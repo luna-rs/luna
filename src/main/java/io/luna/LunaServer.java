@@ -103,7 +103,7 @@ public final class LunaServer {
      * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
     private void initServices() {
-        var gameService = context.getService();
+        var gameService = context.getGame();
         var loginService = context.getWorld().getLoginService();
         var logoutService = context.getWorld().getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
@@ -121,7 +121,7 @@ public final class LunaServer {
         Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
 
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        LOGGER.info("[{}] Kotlin plugins have been loaded into memory.", fractionString);
+        LOGGER.info("{} Kotlin plugins have been loaded into memory.", fractionString);
     }
 
     /**

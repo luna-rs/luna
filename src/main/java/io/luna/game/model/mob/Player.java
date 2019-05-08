@@ -1,11 +1,14 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.util.concurrent.ListenableFuture;
+import io.luna.LunaConstants;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.Bank;
@@ -18,8 +21,10 @@ import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
-import io.luna.game.model.mob.persistence.SqlPlayerSerializer;
+import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.service.LogoutService;
+import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
@@ -33,7 +38,6 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -254,11 +258,6 @@ public final class Player extends Mob {
     private int privateMsgCounter = 1;
 
     /**
-     * The database identifier. Will always be -1 unless the {@link SqlPlayerSerializer} is being used.
-     */
-    private long databaseId = -1;
-
-    /**
      * If a teleportation is in progress.
      */
     private boolean teleporting;
@@ -282,6 +281,21 @@ public final class Player extends Mob {
      * The hashed password.
      */
     private String hashedPassword;
+
+    /**
+     * The last IP address logged in with.
+     */
+    private String lastIp;
+
+    /**
+     * The prepared save data.
+     */
+    private volatile PlayerData saveData;
+
+    /**
+     * If the player is awaiting logout.
+     */
+    private volatile boolean pendingLogout;
 
     /**
      * Creates a new {@link Player}.
@@ -330,7 +344,6 @@ public final class Player extends Mob {
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
         plugins.post(new LoginEvent(this));
-        LOGGER.info("{} has logged in.", this);
     }
 
     @Override
@@ -340,7 +353,6 @@ public final class Player extends Mob {
         removeLocalObjects();
         interfaces.close();
         plugins.post(new LogoutEvent(this));
-        LOGGER.info("{} has logged out.", this);
     }
 
     @Override
@@ -388,6 +400,46 @@ public final class Player extends Mob {
     @Override
     protected void onPositionChange(Position oldPos) {
         world.getAreas().notifyPositionChange(this, oldPos, position);
+    }
+
+    /**
+     * Saves the player manually, using a {@link LogoutService} worker.
+     *
+     * @return The result of the save.
+     */
+    public ListenableFuture<Void> save() {
+        return world.getLogoutService().save(this);
+    }
+
+    /**
+     * Prepares the save data to be serialized by a {@link LogoutService} worker.
+     */
+    public void createSaveData() {
+        saveData = new PlayerData().save(this);
+    }
+
+    /**
+     * Loads the argued save data into this player.
+     */
+    public void loadData(PlayerData data) {
+        if (data != null) {
+            // Load saved data.
+            data.load(this);
+        } else {
+            // New player!
+            setPosition(LunaConstants.STARTING_POSITION);
+            rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
+                    PlayerRights.DEVELOPER : PlayerRights.PLAYER;
+        }
+    }
+
+    /**
+     * Prepares the player for logout.
+     */
+    public void cleanUp() {
+        setState(EntityState.INACTIVE);
+        createSaveData();
+        world.getLogoutService().submit(getUsername(), this);
     }
 
     /**
@@ -448,6 +500,7 @@ public final class Player extends Mob {
         Channel channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
+            setPendingLogout(true);
         }
     }
 
@@ -512,12 +565,13 @@ public final class Player extends Mob {
         return new DialogueQueueBuilder(this, 10);
     }
 
+    // TODO No point in all these being attributes. v
+
     /**
      * Sets the 'withdraw_as_note' attribute.
      *
      * @param withdrawAsNote The value to set to.
      */
-    // TODO No point in this being an attribute. Migrate to boolean within "Bank" class
     public void setWithdrawAsNote(boolean withdrawAsNote) {
         AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
         if (attr.get() != withdrawAsNote) {
@@ -677,6 +731,18 @@ public final class Player extends Mob {
         }
     }
 
+    // TODO No point in all these being attributes. ^
+
+    /**
+     * @return The prepared save data.
+     */
+    public PlayerData getSaveData() {
+        if (saveData == null) {
+            throw new NullPointerException("No data has been prepared yet.");
+        }
+        return saveData;
+    }
+
     /**
      * @return The rights.
      */
@@ -701,12 +767,9 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return The hashed password. Will never be empty or {@code null}.
+     * @return The hashed password..
      */
     public String getHashedPassword() {
-        if (hashedPassword == null) {
-            hashedPassword = BCrypt.hashpw(getPassword(), BCrypt.gensalt());
-        }
         return hashedPassword;
     }
 
@@ -715,6 +778,14 @@ public final class Player extends Mob {
      */
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+    }
+
+    /**
+     * Sets the plaintext password.
+     */
+    public void setPassword(String password) {
+        credentials.setPassword(password);
+        hashedPassword = null;
     }
 
     /**
@@ -776,18 +847,34 @@ public final class Player extends Mob {
         return localItems;
     }
 
+    /**
+     * Sets the settings.
+     *
+     * @param settings The new value.
+     */
     public void setSettings(PlayerSettings settings) {
         this.settings = settings;
     }
 
+    /**
+     * @return The settings.
+     */
     public PlayerSettings getSettings() {
         return settings;
     }
 
+    /**
+     * Sets if this player is running.
+     *
+     * @param running The new value.
+     */
     public void setRunning(boolean running) {
         settings.setRunning(running);
     }
 
+    /**
+     * @return {@code true} if this player is running.
+     */
     public boolean isRunning() {
         return settings.isRunning();
     }
@@ -1027,50 +1114,10 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the database identifier.
-     *
-     * @param databaseId The new value.
-     */
-    public void setDatabaseId(long databaseId) {
-        this.databaseId = databaseId;
-    }
-
-    /**
-     * @return The database identifier.
-     */
-    public long getDatabaseId() {
-        return databaseId;
-    }
-
-    /**
-     * Sets the backing set of friends.
-     *
-     * @param newFriends The new value.
-     */
-    public void setFriends(long[] newFriends) {
-        friends.clear();
-        for (long name : newFriends) {
-            friends.add(name);
-        }
-    }
-
-    /**
      * @return The friend list.
      */
     public Set<Long> getFriends() {
         return friends;
-    }
-
-    /**
-     * Sets the backing set of ignores.
-     *
-     * @param newIgnores The new value.
-     */
-    public void setIgnores(long[] newIgnores) {
-        ignores.clear();
-        for (long name : newIgnores) {
-            ignores.add(name);
-        }
     }
 
     /**
@@ -1092,5 +1139,35 @@ public final class Player extends Mob {
      */
     public PlayerInteractionMenu getInteractions() {
         return interactions;
+    }
+
+    /**
+     * Sets if the player is awaiting logout.
+     */
+    public void setPendingLogout(boolean pendingLogout) {
+        this.pendingLogout = pendingLogout;
+    }
+
+    /**
+     * @return {@code true} if the player is awaiting logout.
+     */
+    public boolean isPendingLogout() {
+        return pendingLogout;
+    }
+
+    /**
+     * @return The last IP address logged in with.
+     */
+    public String getLastIp() {
+        return lastIp;
+    }
+
+    /**
+     * Sets the last IP address logged in with.
+     *
+     * @param lastIp The new value.
+     */
+    public void setLastIp(String lastIp) {
+        this.lastIp = lastIp;
     }
 }

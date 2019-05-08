@@ -3,6 +3,7 @@ package io.luna.game.model.mob.attr;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,11 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
      * The last value.
      */
     private AttributeValue lastValue;
+
+    @Override
+    public UnmodifiableIterator<Entry<String, AttributeValue>> iterator() {
+        return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
+    }
 
     /**
      * Retrieves the value of an attribute by its String key. Not type safe.
@@ -75,17 +81,40 @@ public final class AttributeMap implements Iterable<Entry<String, AttributeValue
     }
 
     /**
+     * Converts this attribute map into a {@link Map} for serialization.
+     */
+    public Map<String, Object> toMap() {
+        var attrMap = new HashMap<String, Object>();
+        for (Entry<String, AttributeValue> entry : this) {
+            AttributeKey key = AttributeKey.ALIASES.get(entry.getKey());
+            AttributeValue value = entry.getValue();
+
+            if (key.isPersistent()) {
+                attrMap.put(key.getName(), value.get());
+            }
+        }
+        return attrMap;
+    }
+
+    /**
+     * Loads the argued map into the underlying attribute map.
+     */
+    public void fromMap(Map<String, Object> attributes) {
+        for (Entry<String, Object> entry : attributes.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            get(key).set(value);
+        }
+    }
+
+    /**
      * Retrieves the {@link AttributeKey} instance from a String {@code key}.
+     *
      * @param key The key.
      * @return The attribute key instance.
      */
     private AttributeKey<?> getAttributeKey(String key) {
         return Optional.ofNullable(AttributeKey.ALIASES.get(key)).
                 orElse(AttributeKey.ALIASES.get(key.intern()));
-    }
-
-    @Override
-    public UnmodifiableIterator<Entry<String, AttributeValue>> iterator() {
-        return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
     }
 }

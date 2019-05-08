@@ -115,8 +115,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         // Initialize the index cache.
         indexes = IntStream.rangeClosed(1, capacity)
-                           .boxed()
-                           .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
+                .boxed()
+                .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
     }
 
     @Override
@@ -272,7 +272,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     /**
      * Determines if the current size is 0.
      *
-     * Returns {@code true} if this list is empty.
+     * @return {@code true} if this list is empty.
      */
     public boolean isEmpty() {
         return size == 0;

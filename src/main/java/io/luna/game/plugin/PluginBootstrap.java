@@ -212,7 +212,7 @@ public final class PluginBootstrap {
      */
     public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager plugins = context.getPlugins();
-        GameService service = context.getService();
+        GameService service = context.getGame();
 
         initFiles();
         Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);

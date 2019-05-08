@@ -3,10 +3,11 @@ package io.luna.util;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
@@ -19,27 +20,37 @@ import java.util.concurrent.TimeUnit;
 public final class ExecutorUtils {
 
     /**
-     * Create a new cached thread pool with a capacity of {@code maxThreads}. It will queue tasks once the maximum amount
-     * of threads have been allocated.
-     *
-     * @param maxThreads The thread pool capacity.
-     * @return The new cached thread pool.
+     * The asynchronous logger.
      */
-    public static ListeningExecutorService newCachedThreadPool(int maxThreads) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("LunaWorkerThread").build();
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(0, maxThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-        executor.setThreadFactory(threadFactory);
-        executor.setRejectedExecutionHandler(new CallerRunsPolicy());
-        return MoreExecutors.listeningDecorator(executor);
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * Create a new thread pool with {@code threads} workers.
+     *
+     * @param name The naming scheme for the workers in the pool.
+     * @param threads The amount of workers in the pool.
+     * @return The thread pool.
+     */
+    public static ListeningExecutorService threadPool(String name, int threads) {
+        int maxRecommendedThreads = ThreadUtils.cpuCount() * 2;
+        if (threads > maxRecommendedThreads) {
+            logger.warn("Exceeding maximum number of recommended threads for cached thread pool (threads: {}).", threads);
+        }
+        var threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+        var threadFactory = new ThreadFactoryBuilder().setNameFormat(name).build();
+        threadPool.setThreadFactory(threadFactory);
+        threadPool.setRejectedExecutionHandler(new CallerRunsPolicy());
+        return MoreExecutors.listeningDecorator(threadPool);
     }
 
     /**
-     * Create a new cached thread pool with a capacity of {@code ThreadUtils.cpuCount() * 2}.
+     * Create a new thread pool with {@code cpu_count * 2} workers.
      *
+     * @param name The naming scheme for the workers in the pool.
      * @return The new cached thread pool.
      */
-    public static ListeningExecutorService newCachedThreadPool() {
-        return newCachedThreadPool(ThreadUtils.cpuCount() * 2);
+    public static ListeningExecutorService threadPool(String name) {
+        return threadPool(name, ThreadUtils.cpuCount() * 2);
     }
 
     /**

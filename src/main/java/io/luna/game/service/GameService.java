@@ -15,10 +15,12 @@ import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
@@ -30,6 +32,17 @@ import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
  * @author lare96 <http://github.org/lare96>
  */
 public final class GameService extends AbstractScheduledService {
+
+    /**
+     * An {@link Executor} implementation that will run all code on the game thread, using {@link #sync(Runnable)}.
+     */
+    private final class GameServiceExecutor implements Executor {
+
+        @Override
+        public void execute(@NotNull Runnable command) {
+            sync(command);
+        }
+    }
 
     /**
      * A listener that will be notified of any changes in the game thread's state.
@@ -77,6 +90,11 @@ public final class GameService extends AbstractScheduledService {
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
     /**
+     * The synchronization executor.
+     */
+    private final GameServiceExecutor gameExecutor = new GameServiceExecutor();
+
+    /**
      * The context instance.
      */
     private final LunaContext context;
@@ -89,7 +107,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * A thread pool for general purpose low-overhead tasks.
      */
-    private final ListeningExecutorService fastPool = ExecutorUtils.newCachedThreadPool();
+    private final ListeningExecutorService fastPool;
 
     /**
      * Creates a new {@link GameService}.
@@ -99,17 +117,8 @@ public final class GameService extends AbstractScheduledService {
     public GameService(LunaContext context) {
         this.context = context;
         world = context.getWorld();
+        fastPool = ExecutorUtils.threadPool(serviceName() + "Worker");
         addListener(new GameServiceListener(), MoreExecutors.directExecutor());
-    }
-
-    @Override
-    protected String serviceName() {
-        return "LunaGameThread";
-    }
-
-    @Override
-    protected void startUp() throws Exception {
-        super.startUp();
     }
 
     @Override
@@ -248,5 +257,12 @@ public final class GameService extends AbstractScheduledService {
      */
     public LunaContext getContext() {
         return context;
+    }
+
+    /**
+     * @return The game executor. Any code passed through it will run on the game thread.
+     */
+    public Executor getExecutor() {
+        return gameExecutor;
     }
 }
