@@ -248,8 +248,11 @@ public final class GameService extends AbstractScheduledService {
      * @param t The task to run.
      * @return The result of {@code t}.
      */
-    public ListenableFuture<?> submit(Runnable t) {
-        return fastPool.submit(t);
+    public ListenableFuture<Void> submit(Runnable t) {
+        return submit(() -> {
+            t.run();
+            return null;
+        });
     }
 
     /**

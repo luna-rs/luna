@@ -1,7 +1,6 @@
 package io.luna.game.service;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -14,17 +13,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
-import java.util.NoSuchElementException;
-
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A {@link PersistenceService} implementation that handles login requests.
+ * A {@link AuthenticationService} implementation that handles login requests.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class LoginService extends PersistenceService<LoginRequest> {
+public final class LoginService extends AuthenticationService<LoginRequest> {
 
     /**
      * The asynchronous logger.
@@ -131,29 +128,6 @@ public final class LoginService extends PersistenceService<LoginRequest> {
         logger.trace("A shutdown of the login service has been requested.");
         workers.shutdownNow();
         awaitTerminationUninterruptibly(workers);
-        logger.fatal("The login service has been shutdown. Login and load requests can no longer be serviced.");
-    }
-
-    /**
-     * Loads an arbitrary player's saved data. The returned Player instance <strong>cannot</strong> be added to the world.
-     * This method does not check if the player is currently logged in. The backing workers perform the deserialization, therefore
-     * great caution should be taken when using this function. Flooding them with manual load requests could cause logins to become slower (or even dropped).
-     * <p>
-     * This function can be safely executed from any thread.
-     *
-     * @param username The username of the player to load.
-     * @return A listenable future describing the result of the load.
-     */
-    public ListenableFuture<PlayerData> load(String username) {
-        logger.trace("Sending load request for {} to a worker...", username);
-        return workers.submit(() -> {
-            var timer = Stopwatch.createStarted();
-            var data = PERSISTENCE.load(username);
-            if (data == null) {
-                throw new NoSuchElementException("No player data available for " + username);
-            }
-            logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
-            return data;
-        });
+        logger.fatal("The login service has been shutdown.");
     }
 }
