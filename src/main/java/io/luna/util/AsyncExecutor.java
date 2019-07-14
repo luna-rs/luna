@@ -26,12 +26,6 @@ import static com.google.common.base.Preconditions.checkState;
 public final class AsyncExecutor implements Executor {
 
     /**
-     * Supplies the default thread factories used to create workers.
-     */
-    private static final ThreadFactoryBuilder DEFAULT_TF_BUILDER =
-            new ThreadFactoryBuilder().setNameFormat("AsyncExecutorWorkerThread");
-
-    /**
      * A queue of pending tasks.
      */
     private final Queue<ListenableFuture<?>> pendingTasks = new ConcurrentLinkedQueue<>();
@@ -82,7 +76,7 @@ public final class AsyncExecutor implements Executor {
      * @param threadCount The thread pool worker count.
      */
     public AsyncExecutor(int threadCount) {
-        this(threadCount, DEFAULT_TF_BUILDER.build());
+        this(threadCount, new ThreadFactoryBuilder().setNameFormat("AsyncExecutorThread").build());
     }
 
     @Override

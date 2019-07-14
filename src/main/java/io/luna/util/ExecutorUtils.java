@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +54,13 @@ public final class ExecutorUtils {
         return threadPool(name, ThreadUtils.cpuCount() * 2);
     }
 
+    public static ThreadFactory threadFactory(Class<?> classType) {
+        return threadFactory(classType.getSimpleName() + "Thread");
+    }
+
+    public static ThreadFactory threadFactory(String nameFormat) {
+        return new ThreadFactoryBuilder().setNameFormat(nameFormat).build();
+    }
     /**
      * Prevent instantiation.
      */
