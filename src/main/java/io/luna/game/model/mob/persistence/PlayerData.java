@@ -8,7 +8,7 @@ import io.luna.game.model.mob.PlayerSettings;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.service.LogoutService;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +22,9 @@ import java.util.Map;
 public final class PlayerData {
 
     // This should be avoided this unless necessary and attributes used instead.
+    // TODO add all 'Java' attributes in Player here
+    // TODO 'first login' attribute obsolete, add starter package plugin with IP-based file managing
     public volatile String password;
-    public transient volatile String enteredPassword;
     public Position position;
     public PlayerRights rights;
     public String lastIp;
@@ -35,8 +36,11 @@ public final class PlayerData {
     public Skill[] skills;
     public List<Long> friends;
     public List<Long> ignores;
+    public LocalDateTime unbanDate;
+    public LocalDateTime unmuteDate;
     public Map<String, Object> attributes;
-    public transient volatile boolean needsHash;
+    transient volatile boolean needsHash;
+    transient volatile String plainTextPassword;
 
     /**
      * Loads {@code player}'s data from this model.
@@ -54,6 +58,8 @@ public final class PlayerData {
         player.getSkills().set(skills);
         player.getFriends().addAll(friends);
         player.getIgnores().addAll(ignores);
+        player.setUnbanDate(unbanDate);
+        player.setUnmuteDate(unmuteDate);
         player.getAttributes().fromMap(attributes);
     }
 
@@ -61,15 +67,15 @@ public final class PlayerData {
      * Saves {@code player}'s data to this model.
      */
     public PlayerData save(Player player) {
-        String hashedPassword = player.getHashedPassword();
-        String plainTextPassword = player.getPassword();
-        if (hashedPassword == null) {
+        String hashedPw = player.getHashedPassword();
+        String plainTextPw = player.getPassword();
+        if (hashedPw == null) {
             // No hashed password, we need to generate one.
-            enteredPassword = plainTextPassword;
+            plainTextPassword = plainTextPw;
             needsHash = true;
         } else {
             // We have a hashed password, use it.
-            password = hashedPassword;
+            password = hashedPw;
         }
         position = player.getPosition();
         rights = player.getRights();
@@ -82,29 +88,16 @@ public final class PlayerData {
         skills = player.getSkills().toArray();
         friends = new ArrayList<>(player.getFriends());
         ignores = new ArrayList<>(player.getIgnores());
+        unbanDate = player.getUnbanDate();
+        unmuteDate = player.getUnmuteDate();
         attributes = player.getAttributes().toMap();
         return this;
     }
 
     /**
-     * Determines if the data reflects that the underlying player is banned.
-     *
-     * @return {@code true} if banned.
+     * @return {@code true} if the underlying player is banned.
      */
     public boolean isBanned() {
-        Object value = attributes.get("unban_date");
-        if (value == null) {
-            return false;
-        }
-        String date = (String) value;
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                return !LocalDate.now().isAfter(lift);
-        }
+        return unbanDate != null && !LocalDateTime.now().isAfter(unbanDate);
     }
 }

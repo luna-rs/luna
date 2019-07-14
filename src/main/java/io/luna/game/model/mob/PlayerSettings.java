@@ -132,6 +132,23 @@ public final class PlayerSettings {
     private transient Player player;
 
     /**
+     * Creates a new copy of this model.
+     */
+    public PlayerSettings copy() {
+        var settings = new PlayerSettings();
+        settings.brightnessLevel = brightnessLevel;
+        settings.mouseType = mouseType;
+        settings.chatEffects = chatEffects;
+        settings.splitPrivateChat = splitPrivateChat;
+        settings.acceptAid = acceptAid;
+        settings.musicVolume = musicVolume;
+        settings.effectsVolume = effectsVolume;
+        settings.running = running;
+        settings.autoRetaliate = autoRetaliate;
+        return settings;
+    }
+
+    /**
      * Show all settings.
      */
     public void showAll() {

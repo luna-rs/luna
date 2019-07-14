@@ -1,10 +1,11 @@
+
 import api.predef.*
+import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.AssignmentMessageWriter
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
@@ -17,12 +18,11 @@ val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, uuuu")!!
  */
 fun checkMute(plr: Player) {
     if (plr.isMuted) {
-        when (plr.unmuteDate) {
-            "never" -> plr.sendMessage("You are permanently muted. You cannot appeal this.")
-            else -> {
-                val lift = LocalDate.parse(plr.unmuteDate)
-                plr.sendMessage("You are muted. You will be unmuted on ${dateFormatter.format(lift)}.")
-            }
+        if (PunishmentHandler.isPermanent(plr.unmuteDate)) {
+            plr.sendMessage("You are permanently muted. You cannot appeal this.")
+        } else {
+            val lift = dateFormatter.format(plr.unmuteDate)
+            plr.sendMessage("You are muted. You will be unmuted on $lift.")
         }
     }
 }

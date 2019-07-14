@@ -127,6 +127,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
+            // TODO WHEN AN EXCEPTION IS THROWN HERE THE PLAYER GETS STUCK LOGGED IN?
             checkState(opcode == 14, "opcode != 14");
 
             ByteBuf msg = ByteMessage.pooledBuffer(17);

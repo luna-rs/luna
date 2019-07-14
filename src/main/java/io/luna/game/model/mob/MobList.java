@@ -2,6 +2,7 @@ package io.luna.game.model.mob;
 
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.World;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -90,6 +91,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
+     * The world.
+     */
+    private final World world;
+
+    /**
      * The elements.
      */
     private final E[] mobs;
@@ -110,7 +116,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param capacity The amount of mobs that can be contained.
      */
     @SuppressWarnings("unchecked")
-    public MobList(int capacity) {
+    public MobList(World world, int capacity) {
+        this.world = world;
         mobs = (E[]) new Mob[capacity + 1];
 
         // Initialize the index cache.
@@ -206,6 +213,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.ACTIVE);
+        } else if (mob.getType() == EntityType.PLAYER) {
+            world.addPlayer((Player) mob);
         }
     }
 
@@ -219,6 +228,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.INACTIVE);
+        } else if (mob.getType() == EntityType.PLAYER) {
+            world.removePlayer((Player) mob);
         }
 
         // Put back index, so other mobs can use it.

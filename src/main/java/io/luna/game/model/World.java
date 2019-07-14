@@ -13,6 +13,7 @@ import io.luna.game.model.object.GameObjectList;
 import io.luna.game.service.GameService;
 import io.luna.game.service.LoginService;
 import io.luna.game.service.LogoutService;
+import io.luna.game.service.PersistenceService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -22,7 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
@@ -85,12 +89,12 @@ public final class World {
     /**
      * A list of active players.
      */
-    private final MobList<Player> playerList = new MobList<>(2048);
+    private final MobList<Player> playerList = new MobList<>(this, 2048);
 
     /**
      * A list of active npc.
      */
-    private final MobList<Npc> npcList = new MobList<>(16384);
+    private final MobList<Npc> npcList = new MobList<>(this, 16384);
 
     /**
      * The login service.
@@ -101,6 +105,11 @@ public final class World {
      * The logout service.
      */
     private final LogoutService logoutService = new LogoutService(this);
+
+    /**
+     * The persistence service.
+     */
+    private final PersistenceService persistenceService = new PersistenceService(this);
 
     /**
      * The chunk manager.
@@ -148,12 +157,24 @@ public final class World {
     private AtomicLong currentTick = new AtomicLong();
 
     /**
+     * The map of online players. Can be accessed safely from any thread.
+     */
+    private final Map<String, Player> playerMap;
+
+    /**
+     * An immutable view of {@link #playerMap}.
+     */
+    private final Map<String, Player> immutablePlayerMap;
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
      */
     public World(LunaContext context) {
         this.context = context;
+        playerMap = new ConcurrentHashMap<>();
+        immutablePlayerMap = Collections.unmodifiableMap(playerMap);
     }
 
     {
@@ -161,6 +182,20 @@ public final class World {
         ThreadFactory tf = new ThreadFactoryBuilder().
                 setNameFormat("WorldSynchronizationThread").build();
         service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+    }
+
+    /**
+     * Adds a player to the backing concurrent map.
+     */
+    public void addPlayer(Player player) {
+        playerMap.put(player.getUsername(), player);
+    }
+
+    /**
+     * Removes a player from the backing concurrent map.
+     */
+    public void removePlayer(Player player) {
+        playerMap.remove(player.getUsername());
     }
 
     /**
@@ -178,10 +213,10 @@ public final class World {
      */
     public void loop() {
         // Add pending players that have just logged in.
-        loginService.finishPendingRequests();
+        loginService.finishRequests();
 
         // Remove pending players that have just logged out.
-        logoutService.finishPendingRequests();
+        logoutService.finishRequests();
 
         // Process all tasks.
         tasks.runTaskIteration();
@@ -280,12 +315,12 @@ public final class World {
     }
 
     /**
-     * Asynchronously saves all players using a {@link LogoutService} worker.
+     * Asynchronously saves all players using the {@link PersistenceService}.
      *
      * @return The result of the mass save.
      */
     public ListenableFuture<Void> saveAll() {
-        return logoutService.saveAll();
+        return persistenceService.saveAll();
     }
 
     /**
@@ -307,6 +342,13 @@ public final class World {
      */
     public LogoutService getLogoutService() {
         return logoutService;
+    }
+
+    /**
+     * @return The persistence service.
+     */
+    public PersistenceService getPersistenceService() {
+        return persistenceService;
     }
 
     /**
@@ -370,5 +412,12 @@ public final class World {
      */
     public AtomicLong getCurrentTick() {
         return currentTick;
+    }
+
+    /**
+     * @return The map of online players. Can be accessed safely from any thread.
+     */
+    public Map<String, Player> getPlayerMap() {
+        return playerMap;
     }
 }

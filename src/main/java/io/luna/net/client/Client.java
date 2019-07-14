@@ -1,6 +1,7 @@
 package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
+import io.luna.net.LunaChannelFilter;
 import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -124,6 +125,13 @@ public abstract class Client<I> {
      */
     public final Channel getChannel() {
         return channel;
+    }
+
+    /**
+     * @return The client's channel filter.
+     */
+    public final LunaChannelFilter getChannelFilter() {
+        return channel.attr(LunaChannelFilter.KEY).get();
     }
 
     /**
