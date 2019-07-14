@@ -1,0 +1,1998 @@
+[
+  {
+    "song_name": "Harmony",
+    "song_id": 150,
+    "music_tab_id": 4344,
+    "music_button_id": 16248,
+    "regions": [
+      12850
+    ]
+  },
+  {
+    "song_name": "Autumn Voyage",
+    "song_id": 22,
+    "music_tab_id": 4304,
+    "music_button_id": 16208,
+    "regions": [
+      12851
+    ]
+  },
+  {
+    "song_name": "Dream",
+    "song_id": 93,
+    "music_tab_id": 8974,
+    "music_button_id": 35014,
+    "regions": [
+      12594
+    ]
+  },
+  {
+    "song_name": "Arabian",
+    "song_id": 8,
+    "music_tab_id": 4291,
+    "music_button_id": 16195,
+    "regions": [
+			13106,
+			13617
+    ]
+  },
+  {
+    "song_name": "Duel Arena",
+    "song_id": 47,
+    "music_tab_id": 6298,
+    "music_button_id": 24154,
+    "regions": [
+      13362
+    ]
+  },
+  {
+    "song_name": "Shine",
+    "song_id": 294,
+    "music_tab_id": 4396,
+    "music_button_id": 17044,
+    "regions": [
+      13363
+    ]
+  },
+  {
+    "song_name": "Arabian 2",
+    "song_id": 9,
+    "music_tab_id": 4292,
+    "music_button_id": 16196,
+    "regions": [
+      13107
+    ]
+  },
+  {
+    "song_name": "Flute Salad",
+    "song_id": 123,
+    "music_tab_id": 4333,
+    "music_button_id": 16237,
+    "regions": [
+      12595
+    ]
+  },
+  {
+    "song_name": "Greatness",
+    "song_id": 144,
+    "music_tab_id": 4343,
+    "music_button_id": 16247,
+    "regions": [
+      12596
+    ]
+  },
+  {
+    "song_name": "Expanse",
+    "song_id": 106,
+    "music_tab_id": 4326,
+    "music_button_id": 16230,
+    "regions": [
+      12852
+    ]
+  },
+  {
+    "song_name": "Still Night",
+    "song_id": 311,
+    "music_tab_id": 4403,
+    "music_button_id": 17051,
+    "regions": [
+      13108
+    ]
+  },
+  {
+    "song_name": "Venture",
+    "song_id": 380,
+    "music_tab_id": 4421,
+    "music_button_id": -1,
+    "regions": [
+      13364
+    ]
+  },
+  {
+    "song_name": "Lullaby",
+    "song_id": 203,
+    "music_tab_id": 4364,
+    "music_button_id": 17012,
+    "regions": [
+			13365,
+			10551
+    ]
+  },
+  {
+    "song_name": "Medieval",
+    "song_id": 217,
+    "music_tab_id": 4368,
+    "music_button_id": 17016,
+    "regions": [
+      13109
+    ]
+  },
+  {
+    "song_name": "Garden",
+    "song_id": 135,
+    "music_tab_id": 4336,
+    "music_button_id": 16240,
+    "regions": [
+      12853
+    ]
+  },
+  {
+    "song_name": "Spirit",
+    "song_id": 302,
+    "music_tab_id": 4398,
+    "music_button_id": 17046,
+    "regions": [
+      12597
+    ]
+  },
+  {
+    "song_name": "Doorways",
+    "song_id": 89,
+    "music_tab_id": 4321,
+    "music_button_id": 16225,
+    "regions": [
+      12598
+    ]
+  },
+  {
+    "song_name": "Adventure",
+    "song_id": 2,
+    "music_tab_id": 4287,
+    "music_button_id": 16191,
+    "regions": [
+      12854
+    ]
+  },
+  {
+    "song_name": "Parade",
+    "song_id": 249,
+    "music_tab_id": 4379,
+    "music_button_id": 17027,
+    "regions": [
+      13110,
+      13366
+    ]
+  },
+  {
+    "song_name": "Crystal Sword",
+    "song_id": 67,
+    "music_tab_id": 4316,
+    "music_button_id": 16220,
+    "regions": [
+      12855
+    ]
+  },
+  {
+    "song_name": "Lightness",
+    "song_id": 196,
+    "music_tab_id": 4359,
+    "music_button_id": 17007,
+    "regions": [
+      12599
+    ]
+  },
+  {
+    "song_name": "Forbidden",
+    "song_id": 125,
+    "music_tab_id": 676,
+    "music_button_id": 2164,
+    "regions": [
+      13111,
+	  13667
+    ]
+  },
+  {
+    "song_name": "Underground",
+    "song_id": 375,
+    "music_tab_id": 4415,
+    "music_button_id": 17063,
+    "regions": [
+      13368
+    ]
+  },
+  {
+    "song_name": "Faithless",
+    "song_id": 111,
+    "music_tab_id": 10129,
+    "music_button_id": 39145,
+    "regions": [
+        12856,
+        13112,
+       	10387
+    ]
+  },
+  {
+        "song_name": "Moody",
+        "song_id": 230,
+        "music_tab_id": 4373,
+        "music_button_id": 17021,
+        "regions": [
+			9779,
+			9523,
+			12600
+        ]
+    },
+  {
+    "song_name": "Dead Can Dance",
+    "song_id": 77,
+    "music_tab_id": 14453,
+    "music_button_id": 56117,
+    "regions": [
+        12601
+    ]
+  },
+  {
+    "song_name": "Scape Wild",
+    "song_id": 286,
+    "music_tab_id": 8978,
+    "music_button_id": 35018,
+    "regions": [
+		12860, 
+		12604, 
+		12857
+    ]
+  },
+  {
+    "song_name": "Dark",
+    "song_id": 75,
+    "music_tab_id": 8973,
+    "music_button_id": 35013,
+    "regions": [
+		13369, 
+		13113
+    ]
+  },
+  {
+    "song_name": "Close Quarters",
+    "song_id": 58,
+    "music_tab_id": 6944,
+    "music_button_id": 27032,
+    "regions": [
+	  12602
+    ]
+  },
+  {
+    "song_name": "Shining",
+    "song_id": 295,
+    "music_tab_id": 5990,
+    "music_button_id": 23102,
+    "regions": [
+		12858
+    ]
+  },
+  {
+    "song_name": "Witching",
+    "song_id": 402,
+    "music_tab_id": 4430,
+    "music_button_id": 17078,
+    "regions": [
+		13114,
+		13370
+    ]
+  },
+  {
+    "song_name": "Dangerous",
+    "song_id": 74,
+    "music_tab_id": 4317,
+    "music_button_id": 16221,
+    "regions": [
+			12343,
+			13371,
+			13115,
+			9033
+    ]
+  },
+  {
+    "song_name": "Wolf Mountain",
+    "song_id": 404,
+    "music_tab_id": 6842,
+    "music_button_id": 26186,
+    "regions": [
+			12603, 
+			12859
+    ]
+  },
+  {
+    "song_name": "Scape Sad",
+    "song_id": 282,
+    "music_tab_id": 8977,
+    "music_button_id": 35017,
+    "regions": [
+			13372, 
+			13116
+    ]
+  },
+  {
+    "song_name": "Everlasting Fire",
+    "song_id": 103,
+    "music_tab_id": 18784,
+    "music_button_id": 73096,
+    "regions": [
+			13373
+    ]
+  },
+  {
+    "song_name": "Regal",
+    "song_id": 263,
+    "music_tab_id": 8976,
+    "music_button_id": 35016,
+    "regions": [
+			13117
+    ]
+  },
+  {
+    "song_name": "Nightfall",
+    "song_id": 238,
+    "music_tab_id": 4376,
+    "music_button_id": 17024,
+    "regions": [
+			12861,
+			11827
+    ]
+  },
+  {
+        "song_name": "Mage Arena",
+        "song_id": 205,
+        "music_tab_id": 4365,
+        "music_button_id": 17013,
+        "regions": [
+			12349,
+			12605
+        ]
+    },
+	{
+        "song_name": "Pirates of Peril",
+        "song_id": 258,
+        "music_tab_id": 10127,
+        "music_button_id": 39143,
+        "regions": [
+			12093
+        ]
+    },
+	{
+        "song_name": "Serene",
+        "song_id": 291,
+        "music_tab_id": 4395,
+        "music_button_id": 17043,
+        "regions": [
+			11837
+        ]
+    },
+	{
+        "song_name": "Deep Wildy",
+        "song_id": 81,
+        "music_tab_id": 4319,
+        "music_button_id": 16223,
+        "regions": [
+        	11835,
+        	11836
+        ]
+    },
+	{
+        "song_name": "Wild Side",
+        "song_id": 397,
+        "music_tab_id": 14454,
+        "music_button_id": 56118,
+        "regions": [
+			12348, 
+			12092
+        ]
+    },
+	{
+        "song_name": "Wilderness 2",
+        "song_id": 399,
+        "music_tab_id": 4427,
+        "music_button_id": 17075,
+        "regions": [
+			12347, 
+			12091
+        ]
+    },
+	{
+        "song_name": "Wilderness",
+        "song_id": 398,
+        "music_tab_id": 13713,
+        "music_button_id": 53145,
+        "regions": [
+			12346,
+			11833
+        ]
+    },
+	{
+        "song_name": "Gaol",
+        "song_id": 134,
+        "music_tab_id": 4335,
+        "music_button_id": 16239,
+        "regions": [
+			12090,
+			10031
+        ]
+    },
+	{
+        "song_name": "Wilderness 3",
+        "song_id": 400,
+        "music_tab_id": 4428,
+        "music_button_id": 17076,
+        "regions": [
+			11834
+        ]
+    },
+    {
+        "song_name": "Stranded",
+        "song_id": 313,
+        "music_tab_id": 11883,
+        "music_button_id": 46107,
+        "regions": [
+        	11578,
+			11322
+        ]
+    },
+	{
+        "song_name": "Frostbite",
+        "song_id": 131,
+        "music_tab_id": 12847,
+        "music_button_id": 50047,
+        "regions": [
+       		11332
+        ]
+    },
+	{
+        "song_name": "Sojourn",
+        "song_id": 299,
+        "music_tab_id": 188,
+        "music_button_id": 188,
+        "regions": [
+        	11577,
+        	11321
+        ]
+    },
+	{
+        "song_name": "Troubled",
+        "song_id": 371,
+        "music_tab_id": 4414,
+        "music_button_id": 17062,
+        "regions": [
+        	11832
+        ]
+    },
+	{
+        "song_name": "Legion",
+        "song_id": 193,
+        "music_tab_id": 4358,
+        "music_button_id": 17006,
+        "regions": [
+			12089,
+			10039
+        ]
+    },
+	{
+        "song_name": "Undercurrent",
+        "song_id": 374,
+        "music_tab_id": 1890,
+        "music_button_id": 7098,
+        "regions": [
+			12345
+        ]
+    },
+	{
+        "song_name": "Wildwood",
+        "song_id": 401,
+        "music_tab_id": 6983,
+        "music_button_id": 27071,
+        "regions": [
+			12344
+        ]
+    },
+	{
+        "song_name": "Army of Darkness",
+        "song_id": 12,
+        "music_tab_id": 4295,
+        "music_button_id": 16199,
+        "regions": [
+			12088
+        ]
+    },
+	{
+        "song_name": "Contest",
+        "song_id": 61,
+        "music_tab_id": 8436,
+        "music_button_id": 32244,
+        "regions": [
+        	11576
+        ]
+    },
+	{
+        "song_name": "Tremble",
+        "song_id": 365,
+        "music_tab_id": 8437,
+        "music_button_id": 32245,
+        "regions": [
+        	11320
+        ]
+    },
+	{
+        "song_name": "Inspiration",
+        "song_id": 169,
+        "music_tab_id": 4349,
+        "music_button_id": 16253,
+        "regions": [
+			12087
+        ]
+    },
+	{
+        "song_name": "Wonder",
+        "song_id": 405,
+        "music_tab_id": 4431,
+        "music_button_id": 17079,
+        "regions": [
+        	11831
+        ]
+    },
+	{
+        "song_name": "Principality",
+        "song_id": 257,
+        "music_tab_id": 8433,
+        "music_button_id": 32241,
+        "regions": [
+        	11575
+        ]
+    },
+	{
+        "song_name": "Kingdom",
+        "song_id": 181,
+        "music_tab_id": 8435,
+        "music_button_id": 32243,
+        "regions": [
+        	11319
+        ]
+    },
+	{
+        "song_name": "Forever",
+        "song_id": 127,
+        "music_tab_id": 4334,
+        "music_button_id": 16238,
+        "regions": [
+			12342
+        ]
+    },
+	{
+        "song_name": "Alone",
+        "song_id": 5,
+        "music_tab_id": 4289,
+        "music_button_id": 16193,
+        "regions": [
+        	12086
+        ]
+    },
+	{
+        "song_name": "Gnome",
+        "song_id": 140,
+        "music_tab_id": 4341,
+        "music_button_id": 16245,
+        "regions": [
+        	11830
+        ]
+    },
+	{
+        "song_name": "Splendour",
+        "song_id": 304,
+        "music_tab_id": 4399,
+        "music_button_id": 17047,
+        "regions": [
+        	11574
+        ]
+    },
+	{
+        "song_name": "Ice Melody",
+        "song_id": 161,
+        "music_tab_id": 961,
+        "music_button_id": 3193,
+        "regions": [
+        	11318
+        ]
+    },
+	{
+        "song_name": "Barbarianism",
+        "song_id": 28,
+        "music_tab_id": 4864,
+        "music_button_id": 19000,
+        "regions": [
+			12341
+        ]
+    },
+	{
+        "song_name": "Gnome Theme",
+        "song_id": 137,
+        "music_tab_id": 4338,
+        "music_button_id": 16242,
+        "regions": [
+        	12085
+        ]
+    },
+	{
+        "song_name": "Scape Soft",
+        "song_id": 285,
+        "music_tab_id": 5988,
+        "music_button_id": 23100,
+        "regions": [
+        	11829
+        ]
+    },
+	{
+        "song_name": "Horizon",
+        "song_id": 158,
+        "music_tab_id": 4346,
+        "music_button_id": 16250,
+        "regions": [
+        	11573
+        ]
+    },
+	{
+        "song_name": "Fishing",
+        "song_id": 122,
+        "music_tab_id": 4332,
+        "music_button_id": 16236,
+        "regions": [
+        	11317
+        ]
+    },
+	{
+        "song_name": "Spooky",
+        "song_id": 306,
+        "music_tab_id": 8979,
+        "music_button_id": 35019,
+        "regions": [
+			12340
+        ]
+    },
+	{
+        "song_name": "Workshop",
+        "song_id": 408,
+        "music_tab_id": 4433,
+        "music_button_id": 17081,
+        "regions": [
+        	12084
+        ]
+    },
+	{
+        "song_name": "Fanfare",
+        "song_id": 112,
+        "music_tab_id": 4329,
+        "music_button_id": 16233,
+        "regions": [
+        	11828
+        ]
+    },
+	{
+        "song_name": "Arrival",
+        "song_id": 13,
+        "music_tab_id": 4296,
+        "music_button_id": 16200,
+        "regions": [
+        	11572
+        ]
+    },
+	{
+        "song_name": "Background",
+        "song_id": 25,
+        "music_tab_id": 8971,
+        "music_button_id": 35011,
+        "regions": [
+        	11316,
+        	11060
+        ]
+    },
+	{
+        "song_name": "Start",
+        "song_id": 310,
+        "music_tab_id": 4434,
+        "music_button_id": 17082,
+        "regions": [
+			12339
+        ]
+    },
+	{
+        "song_name": "Wander",
+        "song_id": 388,
+        "music_tab_id": 4425,
+        "music_button_id": 17073,
+        "regions": [
+        	12083
+        ]
+    },
+	{
+        "song_name": "Miles Away",
+        "song_id": 222,
+        "music_tab_id": 4370,
+        "music_button_id": 17018,
+        "regions": [
+        	11571
+        ]
+    },
+	{
+        "song_name": "The Shadow",
+        "song_id": 349,
+        "music_tab_id": 4405,
+        "music_button_id": 17053,
+        "regions": [
+        	11314,
+        	11315
+        ]
+    },
+	{
+        "song_name": "Unknown Land",
+        "song_id": 378,
+        "music_tab_id": 4418,
+        "music_button_id": 17066,
+        "regions": [
+			12338
+        ]
+    },
+	{
+        "song_name": "Sea Shanty",
+        "song_id": 289,
+        "music_tab_id": 4392,
+        "music_button_id": 17040,
+        "regions": [
+        	12082,
+        	11569
+        ]
+    },
+	{
+        "song_name": "Long Way Home",
+        "song_id": 201,
+        "music_tab_id": 4362,
+        "music_button_id": 17010,
+        "regions": [
+			11826
+        ]
+    },
+	{
+        "song_name": "Al Kharid",
+        "song_id": 3,
+        "music_tab_id": 4288,
+        "music_button_id": 16214,
+        "regions": [
+			13105,
+			13361
+        ]
+    },
+	{
+        "song_name": "Yesteryear",
+        "song_id": 411,
+        "music_tab_id": 5989,
+        "music_button_id": 23101,
+        "regions": [
+			12849
+        ]
+    },
+	{
+        "song_name": "Book Of Spells",
+        "song_id": 37,
+        "music_tab_id": 4310,
+        "music_button_id": 16214,
+        "regions": [
+			12593
+        ]
+    },
+	{
+        "song_name": "Vision",
+        "song_id": 384,
+        "music_tab_id": 4422,
+        "music_button_id": 17070,
+        "regions": [
+        	12337
+        ]
+    },
+	{
+        "song_name": "Tomorrow",
+        "song_id": 360,
+        "music_tab_id": 6297,
+        "music_button_id": 24153,
+        "regions": [
+        	12081
+        ]
+    },
+	{
+        "song_name": "Attention",
+        "song_id": 21,
+        "music_tab_id": 4303,
+        "music_button_id": 16207,
+        "regions": [
+        	11825,
+        	11419
+        ]
+    },
+	{
+        "song_name": "The Golem",
+        "song_id": 336,
+        "music_tab_id": 12841,
+        "music_button_id": 50041,
+        "regions": [
+        	13616,
+        	13872
+        ]
+    },
+	{
+        "song_name": "Egypt",
+        "song_id": 97,
+        "music_tab_id": 4324,
+        "music_button_id": 16228,
+        "regions": [
+        	13104,
+        	13360
+        ]
+    },
+	{
+        "song_name": "Arabian 3",
+        "song_id": 10,
+        "music_tab_id": 4293,
+        "music_button_id": 16197,
+        "regions": [
+        	12848
+        ]
+    },
+	{
+        "song_name": "Newbie Melody",
+        "song_id": 236,
+        "music_tab_id": 4375,
+        "music_button_id": 17023,
+        "regions": [
+        	12592,
+        	12336,
+        	12335,
+        	12079,
+        	12080
+        ]
+    },
+	{
+        "song_name": "Desert Heat",
+        "song_id": 82,
+        "music_tab_id": 5996,
+        "music_button_id": 23108,
+        "regions": [
+        	13615,
+        	13614
+        ]
+    },
+	{
+        "song_name": "Desert Voyage",
+        "song_id": 83,
+        "music_tab_id": 4320,
+        "music_button_id": 16224,
+        "regions": [
+        	13102,
+        	13103,
+        	13359
+        ]
+    },
+	{
+        "song_name": "The Desert",
+        "song_id": 329,
+        "music_tab_id": 4404,
+        "music_button_id": 17052,
+        "regions": [
+       		12591,
+       		12847
+        ]
+    },
+	{
+        "song_name": "Dynasty",
+        "song_id": 96,
+        "music_tab_id": 12835,
+        "music_button_id": 50035,
+        "regions": [
+        	13358
+        ]
+    },
+	{
+        "song_name": "Sunburn",
+        "song_id": 318,
+        "music_tab_id": 7453,
+        "music_button_id": 29029,
+        "regions": [
+        	13357,
+        	12846
+        ]
+    },
+	{
+        "song_name": "Bandit Camp",
+        "song_id": 27,
+        "music_tab_id": 7454,
+        "music_button_id": 29030,
+        "regions": [
+        	12590
+        ]
+    },
+	{
+        "song_name": "Over To Nardah",
+        "song_id": 246,
+        "music_tab_id": 15590,
+        "music_button_id": 60230,
+        "regions": [
+        	13613
+        ]
+    },
+	{
+        "song_name": "Scarab",
+        "song_id": 287,
+        "music_tab_id": 12850,
+        "music_button_id": 50050,
+        "regions": [
+        	12845,
+        	13101,
+        	12589
+        ]
+    },
+	{
+        "song_name": "Pharaoh's Tomb",
+        "song_id": 253,
+        "music_tab_id": 16147,
+        "music_button_id": 63019,
+        "regions": [
+        	13356
+        ]
+    },
+	{
+        "song_name": "Sphinx",
+        "song_id": 301,
+        "music_tab_id": 12851,
+        "music_button_id": 50051,
+        "regions": [
+        	13100
+        ]
+    },
+	{
+        "song_name": "City of the Dead",
+        "song_id": 56,
+        "music_tab_id": 12849,
+        "music_button_id": 50049,
+        "regions": [
+        	12843,
+        	13099,
+        	12844
+        ]
+    },
+	{
+        "song_name": "Dragontooth Island",
+        "song_id": 92,
+        "music_tab_id": 12277,
+        "music_button_id": 48001,
+        "regions": [
+        	15159
+        ]
+    },
+	{
+        "song_name": "The Other Side",
+        "song_id": 345,
+        "music_tab_id": 12288,
+        "music_button_id": 48000,
+        "regions": [
+        	14646,
+        	14647
+        ]
+    },
+	{
+        "song_name": "Shipwrecked",
+        "song_id": 296,
+        "music_tab_id": 12286,
+        "music_button_id": 47254,
+        "regions": [
+        	14391
+        ]
+    },
+	{
+        "song_name": "Fenkenstrain's Refrain",
+        "song_id": 118,
+        "music_tab_id": 12126,
+        "music_button_id": 47094,
+        "regions": [
+        	14135,
+        	13879
+        ]
+    },
+	{
+        "song_name": "The Terrible Tower",
+        "song_id": 351,
+        "music_tab_id": 12048,
+        "music_button_id": 47016,
+        "regions": [
+        	13623
+        ]
+    },
+	{
+        "song_name": "Deadlands",
+        "song_id": 79,
+        "music_tab_id": 8936,
+        "music_button_id": 34232,
+        "regions": [
+        	14134,
+        	14390
+        ]
+    },
+	{
+        "song_name": "Village",
+        "song_id": 383,
+        "music_tab_id": 8118,
+        "music_button_id": 31182,
+        "regions": [
+        	13878
+        ]
+    },
+	{
+        "song_name": "Morytania",
+        "song_id": 231,
+        "music_tab_id": 8117,
+        "music_button_id": 31181,
+        "regions": [
+        	13622
+        ]
+    },
+	{
+        "song_name": "Waterlogged",
+        "song_id": 392,
+        "music_tab_id": 8140,
+        "music_button_id": 31204,
+        "regions": [
+        	14133,
+        	13877
+        ]
+    },
+	{
+        "song_name": "Dead Quiet",
+        "song_id": 78,
+        "music_tab_id": 8142,
+        "music_button_id": 31206,
+        "regions": [
+        	13621
+        ]
+    },
+	{
+        "song_name": "Stagnant",
+        "song_id": 308,
+        "music_tab_id": 8141,
+        "music_button_id": 31205,
+        "regions": [
+        	13876
+        ]
+    },
+	{
+        "song_name": "Natural",
+        "song_id": 234,
+        "music_tab_id": 8139,
+        "music_button_id": 31203,
+        "regions": [
+        	13620
+        ]
+    },
+	{
+        "song_name": "Dance of the Undead",
+        "song_id": 71,
+        "music_tab_id": 13352,
+        "music_button_id": 52040,
+        "regions": [
+        	14131
+        ]
+    },
+	{
+        "song_name": "Shadowland",
+        "song_id": 293,
+        "music_tab_id": 8970,
+        "music_button_id":  35010,
+        "regions": [
+        	13875,
+        	13618
+        ]
+    },
+	{
+        "song_name": "Bone Dance",
+        "song_id": 35,
+        "music_tab_id": 8968,
+        "music_button_id": 35008,
+        "regions": [
+        	13619
+        ]
+    },
+	{
+        "song_name": "Distant Land",
+        "song_id": 86,
+        "music_tab_id": -1,
+        "music_button_id": 12248,
+        "regions": [
+        	14130,
+        	14129,
+        	13873,
+        	13874
+        ]
+    },
+	{
+        "song_name": "In the Brine",
+        "song_id": 163,
+        "music_tab_id": 17509,
+        "music_button_id": 68101,
+        "regions": [
+        	14638
+        ]
+    },
+	{
+        "song_name": "Romancing the Crone",
+        "song_id": 271,
+        "music_tab_id": 11882,
+        "music_button_id": 46106,
+        "regions": [
+        	11068
+        ]
+    },
+	{
+        "song_name": "Settlement",
+        "song_id": 292,
+        "music_tab_id": 12391,
+        "music_button_id": 48103,
+        "regions": [
+        	11065
+        ]
+    },
+	{
+        "song_name": "Borderland",
+        "song_id": 38,
+        "music_tab_id": 10111,
+        "music_button_id": 39127,
+        "regions": [
+        	10809,
+        	10810
+        ]
+    },
+	{
+        "song_name": "Etceteria",
+        "song_id": 102,
+        "music_tab_id": 11108,
+        "music_button_id": 43100,
+        "regions": [
+        	10300
+        ]
+    },
+	{
+        "song_name": "Miscellania",
+        "song_id": 226,
+        "music_tab_id": 11109,
+        "music_button_id": 43101,
+        "regions": [
+        	10044
+        ]
+    },
+	{
+        "song_name": "Rellekka",
+        "song_id": 266,
+        "music_tab_id": 10112,
+        "music_button_id": 39128,
+        "regions": [
+        	10553,
+        	10297,
+        	10554
+        ]
+    },
+	{
+        "song_name": "The Desolate Isle",
+        "song_id": 330,
+        "music_tab_id": 11095,
+        "music_button_id": 43087,
+        "regions": [
+        	10042
+        ]
+    },
+	{
+        "song_name": "Making Waves",
+        "song_id": 208,
+        "music_tab_id": -1,
+        "music_button_id": 248,
+        "regions": [
+        	9271,
+        	9272,
+        	9273
+        ]
+    },
+	{
+        "song_name": "Legend",
+        "song_id": 192,
+        "music_tab_id": 7452,
+        "music_button_id": 29028,
+        "regions": [
+        	11064,
+        	10808
+        ]
+    },
+	{
+        "song_name": "Saga",
+        "song_id": 276,
+        "music_tab_id": 7451,
+        "music_button_id": 29027,
+        "regions": [
+        	10296,
+        	10552
+        ]
+    },
+	{
+        "song_name": "Lighthouse",
+        "song_id": 195,
+        "music_tab_id": 10131,
+        "music_button_id": 39147,
+        "regions": [
+        	10040
+        ]
+    },
+	{
+        "song_name": "Camelot",
+        "song_id": 43,
+        "music_tab_id": 4311,
+        "music_button_id": 16215,
+        "regions": [
+        	11062,
+        	11063
+        ]
+    },
+	{
+        "song_name": "Monarch Waltz",
+        "song_id": 227,
+        "music_tab_id": 4372,
+        "music_button_id": 17020,
+        "regions": [
+        	10807
+        ]
+    },
+	{
+        "song_name": "Gnome King",
+        "song_id": 136,
+        "music_tab_id": 4337,
+        "music_button_id": 16241,
+        "regions": [
+        	9783,
+        	9782
+        ]
+    },
+	{
+        "song_name": "Gnomeball",
+        "song_id": 141,
+        "music_tab_id": 4342,
+        "music_button_id": 16246,
+        "regions": [
+        	9527,
+        	9526,
+        	9270
+        ]
+    },
+	{
+        "song_name": "Overture",
+        "song_id": 248,
+        "music_tab_id": 4378,
+        "music_button_id": 17026,
+        "regions": [
+        	10806
+        ]
+    },
+	{
+        "song_name": "Talking Forest",
+        "song_id": 322,
+        "music_tab_id": 4435,
+        "music_button_id": 17083,
+        "regions": [
+        	10550
+        ]
+    },
+	{
+        "song_name": "Theme",
+        "song_id": 353,
+        "music_tab_id": 4436,
+        "music_button_id": 17084,
+        "regions": [
+        	11830
+        ]
+    },
+	{
+        "song_name": "Voyage",
+        "song_id": 386,
+        "music_tab_id": 4424,
+        "music_button_id": 17072,
+        "regions": [
+        	10038
+        ]
+    },
+	{
+        "song_name": "Lightwalk",
+        "song_id": 197,
+        "music_tab_id": 4360,
+        "music_button_id": 17008,
+        "regions": [
+        	11061
+        ]
+    },
+	{
+        "song_name": "Magical Journey",
+        "song_id": 207,
+        "music_tab_id": 4367,
+        "music_button_id": 17015,
+        "regions": [
+        	10805,
+        	10057
+        ]
+    },
+	{
+        "song_name": "Lasting",
+        "song_id": 191,
+        "music_tab_id": 4357,
+        "music_button_id": 17005,
+        "regions": [
+        	10549
+        ]
+    },
+	{
+        "song_name": "Mellow",
+        "song_id": 218,
+        "music_tab_id": 4369,
+        "music_button_id": 17017,
+        "regions": [
+        	10293
+        ]
+    },
+	{
+        "song_name": "Waterfall",
+        "song_id": 391,
+        "music_tab_id": 4426,
+        "music_button_id": 17074,
+        "regions": [
+        	10037
+        ]
+    },
+	{
+        "song_name": "Gnome Village",
+        "song_id": 138,
+        "music_tab_id": 4339,
+        "music_button_id": 16243,
+        "regions": [
+        	9781
+        ]
+    },
+	{
+        "song_name": "Gnome Village 2",
+        "song_id": 139,
+        "music_tab_id": 4340,
+        "music_button_id": 16244,
+        "regions": [
+        	9525,
+        	9269
+        ]
+    },
+	{
+        "song_name": "Trinity",
+        "song_id": 369,
+        "music_tab_id": 4413,
+        "music_button_id": 17061,
+        "regions": [
+        	10804
+        ]
+    },
+	{
+        "song_name": "Wonderous",
+        "song_id": 406,
+        "music_tab_id": 4432,
+        "music_button_id": 17080,
+        "regions": [
+        	10548
+        ]
+    },
+	{
+        "song_name": "The Tower",
+        "song_id": 352,
+        "music_tab_id": 4406,
+        "music_button_id": 17054,
+        "regions": [
+        	10292
+        ]
+    },
+	{
+        "song_name": "March",
+        "song_id": 210,
+        "music_tab_id": 8975,
+        "music_button_id": 35015,
+        "regions": [
+        	10036
+        ]
+    },
+	{
+        "song_name": "Neverland",
+        "song_id": 235,
+        "music_tab_id": 4374,
+        "music_button_id": 17022,
+        "regions": [
+        	9780
+        ]
+    },
+	{
+        "song_name": "Tree Spirits",
+        "song_id": 364,
+        "music_tab_id": 4409,
+        "music_button_id": 17057,
+        "regions": [
+        	9524,
+        	9268
+        ]
+    },
+	{
+        "song_name": "Crystal Castle",
+        "song_id": 65,
+        "music_tab_id": 8567,
+        "music_button_id": 33119,
+        "regions": [
+        	9011,
+        	9012
+        ]
+    },
+	{
+        "song_name": "Fruits De Mer",
+        "song_id": 132,
+        "music_tab_id": 11107,
+        "music_button_id": 43099,
+        "regions": [
+        	11059
+        ]
+    },
+	{
+        "song_name": "Riverside",
+        "song_id": 269,
+        "music_tab_id": 4384,
+        "music_button_id": 17032,
+        "regions": [
+        	10803
+        ]
+    },
+	{
+        "song_name": "Baroque",
+        "song_id": 30,
+        "music_tab_id": 4307,
+        "music_button_id": 16211,
+        "regions": [
+        	10547
+        ]
+    },
+	{
+        "song_name": "Knightly",
+        "song_id": 182,
+        "music_tab_id": 4356,
+        "music_button_id": 17004,
+        "regions": [
+        	10291
+        ]
+    },
+	{
+        "song_name": "Sad Meadow",
+        "song_id": 275,
+        "music_tab_id": 4387,
+        "music_button_id": 17035,
+        "regions": [
+			10035
+        ]
+    },
+	{
+        "song_name": "Overpass",
+        "song_id": 247,
+        "music_tab_id": 8573,
+        "music_button_id": 33125,
+        "regions": [
+        	9267
+        ]
+    },
+	{
+        "song_name": "Everywhere",
+        "song_id": 104,
+        "music_tab_id": 8572,
+        "music_button_id": 33124,
+        "regions": [
+        	8755
+        ]
+    },
+	{
+        "song_name": "Jolly-R",
+        "song_id": 174,
+        "music_tab_id": 4351,
+        "music_button_id": 16255,
+        "regions": [
+        	11058
+        ]
+    },
+	{
+        "song_name": "Jungly 2",
+        "song_id": 178,
+        "music_tab_id": 4354,
+        "music_button_id": 17002,
+        "regions": [
+        	10802
+        ]
+    },
+	{
+        "song_name": "Upcoming",
+        "song_id": 379,
+        "music_tab_id": 4420,
+        "music_button_id": 17068,
+        "regions": [
+        	10546
+        ]
+    },
+	{
+        "song_name": "Ballad of Enchantment",
+        "song_id": 26,
+        "music_tab_id": 4306,
+        "music_button_id": 16210,
+        "regions": [
+        	10290
+        ]
+    },
+	{
+        "song_name": "Attack 1",
+        "song_id": 15,
+        "music_tab_id": 4297,
+        "music_button_id": 16201,
+        "regions": [
+        	10034
+        ]
+    },
+	{
+        "song_name": "Expecting",
+        "song_id": 107,
+        "music_tab_id": 4327,
+        "music_button_id": 16231,
+        "regions": [
+        	9778
+        ]
+    },
+	{
+        "song_name": "Elven Mist",
+        "song_id": 98,
+        "music_tab_id": 8575,
+        "music_button_id": 33127,
+        "regions": [
+        	9266
+        ]
+    },
+	{
+        "song_name": "Breeze",
+        "song_id": 39,
+        "music_tab_id": 8565,
+        "music_button_id": 33117,
+        "regions": [
+        	9010
+        ]
+    },
+	{
+        "song_name": "Woodland",
+        "song_id": 407,
+        "music_tab_id": 8571,
+        "music_button_id": 33123,
+        "regions": [
+        	8754
+        ]
+    },
+	{
+        "song_name": "Jungle Island",
+        "song_id": 175,
+        "music_tab_id": 4352,
+        "music_button_id": 17000,
+        "regions": [
+        	11309,
+        	11313
+        ]
+    },
+	{
+        "song_name": "High Seas",
+        "song_id": 157,
+        "music_tab_id": 4345,
+        "music_button_id": 16249,
+        "regions": [
+        	11057
+        ]
+    },
+	{
+        "song_name": "Landlubber",
+        "song_id": 189,
+        "music_tab_id": 1883,
+        "music_button_id": 7091,
+        "regions": [
+        	10801
+        ]
+    },
+	{
+        "song_name": "Fanfare 3",
+        "song_id": 114,
+        "music_tab_id": 4331,
+        "music_button_id": 16235,
+        "regions": [
+        	10545
+        ]
+    },
+	{
+        "song_name": "Attack 4",
+        "song_id": 18,
+        "music_tab_id": 4300,
+        "music_button_id": 16204,
+        "regions": [
+        	10289
+        ]
+    },
+	{
+        "song_name": "Emotion",
+        "song_id": 99,
+        "music_tab_id": 4325,
+        "music_button_id": 16229,
+        "regions": [
+        	10033
+        ]
+    },
+	{
+        "song_name": "Serenade",
+        "song_id": 290,
+        "music_tab_id": 4394,
+        "music_button_id": 17042,
+        "regions": [
+        	10289,
+        	9777
+        ]
+    },
+	{
+        "song_name": "Far Away",
+        "song_id": 116,
+        "music_tab_id": 7030,
+        "music_button_id": 27118,
+        "regions": [
+        	8753
+        ]
+    },
+	{
+        "song_name": "Forest",
+        "song_id": 126,
+        "music_tab_id": 8574,
+        "music_button_id": 33126,
+        "regions": [
+        	9009
+        ]
+    },
+	{
+        "song_name": "Meridian",
+        "song_id": 220,
+        "music_tab_id": 8570,
+        "music_button_id": 33122,
+        "regions": [
+        	8753
+        ]
+    },
+	{
+        "song_name": "Mudskipper Melody",
+        "song_id": 232,
+        "music_tab_id": 15293,
+        "music_button_id": 59189,
+        "regions": [
+        	11824
+        ]
+    },
+	{
+        "song_name": "Jungle Troubles",
+        "song_id": 176,
+        "music_tab_id": 14603,
+        "music_button_id": 57011,
+        "regions": [
+        	11568
+        ]
+    },
+	{
+        "song_name": "Tribal Background",
+        "song_id": 367,
+        "music_tab_id": 4410,
+        "music_button_id": 17058,
+        "regions": [
+        	11312
+        ]
+    },
+	{
+        "song_name": "Nomad",
+        "song_id": 241,
+        "music_tab_id": 1893,
+        "music_button_id": 7101,
+        "regions": [
+        	11056
+        ]
+    },
+	{
+        "song_name": "Long Ago",
+        "song_id": 200,
+        "music_tab_id": 4361,
+        "music_button_id": 17009,
+        "regions": [
+        	10544
+        ]
+    },
+	{
+        "song_name": "Magic Dance",
+        "song_id": 206,
+        "music_tab_id": 4366,
+        "music_button_id": 17014,
+        "regions": [
+        	10288
+        ]
+    },
+	{
+        "song_name": "Big Chords",
+        "song_id": 32,
+        "music_tab_id": 4309,
+        "music_button_id": 16213,
+        "regions": [
+        	10032
+        ]
+    },
+	{
+        "song_name": "Melodrama",
+        "song_id": 219,
+        "music_tab_id": 11477,
+        "music_button_id": 44213,
+        "regions": [
+        	9776
+        ]
+    },
+	{
+        "song_name": "Castle Wars",
+        "song_id": 44,
+        "music_tab_id": 11476,
+        "music_button_id": 44212,
+        "regions": [
+        	9520
+        ]
+    },
+	{
+        "song_name": "Lost Soul",
+        "song_id": 202,
+        "music_tab_id": 8569,
+        "music_button_id": 33121,
+        "regions": [
+        	9264,
+        	9008
+        ]
+    },
+	{
+        "song_name": "Exposed",
+        "song_id": 109,
+        "music_tab_id": 8568,
+        "music_button_id": 33120,
+        "regions": [
+        	8752
+        ]
+    },
+	{
+        "song_name": "Riverside",
+        "song_id": 269,
+        "music_tab_id": 4384,
+        "music_button_id": 17032,
+        "regions": [
+        	10803
+        ]
+    },
+	{
+        "song_name": "Fanfare 2",
+        "song_id": 113,
+        "music_tab_id": 4330,
+        "music_button_id": 16234,
+        "regions": [
+        	11823
+        ]
+    },
+	{
+        "song_name": "Reggae 2",
+        "song_id": 265,
+        "music_tab_id": 4383,
+        "music_button_id": 17031,
+        "regions": [
+        	11567
+        ]
+    },
+	{
+        "song_name": "Tribal",
+        "song_id": 368,
+        "music_tab_id": 4411,
+        "music_button_id": 17059,
+        "regions": [
+        	11311
+        ]
+    },
+	{
+        "song_name": "Jungly 3",
+        "song_id": 179,
+        "music_tab_id": 4355,
+        "music_button_id": 17003,
+        "regions": [
+        	11055
+        ]
+    },
+	{
+        "song_name": "In the Manor",
+        "song_id": 165,
+        "music_tab_id": 4348,
+        "music_button_id": 16252,
+        "regions": [
+        	10287
+        ]
+    },
+	{
+        "song_name": "Zogre Dance",
+        "song_id": 413,
+        "music_tab_id": 13355,
+        "music_button_id": 52043,
+        "regions": [
+        	9775
+        ]
+    },
+	{
+        "song_name": "Romper Chomper",
+        "song_id": 272,
+        "music_tab_id": 13359,
+        "music_button_id": 52047,
+        "regions": [
+        	9519,
+        	9263
+        ]
+    },
+	{
+        "song_name": "Tribal 2",
+        "song_id": 366,
+        "music_tab_id": 4412,
+        "music_button_id": 17060,
+        "regions": [
+        	11822,
+        	11566
+        ]
+    },
+	{
+        "song_name": "Ambient Jungle",
+        "song_id": 6,
+        "music_tab_id": 4290,
+        "music_button_id": 16200,
+        "regions": [
+        	11310
+        ]
+    },
+	{
+        "song_name": "Jungly 1",
+        "song_id": 177,
+        "music_tab_id": 4353,
+        "music_button_id": 17001,
+        "regions": [
+        	11054
+        ]
+    },
+	{
+        "song_name": "Chompy Hunt",
+        "song_id": 55,
+        "music_tab_id": 674,
+        "music_button_id": 2162,
+        "regions": [
+        	10542
+        ]
+    },
+	{
+        "song_name": "Grumpy",
+        "song_id": 148,
+        "music_tab_id": 675,
+        "music_button_id": 2163,
+        "regions": [
+        	10286
+        ]
+    },
+	{
+        "song_name": "Soundscape",
+        "song_id": 300,
+        "music_tab_id": 4397,
+        "music_button_id": 17045,
+        "regions": [
+        	10030,
+        	9774
+        ]
+    },
+	{
+        "song_name": "Reggae",
+        "song_id": 264,
+        "music_tab_id": 4382,
+        "music_button_id": 17030,
+        "regions": [
+        	11565,
+        	11821
+        ]
+    },
+	{
+        "song_name": "Jungle Island",
+        "song_id": 175,
+        "music_tab_id": 4352,
+        "music_button_id": 17000,
+        "regions": [
+        	11309,
+        	11313
+        ]
+    },
+	{
+        "song_name": "Spooky Jungle",
+        "song_id": 305,
+        "music_tab_id": 4401,
+        "music_button_id": 17049,
+        "regions": [
+        	11053
+        ]
+    },
+	{
+        "song_name": "Monkey Madness",
+        "song_id": 228,
+        "music_tab_id": 11136,
+        "music_button_id": 43128,
+        "regions": [
+        	11051
+        ]
+    },
+	{
+        "song_name": "Anywhere",
+        "song_id": 7,
+        "music_tab_id": 11134,
+        "music_button_id": 43126,
+        "regions": [
+        	10795
+        ]
+    },
+	{
+        "song_name": "Marooned",
+        "song_id": 211,
+        "music_tab_id": 11137,
+        "music_button_id": 43129,
+        "regions": [
+        	11562
+        ]
+    },
+	{
+        "song_name": "Island Life",
+        "song_id": 172,
+        "music_tab_id": 11138,
+        "music_button_id": 43130,
+        "regions": [
+        	11050,
+        	10794
+        ]
+    },
+	{
+        "song_name": "Null and Void",
+        "song_id": 242,
+        "music_tab_id": -1,
+        "music_button_id": 72034,
+        "regions": [
+        	10537
+        ]
+    },
+	{
+        "song_name": "Pest Control",
+        "song_id": 252,
+        "music_tab_id": -1,
+        "music_button_id": 73002,
+        "regions": [
+        	10536
+        ]
+    }
+]

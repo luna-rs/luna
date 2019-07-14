@@ -1,6 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.net.msg.out.SoundMessageWriter;
 
 /**
  * An event sent when a player clicks a button on an interface.

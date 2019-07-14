@@ -2,6 +2,7 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
+import io.luna.game.model.Music;
 import io.luna.game.model.Position;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
@@ -11,6 +12,8 @@ import io.luna.game.model.mob.block.UpdateState;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Iterator;
 
@@ -20,6 +23,11 @@ import java.util.Iterator;
  * @author lare96 <http://github.org/lare96>
  */
 public final class PlayerUpdateMessageWriter extends GameMessageWriter {
+
+    /**
+     * The asynchronous logger.
+     */
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The player update block set.
@@ -35,6 +43,15 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             msg.startBitAccess();
 
             handleMovement(player, msg);
+
+            Music m = Music.getSongForReqion(player.getPosition().getRegionPosition().getId());
+            if (m!=null) {
+                m.playSong(m, player);
+            } else {
+                LOGGER.info("No music for region: " + player.getPosition().getRegionPosition().getId());
+                Music.stopMusic(player);
+            }
+
             blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
 
             msg.putBits(8, player.getLocalPlayers().size());

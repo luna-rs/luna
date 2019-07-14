@@ -59,6 +59,12 @@ import static com.google.common.base.Preconditions.checkState;
 public final class Player extends Mob {
 
     /**
+     * Integer representing last song played, and Array of unlocked songs.
+     */
+    public int lastSong = -1;
+    public int[] unlockedSongs = new int[600];
+
+    /**
      * An enum representing prayer icons.
      */
     public enum PrayerIcon {
