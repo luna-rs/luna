@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.LunaConstants;
+import io.luna.Luna;
 import io.luna.game.model.mob.Player;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
- * A model responsible for creating the serializer, and performing synchronous loads and saves.
+ * A model responsible for creating the serializer and performing synchronous loads and saves.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -48,7 +48,7 @@ public final class PlayerPersistence {
      */
     public void save(String username, PlayerData data) throws Exception {
         if (data.needsHash) {
-            data.password = BCrypt.hashpw(data.enteredPassword, BCrypt.gensalt());
+            data.password = BCrypt.hashpw(data.plainTextPassword, BCrypt.gensalt());
         }
         serializer.save(username, data);
     }
@@ -70,7 +70,7 @@ public final class PlayerPersistence {
      * @throws ClassCastException If the serializer could not be created.
      */
     private PlayerSerializer computeSerializer() throws ClassCastException {
-        String name = LunaConstants.SERIALIZER;
+        String name = Luna.settings().serializer();
         try {
             String fullName = "io.luna.game.model.mob.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName);

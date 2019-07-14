@@ -1,7 +1,6 @@
 package io.luna.game.model.chunk;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.LunaConstants;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
@@ -15,7 +14,6 @@ import java.util.function.BiFunction;
  * player before other mobs.
  *
  * @author lare96 <http://github.org/lare96>
- * @see LunaConstants#STAGGERED_UPDATING
  */
 public final class ChunkMobComparator implements Comparator<Mob> {
 

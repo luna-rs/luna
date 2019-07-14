@@ -1,7 +1,12 @@
 package io.luna;
 
+import com.moandjiezana.toml.Toml;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
@@ -13,7 +18,12 @@ public final class Luna {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER;
+    private static final Logger logger;
+
+    /**
+     * The global settings.
+     */
+    private static final LunaSettings settings;
 
     /**
      * A private constructor.
@@ -23,7 +33,7 @@ public final class Luna {
 
     static {
         try {
-            Thread.currentThread().setName("LunaInitializationThread");
+            Thread.currentThread().setName("InitializationThread");
 
             // Disable Jansi instantiation warning.
             System.setProperty("log4j.skipJansi", "true");
@@ -31,7 +41,8 @@ public final class Luna {
             // Enables asynchronous, garbage-free logging.
             System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-            LOGGER = LogManager.getLogger();
+            logger = LogManager.getLogger();
+            settings = loadSettings();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -47,8 +58,26 @@ public final class Luna {
             LunaServer luna = new LunaServer();
             luna.init();
         } catch (Exception e) {
-            LOGGER.fatal("Luna could not be started.", e);
+            logger.fatal("Luna could not be started.", e);
             System.exit(0);
         }
+    }
+
+    /**
+     * Loads the contents of the file and parses it into a {@link LunaSettings} object.
+     *
+     * @return The settings object.
+     * @throws FileNotFoundException If the file wasn't found.
+     */
+    private static LunaSettings loadSettings() throws FileNotFoundException {
+        BufferedReader reader = new BufferedReader(new FileReader("./data/luna.toml"));
+        return new Toml().read(reader).to(LunaSettings.class);
+    }
+
+    /**
+     * @return The global settings.
+     */
+    public static LunaSettings settings() {
+        return settings;
     }
 }

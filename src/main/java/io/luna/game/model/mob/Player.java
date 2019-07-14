@@ -2,7 +2,7 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.luna.LunaConstants;
+import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
@@ -24,6 +24,7 @@ import io.luna.game.model.mob.inter.GameTabSet;
 import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.service.LogoutService;
+import io.luna.game.service.PersistenceService;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
@@ -39,7 +40,7 @@ import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -288,6 +289,16 @@ public final class Player extends Mob {
     private String lastIp;
 
     /**
+     * When the player is unbanned.
+     */
+    private LocalDateTime unbanDate;
+
+    /**
+     * When the player is unmuted.
+     */
+    private LocalDateTime unmuteDate;
+
+    /**
      * The prepared save data.
      */
     private volatile PlayerData saveData;
@@ -403,12 +414,12 @@ public final class Player extends Mob {
     }
 
     /**
-     * Saves the player manually, using a {@link LogoutService} worker.
+     * Sends a save request to the {@link PersistenceService}.
      *
-     * @return The result of the save.
+     * @return The result of the save task.
      */
     public ListenableFuture<Void> save() {
-        return world.getLogoutService().save(this);
+        return world.getPersistenceService().save(this);
     }
 
     /**
@@ -427,7 +438,7 @@ public final class Player extends Mob {
             data.load(this);
         } else {
             // New player!
-            setPosition(LunaConstants.STARTING_POSITION);
+            setPosition(Luna.settings().startingPosition());
             rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
         }
@@ -437,9 +448,11 @@ public final class Player extends Mob {
      * Prepares the player for logout.
      */
     public void cleanUp() {
-        setState(EntityState.INACTIVE);
-        createSaveData();
-        world.getLogoutService().submit(getUsername(), this);
+        if (getState() == EntityState.ACTIVE) {
+            setState(EntityState.INACTIVE);
+            createSaveData();
+            world.getLogoutService().submit(getUsername(), this);
+        }
     }
 
     /**
@@ -635,39 +648,35 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'unmute_date' attribute.
+     * Sets when the player is unmuted.
      *
      * @param unmuteDate The value to set to.
      */
-    public void setUnmuteDate(String unmuteDate) {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        attr.set(unmuteDate);
+    public void setUnmuteDate(LocalDateTime unmuteDate) {
+        this.unmuteDate = unmuteDate;
     }
 
     /**
-     * @return The 'unmute_date' attribute.
+     * @return When the player is unmuted.
      */
-    public String getUnmuteDate() {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        return attr.get();
+    public LocalDateTime getUnmuteDate() {
+        return unmuteDate;
     }
 
     /**
-     * Sets the 'unban_date' attribute.
+     * Sets when the player is unbanned.
      *
      * @param unbanDate The value to set to.
      */
-    public void setUnbanDate(String unbanDate) {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        attr.set(unbanDate);
+    public void setUnbanDate(LocalDateTime unbanDate) {
+        this.unbanDate = unbanDate;
     }
 
     /**
-     * @return The 'unban_date' attribute.
+     * @return When the player is unbanned.
      */
-    public String getUnbanDate() {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        return attr.get();
+    public LocalDateTime getUnbanDate() {
+        return unbanDate;
     }
 
     /**
@@ -689,49 +698,14 @@ public final class Player extends Mob {
         return attr.get();
     }
 
+    // TODO No point in all these being attributes. ^
+
     /**
-     * @return {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
+     * @return {@code true} if the player is muted.
      */
     public boolean isMuted() {
-        String date = getUnmuteDate();
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnmuteDate("n/a");
-                    return false;
-                }
-                return true;
-        }
+        return unmuteDate != null && !LocalDateTime.now().isAfter(unmuteDate);
     }
-
-    /**
-     * @return {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
-     */
-    public boolean isBanned() {
-        String date = getUnbanDate();
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnbanDate("n/a");
-                    return false;
-                }
-                return true;
-        }
-    }
-
-    // TODO No point in all these being attributes. ^
 
     /**
      * @return The prepared save data.
@@ -1153,6 +1127,13 @@ public final class Player extends Mob {
      */
     public boolean isPendingLogout() {
         return pendingLogout;
+    }
+
+    /**
+     * @return The IP address currently logged in with.
+     */
+    public String getCurrentIp() {
+        return client.getIpAddress();
     }
 
     /**

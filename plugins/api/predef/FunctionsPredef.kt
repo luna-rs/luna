@@ -3,7 +3,6 @@ package api.predef
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Table
-import com.google.common.util.concurrent.ListenableFuture
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
@@ -16,18 +15,6 @@ import java.util.concurrent.TimeUnit
  * Returns the current time in [TimeUnit.MILLISECONDS], using [System.nanoTime] for better precision.
  */
 fun currentTimeMs() = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS)
-
-/**
- * Executes a block of code asynchronously.
- */
-inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
-    game.submit {
-        try {
-            func()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
 /**
  * A shortcut to the lazy delegate property. Initializations are **not** thread safe!

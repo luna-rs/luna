@@ -1,14 +1,9 @@
 # Detailed descriptions of what these settings do can be found in the LunaConstants class.
 
-[game]
-starting_position = { x = 3093, y = 3244 }
-experience_multiplier = 1.0
+startingPosition = { x = 3093, y = 3244 }
+experienceMultiplier = 1.0
 serializer = "JsonPlayerSerializer"
-
-[network]
 port = 43594
-resource_leak_detection = "PARANOID"
-connection_limit = 2
-
-[util]
-plugin_gui = false
+resourceLeakDetection = "PARANOID"
+connectionLimit = 2
+pluginGui = false

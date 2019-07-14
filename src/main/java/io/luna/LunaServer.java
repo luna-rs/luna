@@ -81,14 +81,14 @@ public final class LunaServer {
         initNetwork();
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        LOGGER.info("Luna is now online on port {} (took {}s).", box(LunaConstants.PORT), box(elapsedTime));
+        LOGGER.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
     }
 
     /**
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
-        ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
+        ResourceLeakDetector.setLevel(Luna.settings().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
@@ -96,7 +96,7 @@ public final class LunaServer {
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-        bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
+        bootstrap.bind(Luna.settings().port()).syncUninterruptibly();
     }
 
     /**
@@ -118,7 +118,7 @@ public final class LunaServer {
      */
     private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
+        Tuple<Integer, Integer> pluginCount = bootstrap.init(Luna.settings().pluginGui());
 
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
         LOGGER.info("{} Kotlin plugins have been loaded into memory.", fractionString);
@@ -128,7 +128,7 @@ public final class LunaServer {
      * Initializes misc. startup tasks.
      **/
     private void initLaunchTasks() {
-        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
+        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
         executor.execute(new ItemDefinitionFileParser());
