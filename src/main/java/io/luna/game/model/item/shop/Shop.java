@@ -20,6 +20,7 @@ import java.util.Set;
  * A model representing a single shop where items can be bought and sold.
  *
  * @author lare96 <http://github.com/lare96>
+ * @author natis1 <http://github.com/natis1>
  *
  */
 public final class Shop {
@@ -122,7 +123,7 @@ public final class Shop {
         Item item = container.get(index);
         if (item != null && item.getAmount() > 0) {
             String itemName = item.getItemDef().getName();
-            int value = computeBuyValue(item, false);
+            int value = computeBuyValue(item, index, 1);
             String currencyName = currency.computeName(value);
 
             player.sendMessage(itemName + ": currently costs " + FORMAT.format(value) + " " + currencyName + ".");
@@ -168,12 +169,13 @@ public final class Shop {
 
         // Determine if player has enough currency.
         int hasValue = inventory.computeAmountForId(currency.getId());
-        int singleValue = computeBuyValue(shopItem, false);
-        int totalValue = singleValue * buyAmount;
+        int totalValue = computeBuyValue(shopItem, index, buyAmount);
         if (hasValue < totalValue) {
             // They don't, buy as many as they can afford.
-            buyAmount = hasValue / singleValue;
-            totalValue = singleValue * buyAmount;
+            while (buyAmount > 0 && hasValue < totalValue) {
+                buyAmount--;
+                totalValue = computeBuyValue(shopItem, index, buyAmount);
+            }
             player.sendMessage("You do not have enough " + currency.getPluralName() + " to buy this item.");
 
             if (buyAmount == 0) {
@@ -295,15 +297,158 @@ public final class Shop {
     /**
      * Computes the buy value of {@code item}.
      *
+     * This is based on extensive black-box testing of modern OSRS's shops, and assuming that none of the code for shop prices
+     * has changed since RS2. The principal difference between this function and most private servers is that this one
+     * accounts for the different shop formulas used with items that the store normally stocks
+     * (for example: selling a staff to Zaff, or a security book to a general store).
+     *
      * @param item The item.
-     * @param total If the value should be multiplied by the item's amount.
+     * @param index The index of the item in the shop.
+     * @param amountBought The amount of the item to be purchased.
      * @return The buy value.
      */
-    private int computeBuyValue(Item item, boolean total) {
+    private int computeBuyValue(Item item, int index, int amountBought) {
+        assert amountBought >= 0;
+
         int value = item.getItemDef().getValue();
-        value = value <= 0 ? 1 : value;
-        return total ? value * item.getAmount() : value;
+        int amountStocked = container.computeAmountForIndex(index);
+
+        // TODO: consider maybe moving these somewhere. I'm not sure where. These are just "magic numbers"
+
+        // How much does an item increase in price relative to its base price when understocked by 1 from a specialized store?
+        final double SP_PRICE_CHANGE = 0.02;
+
+        // What is the minimum buy price of an item at a specialized shop?
+        final double SP_MIN_PRICE = 0.1;
+        // What is the maximum buy price of an item at a specialized shop?
+        final double SP_MAX_PRICE = 1.3;
+
+        // How many items need to be understocked to reach max price and how many items need to be overstocked to reach minimum price?
+        final int SP_ITEMS_TO_REACH_MAX_PRICE = (int) ((SP_MAX_PRICE - 1) / SP_PRICE_CHANGE); // 15 by default.
+        final int SP_ITEMS_TO_REACH_MIN_PRICE = (int) ((1 - SP_MIN_PRICE) / SP_PRICE_CHANGE) - 1; // 44 by default. Should be less than the "actual" value of 45 by default.
+
+        // How much does an item increase in price relative to its base price when "understocked" by 1 from a general store?
+        // In this case the "default stock" is treated as 10 even though stock will adjust until there's 0 of the item.
+        final double GEN_PRICE_CHANGE = 0.03;
+
+        // What is the minimum buy price of an item at a general store?
+        final double GEN_MIN_PRICE = 0.3;
+        final int GEN_ITEMS_TO_REACH_MIN_PRICE = (int) ((1 - GEN_MIN_PRICE) / GEN_PRICE_CHANGE); // rounds to 23 by default. Should be less than the "actual" value of 23.33 by default
+
+
+        /*
+          If an item is naturally sold by the shop it will have a natural expected stock.
+
+          These items are sold by the shop at much lower price than normal:
+          100% value - 2% per extra item stocked, minimum of 10%, maximum 130%???
+
+          whereas items that are not naturally sold are sold at a price of:
+          130% - 3% per item stocked, minimum of 40%
+
+          These values seem to be rounded to the nearest coin.
+         */
+
+        if(amountMap[index].isPresent()) {
+            int expectedAmount = amountMap[index].orElse(0);
+            // Assume that all items bought were bought at normal price, without any offset.
+            double valueMod = amountBought;
+
+            // For buying 1 item, this special case is slightly faster and avoids all the math below.
+            if(amountBought == 1) {
+                valueMod += (expectedAmount - amountStocked) * SP_PRICE_CHANGE;
+
+                // Clamp between 130% and 10%
+                if (valueMod > 1.3) {
+                    valueMod = 1.3;
+                } else if (valueMod < 0.1) {
+                    valueMod = 0.1;
+                }
+                // Calculate true buy value and round it to nearest int.
+                return (int) (value * valueMod + 0.5);
+            }
+
+            /*
+              Excluding the boundaries (max priced and minimum priced items),
+              the problem at this point boils down to something similar to the common puzzle of adding the first 100 integers.
+
+              http://mathcentral.uregina.ca/QQ/database/QQ.02.06/jo1.html
+
+              Thus we can implement that solution but for the item value.
+             */
+
+            // First, find the number of items purchased at the maximum possible price.
+            // We check if any items are bought at maximum price
+            int maxPriceItems = ( (expectedAmount - amountStocked + amountBought) * SP_PRICE_CHANGE >= (SP_MAX_PRICE - 1.0))
+                    // and then set the number bought at that price
+                    ? (expectedAmount - SP_ITEMS_TO_REACH_MAX_PRICE - amountStocked + amountBought) : 0;
+            // This formula above only applies if you are not at the max price from the start. if you are, then all
+            // items are bought at maximum price.
+
+            if(maxPriceItems > amountBought) {
+                maxPriceItems = amountBought;
+            }
+
+            // The number of items bought at minimum price.
+            int minPriceItems = ((expectedAmount - amountStocked) * SP_PRICE_CHANGE <= (SP_MIN_PRICE - 1.0))
+                    ? (amountStocked - expectedAmount - SP_ITEMS_TO_REACH_MIN_PRICE) : 0;
+            if(minPriceItems > amountBought) {
+                minPriceItems = amountBought;
+            }
+
+
+            // Add all the price deltas in maximum and minimum priced items
+            valueMod += minPriceItems * -0.9 + maxPriceItems * 0.3;
+
+            // Now, we can make the assumption that price is not clamped for the remaining items. This allows us to use
+            // gauss's technique for finding the total value mod.
+            int startingIndex = minPriceItems;
+            int endingIndex = amountBought - maxPriceItems - 1;
+            int netIndex = endingIndex - startingIndex + 1;
+            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * SP_PRICE_CHANGE;
+            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * SP_PRICE_CHANGE;
+            double netPriceMod = (endingPriceMod + startingPriceMod);
+
+            valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
+
+            // round and return
+            return (int) ((value * valueMod) + 0.5);
+        } else {
+            // We are in a general store and buying an item that is not normally present in a general store, and
+            // should use the general store constants instead.
+
+            // For some reason general stores have a "stock" of 10 items.
+            int expectedAmount = 10;
+            double valueMod = amountBought;
+            if(amountBought == 1) {
+                valueMod += (expectedAmount - amountStocked) * SP_PRICE_CHANGE;
+
+                // Clamp values less than 30%
+                if (valueMod < GEN_MIN_PRICE) {
+                    valueMod = GEN_MIN_PRICE;
+                }
+                return (int) (value * valueMod + 0.5);
+            }
+            int minPriceItems = ( (expectedAmount - amountStocked) * GEN_PRICE_CHANGE <= (GEN_MIN_PRICE - 1.0))
+                    ? (amountStocked - expectedAmount - GEN_ITEMS_TO_REACH_MIN_PRICE) : 0;
+            if(minPriceItems > amountBought) {
+                minPriceItems = amountBought;
+            }
+            valueMod += minPriceItems * (GEN_MIN_PRICE - 1.0);
+
+            int startingIndex = minPriceItems;
+            int endingIndex = amountBought - 1;
+            int netIndex = endingIndex - startingIndex + 1;
+            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * GEN_PRICE_CHANGE;
+            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * GEN_PRICE_CHANGE;
+            double netPriceMod = (endingPriceMod + startingPriceMod);
+
+            valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
+
+            return (int) ((value * valueMod) + 0.5);
+
+        }
     }
+
 
     /**
      * Computes if {@code item} can be sold to this shop.
