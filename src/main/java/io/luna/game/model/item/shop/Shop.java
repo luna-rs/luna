@@ -1,5 +1,6 @@
 package io.luna.game.model.item.shop;
 
+import com.google.common.base.Preconditions;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.IndexedItem;
@@ -308,33 +309,32 @@ public final class Shop {
      * @return The buy value.
      */
     private int computeBuyValue(Item item, int index, int amountBought) {
-        assert amountBought >= 0;
+        Preconditions.checkArgument(amountBought >= 0);
 
         int value = item.getItemDef().getValue();
         int amountStocked = container.computeAmountForIndex(index);
 
-        // TODO: consider maybe moving these somewhere. I'm not sure where. These are just "magic numbers"
+        // "Magic numbers" that the shop algo uses. Maybe consider moving these somewhere else, like a config file.
+        // By what percent does an item increase in price when understocked by 1 from a specialized store?
+        final double spPriceChange = 0.02;
 
-        // How much does an item increase in price relative to its base price when understocked by 1 from a specialized store?
-        final double SP_PRICE_CHANGE = 0.02;
-
-        // What is the minimum buy price of an item at a specialized shop?
-        final double SP_MIN_PRICE = 0.1;
-        // What is the maximum buy price of an item at a specialized shop?
-        final double SP_MAX_PRICE = 1.3;
+        // What is the minimum price of an item at a specialized shop?
+        final double spMinPrice = 0.1;
+        // What is the maximum price of an item at a specialized shop?
+        final double spMaxPrice = 1.3;
 
         // How many items need to be understocked to reach max price and how many items need to be overstocked to reach minimum price?
-        final int SP_ITEMS_TO_REACH_MAX_PRICE = (int) ((SP_MAX_PRICE - 1) / SP_PRICE_CHANGE); // 15 by default.
-        final int SP_ITEMS_TO_REACH_MIN_PRICE = (int) ((1 - SP_MIN_PRICE) / SP_PRICE_CHANGE) - 1; // 44 by default. Should be less than the "actual" value of 45 by default.
+        final int spItemsToReachMaxPrice = (int) ((spMaxPrice - 1) / spPriceChange); // 15 by default.
+        final int spItemsToReachMinPrice = (int) ((1 - spMinPrice) / spPriceChange) - 1; // 44 by default. Should be less than the "actual" value of 45 by default.
 
-        // How much does an item increase in price relative to its base price when "understocked" by 1 from a general store?
+        // How much does an item that doesn't belong in a shop increase in price when "understocked" by 1?
+        final double genPriceChange = 0.03;
         // In this case the "default stock" is treated as 10 even though stock will adjust until there's 0 of the item.
-        final double GEN_PRICE_CHANGE = 0.03;
+        final int genDefaultStock = 10;
 
-        // What is the minimum buy price of an item at a general store?
-        final double GEN_MIN_PRICE = 0.3;
-        final int GEN_ITEMS_TO_REACH_MIN_PRICE = (int) ((1 - GEN_MIN_PRICE) / GEN_PRICE_CHANGE); // rounds to 23 by default. Should be less than the "actual" value of 23.33 by default
-
+        // What is the minimum buy price of an item that doesn't belong in that shop?
+        final double genMinPrice = 0.3;
+        final int genItemsToReachMinPrice = (int) ((1 - genMinPrice) / genPriceChange); // rounds to 23 by default. Should be less than the "actual" value of 23.33 by default
 
         /*
           If an item is naturally sold by the shop it will have a natural expected stock.
@@ -347,15 +347,14 @@ public final class Shop {
 
           These values seem to be rounded to the nearest coin.
          */
-
-        if(amountMap[index].isPresent()) {
+        if (amountMap[index].isPresent()) {
             int expectedAmount = amountMap[index].orElse(0);
             // Assume that all items bought were bought at normal price, without any offset.
             double valueMod = amountBought;
 
             // For buying 1 item, this special case is slightly faster and avoids all the math below.
-            if(amountBought == 1) {
-                valueMod += (expectedAmount - amountStocked) * SP_PRICE_CHANGE;
+            if (amountBought == 1) {
+                valueMod += (expectedAmount - amountStocked) * spPriceChange;
 
                 // Clamp between 130% and 10%
                 if (valueMod > 1.3) {
@@ -378,74 +377,65 @@ public final class Shop {
 
             // First, find the number of items purchased at the maximum possible price.
             // We check if any items are bought at maximum price
-            int maxPriceItems = ( (expectedAmount - amountStocked + amountBought) * SP_PRICE_CHANGE >= (SP_MAX_PRICE - 1.0))
+            int maxPriceItems = ( (expectedAmount - amountStocked + amountBought) * spPriceChange >= (spMaxPrice - 1.0))
                     // and then set the number bought at that price
-                    ? (expectedAmount - SP_ITEMS_TO_REACH_MAX_PRICE - amountStocked + amountBought) : 0;
+                    ? (expectedAmount - spItemsToReachMaxPrice - amountStocked + amountBought) : 0;
             // This formula above only applies if you are not at the max price from the start. if you are, then all
             // items are bought at maximum price.
 
-            if(maxPriceItems > amountBought) {
+            if (maxPriceItems > amountBought) {
                 maxPriceItems = amountBought;
             }
 
             // The number of items bought at minimum price.
-            int minPriceItems = ((expectedAmount - amountStocked) * SP_PRICE_CHANGE <= (SP_MIN_PRICE - 1.0))
-                    ? (amountStocked - expectedAmount - SP_ITEMS_TO_REACH_MIN_PRICE) : 0;
-            if(minPriceItems > amountBought) {
+            int minPriceItems = ((expectedAmount - amountStocked) * spPriceChange <= (spMinPrice - 1.0))
+                    ? (amountStocked - expectedAmount - spItemsToReachMinPrice) : 0;
+            if (minPriceItems > amountBought) {
                 minPriceItems = amountBought;
             }
 
-
             // Add all the price deltas in maximum and minimum priced items
             valueMod += minPriceItems * -0.9 + maxPriceItems * 0.3;
-
             // Now, we can make the assumption that price is not clamped for the remaining items. This allows us to use
             // gauss's technique for finding the total value mod.
             int startingIndex = minPriceItems;
             int endingIndex = amountBought - maxPriceItems - 1;
             int netIndex = endingIndex - startingIndex + 1;
-            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * SP_PRICE_CHANGE;
-            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * SP_PRICE_CHANGE;
+            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * spPriceChange;
+            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * spPriceChange;
             double netPriceMod = (endingPriceMod + startingPriceMod);
-
             valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
-
             // round and return
             return (int) ((value * valueMod) + 0.5);
         } else {
             // We are in a general store and buying an item that is not normally present in a general store, and
             // should use the general store constants instead.
-
-            // For some reason general stores have a "stock" of 10 items.
-            int expectedAmount = 10;
             double valueMod = amountBought;
-            if(amountBought == 1) {
-                valueMod += (expectedAmount - amountStocked) * SP_PRICE_CHANGE;
+            if (amountBought == 1) {
+                valueMod += (genDefaultStock - amountStocked) * spPriceChange;
 
                 // Clamp values less than 30%
-                if (valueMod < GEN_MIN_PRICE) {
-                    valueMod = GEN_MIN_PRICE;
+                if (valueMod < genMinPrice) {
+                    valueMod = genMinPrice;
                 }
                 return (int) (value * valueMod + 0.5);
             }
-            int minPriceItems = ( (expectedAmount - amountStocked) * GEN_PRICE_CHANGE <= (GEN_MIN_PRICE - 1.0))
-                    ? (amountStocked - expectedAmount - GEN_ITEMS_TO_REACH_MIN_PRICE) : 0;
-            if(minPriceItems > amountBought) {
+
+            int minPriceItems = ( (genDefaultStock - amountStocked) * genPriceChange <= (genMinPrice - 1.0))
+                    ? (amountStocked - genDefaultStock - genItemsToReachMinPrice) : 0;
+            if (minPriceItems > amountBought) {
                 minPriceItems = amountBought;
             }
-            valueMod += minPriceItems * (GEN_MIN_PRICE - 1.0);
 
+            valueMod += minPriceItems * (genMinPrice - 1.0);
             int startingIndex = minPriceItems;
             int endingIndex = amountBought - 1;
             int netIndex = endingIndex - startingIndex + 1;
-            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * GEN_PRICE_CHANGE;
-            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * GEN_PRICE_CHANGE;
+            double startingPriceMod = (genDefaultStock - amountStocked + startingIndex) * genPriceChange;
+            double endingPriceMod = (genDefaultStock - amountStocked + endingIndex) * genPriceChange;
             double netPriceMod = (endingPriceMod + startingPriceMod);
-
             valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
-
             return (int) ((value * valueMod) + 0.5);
-
         }
     }
 
