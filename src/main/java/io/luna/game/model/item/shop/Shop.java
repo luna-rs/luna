@@ -26,56 +26,6 @@ import java.util.Set;
  */
 public final class Shop {
 
-    /**
-     * The number formatter. Uses the UK locale.
-     */
-    private static final NumberFormat FORMAT = NumberFormat.getInstance(Locale.UK);
-
-    /**
-     * The world instance.
-     */
-    private final World world;
-
-    /**
-     * The shop name.
-     */
-    private final String name;
-
-    /**
-     * The shop items.
-     */
-    private final ItemContainer container = new ItemContainer(40, StackPolicy.ALWAYS, 3900);
-
-    /**
-     * The restock policy.
-     */
-    private final RestockPolicy restockPolicy;
-
-    /**
-     * The sell policy.
-     */
-    private final BuyPolicy buyPolicy;
-
-    /**
-     * The currency used to buy items.
-     */
-    private final Currency currency;
-
-    /**
-     * The players viewing this shop.
-     */
-    private final Set<Player> viewing = new HashSet<>();
-
-    /**
-     * A dictionary of original item amounts. {@link OptionalInt#empty()} indicates an empty slot.
-     */
-    private final OptionalInt[] amountMap = new OptionalInt[40];
-
-    /**
-     * The restock task.
-     */
-    private RestockTask restockTask;
-
     // "Magic numbers" for the buy and sell functions.
     // Can be configured before compiling to change how shops price goods.
 
@@ -144,6 +94,56 @@ public final class Shop {
      * is slightly more authentic (but perhaps less desirable) to the original game.
      */
     private static final boolean PERFECT_PRECISION_TRANSACTIONS = false;
+
+    /**
+     * The number formatter. Uses the UK locale.
+     */
+    private static final NumberFormat FORMAT = NumberFormat.getInstance(Locale.UK);
+
+    /**
+     * The world instance.
+     */
+    private final World world;
+
+    /**
+     * The shop name.
+     */
+    private final String name;
+
+    /**
+     * The shop items.
+     */
+    private final ItemContainer container = new ItemContainer(40, StackPolicy.ALWAYS, 3900);
+
+    /**
+     * The restock policy.
+     */
+    private final RestockPolicy restockPolicy;
+
+    /**
+     * The sell policy.
+     */
+    private final BuyPolicy buyPolicy;
+
+    /**
+     * The currency used to buy items.
+     */
+    private final Currency currency;
+
+    /**
+     * The players viewing this shop.
+     */
+    private final Set<Player> viewing = new HashSet<>();
+
+    /**
+     * A dictionary of original item amounts. {@link OptionalInt#empty()} indicates an empty slot.
+     */
+    private final OptionalInt[] amountMap = new OptionalInt[40];
+
+    /**
+     * The restock task.
+     */
+    private RestockTask restockTask;
 
 
     /**
