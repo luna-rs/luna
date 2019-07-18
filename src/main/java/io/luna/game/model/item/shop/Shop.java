@@ -522,12 +522,6 @@ public final class Shop {
             double netPriceMod = (endingPriceMod + startingPriceMod);
             valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
             totalMoney = (int) (value * valueMod);
-            // This is an incredibly fast approximation of rounding for items with an average value less than 1.
-            // Example: selling 6 items that cost 1.3, 1.2, 1.1, 1.0, 0.9, 0.8 coins respectively. The expected output is 4.
-            // Since you are selling 4 items above the 1 coin threshold.
-            // The output this provides is 6.3 - 2 = 4.
-            // For items worth more than 1, this will increase the rounding precision when buying more than 1 item at a time.
-            totalMoney = (int) ((value * valueMod) - ((totalMoney % amountSold) / 2));
         }
         return totalMoney;
     }
