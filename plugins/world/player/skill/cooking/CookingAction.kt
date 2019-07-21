@@ -85,6 +85,6 @@ class CookingAction(plr: Player,
             val reqLvlFactor = mob.cooking.level - food.reqLevel
             val burnChance = baseChance - (reqLvlFactor * (baseChance / burnLvlFactor))
 
-            burnChance <= (rand().nextDouble() * 100.0)
+            burnChance >= (rand().nextDouble() * 100.0)
         }
 }
