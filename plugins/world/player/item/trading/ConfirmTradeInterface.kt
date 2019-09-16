@@ -80,10 +80,12 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         if (confirm.accepted) {
             completed = true
             plr.inventory.addAll(confirm.tradingItems)
+            plr.inventory.removeAll(tradingItems)
             plr.interfaces.close()
 
             confirm.completed = true
             other.inventory.addAll(tradingItems)
+            other.inventory.removeAll(confirm.tradingItems)
             other.interfaces.close()
         } else {
             accepted = true
