@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.collections.MutableList
 
 plugins {
@@ -39,6 +40,8 @@ dependencies {
     implementation("org.mockito:mockito-core:2.24.5")
     testImplementation("org.junit.jupiter:junit-jupiter-api:+")
     testImplementation("org.junit.jupiter:junit-jupiter-params:+")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:+")
+
 }
 
 group = "luna"
@@ -61,8 +64,10 @@ tasks.withType<JavaCompile>{
     options.compilerArgs = MutableList(1) {"-Xlint:unchecked"}
 }
 
-tasks {
-    "test"(Test::class) {
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks.named<Test>("test") {
         useJUnitPlatform()
-    }
 }
