@@ -67,6 +67,7 @@ javafx {
 
 tasks.withType<JavaCompile>{
     options.compilerArgs = MutableList(1) {"-Xlint:unchecked"}
+    options.encoding= "UTF-8"
 }
 
 tasks.withType<KotlinCompile> {
