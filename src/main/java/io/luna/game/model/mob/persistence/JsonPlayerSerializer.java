@@ -97,28 +97,28 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         }
 
         // Read data from main table.
-        Position position = getAsType(data.get("position"), Position.class);
+        var position = getAsType(data.get("position"), Position.class);
         player.setPosition(position);
 
-        PlayerRights rights = PlayerRights.valueOf(data.get("rights").getAsString());
+        var rights = PlayerRights.valueOf(data.get("rights").getAsString());
         player.setRights(rights);
 
         int[] appearance = getAsType(data.get("appearance"), int[].class);
         player.getAppearance().setValues(appearance);
 
-        PlayerSettings settings = getAsType(data.get("settings"), PlayerSettings.class);
+        var settings = getAsType(data.get("settings"), PlayerSettings.class);
         player.setSettings(settings);
 
-        IndexedItem[] inventory = getAsType(data.get("inventory"), IndexedItem[].class);
+        var inventory = getAsType(data.get("inventory"), IndexedItem[].class);
         player.getInventory().init(inventory);
 
-        IndexedItem[] bank = getAsType(data.get("bank"), IndexedItem[].class);
+        var bank = getAsType(data.get("bank"), IndexedItem[].class);
         player.getBank().init(bank);
 
-        IndexedItem[] equipment = getAsType(data.get("equipment"), IndexedItem[].class);
+        var equipment = getAsType(data.get("equipment"), IndexedItem[].class);
         player.getEquipment().init(equipment);
 
-        Skill[] skills = getAsType(data.get("skills"), Skill[].class);
+        var skills = getAsType(data.get("skills"), Skill[].class);
         player.getSkills().setSkills(skills);
 
         long[] friends = getAsType(data.get("friends"), long[].class);
@@ -128,15 +128,11 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         player.setIgnores(ignores);
 
         // Read data from attribute table.
-        JsonObject attributes = data.get("attributes").getAsJsonObject();
+        var attributes = data.get("attributes").getAsJsonObject();
         for (Entry<String, JsonElement> entry : attributes.entrySet()) {
-            String persistenceKey = entry.getKey();
-            JsonObject attrData = entry.getValue().getAsJsonObject();
-
-            // Use attribute key type instead.
-            Class<?> type = Class.forName(attrData.get("type").getAsString());
-            Object value = getAsType(attrData.get("value"), type);
-            player.getAttributes().load(persistenceKey, value);
+            var key = entry.getKey();
+            var value = Attribute.getGsonInstance().fromJson(entry.getValue(), Object.class);
+            player.getAttributes().load(key, value);
         }
         return LoginResponse.NORMAL;
     }
@@ -153,8 +149,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      */
     public LoginResponse parseFromJson(Player player, Path path, String enteredPassword)
             throws ClassNotFoundException, IOException {
-        String jsonString = new String(Files.readAllBytes(path));
-        JsonObject data = new JsonParser().parse(jsonString).getAsJsonObject();
+        var jsonString = new String(Files.readAllBytes(path));
+        var data = new JsonParser().parse(jsonString).getAsJsonObject();
         return fromJson(player, data, enteredPassword);
     }
 
@@ -164,10 +160,10 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      * @param player The player.
      * @return The serialization object.
      */
-    public JsonObject toJson(Player player) {
+    public JsonObject toJson(Player player) throws Exception {
 
         // Serialize the main table.
-        JsonObject mainData = new JsonObject();
+        var mainData = new JsonObject();
         mainData.addProperty("password", computePw(player));
         mainData.add("position", toJsonTree(player.getPosition()));
         mainData.addProperty("rights", player.getRights().name());
@@ -181,20 +177,17 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         mainData.add("ignores", toJsonTree(player.getIgnores().toArray()));
 
         // Iterate through attributes.
-        JsonObject attributeData = new JsonObject();
+        var attributeData = new JsonObject();
         for (Entry<Attribute<?>, Object> entry : player.getAttributes()) {
-            Attribute<?> attr = entry.getKey();
-            Object value = entry.getValue();
+            var key = entry.getKey();
+            var value = entry.getValue();
 
             // Add all persistent ones to the attribute table.
-            if (attr.isPersistent()) {
-                JsonObject attrData = new JsonObject();
-                attrData.addProperty("type", attr.getValueType().getName());
-                attrData.add("value", toJsonTree(value));
-
-                attributeData.add(attr.getPersistenceKey(), attrData);
+            if (key.isPersistent()) {
+                attributeData.add(key.getPersistenceKey(), Attribute.getGsonInstance().toJsonTree(value));
             }
         }
+
         // Add attribute table to main table.
         mainData.add("attributes", attributeData);
         return mainData;

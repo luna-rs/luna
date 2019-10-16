@@ -25,7 +25,7 @@ final class AttributeMapTest {
 
     @AfterEach
     void cleanUp() {
-        AttributeMap.persistentKeySet.clear();
+        AttributeMap.persistentKeyMap.clear();
     }
 
     @Test

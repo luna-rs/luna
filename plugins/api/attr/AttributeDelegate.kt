@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
  *
  * @author lare96 <http://github.com/lare96>
  */
-class AttributeDelegate<T : Any>(private val attr: Attribute<T>) {
+class AttributeDelegate<T : Any>(val attr: Attribute<T>) {
 
     /**
      * Retrieve the attribute value.
@@ -27,5 +27,7 @@ class AttributeDelegate<T : Any>(private val attr: Attribute<T>) {
     /**
      * Makes the attribute save permanently.
      */
-    fun persist(key: String) = attr.persist(key)!!
+    fun persist(key: String): Attribute<T> {
+        return attr.persist(key)!!
+    }
 }

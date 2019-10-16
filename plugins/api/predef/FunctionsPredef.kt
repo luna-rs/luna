@@ -90,7 +90,7 @@ fun rand(upper: Int): Int = rand().nextInt(upper + 1)
 /**
  * Generates a random integer within [range].
  */
-fun rand(range: IntRange) = rand(range.start, range.endInclusive)
+fun rand(range: IntRange) = rand(range.first, range.last)
 
 /**
  * Creates an empty mutable table of [entries].

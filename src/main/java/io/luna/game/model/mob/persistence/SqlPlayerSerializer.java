@@ -78,6 +78,8 @@ public class SqlPlayerSerializer extends PlayerSerializer {
         } catch (SQLException e) {
             // Normal exception, cannot be retried.
             throw new RuntimeException(e);
+        } catch (Exception e) {
+            // handle later TODO
         }
         return true;
     }
@@ -121,7 +123,7 @@ public class SqlPlayerSerializer extends PlayerSerializer {
      * @param statement The SQL statement.
      * @throws SQLException If any SQl errors occur.
      */
-    private void sqlSave(Player player, Statement statement) throws SQLException {
+    private void sqlSave(Player player, Statement statement) throws Exception {
         String jsonString = GsonUtils.GSON.toJson(json.toJson(player));
 
         if (player.getDatabaseId() == -1) {

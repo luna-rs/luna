@@ -1,10 +1,9 @@
 package io.luna.game.model.mob.attr;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonElement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.luna.game.model.mob.Player;
-import io.luna.util.GsonUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -17,7 +16,24 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Attribute<T> {
 
-    private static final ImmutableSet<Class<?>> DEFAULT_TYPES = ImmutableSet.of(Integer.class, Long.class, Double.class, Boolean.class, String.class);
+    /**
+     * The JSON serializer.
+     */
+    private static volatile Gson serializer = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+
+    /**
+     * Sets the new JSON serializer.
+     */
+    public static void setGsonInstance(Gson newSerializer) {
+        serializer = newSerializer;
+    }
+
+    /**
+     * @return The JSON serializer.
+     */
+    public static Gson getGsonInstance() {
+        return serializer;
+    }
 
     /**
      * The initial value.
@@ -28,11 +44,6 @@ public final class Attribute<T> {
      * The value class.
      */
     private final Class<T> valueType;
-
-    /**
-     * The serializer, if any.
-     */
-    private AttributeSerializer<T> serializer;
 
     /**
      * The persistence key, if permanently saved.
@@ -50,34 +61,6 @@ public final class Attribute<T> {
     }
 
     /**
-     * Converts the attribute value into a {@link JsonElement}, for serialization.
-     *
-     * @param out The attribute value.
-     * @return The serialization object.
-     */
-    public JsonElement write(T out) {
-        // Attempt to use a custom serializer to write data.
-        if (serializer != null) {
-            return serializer.write(out);
-        }
-        return GsonUtils.toJsonTree(out);
-    }
-
-    /**
-     * Converts the deserialized {@link JsonElement} back into its original value.
-     *
-     * @param in The serialization object.
-     * @return The attribute value.
-     */
-    public T read(JsonElement in) {
-        // Attempt to use a custom serializer to read data.
-        if (serializer != null) {
-            return serializer.read(in);
-        }
-        return GsonUtils.getAsType(in, valueType);
-    }
-
-    /**
      * Makes this attribute save permanently to a {@link Player}'s character under {@code persistenceKey}. Attributes
      * cannot share the same key.
      *
@@ -85,28 +68,22 @@ public final class Attribute<T> {
      * @return This attribute.
      */
     public Attribute<T> persist(String persistenceKey) {
-        checkState(AttributeMap.persistentKeySet.add(persistenceKey),
+        checkState(AttributeMap.persistentKeyMap.put(persistenceKey, this) == null,
                 "Persistent attribute with key {" + persistenceKey + "} already exists.");
         checkArgument(!persistenceKey.isEmpty(), "Persistent attribute keys must not be empty.");
         checkArgument(CharMatcher.whitespace().matchesNoneOf(persistenceKey),
                 "Persistent attribute key {" + persistenceKey + "} has whitespace characters, use underscores instead.");
         checkArgument(CharMatcher.forPredicate(Character::isUpperCase).matchesNoneOf(persistenceKey),
                 "Persistent attribute key {" + persistenceKey + "} has uppercase characters, use lowercase ones instead.");
-        checkState(serializer != null || DEFAULT_TYPES.contains(valueType),
-                valueType.getSimpleName() + " is not a default type, so it must have an attached AttributeSerializer.");
-        this.persistenceKey = persistenceKey;
-        return this;
+        return setPersistenceKey(persistenceKey);
     }
 
     /**
-     * Sets {@code serializer} as the current serializer. A value of {@code null} = default serializer used.
+     * Does the same thing as {@link #persist(String)}, but does not add it to the persistent key set.
      */
-    public void useSerializer(AttributeSerializer<T> serializer) {
-        this.serializer = serializer;
-    }
-
-    public boolean hasSerializer() {
-        return serializer != null;
+    Attribute<T> setPersistenceKey(String persistenceKey) {
+        this.persistenceKey = persistenceKey;
+        return this;
     }
 
     /**

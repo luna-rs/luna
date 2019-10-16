@@ -25,8 +25,7 @@ public class TickTimer implements Comparable<Long> {
 
     /**
      * Creates a new {@link TickTimer} with {@code initialDurationTicks}.
-     *
-     * @param world The world.
+     *  @param world The world.
      * @param initialDurationTicks The initial duration, in ticks.
      */
     public TickTimer(World world, long initialDurationTicks) {
@@ -63,7 +62,7 @@ public class TickTimer implements Comparable<Long> {
     }
 
     /**
-     * Reset the current duration to {@code 0} ticks.
+     * Reset the current duration to {@link World#getCurrentTick()} ticks.
      */
     public final void reset() {
         snapshot = world.getCurrentTick();

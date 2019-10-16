@@ -1,10 +1,10 @@
 package io.luna.game.model.mob.attr;
 
+import io.luna.util.GsonUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link Attribute}.
@@ -15,11 +15,12 @@ final class AttributeTest {
 
     @AfterEach
     void clearKeySet() {
-        AttributeMap.persistentKeySet.clear();
+        AttributeMap.persistentKeyMap.clear();
     }
 
     @Test
     void illegalKeys() {
+        var gson = GsonUtils.GSON;
 
         // Test for duplicate keys.
         new Attribute<>(false).persist("duplicate_key");
@@ -33,17 +34,5 @@ final class AttributeTest {
 
         // Test for uppercase characters.
         assertThrows(IllegalArgumentException.class, () -> new Attribute<>(false).persist("TEST_KEY"));
-    }
-
-    @Test
-    void defaultSerialization() {
-        var attr = new Attribute<>(false).persist("test_key");
-
-        // Test serializing the attribute.
-        var value = attr.write(true);
-        assertTrue(value.getAsBoolean());
-
-        // Test deserializing the attribute.
-        assertTrue(attr.read(value));
     }
 }

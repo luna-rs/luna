@@ -7,7 +7,6 @@ import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.item.consume.food.Food.Companion.lastEat
 import java.util.*
 
 /**
@@ -60,7 +59,6 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
                 // Invoke effects.
                 plr.animation(drinkAnimation)
                 potion.effect(plr)
-                plr.lastEat.reset()
             }
         }
     })
