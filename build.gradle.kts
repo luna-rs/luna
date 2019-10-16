@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.collections.MutableList
 
@@ -53,6 +54,10 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+}
+
+sourceSets["main"].withConvention(KotlinSourceSet::class) {
+    kotlin.srcDir("plugins")
 }
 
 javafx {
