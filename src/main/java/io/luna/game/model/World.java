@@ -154,7 +154,7 @@ public final class World {
     /**
      * The current tick.
      */
-    private AtomicLong currentTick = new AtomicLong();
+    private final AtomicLong currentTick = new AtomicLong();
 
     /**
      * The map of online players. Can be accessed safely from any thread.
@@ -410,8 +410,8 @@ public final class World {
     /**
      * @return The current tick.
      */
-    public AtomicLong getCurrentTick() {
-        return currentTick;
+    public long getCurrentTick() {
+        return currentTick.get();
     }
 
     /**

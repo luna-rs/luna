@@ -6,9 +6,9 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.task.Task
 
 /**
- * The "restoring_skills" attribute.
+ * If skills are being restored.
  */
-var Player.restoringSkills by Attr<Boolean>("restoring_skills")
+var Player.restoringSkills by Attr.boolean()
 
 /**
  * A [Task] that will restore boosted and depleted skills every 100 ticks.

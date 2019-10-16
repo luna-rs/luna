@@ -33,9 +33,4 @@ final class EventListenerTest {
         eventListener.setScript(script);
         assertThrows(IllegalStateException.class, () -> eventListener.setScript(script));
     }
-
-    @Test
-    void getScript() {
-        assertThrows(IllegalStateException.class, () -> eventListener.getScript());
-    }
 }

@@ -1,9 +1,9 @@
+
 import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
-import io.luna.game.model.item.shop.ShopInterface
 
 shop("General Store") {
     buy = BuyPolicy.ALL
@@ -33,7 +33,7 @@ shop("General Store") {
 npc1(520) {
     plr.newDialogue()
         .npc(npc.id, "Hi, here's what I have in stock for today!")
-        .then { it.interfaces.open(ShopInterface(world, "General Store")) }
+        .then { it.interfaces.openShop("General Store") }
 }
 
 /**

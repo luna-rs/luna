@@ -296,6 +296,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least one was added.
      */
     public boolean addAll(Item... items) {
+        if (items.length == 0) {
+            return false;
+        }
         return addAll(Arrays.asList(items));
     }
 
@@ -420,6 +423,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least one was removed.
      */
     public boolean removeAll(Item... items) {
+        if (items.length == 0) {
+            return false;
+        }
         return removeAll(Arrays.asList(items));
     }
 
@@ -620,6 +626,16 @@ public class ItemContainer implements Iterable<Item> {
      * @return The amount of space required.
      */
     public final int computeSpaceForAll(Item... items) {
+        return computeSpaceForAll(Arrays.asList(items));
+    }
+
+    /**
+     * Computes the amount of space required to hold {@code items}.
+     *
+     * @param items The items.
+     * @return The amount of space required.
+     */
+    public final int computeSpaceForAll(Iterable<? extends Item> items) {
         int count = 0;
         for (Item item : items) {
             count = IntMath.saturatedAdd(count, computeSpaceFor(item));
@@ -671,6 +687,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code ids} are all present in this container.
      */
     public final boolean containsAll(int... ids) {
+        if (ids.length == 0) {
+            return true;
+        }
         return containsAllIds(Ints.asList(ids));
     }
 
@@ -696,6 +715,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code ids} are all present in this container.
      */
     public final boolean containsAny(int... ids) {
+        if (ids.length == 0) {
+            return true;
+        }
         return containsAnyIds(Ints.asList(ids));
     }
 
@@ -731,6 +753,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code items} are all present in this container.
      */
     public final boolean containsAll(Item... items) {
+        if (items.length == 0) {
+            return true;
+        }
         return containsAll(Arrays.asList(items));
     }
 

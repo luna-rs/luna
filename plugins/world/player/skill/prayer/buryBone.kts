@@ -1,46 +1,49 @@
-import api.attr.Stopwatch
+package world.player.skill.prayer
+
+import api.attr.Attr
 import api.predef.*
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
+import io.luna.game.action.ThrottledAction
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.skill.prayer.Bone
+import java.util.*
 
 /**
- * The "last_bone_bury" stopwatch.
+ * Throttles bone burying.
  */
-var Player.buryTimer by Stopwatch("last_bone_bury")
+val Player.lastBury by Attr.timeSource()
 
 /**
- * The bone bury animation.
+ * The bone burying animation.
  */
 val buryAnimation = Animation(827)
 
 /**
- * Attempt to bury a bone, if we haven't recently just buried one.
+ * Buries [bone] for [plr] and awards XP.
  */
-fun buryBone(plr: Player, bone: Bone) {
-    if (plr.buryTimer >= 1200) {
-        plr.interruptAction()
-        plr.animation(buryAnimation)
+fun bury(plr: Player, bone: Bone) {
+    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastBury, 3) {
+        override fun execute() {
+            mob.animation(buryAnimation)
 
-        plr.prayer.addExperience(bone.exp)
-        plr.inventory.remove(bone.boneItem)
+            mob.prayer.addExperience(bone.exp)
+            mob.inventory.remove(bone.boneItem)
 
-        plr.sendMessage("You dig a hole in the ground.")
-        plr.sendMessage("You bury the ${bone.itemName()}.")
-
-        plr.buryTimer = -1
-    }
+            mob.sendMessage("You dig a hole in the ground.")
+            mob.sendMessage("You bury the bones.")
+        }
+    })
 }
 
-/**
- * If the item being clicked is a bone, attempt to bury it.
- */
-on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Bury") }
-    .then {
-        val bone = Bone.ID_TO_BONE[id]
+// Initialize bone burying event listeners here.
+ItemDefinition.ALL
+    .stream()
+    .filter(Objects::nonNull)
+    .forEach {
+        val bone = Bone.ID_TO_BONE[it.id]
         if (bone != null) {
-            buryBone(plr, bone)
+            item1(it.id) {
+                bury(plr, bone)
+            }
         }
     }

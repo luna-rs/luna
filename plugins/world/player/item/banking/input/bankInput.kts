@@ -9,7 +9,7 @@ import io.luna.game.model.mob.inter.AmountInputInterface
  */
 fun setWithdrawMode(plr: Player, value: Boolean) {
     if (plr.bank.isOpen) {
-        plr.isWithdrawAsNote = value
+        plr.bank.isWithdrawAsNote = value
     }
 }
 

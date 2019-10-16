@@ -1,6 +1,8 @@
 package io.luna.game.action;
 
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.task.Task;
 
 import java.util.Optional;
 
@@ -18,55 +20,97 @@ import java.util.Optional;
 public abstract class QueuedAction<T extends Mob> extends Action<T> {
 
     /**
+     * A {@link Task} implementation that will execute the queued action.
+     */
+    private final class Worker extends Task {
+
+        public Worker() {
+            super(delay);
+        }
+
+        @Override
+        protected void execute() {
+            if (mob.getState() != EntityState.INACTIVE && queuedAction.isPresent()) {
+                var action = queuedAction.get();
+                action.execute();
+                source.reset();
+            }
+            interrupt();
+        }
+    }
+
+    /**
+     * The duration of this action.
+     */
+    private final int delay;
+
+    /**
+     * The time source.
+     */
+    private final TimeSource source;
+
+    /**
+     * The worker processing this action.
+     */
+    private final Worker worker;
+
+    /**
      * The queued action.
      */
-    protected Optional<Action<?>> queuedAction = Optional.empty();
+    private Optional<QueuedAction<?>> queuedAction = Optional.empty();
 
     /**
      * Creates a new {@link QueuedAction}.
      *
-     * @param mob The {@link Mob} assigned to this action.
-     * @param duration The duration of this action. All subsequent actions submitted within this duration will
-     * be queued.
+     * @param mob The mob assigned to this action.
+     * @param source The time source.
+     * @param delay The delay of this action. How long (in ticks) the mob must wait before executions of this action.
      */
-    public QueuedAction(T mob, int duration) {
-        super(mob, false, duration);
+    public QueuedAction(T mob, TimeSource source, int delay) {
+        super(mob);
+        this.delay = delay;
+        this.source = source;
+        worker = new Worker();
     }
 
     @Override
-    protected void onInit() {
-        execute();
-    }
-
-    @Override
-    protected final void call() {
-        onDuration();
-
-        // Interrupt this action and execute the queued action.
-        interrupt();
-        queuedAction.ifPresent(Action::call);
-    }
-
-    @Override
-    protected final boolean isEqual(Action<?> other) {
-        return true;
-    }
-
-    @Override
-    protected final void onEquals(Action<?> other) {
-        // Queue all incoming actions. The player is essentially "locked" from doing another action until this one
-        // completes (or this action is interrupted).
-        queuedAction = Optional.of(other);
+    public void run() {
+        mob.getWalking().clear();
+        if (source.ready(delay)) {
+            execute();
+            world.schedule(worker);
+        } else {
+            actionManager.resetQueued();
+        }
     }
 
     /**
-     * Executes this action. Invoked when this action is submitted.
+     * Executes this action.
      */
-    protected abstract void execute();
+    public abstract void execute();
 
     /**
-     * Executes when this action's duration elapses.
+     * Determines if {@code action} should be queued in the current action.
+     *
+     * @param action The action.
+     * @return {@code true} if {@code action} should be queued.
      */
-    protected void onDuration() {
+    public boolean queueIf(QueuedAction<?> action) {
+        return source.equals(action.source);
+    }
+
+    /**
+     * Sets the backing queued action.
+     */
+    void setQueuedAction(QueuedAction<?> pending) {
+        queuedAction = Optional.ofNullable(pending);
+    }
+
+    /**
+     * Resets the internal queued action.
+     */
+    final void interrupt() {
+        worker.cancel();
+        actionManager.resetQueued();
     }
 }

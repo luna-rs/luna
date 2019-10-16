@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.inter;
 
+import io.luna.game.model.item.shop.ShopInterface;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.CloseWindowsMessageWriter;
 import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
@@ -57,6 +58,13 @@ public final class AbstractInterfaceSet {
             setCurrentWalkable((WalkableInterface) inter);
         }
         inter.setOpened(player);
+    }
+
+    /**
+     * A shortcut for {@code open(new ShopInterface(world, "<name>"))}.
+     */
+    public void openShop(String name) {
+        open(new ShopInterface(player.getWorld(), name));
     }
 
     /**

@@ -52,7 +52,11 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     void onMessageReceived(GameMessage msg) {
-        decodedMessages.offer(msg);
+        if (!decodedMessages.offer(msg)) {
+            // Release buffer if unsuccessful or the memory will never get freed.
+            var payload = msg.getPayload();
+            payload.release(payload.refCnt());
+        }
     }
 
     /**
@@ -61,7 +65,7 @@ public class GameClient extends Client<GameMessage> {
      */
     public void handleDecodedMessages() {
         for (; ; ) {
-            GameMessage msg = decodedMessages.poll();
+            var msg = decodedMessages.poll();
             if (msg == null) {
                 break;
             }
@@ -78,8 +82,6 @@ public class GameClient extends Client<GameMessage> {
      * @param msg The message to queue.
      */
     public void queue(GameMessageWriter msg) {
-        Channel channel = getChannel();
-
         if (channel.isActive()) {
             channel.write(msg.toGameMsg(player), channel.voidPromise());
         }
@@ -90,8 +92,6 @@ public class GameClient extends Client<GameMessage> {
      * {@link #queue(GameMessageWriter)}. Calls to this method are expensive and should be done sparingly.
      */
     public void flush() {
-        Channel channel = getChannel();
-
         if (channel.isActive()) {
             channel.flush();
         }

@@ -264,6 +264,11 @@ public final class Player extends Mob {
     private boolean teleporting;
 
     /**
+     * The current run energy level.
+     */
+    private double runEnergy;
+
+    /**
      * The friend list.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
@@ -277,6 +282,21 @@ public final class Player extends Mob {
      * The interaction menu.
      */
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
+
+    /**
+     * The unmute date.
+     */
+    private String unmuteDate = "n/a";
+
+    /**
+     * The unban date.
+     */
+    private String unbanDate = "n/a";
+
+    /**
+     * The combined weight of the {@link #inventory} and {@link #equipment}.
+     */
+    private double weight;
 
     /**
      * The hashed password.
@@ -359,6 +379,8 @@ public final class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        actions.interrupt();
+        world.getPlayerMap().remove(getUsernameHash());
         world.getAreas().notifyLogout(this);
         removeLocalItems();
         removeLocalObjects();
@@ -604,47 +626,43 @@ public final class Player extends Mob {
     /**
      * Sets the 'run_energy' attribute.
      *
-     * @param runEnergy The value to set to.
+     * @param newRunEnergy The value to set to.
      */
-    public void setRunEnergy(double runEnergy) {
-        if (runEnergy > 100.0) {
-            runEnergy = 100.0;
+    public void setRunEnergy(double newRunEnergy) {
+        if (newRunEnergy > 100.0) {
+            newRunEnergy = 100.0;
         }
 
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        if (attr.get() != runEnergy) {
-            attr.set(runEnergy);
+        if (runEnergy != newRunEnergy) {
+            runEnergy = newRunEnergy;
             queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
         }
     }
 
     /**
-     * Changes the 'run_energy' attribute.
+     * Changes the current run energy level.
      *
-     * @param runEnergy The value to change by.
+     * @param mod The value to change by.
      */
-    public void changeRunEnergy(double runEnergy) {
-        if (runEnergy <= 0.0) {
+    public void changeRunEnergy(double mod) {
+        if (mod <= 0.0) {
             return;
         }
-
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        double newEnergy = attr.get() + runEnergy;
+        double newEnergy = runEnergy + mod;
         if (newEnergy > 100.0) {
             newEnergy = 100.0;
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        attr.set(newEnergy);
+        runEnergy = newEnergy;
         queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
     /**
-     * @return The 'run_energy' attribute.
+     * @return The current run energy level.
      */
     public double getRunEnergy() {
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        return attr.get();
+        return runEnergy;
     }
 
     /**
@@ -680,22 +698,20 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'weight' attribute.
-     *
-     * @param weight The value to set to.
+     * Sets the combined weight of the inventory and equipment.
      */
-    public void setWeight(double weight) {
-        AttributeValue<Double> attr = attributes.get("weight");
-        attr.set(weight);
-        queue(new UpdateWeightMessageWriter((int) weight));
+    public void setWeight(double newWeight) {
+        if (weight != newWeight) {
+            weight = newWeight;
+            queue(new UpdateWeightMessageWriter((int) weight));
+        }
     }
 
     /**
-     * @return The 'weight' attribute.
+     * @return The combined weight of the inventory and equipment.
      */
     public double getWeight() {
-        AttributeValue<Double> attr = attributes.get("weight");
-        return attr.get();
+        return weight;
     }
 
     // TODO No point in all these being attributes. ^

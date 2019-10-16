@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for {@link AttributeMap}.
@@ -15,40 +14,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 final class AttributeMapTest {
 
     AttributeMap map;
+    Attribute<Integer> attr;
 
     @BeforeEach
-    void initMap() {
+    void init() {
+        attr = new Attribute<>(0).persist("test_key");
         map = new AttributeMap();
+        map.load("test_key", 5);
     }
 
     @AfterEach
-    void clearAliases() {
-        AttributeKey.ALIASES.clear();
+    void cleanUp() {
+        AttributeMap.persistentKeyMap.clear();
     }
 
     @Test
-    void defaultValues() {
-        AttributeKey.forTransient("attribute_1", "value");
-        AttributeKey.forTransient("attribute_2", 0);
-
-        assertEquals(map.get("attribute_1").get(), "value");
-        assertEquals(map.get("attribute_2").get(), 0);
-    }
-
-    /**
-     * @noinspection RedundantStringConstructorCall
-     */
-    @Test
-    void forcedInterning() {
-        AttributeKey.forTransient("attribute_1", "value");
-        AttributeKey.forTransient("attribute_2", "value");
-
-        assertEquals(map.get(new String("attribute_1")).get(), "value");
-        assertEquals(map.get(new String("attribute_2")).get(), "value");
+    void setValue() {
+        map.set(attr, 10);
+        assertEquals(10, map.get(attr));
     }
 
     @Test
-    void unaliasedAttribute() {
-        assertThrows(IllegalStateException.class, () -> map.get("some_attribute"));
+    void getValue() {
+        assertEquals(5, map.get(attr));
     }
 }

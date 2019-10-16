@@ -8,18 +8,6 @@ import io.luna.net.msg.out.ConfigMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
 
-/**
- * A command that allows for attribute values to be retrieved.
- */
-cmd("attr", RIGHTS_DEV) {
-    val name = args[0]
-    if (plr.attributes.contains(name)) {
-        val value = plr.attributes.get<Any>(name).get()
-        plr.sendMessage("attribute{$name} = $value")
-    } else {
-        plr.sendMessage("Attribute '$name' does not exist.")
-    }
-}
 
 /**
  * A command that sends a client config.

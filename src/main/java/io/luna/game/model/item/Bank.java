@@ -4,6 +4,7 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
+import io.luna.net.msg.out.ConfigMessageWriter;
 
 import java.util.OptionalInt;
 
@@ -48,6 +49,11 @@ public final class Bank extends ItemContainer {
     private BankInterface bankInterface = new BankInterface();
 
     /**
+     * If currently withdrawing items noted.
+     */
+    private boolean withdrawAsNote;
+
+    /**
      * Creates a new {@link Bank}.
      *
      * @param player The player.
@@ -67,7 +73,7 @@ public final class Bank extends ItemContainer {
         if (!isOpen()) {
             disableEvents();
             try {
-                player.setWithdrawAsNote(false);
+                setWithdrawAsNote(false);
 
                 // Display items on interface.
                 clearSpaces();
@@ -145,7 +151,7 @@ public final class Bank extends ItemContainer {
         int existingAmount = item.getAmount();
         amount = amount > existingAmount ? existingAmount : amount;
 
-        if (player.isWithdrawAsNote()) {
+        if (withdrawAsNote) {
             OptionalInt notedId = item.getItemDef().getNotedId();
             if (notedId.isPresent()) {
                 id = notedId.getAsInt();
@@ -176,5 +182,16 @@ public final class Bank extends ItemContainer {
      */
     public boolean isOpen() {
         return bankInterface.isOpen();
+    }
+
+    public boolean isWithdrawAsNote() {
+        return withdrawAsNote;
+    }
+
+    public void setWithdrawAsNote(boolean value) {
+        if (withdrawAsNote != value) {
+            withdrawAsNote = value;
+            player.queue(new ConfigMessageWriter(115, value ? 1 : 0));
+        }
     }
 }

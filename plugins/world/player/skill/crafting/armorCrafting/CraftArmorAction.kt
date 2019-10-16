@@ -3,17 +3,17 @@ package world.player.skill.crafting.armorCrafting
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 
 /**
- * A [ProducingAction] used for crafting armor from tanned hides.
+ * An [InventoryAction] used for crafting armor from tanned hides.
  */
 class CraftArmorAction(private val plr: Player,
                        private val armor: HideArmor,
-                       amount: Int) : ProducingAction(plr, true, 4, amount) {
+                       amount: Int) : InventoryAction(plr, true, 4, amount) {
 
     companion object {
 
@@ -34,11 +34,11 @@ class CraftArmorAction(private val plr: Player,
     }
 
     /**
-     * An attribute that signifies when a spool of thread will be consumed.
+     * When a spool of thread will be consumed.
      */
-    private var Player.threadLeft by Attr<Int>("thread_left")
+    private var Player.threadLeft by Attr.int()
 
-    override fun canProduce() =
+    override fun executeIf(start: Boolean) =
         when {
             plr.crafting.level < armor.level -> {
                 plr.sendMessage("You need a Crafting level of ${armor.level} to make this.")
@@ -51,27 +51,27 @@ class CraftArmorAction(private val plr: Player,
             else -> true
         }
 
-    override fun onProduce() {
+    override fun execute() {
         mob.animation(ANIM)
         mob.sendMessage("You craft the hide into armor.")
     }
 
-    override fun add(): Array<Item> = arrayOf(armor.armorItem)
+    override fun add(): List<Item> = listOf(armor.armorItem)
 
-    override fun remove(): Array<Item> {
+    override fun remove(): List<Item> {
         val rem = armor.hidesItem!!
         return if (mob.threadLeft <= 0) {
             // We have no thread left, remove one from inventory and reset counter.
             mob.threadLeft = rand(4) + 1
-            arrayOf(rem, Item(THREAD_ID))
+            listOf(rem, Item(THREAD_ID))
         } else {
             // Decrement thread counter.
             mob.threadLeft--
-            arrayOf(rem)
+            listOf(rem)
         }
     }
 
-    override fun isEqual(other: Action<*>?) =
+    override fun ignoreIf(other: Action<*>?) =
         when (other) {
             is CraftArmorAction -> armor == other.armor
             else -> false

@@ -1,15 +1,13 @@
-import api.attr.Stopwatch
+package world.player.item.consume.food
+
 import api.predef.*
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
+import io.luna.game.action.ThrottledAction
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.item.consume.food.Food
-
-/**
- * The "last_eat_timer" stopwatch.
- */
-var Player.lastEat by Stopwatch("last_eat_timer")
+import world.player.item.consume.food.Food.Companion.lastEat
+import java.util.*
 
 /**
  * The food eating animation.
@@ -17,58 +15,45 @@ var Player.lastEat by Stopwatch("last_eat_timer")
 val eatAnimation = Animation(829)
 
 /**
- * Forwards to [eat] if the [Player] is alive and not eating too quickly.
- */
-fun tryEat(plr: Player, food: Food, id: Int, index: Int) {
-    if (plr.lastEat < food.longDelay() || !plr.isAlive) {
-        return
-    }
-
-    plr.interruptAction()
-    plr.lastEat = -1
-    eat(plr, Item(id), food, index)
-}
-
-/**
  * Consumes food and restores health, plus any other effects.
  */
 fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
-    val inv = plr.inventory
-    if (inv.remove(index, eatItem)) {
-        // Add next portion of item, if applicable.
-        val nextId = food.getNextId(eatItem.id)
-        if (nextId != null) {
-            inv.add(index, Item(nextId))
-        }
+    plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastEat, food.delay) {
+        override fun execute() {
+            val inv = plr.inventory
+            if (inv.remove(index, eatItem)) {
+                // Add next portion of item, if applicable.
+                val nextId = food.getNextId(eatItem.id)
+                if (nextId != null) {
+                    inv.add(index, Item(nextId))
+                }
 
-        // Send consume messages.
-        val name = food.formattedName
-        plr.sendMessage(food.consumeMessage(name))
-        plr.animation(eatAnimation)
-        food.effect(plr)
+                // Send consume messages.
+                val name = food.formattedName
+                plr.sendMessage(food.consumeMessage(name))
+                plr.animation(eatAnimation)
+                food.effect(plr)
 
-        // Increase HP.
-        val hp = plr.hitpoints
-        if (hp.level < hp.staticLevel) {
-            hp.addLevels(food.heal, false)
-            plr.sendMessage(food.healMessage(name))
+                // Increase HP.
+                val hp = plr.hitpoints
+                if (hp.level < hp.staticLevel) {
+                    hp.addLevels(food.heal, false)
+                    plr.sendMessage(food.healMessage(name))
+                }
+            }
         }
-    }
+    })
 }
 
-/**
- * Performs a lookup for the potion and forwards to [tryDrink].
- */
-fun lookup(msg: ItemFirstClickEvent) {
-    val food = Food.ID_TO_FOOD[msg.id]
-    if (food != null) {
-        tryEat(msg.plr, food, msg.id, msg.index)
+// Initialize food eating event listeners here.
+ItemDefinition.ALL
+    .stream()
+    .filter(Objects::nonNull)
+    .forEach {
+        val food = Food.ID_TO_FOOD[it.id]
+        if (food != null) {
+            item1(it.id) {
+                eat(plr, Item(id), food, index)
+            }
+        }
     }
-}
-
-/**
- * Forwards to [tryEat] if the item clicked was food.
- */
-on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Eat") }
-    .then { lookup(this) }

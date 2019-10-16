@@ -3,6 +3,7 @@ package io.luna.net.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -131,6 +132,22 @@ public final class ByteMessage extends DefaultByteBufHolder {
         this.buf = buf;
         this.opcode = opcode;
         this.type = type;
+    }
+
+    @Override
+    public boolean release() {
+        if (buf == Unpooled.EMPTY_BUFFER) {
+            return true;
+        }
+        return buf.release();
+    }
+
+    @Override
+    public boolean release(int decrement) {
+        if (buf == Unpooled.EMPTY_BUFFER) {
+            return true;
+        }
+        return buf.release(decrement);
     }
 
     /**

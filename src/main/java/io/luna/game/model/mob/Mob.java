@@ -2,7 +2,7 @@ package io.luna.game.model.mob;
 
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
-import io.luna.game.action.ActionSet;
+import io.luna.game.action.ActionManager;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -27,6 +27,7 @@ public abstract class Mob extends Entity {
     /**
      * The attribute map.
      */
+    // TODO for players only...
     protected final AttributeMap attributes = new AttributeMap();
 
     /**
@@ -42,7 +43,7 @@ public abstract class Mob extends Entity {
     /**
      * The action set.
      */
-    protected final ActionSet actions = new ActionSet();
+    protected final ActionManager actions = new ActionManager();
 
     /**
      * The walking queue.
@@ -194,7 +195,7 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Shortcut to function {@link ActionSet#submit(Action)}.
+     * Shortcut to function {@link ActionManager#submit(Action)}.
      *
      * @param pending The action to submit.
      */
@@ -203,7 +204,7 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Shortcut to function {@link ActionSet#interrupt()}.
+     * Shortcut to function {@link ActionManager#interrupt()}.
      */
     public final void interruptAction() {
         actions.interrupt();
@@ -385,10 +386,6 @@ public abstract class Mob extends Entity {
         flags.clear();
     }
 
-    public final boolean isAlive() {
-        return skill(Skill.HITPOINTS).getLevel() > 0;
-    }
-
     /**
      * Retrieves the skill with {@code id}.
      *
@@ -529,5 +526,12 @@ public abstract class Mob extends Entity {
      */
     public OptionalInt getTransformId() {
         return transformId;
+    }
+
+    /**
+     * @return The action set.
+     */
+    public ActionManager getActions() {
+        return actions;
     }
 }

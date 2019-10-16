@@ -17,7 +17,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
     /**
      * The path to the local files.
      */
-    private static final Path DIR = Paths.get("./data/saved_players");
+    private static final Path DIR = Paths.get("data", "saved_players");
 
     static {
         try {
@@ -37,14 +37,14 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
             return null;
         }
         String fileContents = new String(Files.readAllBytes(filePath));
-        return GsonUtils.GSON.fromJson(fileContents, PlayerData.class);
+        return Attribute.getGsonInstance().fromJson(fileContents, PlayerData.class);
     }
 
     @Override
     public void save(String username, PlayerData data) throws Exception {
         var fileWriter = new FileWriter(DIR.resolve(username + ".json").toFile());
         try (fileWriter) {
-            fileWriter.write(GsonUtils.GSON.toJson(data, PlayerData.class));
+            fileWriter.write(Attribute.getGsonInstance().toJson(data, PlayerData.class));
         }
     }
 }

@@ -3,118 +3,97 @@ package io.luna.game.model.mob.attr;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A model that uses a map internally along with its own caching mechanisms to manage attributes.
+ * A model that contains key-value mappings for {@link Attribute} types.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AttributeMap implements Iterable<Entry<String, AttributeValue>> {
+public final class AttributeMap implements Iterable<Entry<Attribute<?>, Object>> {
+
+    /**
+     * A set of all persistent keys. Used to ensure there are no duplicates.
+     */
+    public static final Map<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
 
     /**
      * A map that holds attribute key and value pairs.
      */
-    private final Map<String, AttributeValue> attributes = new IdentityHashMap<>(AttributeKey.ALIASES.size());
+    private final Map<Attribute<?>, Object> attributes = new IdentityHashMap<>(64);
 
     /**
-     * The last key.
+     * The last accessed key.
      */
-    private String lastKey;
+    private Attribute<?> lastKey;
 
     /**
-     * The last value.
+     * The last accessed value.
      */
-    private AttributeValue lastValue;
+    private Object lastValue;
 
     @Override
-    public UnmodifiableIterator<Entry<String, AttributeValue>> iterator() {
+    public UnmodifiableIterator<Entry<Attribute<?>, Object>> iterator() {
         return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
     }
 
     /**
-     * Retrieves the value of an attribute by its String key. Not type safe.
+     * Adds a loaded attribute to the backing map.
      *
-     * @param key The attribute key.
-     * @return The attribute value.
-     * @throws AttributeTypeException If the return value cannot be casted to {@code <T>}.
+     * @param key The attribute's name.
+     * @param value The attribute's value.
      */
-    @SuppressWarnings("unchecked")
-    public <T> AttributeValue<T> get(String key) throws AttributeTypeException {
-
-        //noinspection StringEquality
-        if (lastKey == requireNonNull(key)) { // Check if we can use our cached value.
-            return lastValue;
-        }
-
-        // Try and retrieve the key. If it's null, try again and forcibly intern the argument.
-        AttributeKey<?> alias = getAttributeKey(key);
-        checkState(alias != null, "attributes need to be aliased in the AttributeKey class");
-
-        try {
-            // Cache key and new attribute value, return cached value.
-            lastKey = alias.getName();
-            lastValue = attributes
-                    .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
-            return lastValue;
-        } catch (ClassCastException e) {
-            // Throw an exception on type mismatch.
-            throw new AttributeTypeException(alias);
-        }
+    public void load(String key, Object value) {
+        attributes.put(persistentKeyMap.get(key), value);
     }
 
     /**
-     * Determines if {@code key} is a valid attribute in the backing map.
+     * Sets {@code attr} to {@code value}.
      *
-     * @param key The key to check.
-     * @return {@code true} if the backing map contains the key.
+     * @param attr The attribute to set.
+     * @param value The value to set it to.
+     * @param <T> The attribute type.
      */
-    public boolean contains(String key) {
-        return getAttributeKey(key) != null;
+    public <T> void set(Attribute<T> attr, T value) {
+        requireNonNull(value, "Value cannot be null.");
+        attributes.put(attr, value);
+        lastKey = attr;
+        lastValue = value;
     }
 
     /**
-     * Converts this attribute map into a {@link Map} for serialization.
-     */
-    public Map<String, Object> toMap() {
-        var attrMap = new HashMap<String, Object>();
-        for (Entry<String, AttributeValue> entry : this) {
-            AttributeKey key = AttributeKey.ALIASES.get(entry.getKey());
-            AttributeValue value = entry.getValue();
-
-            if (key.isPersistent()) {
-                attrMap.put(key.getName(), value.get());
-            }
-        }
-        return attrMap;
-    }
-
-    /**
-     * Loads the argued map into the underlying attribute map.
-     */
-    public void fromMap(Map<String, Object> attributes) {
-        for (Entry<String, Object> entry : attributes.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            get(key).set(value);
-        }
-    }
-
-    /**
-     * Retrieves the {@link AttributeKey} instance from a String {@code key}.
+     * Retrieves the value of {@code attr}. If it doesn't exist it will be generated with saved player data, or a default
+     * value.
      *
-     * @param key The key.
-     * @return The attribute key instance.
+     * @param attr The attribute to retrieve.
+     * @param <T> The attribute type.
+     * @return The value of the attribute.
      */
-    private AttributeKey<?> getAttributeKey(String key) {
-        return Optional.ofNullable(AttributeKey.ALIASES.get(key)).
-                orElse(AttributeKey.ALIASES.get(key.intern()));
+    public <T> T get(Attribute<T> attr) {
+        // Attribute is equal to cached key, return last value.
+        if (attr == lastKey) {
+            return (T) lastValue;
+        }
+
+        // Check if we have a value loaded. If not, do so on the fly.
+        Object value = attributes.computeIfAbsent(attr, k -> attr.getInitialValue());
+        lastKey = attr;
+        lastValue = value;
+        return (T) lastValue;
+    }
+
+    /**
+     * Determines if there is a value for {@code attr}.
+     *
+     * @param attr The attribute to check for.
+     * @return {@code true} if there is a value for {@code attr}.
+     */
+    public boolean has(Attribute<?> attr) {
+        return attributes.containsKey(attr);
     }
 }
