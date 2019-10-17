@@ -2,3 +2,6 @@ language: java
 
 jdk:
  - openjdk11
+
+notifications:
+  webhooks: https://www.travisbuddy.com/
