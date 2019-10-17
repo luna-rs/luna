@@ -2,7 +2,7 @@ language: java
 install: true # override default gradle install
 
 jdk:
- - openjdk11
+  - openjdk11
 
 notifications:
   webhooks: https://www.travisbuddy.com/
