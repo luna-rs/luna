@@ -15,7 +15,6 @@ import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.mob.attr.AttributeValue;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -29,7 +28,6 @@ import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
@@ -264,11 +262,6 @@ public final class Player extends Mob {
     private boolean teleporting;
 
     /**
-     * The current run energy level.
-     */
-    private double runEnergy;
-
-    /**
      * The friend list.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
@@ -282,21 +275,6 @@ public final class Player extends Mob {
      * The interaction menu.
      */
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
-
-    /**
-     * The unmute date.
-     */
-    private String unmuteDate = "n/a";
-
-    /**
-     * The unban date.
-     */
-    private String unbanDate = "n/a";
-
-    /**
-     * The combined weight of the {@link #inventory} and {@link #equipment}.
-     */
-    private double weight;
 
     /**
      * The hashed password.
@@ -327,6 +305,21 @@ public final class Player extends Mob {
      * If the player is awaiting logout.
      */
     private volatile boolean pendingLogout;
+
+    /**
+     * The SQL database ID.
+     */
+    private int databaseId = -1;
+
+    /**
+     * The run energy percentage.
+     */
+    private double runEnergy;
+
+    /**
+     * The combined weight of the {@link #inventory} and {@link #equipment}.
+     */
+    private double weight;
 
     /**
      * Creates a new {@link Player}.
@@ -464,6 +457,7 @@ public final class Player extends Mob {
             rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
         }
+        settings.setPlayer(this);
     }
 
     /**
@@ -600,69 +594,63 @@ public final class Player extends Mob {
         return new DialogueQueueBuilder(this, 10);
     }
 
-    // TODO No point in all these being attributes. v
-
     /**
-     * Sets the 'withdraw_as_note' attribute.
-     *
-     * @param withdrawAsNote The value to set to.
+     * @return The run energy percentage.
      */
-    public void setWithdrawAsNote(boolean withdrawAsNote) {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        if (attr.get() != withdrawAsNote) {
-            attr.set(withdrawAsNote);
-            queue(new ConfigMessageWriter(115, withdrawAsNote ? 1 : 0));
-        }
+    public double getRunEnergy() {
+        return runEnergy;
     }
 
     /**
-     * @return The 'withdraw_as_note' attribute.
-     */
-    public boolean isWithdrawAsNote() {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        return attr.get();
-    }
-
-    /**
-     * Sets the 'run_energy' attribute.
+     * Sets the run energy percentage.
      *
      * @param newRunEnergy The value to set to.
      */
-    public void setRunEnergy(double newRunEnergy) {
+    public void setRunEnergy(double newRunEnergy, boolean update) {
         if (newRunEnergy > 100.0) {
             newRunEnergy = 100.0;
         }
 
         if (runEnergy != newRunEnergy) {
             runEnergy = newRunEnergy;
-            queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+            if(update) {
+                queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+            }
         }
     }
 
     /**
-     * Changes the current run energy level.
+     * Increases the current run energy level.
      *
-     * @param mod The value to change by.
+     * @param amount The value to change by.
      */
-    public void changeRunEnergy(double mod) {
-        if (mod <= 0.0) {
-            return;
-        }
-        double newEnergy = runEnergy + mod;
+    public void increaseRunEnergy(double amount) {
+        double newEnergy = runEnergy + amount;
         if (newEnergy > 100.0) {
             newEnergy = 100.0;
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        runEnergy = newEnergy;
-        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+        setRunEnergy(newEnergy, true);
     }
 
     /**
-     * @return The current run energy level.
+     * @return The combined weight of the inventory and equipment.
      */
-    public double getRunEnergy() {
-        return runEnergy;
+    public double getWeight() {
+        return weight;
+    }
+
+    /**
+     * Sets the combined weight of the inventory and equipment.
+     */
+    public void setWeight(double newWeight, boolean update) {
+        if (weight != newWeight) {
+            weight = newWeight;
+            if(update) {
+                queue(new UpdateWeightMessageWriter((int) weight));
+            }
+        }
     }
 
     /**
@@ -696,25 +684,6 @@ public final class Player extends Mob {
     public LocalDateTime getUnbanDate() {
         return unbanDate;
     }
-
-    /**
-     * Sets the combined weight of the inventory and equipment.
-     */
-    public void setWeight(double newWeight) {
-        if (weight != newWeight) {
-            weight = newWeight;
-            queue(new UpdateWeightMessageWriter((int) weight));
-        }
-    }
-
-    /**
-     * @return The combined weight of the inventory and equipment.
-     */
-    public double getWeight() {
-        return weight;
-    }
-
-    // TODO No point in all these being attributes. ^
 
     /**
      * @return {@code true} if the player is muted.
@@ -1166,5 +1135,21 @@ public final class Player extends Mob {
      */
     public void setLastIp(String lastIp) {
         this.lastIp = lastIp;
+    }
+
+    /**
+     * @return The SQL database ID.
+     */
+    public int getDatabaseId() {
+        return databaseId;
+    }
+
+    /**
+     * Sets the SQL database ID.
+     *
+     * @param databaseId The new value.
+     */
+    public void setDatabaseId(int databaseId) {
+        this.databaseId = databaseId;
     }
 }

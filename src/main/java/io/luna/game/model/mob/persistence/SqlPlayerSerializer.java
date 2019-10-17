@@ -1,31 +1,28 @@
 package io.luna.game.model.mob.persistence;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import io.luna.LunaConstants;
-import io.luna.game.model.World;
-import io.luna.game.model.mob.Player;
-import io.luna.net.codec.login.LoginResponse;
-import io.luna.util.GsonUtils;
+import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.attr.Attribute;
 import io.luna.util.SqlConnectionPool;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLTransientException;
 import java.sql.Statement;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link PlayerSerializer} implementation that stores persistent player data in an {@code SQL} database.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class SqlPlayerSerializer extends PlayerSerializer {
+public final class SqlPlayerSerializer extends PlayerSerializer {
 
-    // TODO This is still experimental and hasn't been tested.
-    // TODO Saving json text is temporary and will be removed in the future.
+    /**
+     * The logger instance.
+     */
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The connection pool.
@@ -33,106 +30,171 @@ public class SqlPlayerSerializer extends PlayerSerializer {
     private final SqlConnectionPool connectionPool;
 
     /**
-     * The serializer for JSON data.
-     */
-    private final JsonPlayerSerializer json = new JsonPlayerSerializer();
-
-    /**
      * Creates a new {@link SqlPlayerSerializer}.
      */
     public SqlPlayerSerializer() throws SQLException {
         connectionPool = new SqlConnectionPool.Builder()
-                .poolName("PersistenceSqlPool")
-                .database("players")
-                .timeout(7)
+                .poolName("PlayerDataPersistence")
+                .database("luna_players")
                 .build();
     }
 
     @Override
-    public LoginResponse load(Player player, String enteredPassword) {
-        try {
-            // Connect to database.
-            try (Connection connection = connectionPool.take()) {
-                return sqlLoad(player, connection.createStatement(), enteredPassword);
+    public PlayerData load(String username) throws Exception {
+        PlayerData data = null;
+        try (var connection = connectionPool.take();
+             var loadData = connection.prepareStatement("SELECT json_data FROM main_data WHERE username = ?;")) {
+            loadData.setString(1, username);
+
+            try (var results = loadData.executeQuery()) {
+                if (results.next()) {
+                    String jsonData = results.getString("json_data");
+                    data = Attribute.getGsonInstance().fromJson(jsonData, PlayerData.class);
+                }
             }
         } catch (Exception e) {
-            // Exception while loading data, abort login.
-            LOGGER.warn(player + " data could not be loaded.", e);
-            return LoginResponse.COULD_NOT_COMPLETE_LOGIN;
+            LOGGER.warn(new ParameterizedMessage("{}'s data could not be loaded.", username), e);
         }
+        return data;
     }
 
     @Override
-    public boolean save(Player player) {
-        World world = player.getWorld();
-        try {
-            // Save to database.
-            try (Connection connection = connectionPool.take()) {
-                sqlSave(player, connection.createStatement());
+    public void save(String username, PlayerData data) throws Exception {
+        try (var connection = connectionPool.take()) {
+            connection.setAutoCommit(false);
+            try {
+                if (data.databaseId == -1) {
+                    saveNewPlayer(connection, username, data);
+                } else {
+                    saveExistingPlayer(connection, data);
+                }
+            } finally {
+                connection.setAutoCommit(true);
             }
-        } catch (SQLTransientException e) {
-            // Transient exception, we can retry it.
-            LOGGER.warn("Data for " + player + " could not be saved, retrying...", e);
-            world.savePlayer(player);
-            return false;
-        } catch (SQLException e) {
-            // Normal exception, cannot be retried.
-            throw new RuntimeException(e);
         } catch (Exception e) {
-            // handle later TODO
+            LOGGER.warn(new ParameterizedMessage("{}'s data could not be saved.", username), e);
         }
-        return true;
     }
 
     /**
-     * Loads {@code player} from the backing database.
+     * Saves a new player to the database.
      *
-     * @param player The player.
-     * @param statement The SQL statement.
-     * @param enteredPassword The entered password.
-     * @throws SQLException If any SQl errors occur.
+     * @param connection The connection.
+     * @param username The username.
+     * @param data The player's data.
+     * @throws SQLException If any errors occur.
      */
-    private LoginResponse sqlLoad(Player player, Statement statement, String enteredPassword)
-            throws SQLException, ClassNotFoundException {
+    private void saveNewPlayer(Connection connection, String username, PlayerData data) throws SQLException {
+        try (var insertPlayer = connection.prepareStatement("INSERT INTO main_data (username, password, rights, json_data) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+             var insertSkills = connection.prepareStatement("INSERT INTO skills_data (player_id,attack_xp,attack_level,defence_xp,defence_level,strength_xp,strength_level,hitpoints_xp,hitpoints_level," +
+                     "ranged_xp,ranged_level,prayer_xp,prayer_level,magic_xp,magic_level,cooking_xp,cooking_level,woodcutting_xp,woodcutting_level,fletching_xp,fletching_level,fishing_xp,fishing_level," +
+                     "firemaking_xp,firemaking_level,crafting_xp,crafting_level,smithing_xp,smithing_level,mining_xp,mining_level,herblore_xp,herblore_level,agility_xp,agility_level,thieving_xp,thieving_level," +
+                     "slayer_xp,slayer_level,farming_xp,farming_level,runecrafting_xp,runecrafting_level,total_level) " +
+                     "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+             var updateJsonData = connection.prepareStatement("UPDATE main_data SET json_data = ? WHERE player_id = ?;")) {
 
-        // Lookup database id.
-        ResultSet playerId = statement.executeQuery("SELECT player_id " +
-                "FROM players " +
-                "WHERE name = '" + player.getUsername() + "';");
-        if (!playerId.next()) {
-            // They don't have one, so they're a new player.
-            player.setPosition(LunaConstants.STARTING_POSITION);
-            return LoginResponse.NORMAL;
+            // Insert player data to the main table.
+            insertPlayer.setString(1, username);
+            insertPlayer.setString(2, data.password);
+            insertPlayer.setString(3, data.rights.name());
+            insertPlayer.setString(4, "");
+            insertPlayer.executeUpdate();
+
+            // Get database ID.
+            int playerId = -1;
+            try (var results = insertPlayer.getGeneratedKeys()) {
+                if (results.next()) {
+                    playerId = results.getInt(1);
+                }
+            }
+            if (playerId == -1) {
+                connection.rollback();
+                return;
+            }
+
+            // Insert player data to the skills table.
+            insertSkills.setInt(1, playerId);
+            addSkillParameters(2, data.skills, insertSkills);
+            if (insertSkills.executeUpdate() < 1) {
+                connection.rollback();
+                return;
+            }
+
+            // Update json data with database ID.
+            data.databaseId = playerId;
+            updateJsonData.setString(1, Attribute.getGsonInstance().toJson(data));
+            updateJsonData.setInt(2, playerId);
+            if (updateJsonData.executeUpdate() < 1) {
+                connection.rollback();
+                return;
+            }
+
+            // Commit transaction.
+            connection.commit();
+        } catch (Exception e) {
+            connection.rollback();
+            throw new IllegalStateException(e);
         }
-        long databaseId = playerId.getLong("player_id");
-        player.setDatabaseId(databaseId);
-
-        // Set JSON data.
-        ResultSet data = statement.executeQuery("SELECT data " +
-                "FROM players " +
-                "WHERE player_id = " + player.getDatabaseId() + ";");
-        checkState(data.next(), "There was no result for 'data' in the database.");
-        JsonObject jsonData = new JsonParser().parse(data.getString("data")).getAsJsonObject();
-        return json.fromJson(player, jsonData, enteredPassword);
     }
 
     /**
-     * Saves {@code player} to the backing database.
+     * Saves an existing player to the database.
      *
-     * @param player The player.
-     * @param statement The SQL statement.
-     * @throws SQLException If any SQl errors occur.
+     * @param connection The connection.
+     * @param data The player's data.
+     * @throws SQLException If any errors occur.
      */
-    private void sqlSave(Player player, Statement statement) throws Exception {
-        String jsonString = GsonUtils.GSON.toJson(json.toJson(player));
+    private void saveExistingPlayer(Connection connection, PlayerData data) throws SQLException {
+        try (var updatePlayer = connection.prepareStatement("UPDATE main_data SET password = ?, rights = ?, json_data = ? WHERE player_id = ?;", Statement.RETURN_GENERATED_KEYS);
+             var updateSkills = connection.prepareStatement("UPDATE skills_data SET attack_xp = ?,attack_level = ?,defence_xp = ?,defence_level = ?,strength_xp = ?,strength_level = ?,hitpoints_xp = ?,hitpoints_level = ?," +
+                     "ranged_xp = ?,ranged_level = ?,prayer_xp = ?,prayer_level = ?,magic_xp = ?,magic_level = ?,cooking_xp = ?,cooking_level = ?,woodcutting_xp = ?,woodcutting_level = ?,fletching_xp = ?,fletching_level = ?,fishing_xp = ?,fishing_level = ?," +
+                     "firemaking_xp = ?,firemaking_level = ?,crafting_xp = ?,crafting_level = ?,smithing_xp = ?,smithing_level = ?,mining_xp = ?,mining_level = ?,herblore_xp = ?,herblore_level = ?,agility_xp = ?,agility_level = ?,thieving_xp = ?,thieving_level = ?," +
+                     "slayer_xp = ?,slayer_level = ?,farming_xp = ?,farming_level = ?,runecrafting_xp = ?,runecrafting_level = ?,total_level = ? WHERE player_id = ?;")) {
 
-        if (player.getDatabaseId() == -1) {
-            statement.executeUpdate("INSERT INTO players(name, data) " +
-                    "VALUES('" + player.getUsername() + "', '" + jsonString + "');");
-        } else {
-            statement.executeUpdate("UPDATE players " +
-                    "SET data = '" + jsonString + "' " +
-                    "WHERE player_id = " + player.getDatabaseId() + ";");
+            // Update player data in the main table.
+            updatePlayer.setString(1, data.password);
+            updatePlayer.setString(2, data.rights.name());
+            updatePlayer.setString(3, Attribute.getGsonInstance().toJson(data));
+            updatePlayer.setInt(4, data.databaseId);
+            if (updatePlayer.executeUpdate() < 1) {
+                connection.rollback();
+                return;
+            }
+
+            // Update player data in the skills table.
+            int index = addSkillParameters(1, data.skills, updateSkills);
+            updateSkills.setInt(index, data.databaseId);
+            if (updateSkills.executeUpdate() < 1) {
+                connection.rollback();
+                return;
+            }
+
+            // Commit transaction.
+            connection.commit();
+        } catch (Exception e) {
+            connection.rollback();
+            throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Prepares parameters for the SQL statements that loop through skills.
+     *
+     * @param index The starting index.
+     * @param skills The skills.
+     * @param statement The SQL statement instance.
+     * @return The new index.
+     * @throws SQLException If any errors occur.
+     */
+    private int addSkillParameters(int index, Skill[] skills, PreparedStatement statement) throws SQLException {
+        int totalLevel = 0;
+        for (var skill : skills) {
+            int level = skill.getStaticLevel();
+            statement.setDouble(index++, skill.getExperience());
+            statement.setInt(index++, level);
+            totalLevel += level;
+        }
+        statement.setInt(index++, totalLevel);
+        return index;
     }
 }

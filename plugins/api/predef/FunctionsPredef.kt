@@ -19,18 +19,6 @@ import java.util.concurrent.TimeUnit
 fun currentTimeMs() = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS)
 
 /**
- * Executes a block of code asynchronously.
- */
-inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
-    service.submit {
-        try {
-            func()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-/**
  * Times how long it takes for the code within [block] to complete.
  */
 fun time(block: () -> Unit): Duration {

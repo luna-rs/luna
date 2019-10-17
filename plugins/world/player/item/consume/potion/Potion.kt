@@ -212,7 +212,7 @@ private fun Player.onSkillPotion(skillId: Int) {
  */
 private fun Player.onEnergyPotion(superPotion: Boolean) {
     val amount = if (superPotion) 20.0 else 10.0
-    runEnergy += amount
+    increaseRunEnergy(amount)
 }
 
 /**

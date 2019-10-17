@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.util.GsonUtils;
+import io.luna.game.model.mob.attr.Attribute;
 
 import java.io.FileWriter;
 import java.nio.file.Files;

@@ -1,13 +1,11 @@
 package io.luna.game.model.mob.attr;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.UnmodifiableIterator;
-
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -15,12 +13,17 @@ import static java.util.Objects.requireNonNull;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AttributeMap implements Iterable<Entry<Attribute<?>, Object>> {
+public final class AttributeMap {
 
     /**
      * A set of all persistent keys. Used to ensure there are no duplicates.
      */
     public static final Map<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
+
+    /**
+     * A map of persistent attributes waiting to be assigned.
+     */
+    private final Map<String, Object> loadedAttributes = new HashMap<>();
 
     /**
      * A map that holds attribute key and value pairs.
@@ -37,19 +40,33 @@ public final class AttributeMap implements Iterable<Entry<Attribute<?>, Object>>
      */
     private Object lastValue;
 
-    @Override
-    public UnmodifiableIterator<Entry<Attribute<?>, Object>> iterator() {
-        return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
+    /**
+     * Loads attribute values from the loaded map.
+     *
+     * @param loadedAttributeMap The loaded attributes.
+     */
+    public void load(Map<String, Object> loadedAttributeMap) {
+        for (var entry : loadedAttributeMap.entrySet()) {
+            var key = entry.getKey();
+            checkState(loadedAttributes.put(key, entry.getValue()) == null,
+                    "Duplicate persistent attribute key {" + key + "}.");
+        }
     }
 
     /**
-     * Adds a loaded attribute to the backing map.
+     * Creates a copy of this map for saving.
      *
-     * @param key The attribute's name.
-     * @param value The attribute's value.
+     * @return A copy of this map.
      */
-    public void load(String key, Object value) {
-        attributes.put(persistentKeyMap.get(key), value);
+    public Map<String, Object> save() {
+        Map<String, Object> attributesCopy = new HashMap<>();
+        for (var entry : attributes.entrySet()) {
+            attributesCopy.put(entry.getKey().getPersistenceKey(), entry.getValue());
+        }
+        for (var entry : loadedAttributes.entrySet()) {
+            attributesCopy.put(entry.getKey(), entry.getValue());
+        }
+        return attributesCopy;
     }
 
     /**
@@ -61,9 +78,13 @@ public final class AttributeMap implements Iterable<Entry<Attribute<?>, Object>>
      */
     public <T> void set(Attribute<T> attr, T value) {
         requireNonNull(value, "Value cannot be null.");
-        attributes.put(attr, value);
+        var previousValue = attributes.put(attr, value);
         lastKey = attr;
         lastValue = value;
+        if (attr.isPersistent() && previousValue == null) {
+            // There's now proper mapping for a loaded attribute, remove it.
+            loadedAttributes.remove(attr.getPersistenceKey());
+        }
     }
 
     /**
@@ -81,7 +102,19 @@ public final class AttributeMap implements Iterable<Entry<Attribute<?>, Object>>
         }
 
         // Check if we have a value loaded. If not, do so on the fly.
-        Object value = attributes.computeIfAbsent(attr, k -> attr.getInitialValue());
+        Object value = attributes.get(attr);
+        if (value == null) {
+            if (attr.isPersistent()) {
+                // Attribute persistent, load it from saved data or load it's initial value.
+                Object loadedValue = loadedAttributes.remove(attr.getPersistenceKey());
+                value = loadedValue == null ? attr.getInitialValue() : loadedValue;
+            } else {
+                // Attribute not persistent, load it's initial value.
+                value = attr.getInitialValue();
+            }
+            attributes.put(attr, value);
+        }
+
         lastKey = attr;
         lastValue = value;
         return (T) lastValue;

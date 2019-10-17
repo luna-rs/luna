@@ -105,7 +105,7 @@ enum class Food(val heal: Int,
     PURPLE_SWEETS(heal = 3,
                   delay = 3,
                   id = 4561) {
-        override fun effect(plr: Player) = plr.changeRunEnergy(10.0)
+        override fun effect(plr: Player) = plr.increaseRunEnergy(10.0)
         override fun consumeMessage(name: String) = "You eat the sweets."
         override fun healMessage(name: String) = "The sugary goodness heals some energy."
     };

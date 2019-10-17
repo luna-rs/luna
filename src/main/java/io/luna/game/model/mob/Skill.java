@@ -191,8 +191,7 @@ public final class Skill {
     private transient final int id;
 
     /**
-     * The static (experience based) skill level. Cached to avoid potentially expensive
-     * {@link SkillSet#levelForExperience(int)} calls.
+     * The static (experience based) skill level. Cached to avoid potentially expensive {@link SkillSet#levelForExperience(int)} calls.
      */
     private transient int staticLevel = -1;
 
