@@ -22,7 +22,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     /**
      * The logger instance.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The connection pool.
@@ -53,7 +53,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn(new ParameterizedMessage("{}'s data could not be loaded.", username), e);
+            logger.warn(new ParameterizedMessage("{}'s data could not be loaded.", username), e);
         }
         return data;
     }
@@ -72,7 +72,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
                 connection.setAutoCommit(true);
             }
         } catch (Exception e) {
-            LOGGER.warn(new ParameterizedMessage("{}'s data could not be saved.", username), e);
+            logger.warn(new ParameterizedMessage("{}'s data could not be saved.", username), e);
         }
     }
 

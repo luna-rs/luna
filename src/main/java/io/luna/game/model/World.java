@@ -67,7 +67,7 @@ public final class World {
                     player.queue(new NpcUpdateMessageWriter());
                     player.getClient().flush();
                 } catch (Exception e) {
-                    LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
+                    logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
                 } finally {
                     barrier.arriveAndDeregister();
@@ -79,7 +79,7 @@ public final class World {
     /**
      * The asynchronous logger.
      */
-    private final Logger LOGGER = LogManager.getLogger();
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * The context instance.
@@ -245,7 +245,7 @@ public final class World {
                 player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
-                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
@@ -254,7 +254,7 @@ public final class World {
                 npc.getWalking().process();
             } catch (Exception e) {
                 npcList.remove(npc);
-                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
     }
@@ -280,7 +280,7 @@ public final class World {
                 player.setCachedBlock(null);
             } catch (Exception e) {
                 player.logout();
-                LOGGER.warn(player + " could not complete post-synchronization.", e);
+                logger.warn(player + " could not complete post-synchronization.", e);
             }
         }
 
@@ -289,7 +289,7 @@ public final class World {
                 npc.resetFlags();
             } catch (Exception e) {
                 npcList.remove(npc);
-                LOGGER.warn(npc + " could not complete post-synchronization.", e);
+                logger.warn(npc + " could not complete post-synchronization.", e);
             }
         }
     }

@@ -33,7 +33,7 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A default access level constructor.
@@ -48,7 +48,7 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
         boolean isIgnoredMessage = IGNORED.contains(e.getMessage());
 
         if (!isReadTimeout && !isIgnoredMessage) {
-            LOGGER.warn("Disconnecting " + client + ", upstream exception thrown.", e);
+            logger.warn("Disconnecting " + client + ", upstream exception thrown.", e);
         }
         client.onException(e);
         ctx.channel().close();

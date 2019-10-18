@@ -11,10 +11,14 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+import io.luna.util.LoggingSettings.FileOutputType;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data when a ground item is clicked on.
@@ -22,6 +26,16 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  */
 public final class PickupItemMessageReader extends GameMessageReader {
+
+    /**
+     * An asynchronous logger that will handle item pickup logs.
+     */
+    private static final Logger logger = FileOutputType.ITEM_PICKUP.getLogger();
+
+    /**
+     * The {@code ITEM_PICKUP} logging level.
+     */
+    private static final Level ITEM_PICKUP = FileOutputType.ITEM_PICKUP.getLevel();
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -46,6 +60,7 @@ public final class PickupItemMessageReader extends GameMessageReader {
                         @Override
                         public void execute() {
                             player.getPlugins().post(event);
+                            logger.log(ITEM_PICKUP, "{}: {}(x{})", player.getUsername(), item.def().getName(), box(item.getAmount()));
                         }
                     });
                 });

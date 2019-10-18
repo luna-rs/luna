@@ -17,7 +17,7 @@ public final class PlayerPersistence {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The current serializer.
@@ -75,7 +75,7 @@ public final class PlayerPersistence {
             String fullName = "io.luna.game.model.mob.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName);
         } catch (ClassCastException e) {
-            LOGGER.fatal(name + " not an instance of PlayerSerializer.");
+            logger.fatal(name + " not an instance of PlayerSerializer.");
             throw e;
         }
     }

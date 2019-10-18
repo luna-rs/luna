@@ -19,7 +19,7 @@ public abstract class GameMessageReader {
     /**
      * The asynchronous logger.
      */
-    protected static final Logger LOGGER = LogManager.getLogger();
+    protected static final Logger logger = LogManager.getLogger();
 
     /**
      * The opcode.
@@ -67,7 +67,7 @@ public abstract class GameMessageReader {
         } catch (Exception e) {
 
             // Disconnect on exception.
-            LOGGER.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
+            logger.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
             player.logout();
         } finally {
 
@@ -78,7 +78,7 @@ public abstract class GameMessageReader {
                 // section of the code means that a buffer was not released (or retained) when it was supposed to
                 // be, so we log a warning.
                 int refCount = payload.refCnt();
-                LOGGER.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
+                logger.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
                         box(msg.getOpcode()), box(refCount));
                 payload.release(refCount);
             }

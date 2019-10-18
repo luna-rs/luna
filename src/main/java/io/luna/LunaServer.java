@@ -43,7 +43,7 @@ public final class LunaServer {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A Luna context instance.
@@ -81,7 +81,7 @@ public final class LunaServer {
         initNetwork();
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        LOGGER.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
+        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
     }
 
     /**
@@ -108,7 +108,7 @@ public final class LunaServer {
         var logoutService = context.getWorld().getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
-        LOGGER.info("All services are now running.");
+        logger.info("All services are now running.");
     }
 
     /**
@@ -121,7 +121,7 @@ public final class LunaServer {
         Tuple<Integer, Integer> pluginCount = bootstrap.init(Luna.settings().pluginGui());
 
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        LOGGER.info("{} Kotlin plugins have been loaded into memory.", fractionString);
+        logger.info("{} Kotlin plugins have been loaded into memory.", fractionString);
     }
 
     /**
@@ -140,7 +140,7 @@ public final class LunaServer {
         try {
             int count = executor.size();
             if (count > 0) {
-                LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
+                logger.info("Waiting for {} launch task(s) to complete...", box(count));
                 executor.await(true);
             }
         } catch (ExecutionException e) {

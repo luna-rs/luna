@@ -19,7 +19,7 @@ public final class ShopManager {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A map of shops.
@@ -34,7 +34,7 @@ public final class ShopManager {
     public void register(Shop shop) {
         String name = shop.getName().intern();
         if (shops.put(name, shop) != null) {
-            LOGGER.warn("Shop with name '" + name + "' was overwritten because it already exists.");
+            logger.warn("Shop with name '" + name + "' was overwritten because it already exists.");
         }
     }
 

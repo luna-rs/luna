@@ -21,7 +21,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The type of event that traverses this pipeline.
@@ -85,9 +85,9 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     private void handleException(ScriptExecutionException e) {
         var script = e.getScript();
         if (script != null) {
-            LOGGER.warn("Failed to run a listener from script '" + script.getName() + "'", e);
+            logger.warn("Failed to run a listener from script '" + script.getName() + "'", e);
         } else {
-            LOGGER.catching(e);
+            logger.catching(e);
         }
     }
 

@@ -61,20 +61,20 @@ public final class GameService extends AbstractScheduledService {
         @Override
         public void stopping(State from) {
             // A request to terminate gracefully has been made.
-            LOGGER.fatal("Gracefully terminating Luna...");
+            logger.fatal("Gracefully terminating Luna...");
         }
 
         @Override
         public void terminated(State from) {
             // The game thread was gracefully terminated.
-            LOGGER.fatal("The application will now exit.");
+            logger.fatal("The application will now exit.");
             System.exit(0);
         }
 
         @Override
         public void failed(State from, Throwable failure) {
             // An exception was thrown on the game thread.
-            LOGGER.fatal("Luna has been terminated because of an uncaught exception!", failure);
+            logger.fatal("Luna has been terminated because of an uncaught exception!", failure);
             System.exit(0);
         }
     }
@@ -82,7 +82,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A queue of synchronization tasks.
@@ -130,7 +130,7 @@ public final class GameService extends AbstractScheduledService {
             // Run the main game loop.
             world.loop();
         } catch (Exception e) {
-            LOGGER.catching(e);
+            logger.catching(e);
         }
     }
 
@@ -144,7 +144,7 @@ public final class GameService extends AbstractScheduledService {
         try {
             gracefulShutdown();
         } catch (Exception e) {
-            LOGGER.fatal("Luna could not be terminated gracefully!", e);
+            logger.fatal("Luna could not be terminated gracefully!", e);
         }
     }
 
@@ -162,7 +162,7 @@ public final class GameService extends AbstractScheduledService {
             try {
                 runnable.run();
             } catch (Exception e) {
-                LOGGER.catching(e);
+                logger.catching(e);
             }
         }
     }

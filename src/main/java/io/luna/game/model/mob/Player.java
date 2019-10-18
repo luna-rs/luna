@@ -124,7 +124,7 @@ public final class Player extends Mob {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A set of local players.

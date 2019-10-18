@@ -104,7 +104,7 @@ public final class PluginBootstrap {
             String pluginName = metadata.getName();
             if (plugins.containsKey(pluginName)) {
                 // TODO Track plugins by path to plugin.toml... not name lmao
-                LOGGER.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
+                logger.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
                 return;
             }
             // TODO throw exception instead?
@@ -113,7 +113,7 @@ public final class PluginBootstrap {
             try {
                 fileList.forEach(this::loadFile);
             } catch (LoadScriptException e) {
-                LOGGER.catching(Level.WARN, e);
+                logger.catching(Level.WARN, e);
                 return;
             }
             plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
@@ -170,7 +170,7 @@ public final class PluginBootstrap {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The directory containing plugin files.
