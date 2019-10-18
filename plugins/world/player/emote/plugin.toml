@@ -1,0 +1,7 @@
+[metadata]
+name = "Emote"
+description = "A plugin that enables player emotes."
+version = "1.0"
+authors = [
+"keotl"
+]
