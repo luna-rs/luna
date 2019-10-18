@@ -1,5 +1,7 @@
 import api.attr.Attr
-import api.predef.*
+import api.predef.SKILL_PRAYER
+import api.predef.on
+import api.predef.world
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill

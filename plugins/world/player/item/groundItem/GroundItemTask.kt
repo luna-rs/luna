@@ -1,6 +1,6 @@
 package world.player.item.groundItem
 
-import api.predef.*
+import api.predef.world
 import io.luna.game.model.item.GroundItem
 import io.luna.game.task.Task
 import java.util.*

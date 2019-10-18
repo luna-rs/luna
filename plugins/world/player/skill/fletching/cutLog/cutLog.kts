@@ -1,6 +1,9 @@
 package world.player.skill.fletching.cutLog
 
-import api.predef.*
+import api.predef.addArticle
+import api.predef.fletching
+import api.predef.itemDef
+import api.predef.on
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent

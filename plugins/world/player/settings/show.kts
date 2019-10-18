@@ -1,4 +1,4 @@
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.LoginEvent
 
 /**

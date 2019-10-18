@@ -1,7 +1,8 @@
 package world.player.skill.crafting.armorCrafting
 
 import api.attr.Attr
-import api.predef.*
+import api.predef.crafting
+import api.predef.rand
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item
