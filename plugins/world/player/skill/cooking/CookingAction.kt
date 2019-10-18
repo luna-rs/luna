@@ -1,7 +1,6 @@
 package world.player.skill.cooking
 
-import api.predef.cooking
-import api.predef.rand
+import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item

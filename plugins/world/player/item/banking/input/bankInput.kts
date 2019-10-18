@@ -1,5 +1,4 @@
-import api.predef.button
-import api.predef.on
+import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
