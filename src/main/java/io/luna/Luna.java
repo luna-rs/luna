@@ -2,6 +2,8 @@ package io.luna;
 
 import com.moandjiezana.toml.Toml;
 import io.luna.util.LoggingSettings;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,6 +44,7 @@ public final class Luna {
         try {
             Thread.currentThread().setName("InitializationThread");
 
+            InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
             loggingSettings = loadLoggingSettings();
             System.setProperty("log4j2.configurationFactory", "io.luna.util.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
