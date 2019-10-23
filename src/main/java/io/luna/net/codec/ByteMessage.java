@@ -47,7 +47,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Creates a {@link ByteMessage} used to read and encode game messages.
      *
      * @param opcode The opcode.
-     * @param type The message type.
+     * @param type   The message type.
      * @return A new buffer.
      */
     public static ByteMessage message(int opcode, MessageType type) {
@@ -123,9 +123,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Creates a new {@link ByteMessage}.
      *
-     * @param buf The backing buffer.
+     * @param buf    The backing buffer.
      * @param opcode The opcode.
-     * @param type The header type.
+     * @param type   The header type.
      */
     private ByteMessage(ByteBuf buf, int opcode, MessageType type) {
         super(buf);
@@ -148,6 +148,16 @@ public final class ByteMessage extends DefaultByteBufHolder {
             return true;
         }
         return buf.release(decrement);
+    }
+
+    /**
+     * Releases all references of this {@link ByteBuf}.
+     *
+     * @see ByteMessage#release(int)
+     */
+
+    public boolean releaseAll() {
+        return buf.release(buf.refCnt());
     }
 
     /**
@@ -218,7 +228,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Writes the value as a variable amount of bits.
      *
      * @param amount The bit amount.
-     * @param value The value.
+     * @param value  The value.
      * @return This buffer instance.
      * @throws IllegalArgumentException If {@code amount} is not between {@code 1} and {@code 32} inclusive.
      */
@@ -273,7 +283,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a {@code byte}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
      * @return This buffer instance.
      */
@@ -309,9 +319,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a {@code short}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return This buffer instance.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
@@ -347,7 +357,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a big-endian {@code short}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
      * @return This buffer instance.
      */
@@ -371,9 +381,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as an {@code int}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return This buffer instance.
      */
     public ByteMessage putInt(int value, ValueType transform, ByteOrder order) {
@@ -420,7 +430,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a big-endian {@code int}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
      * @return This buffer instance.
      */
@@ -444,9 +454,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a {@code long}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return This buffer instance.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
@@ -494,7 +504,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Writes a value as a big-endian {@code long}.
      *
-     * @param value The value.
+     * @param value     The value.
      * @param transform The transformation type.
      * @return This buffer instance.
      */
@@ -532,7 +542,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a value as a {@code byte}.
      *
-     * @param signed If the value is signed.
+     * @param signed    If the value is signed.
      * @param transform The transformation type.
      * @return The read value.
      */
@@ -586,9 +596,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a {@code short} value.
      *
-     * @param signed If the value is signed.
+     * @param signed    If the value is signed.
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return The read value.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
@@ -643,7 +653,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a big-endian {@code short}.
      *
-     * @param signed If the value is signed.
+     * @param signed    If the value is signed.
      * @param transform The transformation type.
      * @return The read value.
      */
@@ -665,7 +675,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads a standard {@code short}.
      *
      * @param signed If the value is signed.
-     * @param order The byte order.
+     * @param order  The byte order.
      * @return The read value.
      */
     public int getShort(boolean signed, ByteOrder order) {
@@ -676,7 +686,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads a signed {@code short}.
      *
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return The read value.
      */
     public int getShort(ValueType transform, ByteOrder order) {
@@ -686,9 +696,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads an {@code int}.
      *
-     * @param signed If the value is signed.
+     * @param signed    If the value is signed.
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return The read value.
      */
     public int getInt(boolean signed, ValueType transform, ByteOrder order) {
@@ -754,7 +764,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads a big-endian {@code int}.
      *
-     * @param signed If the value is signed.
+     * @param signed    If the value is signed.
      * @param transform The transformation type.
      * @return The read value.
      */
@@ -776,7 +786,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads a standard {@code int}.
      *
      * @param signed If the value is signed.
-     * @param order The byte order.
+     * @param order  The byte order.
      * @return The read value.
      */
     public int getInt(boolean signed, ByteOrder order) {
@@ -787,7 +797,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads a signed {@code int}.
      *
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return The read value.
      */
     public int getInt(ValueType transform, ByteOrder order) {
@@ -798,7 +808,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads a signed {@code long} value.
      *
      * @param transform The transformation type.
-     * @param order The byte order.
+     * @param order     The byte order.
      * @return The read value.
      * @throws UnsupportedOperationException If middle or inverse-middle value types are selected.
      */
@@ -888,7 +898,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
     /**
      * Reads bytes into an array, starting at the current position.
      *
-     * @param amount The amount of bytes to read.
+     * @param amount    The amount of bytes to read.
      * @param transform The byte transformation.
      * @return The read bytes.
      */
@@ -904,7 +914,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * Reads bytes in reverse into an array, starting at {@code current_position + amount} until the
      * current position.
      *
-     * @param amount The amount of bytes to read.
+     * @param amount    The amount of bytes to read.
      * @param transform The byte transformation.
      * @return The read bytes.
      */

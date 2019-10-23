@@ -77,10 +77,9 @@ public abstract class GameMessageReader {
                 // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
                 // section of the code means that a buffer was not released (or retained) when it was supposed to
                 // be, so we log a warning.
-                int refCount = payload.refCnt();
                 logger.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
-                        box(msg.getOpcode()), box(refCount));
-                payload.release(refCount);
+                        box(msg.getOpcode()), box(payload.refCnt()));
+                payload.releaseAll();
             }
         }
     }
