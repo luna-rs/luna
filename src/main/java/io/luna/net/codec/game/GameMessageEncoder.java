@@ -39,7 +39,7 @@ public final class GameMessageEncoder extends MessageToByteEncoder<GameMessage> 
             }
             out.writeBytes(msg.getPayload().getBuffer());
         } finally {
-            msg.getPayload().release(msg.getPayload().refCnt());
+            msg.getPayload().releaseAll();
         }
     }
 }

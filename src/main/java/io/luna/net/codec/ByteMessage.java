@@ -151,6 +151,16 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
+     * Releases all references of this {@link ByteBuf}.
+     *
+     * @see ByteMessage#release(int)
+     */
+
+    public boolean releaseAll() {
+        return buf.release(buf.refCnt());
+    }
+
+    /**
      * Prepares the buffer for writing bits.
      */
     public void startBitAccess() {

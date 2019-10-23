@@ -53,9 +53,7 @@ public class GameClient extends Client<GameMessage> {
     @Override
     void onMessageReceived(GameMessage msg) {
         if (!decodedMessages.offer(msg)) {
-            // Release buffer if unsuccessful or the memory will never get freed.
-            var payload = msg.getPayload();
-            payload.release(payload.refCnt());
+           msg.getPayload().releaseAll();
         }
     }
 
