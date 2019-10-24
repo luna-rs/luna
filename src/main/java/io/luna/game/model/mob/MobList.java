@@ -214,12 +214,13 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.ACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
-            world.addPlayer((Player) mob);
+            world.addPlayer(mob.asPlr());
         }
     }
 
     /**
-     * Attempts to remove {@code mob}.
+     * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
+     * logout packet or use {@link Player#disconnect()} to destroy the player's connection.</strong>
      *
      * @param mob The mob to remove.
      */
@@ -229,7 +230,8 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.INACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
-            world.removePlayer((Player) mob);
+            checkState(mob.asPlr().getState() == EntityState.INACTIVE, "Player must be inactive. Do not use MobList#remove(Mob) to logout players.");
+            world.removePlayer(mob.asPlr());
         }
 
         // Put back index, so other mobs can use it.

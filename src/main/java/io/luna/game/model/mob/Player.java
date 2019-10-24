@@ -15,6 +15,7 @@ import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -34,7 +35,6 @@ import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
-import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -497,6 +497,22 @@ public final class Player extends Mob {
     }
 
     /**
+     * Adds {@code item} to the inventory. If the inventory is full, add it to the bank. If the bank is full, will drop
+     * it on the floor.
+     *
+     * @param item The item to give the player.
+     */
+    public void giveItem(Item item) {
+        if (inventory.hasSpaceFor(item)) {
+            inventory.add(item);
+        } else if (bank.hasSpaceFor(item)) {
+            bank.add(item);
+        } else {
+            // TODO Drop item on the floor.
+        }
+    }
+
+    /**
      * Shortcut to queue a new {@link GameChatboxMessageWriter} packet.
      *
      * @param msg The message to send.
@@ -523,13 +539,23 @@ public final class Player extends Mob {
     }
 
     /**
-     * Disconnects this player.
+     * Logs out this player using the logout packet. The proper way to logout the player.
      */
     public void logout() {
-        Channel channel = client.getChannel();
+        var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
             setPendingLogout(true);
+        }
+    }
+
+    /**
+     * Disconnects this player's channel. Use this if an error occurs with the player.
+     */
+    public void disconnect() {
+        var channel = client.getChannel();
+        if (channel.isActive()) {
+            channel.disconnect();
         }
     }
 
@@ -613,7 +639,7 @@ public final class Player extends Mob {
 
         if (runEnergy != newRunEnergy) {
             runEnergy = newRunEnergy;
-            if(update) {
+            if (update) {
                 queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
             }
         }
@@ -647,7 +673,7 @@ public final class Player extends Mob {
     public void setWeight(double newWeight, boolean update) {
         if (weight != newWeight) {
             weight = newWeight;
-            if(update) {
+            if (update) {
                 queue(new UpdateWeightMessageWriter((int) weight));
             }
         }
