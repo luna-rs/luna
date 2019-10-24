@@ -3,7 +3,7 @@ package io.luna.game.model.mob;
 /**
  * A model representing an animation performed by a mob.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96 <http://github.com/lare96>
  */
 public final class Animation {
 

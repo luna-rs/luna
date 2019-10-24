@@ -11,8 +11,9 @@ import io.luna.game.model.mob.inter.WalkableInterface
  * @author lare96 <http://github.com/lare96>
  */
 class WildernessArea(swX: Int, swY: Int, neX: Int, neY: Int) : Area(swX, swY, neX, neY) {
-
-    override fun enter(plr: Player) {
+    // TODO Scrap this concept for "controllers" that are activated when you walk to <X> area
+    // Also general purpose controllers that can be instantiated programmatically
+     override fun enter(plr: Player) {
         setWildernessLevel(plr)
         plr.interfaces.open(WalkableInterface(197))
         plr.interactions.show(INTERACTION_ATTACK)

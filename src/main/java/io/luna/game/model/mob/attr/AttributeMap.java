@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.attr;
 
+import com.google.gson.internal.LinkedTreeMap;
+
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -48,7 +50,14 @@ public final class AttributeMap {
     public void load(Map<String, Object> loadedAttributeMap) {
         for (var entry : loadedAttributeMap.entrySet()) {
             var key = entry.getKey();
-            checkState(loadedAttributes.put(key, entry.getValue()) == null,
+            var value = entry.getValue();
+
+            // Because Google gson changes Map to LinkedTreeMap.
+            if(value instanceof LinkedTreeMap) {
+                value = new HashMap<>((LinkedTreeMap) value);
+            }
+
+            checkState(loadedAttributes.put(key, value) == null,
                     "Duplicate persistent attribute key {" + key + "}.");
         }
     }
@@ -61,7 +70,10 @@ public final class AttributeMap {
     public Map<String, Object> save() {
         Map<String, Object> attributesCopy = new HashMap<>();
         for (var entry : attributes.entrySet()) {
-            attributesCopy.put(entry.getKey().getPersistenceKey(), entry.getValue());
+            var key = entry.getKey();
+            if(key.isPersistent()) {
+                attributesCopy.put(key.getPersistenceKey(), entry.getValue());
+            }
         }
         for (var entry : loadedAttributes.entrySet()) {
             attributesCopy.put(entry.getKey(), entry.getValue());
