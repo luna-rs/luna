@@ -130,7 +130,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      */
     private boolean isFriend(Mob mob) {
         if (mob.getType() == EntityType.PLAYER) {
-            long hash = ((Player) mob).getUsernameHash();
+            long hash = mob.asPlr().getUsernameHash();
             return player.getFriends().contains(hash);
         }
         return false;

@@ -48,7 +48,7 @@ public final class GroundItem extends StationaryEntity {
      * @param amount The item amount.
      * @param position The position of the item.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) {
+    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) { // TODO remove Optional... just use null and then use ofNullable
         super(context, position, EntityType.ITEM, player);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
