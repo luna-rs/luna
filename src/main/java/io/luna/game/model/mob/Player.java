@@ -302,11 +302,6 @@ public final class Player extends Mob {
     private volatile PlayerData saveData;
 
     /**
-     * If the player is awaiting logout.
-     */
-    private volatile boolean pendingLogout;
-
-    /**
      * The SQL database ID.
      */
     private int databaseId = -1;
@@ -529,7 +524,7 @@ public final class Player extends Mob {
         Channel channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
-            setPendingLogout(true);
+            client.setPendingLogout(true);
         }
     }
 
@@ -1098,20 +1093,6 @@ public final class Player extends Mob {
      */
     public PlayerInteractionMenu getInteractions() {
         return interactions;
-    }
-
-    /**
-     * Sets if the player is awaiting logout.
-     */
-    public void setPendingLogout(boolean pendingLogout) {
-        this.pendingLogout = pendingLogout;
-    }
-
-    /**
-     * @return {@code true} if the player is awaiting logout.
-     */
-    public boolean isPendingLogout() {
-        return pendingLogout;
     }
 
     /**

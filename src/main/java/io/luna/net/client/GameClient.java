@@ -33,6 +33,11 @@ public class GameClient extends Client<GameMessage> {
     private final GameMessageRepository repository;
 
     /**
+     * If the client is awaiting logout.
+     */
+    private volatile boolean pendingLogout;
+
+    /**
      * Creates a new {@link GameClient}.
      *
      * @param channel The client's channel.
@@ -47,7 +52,7 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onInactive() {
-        player.setPendingLogout(true);
+        setPendingLogout(true);
     }
 
     @Override
@@ -93,5 +98,19 @@ public class GameClient extends Client<GameMessage> {
         if (channel.isActive()) {
             channel.flush();
         }
+    }
+
+    /**
+     * Sets if the client is awaiting logout.
+     */
+    public void setPendingLogout(boolean pendingLogout) {
+        this.pendingLogout = pendingLogout;
+    }
+
+    /**
+     * @return {@code true} if the client is awaiting logout.
+     */
+    public boolean isPendingLogout() {
+        return pendingLogout;
     }
 }
