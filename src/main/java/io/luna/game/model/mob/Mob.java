@@ -636,4 +636,25 @@ public abstract class Mob extends Entity {
     public ActionManager getActions() {
         return actions;
     }
+
+    /**
+     * @return The {@code x} coordinate.
+     */
+    public int getX() {
+        return position.getX();
+    }
+
+    /**
+     * @return The {@code y} coordinate.
+     */
+    public int getY() {
+        return position.getY();
+    }
+
+    /**
+     * @return The {@code z} coordinate.
+     */
+    public int getZ() {
+        return position.getZ();
+    }
 }

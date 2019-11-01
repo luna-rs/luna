@@ -150,6 +150,37 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
+     * Resets the dynamic level back to its static level.
+     *
+     * @param id The skill to reset.
+     * @return {@code true} if the skill was reset.
+     */
+    public boolean reset(int id) {
+        var resetSkill = skills[id];
+        int realLevel = resetSkill.getStaticLevel();
+        if (resetSkill.getLevel() != realLevel) {
+            resetSkill.setLevel(realLevel);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Resets all dynamic levels back to their static levels.
+     *
+     * @return {@code true} if at least one skill was reset.
+     */
+    public boolean resetAll() {
+        var changed = false;
+        for (int index = 0; index < skills.length; index++) {
+            if (reset(index)) {
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    /**
      * Returns a <strong>shallow</strong> copy of the backing array.
      *
      * @return A copy of the skills.

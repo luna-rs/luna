@@ -19,6 +19,7 @@ import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -527,6 +528,15 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Determines if this container is full.
+     *
+     * @return {@code true} if this container is full.
+     */
+    public final boolean isFull() {
+        return computeRemainingSize() == 0;
+    }
+
+    /**
      * Replaces the first occurrence of {@code oldId} with {@code newId}.
      *
      * @param oldId The old item identifier.
@@ -668,6 +678,27 @@ public class ItemContainer implements Iterable<Item> {
 
         // Non-stackable items are equal to the amount.
         return item.getAmount();
+    }
+
+    /**
+     * Performs an indexed loop of the container and executes an action containing the index and item as arguments.
+     *
+     * @param action The action to execute.
+     */
+    public void forItems(BiConsumer<Integer, Item> action) {
+        boolean bulkUpdateInProgress = inBulkUpdate;
+        if(!bulkUpdateInProgress) {
+            startBulkUpdate();
+        }
+        try {
+            for (int index = 0; index < capacity; index++) {
+                action.accept(index, get(index));
+            }
+        } finally {
+            if(!bulkUpdateInProgress) {
+                finishBulkUpdate();
+            }
+        }
     }
 
     /**
