@@ -18,11 +18,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class GameClient extends Client<GameMessage> {
 
     /**
-     * The player.
-     */
-    private final Player player;
-
-    /**
      * The decoded packets.
      */
     private final Queue<GameMessage> decodedMessages = new ArrayBlockingQueue<>(15);
@@ -41,12 +36,10 @@ public class GameClient extends Client<GameMessage> {
      * Creates a new {@link GameClient}.
      *
      * @param channel The client's channel.
-     * @param player The player.
      * @param repository The message repository.
      */
-    public GameClient(Channel channel, Player player, GameMessageRepository repository) {
+    public GameClient(Channel channel, GameMessageRepository repository) {
         super(channel);
-        this.player = player;
         this.repository = repository;
     }
 
@@ -66,7 +59,7 @@ public class GameClient extends Client<GameMessage> {
      * Handles decoded game packets and posts their created events to all applicable plugin listeners.
      * Fires a region update afterwards, if needed.
      */
-    public void handleDecodedMessages() {
+    public void handleDecodedMessages(Player player) {
         for (; ; ) {
             var msg = decodedMessages.poll();
             if (msg == null) {

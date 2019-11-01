@@ -240,7 +240,7 @@ public final class World {
                     player.cleanUp();
                     continue;
                 }
-                player.getClient().handleDecodedMessages();
+                player.getClient().handleDecodedMessages(player);
                 player.getWalking().process();
                 player.getClient().flush();
             } catch (Exception e) {
