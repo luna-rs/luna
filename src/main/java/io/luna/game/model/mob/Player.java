@@ -549,12 +549,12 @@ public final class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
+     * A shortcut function to {@link GameClient#queue(GameMessageWriter, Player)}.
      *
      * @param msg The message to queue in the buffer.
      */
     public void queue(GameMessageWriter msg) {
-        client.queue(msg);
+        client.queue(msg, this);
     }
 
     /**

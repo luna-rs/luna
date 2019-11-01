@@ -84,7 +84,7 @@ public class GameClient extends Client<GameMessage> {
      *
      * @param msg The message to queue.
      */
-    public void queue(GameMessageWriter msg) {
+    public void queue(GameMessageWriter msg, Player player) {
         if (channel.isActive()) {
             channel.write(msg.toGameMsg(player), channel.voidPromise());
         }
@@ -92,7 +92,7 @@ public class GameClient extends Client<GameMessage> {
 
     /**
      * Flushes the underlying channel. This will send all messages to the client queued using
-     * {@link #queue(GameMessageWriter)}. Calls to this method are expensive and should be done sparingly.
+     * {@link #queue(GameMessageWriter, Player)}. Calls to this method are expensive and should be done sparingly.
      */
     public void flush() {
         if (channel.isActive()) {
