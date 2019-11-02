@@ -18,7 +18,7 @@ public abstract class Task {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * If execution happens instantly.
@@ -128,7 +128,7 @@ public abstract class Task {
      * @param failure The exception that was thrown.
      */
     protected void onException(Exception failure) {
-        LOGGER.error(failure);
+        logger.catching(failure);
     }
 
     /**

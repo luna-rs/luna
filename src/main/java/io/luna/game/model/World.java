@@ -3,18 +3,19 @@ package io.luna.game.model;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerPersistence;
 import io.luna.game.model.object.GameObjectList;
+import io.luna.game.service.GameService;
+import io.luna.game.service.LoginService;
+import io.luna.game.service.LogoutService;
+import io.luna.game.service.PersistenceService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
-import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
@@ -22,12 +23,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,8 +39,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author lare96 <http://github.org/lare96>
  */
 public final class World {
-
-    // TODO concurrent map that tracks player names to their instance. use for threaded online checks
 
     /**
      * A model that sends {@link Player} and {@link Npc} synchronization packets.
@@ -68,7 +67,7 @@ public final class World {
                     player.queue(new NpcUpdateMessageWriter());
                     player.getClient().flush();
                 } catch (Exception e) {
-                    LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
+                    logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
                 } finally {
                     barrier.arriveAndDeregister();
@@ -80,7 +79,7 @@ public final class World {
     /**
      * The asynchronous logger.
      */
-    private final Logger LOGGER = LogManager.getLogger();
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * The context instance.
@@ -90,22 +89,27 @@ public final class World {
     /**
      * A list of active players.
      */
-    private final MobList<Player> playerList = new MobList<>(2048);
+    private final MobList<Player> playerList = new MobList<>(this, 2048);
 
     /**
      * A list of active npc.
      */
-    private final MobList<Npc> npcList = new MobList<>(16384);
+    private final MobList<Npc> npcList = new MobList<>(this, 16384);
 
     /**
-     * A queue of login requests.
+     * The login service.
      */
-    private final Queue<Player> logins = new ConcurrentLinkedQueue<>();
+    private final LoginService loginService = new LoginService(this);
 
     /**
-     * A queue of players awaiting logout.
+     * The logout service.
      */
-    private final Queue<Player> logouts = new ConcurrentLinkedQueue<>();
+    private final LogoutService logoutService = new LogoutService(this);
+
+    /**
+     * The persistence service.
+     */
+    private final PersistenceService persistenceService = new PersistenceService(this);
 
     /**
      * The chunk manager.
@@ -133,9 +137,9 @@ public final class World {
     private final GroundItemList items = new GroundItemList(this);
 
     /**
-     * The player persistence manager.
+     * The area manager.
      */
-    private final PlayerPersistence persistence = new PlayerPersistence();
+    private final AreaManager areas = new AreaManager(this);
 
     /**
      * A synchronization barrier.
@@ -150,7 +154,17 @@ public final class World {
     /**
      * The current tick.
      */
-    private AtomicLong currentTick = new AtomicLong();
+    private final AtomicLong currentTick = new AtomicLong();
+
+    /**
+     * The map of online players. Can be accessed safely from any thread.
+     */
+    private final Map<String, Player> playerMap;
+
+    /**
+     * An immutable view of {@link #playerMap}.
+     */
+    private final Map<String, Player> immutablePlayerMap;
 
     /**
      * Creates a new {@link World}.
@@ -159,6 +173,8 @@ public final class World {
      */
     public World(LunaContext context) {
         this.context = context;
+        playerMap = new ConcurrentHashMap<>();
+        immutablePlayerMap = Collections.unmodifiableMap(playerMap);
     }
 
     {
@@ -166,6 +182,20 @@ public final class World {
         ThreadFactory tf = new ThreadFactoryBuilder().
                 setNameFormat("WorldSynchronizationThread").build();
         service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+    }
+
+    /**
+     * Adds a player to the backing concurrent map.
+     */
+    public void addPlayer(Player player) {
+        playerMap.put(player.getUsername(), player);
+    }
+
+    /**
+     * Removes a player from the backing concurrent map.
+     */
+    public void removePlayer(Player player) {
+        playerMap.remove(player.getUsername());
     }
 
     /**
@@ -178,65 +208,15 @@ public final class World {
     }
 
     /**
-     * Queues {@code player} for login on the next tick.
-     *
-     * @param player The player to queue.
-     */
-    public void queueLogin(Player player) {
-        if (player.getState() == EntityState.NEW && !logins.contains(player)) {
-            logins.add(player);
-        }
-    }
-
-    /**
-     * Adds players awaiting login to the world.
-     */
-    public void dequeueLogins() {
-        for (int amount = 0; amount < EntityConstants.LOGIN_THRESHOLD; amount++) {
-            Player player = logins.poll();
-            if (player == null) {
-                break;
-            }
-            try {
-                // TODO Ensure playerlist doesn't contain the queued player.
-                playerList.add(player);
-            } catch (Exception e) {
-                LOGGER.catching(e);
-            }
-        }
-    }
-
-    /**
-     * Queues {@code player} for logout on the next tick.
-     *
-     * @param player The player to queue.
-     */
-    public void queueLogout(Player player) {
-        if (player.getState() == EntityState.ACTIVE && !logouts.contains(player)) {
-            logouts.add(player);
-        }
-    }
-
-    /**
-     * Removes players awaiting logout from the world.
-     */
-    public void dequeueLogouts() {
-        for (int amount = 0; amount < EntityConstants.LOGOUT_THRESHOLD; amount++) {
-            Player player = logouts.poll();
-            if (player == null) {
-                break;
-            }
-            playerList.remove(player);
-        }
-    }
-
-    /**
-     * Runs one iteration of the main game loop. This method should <strong>never</strong> be called
-     * by anything other than the {@link GameService}.
+     * Runs one iteration of the main game loop. This method should <strong>never</strong> be called by anything other
+     * than the {@link GameService}.
      */
     public void loop() {
-        // Handle logins.
-        dequeueLogins();
+        // Add pending players that have just logged in.
+        loginService.finishRequests();
+
+        // Remove pending players that have just logged out.
+        logoutService.finishRequests();
 
         // Process all tasks.
         tasks.runTaskIteration();
@@ -245,9 +225,6 @@ public final class World {
         preSynchronize();
         synchronize();
         postSynchronize();
-
-        // Handle logouts.
-        dequeueLogouts();
 
         // Increment tick counter.
         currentTick.incrementAndGet();
@@ -259,12 +236,16 @@ public final class World {
     private void preSynchronize() {
         for (Player player : playerList) {
             try {
-                player.getClient().handleDecodedMessages();
+                if (player.getClient().isPendingLogout()) {
+                    player.cleanUp();
+                    continue;
+                }
+                player.getClient().handleDecodedMessages(player);
                 player.getWalking().process();
                 player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
-                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
@@ -273,7 +254,7 @@ public final class World {
                 npc.getWalking().process();
             } catch (Exception e) {
                 npcList.remove(npc);
-                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
     }
@@ -299,7 +280,7 @@ public final class World {
                 player.setCachedBlock(null);
             } catch (Exception e) {
                 player.logout();
-                LOGGER.warn(player + " could not complete post-synchronization.", e);
+                logger.warn(player + " could not complete post-synchronization.", e);
             }
         }
 
@@ -308,33 +289,13 @@ public final class World {
                 npc.resetFlags();
             } catch (Exception e) {
                 npcList.remove(npc);
-                LOGGER.warn(npc + " could not complete post-synchronization.", e);
+                logger.warn(npc + " could not complete post-synchronization.", e);
             }
         }
     }
 
     /**
-     * Asynchronously saves persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return A future returning {@code true} if the save was successful.
-     */
-    public Future<Boolean> savePlayer(Player player) {
-        return persistence.save(player);
-    }
-
-    /**
-     * Loads persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return A future returning the login response.
-     */
-    public ListenableFuture<LoginResponse> loadPlayer(Player player) {
-        return persistence.load(player);
-    }
-
-    /**
-     * Retrieves a player by their username hash. Much faster than {@link World#getPlayer(String)}
+     * Retrieves a player by their username hash. Faster than {@link World#getPlayer(String)}.
      *
      * @param username The username hash.
      * @return The player, or no player.
@@ -354,10 +315,40 @@ public final class World {
     }
 
     /**
+     * Asynchronously saves all players using the {@link PersistenceService}.
+     *
+     * @return The result of the mass save.
+     */
+    public ListenableFuture<Void> saveAll() {
+        return persistenceService.saveAll();
+    }
+
+    /**
      * @return The context instance.
      */
     public LunaContext getContext() {
         return context;
+    }
+
+    /**
+     * @return The login service.
+     */
+    public LoginService getLoginService() {
+        return loginService;
+    }
+
+    /**
+     * @return The logout service.
+     */
+    public LogoutService getLogoutService() {
+        return logoutService;
+    }
+
+    /**
+     * @return The persistence service.
+     */
+    public PersistenceService getPersistenceService() {
+        return persistenceService;
     }
 
     /**
@@ -403,6 +394,13 @@ public final class World {
     }
 
     /**
+     * @return The area manager.
+     */
+    public AreaManager getAreas() {
+        return areas;
+    }
+
+    /**
      * @return The shop manager.
      */
     public ShopManager getShops() {
@@ -410,16 +408,16 @@ public final class World {
     }
 
     /**
-     * @return The player persistence manager.
+     * @return The current tick.
      */
-    public PlayerPersistence getPersistence() {
-        return persistence;
+    public long getCurrentTick() {
+        return currentTick.get();
     }
 
     /**
-     * @return The current tick.
+     * @return The map of online players. Can be accessed safely from any thread.
      */
-    public AtomicLong getCurrentTick() {
-        return currentTick;
+    public Map<String, Player> getPlayerMap() {
+        return playerMap;
     }
 }

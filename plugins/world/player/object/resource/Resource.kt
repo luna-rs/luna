@@ -50,7 +50,6 @@ abstract class Resource {
                     plr.submitAction(FillAction(plr, emptyItem, objectId, filledItem, this@Resource, forAmount))
                 }
             })
-            msg?.terminate()
         }
     }
 
@@ -62,7 +61,7 @@ abstract class Resource {
             if (obj != null && matches(obj)) {
                 // Dynamically cached, so we don't have to worry about 'matches' performance.
                 on(ItemOnObjectEvent::class)
-                    .condition { objectId == obj.id }
+                    .filter { objectId == obj.id }
                     .then { fill(plr, itemId, objectId, this) }
                 onMatch(obj)
             }

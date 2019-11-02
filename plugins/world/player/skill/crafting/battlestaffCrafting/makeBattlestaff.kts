@@ -2,7 +2,7 @@ package world.player.skill.crafting.battlestaffCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Player
@@ -12,12 +12,12 @@ import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BAT
 import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.ORB_TO_BATTLESTAFF
 
 /**
- * A [ProducingAction] implementation that makes battlestaves.
+ * An [InventoryAction] implementation that makes battlestaves.
  */
 class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, amount: Int) :
-        ProducingAction(plr, true, 2, amount) {
+        InventoryAction(plr, true, 2, amount) {
 
-    override fun canProduce(): Boolean =
+    override fun executeIf(start: Boolean): Boolean =
         when {
             mob.crafting.level < battlestaff.level -> {
                 plr.sendMessage("You need a Crafting level of ${battlestaff.level} to make this.")
@@ -26,14 +26,14 @@ class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, amoun
             else -> true
         }
 
-    override fun onProduce() {
+    override fun execute() {
         mob.crafting.addExperience(battlestaff.exp)
     }
 
-    override fun add() = arrayOf(battlestaff.staffItem)
-    override fun remove() = arrayOf(battlestaff.orbItem, BATTLESTAFF_ITEM)
+    override fun add() = listOf(battlestaff.staffItem)
+    override fun remove() = listOf(battlestaff.orbItem, BATTLESTAFF_ITEM)
 
-    override fun isEqual(other: Action<*>?): Boolean =
+    override fun ignoreIf(other: Action<*>?): Boolean =
         when (other) {
             is MakeBattlestaffAction -> battlestaff == other.battlestaff
             else -> false
@@ -50,7 +50,6 @@ fun attachOrb(plr: Player, msg: Event, orb: Int) {
             override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(MakeBattlestaffAction(plr, battlestaff, forAmount))
         })
-        msg.terminate()
     }
 }
 

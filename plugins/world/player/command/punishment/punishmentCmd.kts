@@ -1,10 +1,9 @@
 import api.predef.*
+import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
-import io.luna.net.LunaChannelFilter
 import java.io.File
-import java.io.FileWriter
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -26,15 +25,15 @@ fun getPlayer(msg: CommandEvent, action: (Player) -> Unit) =
 /**
  * Construct a string with punishment lift date ~ [yyyy-mm-dd].
  */
-fun punishDuration(msg: CommandEvent): LocalDate {
+fun punishDuration(msg: CommandEvent): LocalDateTime {
     val args = msg.args
-    val years = if (args.size == 4) args[3].toLong() else 0
-    val months = if (args.size == 3) args[2].toLong() else 0
-    val days = args[1].toLong()
+    val days = if (args.size == 4) args[3].toLong() else 0
+    val hours = if (args.size == 3) args[2].toLong() else 0
+    val minutes = args[1].toLong()
 
-    return LocalDate.now()
-        .plusYears(years)
-        .plusMonths(months)
+    return LocalDateTime.now()
+        .plusMinutes(minutes)
+        .plusHours(hours)
         .plusDays(days)
 }
 
@@ -43,14 +42,7 @@ fun punishDuration(msg: CommandEvent): LocalDate {
  */
 cmd("ip_ban", RIGHTS_ADMIN) {
     getPlayer(this) {
-        async {
-            val client = it.client
-            FileWriter(blacklistFile, true).use { fw -> fw.write(client.ipAddress) }
-
-            val channelFilter = client.channel.attr(LunaChannelFilter.KEY).get()
-            channelFilter.blacklist.add(client.ipAddress)
-        }
-        it.logout()
+        PunishmentHandler.ipBan(it)
         plr.sendMessage("You have IP banned ${it.username}.")
     }
 }
@@ -60,8 +52,7 @@ cmd("ip_ban", RIGHTS_ADMIN) {
  */
 cmd("perm_ban", RIGHTS_ADMIN) {
     getPlayer(this) {
-        it.unbanDate = "never"
-        it.logout()
+        PunishmentHandler.permBan(it)
         plr.sendMessage("You have permanently banned ${it.username}.")
     }
 }
@@ -71,8 +62,7 @@ cmd("perm_ban", RIGHTS_ADMIN) {
  */
 cmd("perm_mute", RIGHTS_MOD) {
     getPlayer(this) {
-        it.unmuteDate = "never"
-        it.logout()
+        PunishmentHandler.permMute(it)
         plr.sendMessage("You have permanently muted ${it.username}.")
     }
 }
@@ -83,9 +73,8 @@ cmd("perm_mute", RIGHTS_MOD) {
 cmd("ban", RIGHTS_MOD) {
     getPlayer(this) {
         val duration = punishDuration(this)
-        it.unbanDate = duration.toString()
-        it.logout()
-        plr.sendMessage("You have banned ${it.username} until ${df.format(duration)}.")
+        PunishmentHandler.ban(it, duration)
+        plr.sendMessage("You have banned ${it.username} until ${PunishmentHandler.FORMATTER.format(duration)}.")
     }
 }
 
@@ -95,9 +84,8 @@ cmd("ban", RIGHTS_MOD) {
 cmd("mute", RIGHTS_MOD) {
     getPlayer(this) {
         val duration = punishDuration(this)
-        it.unmuteDate = duration.toString()
-        it.logout()
-        plr.sendMessage("You have muted ${it.username} until ${df.format(duration)}.")
+        PunishmentHandler.mute(it, duration)
+        plr.sendMessage("You have muted ${it.username} until ${PunishmentHandler.FORMATTER.format(duration)}.")
     }
 }
 

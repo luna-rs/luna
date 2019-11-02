@@ -1,5 +1,6 @@
 package world.player.skill.herblore.makeUnfPotion
 
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**
@@ -72,5 +73,10 @@ enum class UnfPotion(val id: Int, val herb: Int, val level: Int) {
      * The unf. potion item.
      */
     val idItem = Item(id)
+
+    /**
+     * The herb's name.
+     */
+    val herbName = itemDef(herb).name
 }
 

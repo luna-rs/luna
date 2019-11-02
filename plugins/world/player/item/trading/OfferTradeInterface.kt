@@ -1,6 +1,5 @@
 package world.player.item.trading
 
-import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.IndexedItem
@@ -31,22 +30,13 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         }
     }
 
-    companion object {
-
-        /**
-         * The "trading_with" attribute.
-         */
-        var Player.tradingWith by Attr<Int>("trading_with")
-    }
-
     /**
      * The items being offered.
      */
     val items = ItemContainer(28, ItemContainer.StackPolicy.STANDARD, 3415)
 
     /**
-     * The trading player's offer instance (load lazily so its not initialized in
-     * the constructor).
+     * The trading player's offer instance (load lazily so its not initialized in the constructor).
      */
     val otherOffer by lazyVal {
         other.interfaces.get(OfferTradeInterface::class)!!

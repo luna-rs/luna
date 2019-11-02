@@ -1,21 +1,15 @@
 package io.luna.game.model.mob.persistence;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import io.luna.LunaConstants;
+import io.luna.Luna;
 import io.luna.game.model.mob.Player;
-import io.luna.net.codec.login.LoginResponse;
-import io.luna.util.ExecutorUtils;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
+ * A model responsible for creating the serializer and performing synchronous loads and saves.
+ *
  * @author lare96 <http://github.com/lare96>
  */
 public final class PlayerPersistence {
@@ -23,110 +17,65 @@ public final class PlayerPersistence {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The thread pool that will handle save and load requests.
-     */
-    private final ListeningExecutorService threadPool = ExecutorUtils.newCachedThreadPool();
-
-    /**
-     * The map that will track pending saves.
-     */
-    private final Map<String, Future<Boolean>> pendingSaves = new ConcurrentHashMap<>();
-
-    /**
-     * The default serializer.
+     * The current serializer.
      */
     private final PlayerSerializer serializer;
 
     /**
      * Creates a new {@link PlayerPersistence}.
      *
-     * @throws ClassCastException If the serializer could not be instanced.
+     * @throws ClassCastException If the serializer could not be created.
      */
     public PlayerPersistence() throws ClassCastException {
-        serializer = newSerializer();
+        serializer = computeSerializer();
     }
 
     /**
-     * Asynchronously saves persistent data for {@code player}.
-     *
-     * @param player The player.
-     * @return A future returning {@code true} if the save was successful.
+     * Shortcut to {@link #save(String, PlayerData)}.
      */
-    public Future<Boolean> save(Player player) {
-        String key = player.getUsername();
-        // TODO Needs testing!
-        // Cancel any in-progress saves.
-        Future<Boolean> pending = pendingSaves.get(key);
-        if (pending != null && pending.cancel(true)) {
-            LOGGER.warn(player + " an in-progress save was interrupted.");
-        }
-
-        // Submit new save task.
-        ListenableFuture<Boolean> loadFuture = threadPool.submit(() -> {
-            synchronized (player) {
-                return serializer.save(player);
-            }
-        });
-
-        if (!loadFuture.isDone()) {
-            // Track the save if it doesn't complete quickly, so it isn't accidentally overwritten.
-            pendingSaves.put(key, loadFuture);
-            loadFuture.addListener(() -> pendingSaves.remove(key), threadPool);
-        }
-        return loadFuture;
+    public void save(Player player) throws Exception {
+        save(player.getUsername(), player.getSaveData());
     }
 
     /**
-     * Loads persistent data for {@code player}.
+     * Synchronously saves persistent data.
      *
-     * @param player The player.
-     * @return A future returning the login response.
+     * @param username The username of the player to save.
+     * @param data The data to save.
      */
-    public ListenableFuture<LoginResponse> load(Player player) {
-        // TODO Needs testing!
-        String enteredPassword = player.getPassword();
-        if (serializer instanceof SqlPlayerSerializer) {
-            // Loading players from a database needs to be done on another thread.
-            return threadPool.submit(() -> {
-                synchronized (player) {
-                    return serializer.load(player, enteredPassword);
-                }
-            });
-        } else {
-            // Otherwise, it's fast enough to do right on the networking thread.
-            synchronized (player) {
-                LoginResponse response = serializer.load(player, enteredPassword);
-                return Futures.immediateFuture(response);
-            }
+    public void save(String username, PlayerData data) throws Exception {
+        if (data.needsHash) {
+            data.password = BCrypt.hashpw(data.plainTextPassword, BCrypt.gensalt());
         }
+        serializer.save(username, data);
     }
 
     /**
-     * Determines if there is currently a save in progress for {@code player}.
+     * Synchronously loads persistent data for {@code username}.
      *
-     * @param player The player.
-     * @return {@code true} if there is a save in progress.
+     * @param username The username of the player to load.
+     * @return The loaded data.
      */
-    public boolean hasPendingSave(Player player) {
-        return pendingSaves.containsKey(player.getUsername());
+    public PlayerData load(String username) throws Exception {
+        return serializer.load(username);
     }
 
     /**
-     * Initializes a new serializer based on {@code luna.toml}.
+     * Initializes a new serializer based on data within {@code luna.toml}.
      *
      * @return The serializer.
-     * @throws ClassCastException If the argued serializer is the wrong type.
+     * @throws ClassCastException If the serializer could not be created.
      */
-    private PlayerSerializer newSerializer() throws ClassCastException {
-        String name = LunaConstants.SERIALIZER;
+    private PlayerSerializer computeSerializer() throws ClassCastException {
+        String name = Luna.settings().serializer();
         try {
             String fullName = "io.luna.game.model.mob.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName);
         } catch (ClassCastException e) {
-            LOGGER.fatal(name + " not an instance of PlayerSerializer.");
+            logger.fatal(name + " not an instance of PlayerSerializer.");
             throw e;
         }
     }

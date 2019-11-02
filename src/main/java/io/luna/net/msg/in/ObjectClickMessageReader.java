@@ -59,7 +59,12 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
         Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
         GameObject object = new GameObject(player.getContext(), evt.getId(), position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
-        player.submitAction(new InteractionAction(player, object, evt));
+        player.submitAction(new InteractionAction(player, object) {
+            @Override
+            public void execute() {
+                player.getPlugins().post(evt);
+            }
+        });
     }
 
     /**

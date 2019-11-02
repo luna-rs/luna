@@ -21,7 +21,7 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginCredentialsMessage}.
+ * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginRequestMessage}.
  *
  * @author lare96 <http://github.org/lare96>
  */
@@ -127,6 +127,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
+            // TODO WHEN AN EXCEPTION IS THROWN HERE THE PLAYER GETS STUCK LOGGED IN?
             checkState(opcode == 14, "opcode != 14");
 
             ByteBuf msg = ByteMessage.pooledBuffer(17);
@@ -211,10 +212,10 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
                 @SuppressWarnings("unused") int uid = rsaBuffer.readInt();
 
                 ByteMessage msg = ByteMessage.wrap(rsaBuffer);
-                String username = msg.getString().toLowerCase();
-                String password = msg.getString().toLowerCase();
+                String username = msg.getString().toLowerCase().trim();
+                String password = msg.getString().toLowerCase().trim();
 
-                return new LoginCredentialsMessage(username,
+                return new LoginRequestMessage(username,
                         password, encryptor, decryptor, ctx.channel().pipeline());
             } finally {
                 rsaBuffer.release();

@@ -53,7 +53,7 @@ public final class WeightListener implements ItemContainerListener {
             currentWeight += iterator.next();
             iterator.remove();
         }
-        player.setWeight(currentWeight);
+        player.setWeight(currentWeight, true);
     }
 
     /**
@@ -63,7 +63,7 @@ public final class WeightListener implements ItemContainerListener {
      * @param newItem The new item.
      */
     private void updateWeight(Optional<Item> oldItem, Optional<Item> newItem) {
-        player.setWeight(player.getWeight() + computeWeightDifference(oldItem, newItem));
+        player.setWeight(player.getWeight() + computeWeightDifference(oldItem, newItem), true);
     }
 
     /**

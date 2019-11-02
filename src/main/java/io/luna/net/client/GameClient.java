@@ -1,6 +1,5 @@
 package io.luna.net.client;
 
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -19,11 +18,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class GameClient extends Client<GameMessage> {
 
     /**
-     * The player.
-     */
-    private final Player player;
-
-    /**
      * The decoded packets.
      */
     private final Queue<GameMessage> decodedMessages = new ArrayBlockingQueue<>(15);
@@ -34,36 +28,40 @@ public class GameClient extends Client<GameMessage> {
     private final GameMessageRepository repository;
 
     /**
+     * If the client is awaiting logout.
+     */
+    private volatile boolean pendingLogout;
+
+    /**
      * Creates a new {@link GameClient}.
      *
      * @param channel The client's channel.
-     * @param player The player.
      * @param repository The message repository.
      */
-    public GameClient(Channel channel, Player player, GameMessageRepository repository) {
+    public GameClient(Channel channel, GameMessageRepository repository) {
         super(channel);
-        this.player = player;
         this.repository = repository;
     }
 
     @Override
     public void onInactive() {
-        World world = player.getWorld();
-        world.queueLogout(player);
+        setPendingLogout(true);
     }
 
     @Override
     void onMessageReceived(GameMessage msg) {
-        decodedMessages.offer(msg);
+        if (!decodedMessages.offer(msg)) {
+           msg.getPayload().releaseAll();
+        }
     }
 
     /**
      * Handles decoded game packets and posts their created events to all applicable plugin listeners.
      * Fires a region update afterwards, if needed.
      */
-    public void handleDecodedMessages() {
+    public void handleDecodedMessages(Player player) {
         for (; ; ) {
-            GameMessage msg = decodedMessages.poll();
+            var msg = decodedMessages.poll();
             if (msg == null) {
                 break;
             }
@@ -79,9 +77,7 @@ public class GameClient extends Client<GameMessage> {
      *
      * @param msg The message to queue.
      */
-    public void queue(GameMessageWriter msg) {
-        Channel channel = getChannel();
-
+    public void queue(GameMessageWriter msg, Player player) {
         if (channel.isActive()) {
             channel.write(msg.toGameMsg(player), channel.voidPromise());
         }
@@ -89,13 +85,25 @@ public class GameClient extends Client<GameMessage> {
 
     /**
      * Flushes the underlying channel. This will send all messages to the client queued using
-     * {@link #queue(GameMessageWriter)}. Calls to this method are expensive and should be done sparingly.
+     * {@link #queue(GameMessageWriter, Player)}. Calls to this method are expensive and should be done sparingly.
      */
     public void flush() {
-        Channel channel = getChannel();
-
         if (channel.isActive()) {
             channel.flush();
         }
+    }
+
+    /**
+     * Sets if the client is awaiting logout.
+     */
+    public void setPendingLogout(boolean pendingLogout) {
+        this.pendingLogout = pendingLogout;
+    }
+
+    /**
+     * @return {@code true} if the client is awaiting logout.
+     */
+    public boolean isPendingLogout() {
+        return pendingLogout;
     }
 }

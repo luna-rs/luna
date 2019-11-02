@@ -5,9 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.OptionalInt;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -22,7 +20,7 @@ public final class SqlConnectionPool {
     /**
      * The database host.
      */
-    private static final String HOST = "";
+    private static final String HOST = "localhost";
 
     /**
      * The database port.
@@ -32,23 +30,12 @@ public final class SqlConnectionPool {
     /**
      * The database login username.
      */
-    private static final String USERNAME = "";
+    private static final String USERNAME = "luna_db";
 
     /**
      * The database login password.
      */
-    private static final String PASSWORD = "";
-
-    static {
-        try {
-            //noinspection ConstantConditions
-            checkState(!HOST.isEmpty(), "Please specify the SQL database HOST.");
-            checkState(!USERNAME.isEmpty(), "Please specify the SQL database login USERNAME.");
-            checkState(!PASSWORD.isEmpty(), "Please specify the SQL database login PASSWORD.");
-        } catch (Exception e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
+    private static final String PASSWORD = "H55yPGC9CkVcNwcqGJPT";
 
     /**
      * A builder for this connection pool.
@@ -64,11 +51,6 @@ public final class SqlConnectionPool {
          * The database (default value is {@code USERNAME}).
          */
         private String database = USERNAME;
-
-        /**
-         * The login timeout seconds.
-         */
-        private OptionalInt timeout;
 
         /**
          * Sets the pool's name.
@@ -93,17 +75,6 @@ public final class SqlConnectionPool {
         }
 
         /**
-         * Sets the login timeout seconds.
-         *
-         * @param timeout The new value.
-         * @return This builder.
-         */
-        public Builder timeout(int timeout) {
-            this.timeout = OptionalInt.of(timeout);
-            return this;
-        }
-
-        /**
          * Creates a new connection pool.
          *
          * @return The new pool.
@@ -111,17 +82,11 @@ public final class SqlConnectionPool {
          */
         public SqlConnectionPool build() throws SQLException {
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:postgresql://" + HOST + ":" + PORT + "/" + database);
+            config.setJdbcUrl("jdbc:mysql://" + HOST + ":" + PORT + "/" + database + "");
             config.setUsername(USERNAME);
             config.setPassword(PASSWORD);
-            config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
-
-            HikariDataSource dataSource = new HikariDataSource(config);
-            dataSource.setPoolName(poolName);
-            if (timeout.isPresent()) {
-                dataSource.setLoginTimeout(timeout.getAsInt());
-            }
-            return new SqlConnectionPool(dataSource);
+            config.setPoolName(poolName);
+            return new SqlConnectionPool(new HikariDataSource(config));
         }
 
     }

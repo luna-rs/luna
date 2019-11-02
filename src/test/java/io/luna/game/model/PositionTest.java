@@ -1,43 +1,33 @@
 package io.luna.game.model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * A test that ensures that functions within {@link Position} are functioning correctly.
+ * Unit tests for {@link Position}.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class PositionTest {
+final class PositionTest {
 
-    /**
-     * Test invalid {@code x} values.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidX() {
-        new Position(-1, 1, 1);
+    @Test
+    void invalidX() {
+        assertThrows(IllegalArgumentException.class, () -> new Position(-1, 1, 1));
     }
 
-    /**
-     * Test invalid {@code y} values.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidY() {
-        new Position(1, -1, 1);
+    @Test
+    void invalidY() {
+        assertThrows(IllegalArgumentException.class, () -> new Position(1, -1, 1));
     }
 
-    /**
-     * Test invalid upper bound {@code z} values.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidUpperZ() {
-        new Position(1, 1, 4);
+    @Test
+    void invalidUpperZ() {
+        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4));
     }
 
-    /**
-     * Test invalid lower bound {@code z} values.
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidLowerZ() {
-        new Position(1, 1, -1);
+    @Test
+    void invalidLowerZ() {
+        assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, -1));
     }
 }

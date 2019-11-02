@@ -32,8 +32,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         ByteMessage buf = ByteMessage.raw();
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
-            buf.put(player.getPrayerIcon().getId()); // Prayer icon.
-            buf.put(player.getSkullIcon().getId()); // Skull icon.
+            buf.put(player.getPrayerIcon().getId()); // Prayer icon. // TODO fix with new client
+            buf.put(player.getSkullIcon().getId()); // Skull icon. // TODO fix with new client
 
             // Transform the player if needed.
             OptionalInt transformId = player.getTransformId();

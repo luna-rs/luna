@@ -70,11 +70,10 @@ fun craft(plr: Player, rune: Rune) {
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
 on(ObjectFirstClickEvent::class)
-    .condition { objectDef(id).hasAction(0, "Craft-rune") }
+    .filter { objectDef(id).hasAction(0, "Craft-rune") }
     .then {
         val altar = Rune.ALTAR_TO_RUNE[id]
         if (altar != null) {
             craft(plr, altar)
-            terminate()
         }
     }

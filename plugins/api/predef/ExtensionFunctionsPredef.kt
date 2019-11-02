@@ -9,12 +9,14 @@ import io.luna.game.model.chunk.ChunkManager
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.task.Task
 import io.luna.net.msg.out.ConfigMessageWriter
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
 
 
 /*****************************
@@ -27,6 +29,25 @@ import kotlin.reflect.KClass
  * Queues a [ConfigMessageWriter] message.
  */
 fun Player.sendConfig(id: Int, state: Int) = queue(ConfigMessageWriter(id, state))
+
+
+/********************************
+ *                              *
+ *  [Attribute] ext. functions  *
+ *                              *
+ *******************************/
+
+/**
+ * An extension property that adds a getter delegate to [Attribute].
+ */
+operator fun <T> Attribute<T>.getValue(plr: Player, property: KProperty<*>): T = plr.attributes[this]
+
+/**
+ * An extension property that adds a setter delegate to [Attribute].
+ */
+operator fun <T> Attribute<T>.setValue(plr: Player, property: KProperty<*>, value: T) {
+    plr.attributes[this] = value
+}
 
 
 /*****************************
@@ -149,11 +170,11 @@ fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
 }
 
 
-/*******************************************
- *                                         *
+/***********************************
+ *                                 *
  *  [ChunkManager] ext. functions  *
- *                                         *
- ******************************************/
+ *                                 *
+ **********************************/
 
 /**
  * Shortcut to [ChunkManager.getViewableEntities] for [Player]s.

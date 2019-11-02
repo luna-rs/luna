@@ -31,6 +31,41 @@ public final class StringUtils {
     public static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
     /**
+     * The character table that will aid in unpacking text.
+     */
+    private static final ImmutableList<Character> CHAR_TABLE = ImmutableList.of(' ', 'e', 't', 'a', 'o', 'i', 'h', 'n',
+            's', 'r', 'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p', 'b',
+            'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2', '3', '4', '5', '6',
+            '7', '8', '9', ' ', '!', '?', '.', ',', ':', ';', '(', ')', '-',
+            '&', '*', '\\', '\'', '@', '#', '+', '=', '\243', '$', '%', '"',
+            '[', ']');
+
+    /**
+     * Unpacks text received from the client.
+     *
+     * @param message The message, in bytes.
+     * @return The unpacked text.
+     */
+    public static String unpackText(byte[] message) {
+        int size = message.length;
+        char[] decodeBuf = new char[size * 2];
+        int idx = 0, highNibble = -1;
+        for (int i = 0; i < size * 2; i++) {
+            int val = message[i / 2] >> (4 - 4 * (i % 2)) & 0xf;
+            if (highNibble == -1) {
+                if (val < 13)
+                    decodeBuf[idx++] = CHAR_TABLE.get(val);
+                else
+                    highNibble = val;
+            } else {
+                decodeBuf[idx++] = CHAR_TABLE.get(((highNibble << 4) + val) - 195);
+                highNibble = -1;
+            }
+        }
+        return new String(decodeBuf, 0, idx);
+    }
+
+    /**
      * Computes the indefinite article of {@code thing}.
      *
      * @param thing The thing to compute for.
@@ -105,7 +140,6 @@ public final class StringUtils {
         }
         return new String(name, 12 - offset, offset);
     }
-
 
     /**
      * Capitalizes a String value.

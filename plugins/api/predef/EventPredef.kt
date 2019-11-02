@@ -13,12 +13,25 @@ import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.model.mob.PlayerRights
+import java.util.*
 import kotlin.reflect.KClass
 
 /**
  * The player dedicated event listener consumer alias.
  */
 private typealias Action<E> = E.() -> Unit
+
+/**
+ * The command key, used to match [CommandEvent]s.
+ */
+class CommandKey(val name: String, val rights: PlayerRights) {
+    override fun hashCode() = Objects.hash(name)
+    override fun equals(other: Any?) =
+        when (other) {
+            is CommandKey -> name == other.name
+            else -> false
+        }
+}
 
 /**
  * The main event interception function. Forwards to [InterceptBy].
@@ -29,7 +42,7 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
  * The main event interception function. Runs the action without any forwarding.
  */
 fun <E : Event> on(eventClass: KClass<E>, action: Action<E>) {
-    scriptListeners.add(EventListener(eventClass.java, action))
+    scriptListeners += EventListener(eventClass.java, action)
 }
 
 /**
@@ -41,8 +54,8 @@ fun useItem(id: Int) = InterceptUseItem(id)
  * The [CommandEvent] matcher function.
  */
 fun cmd(name: String, rights: PlayerRights, action: Action<CommandEvent>) {
-    val matcher = Matcher.get<CommandEvent, String>()
-    matcher[name] = {
+    val matcher = Matcher.get<CommandEvent, CommandKey>()
+    matcher[CommandKey(name, rights)] = {
         if (plr.rights >= rights) {
             action(this)
         }

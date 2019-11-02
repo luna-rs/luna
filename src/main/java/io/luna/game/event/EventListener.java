@@ -61,8 +61,7 @@ public final class EventListener<E extends Event> {
         try {
             listener.accept(msg);
         } catch (Exception failure) {
-            failure.printStackTrace();
-            throw new ScriptExecutionException(this, failure);
+            throw new ScriptExecutionException(script, failure);
         }
     }
 
@@ -77,10 +76,9 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * @return The encompassing script.
+     * @return The encompassing script. Possibly {@code null}.
      */
     public Script getScript() {
-        checkState(script != null, "Script cannot be <null>.");
         return script;
     }
 

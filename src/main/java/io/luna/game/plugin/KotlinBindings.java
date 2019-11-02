@@ -3,6 +3,7 @@ package io.luna.game.plugin;
 import io.luna.LunaContext;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.game.event.EventMatcherListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,6 +31,11 @@ public final class KotlinBindings {
      * A list of event listeners.
      */
     private final List<EventListener<?>> listeners = new ArrayList<>();
+
+    /**
+     * A list of event matcher listeners.
+     */
+    private final List<EventMatcherListener<?>> matchers = new ArrayList<>();
 
     /**
      * The pipeline set.
@@ -64,6 +70,13 @@ public final class KotlinBindings {
      */
     public List<EventListener<?>> getListeners() {
         return listeners;
+    }
+
+    /**
+     * @return A list of event matcher listeners.
+     */
+    public List<EventMatcherListener<?>> getMatchers() {
+        return matchers;
     }
 
     /**

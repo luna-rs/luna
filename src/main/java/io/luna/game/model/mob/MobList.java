@@ -1,6 +1,8 @@
 package io.luna.game.model.mob;
 
 import io.luna.game.model.EntityState;
+import io.luna.game.model.EntityType;
+import io.luna.game.model.World;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -89,6 +91,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
+     * The world.
+     */
+    private final World world;
+
+    /**
      * The elements.
      */
     private final E[] mobs;
@@ -109,13 +116,14 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param capacity The amount of mobs that can be contained.
      */
     @SuppressWarnings("unchecked")
-    public MobList(int capacity) {
+    public MobList(World world, int capacity) {
+        this.world = world;
         mobs = (E[]) new Mob[capacity + 1];
 
         // Initialize the index cache.
         indexes = IntStream.rangeClosed(1, capacity)
-                           .boxed()
-                           .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
+                .boxed()
+                .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
     }
 
     @Override
@@ -201,29 +209,36 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         int index = indexes.remove();
         mobs[index] = mob;
         mob.setIndex(index);
-
-        mob.setState(EntityState.ACTIVE);
-
         size++;
+
+        if (mob.getType() == EntityType.NPC) {
+            mob.setState(EntityState.ACTIVE);
+        } else if (mob.getType() == EntityType.PLAYER) {
+            world.addPlayer(mob.asPlr());
+        }
     }
 
     /**
-     * Attempts to remove {@code mob}.
+     * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
+     * logout packet or use {@link Player#disconnect()} to destroy the player's connection.</strong>
      *
      * @param mob The mob to remove.
      */
     public void remove(E mob) {
-        checkArgument(mob.getState() == EntityState.ACTIVE, "state != ACTIVE");
         checkArgument(mob.getIndex() != -1, "index == -1");
+
+        if (mob.getType() == EntityType.NPC) {
+            mob.setState(EntityState.INACTIVE);
+        } else if (mob.getType() == EntityType.PLAYER) {
+            checkState(mob.asPlr().getState() == EntityState.INACTIVE, "Player must be inactive. Do not use MobList#remove(Mob) to logout players.");
+            world.removePlayer(mob.asPlr());
+        }
 
         // Put back index, so other mobs can use it.
         indexes.add(mob.getIndex());
 
-        mob.setState(EntityState.INACTIVE);
-
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
-
         size--;
     }
 
@@ -270,7 +285,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     /**
      * Determines if the current size is 0.
      *
-     * Returns {@code true} if this list is empty.
+     * @return {@code true} if this list is empty.
      */
     public boolean isEmpty() {
         return size == 0;

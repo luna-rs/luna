@@ -1,43 +1,44 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableMap;
-import io.luna.LunaConstants;
+import com.google.common.util.concurrent.ListenableFuture;
+import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Direction;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.World;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
-import io.luna.game.model.mob.attr.AttributeValue;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
-import io.luna.game.model.mob.persistence.SqlPlayerSerializer;
+import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.object.GameObject;
+import io.luna.game.service.LogoutService;
+import io.luna.game.service.PersistenceService;
+import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.ConfigMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionChangeMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
-import io.netty.channel.Channel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,10 +48,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing a player-controlled mob.
@@ -126,7 +125,7 @@ public final class Player extends Mob {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A set of local players.
@@ -186,8 +185,7 @@ public final class Player extends Mob {
     /**
      * The text cache.
      */
-    private final Map<Integer, String> textCache =
-            LunaConstants.PACKET_126_CACHING ? new HashMap<>() : ImmutableMap.of();
+    private final Map<Integer, String> textCache = new HashMap<>();
 
     /**
      * The settings.
@@ -260,11 +258,6 @@ public final class Player extends Mob {
     private int privateMsgCounter = 1;
 
     /**
-     * The database identifier. Will always be -1 unless the {@link SqlPlayerSerializer} is being used.
-     */
-    private long databaseId = -1;
-
-    /**
      * If a teleportation is in progress.
      */
     private boolean teleporting;
@@ -283,6 +276,46 @@ public final class Player extends Mob {
      * The interaction menu.
      */
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
+
+    /**
+     * The hashed password.
+     */
+    private String hashedPassword;
+
+    /**
+     * The last IP address logged in with.
+     */
+    private String lastIp;
+
+    /**
+     * When the player is unbanned.
+     */
+    private LocalDateTime unbanDate;
+
+    /**
+     * When the player is unmuted.
+     */
+    private LocalDateTime unmuteDate;
+
+    /**
+     * The prepared save data.
+     */
+    private volatile PlayerData saveData;
+
+    /**
+     * The SQL database ID.
+     */
+    private int databaseId = -1;
+
+    /**
+     * The run energy percentage.
+     */
+    private double runEnergy;
+
+    /**
+     * The combined weight of the {@link #inventory} and {@link #equipment}.
+     */
+    private double weight;
 
     /**
      * Creates a new {@link Player}.
@@ -327,20 +360,21 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
+        world.getAreas().notifyLogin(this);
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
         plugins.post(new LoginEvent(this));
-        LOGGER.info("{} has logged in.", this);
     }
 
     @Override
     protected void onInactive() {
+        actions.interrupt();
+        world.getPlayerMap().remove(getUsernameHash());
+        world.getAreas().notifyLogout(this);
         removeLocalItems();
         removeLocalObjects();
         interfaces.close();
         plugins.post(new LogoutEvent(this));
-        save();
-        LOGGER.info("{} has logged out.", this);
     }
 
     @Override
@@ -385,6 +419,54 @@ public final class Player extends Mob {
         interfaces.applyActionClose();
     }
 
+    @Override
+    protected void onPositionChange(Position oldPos) {
+        world.getAreas().notifyPositionChange(this, oldPos, position);
+    }
+
+    /**
+     * Sends a save request to the {@link PersistenceService}.
+     *
+     * @return The result of the save task.
+     */
+    public ListenableFuture<Void> save() {
+        return world.getPersistenceService().save(this);
+    }
+
+    /**
+     * Prepares the save data to be serialized by a {@link LogoutService} worker.
+     */
+    public void createSaveData() {
+        saveData = new PlayerData().save(this);
+    }
+
+    /**
+     * Loads the argued save data into this player.
+     */
+    public void loadData(PlayerData data) {
+        if (data != null) {
+            // Load saved data.
+            data.load(this);
+        } else {
+            // New player!
+            setPosition(Luna.settings().startingPosition());
+            rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
+                    PlayerRights.DEVELOPER : PlayerRights.PLAYER;
+        }
+        settings.setPlayer(this);
+    }
+
+    /**
+     * Prepares the player for logout.
+     */
+    public void cleanUp() {
+        if (getState() == EntityState.ACTIVE) {
+            setState(EntityState.INACTIVE);
+            createSaveData();
+            world.getLogoutService().submit(getUsername(), this);
+        }
+    }
+
     /**
      * Unregisters all assigned local objects.
      */
@@ -412,15 +494,23 @@ public final class Player extends Mob {
     }
 
     /**
-     * Forwards to {@link World#savePlayer(Player)}.
+     * Adds {@code item} to the inventory. If the inventory is full, add it to the bank. If the bank is full, will drop
+     * it on the floor.
+     *
+     * @param item The item to give the player.
      */
-    public Future<Boolean> save() {
-        return world.savePlayer(this);
+    public void giveItem(Item item) {
+        if (inventory.hasSpaceFor(item)) {
+            inventory.add(item);
+        } else if (bank.hasSpaceFor(item)) {
+            bank.add(item);
+        } else {
+            // TODO Drop item on the floor.
+        }
     }
 
     /**
-     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet. It's used enough where this
-     * is warranted.
+     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet.
      *
      * @param msg The message to send.
      */
@@ -429,28 +519,40 @@ public final class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. It's used enough where this
-     * is warranted.
+     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. This function makes use of caching mechanisms that
+     * can boost performance when invoked repetitively.
      *
-     * @param text The text to send.
+     * @param msg The message to send.
      * @param id The widget identifier.
      */
-    public void sendText(String text, int id) {
-        requireNonNull(text);
-
-        String previous = LunaConstants.PACKET_126_CACHING ? textCache.put(id, text) : null;
-        if (!text.equals(previous)) {
-            queue(new WidgetTextMessageWriter(text, id));
+    public void sendText(Object msg, int id) {
+        // Retrieve the text that's already on the interface.
+        String pending = msg.toString();
+        String previous = textCache.put(id, pending);
+        if (!pending.equals(previous)) {
+            // Only queue the packet if we're sending different text.
+            queue(new WidgetTextMessageWriter(pending, id));
         }
     }
 
     /**
-     * Disconnects this player.
+     * Logs out this player using the logout packet. The proper way to logout the player.
      */
     public void logout() {
-        Channel channel = client.getChannel();
+        var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
+            client.setPendingLogout(true);
+        }
+    }
+
+    /**
+     * Disconnects this player's channel. Use this if an error occurs with the player.
+     */
+    public void disconnect() {
+        var channel = client.getChannel();
+        if (channel.isActive()) {
+            channel.disconnect();
         }
     }
 
@@ -475,12 +577,12 @@ public final class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
+     * A shortcut function to {@link GameClient#queue(GameMessageWriter, Player)}.
      *
      * @param msg The message to queue in the buffer.
      */
     public void queue(GameMessageWriter msg) {
-        client.queue(msg);
+        client.queue(msg, this);
     }
 
     /**
@@ -516,168 +618,111 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the 'withdraw_as_note' attribute.
-     *
-     * @param withdrawAsNote The value to set to.
+     * @return The run energy percentage.
      */
-    // TODO No point in this being an attribute. Migrate to boolean within "Bank" class
-    public void setWithdrawAsNote(boolean withdrawAsNote) {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        if (attr.get() != withdrawAsNote) {
-            attr.set(withdrawAsNote);
-            queue(new ConfigMessageWriter(115, withdrawAsNote ? 1 : 0));
+    public double getRunEnergy() {
+        return runEnergy;
+    }
+
+    /**
+     * Sets the run energy percentage.
+     *
+     * @param newRunEnergy The value to set to.
+     */
+    public void setRunEnergy(double newRunEnergy, boolean update) {
+        if (newRunEnergy > 100.0) {
+            newRunEnergy = 100.0;
+        }
+
+        if (runEnergy != newRunEnergy) {
+            runEnergy = newRunEnergy;
+            if (update) {
+                queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+            }
         }
     }
 
     /**
-     * @return The 'withdraw_as_note' attribute.
-     */
-    public boolean isWithdrawAsNote() {
-        AttributeValue<Boolean> attr = attributes.get("withdraw_as_note");
-        return attr.get();
-    }
-
-    /**
-     * Sets the 'run_energy' attribute.
+     * Increases the current run energy level.
      *
-     * @param runEnergy The value to set to.
+     * @param amount The value to change by.
      */
-    public void setRunEnergy(double runEnergy) {
-        if (runEnergy > 100.0) {
-            runEnergy = 100.0;
-        }
-
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        if (attr.get() != runEnergy) {
-            attr.set(runEnergy);
-            queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
-        }
-    }
-
-    /**
-     * Changes the 'run_energy' attribute.
-     *
-     * @param runEnergy The value to change by.
-     */
-    public void changeRunEnergy(double runEnergy) {
-        if (runEnergy <= 0.0) {
-            return;
-        }
-
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        double newEnergy = attr.get() + runEnergy;
+    public void increaseRunEnergy(double amount) {
+        double newEnergy = runEnergy + amount;
         if (newEnergy > 100.0) {
             newEnergy = 100.0;
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        attr.set(newEnergy);
-        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
+        setRunEnergy(newEnergy, true);
     }
 
     /**
-     * @return The 'run_energy' attribute.
+     * @return The combined weight of the inventory and equipment.
      */
-    public double getRunEnergy() {
-        AttributeValue<Double> attr = attributes.get("run_energy");
-        return attr.get();
+    public double getWeight() {
+        return weight;
     }
 
     /**
-     * Sets the 'unmute_date' attribute.
+     * Sets the combined weight of the inventory and equipment.
+     */
+    public void setWeight(double newWeight, boolean update) {
+        if (weight != newWeight) {
+            weight = newWeight;
+            if (update) {
+                queue(new UpdateWeightMessageWriter((int) weight));
+            }
+        }
+    }
+
+    /**
+     * Sets when the player is unmuted.
      *
      * @param unmuteDate The value to set to.
      */
-    public void setUnmuteDate(String unmuteDate) {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        attr.set(unmuteDate);
+    public void setUnmuteDate(LocalDateTime unmuteDate) {
+        this.unmuteDate = unmuteDate;
     }
 
     /**
-     * @return The 'unmute_date' attribute.
+     * @return When the player is unmuted.
      */
-    public String getUnmuteDate() {
-        AttributeValue<String> attr = attributes.get("unmute_date");
-        return attr.get();
+    public LocalDateTime getUnmuteDate() {
+        return unmuteDate;
     }
 
     /**
-     * Sets the 'unban_date' attribute.
+     * Sets when the player is unbanned.
      *
      * @param unbanDate The value to set to.
      */
-    public void setUnbanDate(String unbanDate) {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        attr.set(unbanDate);
+    public void setUnbanDate(LocalDateTime unbanDate) {
+        this.unbanDate = unbanDate;
     }
 
     /**
-     * @return The 'unban_date' attribute.
+     * @return When the player is unbanned.
      */
-    public String getUnbanDate() {
-        AttributeValue<String> attr = attributes.get("unban_date");
-        return attr.get();
+    public LocalDateTime getUnbanDate() {
+        return unbanDate;
     }
 
     /**
-     * Sets the 'weight' attribute.
-     *
-     * @param weight The value to set to.
-     */
-    public void setWeight(double weight) {
-        AttributeValue<Double> attr = attributes.get("weight");
-        attr.set(weight);
-        queue(new UpdateWeightMessageWriter((int) weight));
-    }
-
-    /**
-     * @return The 'weight' attribute.
-     */
-    public double getWeight() {
-        AttributeValue<Double> attr = attributes.get("weight");
-        return attr.get();
-    }
-
-    /**
-     * @return {@code true} if the 'unmute_date' attribute is not equal to 'n/a'.
+     * @return {@code true} if the player is muted.
      */
     public boolean isMuted() {
-        String date = getUnmuteDate();
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnmuteDate("n/a");
-                    return false;
-                }
-                return true;
-        }
+        return unmuteDate != null && !LocalDateTime.now().isAfter(unmuteDate);
     }
 
     /**
-     * @return {@code true} if the 'unban_date' attribute is not equal to 'n/a'.
+     * @return The prepared save data.
      */
-    public boolean isBanned() {
-        String date = getUnbanDate();
-        switch (date) {
-            case "never":
-                return true;
-            case "n/a":
-                return false;
-            default:
-                LocalDate lift = LocalDate.parse(date);
-                LocalDate now = LocalDate.now();
-                if (now.isAfter(lift)) {
-                    setUnbanDate("n/a");
-                    return false;
-                }
-                return true;
+    public PlayerData getSaveData() {
+        if (saveData == null) {
+            throw new NullPointerException("No data has been prepared yet.");
         }
+        return saveData;
     }
 
     /**
@@ -701,6 +746,28 @@ public final class Player extends Mob {
      */
     public String getUsername() {
         return credentials.getUsername();
+    }
+
+    /**
+     * @return The hashed password..
+     */
+    public String getHashedPassword() {
+        return hashedPassword;
+    }
+
+    /**
+     * Sets the hashed password.
+     */
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    /**
+     * Sets the plaintext password.
+     */
+    public void setPassword(String password) {
+        credentials.setPassword(password);
+        hashedPassword = null;
     }
 
     /**
@@ -762,18 +829,34 @@ public final class Player extends Mob {
         return localItems;
     }
 
+    /**
+     * Sets the settings.
+     *
+     * @param settings The new value.
+     */
     public void setSettings(PlayerSettings settings) {
         this.settings = settings;
     }
 
+    /**
+     * @return The settings.
+     */
     public PlayerSettings getSettings() {
         return settings;
     }
 
+    /**
+     * Sets if this player is running.
+     *
+     * @param running The new value.
+     */
     public void setRunning(boolean running) {
         settings.setRunning(running);
     }
 
+    /**
+     * @return {@code true} if this player is running.
+     */
     public boolean isRunning() {
         return settings.isRunning();
     }
@@ -1013,50 +1096,10 @@ public final class Player extends Mob {
     }
 
     /**
-     * Sets the database identifier.
-     *
-     * @param databaseId The new value.
-     */
-    public void setDatabaseId(long databaseId) {
-        this.databaseId = databaseId;
-    }
-
-    /**
-     * @return The database identifier.
-     */
-    public long getDatabaseId() {
-        return databaseId;
-    }
-
-    /**
-     * Sets the backing set of friends.
-     *
-     * @param newFriends The new value.
-     */
-    public void setFriends(long[] newFriends) {
-        friends.clear();
-        for (long name : newFriends) {
-            friends.add(name);
-        }
-    }
-
-    /**
      * @return The friend list.
      */
     public Set<Long> getFriends() {
         return friends;
-    }
-
-    /**
-     * Sets the backing set of ignores.
-     *
-     * @param newIgnores The new value.
-     */
-    public void setIgnores(long[] newIgnores) {
-        ignores.clear();
-        for (long name : newIgnores) {
-            ignores.add(name);
-        }
     }
 
     /**
@@ -1078,5 +1121,44 @@ public final class Player extends Mob {
      */
     public PlayerInteractionMenu getInteractions() {
         return interactions;
+    }
+
+    /**
+     * @return The IP address currently logged in with.
+     */
+    public String getCurrentIp() {
+        return client.getIpAddress();
+    }
+
+    /**
+     * @return The last IP address logged in with.
+     */
+    public String getLastIp() {
+        return lastIp;
+    }
+
+    /**
+     * Sets the last IP address logged in with.
+     *
+     * @param lastIp The new value.
+     */
+    public void setLastIp(String lastIp) {
+        this.lastIp = lastIp;
+    }
+
+    /**
+     * @return The SQL database ID.
+     */
+    public int getDatabaseId() {
+        return databaseId;
+    }
+
+    /**
+     * Sets the SQL database ID.
+     *
+     * @param databaseId The new value.
+     */
+    public void setDatabaseId(int databaseId) {
+        this.databaseId = databaseId;
     }
 }

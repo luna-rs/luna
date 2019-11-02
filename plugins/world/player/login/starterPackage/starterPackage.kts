@@ -1,14 +1,10 @@
-import api.attr.Attr
+
 import api.predef.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface
 
-/**
- * The "first_login" attribute.
- */
-var Player.firstLogin by Attr<Boolean>("first_login")
 
 /**
  * Inventory starter items.
@@ -49,5 +45,5 @@ fun firstLogin(plr: Player) {
 }
 
 on(LoginEvent::class)
-    .condition { plr.firstLogin }
+    .filter { plr.firstLogin }
     .then { firstLogin(plr) }

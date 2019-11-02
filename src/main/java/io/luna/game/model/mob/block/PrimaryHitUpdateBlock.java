@@ -27,7 +27,7 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
         Hit hit = unwrap(player.getPrimaryHit());
         msg.put(hit.getDamage());
         msg.put(hit.getType().getOpcode(), ValueType.ADD);
-        msg.put(player.getCurrentHealth(), ValueType.NEGATE);
+        msg.put(player.getHealth(), ValueType.NEGATE);
         msg.put(player.getTotalHealth());
     }
 
@@ -36,7 +36,7 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
         Hit hit = unwrap(npc.getPrimaryHit());
         msg.put(hit.getDamage(), ValueType.NEGATE);
         msg.put(hit.getType().getOpcode(), ValueType.SUBTRACT);
-        msg.put(npc.getCurrentHealth(), ValueType.SUBTRACT);
+        msg.put(npc.getHealth(), ValueType.SUBTRACT);
         msg.put(npc.getTotalHealth(), ValueType.NEGATE);
     }
 

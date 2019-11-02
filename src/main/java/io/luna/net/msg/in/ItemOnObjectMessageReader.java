@@ -46,7 +46,12 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
         Event event = new ItemOnObjectEvent(player, itemId, itemIndexId,
                 itemInterfaceId, objectId, objectX, objectY);
-        player.submitAction(new InteractionAction(player, object, event));
+        player.submitAction(new InteractionAction(player, object) {
+            @Override
+            public void execute() {
+                player.getPlugins().post(event);
+            }
+        });
         return null;
     }
 

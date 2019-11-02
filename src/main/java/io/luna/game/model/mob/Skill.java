@@ -3,7 +3,7 @@ package io.luna.game.model.mob;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
-import io.luna.LunaConstants;
+import io.luna.Luna;
 import io.luna.game.event.impl.SkillChangeEvent;
 import io.luna.game.plugin.PluginManager;
 
@@ -191,8 +191,7 @@ public final class Skill {
     private transient final int id;
 
     /**
-     * The static (experience based) skill level. Cached to avoid potentially expensive
-     * {@link SkillSet#levelForExperience(int)} calls.
+     * The static (experience based) skill level. Cached to avoid potentially expensive {@link SkillSet#levelForExperience(int)} calls.
      */
     private transient int staticLevel = -1;
 
@@ -235,7 +234,7 @@ public final class Skill {
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
 
-        amount = amount * LunaConstants.EXPERIENCE_MULTIPLIER;
+        amount = amount * Luna.settings().experienceMultiplier();
         setExperience(experience + amount);
     }
 

@@ -48,6 +48,29 @@ public final class RandomUtils {
     }
 
     /**
+     * Returns a pseudo-random {@code int} value between inclusive {@code min} and exclusive {@code max}.
+     *
+     * @param min The lower bound.
+     * @param max The exclusive upper bound.
+     * @return The generated number.
+     * @throws IllegalArgumentException If {@code max - min + 1} is equal to or less than {@code 0}.
+     */
+    public static int exclusive(int min, int max) {
+        return ThreadLocalRandom.current().nextInt(min, max);
+    }
+
+    /**
+     * Returns a pseudo-random {@code int} value between inclusive {@code 0} and exclusive {@code range}.
+     *
+     * @param range The exclusive upper bound.
+     * @return The generated number.
+     * @throws IllegalArgumentException If {@code range} is less than {@code 1}.
+     */
+    public static int exclusive(int range) {
+        return exclusive(0, range);
+    }
+
+    /**
      * Pseudo-randomly retrieves an element from {@code array}.
      *
      * @param array The array.

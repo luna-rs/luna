@@ -1,7 +1,8 @@
 package io.luna;
 
 import com.google.common.base.Stopwatch;
-import io.luna.game.GameService;
+import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ServiceManager;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -25,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +43,7 @@ public final class LunaServer {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A Luna context instance.
@@ -74,19 +76,19 @@ public final class LunaServer {
 
         initLaunchTasks();
         initPlugins();
-        initGame();
+        initServices();
 
         initNetwork();
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        LOGGER.info("Luna is now online on port {} (took {}s).", box(LunaConstants.PORT), box(elapsedTime));
+        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
     }
 
     /**
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
-        ResourceLeakDetector.setLevel(LunaConstants.RESOURCE_LEAK_DETECTION);
+        ResourceLeakDetector.setLevel(Luna.settings().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
@@ -94,16 +96,19 @@ public final class LunaServer {
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-        bootstrap.bind(LunaConstants.PORT).syncUninterruptibly();
+        bootstrap.bind(Luna.settings().port()).syncUninterruptibly();
     }
 
     /**
-     * Initializes the {@link GameService}.
+     * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
-    private void initGame() {
-        GameService service = context.getService();
-        service.startAsync().awaitRunning();
-        LOGGER.info("The game thread is now running.");
+    private void initServices() {
+        var gameService = context.getGame();
+        var loginService = context.getWorld().getLoginService();
+        var logoutService = context.getWorld().getLogoutService();
+        var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
+        allServices.startAsync().awaitHealthy();
+        logger.info("All services are now running.");
     }
 
     /**
@@ -113,17 +118,17 @@ public final class LunaServer {
      */
     private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        Tuple<Integer, Integer> pluginCount = bootstrap.init(LunaConstants.PLUGIN_GUI);
+        Tuple<Integer, Integer> pluginCount = bootstrap.init(Luna.settings().pluginGui());
 
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        LOGGER.info("[{}] Kotlin plugins have been loaded into memory.", fractionString);
+        logger.info("{} Kotlin plugins have been loaded into memory.", fractionString);
     }
 
     /**
      * Initializes misc. startup tasks.
      **/
     private void initLaunchTasks() {
-        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "LunaInitThread");
+        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
         executor.execute(new ItemDefinitionFileParser());
@@ -135,7 +140,7 @@ public final class LunaServer {
         try {
             int count = executor.size();
             if (count > 0) {
-                LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
+                logger.info("Waiting for {} launch task(s) to complete...", box(count));
                 executor.await(true);
             }
         } catch (ExecutionException e) {

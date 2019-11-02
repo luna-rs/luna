@@ -6,44 +6,56 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import org.junit.Test;
+import io.netty.channel.ChannelHandlerContext;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
- * A test that ensures the {@link GameMessageEncoder} is functioning correctly.
+ * Unit tests for {@link GameMessageEncoder}.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class GameMessageEncoderTest {
+final class GameMessageEncoderTest {
 
-    /**
-     * Test encoding game packets.
-     */
+    static IsaacCipher isaac;
+    static GameMessageEncoder encoder;
+    static ChannelHandlerContext ctx;
+    static byte[] payload;
+    static ByteBuf buffer;
+
+    @BeforeAll
+    static void initData() {
+        isaac = new IsaacCipher(new int[]{0, 0, 0, 0});
+        encoder = new GameMessageEncoder(isaac);
+        ctx = mock(ChannelHandlerContext.class);
+        payload = "test".getBytes();
+        buffer = Unpooled.buffer();
+    }
+
     @Test
-    public void testEncode() throws Exception {
-        IsaacCipher isaac = new IsaacCipher(new int[] { 0, 0, 0, 0 });
-        GameMessageEncoder encoder = new GameMessageEncoder(isaac);
-        byte[] payload = "test".getBytes();
-        ByteBuf buffer = Unpooled.buffer();
+    void encodeMessages() throws Exception {
+        // Has to be done in one test since there's no support for ordering yet.
 
-        // Test fixed length messages.
-        ByteMessage msg = ByteMessage.message(54, MessageType.FIXED);
+        // Fixed length test.
+        var msg = ByteMessage.message(54, MessageType.FIXED);
         msg.putBytes(payload);
-        encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
+        encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
         assertEquals(41, buffer.readUnsignedByte());
         assertEquals('t', buffer.readByte());
         assertEquals('e', buffer.readByte());
         assertEquals('s', buffer.readByte());
         assertEquals('t', buffer.readByte());
-
         buffer.clear();
 
-        // Test variable length messages.
+
+        // Variable length test.
         msg = ByteMessage.message(54, MessageType.VAR);
         msg.putBytes(payload);
-        encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
+        encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
         assertEquals(195, buffer.readUnsignedByte());
         assertEquals(4, buffer.readByte());
@@ -51,13 +63,12 @@ public final class GameMessageEncoderTest {
         assertEquals('e', buffer.readByte());
         assertEquals('s', buffer.readByte());
         assertEquals('t', buffer.readByte());
-
         buffer.clear();
 
-        // Test variable short length messages.
+        // Variable short length test.
         msg = ByteMessage.message(54, MessageType.VAR_SHORT);
         msg.putBytes(payload);
-        encoder.encode(null, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
+        encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
         assertEquals(88, buffer.readUnsignedByte());
         assertEquals(4, buffer.readUnsignedShort());

@@ -1,8 +1,10 @@
 package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
+import io.luna.net.LunaChannelFilter;
 import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.TypeParameterMatcher;
 
@@ -114,8 +116,8 @@ public abstract class Client<I> {
     /**
      * Closes this channel.
      */
-    public final void disconnect() {
-        channel.close();
+    public final ChannelFuture disconnect() {
+        return channel.close();
     }
 
     /**
@@ -123,6 +125,13 @@ public abstract class Client<I> {
      */
     public final Channel getChannel() {
         return channel;
+    }
+
+    /**
+     * @return The client's channel filter.
+     */
+    public final LunaChannelFilter getChannelFilter() {
+        return channel.attr(LunaChannelFilter.KEY).get();
     }
 
     /**

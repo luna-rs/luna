@@ -4,6 +4,7 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
+import io.luna.Luna;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
@@ -18,8 +19,6 @@ import io.netty.util.AttributeKey;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
-
-import static io.luna.LunaConstants.CONNECTION_LIMIT;
 
 /**
  * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active
@@ -67,7 +66,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
 
             // Bypass filter for whitelisted addresses.
             return true;
-        } else if (connections.count(address) >= CONNECTION_LIMIT) {
+        } else if (connections.count(address) >= Luna.settings().connectionLimit()) {
 
             // Reject if more than CONNECTION_LIMIT active connections.
             response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);

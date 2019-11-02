@@ -1,18 +1,9 @@
 # Detailed descriptions of what these settings do can be found in the LunaConstants class.
 
-[game]
-starting_position = { x = 3093, y = 3244 }
-experience_multiplier = 1.0
-staggered_updating = false
-packet_126_caching = false
-password_hashing = true
-player_serializer = "JsonPlayerSerializer"
-
-[network]
+startingPosition = { x = 3093, y = 3244 }
+experienceMultiplier = 1.0
+serializer = "JsonPlayerSerializer"
 port = 43594
-resource_leak_detection = "PARANOID"
-connection_threshold = 2
-
-[utility]
-asynchronous_logging = true
-plugin_gui = false
+resourceLeakDetection = "PARANOID"
+connectionLimit = 2
+pluginGui = false

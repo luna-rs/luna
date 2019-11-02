@@ -1,91 +1,144 @@
 package io.luna.game.model.mob.attr;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.UnmodifiableIterator;
+import com.google.gson.internal.LinkedTreeMap;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A model that uses a map internally along with its own caching mechanisms to manage attributes.
+ * A model that contains key-value mappings for {@link Attribute} types.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class AttributeMap implements Iterable<Entry<String, AttributeValue>> {
+public final class AttributeMap {
+
+    /**
+     * A set of all persistent keys. Used to ensure there are no duplicates.
+     */
+    public static final Map<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
+
+    /**
+     * A map of persistent attributes waiting to be assigned.
+     */
+    private final Map<String, Object> loadedAttributes = new HashMap<>();
 
     /**
      * A map that holds attribute key and value pairs.
      */
-    private final Map<String, AttributeValue> attributes = new IdentityHashMap<>(AttributeKey.ALIASES.size());
+    private final Map<Attribute<?>, Object> attributes = new IdentityHashMap<>(64);
 
     /**
-     * The last key.
+     * The last accessed key.
      */
-    private String lastKey;
+    private Attribute<?> lastKey;
 
     /**
-     * The last value.
+     * The last accessed value.
      */
-    private AttributeValue lastValue;
+    private Object lastValue;
 
     /**
-     * Retrieves the value of an attribute by its String key. Not type safe.
+     * Loads attribute values from the loaded map.
      *
-     * @param key The attribute key.
-     * @return The attribute value.
-     * @throws AttributeTypeException If the return value cannot be casted to {@code <T>}.
+     * @param loadedAttributeMap The loaded attributes.
      */
-    @SuppressWarnings("unchecked")
-    public <T> AttributeValue<T> get(String key) throws AttributeTypeException {
+    public void load(Map<String, Object> loadedAttributeMap) {
+        for (var entry : loadedAttributeMap.entrySet()) {
+            var key = entry.getKey();
+            var value = entry.getValue();
 
-        //noinspection StringEquality
-        if (lastKey == requireNonNull(key)) { // Check if we can use our cached value.
-            return lastValue;
-        }
+            // Because Google gson changes Map to LinkedTreeMap.
+            if(value instanceof LinkedTreeMap) {
+                value = new HashMap<>((LinkedTreeMap) value);
+            }
 
-        // Try and retrieve the key. If it's null, try again and forcibly intern the argument.
-        AttributeKey<?> alias = getAttributeKey(key);
-        checkState(alias != null, "attributes need to be aliased in the AttributeKey class");
-
-        try {
-            // Cache key and new attribute value, return cached value.
-            lastKey = alias.getName();
-            lastValue = attributes
-                    .computeIfAbsent(alias.getName(), it -> new AttributeValue<>(alias.getInitialValue()));
-            return lastValue;
-        } catch (ClassCastException e) {
-            // Throw an exception on type mismatch.
-            throw new AttributeTypeException(alias);
+            checkState(loadedAttributes.put(key, value) == null,
+                    "Duplicate persistent attribute key {" + key + "}.");
         }
     }
 
     /**
-     * Determines if {@code key} is a valid attribute in the backing map.
+     * Creates a copy of this map for saving.
      *
-     * @param key The key to check.
-     * @return {@code true} if the backing map contains the key.
+     * @return A copy of this map.
      */
-    public boolean contains(String key) {
-        return getAttributeKey(key) != null;
+    public Map<String, Object> save() {
+        Map<String, Object> attributesCopy = new HashMap<>();
+        for (var entry : attributes.entrySet()) {
+            var key = entry.getKey();
+            if(key.isPersistent()) {
+                attributesCopy.put(key.getPersistenceKey(), entry.getValue());
+            }
+        }
+        for (var entry : loadedAttributes.entrySet()) {
+            attributesCopy.put(entry.getKey(), entry.getValue());
+        }
+        return attributesCopy;
     }
 
     /**
-     * Retrieves the {@link AttributeKey} instance from a String {@code key}.
-     * @param key The key.
-     * @return The attribute key instance.
+     * Sets {@code attr} to {@code value}.
+     *
+     * @param attr The attribute to set.
+     * @param value The value to set it to.
+     * @param <T> The attribute type.
      */
-    private AttributeKey<?> getAttributeKey(String key) {
-        return Optional.ofNullable(AttributeKey.ALIASES.get(key)).
-                orElse(AttributeKey.ALIASES.get(key.intern()));
+    public <T> void set(Attribute<T> attr, T value) {
+        requireNonNull(value, "Value cannot be null.");
+        var previousValue = attributes.put(attr, value);
+        lastKey = attr;
+        lastValue = value;
+        if (attr.isPersistent() && previousValue == null) {
+            // There's now proper mapping for a loaded attribute, remove it.
+            loadedAttributes.remove(attr.getPersistenceKey());
+        }
     }
 
-    @Override
-    public UnmodifiableIterator<Entry<String, AttributeValue>> iterator() {
-        return Iterators.unmodifiableIterator(attributes.entrySet().iterator());
+    /**
+     * Retrieves the value of {@code attr}. If it doesn't exist it will be generated with saved player data, or a default
+     * value.
+     *
+     * @param attr The attribute to retrieve.
+     * @param <T> The attribute type.
+     * @return The value of the attribute.
+     */
+    public <T> T get(Attribute<T> attr) {
+        // Attribute is equal to cached key, return last value.
+        if (attr == lastKey) {
+            return (T) lastValue;
+        }
+
+        // Check if we have a value loaded. If not, do so on the fly.
+        Object value = attributes.get(attr);
+        if (value == null) {
+            if (attr.isPersistent()) {
+                // Attribute persistent, load it from saved data or load it's initial value.
+                Object loadedValue = loadedAttributes.remove(attr.getPersistenceKey());
+                value = loadedValue == null ? attr.getInitialValue() : loadedValue;
+            } else {
+                // Attribute not persistent, load it's initial value.
+                value = attr.getInitialValue();
+            }
+            attributes.put(attr, value);
+        }
+
+        lastKey = attr;
+        lastValue = value;
+        return (T) lastValue;
+    }
+
+    /**
+     * Determines if there is a value for {@code attr}.
+     *
+     * @param attr The attribute to check for.
+     * @return {@code true} if there is a value for {@code attr}.
+     */
+    public boolean has(Attribute<?> attr) {
+        return attributes.containsKey(attr);
     }
 }

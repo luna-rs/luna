@@ -1,37 +1,98 @@
 package api.attr
 
-import io.luna.game.model.mob.Mob
-import kotlin.reflect.KProperty
+import api.predef.*
+import com.google.gson.FieldNamingPolicy
+import com.google.gson.GsonBuilder
+import io.luna.game.action.TimeSource
+import io.luna.game.model.mob.attr.Attribute
+import io.luna.util.TickTimer
 
 /**
- * A model representing a delegate for the attribute with [name] and a type of [T]. It can be retrieved and
- * set through the set/get functions in this class. The syntax for usage is as follows
- * ```
+ * A factory class for instantiating attributes.
  *
- * var Player.myAttribute by Attr<Int>("attribute_name")
- *
- * fun doSomething(plr: Player) {
- *     plr.myAttribute = 10
- *     println(plr.myAttribute)
- * }
- * ```
- *
- * @author lare96
+ * @author lare96 <http://github.com/lare96>
  */
-open class Attr<T>(private val name: String) {
+object Attr {
 
     /**
-     * Retrieve attribute value.
+     * A set of valid collection types.
      */
-    open operator fun getValue(mob: Mob, property: KProperty<*>): T = attr(mob).get()
+    val VALID_COLLECTION_TYPES = setOf(Int::class, Long::class, String::class, Double::class, Boolean::class)
+
+    init {
+        val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+
+        // Register type adapters.
+        builder.registerTypeAdapter(TickTimer::class.java, TickTimerTypeAdapter)
+
+        // Set the serializer.
+        Attribute.setGsonInstance(builder.create())
+    }
 
     /**
-     * Set attribute value.
+     * Creates a new [Int] attribute with [initialValue] (default `0`).
      */
-    open operator fun setValue(mob: Mob, property: KProperty<*>, value: T) = attr(mob).set(value)
+    fun int(initialValue: Int = 0) = AttributeDelegate(Attribute(initialValue))
 
     /**
-     * Retrieves the attribute value instance.
+     * Creates a [Long] attribute with [initialValue] (default `0L`).
      */
-    protected fun attr(mob: Mob) = mob.attributes.get<T>(name)!!
+    fun long(initialValue: Long = 0L) = AttributeDelegate(Attribute(initialValue))
+
+    /**
+     * Creates a [String] attribute with [initialValue] (default `""`).
+     */
+    fun string(initialValue: String = "") = AttributeDelegate(Attribute(initialValue))
+
+    /**
+     * Creates a [Double] attribute with [initialValue] (default `0.0`).
+     */
+    fun double(initialValue: Double = 0.0) = AttributeDelegate(Attribute(initialValue))
+
+    /**
+     * Creates a [Boolean] attribute with [initialValue] (default `false`).
+     */
+    fun boolean(initialValue: Boolean = false) = AttributeDelegate(Attribute(initialValue))
+
+    /**
+     * Creates a [TimeSource] attribute.
+     */
+    fun timeSource(): AttributeDelegate<TimeSource> {
+        val attr = Attribute(TimeSource(world))
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates a [TickTimer] attribute with [initialTicks] (default `0L`).
+     */
+    fun timer(initialTicks: Long = 0L): AttributeDelegate<TickTimer> {
+        val attr = Attribute(TickTimer(world, initialTicks))
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates an [ArrayList] attribute with [initialValues].
+     */
+    inline fun <reified E> list(vararg initialValues: E): AttributeDelegate<ArrayList<E>> {
+        check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
+        val values = initialValues.toCollection(ArrayList())
+        val attr = Attribute(values)
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates a [HashMap] attribute with [initialValues].
+     */
+    inline fun <reified K, reified V> map(vararg initialValues: Pair<K, V>): AttributeDelegate<HashMap<K, V>> {
+        check(VALID_COLLECTION_TYPES.contains(K::class) && VALID_COLLECTION_TYPES.contains(V::class)) {
+            "Attribute collections can only hold Int, Long, Double, Boolean, or String types."
+        }
+        val map = HashMap<K, V>()
+        for (next in initialValues) {
+            map += next
+        }
+        val attr = Attribute(map)
+        return AttributeDelegate(attr)
+    }
 }

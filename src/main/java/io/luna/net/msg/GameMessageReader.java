@@ -3,7 +3,6 @@ package io.luna.net.msg;
 import io.luna.game.event.Event;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.netty.buffer.Unpooled;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -20,7 +19,7 @@ public abstract class GameMessageReader {
     /**
      * The asynchronous logger.
      */
-    protected static final Logger LOGGER = LogManager.getLogger();
+    protected static final Logger logger = LogManager.getLogger();
 
     /**
      * The opcode.
@@ -68,22 +67,19 @@ public abstract class GameMessageReader {
         } catch (Exception e) {
 
             // Disconnect on exception.
-            LOGGER.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
+            logger.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
             player.logout();
         } finally {
 
             // Release pooled buffer.
             ByteMessage payload = msg.getPayload();
-            boolean isPooled = Unpooled.EMPTY_BUFFER != payload.getBuffer();
-            if(isPooled && !payload.release()) {
-
+            if (!payload.release()) {
                 // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
                 // section of the code means that a buffer was not released (or retained) when it was supposed to
                 // be, so we log a warning.
-                int refCount = payload.refCnt();
-                LOGGER.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
-                        box(msg.getOpcode()), box(refCount));
-                payload.release(refCount);
+                logger.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
+                        box(msg.getOpcode()), box(payload.refCnt()));
+                payload.releaseAll();
             }
         }
     }

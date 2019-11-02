@@ -1,13 +1,14 @@
 daysUntilStale: 60
 daysUntilClose: 7
 exemptLabels:
+  - easy
   - high priority
   - medium priority
   - blocked
 staleLabel: wontfix
 markComment: >
-  This issue has been automatically marked as stale because it has not had any recent activity. It will be closed if no
+  This issue has been marked as stale because it has not had any recent activity. It will be closed if no
   further activity occurs.
 closeComment: >
-  This issue has been automatically closed because it has not had any recent activity. Feel free to re-open this issue
+  This issue has been closed because it has not had any recent activity. Feel free to re-open this issue
   or create another one if the problem isn't resolved.

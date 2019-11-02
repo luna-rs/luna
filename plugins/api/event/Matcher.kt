@@ -2,7 +2,8 @@ package api.event
 
 import api.predef.*
 import io.luna.game.event.Event
-import io.luna.game.event.EventListener
+import io.luna.game.event.EventMatcher
+import io.luna.game.event.EventMatcherListener
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.ItemClickEvent
@@ -13,8 +14,6 @@ import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
-import io.luna.game.plugin.Script
-import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 /**
@@ -35,11 +34,6 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
          * Mappings of all matchers. The event type is the key.
          */
         val ALL: Map<KClass<out Event>, Matcher<*, *>>
-
-        /**
-         * The dummy script instance to use for [EventListener]s.
-         */
-        private val SCRIPT = Script("matcherScript", Paths.get(""), "")
 
         /**
          * Retrieves a [Matcher] from the backing map that is matching on events with [E].
@@ -95,7 +89,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * The map of event keys to action function instances. Will be used to match arguments.
      */
-    private val actions = mutableMapOf<K, E.() -> Unit>()
+    private val actions = mutableMapOf<K, EventMatcherListener<E>>()
 
     /**
      * Computes a lookup key from the event instance.
@@ -111,10 +105,12 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * Adds or replaces an optimized listener key -> value pair.
      */
     operator fun set(key: K, value: E.() -> Unit) {
-        val previous = actions.put(key, value)
+        val matcherListener = EventMatcherListener(value)
+        val previous = actions.put(key, matcherListener)
         if (previous != null) {
             throw DuplicateMatchException(key, eventType)
         }
+        scriptMatchers += matcherListener
     }
 
     /**
@@ -122,16 +118,21 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      */
     private fun addListener() {
         val type = eventType.java
-        val eventListener = EventListener<E>(type) {
-            val actionKey = key(it)
-            val action = actions[actionKey]
-            if (action != null) {
-                action(it)
-                it.terminate()
-            }
+        val pipeline = pipelines.get(type)
+        pipeline.setMatcher(EventMatcher<E>(this::match))
+    }
+
+    /**
+     * Matches [msg] to an event listener within this matcher.
+     */
+    private fun match(msg: E): Boolean {
+        val actionKey = key(msg)
+        val action = actions[actionKey]
+        if (action != null) {
+            action.apply(msg)
+            return true
         }
-        eventListener.script = SCRIPT
-        pipelines.get(type).setMatcher(eventListener)
+        return false
     }
 
     /**
@@ -165,8 +166,9 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * A singleton [Matcher] instance for [CommandEvent]s.
      */
-    object CommandMatcher : Matcher<CommandEvent, String>(CommandEvent::class) {
-        override fun key(msg: CommandEvent) = msg.name!!
+    object CommandMatcher : Matcher<CommandEvent, CommandKey>(CommandEvent::class) {
+        // Note: The rights value is ignored, the real key is 'msg.name'.
+        override fun key(msg: CommandEvent) = CommandKey(msg.name, msg.plr.rights)
     }
 
     /**

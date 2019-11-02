@@ -29,11 +29,10 @@ fun craftArmor(plr: Player, hide: Hide) {
 
 // Handle all armor crafting.
 on(ItemOnItemEvent::class)
-    .condition { matches(CraftArmorAction.NEEDLE_ID) }
+    .filter { matches(CraftArmorAction.NEEDLE_ID) }
     .then {
         val result = lookup(Hide.TAN_TO_HIDE)
         if (result != null) {
             craftArmor(plr, result)
-            terminate()
         }
     }

@@ -132,6 +132,23 @@ public final class PlayerSettings {
     private transient Player player;
 
     /**
+     * Creates a new copy of this model.
+     */
+    public PlayerSettings copy() {
+        var settings = new PlayerSettings();
+        settings.brightnessLevel = brightnessLevel;
+        settings.mouseType = mouseType;
+        settings.chatEffects = chatEffects;
+        settings.splitPrivateChat = splitPrivateChat;
+        settings.acceptAid = acceptAid;
+        settings.musicVolume = musicVolume;
+        settings.effectsVolume = effectsVolume;
+        settings.running = running;
+        settings.autoRetaliate = autoRetaliate;
+        return settings;
+    }
+
+    /**
      * Show all settings.
      */
     public void showAll() {
@@ -217,17 +234,25 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows the chat effects setting.
+     */
     public void showChatEffects() {
         player.queue(new ConfigMessageWriter(171, chatEffects ? 0 : 1));
     }
 
     /**
-     * @return
+     * @return {@code true} if private chat should be split.
      */
     public boolean isSplitPrivateChat() {
         return splitPrivateChat;
     }
 
+    /**
+     * Sets if private chat should be split.
+     *
+     * @param newSplitPrivateChat The new value.
+     */
     public void setSplitPrivateChat(boolean newSplitPrivateChat) {
         if (splitPrivateChat != newSplitPrivateChat) {
             splitPrivateChat = newSplitPrivateChat;
@@ -235,17 +260,25 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows the split private chat setting.
+     */
     public void showSplitPrivateChat() {
         player.queue(new ConfigMessageWriter(287, splitPrivateChat ? 1 : 0));
     }
 
     /**
-     * @return {@code true} f aid should be accepted.
+     * @return {@code true} if aid should be accepted.
      */
     public boolean isAcceptAid() {
         return acceptAid;
     }
 
+    /**
+     * Sets if aid should be accepted.
+     *
+     * @param newAcceptAid The new value.
+     */
     public void setAcceptAid(boolean newAcceptAid) {
         if (acceptAid != newAcceptAid) {
             acceptAid = newAcceptAid;
@@ -253,6 +286,9 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows the accept aid setting.
+     */
     public void showAcceptAid() {
         player.queue(new ConfigMessageWriter(427, acceptAid ? 1 : 0));
     }
@@ -264,6 +300,11 @@ public final class PlayerSettings {
         return musicVolume;
     }
 
+    /**
+     * Sets the music volume.
+     *
+     * @param newMusicVolume The new value.
+     */
     public void setMusicVolume(VolumeLevel newMusicVolume) {
         if (musicVolume != newMusicVolume) {
             musicVolume = requireNonNull(newMusicVolume);
@@ -271,6 +312,9 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows the music volume.
+     */
     public void showMusicVolume() {
         player.queue(new ConfigMessageWriter(168, musicVolume.value));
     }
@@ -282,6 +326,11 @@ public final class PlayerSettings {
         return effectsVolume;
     }
 
+    /**
+     * Sets the sound effects volume.
+     *
+     * @param newEffectsVolume The new value.
+     */
     public void setEffectsVolume(VolumeLevel newEffectsVolume) {
         if (effectsVolume != newEffectsVolume) {
             effectsVolume = requireNonNull(newEffectsVolume);
@@ -289,15 +338,25 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * @return The sound effect volume.
+     */
     public void showEffectsVolume() {
         player.queue(new ConfigMessageWriter(169, effectsVolume.value));
     }
 
-
+    /**
+     * @return {@code true} if the player is running.
+     */
     public boolean isRunning() {
         return running;
     }
 
+    /**
+     * Set if the player is running.
+     *
+     * @param newRunning The new value.
+     */
     public void setRunning(boolean newRunning) {
         if (running != newRunning) {
             running = newRunning;
@@ -305,14 +364,25 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows if the player is walking or running.
+     */
     public void showRunning() {
         player.queue(new ConfigMessageWriter(173, running ? 1 : 0));
     }
 
+    /**
+     * @return {@code true} if the player has auto-retaliate enabled.
+     */
     public boolean isAutoRetaliate() {
         return autoRetaliate;
     }
 
+    /**
+     * Sets if the player has auto-retaliate enabled.
+     *
+     * @param newAutoRetaliate The new value.
+     */
     public void setAutoRetaliate(boolean newAutoRetaliate) {
         if (autoRetaliate != newAutoRetaliate) {
             autoRetaliate = newAutoRetaliate;
@@ -320,10 +390,18 @@ public final class PlayerSettings {
         }
     }
 
+    /**
+     * Shows if the player has auto-retaliate enabled.
+     */
     public void showAutoRetaliate() {
         player.queue(new ConfigMessageWriter(172, autoRetaliate ? 0 : 1));
     }
 
+    /**
+     * Sets the player for this settings instance.
+     *
+     * @param newPlayer The player.
+     */
     public void setPlayer(Player newPlayer) {
         if (player == null) {
             player = requireNonNull(newPlayer);

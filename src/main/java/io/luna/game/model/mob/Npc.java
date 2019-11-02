@@ -26,6 +26,11 @@ public class Npc extends Mob {
     private final int id;
 
     /**
+     * The base position. The one the class was created with.
+     */
+    private final Position basePosition;
+
+    /**
      * The definition.
      */
     private NpcDefinition definition;
@@ -41,6 +46,11 @@ public class Npc extends Mob {
     private OptionalInt transformId = OptionalInt.empty();
 
     /**
+     * If this NPC should respawn.
+     */
+    private boolean respawn;
+
+    /**
      * Creates a new {@link Npc}.
      *
      * @param context The context instance.
@@ -50,6 +60,7 @@ public class Npc extends Mob {
     public Npc(LunaContext context, int id, Position position) {
         super(context, EntityType.NPC);
         this.id = id; // Base identifier, for resetting transformations.
+        basePosition = position; // Base position, for respawning.
 
         // Set definition values.
         definition = NpcDefinition.ALL.retrieve(id);
@@ -153,6 +164,13 @@ public class Npc extends Mob {
     }
 
     /**
+     * @return The base position. The one the class was created with.
+     */
+    public Position getBasePosition() {
+        return basePosition;
+    }
+
+    /**
      * @return The identifier.
      */
     public int getId() {
@@ -171,5 +189,22 @@ public class Npc extends Mob {
      */
     public Optional<NpcCombatDefinition> getCombatDefinition() {
         return combatDefinition;
+    }
+
+    /**
+     * @return {@code true} if this NPC respawns, {@code false} otherwise.
+     */
+    public boolean isRespawn() {
+        return respawn;
+    }
+
+    /**
+     * Forces this NPC to respawn when killed.
+     *
+     * @return This instance, for chaining.
+     */
+    public Npc setRespawning() {
+        respawn = true;
+        return this;
     }
 }

@@ -7,6 +7,10 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+import io.luna.util.LoggingSettings.FileOutputType;
+import io.luna.util.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -16,6 +20,16 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  */
 public final class ChatMessageReader extends GameMessageReader {
+
+    /**
+     * An asynchronous logger that will handle chat logs.
+     */
+    private static final Logger logger = FileOutputType.CHAT.getLogger();
+
+    /**
+     * The {@code CHAT} logging level.
+     */
+    private static final Level CHAT = FileOutputType.CHAT.getLevel();
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -31,7 +45,7 @@ public final class ChatMessageReader extends GameMessageReader {
         if (player.isMuted()) {
             return null;
         }
-
+        logger.log(CHAT, "{}: {}", player::getUsername, () -> StringUtils.unpackText(message));
         player.chat(new Chat(message, color, effects));
         return new ChatEvent(player, effects, color, size, message);
     }

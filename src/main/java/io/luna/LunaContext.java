@@ -1,8 +1,8 @@
 package io.luna;
 
-import io.luna.game.GameService;
 import io.luna.game.model.World;
 import io.luna.game.plugin.PluginManager;
+import io.luna.game.service.GameService;
 
 /**
  * A model representing a single instance of Runescape. Only one instance should exist at a time.
@@ -19,7 +19,7 @@ public final class LunaContext {
     /**
      * The game service.
      */
-    private final GameService service = new GameService(this);
+    private final GameService game = new GameService(this);
 
     /**
      * The plugin manager.
@@ -42,8 +42,8 @@ public final class LunaContext {
     /**
      * @return The game service.
      */
-    public GameService getService() {
-        return service;
+    public GameService getGame() {
+        return game;
     }
 
     /**

@@ -1,13 +1,13 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.plugin.PluginManager;
+import io.luna.game.service.GameService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -72,8 +72,9 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getService();
+        service = context.getGame();
         world = context.getWorld();
+
     }
 
     /**
@@ -87,7 +88,7 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getService();
+        service = context.getGame();
         world = context.getWorld();
     }
 
@@ -156,6 +157,7 @@ public abstract class Entity {
      * @param newState The new state.
      */
     public final void setState(EntityState newState) {
+        // TODO Might need to be volatile/atomic "state"
         checkArgument(newState != EntityState.NEW, "Cannot set state to NEW.");
         checkArgument(newState != state, "State already equal to " + newState + ".");
         checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");
@@ -179,6 +181,15 @@ public abstract class Entity {
     }
 
     /**
+     * Invoked when this entity's position changes.
+     *
+     * @param oldPos The old position.
+     */
+    protected void onPositionChange(Position oldPos) {
+
+    }
+
+    /**
      * Sets the current position and performs chunk checking.
      *
      * @param newPosition The new position.
@@ -189,6 +200,7 @@ public abstract class Entity {
 
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
+                onPositionChange(old);
             }
         }
     }

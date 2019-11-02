@@ -1,126 +1,28 @@
 package io.luna.net.client;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
-import io.luna.game.model.mob.PlayerRights;
-import io.luna.net.LunaChannelFilter;
+import io.luna.game.model.mob.persistence.PlayerData;
+import io.luna.game.service.LoginService;
+import io.luna.game.service.LoginService.LoginRequest;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;
-import io.luna.net.codec.login.LoginCredentialsMessage;
+import io.luna.net.codec.login.LoginRequestMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelPipeline;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-
-import static com.google.common.base.Preconditions.checkState;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * A {@link Client} implementation model representing login protocol I/O communications.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class LoginClient extends Client<LoginCredentialsMessage> {
-
-    /**
-     * A callback that sends the login response after deserialization.
-     */
-    private final class LoginResponseCallback implements FutureCallback<LoginResponse> {
-
-        /**
-         * The player.
-         */
-        private final Player player;
-
-        /**
-         * The login credentials.
-         */
-        private final LoginCredentialsMessage msg;
-
-        /**
-         * Creates a new {@link LoginCredentialsMessage}.
-         *
-         * @param player The player.
-         * @param msg The login credentials.
-         */
-        private LoginResponseCallback(Player player, LoginCredentialsMessage msg) {
-            this.player = player;
-            this.msg = msg;
-        }
-
-        @Override
-        public void onSuccess(LoginResponse result) {
-            sendLoginResponse(player, result, msg);
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-            sendLoginResponse(player, LoginResponse.COULD_NOT_COMPLETE_LOGIN, msg);
-        }
-
-        /**
-         * Initializes this callback using the argued future.
-         */
-        public void init(ListenableFuture<LoginResponse> loadFuture) {
-            Futures.addCallback(loadFuture, this, channel.eventLoop());
-        }
-    }
-
-    /**
-     * A listener that loads the player after the login response is sent.
-     */
-    private final class LoadPlayerListener implements GenericFutureListener<Future<Void>> {
-
-        /**
-         * The player.
-         */
-        private final Player player;
-
-        /**
-         * The login credentials.
-         */
-        private final LoginCredentialsMessage msg;
-
-        /**
-         * Creates a new {@link LoadPlayerListener}.
-         *
-         * @param player The player.
-         * @param msg The login credentials.
-         */
-        private LoadPlayerListener(Player player, LoginCredentialsMessage msg) {
-            this.player = player;
-            this.msg = msg;
-        }
-
-        @Override
-        public void operationComplete(Future<Void> future) {
-            ChannelPipeline pipeline = msg.getPipeline();
-
-            // Replace message encoder.
-            GameMessageEncoder messageEncoder = new GameMessageEncoder(msg.getEncryptor());
-            pipeline.replace("login-encoder", "game-encoder", messageEncoder);
-
-            // Replace message decoder.
-            GameMessageDecoder messageDecoder = new GameMessageDecoder(msg.getDecryptor(), repository);
-            pipeline.replace("login-decoder", "game-decoder", messageDecoder);
-
-            // Set new client values.
-            GameClient gameClient = new GameClient(channel, player, repository);
-            channel.attr(KEY).set(gameClient);
-            player.setClient(gameClient);
-
-            // Queue for login.
-            world.queueLogin(player);
-        }
-    }
+public class LoginClient extends Client<LoginRequestMessage> {
 
     /**
      * The context instance.
@@ -130,7 +32,7 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
     /**
      * The message repository.
      */
-    private final GameMessageRepository repository;
+    private final GameMessageRepository messageRepository;
 
     /**
      * The world.
@@ -138,60 +40,96 @@ public class LoginClient extends Client<LoginCredentialsMessage> {
     private final World world;
 
     /**
+     * The login service.
+     */
+    private final LoginService loginService;
+
+    /**
      * Creates a new {@link Client}.
      *
      * @param channel The client's channel.
-     * @param repository The message repository.
+     * @param messageRepository The message repository.
      */
-    public LoginClient(Channel channel, LunaContext context, GameMessageRepository repository) {
+    public LoginClient(Channel channel, LunaContext context, GameMessageRepository messageRepository) {
         super(channel);
         this.context = context;
-        this.repository = repository;
+        this.messageRepository = messageRepository;
         world = context.getWorld();
+        loginService = world.getLoginService();
     }
 
     @Override
-    void onMessageReceived(LoginCredentialsMessage msg) {
-
-        // Validate username and password.
+    void onMessageReceived(LoginRequestMessage msg) {
         String username = msg.getUsername();
         String password = msg.getPassword();
-        checkState(username.matches("^[a-z0-9_ ]{1,12}$") && !password.isEmpty() && password.length() <= 20);
+        var player = new Player(context, new PlayerCredentials(username, password));
 
-        // Create player and assign rights.
-        Player player = new Player(context, new PlayerCredentials(username, password));
-        if (LunaChannelFilter.WHITELIST.contains(ipAddress)) {
-            player.setRights(PlayerRights.DEVELOPER);
-        }
-
-        // Determine login response and send it to the client.
-        if (world.getPlayers().isFull()) {
-            // World is full.
-            sendLoginResponse(player, LoginResponse.WORLD_FULL, msg);
-        } else if (world.getPlayer(player.getUsernameHash()).isPresent() ||
-                world.getPersistence().hasPendingSave(player)) {
-            // Player is online, or their file is still being saved.
-            sendLoginResponse(player, LoginResponse.ACCOUNT_ONLINE, msg);
-        } else if (player.isBanned()) {
-            // Player is banned.
-            sendLoginResponse(player, LoginResponse.ACCOUNT_BANNED, msg);
+        if (!username.matches("^[a-z0-9_ ]{1,12}$") || password.isEmpty() || password.length() > 20) {
+            // Username/password format invalid, drop connection.
+            channel.close();
         } else {
-            // Load persistent player data.
-            LoginResponseCallback loadCallback = new LoginResponseCallback(player, msg);
-            loadCallback.init(world.loadPlayer(player));
+            // Passed initial check, submit login request.
+            loginService.submit(username, new LoginRequest(player, this, msg));
         }
     }
 
     /**
-     * Determines the login response for {@code player}.
+     * Sends a login response to the client. Will add a disconnect listener for any response that isn't {@link LoginResponse#NORMAL}.
+     */
+    public void sendLoginResponse(Player player, LoginResponse response) {
+        var channelFuture = channel.writeAndFlush(new LoginResponseMessage(response, player.getRights(), false));
+        if (response != LoginResponse.NORMAL) {
+            channelFuture.addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    /**
+     * Determines what the login response should be once the player's data is loaded.
+     *
+     * @param data The loaded data.
+     * @param enteredPassword The entered password.
+     */
+    public LoginResponse getLoginResponse(PlayerData data, String enteredPassword) {
+        if (data == null) {
+            return LoginResponse.NORMAL;
+        } else if (!BCrypt.checkpw(enteredPassword, data.password)) {
+            return LoginResponse.INVALID_CREDENTIALS;
+        } else if (data.isBanned()) {
+            return LoginResponse.ACCOUNT_BANNED;
+        } else {
+            return LoginResponse.NORMAL;
+        }
+    }
+
+    /**
+     * Sends the final login response before the player is added to the world.
      *
      * @param player The player.
-     * @param response The login response.
-     * @param msg The login credentials message.
+     * @param data The data to sync with the player.
+     * @param message The login request message.
+     * @return {@code true} if the final login response {@link LoginResponse#NORMAL}.
      */
-    private void sendLoginResponse(Player player, LoginResponse response, LoginCredentialsMessage msg) {
-        LoginResponseMessage responseMsg = new LoginResponseMessage(response, player.getRights(), false);
-        channel.writeAndFlush(responseMsg).addListener(response == LoginResponse.NORMAL ?
-                new LoadPlayerListener(player, msg) : ChannelFutureListener.CLOSE);
+    public boolean sendFinalLoginResponse(Player player, PlayerData data, LoginRequestMessage message) {
+        if (world.getPlayers().isFull()) {
+            sendLoginResponse(player, LoginResponse.WORLD_FULL);
+            return false;
+        } else if (world.getLogoutService().isSavePending(player.getUsername()) || world.getPlayer(player.getUsernameHash()).isPresent()) {
+            sendLoginResponse(player, LoginResponse.ACCOUNT_ONLINE);
+            return false;
+        } else {
+            var gameClient = new GameClient(channel, messageRepository);
+            channel.attr(KEY).set(gameClient);
+            player.setClient(gameClient);
+
+            player.loadData(data);
+            sendLoginResponse(player, LoginResponse.NORMAL);
+
+            var pipeline = channel.pipeline();
+            var messageEncoder = new GameMessageEncoder(message.getEncryptor());
+            var messageDecoder = new GameMessageDecoder(message.getDecryptor(), messageRepository);
+            pipeline.replace("login-encoder", "game-encoder", messageEncoder);
+            pipeline.replace("login-decoder", "game-decoder", messageDecoder);
+            return true;
+        }
     }
 }

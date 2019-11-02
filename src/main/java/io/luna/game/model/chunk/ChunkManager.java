@@ -36,7 +36,7 @@ public final class ChunkManager implements Iterable<Chunk> {
     /**
      * A map of loaded chunks.
      */
-    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128); // TODO Better initial size, cache loading.
+    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128);
 
     @Override
     public Spliterator<Chunk> spliterator() {

@@ -1,14 +1,15 @@
 package api.predef
 
+import com.google.common.base.Stopwatch
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Table
-import com.google.common.util.concurrent.ListenableFuture
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.ObjectDefinition
 import io.luna.util.StringUtils
+import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 
@@ -18,16 +19,13 @@ import java.util.concurrent.TimeUnit
 fun currentTimeMs() = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS)
 
 /**
- * Executes a block of code asynchronously.
+ * Times how long it takes for the code within [block] to complete.
  */
-inline fun async(crossinline func: () -> Unit): ListenableFuture<*> =
-    service.submit {
-        try {
-            func()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
+fun time(block: () -> Unit): Duration {
+    val stopwatch = Stopwatch.createStarted()
+    block()
+    return stopwatch.elapsed()
+}
 
 /**
  * A shortcut to the lazy delegate property. Initializations are **not** thread safe!
@@ -81,6 +79,11 @@ fun rand(lower: Int, upper: Int): Int = rand().nextInt((upper - lower) + 1) + lo
  * Generates a random integer from 0 to [upper] inclusive.
  */
 fun rand(upper: Int): Int = rand().nextInt(upper + 1)
+
+/**
+ * Generates a random integer within [range].
+ */
+fun rand(range: IntRange) = rand(range.first, range.last)
 
 /**
  * Creates an empty mutable table of [entries].

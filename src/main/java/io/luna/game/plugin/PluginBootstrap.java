@@ -3,9 +3,10 @@ package io.luna.game.plugin;
 import com.google.common.io.MoreFiles;
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.game.event.EventMatcherListener;
+import io.luna.game.service.GameService;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
 import io.luna.util.Tuple;
@@ -103,7 +104,7 @@ public final class PluginBootstrap {
             String pluginName = metadata.getName();
             if (plugins.containsKey(pluginName)) {
                 // TODO Track plugins by path to plugin.toml... not name lmao
-                LOGGER.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
+                logger.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
                 return;
             }
             // TODO throw exception instead?
@@ -112,7 +113,7 @@ public final class PluginBootstrap {
             try {
                 fileList.forEach(this::loadFile);
             } catch (LoadScriptException e) {
-                LOGGER.catching(Level.WARN, e);
+                logger.catching(Level.WARN, e);
                 return;
             }
             plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
@@ -169,7 +170,7 @@ public final class PluginBootstrap {
     /**
      * The asynchronous logger.
      */
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The directory containing plugin files.
@@ -211,7 +212,7 @@ public final class PluginBootstrap {
      */
     public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
         PluginManager plugins = context.getPlugins();
-        GameService service = context.getService();
+        GameService service = context.getGame();
 
         initFiles();
         Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
@@ -313,11 +314,15 @@ public final class PluginBootstrap {
             // Evaluate the script.
             interpreter.eval(script);
 
-            // Add all of its listeners, reflectively set the listener script name.
-            for (EventListener<?> evtListener : bindings.getListeners()) {
-                evtListener.setScript(script);
-                bindings.getPipelines().add(evtListener);
+            // Add all of its listeners, reflectively set the listener script.
+            for (EventListener<?> listener : bindings.getListeners()) {
+                listener.setScript(script);
+                bindings.getPipelines().add(listener);
             }
+            for (EventMatcherListener<?> listener : bindings.getMatchers()) {
+                listener.setScript(script);
+            }
+            bindings.getMatchers().clear();
             bindings.getListeners().clear();
         }
     }

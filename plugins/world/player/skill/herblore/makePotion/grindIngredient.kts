@@ -1,6 +1,6 @@
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ProducingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
@@ -8,11 +8,11 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 import world.player.skill.herblore.makePotion.Ingredient
 
 /**
- * A [ProducingAction] that will grind all ingredients in an inventory.
+ * An [InventoryAction] that will grind all ingredients in an inventory.
  */
 class GrindAction(plr: Player,
                   val ingredient: Ingredient,
-                  makeTimes: Int) : ProducingAction(plr, true, 2, makeTimes) {
+                  makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -22,14 +22,14 @@ class GrindAction(plr: Player,
         val ANIMATION = Animation(364)
     }
 
-    override fun canProduce() =
+    override fun executeIf(start: Boolean) =
         when {
             !mob.inventory.contains(Ingredient.PESTLE_AND_MORTAR) -> false
             else -> true
         }
 
 
-    override fun onProduce() {
+    override fun execute() {
         val oldName = itemDef(ingredient.id).name
         val newName = itemDef(ingredient.newId).name
         val nextWord = if (ingredient == Ingredient.CRUSHED_NEST) "a" else "some"
@@ -38,11 +38,11 @@ class GrindAction(plr: Player,
         mob.animation(ANIMATION)
     }
 
-    override fun remove() = arrayOf(ingredient.oldItem)
+    override fun remove() = listOf(ingredient.oldItem)
 
-    override fun add() = arrayOf(ingredient.newItem)
+    override fun add() = listOf(ingredient.newItem)
 
-    override fun isEqual(other: Action<*>) =
+    override fun ignoreIf(other: Action<*>) =
         when (other) {
             is GrindAction -> ingredient == other.ingredient
             else -> false
@@ -60,7 +60,6 @@ fun grind(msg: ItemOnItemEvent, id: Int) {
             override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
                 plr.submitAction(GrindAction(plr, ingredient, forAmount))
         })
-        msg.terminate()
     }
 }
 

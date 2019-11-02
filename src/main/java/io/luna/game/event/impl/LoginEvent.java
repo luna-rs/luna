@@ -17,9 +17,4 @@ public final class LoginEvent extends PlayerEvent {
     public LoginEvent(Player player) {
         super(player);
     }
-
-    @Override
-    public boolean terminate() {
-        throw new IllegalStateException("This event type (LoginEvent) cannot be terminated.");
-    }
 }

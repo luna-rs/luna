@@ -32,21 +32,21 @@ public final class NpcClickMessageReader extends GameMessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         switch (opcode) {
-        case 155:
-            firstIndex(player, msg.getPayload());
-            break;
-        case 17:
-            secondIndex(player, msg.getPayload());
-            break;
-        case 72:
-            thirdIndex(player, msg.getPayload());
-            break;
-        case 21:
-            fourthIndex(player, msg.getPayload());
-            break;
-        case 18:
-            fifthIndex(player, msg.getPayload());
-            break;
+            case 155:
+                firstIndex(player, msg.getPayload());
+                break;
+            case 17:
+                secondIndex(player, msg.getPayload());
+                break;
+            case 72:
+                thirdIndex(player, msg.getPayload());
+                break;
+            case 21:
+                fourthIndex(player, msg.getPayload());
+                break;
+            case 18:
+                fifthIndex(player, msg.getPayload());
+                break;
         }
         return null;
     }
@@ -63,7 +63,12 @@ public final class NpcClickMessageReader extends GameMessageReader {
         checkState(index >= 0 && index < world.getNpcs().capacity(), "index[" + index + "] out of range");
 
         Npc npc = world.getNpcs().get(index);
-        player.submitAction(new InteractionAction(player, npc, evt.apply(player, npc)));
+        player.submitAction(new InteractionAction(player, npc) {
+            @Override
+            public void execute() {
+                player.getPlugins().post(evt.apply(player, npc));
+            }
+        });
     }
 
     /**

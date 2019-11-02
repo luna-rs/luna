@@ -52,7 +52,6 @@ on(ItemOnObjectEvent::class) {
     val altar = Altar.TALISMAN_TO_ALTAR[itemId]
     if (altar != null && altar.id == objectId) {
         talismanEnter(plr, altar)
-        terminate()
     }
 }
 
@@ -63,7 +62,6 @@ on(ObjectFirstClickEvent::class) {
     val headId = plr.equipment.get(Equipment.HEAD)?.id
     if (headId != null && itemDef(headId).name.contains("tiara")) {
         tiaraEnter(plr, headId, id)
-        terminate()
     }
 }
 
@@ -71,12 +69,11 @@ on(ObjectFirstClickEvent::class) {
  * Intercept event for exiting through altar portals.
  */
 on(ObjectFirstClickEvent::class)
-    .condition { objectDef(id).name == "Portal" }
+    .filter { objectDef(id).name == "Portal" }
     .then {
         val altar = Altar.PORTAL_TO_ALTAR[id]
         if (altar != null) {
             portalExit(plr, altar)
-            terminate()
         }
     }
 

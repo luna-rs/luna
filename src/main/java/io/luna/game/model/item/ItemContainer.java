@@ -1,7 +1,6 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
@@ -20,6 +19,7 @@ import java.util.OptionalInt;
 import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -297,6 +297,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least one was added.
      */
     public boolean addAll(Item... items) {
+        if (items.length == 0) {
+            return false;
+        }
         return addAll(Arrays.asList(items));
     }
 
@@ -421,6 +424,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if at least one was removed.
      */
     public boolean removeAll(Item... items) {
+        if (items.length == 0) {
+            return false;
+        }
         return removeAll(Arrays.asList(items));
     }
 
@@ -519,6 +525,15 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final int computeRemainingSize() {
         return capacity - size;
+    }
+
+    /**
+     * Determines if this container is full.
+     *
+     * @return {@code true} if this container is full.
+     */
+    public final boolean isFull() {
+        return computeRemainingSize() == 0;
     }
 
     /**
@@ -621,6 +636,16 @@ public class ItemContainer implements Iterable<Item> {
      * @return The amount of space required.
      */
     public final int computeSpaceForAll(Item... items) {
+        return computeSpaceForAll(Arrays.asList(items));
+    }
+
+    /**
+     * Computes the amount of space required to hold {@code items}.
+     *
+     * @param items The items.
+     * @return The amount of space required.
+     */
+    public final int computeSpaceForAll(Iterable<? extends Item> items) {
         int count = 0;
         for (Item item : items) {
             count = IntMath.saturatedAdd(count, computeSpaceFor(item));
@@ -656,6 +681,27 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Performs an indexed loop of the container and executes an action containing the index and item as arguments.
+     *
+     * @param action The action to execute.
+     */
+    public void forItems(BiConsumer<Integer, Item> action) {
+        boolean bulkUpdateInProgress = inBulkUpdate;
+        if(!bulkUpdateInProgress) {
+            startBulkUpdate();
+        }
+        try {
+            for (int index = 0; index < capacity; index++) {
+                action.accept(index, get(index));
+            }
+        } finally {
+            if(!bulkUpdateInProgress) {
+                finishBulkUpdate();
+            }
+        }
+    }
+
+    /**
      * Determines if an item with {@code id} is present.
      *
      * @param id The identifier to look for.
@@ -672,6 +718,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code ids} are all present in this container.
      */
     public final boolean containsAll(int... ids) {
+        if (ids.length == 0) {
+            return true;
+        }
         return containsAllIds(Ints.asList(ids));
     }
 
@@ -697,6 +746,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code ids} are all present in this container.
      */
     public final boolean containsAny(int... ids) {
+        if (ids.length == 0) {
+            return true;
+        }
         return containsAnyIds(Ints.asList(ids));
     }
 
@@ -732,6 +784,9 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code items} are all present in this container.
      */
     public final boolean containsAll(Item... items) {
+        if (items.length == 0) {
+            return true;
+        }
         return containsAll(Arrays.asList(items));
     }
 
@@ -878,7 +933,7 @@ public class ItemContainer implements Iterable<Item> {
      *
      * @param setItems The items to set.
      */
-    public final void init(IndexedItem[] setItems) {
+    public final void init(List<IndexedItem> setItems) {
         checkState(size == 0 && !initialized, "Containers can only be initialized once.");
 
         for (IndexedItem item : setItems) {
@@ -898,20 +953,20 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Creates and returns the backing array as an array of indexed items.
+     * Creates and returns the backing array as a list of indexed items.
      *
-     * @return The backing array, as indexed items.
+     * @return The backing list, as indexed items.
      */
-    public final IndexedItem[] toIndexedArray() {
-        List<IndexedItem> indexedItems = new ArrayList<>(size);
+    public final List<IndexedItem> toList() {
+        var list = new ArrayList<IndexedItem>(size);
         for (int index = 0; index < capacity; index++) {
             Item item = get(index);
             if (item == null) {
                 continue;
             }
-            indexedItems.add(new IndexedItem(index, item));
+            list.add(new IndexedItem(index, item));
         }
-        return Iterables.toArray(indexedItems, IndexedItem.class);
+        return list;
     }
 
     /**

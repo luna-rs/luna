@@ -36,8 +36,14 @@ class GroundItemTask : Task(100) {
      */
     private val registerQueue = ArrayDeque<GroundItem>()
 
+    /**
+     * A queue of items awaiting unregistration.
+     */
+    private val unregisterQueue = ArrayDeque<GroundItem>()
+
     override fun execute() {
         processItems()
+        processUnregistrations()
         processRegistrations()
     }
 
@@ -59,7 +65,7 @@ class GroundItemTask : Task(100) {
                 mins == TRADEABLE_LOCAL_MINUTES &&
                         tradeable &&
                         item.isLocal -> {
-                    it.remove()
+                    unregisterQueue += item
                     registerQueue += GroundItem(item.context, item.id, item.amount, item.position,
                                                 Optional.empty())
                 }
@@ -67,12 +73,22 @@ class GroundItemTask : Task(100) {
                 // Local untradeable item expires.
                 mins == UNTRADEABLE_LOCAL_MINUTES &&
                         !tradeable &&
-                        item.isLocal -> it.remove()
+                        item.isLocal -> unregisterQueue += item
 
                 // Global item expires.
                 mins == GLOBAL_MINUTES &&
-                        item.isGlobal -> it.remove()
+                        item.isGlobal -> unregisterQueue += item
             }
+        }
+    }
+
+    /**
+     * Handle any new unregistrations from expiration timer processing.
+     */
+    private fun processUnregistrations() {
+        while (true) {
+            val item = unregisterQueue.poll() ?: break
+            world.items.unregister(item)
         }
     }
 

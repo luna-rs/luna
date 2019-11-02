@@ -1,0 +1,7 @@
+[metadata]
+name = "Drop player death items"
+description = "A plugin that enables player items dropping on death."
+version = "1.0"
+authors = [
+  "lare96"
+]

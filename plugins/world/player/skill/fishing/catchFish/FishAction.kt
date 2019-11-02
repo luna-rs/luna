@@ -2,16 +2,30 @@ package world.player.skill.fishing
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.HarvestingAction
+import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 
 /**
- * A [HarvestingAction] implementation that will catch fish.
+ * An [InventoryAction] implementation that will catch fish.
  */
 class FishAction(private val msg: NpcClickEvent,
-                 private val tool: Tool) : HarvestingAction(msg.plr, rand(10, 50)) {
+                 private val tool: Tool) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
+
+
+    companion object {
+
+        /**
+         * Between 10 and 100 fishing actions for the 'random stop' effect.
+         */
+        val RANDOM_FAIL_RATE = 10..100
+
+        /**
+         * Ensures that fishing does not happen too fast. The minimum tick factor one can achieve with any tool.
+         */
+        const val MINIMUM_TICK_FACTOR = 5
+    }
 
     /**
      * The messages to send on harvest.
@@ -23,12 +37,7 @@ class FishAction(private val msg: NpcClickEvent,
      */
     private var exp = 0.0
 
-    override fun initialize() {
-        // TODO Send proper tool message
-        mob.sendMessage("You begin to fish...")
-    }
-
-    override fun canHarvest() =
+    override fun executeIf(start: Boolean) =
         when {
             mob.fishing.level < tool.level -> {
                 // Check if we have required level.
@@ -48,11 +57,16 @@ class FishAction(private val msg: NpcClickEvent,
             else -> {
                 // Start fishing!
                 mob.animation(Animation(tool.animation))
+                if (start) {
+                    // TODO Send proper tool messages
+                    mob.sendMessage("You begin to fish...")
+                    delay = getFishingDelay()
+                }
                 true
             }
         }
 
-    override fun onHarvest() {
+    override fun execute() {
         // Send messages.
         messages.forEach(mob::sendMessage)
         messages.clear()
@@ -60,22 +74,22 @@ class FishAction(private val msg: NpcClickEvent,
         // Add experience.
         mob.fishing.addExperience(exp)
         exp = 0.0
+
+        // Reset fishing delay.
+        delay = getFishingDelay()
     }
 
-    override fun harvestChance() = tool.frequency
-
-    override fun add(): Array<Item?> {
+    override fun add(): List<Item?> {
         val amount = tool.catchAmount.random()
         val availableFish = tool.fish.filter { it.level <= mob.fishing.level }
-        val addItems = arrayOfNulls<Item>(amount)
-        var index = 0
+        val addItems = ArrayList<Item>(amount)
 
         // Fill addItems with random available fish.
         repeat(amount) {
             val fish = availableFish.random()
             val item = fish.toItem(this)
             if (item != null) {
-                addItems[index++] = item
+                addItems += item
                 exp += fish.exp
                 messages += fish.catchMessage
             }
@@ -85,13 +99,25 @@ class FishAction(private val msg: NpcClickEvent,
 
     override fun remove() =
         if (tool.bait != null)
-            arrayOf(Item(tool.bait)) else emptyArray()
+            listOf(Item(tool.bait)) else emptyList()
 
-    override fun onInterrupt() = mob.animation(Animation.CANCEL)
+    override fun stop() = mob.animation(Animation.CANCEL)
 
-    override fun isEqual(other: Action<*>?) =
+    override fun ignoreIf(other: Action<*>?) =
         when (other) {
             is FishAction -> msg.npc == other.msg.npc
             else -> false
         }
+
+    /**
+     * Computes the next fishing delay.
+     */
+    private fun getFishingDelay(): Int {
+        var ticksFactor = tool.catchRate
+        ticksFactor -= (mob.fishing.level - tool.level) / 3
+        if (ticksFactor < MINIMUM_TICK_FACTOR) {
+            ticksFactor = MINIMUM_TICK_FACTOR
+        }
+        return rand(1, ticksFactor)
+    }
 }

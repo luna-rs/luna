@@ -3,7 +3,6 @@ package world.player.item.trading
 import api.predef.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
-import world.player.item.trading.OfferTradeInterface.Companion.tradingWith
 import java.text.NumberFormat
 import java.util.*
 
@@ -80,10 +79,12 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
         if (confirm.accepted) {
             completed = true
             plr.inventory.addAll(confirm.tradingItems)
+            plr.inventory.removeAll(tradingItems)
             plr.interfaces.close()
 
             confirm.completed = true
             other.inventory.addAll(tradingItems)
+            other.inventory.removeAll(confirm.tradingItems)
             other.interfaces.close()
         } else {
             accepted = true

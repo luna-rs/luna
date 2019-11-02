@@ -8,6 +8,10 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+import io.luna.util.LoggingSettings.FileOutputType;
+import io.luna.util.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -18,6 +22,17 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.com/lare96>
  */
 public final class PrivateChatMessageReader extends GameMessageReader {
+
+    /**
+     * An asynchronous logger that will handle private message logs.
+     */
+    private static final Logger logger = FileOutputType.PRIVATE_MESSAGE.getLogger();
+
+    /**
+     * The {@code PRIVATE_MESSAGE} logging level.
+     */
+    private static final Level PRIVATE_MESSAGE = FileOutputType.PRIVATE_MESSAGE.getLevel();
+
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
@@ -55,6 +70,7 @@ public final class PrivateChatMessageReader extends GameMessageReader {
             byte[] message = msg.getBytes(msg.getBuffer().readableBytes());
 
             checkState(message.length > 0, "Message length must be above 0.");
+            logger.log(PRIVATE_MESSAGE, "{} @ {}: {}", player::getUsername, () -> StringUtils.decodeFromBase37(name), () -> StringUtils.unpackText(message));
             return new PrivateChatEvent(player, name, message);
         }
     }
