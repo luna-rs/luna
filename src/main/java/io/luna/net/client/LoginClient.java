@@ -117,7 +117,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
             sendLoginResponse(player, LoginResponse.ACCOUNT_ONLINE);
             return false;
         } else {
-            var gameClient = new GameClient(channel, player, messageRepository);
+            var gameClient = new GameClient(channel, messageRepository);
             channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 
