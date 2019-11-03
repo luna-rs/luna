@@ -302,11 +302,6 @@ public final class Player extends Mob {
     private volatile PlayerData saveData;
 
     /**
-     * If the player is awaiting logout.
-     */
-    private volatile boolean pendingLogout;
-
-    /**
      * The SQL database ID.
      */
     private int databaseId = -1;
@@ -545,7 +540,7 @@ public final class Player extends Mob {
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
-            setPendingLogout(true);
+            client.setPendingLogout(true);
         }
     }
 
@@ -580,12 +575,12 @@ public final class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
+     * A shortcut function to {@link GameClient#queue(GameMessageWriter, Player)}.
      *
      * @param msg The message to queue in the buffer.
      */
     public void queue(GameMessageWriter msg) {
-        client.queue(msg);
+        client.queue(msg, this);
     }
 
     /**
@@ -1124,20 +1119,6 @@ public final class Player extends Mob {
      */
     public PlayerInteractionMenu getInteractions() {
         return interactions;
-    }
-
-    /**
-     * Sets if the player is awaiting logout.
-     */
-    public void setPendingLogout(boolean pendingLogout) {
-        this.pendingLogout = pendingLogout;
-    }
-
-    /**
-     * @return {@code true} if the player is awaiting logout.
-     */
-    public boolean isPendingLogout() {
-        return pendingLogout;
     }
 
     /**

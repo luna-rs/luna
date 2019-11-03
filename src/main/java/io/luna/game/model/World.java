@@ -232,12 +232,12 @@ public final class World {
     private void preSynchronize() {
         for (Player player : playerList) {
             try {
-                if (player.isPendingLogout()) {
+                if (player.getClient().isPendingLogout()) {
                     player.cleanUp();
                     continue;
                 }
 
-                player.getClient().handleDecodedMessages();
+                player.getClient().handleDecodedMessages(player);
                 player.getWalking().process();
                 player.getClient().flush();
             } catch (Exception e) {
