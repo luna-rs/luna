@@ -4,7 +4,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.WidgetItemsMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter
-import java.util.stream.Collectors
+import kotlin.streams.toList
 
 /**
  * A standard interface representing the result of a search.
@@ -24,7 +24,6 @@ class SearchResultInterface(private val searchToken: String) : StandardInterface
             .stream()
             .filter { it.id > 0 && !it.isNoted && it.name.toLowerCase().contains(searchToken) }
             .map { Item(it.id, 1) }
-            .collect(Collectors.toList())
             .toList()
 
         // Display the items, truncating results if necessary.
