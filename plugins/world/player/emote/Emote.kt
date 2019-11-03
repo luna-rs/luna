@@ -1,5 +1,3 @@
-package world.player.emote
-
 /**
  * An enum representing player animations triggered from the Player controls menu.
  */

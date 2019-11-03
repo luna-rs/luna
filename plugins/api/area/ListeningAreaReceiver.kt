@@ -1,5 +1,3 @@
-package api.area
-
 import io.luna.game.model.mob.Player
 
 /**

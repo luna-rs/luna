@@ -1,11 +1,8 @@
 package io.luna.util.parser;
 
-import com.google.common.collect.ImmutableList;
-
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,25 +18,25 @@ import java.util.List;
  * @param <R> The type representing converted tokens.
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class FileParser<P, T, R> implements Runnable {
+public abstract class AbstractFileParser<P, T, R> implements Runnable {
 
     /**
      * The files to parse.
      */
-    private final ImmutableList<String> fileList;
+    private final List<String> fileList;
 
     /**
      * The current parsing index.
      */
-    int currentIndex = 0;
+    protected int currentIndex;
 
     /**
-     * Creates a new {@link FileParser}.
+     * Creates a new {@link AbstractFileParser}.
      *
      * @param files The files to parse.
      */
-    public FileParser(String... files) {
-        fileList = ImmutableList.copyOf(files);
+    public AbstractFileParser(String... files) {
+        fileList = List.of(files);
     }
 
     @Override
@@ -89,7 +86,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * @param tokenObjects An immutable list of all token objects.
      * @throws Exception If any errors occur while notifying this listener.
      */
-    public void onCompleted(ImmutableList<R> tokenObjects) throws Exception {
+    public void onCompleted(List<R> tokenObjects) throws Exception {
 
     }
 
@@ -97,38 +94,39 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * Parses all files in the {@link #fileList}.
      */
     public final synchronized void parseFiles() {
-        fileList.stream().
-                map(Paths::get).
-                forEach(this::parseFile);
+        fileList.stream().map(Path::of).forEach(this::parseFile);
     }
 
     /**
-     * Parses {@code file} and notifies {@link #onCompleted(ImmutableList)} when finished.
+     * Parses {@code file} and notifies {@link #onCompleted(List)} when finished.
      *
      * @param file The file to parse.
      */
     private void parseFile(Path file) {
         try (BufferedReader buf = Files.newBufferedReader(file)) {
             List<R> tokenObjects = new ArrayList<>();
+
             P parser = newParser(buf);
 
             while (hasNext(parser)) {
                 R tokenObj = convert(parse(parser));
+
                 if(tokenObj != null) {
                     tokenObjects.add(tokenObj);
                     currentIndex++;
                 }
             }
-            onCompleted(ImmutableList.copyOf(tokenObjects));
+
+            onCompleted(List.copyOf(tokenObjects));
         } catch (Exception e) {
             throw new RuntimeException("Error while reading file [" + file + "]", e);
         }
     }
 
     /**
-     * @return The files to parse.
+     * @return An unmodifiable {@link List} containing the files to parse.
      */
-    public ImmutableList<String> getFileList() {
+    public List<String> getFileList() {
         return fileList;
     }
 }

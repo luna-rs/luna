@@ -1,6 +1,3 @@
-package world.player.skill.cooking
-
-import api.predef.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.DialogueInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter

@@ -1,10 +1,8 @@
-import api.predef.*
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import world.player.skill.runecrafting.Tiara
 
 /**
  * Sends tiara altar config on login.

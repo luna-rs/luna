@@ -1,5 +1,3 @@
-package world.player.skill.crafting.battlestaffCrafting
-
 import io.luna.game.model.item.Item
 
 /**

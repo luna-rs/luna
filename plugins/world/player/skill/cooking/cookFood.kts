@@ -1,10 +1,6 @@
-import api.predef.*
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
-import world.player.skill.cooking.CookingAction
-import world.player.skill.cooking.CookingInterface
-import world.player.skill.cooking.Food
 
 /**
  * The fire objects.

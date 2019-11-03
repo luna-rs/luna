@@ -1,6 +1,3 @@
-package world.player.skill.fletching.stringBow
-
-import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent

@@ -11,6 +11,13 @@ import java.util.concurrent.TimeUnit;
 public final class ThreadUtils {
 
     /**
+     * A private constructor.
+     */
+    private ThreadUtils() {
+        throw new UnsupportedOperationException("This class cannot be instantiated!");
+    }
+
+    /**
      * Shortcut function to {@link Runtime#availableProcessors()}.
      */
     public static int cpuCount() {

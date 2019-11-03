@@ -1,5 +1,3 @@
-package world.player.skill.fletching.stringBow
-
 import io.luna.game.model.item.Item
 
 /**

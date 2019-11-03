@@ -1,6 +1,3 @@
-package world.player.`object`.resource
-
-import api.predef.*
 import io.luna.game.model.def.ObjectDefinition
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player

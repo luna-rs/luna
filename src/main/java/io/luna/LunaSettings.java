@@ -4,30 +4,44 @@ import io.luna.game.model.Position;
 import io.netty.util.ResourceLeakDetector.Level;
 
 /**
- * Holds settings parsed from the {@code ./data/luna.toml} file. Effectively constants, as they are only modified by GSON.
+ * Holds settings parsed from the {@code ./data/luna.toml} file.
+ * <br><br>
+ * Effectively constants, as they are only modified by GSON.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class LunaSettings {
 
-    private Level resourceLeakDetection;
-    private int port;
-    private int connectionLimit;
-    private Position startingPosition;
-    private double experienceMultiplier;
     private boolean pluginGui;
+
+    private int port;
+
+    private int connectionLimit;
+
+    private double experienceMultiplier;
+
     private String serializer;
 
+    private Level resourceLeakDetection;
+
+    private Position startingPosition;
+
     /**
-     * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code
-     * DISABLED} in a production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise in both
-     * scenarios.
-     * <p>
-     * Please note as the leak detection levels get higher, the tradeoff is a <strong>substantial</strong>
-     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
+     * To prevent public instantiation.
+     * <br><br>
+     * This constructor should <strong>NOT</strong> throw an {@link UnsupportedOperationException}, because it is
+     * instantiated reflectively by a {@link com.moandjiezana.toml.Toml} instance.
      */
-    public Level resourceLeakDetection() {
-        return resourceLeakDetection;
+    private LunaSettings() {
+
+    }
+
+    /**
+     * If the plugin GUI should be opened on startup. The plugin GUI is an interactive interface that allows
+     * for plugins to be enabled, disabled, and reloaded. If this value is false all plugins will be loaded.
+     */
+    public boolean pluginGui() {
+        return pluginGui;
     }
 
     /**
@@ -46,25 +60,10 @@ public final class LunaSettings {
     }
 
     /**
-     * The position that new players will start on.
-     */
-    public Position startingPosition() {
-        return startingPosition;
-    }
-
-    /**
      * The experience multiplier. This value determines how fast mobs can level up their skills.
      */
     public double experienceMultiplier() {
         return experienceMultiplier;
-    }
-
-    /**
-     * If the plugin GUI should be opened on startup. The plugin GUI is an interactive interface that allows
-     * for plugins to be enabled, disabled, and reloaded. If this value is false all plugins will be loaded.
-     */
-    public boolean pluginGui() {
-        return pluginGui;
     }
 
     /**
@@ -76,9 +75,21 @@ public final class LunaSettings {
     }
 
     /**
-     * To prevent public instantiation.
+     * The resource leak detection level, should be {@code PARANOID} in a development environment and
+     * {@code DISABLED} in a production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise
+     * in both scenarios.
+     * <p>
+     * Please note as the leak detection levels get higher, the trade-off is a <strong>substantial</strong>
+     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
      */
-    private LunaSettings() {
+    public Level resourceLeakDetection() {
+        return resourceLeakDetection;
+    }
 
+    /**
+     * The position that new players will start on.
+     */
+    public Position startingPosition() {
+        return startingPosition;
     }
 }

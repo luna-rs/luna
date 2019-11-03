@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -67,7 +66,7 @@ public final class World {
                     player.queue(new NpcUpdateMessageWriter());
                     player.getClient().flush();
                 } catch (Exception e) {
-                    logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
+                    LOGGER.warn(new ParameterizedMessage("{} could not complete synchronization.", player), e);
                     player.logout();
                 } finally {
                     barrier.arriveAndDeregister();
@@ -79,7 +78,7 @@ public final class World {
     /**
      * The asynchronous logger.
      */
-    private final Logger logger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The context instance.
@@ -89,12 +88,12 @@ public final class World {
     /**
      * A list of active players.
      */
-    private final MobList<Player> playerList = new MobList<>(this, 2048);
+    private final MobList<Player> playerList = new MobList<>(this, 2_048);
 
     /**
      * A list of active npc.
      */
-    private final MobList<Npc> npcList = new MobList<>(this, 16384);
+    private final MobList<Npc> npcList = new MobList<>(this, 16_384);
 
     /**
      * The login service.
@@ -173,15 +172,12 @@ public final class World {
      */
     public World(LunaContext context) {
         this.context = context;
-        playerMap = new ConcurrentHashMap<>();
-        immutablePlayerMap = Collections.unmodifiableMap(playerMap);
-    }
+        this.playerMap = new ConcurrentHashMap<>();
+        this.immutablePlayerMap = Collections.unmodifiableMap(playerMap);
 
-    {
         // Initialize synchronization thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().
-                setNameFormat("WorldSynchronizationThread").build();
-        service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+        var threadFactory = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
+        service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), threadFactory);
     }
 
     /**
@@ -240,12 +236,13 @@ public final class World {
                     player.cleanUp();
                     continue;
                 }
+
                 player.getClient().handleDecodedMessages();
                 player.getWalking().process();
                 player.getClient().flush();
             } catch (Exception e) {
+                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player), e);
                 player.logout();
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
@@ -253,8 +250,8 @@ public final class World {
             try {
                 npc.getWalking().process();
             } catch (Exception e) {
+                LOGGER.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc), e);
                 npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
     }
@@ -264,9 +261,11 @@ public final class World {
      */
     private void synchronize() {
         barrier.bulkRegister(playerList.size());
+
         for (Player player : playerList) {
             service.execute(new PlayerSynchronizationTask(player));
         }
+
         barrier.arriveAndAwaitAdvance();
     }
 
@@ -279,8 +278,8 @@ public final class World {
                 player.resetFlags();
                 player.setCachedBlock(null);
             } catch (Exception e) {
+                LOGGER.warn(player + " could not complete post-synchronization.", e);
                 player.logout();
-                logger.warn(player + " could not complete post-synchronization.", e);
             }
         }
 
@@ -288,8 +287,8 @@ public final class World {
             try {
                 npc.resetFlags();
             } catch (Exception e) {
+                LOGGER.warn(npc + " could not complete post-synchronization.", e);
                 npcList.remove(npc);
-                logger.warn(npc + " could not complete post-synchronization.", e);
             }
         }
     }

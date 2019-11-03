@@ -1,10 +1,7 @@
-
-import api.predef.*
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.event.impl.PlayerEvent
 
 // TODO Blocked until stationary entity system is complete
-
 
 val tinderbox = -1
 

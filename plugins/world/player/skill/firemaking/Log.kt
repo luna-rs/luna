@@ -1,6 +1,5 @@
 package world.player.skill.firemaking
 
-
 // TODO Blocked until stationary entity system is complete
 enum class Log(val id: Int, val level: Int, val exp: Double, val ticks: Int) {
     NORMAL(id = 1511,

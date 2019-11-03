@@ -1,9 +1,6 @@
-import api.predef.*
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent
 import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
-import world.player.skill.fishing.FishAction
-import world.player.skill.fishing.Tool
 
 /**
  * Submits a [FishAction] to start fishing.

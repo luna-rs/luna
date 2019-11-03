@@ -1,6 +1,4 @@
-
 import AdvanceLevel.LevelUpInterface
-import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Player

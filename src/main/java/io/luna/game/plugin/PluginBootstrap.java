@@ -5,8 +5,6 @@ import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
-import io.luna.game.event.EventMatcherListener;
-import io.luna.game.service.GameService;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
 import io.luna.util.Tuple;
@@ -28,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +39,7 @@ public final class PluginBootstrap {
     /**
      * A {@link RuntimeException} implementation thrown when a script file cannot be loaded.
      */
-    private final class LoadScriptException extends RuntimeException {
+    private static final class LoadScriptException extends RuntimeException {
 
         /**
          * Creates a new {@link LoadScriptException}.
@@ -92,19 +91,20 @@ public final class PluginBootstrap {
         @Override
         public void run() {
             //noinspection ConstantConditions
-            Set<String> fileList = Arrays.stream(dir.toFile().list()).
-                    filter(f -> f.endsWith(".kt") || f.endsWith(".kts")).
-                    collect(Collectors.toSet());
+            Set<String> fileList = Arrays.stream(dir.toFile().list())
+                    .filter(f -> KOTLIN_FILE_PATTERN.matcher(f).matches())
+                    .collect(Collectors.toUnmodifiableSet());
 
             // Metadata TOML -> Java
-            PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).
-                    getTable("metadata").to(PluginMetadata.class);
+            PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).getTable("metadata")
+                    .to(PluginMetadata.class);
 
             // Check for duplicate plugins.
             String pluginName = metadata.getName();
+
             if (plugins.containsKey(pluginName)) {
                 // TODO Track plugins by path to plugin.toml... not name lmao
-                logger.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
+                LOGGER.warn("Plugin [{}] shares the same name as another plugin.", pluginName);
                 return;
             }
             // TODO throw exception instead?
@@ -113,9 +113,10 @@ public final class PluginBootstrap {
             try {
                 fileList.forEach(this::loadFile);
             } catch (LoadScriptException e) {
-                logger.catching(Level.WARN, e);
+                LOGGER.catching(Level.WARN, e);
                 return;
             }
+
             plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
         }
 
@@ -125,14 +126,15 @@ public final class PluginBootstrap {
          * @return The package name.
          */
         private String computePackageName() {
-            String packageDir = dir.toString().
-                    replace(File.separator, ".").
-                    substring(2);
+            String packageDir = dir.toString().replace(File.separator, ".").substring(2);
+
             int firstIndex = packageDir.indexOf('.');
             int lastIndex = packageDir.lastIndexOf('.');
+
             if (firstIndex == lastIndex) {
                 return "";
             }
+
             return packageDir.substring(firstIndex + 1, lastIndex);
         }
 
@@ -144,9 +146,10 @@ public final class PluginBootstrap {
         private void loadFile(String fileName) {
             try {
                 Path path = dir.resolve(fileName);
+
                 if (fileName.endsWith(".kts")) {
                     // Load script file.
-                    String scriptContents = new String(Files.readAllBytes(path));
+                    String scriptContents = Files.readString(path);
                     scripts.add(new Script(fileName, path, scriptContents));
                 } else {
                     // Load dependency file.
@@ -159,23 +162,19 @@ public final class PluginBootstrap {
     }
 
     /**
-     * Creates and sets the global Kotlin bindings. Is only set once.
-     *
-     * @param context The context instance.
-     */
-    private static void setBindings(LunaContext context) {
-        bindings = new KotlinBindings(context);
-    }
-
-    /**
      * The asynchronous logger.
      */
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The directory containing plugin files.
      */
-    static final Path DIR = Paths.get("./plugins");
+    private static final Path DIR = Paths.get("./plugins");
+
+    /**
+     * A compiled pattern denoting Kotlin file names.
+     */
+    private static final Pattern KOTLIN_FILE_PATTERN = Pattern.compile(".*\\.kts?$");
 
     /**
      * The bindings. Has to be global in order for Kotlin scripts to access it.
@@ -183,14 +182,14 @@ public final class PluginBootstrap {
     private static KotlinBindings bindings;
 
     /**
-     * A map of plugin names to instances.
-     */
-    private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
-
-    /**
      * The context instance.
      */
     private final LunaContext context;
+
+    /**
+     * A map of plugin names to instances.
+     */
+    private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link PluginBootstrap}.
@@ -203,6 +202,15 @@ public final class PluginBootstrap {
     }
 
     /**
+     * Creates and sets the global Kotlin bindings. Is only set once.
+     *
+     * @param context The context instance.
+     */
+    private static void setBindings(LunaContext context) {
+        bindings = new KotlinBindings(context);
+    }
+
+    /**
      * Initializes this bootstrapper, loading all of the plugins.
      *
      * @param displayGui If the plugin GUI should be started.
@@ -211,15 +219,14 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
-        PluginManager plugins = context.getPlugins();
-        GameService service = context.getGame();
-
         initFiles();
         Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
 
-        EventListenerPipelineSet oldPipelines = plugins.getPipelines();
+        EventListenerPipelineSet oldPipelines = context.getPlugins().getPipelines();
         EventListenerPipelineSet newPipelines = bindings.getPipelines();
-        service.sync(() -> oldPipelines.replaceAll(newPipelines));
+
+        context.getGameService().sync(() -> oldPipelines.replaceAll(newPipelines));
+
         return pluginCount;
     }
 
@@ -231,9 +238,11 @@ public final class PluginBootstrap {
 
         // Traverse all paths and sub-paths.
         Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
+
         for (Path dir : directories) {
             if (Files.isDirectory(dir)) {
                 Path pluginMetadata = dir.resolve("plugin.toml");
+
                 if (Files.exists(pluginMetadata)) {
                     // Submit file tasks.
                     executor.execute(new PluginDirLoader(dir, pluginMetadata));
@@ -258,13 +267,13 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
-
         // Launch the GUI, determine selected plugins.
         int totalCount = plugins.size();
         selectPlugins(displayGui);
 
         // Load all plugins.
         KotlinInterpreter interpreter = new KotlinInterpreter();
+
         for (Plugin other : plugins.values()) {
             loadPlugin(other, interpreter);
         }
@@ -280,18 +289,17 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     private void selectPlugins(boolean displayGui) throws IOException {
-        final Set<String> selectedPlugins = new HashSet<>();
+        Set<String> selectedPlugins = new HashSet<>();
+
         if (displayGui) {
             // Displays the GUI, grabs the plugin selection from the interface.
             PluginGui gui = new PluginGui(plugins);
             selectedPlugins.addAll(gui.launch());
         } else {
             // Loads the plugin selection from the GUI settings file.
-            Toml guiSettings = new Toml().
-                    read(new File("./data/gui/settings.toml")).
-                    getTable("settings");
-
+            Toml guiSettings = new Toml().read(new File("./data/gui/settings.toml")).getTable("settings");
             boolean retainSelection = guiSettings.getBoolean("retain_selection");
+
             if (retainSelection) {
                 // Load only selected plugins.
                 selectedPlugins.addAll(guiSettings.getList("selected"));
@@ -300,6 +308,7 @@ public final class PluginBootstrap {
                 selectedPlugins.addAll(plugins.keySet());
             }
         }
+
         plugins.keySet().retainAll(selectedPlugins);
     }
 
@@ -319,9 +328,8 @@ public final class PluginBootstrap {
                 listener.setScript(script);
                 bindings.getPipelines().add(listener);
             }
-            for (EventMatcherListener<?> listener : bindings.getMatchers()) {
-                listener.setScript(script);
-            }
+
+            bindings.getMatchers().forEach(listener -> listener.setScript(script));
             bindings.getMatchers().clear();
             bindings.getListeners().clear();
         }

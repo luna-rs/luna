@@ -10,6 +10,8 @@ import io.netty.channel.ChannelHandlerContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
@@ -20,18 +22,20 @@ import static org.mockito.Mockito.mock;
  */
 final class GameMessageEncoderTest {
 
-    static IsaacCipher isaac;
-    static GameMessageEncoder encoder;
-    static ChannelHandlerContext ctx;
-    static byte[] payload;
-    static ByteBuf buffer;
+    private static ByteBuf buffer;
+
+    private static ChannelHandlerContext ctx;
+
+    private static GameMessageEncoder encoder;
+
+    private static byte[] payload;
 
     @BeforeAll
     static void initData() {
-        isaac = new IsaacCipher(new int[]{0, 0, 0, 0});
+        var isaac = new IsaacCipher(new int[] {0, 0, 0, 0});
         encoder = new GameMessageEncoder(isaac);
         ctx = mock(ChannelHandlerContext.class);
-        payload = "test".getBytes();
+        payload = "test".getBytes(StandardCharsets.UTF_8);
         buffer = Unpooled.buffer();
     }
 
@@ -50,7 +54,6 @@ final class GameMessageEncoderTest {
         assertEquals('s', buffer.readByte());
         assertEquals('t', buffer.readByte());
         buffer.clear();
-
 
         // Variable length test.
         msg = ByteMessage.message(54, MessageType.VAR);

@@ -1,5 +1,3 @@
-package world.player.skill.runecrafting
-
 /**
  * An enum representing a rune that can be crafted at an [Altar].
  */

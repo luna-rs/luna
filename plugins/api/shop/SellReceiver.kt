@@ -1,5 +1,3 @@
-package api.shop
-
 import io.luna.game.model.def.ItemDefinition
 
 /**

@@ -1,9 +1,7 @@
 package io.luna.net;
 
 import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import io.luna.Luna;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
@@ -19,6 +17,7 @@ import io.netty.util.AttributeKey;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * An {@link AbstractRemoteAddressFilter} implementation that filters {@link Channel}s by the amount of active
@@ -39,14 +38,15 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
 
     /**
-     * An immutable set containing whitelisted (filter bypassing) addresses.
+     * An unmodifiable set containing whitelisted (filter bypassing) addresses.
      */
-    public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
+    public static final Set<String> WHITELIST = Set.of("127.0.0.1");
 
     /**
      * An attribute describing the login response for rejected channels.
      */
-    private static final AttributeKey<LoginResponse> LOGIN_RESPONSE_KEY = AttributeKey.valueOf("LunaChannelFilter.loginResponseKey");
+    private static final AttributeKey<LoginResponse> LOGIN_RESPONSE_KEY =
+            AttributeKey.valueOf("LunaChannelFilter.loginResponseKey");
 
     /**
      * A concurrent multiset containing active connection counts.
@@ -56,27 +56,29 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     /**
      * A concurrent set containing blacklisted addresses.
      */
-    private final Set<String> blacklist = Sets.newConcurrentHashSet();
+    private final Set<String> blacklist = ConcurrentHashMap.newKeySet();
 
     @Override
-    protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) throws Exception {
+    protected boolean accept(ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
         String address = ipAddress(remoteAddress);
 
         if (WHITELIST.contains(address)) {
-
             // Bypass filter for whitelisted addresses.
             return true;
-        } else if (connections.count(address) >= Luna.settings().connectionLimit()) {
+        }
 
+        if (connections.count(address) >= Luna.settings().connectionLimit()) {
             // Reject if more than CONNECTION_LIMIT active connections.
             response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return false;
-        } else if (blacklist.contains(address)) {
+        }
 
+        if (blacklist.contains(address)) {
             // Reject if blacklisted (IP banned).
             response(ctx, LoginResponse.ACCOUNT_BANNED);
             return false;
         }
+
         return true;
     }
 
@@ -101,7 +103,8 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         LoginResponseMessage msg = new LoginResponseMessage(response);
 
         // Write initial message.
-        ByteBuf initialMsg = ByteMessage.pooledBuffer(8);
+        ByteBuf initialMsg = ByteMessage.pooledBuffer(Long.BYTES);
+
         try {
             initialMsg.writeLong(0);
         } finally {
@@ -118,7 +121,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      * @param remoteAddress The socket address.
      * @return The IP address.
      */
-    private String ipAddress(InetSocketAddress remoteAddress) {
+    private static String ipAddress(InetSocketAddress remoteAddress) {
         InetAddress inet = remoteAddress.getAddress();
         return inet.getHostAddress();
     }
@@ -129,15 +132,17 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      * @param ctx The context containing the channel.
      * @param response The login response to set.
      */
-    private void response(ChannelHandlerContext ctx, LoginResponse response) {
+    private static void response(ChannelHandlerContext ctx, LoginResponse response) {
         Channel channel = ctx.channel();
         channel.attr(LOGIN_RESPONSE_KEY).set(response);
     }
 
     /**
-     * @return A concurrent set containing blacklisted addresses.
+     * Add the specified address to the blacklist.
+     *
+     * @param address The address to blacklist.
      */
-    public Set<String> getBlacklist() {
-        return blacklist;
+    public void blacklistAddress(String address) {
+        blacklist.add(address);
     }
 }

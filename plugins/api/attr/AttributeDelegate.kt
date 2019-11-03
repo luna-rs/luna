@@ -1,5 +1,3 @@
-package api.attr
-
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.attr.Attribute
 import kotlin.reflect.KProperty

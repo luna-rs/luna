@@ -1,6 +1,3 @@
-package api.shop
-
-import api.predef.*
 import io.luna.game.event.impl.PlayerEvent
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface

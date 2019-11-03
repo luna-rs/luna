@@ -1,8 +1,3 @@
-package api.predef
-
-import api.event.InterceptBy
-import api.event.InterceptUseItem
-import api.event.Matcher
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
 import io.luna.game.event.impl.ButtonClickEvent

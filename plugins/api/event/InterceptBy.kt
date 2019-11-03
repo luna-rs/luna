@@ -1,6 +1,3 @@
-package api.event
-
-import api.predef.*
 import io.luna.game.event.Event
 import javax.script.ScriptException
 import kotlin.reflect.KClass

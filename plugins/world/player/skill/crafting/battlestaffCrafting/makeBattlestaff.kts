@@ -1,15 +1,12 @@
-package world.player.skill.crafting.battlestaffCrafting
-
-import api.predef.*
+import Battlestaff.Companion.BATTLESTAFF
+import Battlestaff.Companion.BATTLESTAFF_ITEM
+import Battlestaff.Companion.ORB_TO_BATTLESTAFF
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF
-import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
-import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.ORB_TO_BATTLESTAFF
 
 /**
  * An [InventoryAction] implementation that makes battlestaves.

@@ -1,5 +1,3 @@
-package world.player.skill.runecrafting
-
 import io.luna.game.model.Position
 
 /**

@@ -1,49 +1,53 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+group = "luna"
+version = "1.0"
+
 plugins {
-    val kotlinVersion = "1.3.11"
-    val jfxVersion = "0.0.8"
+    val javafxVersion = "0.0.8"
+    val kotlinVersion = "1.3.50"
 
     java
     application
-    id("org.jetbrains.kotlin.jvm") version kotlinVersion
-    id("org.openjfx.javafxplugin") version jfxVersion
+
+    kotlin("jvm") version kotlinVersion
+
+    id("org.openjfx.javafxplugin") version javafxVersion
 }
 
 repositories {
     mavenLocal()
-    maven {
-        url = uri("http://repo.maven.apache.org/maven2")
-    }
+    mavenCentral()
 }
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.8.5")
-    implementation("org.apache.logging.log4j:log4j-core:2.11.1")
-    implementation("org.apache.logging.log4j:log4j-api:2.11.1")
-    implementation("org.slf4j:slf4j-nop:1.7.25")
+    val javafxVersion = "11.0.1"
+
+    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("org.apache.logging.log4j:log4j-core:2.12.1")
+    implementation("org.slf4j:slf4j-nop:1.7.28")
     implementation("com.lmax:disruptor:3.4.2")
-    implementation("io.netty:netty-all:4.1.32.Final")
-    implementation("com.google.guava:guava:27.0.1-jre")
+    implementation("io.netty:netty-all:4.1.42.Final")
+    implementation("com.google.guava:guava:28.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-script-util:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-compiler:1.3.11")
-    implementation("org.openjfx:javafx-controls:11.0.1")
-    implementation("org.openjfx:javafx-fxml:11.0.1")
-    implementation("org.openjfx:javafx-swing:11.0.1")
-    implementation("com.zaxxer:HikariCP:3.3.0")
-    implementation("org.mockito:mockito-core:2.24.5")
+    implementation("org.openjfx:javafx-controls:$javafxVersion")
+    implementation("org.openjfx:javafx-fxml:$javafxVersion")
+    implementation("org.openjfx:javafx-swing:$javafxVersion")
+    implementation("com.zaxxer:HikariCP:3.4.1")
+    implementation("org.mockito:mockito-core:3.1.0")
+
+    implementation(kotlin("compiler-embeddable"))
+    implementation(kotlin("reflect"))
+    implementation(kotlin("script-util"))
+    implementation(kotlin("scripting-compiler-embeddable"))
+    implementation(kotlin("stdlib-jdk8"))
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:+")
     testImplementation("org.junit.jupiter:junit-jupiter-params:+")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:+")
 }
-
-group = "luna"
-version = "1.0"
 
 application {
     mainClassName = "io.luna.Luna"
@@ -68,7 +72,7 @@ javafx {
 }
 
 tasks.withType<JavaCompile> {
-    options.compilerArgs = MutableList(1) { "-Xlint:unchecked" }
+    options.compilerArgs = mutableListOf("-Xlint:deprecation", "-Xlint:unchecked")
     options.encoding = "UTF-8"
 }
 

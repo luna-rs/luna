@@ -1,6 +1,3 @@
-package world.player.skill.fletching.cutLog
-
-import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -8,8 +5,6 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.fletching.attachArrow.Arrow
-import world.player.skill.fletching.stringBow.Bow
 
 /**
  * An [InventoryAction] implementation that cuts logs.
@@ -46,7 +41,6 @@ class CutLogAction(plr: Player,
             }
             else -> true
         }
-
 
     override fun execute() {
         val unstrungName = itemDef(bow.unstrung).name

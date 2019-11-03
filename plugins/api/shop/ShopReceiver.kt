@@ -1,6 +1,3 @@
-package api.shop
-
-import api.predef.*
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency

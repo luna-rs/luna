@@ -1,5 +1,3 @@
-package api.inter
-
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import java.util.*

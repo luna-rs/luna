@@ -1,5 +1,3 @@
-package api.predef
-
 import com.google.common.base.Stopwatch
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable

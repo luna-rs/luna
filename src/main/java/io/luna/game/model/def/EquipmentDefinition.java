@@ -1,14 +1,16 @@
 package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static io.luna.util.StringUtils.addArticle;
 
@@ -52,20 +54,20 @@ public final class EquipmentDefinition implements Definition {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).
-                    add("name", name).
-                    add("id", id).
-                    add("level", level).toString();
+            return MoreObjects.toStringHelper(this)
+                    .add("name", name)
+                    .add("id", id)
+                    .add("level", level).toString();
         }
 
         /**
-         * Determines if {@code player} meets this requirement.
+         * Determines if a {@link Mob} meets this requirement.
          *
-         * @param player The player to check.
-         * @return {@code true} if {@code player} meets this requirement.
+         * @param mob The mob to check.
+         * @return {@code true} if {@code mob} meets this requirement.
          */
-        public boolean meets(Player player) {
-            return player.skill(id).getLevel() >= level;
+        public boolean meets(Mob mob) {
+            return mob.skill(id).getLevel() >= level;
         }
 
         /**
@@ -134,14 +136,14 @@ public final class EquipmentDefinition implements Definition {
     private final boolean fullHelmet;
 
     /**
-     * A list of equipment requirements.
+     * An unmodifiable list of equipment requirements.
      */
-    private final ImmutableList<Requirement> requirements;
+    private final List<Requirement> requirements;
 
     /**
-     * A list of equipment bonuses.
+     * An unmodifiable list of equipment bonuses.
      */
-    private final ImmutableList<Integer> bonuses;
+    private final List<Integer> bonuses;
 
     /**
      * Creates a new {@link EquipmentDefinition}.
@@ -155,14 +157,14 @@ public final class EquipmentDefinition implements Definition {
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                              Requirement[] requirements, int[] bonuses) {
+                               Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = ImmutableList.copyOf(requirements);
-        this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
+        this.requirements = List.of(requirements);
+        this.bonuses = Arrays.stream(bonuses).boxed().collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -173,12 +175,9 @@ public final class EquipmentDefinition implements Definition {
      * meets all requirements.
      */
     public Optional<Requirement> getFailedRequirement(Player player) {
-        for(Requirement req : requirements) {
-            if(!req.meets(player)) {
-                return Optional.of(req);
-            }
-        }
-        return Optional.empty();
+        return requirements.stream()
+                .filter(requirement -> !requirement.meets(player))
+                .findAny();
     }
 
     /**
@@ -188,7 +187,7 @@ public final class EquipmentDefinition implements Definition {
      * @return {@code true} if {@code player} meets all requirements.
      */
     public boolean meetsAllRequirements(Player player) {
-        return !getFailedRequirement(player).isPresent();
+        return getFailedRequirement(player).isEmpty();
     }
 
     @Override
@@ -225,16 +224,16 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * @return A list of the requirements.
+     * @return An unmodifiable list of the requirements.
      */
-    public ImmutableList<Requirement> getRequirements() {
+    public List<Requirement> getRequirements() {
         return requirements;
     }
 
     /**
-     * @return A list of equipment bonuses.
+     * @return An unmodifiable list of equipment bonuses.
      */
-    public ImmutableList<Integer> getBonuses() {
+    public List<Integer> getBonuses() {
         return bonuses;
     }
 }

@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.Uninterruptibles;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -18,17 +19,12 @@ import java.util.concurrent.ThreadFactory;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Executor} implementation that asynchronously executes a series of user-defined tasks, and
- * provides functionality to wait until they're completed.
+ * An {@link Executor} implementation that asynchronously executes a series of user-defined tasks, and provides
+ * functionality to wait until they're completed.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class AsyncExecutor implements Executor {
-
-    /**
-     * A queue of pending tasks.
-     */
-    private final Queue<ListenableFuture<?>> pendingTasks = new ConcurrentLinkedQueue<>();
 
     /**
      * The thread pool worker count.
@@ -44,6 +40,11 @@ public final class AsyncExecutor implements Executor {
      * The backing thread pool containing workers that execute tasks.
      */
     private final ListeningExecutorService threadPool;
+
+    /**
+     * A queue of pending tasks.
+     */
+    private final Queue<ListenableFuture<?>> pendingTasks = new ConcurrentLinkedQueue<>();
 
     /**
      * Creates a new {@link AsyncExecutor}.
@@ -80,16 +81,15 @@ public final class AsyncExecutor implements Executor {
     }
 
     @Override
-    public void execute(Runnable command) {
-        checkState(isRunning(), "No workers available to run tasks."); // TODO change message
-
-        ListenableFuture<?> pending = threadPool.submit(command);
+    public void execute(@NotNull Runnable runnable) {
+        checkState(isRunning(), "Backing thread pool cannot accept new tasks, as it has already terminated!.");
+        ListenableFuture<?> pending = threadPool.submit(runnable);
         pendingTasks.offer(pending);
     }
 
     /**
      * Waits as long as necessary for all pending tasks to complete, performing shutdown operations if
-     * necessary. When this method returns successfully, {@link #size()} {@code == 0}.
+     * necessary. When this method returns successfully, {@link #getPendingTaskCount()} {@code == 0}.
      *
      * @param terminate If the backing thread pool should be terminated once all tasks finish.
      * @throws ExecutionException If a pending task throws an exception.
@@ -97,13 +97,9 @@ public final class AsyncExecutor implements Executor {
     public void await(boolean terminate) throws ExecutionException {
         checkState(isRunning(), "Backing thread pool has already been terminated.");
 
-        for (;;) {
-            Future<?> pending = pendingTasks.poll();
+        Future<?> pending;
 
-            if (pending == null) {
-                break;
-            }
-
+        while ((pending = pendingTasks.poll()) != null) {
             Uninterruptibles.getUninterruptibly(pending);
         }
 
@@ -119,7 +115,7 @@ public final class AsyncExecutor implements Executor {
      *
      * @return The amount of pending tasks.
      */
-    public int size() { //TODO rename to getPendingCount or something
+    public int getPendingTaskCount() {
         pendingTasks.removeIf(Future::isDone);
         return pendingTasks.size();
     }
@@ -131,12 +127,12 @@ public final class AsyncExecutor implements Executor {
      * @return {@code true} if all pending tasks are done.
      */
     public boolean isDone() {
-        return size() == 0;
+        return getPendingTaskCount() == 0;
     }
 
     /**
      * Returns if this executor is running. If {@code false} new tasks cannot be added and
-     * {@link #size()} {@code == 0}.
+     * {@link #getPendingTaskCount()} {@code == 0}.
      *
      * @return {@code true} if the backing thread pool isn't shutdown.
      */

@@ -1,5 +1,3 @@
-import api.predef.*
-import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import java.io.File

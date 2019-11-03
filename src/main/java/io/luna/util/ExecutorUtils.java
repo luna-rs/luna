@@ -23,7 +23,14 @@ public final class ExecutorUtils {
     /**
      * The asynchronous logger.
      */
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    /**
+     * Prevent instantiation.
+     */
+    private ExecutorUtils() {
+        throw new UnsupportedOperationException("This class cannot be instantiated!");
+    }
 
     /**
      * Create a new thread pool with {@code threads} workers.
@@ -33,25 +40,31 @@ public final class ExecutorUtils {
      * @return The thread pool.
      */
     public static ListeningExecutorService threadPool(String name, int threads) {
-        int maxRecommendedThreads = ThreadUtils.cpuCount() * 2;
+        int maxRecommendedThreads = ThreadUtils.cpuCount();
+
         if (threads > maxRecommendedThreads) {
-            logger.warn("Exceeding maximum number of recommended threads for cached thread pool (threads: {}).", threads);
+            LOGGER.warn("Exceeding maximum number of recommended threads for cached thread pool (threads: {}).",
+                    threads);
         }
-        var threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+        var threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>());
         var threadFactory = new ThreadFactoryBuilder().setNameFormat(name).build();
+
         threadPool.setThreadFactory(threadFactory);
         threadPool.setRejectedExecutionHandler(new CallerRunsPolicy());
+
         return MoreExecutors.listeningDecorator(threadPool);
     }
 
     /**
-     * Create a new thread pool with {@code cpu_count * 2} workers.
+     * Create a new thread pool with {@code cpu_count} workers.
      *
      * @param name The naming scheme for the workers in the pool.
      * @return The new cached thread pool.
      */
     public static ListeningExecutorService threadPool(String name) {
-        return threadPool(name, ThreadUtils.cpuCount() * 2);
+        return threadPool(name, ThreadUtils.cpuCount());
     }
 
     public static ThreadFactory threadFactory(Class<?> classType) {
@@ -60,10 +73,5 @@ public final class ExecutorUtils {
 
     public static ThreadFactory threadFactory(String nameFormat) {
         return new ThreadFactoryBuilder().setNameFormat(nameFormat).build();
-    }
-    /**
-     * Prevent instantiation.
-     */
-    private ExecutorUtils() {
     }
 }

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
  */
 final class DefinitionRepositoryTest {
 
-    Definition def;
+    private Definition def;
 
     @BeforeEach
     void initDefinition() {

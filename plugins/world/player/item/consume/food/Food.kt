@@ -1,8 +1,8 @@
 package world.player.item.consume.food
 
-import api.attr.Attr
-import api.predef.*
+import Attr
 import io.luna.game.model.mob.Player
+import itemDef
 import kotlin.collections.set
 
 /**

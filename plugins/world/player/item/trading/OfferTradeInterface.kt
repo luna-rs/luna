@@ -1,6 +1,3 @@
-package world.player.item.trading
-
-import api.predef.*
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.Item

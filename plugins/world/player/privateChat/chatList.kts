@@ -1,4 +1,3 @@
-import api.predef.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.event.impl.PrivateChatListChangeEvent

@@ -1,9 +1,6 @@
-package world.player.skill.crafting.hideTanning
-
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
-import world.player.skill.crafting.hideTanning.Hide.*
 
 /**
  *
@@ -14,14 +11,14 @@ class TanInterface : StandardInterface(14670) {
 
     companion object {
         val HIDES = listOf(
-                SOFT_LEATHER,
-                HARD_LEATHER,
-                SWAMP_SNAKESKIN,
-                SNAKESKIN,
-                GREEN_D_LEATHER,
-                BLUE_D_LEATHER,
-                RED_D_LEATHER,
-                BLACK_D_LEATHER
+                Hide.SOFT_LEATHER,
+                Hide.HARD_LEATHER,
+                Hide.SWAMP_SNAKESKIN,
+                Hide.SNAKESKIN,
+                Hide.GREEN_D_LEATHER,
+                Hide.BLUE_D_LEATHER,
+                Hide.RED_D_LEATHER,
+                Hide.BLACK_D_LEATHER
         )
     }
 

@@ -1,11 +1,9 @@
-import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.herblore.makePotion.Ingredient
 
 /**
  * An [InventoryAction] that will grind all ingredients in an inventory.

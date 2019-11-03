@@ -1,4 +1,3 @@
-import api.predef.*
 import io.luna.game.event.impl.EquipItemEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
 import io.luna.game.model.mob.Player

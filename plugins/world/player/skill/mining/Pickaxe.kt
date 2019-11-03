@@ -1,5 +1,4 @@
 // TODO Blocked until stationary entity system is complete
-package world.player.skill.mining
 
 /**
  *

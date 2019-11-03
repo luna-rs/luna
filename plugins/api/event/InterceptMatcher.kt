@@ -1,5 +1,3 @@
-package api.event
-
 import io.luna.game.event.Event
 import kotlin.reflect.KClass
 

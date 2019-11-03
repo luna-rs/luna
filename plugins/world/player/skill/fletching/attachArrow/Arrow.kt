@@ -1,5 +1,3 @@
-package world.player.skill.fletching.attachArrow
-
 /**
  * An enum representing an arrow made from two materials.
  */

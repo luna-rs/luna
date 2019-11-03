@@ -1,7 +1,3 @@
-package world.player.skill.prayer
-
-import api.attr.Attr
-import api.predef.*
 import io.luna.game.action.ThrottledAction
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.mob.Animation

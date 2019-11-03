@@ -1,5 +1,3 @@
-package api.item
-
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.util.Rational

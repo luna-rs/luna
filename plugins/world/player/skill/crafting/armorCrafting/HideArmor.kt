@@ -1,9 +1,5 @@
-package world.player.skill.crafting.armorCrafting
-
-import api.predef.*
 import com.google.common.collect.ArrayListMultimap
 import io.luna.game.model.item.Item
-import world.player.skill.crafting.hideTanning.Hide
 
 /**
  * An enum representing armor that can be crafted from [Hide]s.

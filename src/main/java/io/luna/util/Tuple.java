@@ -35,28 +35,27 @@ public final class Tuple<T, U> {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(first, second);
-    }
-
-    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
         if (obj instanceof Tuple) {
-            Tuple other = (Tuple) obj;
-            return Objects.equals(first, other.first) &&
-                    Objects.equals(second, other.second);
+            Tuple<?, ?> other = (Tuple<?, ?>) obj;
+            return Objects.equals(first, other.first) && Objects.equals(second, other.second);
         }
         return false;
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(first, second);
+    }
+
+    @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("1", first).
-                add("2", second).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("1", first)
+                .add("2", second).toString();
     }
 
     /**

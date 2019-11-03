@@ -1,5 +1,3 @@
-
-import api.predef.*
 import io.luna.game.event.impl.NpcDeathEvent
 
 on(NpcDeathEvent::class) {

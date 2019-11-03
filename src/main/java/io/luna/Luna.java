@@ -7,10 +7,9 @@ import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
@@ -22,39 +21,45 @@ public final class Luna {
     /**
      * The asynchronous logger.
      */
-    private static final Logger logger;
+    private static final Logger LOGGER;
 
     /**
      * The global settings.
      */
-    private static final LunaSettings settings;
+    private static final LunaSettings LUNA_SETTINGS;
 
     /**
      * The log4j2 settings.
      */
-    private static final LoggingSettings loggingSettings;
+    private static final LoggingSettings LOGGING_SETTINGS;
 
     /**
-     * A private constructor.
+     * The {@link Toml} instance used to read {@code .toml} files.
      */
-    private Luna() {
-    }
+    private static final Toml TOML = new Toml();
 
     static {
         try {
             Thread.currentThread().setName("InitializationThread");
 
             InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
-            loggingSettings = loadLoggingSettings();
+            LOGGING_SETTINGS = loadLoggingSettings();
             System.setProperty("log4j2.configurationFactory", "io.luna.util.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
             System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-            logger = LogManager.getLogger();
-            settings = loadSettings();
-        } catch (Exception e) {
+            LOGGER = LogManager.getLogger();
+            LUNA_SETTINGS = loadSettings();
+        } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
+    }
+
+    /**
+     * A private constructor.
+     */
+    private Luna() {
+        throw new UnsupportedOperationException("This class cannot be instantiated!");
     }
 
     /**
@@ -64,10 +69,9 @@ public final class Luna {
      */
     public static void main(String[] args) {
         try {
-            var luna = new LunaServer();
-            luna.init();
-        } catch (Exception e) {
-            logger.fatal("Luna could not be started.", e);
+            new LunaServer().init();
+        } catch (IOException e) {
+            LOGGER.fatal("Luna could not be started.", e);
             System.exit(0);
         }
     }
@@ -78,9 +82,8 @@ public final class Luna {
      * @return The settings object.
      */
     private static LunaSettings loadSettings() throws IOException {
-        var fileReader = new FileReader(Paths.get("data", "luna.toml").toFile());
-        try (var bufferedReader = new BufferedReader(fileReader)) {
-            return new Toml().read(bufferedReader).to(LunaSettings.class);
+        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "luna.toml"))) {
+            return TOML.read(bufferedReader).to(LunaSettings.class);
         }
     }
 
@@ -90,9 +93,8 @@ public final class Luna {
      * @return The logging settings object.
      */
     private static LoggingSettings loadLoggingSettings() throws IOException {
-        var fileReader = new FileReader(Paths.get("data", "logging.toml").toFile());
-        try (var bufferedReader = new BufferedReader(fileReader)) {
-           return new Toml().read(bufferedReader).to(LoggingSettings.class);
+        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
+            return TOML.read(bufferedReader).to(LoggingSettings.class);
         }
     }
 
@@ -100,13 +102,13 @@ public final class Luna {
      * @return The global settings.
      */
     public static LunaSettings settings() {
-        return settings;
+        return LUNA_SETTINGS;
     }
 
     /**
      * @return The logging settings.
      */
     public static LoggingSettings loggingSettings() {
-        return loggingSettings;
+        return LOGGING_SETTINGS;
     }
 }

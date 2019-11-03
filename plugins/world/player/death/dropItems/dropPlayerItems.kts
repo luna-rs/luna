@@ -1,4 +1,3 @@
-import api.predef.*
 import io.luna.game.event.impl.PlayerDeathEvent
 import io.luna.game.model.EntityType
 import io.luna.game.model.item.GroundItem

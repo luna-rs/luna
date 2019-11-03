@@ -4,11 +4,11 @@ import java.io.BufferedReader;
 import java.util.Scanner;
 
 /**
- * A {@link FileParser} implementation designated for files that have tokens separated by a new line.
+ * A {@link AbstractFileParser} implementation designated for files that have tokens separated by a new line.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class NewLineFileParser extends FileParser<Scanner, String, String> {
+public abstract class NewLineFileParser extends AbstractFileParser<Scanner, String, String> {
 
     /**
      * Creates a new {@link NewLineFileParser}.

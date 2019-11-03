@@ -1,5 +1,3 @@
-package api.predef
-
 import io.luna.game.event.EventListener
 import io.luna.game.event.EventMatcherListener
 import io.luna.game.model.EntityType
@@ -58,7 +56,7 @@ val world = ctx.world!!
 /**
  * The [GameService] instance.
  */
-val game = ctx.game!!
+val game = ctx.gameService!!
 
 
 /*******************

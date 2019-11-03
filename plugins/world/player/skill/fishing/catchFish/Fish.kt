@@ -1,6 +1,3 @@
-package world.player.skill.fishing
-
-import api.predef.*
 import io.luna.game.model.item.Item
 
 /**

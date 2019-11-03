@@ -1,7 +1,3 @@
-package api.predef
-
-import api.area.AreaReceiver
-import api.area.ListeningAreaReceiver
 import io.luna.game.model.Area
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Player

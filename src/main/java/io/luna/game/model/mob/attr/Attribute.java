@@ -55,6 +55,7 @@ public final class Attribute<T> {
      *
      * @param initialValue The initial value.
      */
+    @SuppressWarnings("unchecked")
     public Attribute(T initialValue) {
         this.initialValue = requireNonNull(initialValue, "Initial value cannot be <null>.");
         valueType = (Class<T>) initialValue.getClass();
@@ -69,12 +70,12 @@ public final class Attribute<T> {
      */
     public Attribute<T> persist(String persistenceKey) {
         checkState(AttributeMap.persistentKeyMap.put(persistenceKey, this) == null,
-                "Persistent attribute with key {" + persistenceKey + "} already exists.");
+                "Persistent attribute with key {%s} already exists.", persistenceKey);
         checkArgument(!persistenceKey.isEmpty(), "Persistent attribute keys must not be empty.");
         checkArgument(CharMatcher.whitespace().matchesNoneOf(persistenceKey),
-                "Persistent attribute key {" + persistenceKey + "} has whitespace characters, use underscores instead.");
+                "Persistent attribute key {%s} has whitespace characters, use underscores instead.", persistenceKey);
         checkArgument(CharMatcher.forPredicate(Character::isUpperCase).matchesNoneOf(persistenceKey),
-                "Persistent attribute key {" + persistenceKey + "} has uppercase characters, use lowercase ones instead.");
+                "Persistent attribute key {%s} has uppercase characters, use lowercase ones instead.", persistenceKey);
         return setPersistenceKey(persistenceKey);
     }
 

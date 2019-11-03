@@ -1,7 +1,23 @@
 package world.player.item.consume.potion
 
-import api.predef.*
+import SKILL_AGILITY
+import SKILL_ATTACK
+import SKILL_DEFENCE
+import SKILL_FISHING
+import SKILL_HITPOINTS
+import SKILL_MAGIC
+import SKILL_PRAYER
+import SKILL_RANGED
+import SKILL_STRENGTH
+import attack
+import defence
+import hitpoints
 import io.luna.game.model.mob.Player
+import itemDef
+import magic
+import prayer
+import ranged
+import strength
 
 /**
  * An enum representing potions that can be consumed.

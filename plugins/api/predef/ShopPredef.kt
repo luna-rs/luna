@@ -1,7 +1,3 @@
-package api.predef
-
-import api.shop.ShopReceiver
-
 /**
  * Initializes a new [ShopReceiver]. The entry point of shop creation.
  */

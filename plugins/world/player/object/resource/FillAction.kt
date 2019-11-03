@@ -1,5 +1,3 @@
-package world.player.`object`.resource
-
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item

@@ -1,5 +1,3 @@
-package world.player.skill.runecrafting
-
 /**
  * An enum representing headgear that can be used to enter an [Altar].
  */

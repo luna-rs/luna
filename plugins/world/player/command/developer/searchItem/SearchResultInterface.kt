@@ -1,12 +1,10 @@
-package world.player.command.developer.searchItem
-
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.WidgetItemsMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter
-import kotlin.streams.toList
+import java.util.stream.Collectors
 
 /**
  * A standard interface representing the result of a search.
@@ -26,6 +24,7 @@ class SearchResultInterface(private val searchToken: String) : StandardInterface
             .stream()
             .filter { it.id > 0 && !it.isNoted && it.name.toLowerCase().contains(searchToken) }
             .map { Item(it.id, 1) }
+            .collect(Collectors.toList())
             .toList()
 
         // Display the items, truncating results if necessary.

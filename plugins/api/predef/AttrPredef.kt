@@ -1,9 +1,6 @@
 /**
  * All globally accessible attributes go in this file. Niche attributes can be put in the files they're related to.
  */
-package api.predef
-
-import api.attr.Attr
 import io.luna.game.model.mob.Player
 
 /**

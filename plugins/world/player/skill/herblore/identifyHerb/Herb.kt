@@ -1,5 +1,3 @@
-package world.player.skill.herblore.identifyHerb
-
 import io.luna.game.model.item.Item
 
 /**

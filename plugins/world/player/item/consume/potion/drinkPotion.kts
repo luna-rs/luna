@@ -1,12 +1,12 @@
 package world.player.item.consume.potion
 
-import api.attr.Attr
-import api.predef.*
+import Attr
 import io.luna.game.action.ThrottledAction
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
+import item1
 import java.util.*
 
 /**

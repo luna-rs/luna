@@ -1,4 +1,3 @@
-import api.predef.*
 import io.luna.game.event.impl.PrivateChatEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.PrivateChatMessageWriter

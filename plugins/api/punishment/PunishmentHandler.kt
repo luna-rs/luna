@@ -1,6 +1,3 @@
-package api.punishment
-
-import api.predef.*
 import com.google.common.collect.Sets
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture

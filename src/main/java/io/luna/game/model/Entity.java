@@ -70,7 +70,7 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getGame();
+        service = context.getGameService();
         world = context.getWorld();
 
     }
@@ -86,7 +86,7 @@ public abstract class Entity {
         this.type = type;
 
         plugins = context.getPlugins();
-        service = context.getGame();
+        service = context.getGameService();
         world = context.getWorld();
     }
 

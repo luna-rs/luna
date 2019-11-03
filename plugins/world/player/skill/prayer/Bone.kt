@@ -1,5 +1,3 @@
-package world.player.skill.prayer
-
 import io.luna.game.model.item.Item
 
 /**

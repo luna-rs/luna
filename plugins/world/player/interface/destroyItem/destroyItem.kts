@@ -1,4 +1,3 @@
-import api.predef.*
 import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 
 /**

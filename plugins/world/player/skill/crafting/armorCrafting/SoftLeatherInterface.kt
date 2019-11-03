@@ -1,5 +1,3 @@
-package world.player.skill.crafting.armorCrafting
-
 import io.luna.game.model.mob.inter.StandardInterface
 
 /**

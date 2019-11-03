@@ -1,5 +1,3 @@
-import api.predef.*
-
 /**
  * Disconnect player if the logout button is clicked.
  */

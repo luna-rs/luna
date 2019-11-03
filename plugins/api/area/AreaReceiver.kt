@@ -1,5 +1,3 @@
-package api.area
-
 /**
  * A receiver for registering area implementations.
  *

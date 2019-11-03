@@ -1,14 +1,11 @@
-package world.player.skill.crafting.gemCutting
-
-import api.predef.*
+import Gem.Companion.CHISEL
+import Gem.Companion.UNCUT_TO_GEM
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.Event
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import world.player.skill.crafting.gemCutting.Gem.Companion.CHISEL
-import world.player.skill.crafting.gemCutting.Gem.Companion.UNCUT_TO_GEM
 
 /**
  * An [InventoryAction] that cuts precious gems.

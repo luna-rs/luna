@@ -1,6 +1,3 @@
-package world.player.skill.fletching.attachArrow
-
-import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.event.impl.ItemOnItemEvent
@@ -42,7 +39,6 @@ class MakeArrowAction(plr: Player,
                 val tipCount = mob.inventory.computeAmountForId(arrow.tip)
                 setAmount = Integer.min(withCount, tipCount)
                 setAmount = Integer.min(setAmount, Arrow.SET_AMOUNT)
-
                 setAmount != 0
             }
         }

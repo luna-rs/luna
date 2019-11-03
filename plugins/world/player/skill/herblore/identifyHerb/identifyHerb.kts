@@ -1,6 +1,3 @@
-package world.player.skill.herblore.identifyHerb
-
-import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Player
 

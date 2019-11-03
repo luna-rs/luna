@@ -1,5 +1,3 @@
-
-import api.predef.*
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Npc
@@ -7,7 +5,6 @@ import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.ConfigMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
-
 
 /**
  * A command that sends a client config.

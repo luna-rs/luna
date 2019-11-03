@@ -1,5 +1,3 @@
-package api.item
-
 import io.luna.util.Rational
 
 /**

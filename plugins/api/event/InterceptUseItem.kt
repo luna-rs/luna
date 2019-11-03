@@ -1,5 +1,3 @@
-package api.event
-
 import io.luna.game.event.impl.ItemOnItemEvent
 import io.luna.game.event.impl.ItemOnObjectEvent
 

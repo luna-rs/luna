@@ -1,7 +1,3 @@
-import api.predef.*
-import world.player.item.trading.ConfirmTradeInterface
-import world.player.item.trading.OfferTradeInterface
-
 /**
  * Accept on offer interface.
  */

@@ -43,7 +43,7 @@ public final class LunaServer {
     /**
      * The asynchronous logger.
      */
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * A Luna context instance.
@@ -81,7 +81,7 @@ public final class LunaServer {
         initNetwork();
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
+        LOGGER.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
     }
 
     /**
@@ -100,15 +100,15 @@ public final class LunaServer {
     }
 
     /**
-     * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
+     * Initializes all {@link Service services}. This will start the game loop and create login/logout workers.
      */
     private void initServices() {
-        var gameService = context.getGame();
+        var gameService = context.getGameService();
         var loginService = context.getWorld().getLoginService();
         var logoutService = context.getWorld().getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
-        logger.info("All services are now running.");
+        LOGGER.info("All services are now running.");
     }
 
     /**
@@ -119,9 +119,8 @@ public final class LunaServer {
     private void initPlugins() throws IOException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
         Tuple<Integer, Integer> pluginCount = bootstrap.init(Luna.settings().pluginGui());
-
         String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        logger.info("{} Kotlin plugins have been loaded into memory.", fractionString);
+        LOGGER.info("{} Kotlin plugins have been loaded into memory.", fractionString);
     }
 
     /**
@@ -129,6 +128,7 @@ public final class LunaServer {
      **/
     private void initLaunchTasks() {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
+
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
         executor.execute(new ItemDefinitionFileParser());
@@ -138,13 +138,14 @@ public final class LunaServer {
         executor.execute(new BlacklistFileParser(channelFilter));
 
         try {
-            int count = executor.size();
+            int count = executor.getPendingTaskCount();
+
             if (count > 0) {
-                logger.info("Waiting for {} launch task(s) to complete...", box(count));
+                LOGGER.info("Waiting for {} launch task(s) to complete...", box(count));
                 executor.await(true);
             }
         } catch (ExecutionException e) {
-            throw new CompletionException(e.getCause());
+            throw new CompletionException(e);
         }
     }
 }

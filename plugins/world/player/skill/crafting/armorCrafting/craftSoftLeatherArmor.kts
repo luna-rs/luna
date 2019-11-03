@@ -1,8 +1,4 @@
-import api.predef.*
 import io.luna.game.model.mob.Player
-import world.player.skill.crafting.armorCrafting.CraftArmorAction
-import world.player.skill.crafting.armorCrafting.HideArmor
-import world.player.skill.crafting.armorCrafting.SoftLeatherInterface
 
 /**
  * The armor that is displayed on the [SoftLeatherInterface].

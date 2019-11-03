@@ -32,7 +32,7 @@ public final class EventMatcherListener<E extends Event> {
      */
     public EventMatcherListener(Consumer<E> listener) {
         this.listener = listener;
-        script = null;
+        this.script = null;
     }
 
     /**

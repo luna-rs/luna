@@ -1,6 +1,3 @@
-package api.item
-
-import api.predef.*
 import io.luna.game.model.item.Item
 
 /**

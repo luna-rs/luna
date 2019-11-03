@@ -1,6 +1,3 @@
-package api.attr
-
-import api.predef.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import io.luna.game.action.TimeSource

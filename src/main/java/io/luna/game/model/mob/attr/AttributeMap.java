@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
@@ -20,7 +21,7 @@ public final class AttributeMap {
     /**
      * A set of all persistent keys. Used to ensure there are no duplicates.
      */
-    public static final Map<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
+    protected static final ConcurrentMap<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
 
     /**
      * A map of persistent attributes waiting to be assigned.
@@ -52,13 +53,13 @@ public final class AttributeMap {
             var key = entry.getKey();
             var value = entry.getValue();
 
-            // Because Google gson changes Map to LinkedTreeMap.
-            if(value instanceof LinkedTreeMap) {
-                value = new HashMap<>((LinkedTreeMap) value);
+            // Because Google GSON changes Map to LinkedTreeMap.
+            if (value instanceof LinkedTreeMap<?, ?>) {
+                value = new HashMap<>((LinkedTreeMap<?, ?>) value);
             }
 
             checkState(loadedAttributes.put(key, value) == null,
-                    "Duplicate persistent attribute key {" + key + "}.");
+                    "Duplicate persistent attribute key {%s}.", key);
         }
     }
 
@@ -69,15 +70,16 @@ public final class AttributeMap {
      */
     public Map<String, Object> save() {
         Map<String, Object> attributesCopy = new HashMap<>();
+
         for (var entry : attributes.entrySet()) {
             var key = entry.getKey();
-            if(key.isPersistent()) {
+
+            if (key.isPersistent()) {
                 attributesCopy.put(key.getPersistenceKey(), entry.getValue());
             }
         }
-        for (var entry : loadedAttributes.entrySet()) {
-            attributesCopy.put(entry.getKey(), entry.getValue());
-        }
+
+        attributesCopy.putAll(loadedAttributes);
         return attributesCopy;
     }
 
@@ -107,6 +109,7 @@ public final class AttributeMap {
      * @param <T> The attribute type.
      * @return The value of the attribute.
      */
+    @SuppressWarnings("unchecked")
     public <T> T get(Attribute<T> attr) {
         // Attribute is equal to cached key, return last value.
         if (attr == lastKey) {

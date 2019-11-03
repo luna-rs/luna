@@ -1,5 +1,3 @@
-package api.predef
-
 import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.`object`.GameObject
@@ -17,7 +15,6 @@ import io.luna.net.msg.out.ConfigMessageWriter
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-
 
 /*****************************
  *                           *

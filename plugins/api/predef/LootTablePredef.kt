@@ -1,8 +1,3 @@
-package api.predef
-
-import api.item.LootTable
-import api.item.LootTableReceiver
-
 /**
  * Initializes a new [LootTableReceiver] and returns the created loot table.
  */

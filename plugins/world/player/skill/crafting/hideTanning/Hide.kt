@@ -1,5 +1,3 @@
-package world.player.skill.crafting.hideTanning
-
 /**
  * An enum representing all tannable hides.
  */

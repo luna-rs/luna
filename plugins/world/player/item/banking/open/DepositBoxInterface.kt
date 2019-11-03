@@ -1,5 +1,3 @@
-package world.player.item.banking.open
-
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
 
