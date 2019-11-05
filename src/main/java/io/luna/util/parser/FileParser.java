@@ -84,7 +84,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
     /**
      * A function called when all tokens have been parsed.
      *
-     * @param tokenObjects An immutable list of all token objects.
+     * @param tokenObjects An unmodifiable list of all token objects.
      * @throws Exception If any errors occur while notifying this listener.
      */
     public void onCompleted(List<R> tokenObjects) throws Exception {
@@ -95,9 +95,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * Parses all files in the {@link #fileList}.
      */
     public final synchronized void parseFiles() {
-        fileList.stream().
-                map(Paths::get).
-                forEach(this::parseFile);
+        fileList.stream().map(Paths::get).forEach(this::parseFile);
     }
 
     /**
