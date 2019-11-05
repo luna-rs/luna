@@ -1,10 +1,11 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+
+import java.util.List;
 
 /**
  * A {@link JsonFileParser} implementation that reads item definitions.
@@ -38,7 +39,7 @@ public final class ItemDefinitionFileParser extends JsonFileParser<ItemDefinitio
     }
 
     @Override
-    public void onCompleted(ImmutableList<ItemDefinition> tokenObjects) throws Exception {
+    public void onCompleted(List<ItemDefinition> tokenObjects) throws Exception {
         ItemDefinition.ALL.storeAndLock(tokenObjects);
     }
 }

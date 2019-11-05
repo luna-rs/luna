@@ -1,13 +1,13 @@
 package io.luna.game.model.mob;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 import io.luna.Luna;
 import io.luna.game.event.impl.SkillChangeEvent;
 import io.luna.game.plugin.PluginManager;
 
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,12 +21,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Skill {
 
     /**
-     * The names of all skills.
+     * An unmodifiable list of the names of all skills.
      */
-    public static final ImmutableList<String> NAMES = ImmutableList.of("Attack", "Defence", "Strength",
-            "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting", "Fletching", "Fishing",
-            "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer",
-            "Farming", "Runecrafting");
+    public static final List<String> NAMES = List.of(
+        "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
+        "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing",
+        "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming", "Runecrafting"
+    );
 
     /**
      * The combat skill identifiers.
@@ -34,9 +35,9 @@ public final class Skill {
     public static final Range<Integer> COMBAT_IDS = Range.closed(0, 6);
 
     /**
-     * A map of names to identifiers.
+     * An unmodifiable map of names to identifiers.
      */
-    public static final ImmutableMap<String, Integer> NAME_TO_ID;
+    public static final Map<String, Integer> NAME_TO_ID;
 
     /**
      * The Attack identifier.
@@ -175,9 +176,8 @@ public final class Skill {
 
     static {
         // Build and set [name -> identifier] cache.
-        Map<String, Integer> skills = IntStream.range(0, NAMES.size()).
-                boxed().collect(Collectors.toMap(NAMES::get, it -> it));
-        NAME_TO_ID = ImmutableMap.copyOf(skills);
+        NAME_TO_ID = IntStream.range(0, NAMES.size()).boxed()
+                .collect(Collectors.toUnmodifiableMap(NAMES::get, Function.identity()));
     }
 
     /**

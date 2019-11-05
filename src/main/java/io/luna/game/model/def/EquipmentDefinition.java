@@ -1,13 +1,13 @@
 package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
+import java.util.List;
 import java.util.Optional;
 
 import static io.luna.util.StringUtils.addArticle;
@@ -59,13 +59,13 @@ public final class EquipmentDefinition implements Definition {
         }
 
         /**
-         * Determines if {@code player} meets this requirement.
+         * Determines if the specified {@link Mob} meets this requirement.
          *
-         * @param player The player to check.
-         * @return {@code true} if {@code player} meets this requirement.
+         * @param mob The mob to check.
+         * @return {@code true} if {@code mob} meets this requirement, otherwise {@code false}.
          */
-        public boolean meets(Player player) {
-            return player.skill(id).getLevel() >= level;
+        public boolean meets(Mob mob) {
+            return mob.skill(id).getLevel() >= level;
         }
 
         /**
@@ -134,14 +134,14 @@ public final class EquipmentDefinition implements Definition {
     private final boolean fullHelmet;
 
     /**
-     * A list of equipment requirements.
+     * An unmodifiable list of equipment requirements.
      */
-    private final ImmutableList<Requirement> requirements;
+    private final List<Requirement> requirements;
 
     /**
      * A list of equipment bonuses.
      */
-    private final ImmutableList<Integer> bonuses;
+    private final int[] bonuses;
 
     /**
      * Creates a new {@link EquipmentDefinition}.
@@ -151,7 +151,7 @@ public final class EquipmentDefinition implements Definition {
      * @param twoHanded If this item is two-handed.
      * @param fullBody If this item covers the arms and torso.
      * @param fullHelmet If this item covers the head and face.
-     * @param requirements A set of equipment requirements.
+     * @param requirements A list of equipment requirements.
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
@@ -161,8 +161,8 @@ public final class EquipmentDefinition implements Definition {
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = ImmutableList.copyOf(requirements);
-        this.bonuses = ImmutableList.copyOf(Ints.asList(bonuses));
+        this.requirements = List.of(requirements);
+        this.bonuses = bonuses.clone();
     }
 
     /**
@@ -173,12 +173,7 @@ public final class EquipmentDefinition implements Definition {
      * meets all requirements.
      */
     public Optional<Requirement> getFailedRequirement(Player player) {
-        for(Requirement req : requirements) {
-            if(!req.meets(player)) {
-                return Optional.of(req);
-            }
-        }
-        return Optional.empty();
+        return requirements.stream().filter(requirement -> !requirement.meets(player)).findFirst();
     }
 
     /**
@@ -188,7 +183,7 @@ public final class EquipmentDefinition implements Definition {
      * @return {@code true} if {@code player} meets all requirements.
      */
     public boolean meetsAllRequirements(Player player) {
-        return !getFailedRequirement(player).isPresent();
+        return getFailedRequirement(player).isEmpty();
     }
 
     @Override
@@ -225,16 +220,16 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * @return A list of the requirements.
+     * @return An unmodifiable list of the requirements.
      */
-    public ImmutableList<Requirement> getRequirements() {
+    public List<Requirement> getRequirements() {
         return requirements;
     }
 
     /**
-     * @return A list of equipment bonuses.
+     * @return A deep copy of equipment bonuses.
      */
-    public ImmutableList<Integer> getBonuses() {
-        return bonuses;
+    public int[] getBonuses() {
+        return bonuses.clone();
     }
 }

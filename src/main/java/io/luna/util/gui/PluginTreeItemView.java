@@ -1,7 +1,5 @@
 package io.luna.util.gui;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.TreeMultimap;
 import javafx.scene.control.CheckBoxTreeItem;
 
@@ -9,6 +7,7 @@ import java.text.Collator;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -29,9 +28,9 @@ final class PluginTreeItemView {
     private final Map<String, CheckBoxTreeItem<String>> packages = new HashMap<>();
 
     /**
-     * A map of package names -> plugin tree items.
+     * An unmodifiable map of package names -> plugin tree items.
      */
-    private final ImmutableMap<String, PluginTreeItem> pluginMap;
+    private final Map<String, PluginTreeItem> pluginMap;
 
     /**
      * The root item.
@@ -45,9 +44,9 @@ final class PluginTreeItemView {
      * @param pluginMap A map of package names -> plugin tree items.
      */
     public PluginTreeItemView(CheckBoxTreeItem<String> root,
-                              ImmutableMap<String, PluginTreeItem> pluginMap) {
+                              Map<String, PluginTreeItem> pluginMap) {
         this.root = root;
-        this.pluginMap = pluginMap;
+        this.pluginMap = Map.copyOf(pluginMap);
     }
 
     /**
@@ -84,8 +83,7 @@ final class PluginTreeItemView {
      */
     void buildNested() {
         // Use recursion here to obtain nested view.
-        pluginMap.forEach((k, v) ->
-                addNonDuplicateChild(buildNestedPackage(v), root));
+        pluginMap.forEach((k, v) -> addNonDuplicateChild(buildNestedPackage(v), root));
     }
 
     /**
@@ -98,7 +96,7 @@ final class PluginTreeItemView {
         String packageName = treeItem.getPlugin().getPackageName();
         checkState(!packageName.isEmpty(), "All plugins except the API must have a package.");
 
-        ImmutableList<String> packageDir = ImmutableList.copyOf(packageName.split("\\."));
+        List<String> packageDir = List.of(packageName.split("\\."));
         CheckBoxTreeItem<String> head = getPackage(packageDir.get(0));
         walkNestedPackage(1, head, treeItem, packageDir);
         return head;
@@ -110,19 +108,19 @@ final class PluginTreeItemView {
      * @param index The current index.
      * @param head The package head.
      * @param plugin The plugin tree item.
-     * @param packageDir The immutable list of packages.
+     * @param packageDir The unmodifiable list of packages.
      */
     private void walkNestedPackage(int index,
                                    CheckBoxTreeItem<String> head,
                                    PluginTreeItem plugin,
-                                   ImmutableList<String> packageDir) {
+                                   List<String> packageDir) {
         if (index == packageDir.size()) {
             head.getChildren().add(plugin);
             return;
         }
         CheckBoxTreeItem<String> next = getPackage(packageDir.get(index));
         addNonDuplicateChild(next, head);
-        walkNestedPackage(++index, next, plugin, packageDir);
+        walkNestedPackage(index + 1, next, plugin, packageDir);
     }
 
     /**
@@ -132,19 +130,17 @@ final class PluginTreeItemView {
      * @return The cached tree item.
      */
     private CheckBoxTreeItem<String> getPackage(String name) {
-        CheckBoxTreeItem<String> treeItem = packages.get(name);
+        return packages.compute(name, (String key, CheckBoxTreeItem<String> treeItem) -> {
+           if (treeItem == null) {
+               treeItem = new CheckBoxTreeItem<>(key);
+           }
 
-        // If no cache entry, create one.
-        if (treeItem == null) {
-            treeItem = new CheckBoxTreeItem<>(name);
-            packages.put(name, treeItem);
-        }
+           if (treeItem.getGraphic() == null) {
+               addTreeItemIcons(treeItem, PACKAGE_IMG);
+           }
 
-        // Add icon if needed.
-        if (treeItem.getGraphic() == null) {
-            addTreeItemIcons(treeItem, PACKAGE_IMG);
-        }
-        return treeItem;
+           return treeItem;
+        });
     }
 
     /**

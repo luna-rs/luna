@@ -1,6 +1,5 @@
 package io.luna.game.model.item;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
@@ -130,9 +129,9 @@ public class ItemContainer implements Iterable<Item> {
     private OptionalInt secondaryRefreshId = OptionalInt.empty();
 
     /**
-     * An immutable list of listeners.
+     * An unmodifiable list of listeners.
      */
-    private ImmutableList<ItemContainerListener> listeners = ImmutableList.of();
+    private List<ItemContainerListener> listeners = List.of();
 
     /**
      * If events are being fired.
@@ -1106,7 +1105,7 @@ public class ItemContainer implements Iterable<Item> {
      * @param newListeners The new listeners.
      */
     public final void setListeners(ItemContainerListener... newListeners) {
-        listeners = ImmutableList.copyOf(newListeners);
+        listeners = List.of(newListeners);
     }
 
     /**

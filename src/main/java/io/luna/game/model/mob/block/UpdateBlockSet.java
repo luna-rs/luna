@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.block;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -24,17 +23,17 @@ import static io.luna.game.model.mob.block.UpdateState.UPDATE_SELF;
 public abstract class UpdateBlockSet<E extends Mob> {
 
     /**
-     * The update blocks.
+     * The unmodifiable list of update blocks.
      */
-    private final ImmutableList<UpdateBlock> updateBlocks;
+    private final List<UpdateBlock> updateBlocks;
 
     /**
      * Creates a new {@link UpdateBlockSet}.
      *
      * @param updateBlocks The update blocks.
      */
-    public UpdateBlockSet(ImmutableList<UpdateBlock> updateBlocks) {
-        this.updateBlocks = updateBlocks;
+    public UpdateBlockSet(List<UpdateBlock> updateBlocks) {
+        this.updateBlocks = List.copyOf(updateBlocks);
     }
 
     /**

@@ -146,7 +146,7 @@ public final class PluginBootstrap {
                 Path path = dir.resolve(fileName);
                 if (fileName.endsWith(".kts")) {
                     // Load script file.
-                    String scriptContents = new String(Files.readAllBytes(path));
+                    String scriptContents = Files.readString(path);
                     scripts.add(new Script(fileName, path, scriptContents));
                 } else {
                     // Load dependency file.
@@ -175,7 +175,7 @@ public final class PluginBootstrap {
     /**
      * The directory containing plugin files.
      */
-    static final Path DIR = Paths.get("./plugins");
+    static final Path DIR = Path.of("plugins");
 
     /**
      * The bindings. Has to be global in order for Kotlin scripts to access it.

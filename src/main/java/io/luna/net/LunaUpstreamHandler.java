@@ -1,6 +1,5 @@
 package io.luna.net;
 
-import com.google.common.collect.ImmutableSet;
 import io.luna.net.client.Client;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,9 +25,10 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
     /**
      * A set of ignored exceptions from Netty.
      */
-    private static final Set<String> IGNORED = ImmutableSet
-            .of("An existing connection was forcibly closed by the remote host",
-                    "An established connection was aborted by the software in your host machine");
+    private static final Set<String> IGNORED = Set.of(
+        "An existing connection was forcibly closed by the remote host",
+        "An established connection was aborted by the software in your host machine"
+    );
 
     /**
      * The asynchronous logger.

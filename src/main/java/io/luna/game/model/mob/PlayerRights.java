@@ -1,7 +1,10 @@
 package io.luna.game.model.mob;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import io.luna.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -18,9 +21,9 @@ public enum PlayerRights {
     DEVELOPER(2, 3);
 
     /**
-     * All of the elements in this enum.
+     * An immutable set of the elements in this enum.
      */
-    public static final ImmutableSet<PlayerRights> ALL = ImmutableSet.copyOf(values());
+    public static final Set<PlayerRights> ALL = Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
 
     /**
      * The protocol value. May only be between 0-2 (player, moderator, administrator).

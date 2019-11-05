@@ -1,8 +1,8 @@
 package io.luna.game.model.def;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
+import java.util.List;
 import java.util.OptionalInt;
 
 /**
@@ -78,14 +78,14 @@ public final class ItemDefinition implements Definition {
     private final boolean tradeable;
 
     /**
-     * A set of inventory actions.
+     * An unmodifiable list of inventory actions.
      */
-    private final ImmutableList<String> inventoryActions;
+    private final List<String> inventoryActions;
 
     /**
-     * A set of ground actions.
+     * An unmodifiable list of ground actions.
      */
-    private final ImmutableList<String> groundActions;
+    private final List<String> groundActions;
 
     /**
      * Creates a new {@link ItemDefinition}.
@@ -114,8 +114,8 @@ public final class ItemDefinition implements Definition {
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
-        this.inventoryActions = ImmutableList.copyOf(inventoryActions);
-        this.groundActions = ImmutableList.copyOf(groundActions);
+        this.inventoryActions = List.of(inventoryActions);
+        this.groundActions = List.of(groundActions);
     }
 
     /**
@@ -219,16 +219,16 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
-     * @return A set of inventory actions.
+     * @return An unmodifiable list of inventory actions.
      */
-    public ImmutableList<String> getInventoryActions() {
+    public List<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
-     * @return A set of ground actions.
+     * @return An unmodifiable list of ground actions.
      */
-    public ImmutableList<String> getGroundActions() {
+    public List<String> getGroundActions() {
         return groundActions;
     }
 }

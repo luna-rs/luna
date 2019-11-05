@@ -1,8 +1,9 @@
 package io.luna.game.model.mob.block;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+
+import java.util.List;
 
 import static io.luna.game.model.mob.block.UpdateState.UPDATE_LOCAL;
 
@@ -15,19 +16,20 @@ import static io.luna.game.model.mob.block.UpdateState.UPDATE_LOCAL;
 public class PlayerUpdateBlockSet extends UpdateBlockSet<Player> {
 
     /**
-     * An immutable list of update blocks.
+     * An unmodifiable list of update blocks.
      */
-    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-            new GraphicUpdateBlock(),
-            new AnimationUpdateBlock(),
-            new ForcedChatUpdateBlock(),
-            new ChatUpdateBlock(),
-            new ForcedMovementUpdateBlock(),
-            new InteractionUpdateBlock(),
-            new AppearanceUpdateBlock(),
-            new FacePositionUpdateBlock(),
-            new PrimaryHitUpdateBlock(),
-            new SecondaryHitUpdateBlock());
+    private static final List<UpdateBlock> UPDATE_BLOCKS = List.of(
+        new GraphicUpdateBlock(),
+        new AnimationUpdateBlock(),
+        new ForcedChatUpdateBlock(),
+        new ChatUpdateBlock(),
+        new ForcedMovementUpdateBlock(),
+        new InteractionUpdateBlock(),
+        new AppearanceUpdateBlock(),
+        new FacePositionUpdateBlock(),
+        new PrimaryHitUpdateBlock(),
+        new SecondaryHitUpdateBlock()
+    );
 
     /**
      * Creates a new {@link PlayerUpdateBlockSet}.

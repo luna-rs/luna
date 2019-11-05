@@ -1,7 +1,6 @@
 package io.luna.net;
 
 import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
@@ -39,9 +38,9 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
 
     /**
-     * An immutable set containing whitelisted (filter bypassing) addresses.
+     * An unmodifiable set containing whitelisted (filter bypassing) addresses.
      */
-    public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
+    public static final Set<String> WHITELIST = Set.of("127.0.0.1");
 
     /**
      * An attribute describing the login response for rejected channels.

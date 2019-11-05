@@ -1,6 +1,5 @@
 package io.luna.game.model.item;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
@@ -9,9 +8,12 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
 
 import java.util.BitSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static io.luna.util.OptionalUtils.*;
 
@@ -101,9 +103,8 @@ public final class Equipment extends ItemContainer {
          * @param item The item to get the bonuses of.
          * @return The item's bonuses.
          */
-        private ImmutableList<Integer> getBonuses(Optional<Item> item) {
-            return item.map(Item::getEquipDef).
-                    map(EquipmentDefinition::getBonuses).orElse(EMPTY_BONUSES);
+        private int[] getBonuses(Optional<Item> item) {
+            return item.map(Item::getEquipDef).map(EquipmentDefinition::getBonuses).orElse(EMPTY_BONUSES.clone());
         }
 
         /**
@@ -113,13 +114,13 @@ public final class Equipment extends ItemContainer {
          * @param newItem The new item.
          */
         private void updateBonus(Optional<Item> oldItem, Optional<Item> newItem) {
-
             // Retrieve old and new bonuses.
-            ImmutableList<Integer> oldBonuses = getBonuses(oldItem);
-            ImmutableList<Integer> newBonuses = getBonuses(newItem);
+            int[] oldBonuses = getBonuses(oldItem);
+            int[] newBonuses = getBonuses(newItem);
+
             for (int index = 0; index < bonuses.length; index++) {
-                int old = oldBonuses.get(index);
-                int replace = newBonuses.get(index);
+                int old = oldBonuses[index];
+                int replace = newBonuses[index];
 
                 // Bonus(es) nonzero, this index needs updating.
                 if (old != 0 || replace != 0) {
@@ -162,8 +163,7 @@ public final class Equipment extends ItemContainer {
     /**
      * An array of bonuses, all of which are {@code 0}.
      */
-    private static final ImmutableList<Integer> EMPTY_BONUSES = IntStream.range(0, 12).boxed().
-            map(index -> 0).collect(ImmutableList.toImmutableList());
+    private static final int[] EMPTY_BONUSES = IntStream.generate(() -> 0).limit(12).toArray();
 
     /**
      * The head index.
@@ -281,10 +281,12 @@ public final class Equipment extends ItemContainer {
     public static final int PRAYER = 11;
 
     /**
-     * A list of bonus names.
+     * An unmodifiable list of bonus names.
      */
-    public static final ImmutableList<String> BONUS_NAMES = ImmutableList.of("Stab", "Slash", "Crush",
-            "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range", "Strength", "Prayer");
+    public static final List<String> BONUS_NAMES = List.of(
+        "Stab", "Slash", "Crush", "Magic", "Range", "Stab",
+        "Slash", "Crush", "Magic", "Range", "Strength", "Prayer"
+    );
 
     /**
      * An error message.

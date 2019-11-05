@@ -120,7 +120,7 @@ public final class GameTabSet {
      */
     public boolean set(TabIndex index, int id) {
         OptionalInt currentId = get(index);
-        if (!currentId.isPresent() || currentId.getAsInt() != id) {
+        if (currentId.isEmpty() || currentId.getAsInt() != id) {
             player.queue(new TabInterfaceMessageWriter(index, id));
             tabs.put(index, id);
             return true;

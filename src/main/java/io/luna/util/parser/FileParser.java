@@ -1,7 +1,5 @@
 package io.luna.util.parser;
 
-import com.google.common.collect.ImmutableList;
-
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,9 +22,9 @@ import java.util.List;
 public abstract class FileParser<P, T, R> implements Runnable {
 
     /**
-     * The files to parse.
+     * The unmodifiable list of files to parse.
      */
-    private final ImmutableList<String> fileList;
+    private final List<String> fileList;
 
     /**
      * The current parsing index.
@@ -39,7 +37,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * @param files The files to parse.
      */
     public FileParser(String... files) {
-        fileList = ImmutableList.copyOf(files);
+        fileList = List.of(files);
     }
 
     @Override
@@ -89,7 +87,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * @param tokenObjects An immutable list of all token objects.
      * @throws Exception If any errors occur while notifying this listener.
      */
-    public void onCompleted(ImmutableList<R> tokenObjects) throws Exception {
+    public void onCompleted(List<R> tokenObjects) throws Exception {
 
     }
 
@@ -103,7 +101,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
     }
 
     /**
-     * Parses {@code file} and notifies {@link #onCompleted(ImmutableList)} when finished.
+     * Parses {@code file} and notifies {@link #onCompleted(List)} when finished.
      *
      * @param file The file to parse.
      */
@@ -119,16 +117,16 @@ public abstract class FileParser<P, T, R> implements Runnable {
                     currentIndex++;
                 }
             }
-            onCompleted(ImmutableList.copyOf(tokenObjects));
+            onCompleted(List.copyOf(tokenObjects));
         } catch (Exception e) {
             throw new RuntimeException("Error while reading file [" + file + "]", e);
         }
     }
 
     /**
-     * @return The files to parse.
+     * @return The unmodifiable list of files to parse.
      */
-    public ImmutableList<String> getFileList() {
+    public List<String> getFileList() {
         return fileList;
     }
 }

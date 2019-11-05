@@ -1,7 +1,6 @@
 package io.luna.util;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -13,6 +12,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class StringUtils {
 
     /**
+     * A {@link Joiner} that joins strings together with a ",".
+     */
+    public static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
+
+    /**
      * An empty array of strings.
      */
     public static final String[] EMPTY_ARRAY = {};
@@ -20,25 +24,27 @@ public final class StringUtils {
     /**
      * An array containing valid {@code char}s.
      */
-    public static final ImmutableList<Character> VALID_CHARACTERS = ImmutableList.of('_', 'a', 'b', 'c', 'd', 'e',
-            'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-',
-            '+', '=', ':', ';', '.', '>', '<', ',', '"', '[', ']', '|', '?', '/', '`');
-
-    /**
-     * A {@link Joiner} that joins strings together with a ",".
-     */
-    public static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
+    public static final char[] VALID_CHARACTERS = new char[] {
+        '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+        'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+        'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8',
+        '9', '!', '@', '#', '$', '%', '^', '&', '*',
+        '(', ')', '-', '+', '=', ':', ';', '.', '>',
+        '<', ',', '"', '[', ']', '|', '?', '/', '`'
+    };
 
     /**
      * The character table that will aid in unpacking text.
      */
-    private static final ImmutableList<Character> CHAR_TABLE = ImmutableList.of(' ', 'e', 't', 'a', 'o', 'i', 'h', 'n',
-            's', 'r', 'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p', 'b',
-            'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2', '3', '4', '5', '6',
-            '7', '8', '9', ' ', '!', '?', '.', ',', ':', ';', '(', ')', '-',
-            '&', '*', '\\', '\'', '@', '#', '+', '=', '\243', '$', '%', '"',
-            '[', ']');
+    private static final char[] CHAR_TABLE = new char[]{
+        ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
+        'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
+        'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
+        '3', '4', '5', '6', '7', '8', '9', ' ', '!', '?',
+        '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
+        '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
+    };
 
     /**
      * Unpacks text received from the client.
@@ -54,11 +60,11 @@ public final class StringUtils {
             int val = message[i / 2] >> (4 - 4 * (i % 2)) & 0xf;
             if (highNibble == -1) {
                 if (val < 13)
-                    decodeBuf[idx++] = CHAR_TABLE.get(val);
+                    decodeBuf[idx++] = CHAR_TABLE[val];
                 else
                     highNibble = val;
             } else {
-                decodeBuf[idx++] = CHAR_TABLE.get(((highNibble << 4) + val) - 195);
+                decodeBuf[idx++] = CHAR_TABLE[((highNibble << 4) + val) - 195];
                 highNibble = -1;
             }
         }
@@ -136,7 +142,7 @@ public final class StringUtils {
         while (value != 0L) {
             long n = value;
             value /= 37L;
-            name[11 - offset++] = VALID_CHARACTERS.get((int) (n - value * 37L));
+            name[11 - offset++] = VALID_CHARACTERS[(int) (n - value * 37L)];
         }
         return new String(name, 12 - offset, offset);
     }

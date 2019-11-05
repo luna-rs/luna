@@ -1,6 +1,5 @@
 package io.luna.util.parser.impl;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -40,7 +39,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
     }
 
     @Override
-    public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) throws Exception {
+    public void onCompleted(List<EquipmentDefinition> tokenObjects) throws Exception {
         EquipmentDefinition.ALL.storeAndLock(tokenObjects);
     }
 

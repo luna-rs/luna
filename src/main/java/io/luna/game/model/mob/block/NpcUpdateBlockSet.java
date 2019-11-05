@@ -1,8 +1,9 @@
 package io.luna.game.model.mob.block;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
+
+import java.util.List;
 
 /**
  * An {@link UpdateBlockSet} implementation that handles the encoding of {@link Npc} update
@@ -13,17 +14,18 @@ import io.luna.net.codec.ByteMessage;
 public class NpcUpdateBlockSet extends UpdateBlockSet<Npc> {
 
     /**
-     * An immutable list of update blocks.
+     * An unmodifiable list of update blocks.
      */
-    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-            new AnimationUpdateBlock(),
-            new SecondaryHitUpdateBlock(),
-            new GraphicUpdateBlock(),
-            new InteractionUpdateBlock(),
-            new ForcedChatUpdateBlock(),
-            new PrimaryHitUpdateBlock(),
-            new TransformUpdateBlock(),
-            new FacePositionUpdateBlock());
+    private static final List<UpdateBlock> UPDATE_BLOCKS = List.of(
+        new AnimationUpdateBlock(),
+        new SecondaryHitUpdateBlock(),
+        new GraphicUpdateBlock(),
+        new InteractionUpdateBlock(),
+        new ForcedChatUpdateBlock(),
+        new PrimaryHitUpdateBlock(),
+        new TransformUpdateBlock(),
+        new FacePositionUpdateBlock()
+    );
 
     /**
      * Creates a new {@link NpcUpdateBlockSet}.

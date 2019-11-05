@@ -1,7 +1,6 @@
 package world.player.item.trading
 
 import api.predef.*
-import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
@@ -57,8 +56,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         plr.inventory.refreshSecondary(plr)
 
         // Clear left and right trade panels.
-        val clearLeftMsg = WidgetItemsMessageWriter(3415, ImmutableList.of())
-        val clearRightMsg = WidgetItemsMessageWriter(3416, ImmutableList.of())
+        val clearLeftMsg = WidgetItemsMessageWriter(3415, listOf())
+        val clearRightMsg = WidgetItemsMessageWriter(3416, listOf())
         plr.queue(clearLeftMsg)
         plr.queue(clearRightMsg)
 

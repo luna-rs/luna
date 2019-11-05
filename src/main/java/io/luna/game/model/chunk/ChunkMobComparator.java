@@ -1,12 +1,12 @@
 package io.luna.game.model.chunk;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.util.Tuple;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiFunction;
 
 /**
@@ -26,14 +26,15 @@ public final class ChunkMobComparator implements Comparator<Mob> {
     }
 
     /**
-     * An immutable list of factors used to compare mobs.
+     * An unmodifiable list of factors used to compare mobs.
      */
-    private final ImmutableList<ComparableFactor> factors = ImmutableList.of(
-            this::comparePosition,
-            this::compareFriends,
-            this::compareSize,
-            this::compareCombatLevel,
-            this::compareCombat);
+    private final List<ComparableFactor> factors = List.of(
+        this::comparePosition,
+        this::compareFriends,
+        this::compareSize,
+        this::compareCombatLevel,
+        this::compareCombat
+    );
 
     /**
      * The player to compare mobs for.

@@ -1,15 +1,11 @@
 package io.luna.game.model.mob;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
-import com.google.common.primitives.Ints;
 import io.luna.game.model.mob.inter.StandardInterface;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,8 +109,7 @@ public final class PlayerAppearance {
     /**
      * The default appearance set.
      */
-    public static final ImmutableList<Integer> DEFAULT_APPEARANCE = ImmutableList
-            .of(0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0);
+    public static final int[] DEFAULT_APPEARANCE = {0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0};
 
     /**
      * The valid gender values.
@@ -127,9 +122,9 @@ public final class PlayerAppearance {
     private static final ImmutableTable<Integer, Integer, Range<Integer>> VALID_MODELS;
 
     /**
-     * The valid color values.
+     * An unmodifiable map containing the valid color values.
      */
-    private static final ImmutableMap<Integer, Range<Integer>> VALID_COLORS;
+    private static final Map<Integer, Range<Integer>> VALID_COLORS;
 
     static {
         // Initialize and cache valid appearance values.
@@ -162,7 +157,7 @@ public final class PlayerAppearance {
         colors.put(LEG_COLOR, Range.closed(0, 15));
         colors.put(FEET_COLOR, Range.closed(0, 5));
         colors.put(SKIN_COLOR, Range.closed(0, 7));
-        VALID_COLORS = ImmutableMap.copyOf(colors);
+        VALID_COLORS = Map.copyOf(colors);
     }
 
     /**
@@ -243,17 +238,14 @@ public final class PlayerAppearance {
     /**
      * An array of appearance values.
      */
-    private final int[] appearance = new int[DEFAULT_APPEARANCE.size()];
+    private int[] appearance;
 
     /**
      * Creates a new {@link PlayerAppearance}.
      */
     public PlayerAppearance() {
-
         // Populate the appearance array with the default values.
-        for (int index = 0; index < appearance.length; index++) {
-            appearance[index] = DEFAULT_APPEARANCE.get(index);
-        }
+        this.appearance = DEFAULT_APPEARANCE.clone();
     }
 
     /**
@@ -298,16 +290,7 @@ public final class PlayerAppearance {
      */
     public void setValues(int[] newValues) {
         checkArgument(isAllValid(newValues), "Invalid appearance array.");
-        System.arraycopy(newValues, 0, appearance, 0, 13);
-    }
-
-    /**
-     * Returns an immutable shallow-copy of the appearance array.
-     *
-     * @return An immutable list copy of the backing array.
-     */
-    public ImmutableList<Integer> toList() {
-        return ImmutableList.copyOf(Ints.asList(appearance));
+        appearance = newValues.clone();
     }
 
     /**
@@ -316,6 +299,6 @@ public final class PlayerAppearance {
      * @return A shallow-copy of the appearance array.
      */
     public int[] toArray() {
-        return Arrays.copyOf(appearance, appearance.length);
+        return appearance.clone();
     }
 }
