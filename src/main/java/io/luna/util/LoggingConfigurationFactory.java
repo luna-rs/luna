@@ -58,7 +58,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         builder.setStatusLevel(Level.WARN);
 
         // Add custom logging levels.
-        for (var type : FileOutputType.ALL) {
+        for (var type : FileOutputType.values()) {
             builder.add(builder.newCustomLevel(type.name(), 700));
         }
 
@@ -76,7 +76,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         // Build file appenders.
         var newFileLogs = EnumSet.noneOf(FileOutputType.class);
         var activeFileLogs = Luna.loggingSettings().activeFileLogs();
-        for (var type : FileOutputType.ALL) {
+        for (var type : FileOutputType.values()) {
             if (type == FileOutputType.CONSOLE_OUT && outputType == OutputType.ERR) {
                 continue;
             }

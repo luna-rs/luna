@@ -1,7 +1,8 @@
 package io.luna.game.model.def;
 
-import com.google.common.primitives.Ints;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
+
+import java.util.Arrays;
 
 /**
  * A definition model describing an attackable non-player.
@@ -186,8 +187,8 @@ public final class NpcCombatDefinition implements Definition {
         this.attackAnimation = attackAnimation;
         this.defenceAnimation = defenceAnimation;
         this.deathAnimation = deathAnimation;
-        this.skills = skills.clone();
-        this.bonuses = bonuses.clone();
+        this.skills = Arrays.copyOf(skills, skills.length);
+        this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
     }
 
     @Override
@@ -264,18 +265,14 @@ public final class NpcCombatDefinition implements Definition {
     public int getDeathAnimation() {
         return deathAnimation;
     }
-
+    
     /**
-     * @return An array of skills.
+     * Gets the skill at the specified identifier.
+     *
+     * @param id The skill identifier.
+     * @return The skill at the specified identifier as an {@code int}.
      */
-    public int[] getSkills() {
-        return skills.clone();
-    }
-
-    /**
-     * @return An array of bonuses.
-     */
-    public int[] getBonuses() {
-        return bonuses.clone();
+    public int getSkill(int id) {
+        return skills[id];
     }
 }

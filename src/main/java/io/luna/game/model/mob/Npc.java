@@ -138,7 +138,6 @@ public class Npc extends Mob {
     private void setSkills() {
         // Set the attack, strength, defence, ranged, and magic levels.
         combatDefinition.ifPresent(def -> {
-            int[] skills = def.getSkills();
             Skill attack = skill(Skill.ATTACK);
             Skill strength = skill(Skill.STRENGTH);
             Skill defence = skill(Skill.DEFENCE);
@@ -146,11 +145,11 @@ public class Npc extends Mob {
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
 
-            attack.setLevel(skills[NpcCombatDefinition.ATTACK]);
-            strength.setLevel(skills[NpcCombatDefinition.STRENGTH]);
-            defence.setLevel(skills[NpcCombatDefinition.DEFENCE]);
-            ranged.setLevel(skills[NpcCombatDefinition.RANGED]);
-            magic.setLevel(skills[NpcCombatDefinition.MAGIC]);
+            attack.setLevel(def.getSkill(NpcCombatDefinition.ATTACK));
+            strength.setLevel(def.getSkill(NpcCombatDefinition.STRENGTH));
+            defence.setLevel(def.getSkill(NpcCombatDefinition.DEFENCE));
+            ranged.setLevel(def.getSkill(NpcCombatDefinition.RANGED));
+            magic.setLevel(def.getSkill(NpcCombatDefinition.MAGIC));
             hitpoints.setLevel(def.getHitpoints());
         });
     }

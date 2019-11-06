@@ -7,6 +7,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -162,7 +163,7 @@ public final class EquipmentDefinition implements Definition {
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
         this.requirements = List.of(requirements);
-        this.bonuses = bonuses.clone();
+        this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
     }
 
     /**
@@ -225,11 +226,14 @@ public final class EquipmentDefinition implements Definition {
     public List<Requirement> getRequirements() {
         return requirements;
     }
-
+    
     /**
-     * @return A deep copy of equipment bonuses.
+     * Gets the bonus at the specified identifier.
+     *
+     * @param id The bonus identifier.
+     * @return The bonus at the specified identifier as an {@code int}.
      */
-    public int[] getBonuses() {
-        return bonuses.clone();
+    public int getBonus(int id) {
+        return bonuses[id];
     }
 }

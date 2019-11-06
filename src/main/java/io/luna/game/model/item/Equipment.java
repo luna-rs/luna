@@ -11,11 +11,11 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.function.IntUnaryOperator;
 
-import static io.luna.util.OptionalUtils.*;
+import static io.luna.util.OptionalUtils.ifPresent;
+import static io.luna.util.OptionalUtils.mapToInt;
+import static io.luna.util.OptionalUtils.matches;
 
 /**
  * An item container model representing a player's equipment.
@@ -98,29 +98,31 @@ public final class Equipment extends ItemContainer {
         }
 
         /**
-         * Gets the bonuses of {@code item}.
-         *
-         * @param item The item to get the bonuses of.
-         * @return The item's bonuses.
-         */
-        private int[] getBonuses(Optional<Item> item) {
-            return item.map(Item::getEquipDef).map(EquipmentDefinition::getBonuses).orElse(EMPTY_BONUSES.clone());
-        }
-
-        /**
          * Updates bonuses for two potential items.
          *
          * @param oldItem The old item.
          * @param newItem The new item.
          */
         private void updateBonus(Optional<Item> oldItem, Optional<Item> newItem) {
-            // Retrieve old and new bonuses.
-            int[] oldBonuses = getBonuses(oldItem);
-            int[] newBonuses = getBonuses(newItem);
-
+            IntUnaryOperator oldBonusFunction, newBonusFunction;
+            
+            if (oldItem.isPresent()) {
+                var equipmentDefinition = oldItem.get().getEquipDef();
+                oldBonusFunction = equipmentDefinition::getBonus;
+            } else {
+                oldBonusFunction = id -> 0;
+            }
+    
+            if (newItem.isPresent()) {
+                var equipmentDefinition = newItem.get().getEquipDef();
+                newBonusFunction = equipmentDefinition::getBonus;
+            } else {
+                newBonusFunction = id -> 0;
+            }
+            
             for (int index = 0; index < bonuses.length; index++) {
-                int old = oldBonuses[index];
-                int replace = newBonuses[index];
+                int old = oldBonusFunction.applyAsInt(index);
+                int replace = newBonusFunction.applyAsInt(index);
 
                 // Bonus(es) nonzero, this index needs updating.
                 if (old != 0 || replace != 0) {
@@ -128,8 +130,7 @@ public final class Equipment extends ItemContainer {
                 }
 
                 // Apply old (-) and new (+) bonuses.
-                bonuses[index] -= old;
-                bonuses[index] += replace;
+                bonuses[index] = bonuses[index] - old + replace;
             }
         }
 
@@ -159,11 +160,6 @@ public final class Equipment extends ItemContainer {
             writeBonuses.clear();
         }
     }
-
-    /**
-     * An array of bonuses, all of which are {@code 0}.
-     */
-    private static final int[] EMPTY_BONUSES = IntStream.generate(() -> 0).limit(12).toArray();
 
     /**
      * The head index.

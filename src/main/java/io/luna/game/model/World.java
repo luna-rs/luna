@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
@@ -159,7 +160,7 @@ public final class World {
     /**
      * The map of online players. Can be accessed safely from any thread.
      */
-    private final Map<String, Player> playerMap;
+    private final ConcurrentMap<String, Player> playerMap;
 
     /**
      * An immutable view of {@link #playerMap}.
@@ -173,15 +174,12 @@ public final class World {
      */
     public World(LunaContext context) {
         this.context = context;
-        playerMap = new ConcurrentHashMap<>();
-        immutablePlayerMap = Collections.unmodifiableMap(playerMap);
-    }
-
-    {
+        this.playerMap = new ConcurrentHashMap<>();
+        this.immutablePlayerMap = Collections.unmodifiableMap(playerMap);
+    
         // Initialize synchronization thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().
-                setNameFormat("WorldSynchronizationThread").build();
-        service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+        ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
+        this.service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
     }
 
     /**
