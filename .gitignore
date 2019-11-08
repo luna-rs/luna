@@ -72,7 +72,6 @@ gradle-app.setting
 # Log file
 *.log
 /data/logs
-# console_err.txt
 
 # Package Files #
 *.jar
