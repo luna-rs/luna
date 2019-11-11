@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.3.11"
+    val kotlinVersion = "1.3.50"
     val jfxVersion = "0.0.8"
 
     java
@@ -12,10 +12,7 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri("http://repo.maven.apache.org/maven2")
-    }
+    jcenter()
 }
 
 dependencies {
@@ -78,4 +75,8 @@ tasks.withType<KotlinCompile> {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+}
+
+tasks.withType<Test> {
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
 }
