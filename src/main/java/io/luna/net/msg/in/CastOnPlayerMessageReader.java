@@ -13,9 +13,9 @@ public final class CastOnPlayerMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player player, GameMessage msg) {
-        int targetPlayerId = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE); // the id of the player
+        int targetPlayerId = msg.getPayload().getShort(false, ValueType.ADD); // the id of the player
         // targeted
-        int targetSpellId = msg.getPayload().getShort(false, ValueType.ADD); // the id of the spell casted
+        int targetSpellId = msg.getPayload().getShort(false, ByteOrder.LITTLE); // the id of the spell casted
 
         if (!targetExistsInWorld(targetPlayerId, player.getWorld())) {
             throw new InvalidSpellTargetException(targetPlayerId);
