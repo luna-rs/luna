@@ -1,13 +1,10 @@
 package io.luna.util;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -97,11 +94,6 @@ public final class LoggingSettings {
         PRIVATE_MESSAGE("PrivateMessageLogger");
 
         /**
-         * An immutable set containing all values in this enumeration.
-         */
-        public static final ImmutableSet<FileOutputType> ALL = Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
-
-        /**
          * The logger's name.
          */
         private final String loggerName;
@@ -186,7 +178,7 @@ public final class LoggingSettings {
     /**
      * @return The active file logs. Determines what will be logged to text files.
      */
-    public Set<FileOutputType> activeFileLogs() {
-        return Collections.unmodifiableSet(activeFileLogs);
+    public ImmutableSet<FileOutputType> activeFileLogs() {
+        return ImmutableSet.copyOf(activeFileLogs);
     }
 }

@@ -97,7 +97,7 @@ fun World.addObject(id: Int,
                     type: ObjectType = ObjectType.DEFAULT,
                     direction: ObjectDirection = ObjectDirection.WEST,
                     plr: Player? = null): GameObject {
-    val obj = GameObject(ctx, id, Position(x, y, z), type, direction, Optional.ofNullable(plr))
+    val obj = GameObject(ctx, id, Position(x, y, z), type, direction, plr)
     return addObject(obj)
 }
 
@@ -132,7 +132,7 @@ fun World.addItem(id: Int,
                   y: Int,
                   z: Int = 0,
                   plr: Player? = null): GroundItem {
-    val item = GroundItem(ctx, id, amount, Position(x, y, z), Optional.ofNullable(plr))
+    val item = GroundItem(ctx, id, amount, Position(x, y, z), plr)
     return addItem(item)
 }
 

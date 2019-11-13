@@ -4,13 +4,14 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.model.mob.Player;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -92,11 +93,9 @@ public final class AreaManager implements Iterable<Area> {
      */
     public void notifyLogin(Player player) {
         var position = player.getPosition();
-        for (var area : registeredAreas) {
-            if (area.contains(position)) {
-                area.enter(player);
-            }
-        }
+        registeredAreas.stream()
+            .filter(area -> area.contains(position))
+            .forEach(area -> area.enter(player));
     }
 
     /**
@@ -106,11 +105,9 @@ public final class AreaManager implements Iterable<Area> {
      */
     public void notifyLogout(Player player) {
         var position = player.getPosition();
-        for (var area : registeredAreas) {
-            if (area.contains(position)) {
-                area.exit(player);
-            }
-        }
+        registeredAreas.stream()
+            .filter(area -> area.contains(position))
+            .forEach(area -> area.exit(player));
     }
 
     /**
@@ -120,13 +117,9 @@ public final class AreaManager implements Iterable<Area> {
      * @return The areas that contain the position.
      */
     public List<Area> getAllContaining(Position position) {
-        var areaList = new ArrayList<Area>(4);
-        for (var area : registeredAreas) {
-            if (area.contains(position)) {
-                areaList.add(area);
-            }
-        }
-        return areaList;
+        return registeredAreas.stream()
+            .filter(area -> area.contains(position))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -137,18 +130,8 @@ public final class AreaManager implements Iterable<Area> {
      */
     public Optional<Area> getFirstContaining(Position position) {
         var areaList = getAllContaining(position);
-        int lastSize = Integer.MAX_VALUE;
-        Area lastArea = null;
-        for (var area : areaList) {
-            int size = area.size();
-            if (size < lastSize) {
-                lastSize = size;
-                lastArea = area;
-            }
-        }
-        return Optional.ofNullable(lastArea);
+        return areaList.stream().min(Comparator.comparingInt(Area::size));
     }
-
 
     /**
      * Returns the last (largest) {@link Area} that contains {@code position}.
@@ -158,16 +141,7 @@ public final class AreaManager implements Iterable<Area> {
      */
     public Optional<Area> getLastContaining(Position position) {
         var areaList = getAllContaining(position);
-        int lastSize = 0;
-        Area lastArea = null;
-        for (var area : areaList) {
-            int size = area.size();
-            if (size > lastSize) {
-                lastSize = size;
-                lastArea = area;
-            }
-        }
-        return Optional.ofNullable(lastArea);
+        return areaList.stream().max(Comparator.comparingInt(Area::size));
     }
 
     /**

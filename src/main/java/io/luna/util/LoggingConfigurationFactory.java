@@ -30,19 +30,19 @@ import java.util.EnumSet;
 public final class LoggingConfigurationFactory extends ConfigurationFactory {
 
     @Override
-    public Configuration getConfiguration(final LoggerContext loggerContext, final ConfigurationSource source) {
+    public Configuration getConfiguration(LoggerContext loggerContext, ConfigurationSource source) {
         return getConfiguration(loggerContext, source.toString(), null);
     }
 
     @Override
-    public Configuration getConfiguration(final LoggerContext loggerContext, final String name, final URI configLocation) {
+    public Configuration getConfiguration(LoggerContext loggerContext, String name, URI configLocation) {
         ConfigurationBuilder<BuiltConfiguration> builder = newConfigurationBuilder();
         return createConfiguration(builder);
     }
 
     @Override
     protected String[] getSupportedTypes() {
-        return new String[]{"*"};
+        return new String[] { "*" };
     }
 
     /**
@@ -52,31 +52,34 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
      * @return The configuration instance.
      */
     private Configuration createConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
-
         // Set name and StatusLogger logging level.
         builder.setConfigurationName("LoggingConfigurationFactory");
         builder.setStatusLevel(Level.WARN);
 
         // Add custom logging levels.
-        for (var type : FileOutputType.ALL) {
+        for (var type : FileOutputType.values()) {
             builder.add(builder.newCustomLevel(type.name(), 700));
         }
 
         // Build console appenders.
         var outputType = Luna.loggingSettings().outputType();
         if (outputType == OutputType.OUT) {
-            builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_OUT).add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
+            builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_OUT)
+                    .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
         } else if (outputType == OutputType.ERR) {
-            builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_ERR).add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
+            builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_ERR)
+                    .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
         } else if (outputType == OutputType.MIXED) {
-            builder.add(builder.newAppender("sout", "Console").addAttribute("target", Target.SYSTEM_OUT).add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "INFO", "TRACE")));
-            builder.add(builder.newAppender("serr", "Console").addAttribute("target", Target.SYSTEM_ERR).add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "WARN")));
+            builder.add(builder.newAppender("sout", "Console").addAttribute("target", Target.SYSTEM_OUT)
+                    .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "INFO", "TRACE")));
+            builder.add(builder.newAppender("serr", "Console").addAttribute("target", Target.SYSTEM_ERR)
+                    .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "WARN")));
         }
 
         // Build file appenders.
         var newFileLogs = EnumSet.noneOf(FileOutputType.class);
         var activeFileLogs = Luna.loggingSettings().activeFileLogs();
-        for (var type : FileOutputType.ALL) {
+        for (var type : FileOutputType.values()) {
             if (type == FileOutputType.CONSOLE_OUT && outputType == OutputType.ERR) {
                 continue;
             }
@@ -85,7 +88,8 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
             }
             if (activeFileLogs.contains(type)) {
                 var fileName = type.getFileName();
-                var fileAppender = builder.newAppender(fileName, "RandomAccessFile").addAttribute("fileName", "./data/logs/" + fileName + ".txt");
+                var fileAppender = builder.newAppender(fileName, "RandomAccessFile")
+                        .addAttribute("fileName", "./data/logs/" + fileName + ".txt");
                 if (outputType == OutputType.MIXED) {
                     if (type == FileOutputType.CONSOLE_OUT) {
                         fileAppender.add(getLevelRangeFilter(builder, "INFO", "TRACE"));
@@ -96,7 +100,8 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
                 if (type == FileOutputType.CONSOLE_OUT || type == FileOutputType.CONSOLE_ERR) {
                     fileAppender.add(getPatternLayout(builder));
                 } else {
-                    fileAppender.add(builder.newLayout("PatternLayout").addAttribute("pattern","[%d{EEEE | dd, MMM yyyy | h:mm:ss a}] %msg%n"));
+                    fileAppender.add(builder.newLayout("PatternLayout")
+                            .addAttribute("pattern","[%d{EEEE | dd, MMM yyyy | h:mm:ss a}] %msg%n"));
                 }
                 builder.add(fileAppender);
                 newFileLogs.add(type);
@@ -161,7 +166,8 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
      * @param maxLevel The maximum logging level.
      * @return The filter.
      */
-    private FilterComponentBuilder getLevelRangeFilter(ConfigurationBuilder<BuiltConfiguration> builder, String minLevel, String maxLevel) {
+    private FilterComponentBuilder getLevelRangeFilter(ConfigurationBuilder<BuiltConfiguration> builder,
+                                                       String minLevel, String maxLevel) {
         return builder.newFilter("LevelRangeFilter", Result.ACCEPT, Result.DENY).
                 addAttribute("minLevel", minLevel).
                 addAttribute("maxLevel", maxLevel);

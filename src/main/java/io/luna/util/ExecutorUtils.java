@@ -45,13 +45,13 @@ public final class ExecutorUtils {
     }
 
     /**
-     * Create a new thread pool with {@code cpu_count * 2} workers.
+     * Create a new thread pool with {@code cpu_count} workers.
      *
      * @param name The naming scheme for the workers in the pool.
      * @return The new cached thread pool.
      */
     public static ListeningExecutorService threadPool(String name) {
-        return threadPool(name, ThreadUtils.cpuCount() * 2);
+        return threadPool(name, ThreadUtils.cpuCount());
     }
 
     public static ThreadFactory threadFactory(Class<?> classType) {

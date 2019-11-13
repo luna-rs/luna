@@ -9,7 +9,6 @@ import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,12 +26,12 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
-     * The player to update for. If empty, updates for all players.
+     * The player to update for. If {@code null}, updates for all players.
      */
-    private final Optional<Player> player;
+    private final Player player;
 
     /**
-     * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
+     * An immutable list of the surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
      */
     private ImmutableList<Set<Player>> surroundingPlayers;
 
@@ -42,9 +41,9 @@ public abstract class StationaryEntity extends Entity {
      * @param context The context instance.
      * @param position The position.
      * @param type The entity type.
-     * @param player The player to update for. If empty, updates for all players.
+     * @param player The player to update for. If {@code null}, updates for all players.
      */
-    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> player) {
+    public StationaryEntity(LunaContext context, Position position, EntityType type, Player player) {
         super(context, position, type);
         this.player = player;
     }
@@ -85,20 +84,17 @@ public abstract class StationaryEntity extends Entity {
      * @param updateType The update type to apply.
      */
     private void applyUpdate(UpdateType updateType) {
-        if (player.isPresent() && player.get().isViewableFrom(this)) {
-
+        if (player != null && player.isViewableFrom(this)) {
             // We have a player to update for.
-            sendUpdateMessage(player.get(), updateType);
-        } else {
-            // We don't, so update for all viewable surrounding players.
-            for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
-                for (Player inside : chunkPlayers) {
-                    if (isViewableFrom(inside)) {
-                        sendUpdateMessage(inside, updateType);
-                    }
-                }
-            }
+            sendUpdateMessage(player, updateType);
+            return;
         }
+
+        // We don't, so update for all viewable surrounding players.
+        getSurroundingPlayers().stream()
+                .flatMap(Set::stream)
+                .filter(this::isViewableFrom)
+                .forEach(inside -> sendUpdateMessage(inside, updateType));
     }
 
     /**
@@ -120,7 +116,7 @@ public abstract class StationaryEntity extends Entity {
     /**
      * @return The player to update for.
      */
-    public final Optional<Player> getPlayer() {
+    public final Player getPlayer() {
         return player;
     }
 
@@ -128,19 +124,19 @@ public abstract class StationaryEntity extends Entity {
      * @return {@code true} if this entity is updating for everyone.
      */
     public final boolean isGlobal() {
-        return !player.isPresent();
+        return player == null;
     }
 
     /**
      * @return {@code true} if this entity is updating for just one player.
      */
     public final boolean isLocal() {
-        return player.isPresent();
+        return !isGlobal();
     }
 
     /**
-     * Returns an {@link ImmutableList} representing surrounding players. Each set represents players within a viewable
-     * chunk.
+     * Returns an immutable {@link List} representing surrounding players. Each set represents players within a
+     * viewable chunk.
      * <p>
      * We retain references to the original sets instead of flattening them, so that they implicitly stay updated as
      * players move in and out of view of this entity.
@@ -148,8 +144,10 @@ public abstract class StationaryEntity extends Entity {
     public final ImmutableList<Set<Player>> getSurroundingPlayers() {
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
+
             // Retrieve viewable chunks.
             List<Chunk> viewableChunks = world.getChunks().getViewableChunks(position);
+
             for (Chunk chunk : viewableChunks) {
                 // Wrap players in immutable view, add it.
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));

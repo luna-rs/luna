@@ -1,6 +1,5 @@
 package io.luna.game.model.item;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 
@@ -64,7 +63,7 @@ public abstract class RefreshListener implements ItemContainerListener {
 
     @Override
     public final void onSingleUpdate(int index, ItemContainer items, Optional<Item> oldItem, Optional<Item> newItem) {
-        ImmutableList<IndexedItem> updateItem = ImmutableList.of(getItem(index, newItem));
+        List<IndexedItem> updateItem = List.of(getItem(index, newItem));
         sendMsg(items, updateItem);
     }
 

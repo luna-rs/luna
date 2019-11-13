@@ -46,7 +46,7 @@ public final class ObjectDefinition implements Definition {
     private final int width;
 
     /**
-     * A set of actions.
+     * An immutable list of actions.
      */
     private final ImmutableList<String> actions;
 
@@ -180,7 +180,7 @@ public final class ObjectDefinition implements Definition {
     }
 
     /**
-     * @return A set of actions.
+     * @return An immutable list of actions.
      */
     public ImmutableList<String> getActions() {
         return actions;

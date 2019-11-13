@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.message.ParameterizedMessage
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -31,7 +31,7 @@ object PunishmentHandler {
     /**
      * The path to the IP ban database.
      */
-    private val IP_BANS = Paths.get("./data/blacklist.txt")
+    private val IP_BANS = Path.of("data", "blacklist.txt")
 
     /**
      * The punishment logging level.
@@ -65,8 +65,8 @@ object PunishmentHandler {
             // Add target to local file database.
             return game.submit {
                 try {
-                    Files.write(IP_BANS,
-                                (target.currentIp + '\n').toByteArray(),
+                    Files.writeString(IP_BANS,
+                                (target.currentIp + '\n'),
                                 StandardOpenOption.CREATE,
                                 StandardOpenOption.WRITE,
                                 StandardOpenOption.APPEND)

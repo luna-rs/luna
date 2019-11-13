@@ -7,8 +7,7 @@ import io.luna.Luna;
 import io.luna.game.event.impl.SkillChangeEvent;
 import io.luna.game.plugin.PluginManager;
 
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -21,12 +20,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Skill {
 
     /**
-     * The names of all skills.
+     * An immutable list of the names of all skills.
      */
-    public static final ImmutableList<String> NAMES = ImmutableList.of("Attack", "Defence", "Strength",
-            "Hitpoints", "Ranged", "Prayer", "Magic", "Cooking", "Woodcutting", "Fletching", "Fishing",
-            "Firemaking", "Crafting", "Smithing", "Mining", "Herblore", "Agility", "Thieving", "Slayer",
-            "Farming", "Runecrafting");
+    public static final ImmutableList<String> NAMES = ImmutableList.of(
+        "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
+        "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing",
+        "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming", "Runecrafting"
+    );
 
     /**
      * The combat skill identifiers.
@@ -34,7 +34,7 @@ public final class Skill {
     public static final Range<Integer> COMBAT_IDS = Range.closed(0, 6);
 
     /**
-     * A map of names to identifiers.
+     * An immutable map of names to identifiers.
      */
     public static final ImmutableMap<String, Integer> NAME_TO_ID;
 
@@ -175,9 +175,8 @@ public final class Skill {
 
     static {
         // Build and set [name -> identifier] cache.
-        Map<String, Integer> skills = IntStream.range(0, NAMES.size()).
-                boxed().collect(Collectors.toMap(NAMES::get, it -> it));
-        NAME_TO_ID = ImmutableMap.copyOf(skills);
+        NAME_TO_ID = IntStream.range(0, NAMES.size()).boxed()
+                .collect(ImmutableMap.toImmutableMap(NAMES::get, Function.identity()));
     }
 
     /**
@@ -233,7 +232,6 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
-
         amount = amount * Luna.settings().experienceMultiplier();
         setExperience(experience + amount);
     }
@@ -324,8 +322,7 @@ public final class Skill {
      */
     public void removeLevels(int amount) {
         int newAmount = getLevel() - amount;
-
-        newAmount = newAmount < 0 ? 0 : newAmount;
+        newAmount = Math.max(newAmount, 0);
         setLevel(newAmount);
     }
 

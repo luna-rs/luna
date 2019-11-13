@@ -19,9 +19,8 @@ public enum Currency {
     /**
      * An immutable set of currency identifiers.
      */
-    public static final ImmutableSet<Integer> IDENTIFIERS = Arrays.stream(values()).
-            map(currency -> currency.id).
-            collect(ImmutableSet.toImmutableSet());
+    public static final ImmutableSet<Integer> IDENTIFIERS = Arrays.stream(values()).map(currency -> currency.id)
+            .collect(ImmutableSet.toImmutableSet());
 
     /**
      * The item identifier.
@@ -45,7 +44,7 @@ public enum Currency {
      */
     Currency(int id) {
         this.id = id;
-        pluralName = name().toLowerCase().replaceAll("_", " ");
+        pluralName = name().toLowerCase().replace("_", " ");
         singularName = computeSingularName();
     }
 

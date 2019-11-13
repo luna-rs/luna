@@ -29,11 +29,12 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * An immutable list of factors used to compare mobs.
      */
     private final ImmutableList<ComparableFactor> factors = ImmutableList.of(
-            this::comparePosition,
-            this::compareFriends,
-            this::compareSize,
-            this::compareCombatLevel,
-            this::compareCombat);
+        this::comparePosition,
+        this::compareFriends,
+        this::compareSize,
+        this::compareCombatLevel,
+        this::compareCombat
+    );
 
     /**
      * The player to compare mobs for.

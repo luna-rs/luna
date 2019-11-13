@@ -7,16 +7,16 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.parser.JsonFileParser;
+import io.luna.util.parser.AbstractJsonFileParser;
 
 import java.lang.reflect.Field;
 
 /**
- * A {@link JsonFileParser} implementation that parses incoming message listener metadata.
+ * A {@link AbstractJsonFileParser} implementation that parses incoming message listener metadata.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader> {
+public final class MessageRepositoryFileParser extends AbstractJsonFileParser<GameMessageReader> {
 
     /**
      * A default implementation of a {@link GameMessageReader}. It does nothing.

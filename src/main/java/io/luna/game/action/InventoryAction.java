@@ -1,6 +1,5 @@
 package io.luna.game.action;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 
@@ -91,14 +90,14 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
      * @return The items that will be removed.
      */
     public List<Item> remove() {
-        return ImmutableList.of();
+        return List.of();
     }
 
     /**
      * @return The items that will be added.
      */
     public List<Item> add() {
-        return ImmutableList.of();
+        return List.of();
     }
 
     /**

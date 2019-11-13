@@ -5,25 +5,26 @@ import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
 
 /**
- * An {@link UpdateBlockSet} implementation that handles the encoding of {@link Npc} update
+ * An {@link AbstractUpdateBlockSet} implementation that handles the encoding of {@link Npc} update
  * blocks.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class NpcUpdateBlockSet extends UpdateBlockSet<Npc> {
+public class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     /**
      * An immutable list of update blocks.
      */
     private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-            new AnimationUpdateBlock(),
-            new SecondaryHitUpdateBlock(),
-            new GraphicUpdateBlock(),
-            new InteractionUpdateBlock(),
-            new ForcedChatUpdateBlock(),
-            new PrimaryHitUpdateBlock(),
-            new TransformUpdateBlock(),
-            new FacePositionUpdateBlock());
+        new AnimationUpdateBlock(),
+        new SecondaryHitUpdateBlock(),
+        new GraphicUpdateBlock(),
+        new InteractionUpdateBlock(),
+        new ForcedChatUpdateBlock(),
+        new PrimaryHitUpdateBlock(),
+        new TransformUpdateBlock(),
+        new FacePositionUpdateBlock()
+    );
 
     /**
      * Creates a new {@link NpcUpdateBlockSet}.

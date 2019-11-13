@@ -1,7 +1,6 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -139,7 +138,6 @@ public class Npc extends Mob {
     private void setSkills() {
         // Set the attack, strength, defence, ranged, and magic levels.
         combatDefinition.ifPresent(def -> {
-            ImmutableList<Integer> skills = def.getSkills();
             Skill attack = skill(Skill.ATTACK);
             Skill strength = skill(Skill.STRENGTH);
             Skill defence = skill(Skill.DEFENCE);
@@ -147,11 +145,11 @@ public class Npc extends Mob {
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
 
-            attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
-            strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
-            defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
-            ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
-            magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+            attack.setLevel(def.getSkill(NpcCombatDefinition.ATTACK));
+            strength.setLevel(def.getSkill(NpcCombatDefinition.STRENGTH));
+            defence.setLevel(def.getSkill(NpcCombatDefinition.DEFENCE));
+            ranged.setLevel(def.getSkill(NpcCombatDefinition.RANGED));
+            magic.setLevel(def.getSkill(NpcCombatDefinition.MAGIC));
             hitpoints.setLevel(def.getHitpoints());
         });
     }

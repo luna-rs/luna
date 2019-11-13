@@ -1,6 +1,5 @@
 package io.luna.net.msg.out;
 
-import com.google.common.collect.ImmutableList;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -9,6 +8,7 @@ import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A {@link GameMessageWriter} implementation that displays an item on a widget.
@@ -48,9 +48,9 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
         this.id = id;
 
         if (items.length == 0) {
-            this.items = ImmutableList.of();
+            this.items = List.of();
         } else if (items.length == 1) {
-            this.items = ImmutableList.of(items[0]);
+            this.items = List.of(items[0]);
         } else {
             // Arrays.asList is faster here, doesn't make a copy of the array.
             this.items = Arrays.asList(items);

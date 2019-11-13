@@ -3,6 +3,7 @@ package io.luna.game.model.mob;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -45,12 +46,10 @@ public final class PlayerInteractionMenu implements Iterable<PlayerInteraction> 
      * @return The interaction, wrapped in an optional.
      */
     public Optional<PlayerInteraction> forInteraction(String name) {
-        for (PlayerInteraction interaction : interactions) {
-            if (interaction != null && interaction.getName().equals(name)) {
-                return Optional.of(interaction);
-            }
-        }
-        return Optional.empty();
+        return Arrays.stream(interactions)
+            .filter(Objects::nonNull)
+            .filter(interaction -> interaction.getName().equals(name))
+            .findAny();
     }
 
     /**

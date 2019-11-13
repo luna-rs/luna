@@ -13,16 +13,6 @@ import java.util.OptionalInt;
 public final class ItemDefinition implements Definition {
 
     /**
-     * Determines if {@code id} is valid.
-     *
-     * @param id The identifier.
-     * @return {@code true} if the identifier is valid.
-     */
-    public static boolean isIdValid(int id) {
-        return id > 0 && id < SIZE;
-    }
-
-    /**
      * The definition count.
      */
     public static final int SIZE = 7956;
@@ -78,12 +68,12 @@ public final class ItemDefinition implements Definition {
     private final boolean tradeable;
 
     /**
-     * A set of inventory actions.
+     * An immutable list of inventory actions.
      */
     private final ImmutableList<String> inventoryActions;
 
     /**
-     * A set of ground actions.
+     * An immutable list of ground actions.
      */
     private final ImmutableList<String> groundActions;
 
@@ -102,9 +92,9 @@ public final class ItemDefinition implements Definition {
      * @param inventoryActions A list of inventory actions.
      * @param groundActions A list of ground actions.
      */
-    public ItemDefinition(int id, String name, boolean stackable, int value, int notedId,
-                          int unnotedId, boolean membersOnly, double weight, boolean tradeable,
-                          String[] inventoryActions, String[] groundActions) {
+    public ItemDefinition(int id, String name, boolean stackable, int value, int notedId, int unnotedId,
+                          boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
+                          String[] groundActions) {
         this.id = id;
         this.name = name;
         this.stackable = stackable;
@@ -116,6 +106,16 @@ public final class ItemDefinition implements Definition {
         this.tradeable = tradeable;
         this.inventoryActions = ImmutableList.copyOf(inventoryActions);
         this.groundActions = ImmutableList.copyOf(groundActions);
+    }
+
+    /**
+     * Determines if {@code id} is valid.
+     *
+     * @param id The identifier.
+     * @return {@code true} if the identifier is valid.
+     */
+    public static boolean isIdValid(int id) {
+        return id > 0 && id < SIZE;
     }
 
     /**
@@ -219,14 +219,14 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
-     * @return A set of inventory actions.
+     * @return An immutable list of inventory actions.
      */
     public ImmutableList<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
-     * @return A set of ground actions.
+     * @return An immutable list of ground actions.
      */
     public ImmutableList<String> getGroundActions() {
         return groundActions;

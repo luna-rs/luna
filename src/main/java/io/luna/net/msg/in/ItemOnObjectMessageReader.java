@@ -16,8 +16,6 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -43,7 +41,8 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         Position position = new Position(objectX, objectY, player.getPosition().getZ());
 
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT, ObjectDirection.WEST, Optional.empty());
+        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT,
+            ObjectDirection.WEST, null);
         Event event = new ItemOnObjectEvent(player, itemId, itemIndexId,
                 itemInterfaceId, objectId, objectX, objectY);
         player.submitAction(new InteractionAction(player, object) {
