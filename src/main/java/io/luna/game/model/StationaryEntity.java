@@ -9,7 +9,6 @@ import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,9 +26,9 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
-     * The player to update for. If empty, updates for all players.
+     * The player to update for. If {@code null}, updates for all players.
      */
-    private final Optional<Player> player;
+    private final Player player;
 
     /**
      * An immutable list of the surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
@@ -42,9 +41,9 @@ public abstract class StationaryEntity extends Entity {
      * @param context The context instance.
      * @param position The position.
      * @param type The entity type.
-     * @param player The player to update for. If empty, updates for all players.
+     * @param player The player to update for. If {@code null}, updates for all players.
      */
-    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> player) {
+    public StationaryEntity(LunaContext context, Position position, EntityType type, Player player) {
         super(context, position, type);
         this.player = player;
     }
@@ -85,9 +84,9 @@ public abstract class StationaryEntity extends Entity {
      * @param updateType The update type to apply.
      */
     private void applyUpdate(UpdateType updateType) {
-        if (player.isPresent() && player.get().isViewableFrom(this)) {
+        if (player != null && player.isViewableFrom(this)) {
             // We have a player to update for.
-            sendUpdateMessage(player.get(), updateType);
+            sendUpdateMessage(player, updateType);
             return;
         }
 
@@ -117,7 +116,7 @@ public abstract class StationaryEntity extends Entity {
     /**
      * @return The player to update for.
      */
-    public final Optional<Player> getPlayer() {
+    public final Player getPlayer() {
         return player;
     }
 
@@ -125,14 +124,14 @@ public abstract class StationaryEntity extends Entity {
      * @return {@code true} if this entity is updating for everyone.
      */
     public final boolean isGlobal() {
-        return player.isEmpty();
+        return player == null;
     }
 
     /**
      * @return {@code true} if this entity is updating for just one player.
      */
     public final boolean isLocal() {
-        return player.isPresent();
+        return !isGlobal();
     }
 
     /**

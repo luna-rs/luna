@@ -1,6 +1,6 @@
 package world.player.item.groundItem
 
-import api.predef.*
+import api.predef.world
 import io.luna.game.model.item.GroundItem
 import io.luna.game.task.Task
 import java.util.*
@@ -66,8 +66,7 @@ class GroundItemTask : Task(100) {
                         tradeable &&
                         item.isLocal -> {
                     unregisterQueue += item
-                    registerQueue += GroundItem(item.context, item.id, item.amount, item.position,
-                                                Optional.empty())
+                    registerQueue += GroundItem(item.context, item.id, item.amount, item.position, null)
                 }
 
                 // Local untradeable item expires.

@@ -13,7 +13,6 @@ import io.luna.net.msg.out.AddObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * An {@link Entity} implementation representing an object in the Runescape world.
@@ -52,7 +51,8 @@ public final class GameObject extends StationaryEntity {
      * @param direction The direction.
      * @param player The player to update for.
      */
-    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, Optional<Player> player) {
+    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction,
+                      Player player) {
         super(context, position, EntityType.OBJECT, player);
         this.id = id;
         this.objectType = objectType;

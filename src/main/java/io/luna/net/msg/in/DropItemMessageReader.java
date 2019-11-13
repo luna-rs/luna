@@ -15,8 +15,6 @@ import io.luna.util.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Optional;
-
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -59,7 +57,7 @@ public final class DropItemMessageReader extends GameMessageReader {
             // Drop item.
             Item item = player.getInventory().get(index);
             GroundItem dropItem = new GroundItem(player.getContext(), itemId, inventoryItem.getAmount(),
-                    player.getPosition(), Optional.of(player));
+                    player.getPosition(), player);
             world.getItems().register(dropItem);
             player.getInventory().set(index, null);
             logger.log(ITEM_DROP, "{}: {}(x{})", player.getUsername(),item.getItemDef().getName(), box(item.getAmount()));

@@ -12,7 +12,6 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
-import java.util.Optional;
 import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -48,7 +47,7 @@ public final class GroundItem extends StationaryEntity {
      * @param amount The item amount.
      * @param position The position of the item.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) { // TODO remove Optional... just use null and then use ofNullable
+    public GroundItem(LunaContext context, int id, int amount, Position position, Player player) {
         super(context, position, EntityType.ITEM, player);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
@@ -103,7 +102,7 @@ public final class GroundItem extends StationaryEntity {
      * @param expire The value.
      */
     public void setExpire(boolean expire) {
-        if (expire && !expireMinutes.isPresent()) {
+        if (expire && expireMinutes.isEmpty()) {
             expireMinutes = OptionalInt.of(0);
         } else if (!expire && expireMinutes.isPresent()) {
             expireMinutes = OptionalInt.empty();
