@@ -1,13 +1,8 @@
 package io.luna.game.model.mob.inter;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -23,39 +18,40 @@ public final class GameTabSet {
      * An enumerated type representing the sidebar tab indexes.
      */
     public enum TabIndex {
-        COMBAT(0),
-        SKILL(1),
-        QUEST(2),
-        INVENTORY(3),
-        EQUIPMENT(4),
-        PRAYER(5),
-        MAGIC(6),
-        UNUSED(7),
-        FRIENDS(8),
-        IGNORES(9),
-        LOGOUT(10),
-        SETTINGS(11),
-        EMOTE(12),
-        MUSIC(13);
-
-        /**
-         * An immutable set containing all elements in this enumerated type.
-         */
-        public static final ImmutableSet<TabIndex> ALL =
-                Arrays.stream(values()).collect(Sets.toImmutableEnumSet());
+        COMBAT(0, 2423),
+        SKILL(1, 3917),
+        QUEST(2, 638),
+        INVENTORY(3, 3213),
+        EQUIPMENT(4, 1644),
+        PRAYER(5, 5608),
+        MAGIC(6, 1151),
+        UNUSED(7, -1),
+        FRIENDS(8, 5065),
+        IGNORES(9, 5715),
+        LOGOUT(10, 2449),
+        SETTINGS(11, 904),
+        EMOTE(12, 147),
+        MUSIC(13, 962);
 
         /**
          * The index.
          */
         private final int id;
+    
+        /**
+         * The default tab.
+         */
+        private final int defaultTab;
 
         /**
          * Creates a new {@link TabIndex}.
          *
          * @param id The index.
+         * @param defaultTab The default tab.
          */
-        TabIndex(int id) {
+        TabIndex(int id, int defaultTab) {
             this.id = id;
+            this.defaultTab = defaultTab;
         }
 
         /**
@@ -64,33 +60,14 @@ public final class GameTabSet {
         public final int getId() {
             return id;
         }
+    
+        /**
+         * @return The default tab.
+         */
+        public int getDefaultTab() {
+            return defaultTab;
+        }
     }
-
-    // Initialize map of default tabs.
-    static {
-        Map<TabIndex, Integer> defaultTabs = new EnumMap<>(TabIndex.class);
-        defaultTabs.put(TabIndex.COMBAT, 2423);
-        defaultTabs.put(TabIndex.SKILL, 3917);
-        defaultTabs.put(TabIndex.QUEST, 638);
-        defaultTabs.put(TabIndex.INVENTORY, 3213);
-        defaultTabs.put(TabIndex.EQUIPMENT, 1644);
-        defaultTabs.put(TabIndex.PRAYER, 5608);
-        defaultTabs.put(TabIndex.MAGIC, 1151);
-        defaultTabs.put(TabIndex.UNUSED, -1);
-        defaultTabs.put(TabIndex.FRIENDS, 5065);
-        defaultTabs.put(TabIndex.IGNORES, 5715);
-        defaultTabs.put(TabIndex.LOGOUT, 2449);
-        defaultTabs.put(TabIndex.SETTINGS, 904);
-        defaultTabs.put(TabIndex.EMOTE, 147);
-        defaultTabs.put(TabIndex.MUSIC, 962);
-
-        DEFAULT = ImmutableMap.copyOf(defaultTabs);
-    }
-
-    /**
-     * The immutable map of default tabs.
-     */
-    private static final ImmutableMap<TabIndex, Integer> DEFAULT;
 
     /**
      * The Player instance.
@@ -98,7 +75,7 @@ public final class GameTabSet {
     private final Player player;
 
     /**
-     * An array of currently set game tabs.
+     * A map of currently-set game tabs.
      */
     private final Map<TabIndex, Integer> tabs = new EnumMap<>(TabIndex.class);
 
@@ -156,7 +133,9 @@ public final class GameTabSet {
      * Clears the interfaces on all tabs.
      */
     public void clearAll() {
-        TabIndex.ALL.forEach(this::clear);
+        for (var tabIndex : TabIndex.values()) {
+            clear(tabIndex);
+        }
     }
 
     /**
@@ -165,23 +144,15 @@ public final class GameTabSet {
      * @param index The tab to reset.
      */
     public void reset(TabIndex index) {
-        set(index, DEFAULT.get(index));
+        set(index, index.defaultTab);
     }
 
     /**
      * Resets the interfaces on all tabs back to their defaults.
      */
     public void resetAll() {
-        TabIndex.ALL.forEach(this::reset);
-    }
-
-    /**
-     * Returns a <strong>copy</strong> of the backing enum map. A new copy is created on each invocation of
-     * this method.
-     *
-     * @return An immutable copy of the backing enum map.
-     */
-    public ImmutableMap<TabIndex, Integer> getAll() {
-        return Maps.immutableEnumMap(tabs);
+        for (var taxIndex : TabIndex.values()) {
+            reset(taxIndex);
+        }
     }
 }

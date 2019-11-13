@@ -7,6 +7,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 import io.luna.game.model.mob.inter.StandardInterface;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -111,7 +112,7 @@ public final class PlayerAppearance {
     /**
      * The default appearance set.
      */
-    public static final int[] DEFAULT_APPEARANCE = {0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0};
+    private static final int[] DEFAULT_APPEARANCE = {0, 0, 10, 18, 26, 33, 36, 42, 0, 0, 0, 0, 0};
 
     /**
      * The valid gender values.
@@ -160,6 +161,19 @@ public final class PlayerAppearance {
         colors.put(FEET_COLOR, Range.closed(0, 5));
         colors.put(SKIN_COLOR, Range.closed(0, 7));
         VALID_COLORS = ImmutableMap.copyOf(colors);
+    }
+
+    /**
+     * An array of appearance values.
+     */
+    private int[] appearance;
+
+    /**
+     * Creates a new {@link PlayerAppearance}.
+     */
+    public PlayerAppearance() {
+        // Populate the appearance array with the default values.
+        this.appearance = Arrays.copyOf(DEFAULT_APPEARANCE, DEFAULT_APPEARANCE.length);
     }
 
     /**
@@ -233,19 +247,6 @@ public final class PlayerAppearance {
     }
 
     /**
-     * An array of appearance values.
-     */
-    private int[] appearance;
-
-    /**
-     * Creates a new {@link PlayerAppearance}.
-     */
-    public PlayerAppearance() {
-        // Populate the appearance array with the default values.
-        this.appearance = DEFAULT_APPEARANCE.clone();
-    }
-
-    /**
      * Retrieves the value for {@code index}.
      *
      * @param index The identifier.
@@ -287,15 +288,13 @@ public final class PlayerAppearance {
      */
     public void setValues(int[] newValues) {
         checkArgument(isAllValid(newValues), "Invalid appearance array.");
-        appearance = newValues.clone();
+        appearance = Arrays.copyOf(newValues, newValues.length);
     }
 
     /**
-     * Returns a mutable shallow-copy of the appearance array.
-     *
-     * @return A shallow-copy of the appearance array.
+     * @return A deep-copy of the appearance array.
      */
     public int[] toArray() {
-        return appearance.clone();
+        return Arrays.copyOf(appearance, appearance.length);
     }
 }

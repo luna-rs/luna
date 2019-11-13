@@ -45,7 +45,13 @@ public final class StringUtils {
         '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
         '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
     };
-
+    
+    /**
+     * A private constructor to discourage external instantiation.
+     */
+    private StringUtils() {
+    }
+    
     /**
      * Unpacks text received from the client.
      *
@@ -154,19 +160,12 @@ public final class StringUtils {
      * @return The capitalized String.
      */
     public static String capitalize(String s) {
-        if (!s.isEmpty()) {
-            String capital = s.substring(0, 1).toUpperCase();
-            StringBuilder builder = new StringBuilder(s);
-
-            builder.setCharAt(0, capital.charAt(0));
-            return builder.toString();
+        if (s.isEmpty()) {
+            return s;
         }
-        return s;
-    }
-
-    /**
-     * A private constructor to discourage external instantiation.
-     */
-    private StringUtils() {
+        
+        StringBuilder builder = new StringBuilder(s);
+        builder.setCharAt(0, Character.toUpperCase(s.charAt(0)));
+        return builder.toString();
     }
 }
