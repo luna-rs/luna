@@ -1,22 +1,21 @@
 package io.luna.game.model.mob.block;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
 
-import java.util.List;
-
 /**
- * An {@link UpdateBlockSet} implementation that handles the encoding of {@link Npc} update
+ * An {@link AbstractUpdateBlockSet} implementation that handles the encoding of {@link Npc} update
  * blocks.
  *
  * @author lare96 <http://github.com/lare96>
  */
-public class NpcUpdateBlockSet extends UpdateBlockSet<Npc> {
+public class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     /**
-     * An unmodifiable list of update blocks.
+     * An immutable list of update blocks.
      */
-    private static final List<UpdateBlock> UPDATE_BLOCKS = List.of(
+    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
         new AnimationUpdateBlock(),
         new SecondaryHitUpdateBlock(),
         new GraphicUpdateBlock(),

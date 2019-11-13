@@ -48,18 +48,15 @@ public final class AttributeMap {
      * @param loadedAttributeMap The loaded attributes.
      */
     public void load(Map<String, Object> loadedAttributeMap) {
-        for (var entry : loadedAttributeMap.entrySet()) {
-            var key = entry.getKey();
-            var value = entry.getValue();
-
+        loadedAttributeMap.forEach((String key, Object value) -> {
             // Because Google gson changes Map to LinkedTreeMap.
-            if(value instanceof LinkedTreeMap) {
-                value = new HashMap<>((LinkedTreeMap) value);
+            if (value instanceof LinkedTreeMap<?, ?>) {
+                value = new HashMap<>((LinkedTreeMap<?, ?>) value);
             }
 
             checkState(loadedAttributes.put(key, value) == null,
-                    "Duplicate persistent attribute key {" + key + "}.");
-        }
+                "Duplicate persistent attribute key {%s}.", key);
+        });
     }
 
     /**
@@ -69,15 +66,12 @@ public final class AttributeMap {
      */
     public Map<String, Object> save() {
         Map<String, Object> attributesCopy = new HashMap<>();
-        for (var entry : attributes.entrySet()) {
-            var key = entry.getKey();
-            if(key.isPersistent()) {
-                attributesCopy.put(key.getPersistenceKey(), entry.getValue());
+        attributes.forEach((Attribute<?> key, Object value) -> {
+            if (key.isPersistent()) {
+                attributesCopy.put(key.getPersistenceKey(), value);
             }
-        }
-        for (var entry : loadedAttributes.entrySet()) {
-            attributesCopy.put(entry.getKey(), entry.getValue());
-        }
+        });
+        attributesCopy.putAll(loadedAttributes);
         return attributesCopy;
     }
 

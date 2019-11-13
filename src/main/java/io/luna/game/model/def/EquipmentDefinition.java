@@ -1,13 +1,13 @@
 package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 
-import java.util.List;
 import java.util.Optional;
 
 import static io.luna.util.StringUtils.addArticle;
@@ -134,9 +134,9 @@ public final class EquipmentDefinition implements Definition {
     private final boolean fullHelmet;
 
     /**
-     * An unmodifiable list of equipment requirements.
+     * An immutable list of equipment requirements.
      */
-    private final List<Requirement> requirements;
+    private final ImmutableList<Requirement> requirements;
 
     /**
      * A list of equipment bonuses.
@@ -155,13 +155,13 @@ public final class EquipmentDefinition implements Definition {
      * @param bonuses A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                              Requirement[] requirements, int[] bonuses) {
+                               Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
         this.fullBody = fullBody;
         this.fullHelmet = fullHelmet;
-        this.requirements = List.of(requirements);
+        this.requirements = ImmutableList.copyOf(requirements);
         this.bonuses = bonuses.clone();
     }
 
@@ -220,9 +220,9 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * @return An unmodifiable list of the requirements.
+     * @return An immutable list of the requirements.
      */
-    public List<Requirement> getRequirements() {
+    public ImmutableList<Requirement> getRequirements() {
         return requirements;
     }
 

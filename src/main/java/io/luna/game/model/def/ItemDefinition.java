@@ -1,8 +1,8 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
-import java.util.List;
 import java.util.OptionalInt;
 
 /**
@@ -11,16 +11,6 @@ import java.util.OptionalInt;
  * @author lare96 <http://github.org/lare96>
  */
 public final class ItemDefinition implements Definition {
-
-    /**
-     * Determines if {@code id} is valid.
-     *
-     * @param id The identifier.
-     * @return {@code true} if the identifier is valid.
-     */
-    public static boolean isIdValid(int id) {
-        return id > 0 && id < SIZE;
-    }
 
     /**
      * The definition count.
@@ -78,14 +68,14 @@ public final class ItemDefinition implements Definition {
     private final boolean tradeable;
 
     /**
-     * An unmodifiable list of inventory actions.
+     * An immutable list of inventory actions.
      */
-    private final List<String> inventoryActions;
+    private final ImmutableList<String> inventoryActions;
 
     /**
-     * An unmodifiable list of ground actions.
+     * An immutable list of ground actions.
      */
-    private final List<String> groundActions;
+    private final ImmutableList<String> groundActions;
 
     /**
      * Creates a new {@link ItemDefinition}.
@@ -102,9 +92,9 @@ public final class ItemDefinition implements Definition {
      * @param inventoryActions A list of inventory actions.
      * @param groundActions A list of ground actions.
      */
-    public ItemDefinition(int id, String name, boolean stackable, int value, int notedId,
-                          int unnotedId, boolean membersOnly, double weight, boolean tradeable,
-                          String[] inventoryActions, String[] groundActions) {
+    public ItemDefinition(int id, String name, boolean stackable, int value, int notedId, int unnotedId,
+                          boolean membersOnly, double weight, boolean tradeable, String[] inventoryActions,
+                          String[] groundActions) {
         this.id = id;
         this.name = name;
         this.stackable = stackable;
@@ -114,8 +104,18 @@ public final class ItemDefinition implements Definition {
         this.membersOnly = membersOnly;
         this.weight = weight;
         this.tradeable = tradeable;
-        this.inventoryActions = List.of(inventoryActions);
-        this.groundActions = List.of(groundActions);
+        this.inventoryActions = ImmutableList.copyOf(inventoryActions);
+        this.groundActions = ImmutableList.copyOf(groundActions);
+    }
+
+    /**
+     * Determines if {@code id} is valid.
+     *
+     * @param id The identifier.
+     * @return {@code true} if the identifier is valid.
+     */
+    public static boolean isIdValid(int id) {
+        return id > 0 && id < SIZE;
     }
 
     /**
@@ -219,16 +219,16 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
-     * @return An unmodifiable list of inventory actions.
+     * @return An immutable list of inventory actions.
      */
-    public List<String> getInventoryActions() {
+    public ImmutableList<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
-     * @return An unmodifiable list of ground actions.
+     * @return An immutable list of ground actions.
      */
-    public List<String> getGroundActions() {
+    public ImmutableList<String> getGroundActions() {
         return groundActions;
     }
 }

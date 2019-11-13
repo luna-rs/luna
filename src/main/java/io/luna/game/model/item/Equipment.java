@@ -1,5 +1,6 @@
 package io.luna.game.model.item;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
@@ -8,14 +9,13 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.plugin.PluginManager;
 
 import java.util.BitSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-import static io.luna.util.OptionalUtils.*;
+import static io.luna.util.OptionalUtils.ifPresent;
+import static io.luna.util.OptionalUtils.mapToInt;
+import static io.luna.util.OptionalUtils.matches;
 
 /**
  * An item container model representing a player's equipment.
@@ -281,9 +281,9 @@ public final class Equipment extends ItemContainer {
     public static final int PRAYER = 11;
 
     /**
-     * An unmodifiable list of bonus names.
+     * An immutable list of bonus names.
      */
-    public static final List<String> BONUS_NAMES = List.of(
+    public static final ImmutableList<String> BONUS_NAMES = ImmutableList.of(
         "Stab", "Slash", "Crush", "Magic", "Range", "Stab",
         "Slash", "Crush", "Magic", "Range", "Strength", "Prayer"
     );

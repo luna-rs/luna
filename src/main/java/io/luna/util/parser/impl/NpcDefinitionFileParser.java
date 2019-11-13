@@ -1,18 +1,17 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.util.GsonUtils;
-import io.luna.util.parser.JsonFileParser;
-
-import java.util.List;
+import io.luna.util.parser.AbstractJsonFileParser;
 
 /**
- * A {@link JsonFileParser} implementation that reads NPC definitions.
+ * A {@link AbstractJsonFileParser} implementation that reads NPC definitions.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class NpcDefinitionFileParser extends JsonFileParser<NpcDefinition> {
+public final class NpcDefinitionFileParser extends AbstractJsonFileParser<NpcDefinition> {
 
     /**
      * Creates a new {@link NpcDefinitionFileParser}.
@@ -37,7 +36,7 @@ public final class NpcDefinitionFileParser extends JsonFileParser<NpcDefinition>
     }
 
     @Override
-    public void onCompleted(List<NpcDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<NpcDefinition> tokenObjects) throws Exception {
         tokenObjects.forEach(NpcDefinition.ALL::storeDefinition);
     }
 }

@@ -3,7 +3,6 @@ package io.luna.game.model.mob;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 import com.google.common.collect.UnmodifiableIterator;
-import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
 import java.util.Spliterator;
@@ -236,21 +235,11 @@ public final class SkillSet implements Iterable<Skill> {
 
             double combatLvl;
             if (ran > attstr && ran > mag) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (ranged * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (ranged * 0.4875);
             } else if (mag > attstr) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (magic * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (magic * 0.4875);
             } else {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (attack * 0.325) +
-                        (strength * 0.325);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (attack * 0.325) + (strength * 0.325);
             }
             combatLevel = (int) combatLvl;
         }

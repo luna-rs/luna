@@ -1,5 +1,7 @@
 package io.luna.util.parser;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,25 +21,25 @@ import java.util.List;
  * @param <R> The type representing converted tokens.
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class FileParser<P, T, R> implements Runnable {
+public abstract class AbstractFileParser<P, T, R> implements Runnable {
 
     /**
-     * The unmodifiable list of files to parse.
+     * The immutable list of files to parse.
      */
-    private final List<String> fileList;
+    private final ImmutableList<String> fileList;
 
     /**
      * The current parsing index.
      */
-    int currentIndex = 0;
+    int currentIndex;
 
     /**
-     * Creates a new {@link FileParser}.
+     * Creates a new {@link AbstractFileParser}.
      *
      * @param files The files to parse.
      */
-    public FileParser(String... files) {
-        fileList = List.of(files);
+    public AbstractFileParser(String... files) {
+        this.fileList = ImmutableList.copyOf(files);
     }
 
     @Override
@@ -84,10 +86,10 @@ public abstract class FileParser<P, T, R> implements Runnable {
     /**
      * A function called when all tokens have been parsed.
      *
-     * @param tokenObjects An unmodifiable list of all token objects.
+     * @param tokenObjects An immutable list of all token objects.
      * @throws Exception If any errors occur while notifying this listener.
      */
-    public void onCompleted(List<R> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<R> tokenObjects) throws Exception {
 
     }
 
@@ -99,7 +101,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
     }
 
     /**
-     * Parses {@code file} and notifies {@link #onCompleted(List)} when finished.
+     * Parses {@code file} and notifies {@link #onCompleted(ImmutableList)} when finished.
      *
      * @param file The file to parse.
      */
@@ -115,16 +117,16 @@ public abstract class FileParser<P, T, R> implements Runnable {
                     currentIndex++;
                 }
             }
-            onCompleted(List.copyOf(tokenObjects));
+            onCompleted(ImmutableList.copyOf(tokenObjects));
         } catch (Exception e) {
             throw new RuntimeException("Error while reading file [" + file + "]", e);
         }
     }
 
     /**
-     * @return The unmodifiable list of files to parse.
+     * @return The immutable list of files to parse.
      */
-    public List<String> getFileList() {
+    public ImmutableList<String> getFileList() {
         return fileList;
     }
 }

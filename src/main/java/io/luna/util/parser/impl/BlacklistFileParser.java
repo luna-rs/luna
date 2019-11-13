@@ -1,17 +1,16 @@
 package io.luna.util.parser.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.InetAddresses;
 import io.luna.net.LunaChannelFilter;
-import io.luna.util.parser.NewLineFileParser;
-
-import java.util.List;
+import io.luna.util.parser.AbstractNewLineFileParser;
 
 /**
- * A {@link NewLineFileParser} implementation that parses blacklisted addresses.
+ * A {@link AbstractNewLineFileParser} implementation that parses blacklisted addresses.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class BlacklistFileParser extends NewLineFileParser {
+public final class BlacklistFileParser extends AbstractNewLineFileParser {
 
     /**
      * A channel handler that will filter channels.
@@ -29,9 +28,7 @@ public final class BlacklistFileParser extends NewLineFileParser {
     }
 
     @Override
-    public void onCompleted(List<String> tokenObjects) throws Exception {
-        tokenObjects.stream().
-                filter(InetAddresses::isInetAddress).
-                forEach(channelFilter.getBlacklist()::add);
+    public void onCompleted(ImmutableList<String> tokenObjects) throws Exception {
+        tokenObjects.stream().filter(InetAddresses::isInetAddress).forEach(channelFilter::addToBlacklist);
     }
 }

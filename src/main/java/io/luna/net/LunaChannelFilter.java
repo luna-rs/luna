@@ -1,6 +1,7 @@
 package io.luna.net;
 
 import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
@@ -38,14 +39,15 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     public static final AttributeKey<LunaChannelFilter> KEY = AttributeKey.valueOf("LunaChannelFilter.key");
 
     /**
-     * An unmodifiable set containing whitelisted (filter bypassing) addresses.
+     * An immutable set containing whitelisted (filter bypassing) addresses.
      */
-    public static final Set<String> WHITELIST = Set.of("127.0.0.1");
+    public static final ImmutableSet<String> WHITELIST = ImmutableSet.of("127.0.0.1");
 
     /**
      * An attribute describing the login response for rejected channels.
      */
-    private static final AttributeKey<LoginResponse> LOGIN_RESPONSE_KEY = AttributeKey.valueOf("LunaChannelFilter.loginResponseKey");
+    private static final AttributeKey<LoginResponse> LOGIN_RESPONSE_KEY =
+            AttributeKey.valueOf("LunaChannelFilter.loginResponseKey");
 
     /**
      * A concurrent multiset containing active connection counts.
@@ -62,16 +64,15 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         String address = ipAddress(remoteAddress);
 
         if (WHITELIST.contains(address)) {
-
             // Bypass filter for whitelisted addresses.
             return true;
-        } else if (connections.count(address) >= Luna.settings().connectionLimit()) {
-
+        }
+        if (connections.count(address) >= Luna.settings().connectionLimit()) {
             // Reject if more than CONNECTION_LIMIT active connections.
             response(ctx, LoginResponse.LOGIN_LIMIT_EXCEEDED);
             return false;
-        } else if (blacklist.contains(address)) {
-
+        }
+        if (blacklist.contains(address)) {
             // Reject if blacklisted (IP banned).
             response(ctx, LoginResponse.ACCOUNT_BANNED);
             return false;
@@ -100,7 +101,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         LoginResponseMessage msg = new LoginResponseMessage(response);
 
         // Write initial message.
-        ByteBuf initialMsg = ByteMessage.pooledBuffer(8);
+        ByteBuf initialMsg = ByteMessage.pooledBuffer(Long.BYTES);
         try {
             initialMsg.writeLong(0);
         } finally {
@@ -133,10 +134,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
         channel.attr(LOGIN_RESPONSE_KEY).set(response);
     }
 
-    /**
-     * @return A concurrent set containing blacklisted addresses.
-     */
-    public Set<String> getBlacklist() {
-        return blacklist;
+    public void addToBlacklist(String address) {
+        blacklist.add(address);
     }
 }

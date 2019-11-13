@@ -1,5 +1,7 @@
 package io.luna.game.plugin;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.Set;
 
 /**
@@ -28,14 +30,14 @@ public final class Plugin {
     private final String packageName;
 
     /**
-     * An unmodifiable set of script dependencies.
+     * An immutable set of script dependencies.
      */
-    private final Set<ScriptDependency> dependencies;
+    private final ImmutableSet<ScriptDependency> dependencies;
 
     /**
-     * An unmodifiable set of scripts.
+     * An immutable set of scripts.
      */
-    private final Set<Script> scripts;
+    private final ImmutableSet<Script> scripts;
 
     /**
      * Creates a new {@link Plugin}.
@@ -48,8 +50,8 @@ public final class Plugin {
                   Set<ScriptDependency> dependencies, Set<Script> scripts) {
         this.metadata = metadata;
         this.packageName = packageName;
-        this.scripts = Set.copyOf(scripts);
-        this.dependencies = Set.copyOf(dependencies);
+        this.scripts = ImmutableSet.copyOf(scripts);
+        this.dependencies = ImmutableSet.copyOf(dependencies);
     }
 
     /**
@@ -67,16 +69,16 @@ public final class Plugin {
     }
 
     /**
-     * @return An unmodifiable set of script dependencies.
+     * @return An immutable set of script dependencies.
      */
-    public Set<ScriptDependency> getDependencies() {
+    public ImmutableSet<ScriptDependency> getDependencies() {
         return dependencies;
     }
 
     /**
-     * @return An unmodifiable set of scripts.
+     * @return An immutable set of scripts.
      */
-    public Set<Script> getScripts() {
+    public ImmutableSet<Script> getScripts() {
         return scripts;
     }
 }

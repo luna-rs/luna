@@ -4,18 +4,18 @@ import java.io.BufferedReader;
 import java.util.Scanner;
 
 /**
- * A {@link FileParser} implementation designated for files that have tokens separated by a new line.
+ * A {@link AbstractFileParser} implementation designated for files that have tokens separated by a new line.
  *
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class NewLineFileParser extends FileParser<Scanner, String, String> {
+public abstract class AbstractNewLineFileParser extends AbstractFileParser<Scanner, String, String> {
 
     /**
-     * Creates a new {@link NewLineFileParser}.
+     * Creates a new {@link AbstractNewLineFileParser}.
      *
      * @param files The files to parse.
      */
-    public NewLineFileParser(String... files) {
+    public AbstractNewLineFileParser(String... files) {
         super(files);
     }
 
@@ -62,7 +62,8 @@ public abstract class NewLineFileParser extends FileParser<Scanner, String, Stri
             EmptyLinePolicy linePolicy = emptyLinePolicy();
             if (linePolicy == EmptyLinePolicy.SKIP) {
                 return null;
-            } else if (linePolicy == EmptyLinePolicy.EXCEPTION) {
+            }
+            if (linePolicy == EmptyLinePolicy.EXCEPTION) {
                 throw new IllegalStateException("[@ index: " +
                         currentIndex + "] Parser does not allow empty lines!");
             }

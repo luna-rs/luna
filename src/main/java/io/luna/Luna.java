@@ -7,12 +7,9 @@ import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
@@ -35,6 +32,11 @@ public final class Luna {
      * The log4j2 settings.
      */
     private static final LoggingSettings loggingSettings;
+
+    /**
+     * The mechanism used to read {@code .toml} files.
+     */
+    private static final Toml TOML = new Toml();
 
     /**
      * A private constructor.
@@ -81,7 +83,7 @@ public final class Luna {
      */
     private static LunaSettings loadSettings() throws IOException {
         try (var bufferedReader = Files.newBufferedReader(Path.of("data", "luna.toml"))) {
-            return new Toml().read(bufferedReader).to(LunaSettings.class);
+            return TOML.read(bufferedReader).to(LunaSettings.class);
         }
     }
 
@@ -92,7 +94,7 @@ public final class Luna {
      */
     private static LoggingSettings loadLoggingSettings() throws IOException {
         try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
-            return new Toml().read(bufferedReader).to(LoggingSettings.class);
+            return TOML.read(bufferedReader).to(LoggingSettings.class);
         }
     }
 

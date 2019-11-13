@@ -1,12 +1,12 @@
 package io.luna.game.model;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -32,9 +32,9 @@ public abstract class StationaryEntity extends Entity {
     private final Optional<Player> player;
 
     /**
-     * An unmodifiable list of the surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
+     * An immutable list of the surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
      */
-    private List<Set<Player>> surroundingPlayers;
+    private ImmutableList<Set<Player>> surroundingPlayers;
 
     /**
      * Creates a new local {@link StationaryEntity}.
@@ -86,19 +86,16 @@ public abstract class StationaryEntity extends Entity {
      */
     private void applyUpdate(UpdateType updateType) {
         if (player.isPresent() && player.get().isViewableFrom(this)) {
-
             // We have a player to update for.
             sendUpdateMessage(player.get(), updateType);
-        } else {
-            // We don't, so update for all viewable surrounding players.
-            for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
-                for (Player inside : chunkPlayers) {
-                    if (isViewableFrom(inside)) {
-                        sendUpdateMessage(inside, updateType);
-                    }
-                }
-            }
+            return;
         }
+
+        // We don't, so update for all viewable surrounding players.
+        getSurroundingPlayers().stream()
+                .flatMap(Set::stream)
+                .filter(this::isViewableFrom)
+                .forEach(inside -> sendUpdateMessage(inside, updateType));
     }
 
     /**
@@ -139,15 +136,15 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
-     * Returns an unmodifiable {@link List} representing surrounding players. Each set represents players within a
+     * Returns an immutable {@link List} representing surrounding players. Each set represents players within a
      * viewable chunk.
      * <p>
      * We retain references to the original sets instead of flattening them, so that they implicitly stay updated as
      * players move in and out of view of this entity.
      */
-    public final List<Set<Player>> getSurroundingPlayers() {
+    public final ImmutableList<Set<Player>> getSurroundingPlayers() {
         if (surroundingPlayers == null) {
-            List<Set<Player>> builder = new ArrayList<>();
+            ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
 
             // Retrieve viewable chunks.
             List<Chunk> viewableChunks = world.getChunks().getViewableChunks(position);
@@ -157,7 +154,7 @@ public abstract class StationaryEntity extends Entity {
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));
                 builder.add(players);
             }
-            surroundingPlayers = List.copyOf(builder);
+            surroundingPlayers = builder.build();
         }
         return surroundingPlayers;
     }

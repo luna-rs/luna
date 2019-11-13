@@ -173,14 +173,13 @@ public final class World {
      */
     public World(LunaContext context) {
         this.context = context;
-        playerMap = new ConcurrentHashMap<>();
-        immutablePlayerMap = Collections.unmodifiableMap(playerMap);
+        this.playerMap = new ConcurrentHashMap<>();
+        this.immutablePlayerMap = Collections.unmodifiableMap(playerMap);
     }
 
     {
         // Initialize synchronization thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().
-                setNameFormat("WorldSynchronizationThread").build();
+        ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
         service = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
     }
 

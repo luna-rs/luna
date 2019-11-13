@@ -1,8 +1,7 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
-
-import java.util.List;
 
 /**
  * A definition model describing a non-player mob.
@@ -62,9 +61,9 @@ public final class NpcDefinition implements Definition {
     private final int walkRightAnimation;
 
     /**
-     * An unmodifiable list of actions.
+     * An immutable list of actions.
      */
-    private final List<String> actions;
+    private final ImmutableList<String> actions;
 
     /**
      * Creates a new {@link NpcDefinition}.
@@ -89,7 +88,7 @@ public final class NpcDefinition implements Definition {
         this.walkBackAnimation = walkBackAnimation;
         this.walkLeftAnimation = walkLeftAnimation;
         this.walkRightAnimation = walkRightAnimation;
-        this.actions = List.of(actions);
+        this.actions = ImmutableList.copyOf(actions);
     }
 
 
@@ -161,9 +160,9 @@ public final class NpcDefinition implements Definition {
     }
 
     /**
-     * @return An unmodifiable list of actions.
+     * @return An immutable list of actions.
      */
-    public List<String> getActions() {
+    public ImmutableList<String> getActions() {
         return actions;
     }
 }

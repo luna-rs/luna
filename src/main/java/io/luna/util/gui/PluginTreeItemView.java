@@ -1,5 +1,7 @@
 package io.luna.util.gui;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.TreeMultimap;
 import javafx.scene.control.CheckBoxTreeItem;
 
@@ -7,9 +9,9 @@ import java.text.Collator;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkState;
 import static io.luna.util.gui.PluginGuiImage.PACKAGE_IMG;
@@ -23,14 +25,19 @@ import static io.luna.util.gui.PluginGuiImage.addTreeItemIcons;
 final class PluginTreeItemView {
 
     /**
+     * A regular expression pattern that matches package names.
+     */
+    private static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("\\.");
+
+    /**
      * A map of cached packages.
      */
     private final Map<String, CheckBoxTreeItem<String>> packages = new HashMap<>();
 
     /**
-     * An unmodifiable map of package names -> plugin tree items.
+     * An immutable map of package names -> plugin tree items.
      */
-    private final Map<String, PluginTreeItem> pluginMap;
+    private final ImmutableMap<String, PluginTreeItem> pluginMap;
 
     /**
      * The root item.
@@ -46,24 +53,21 @@ final class PluginTreeItemView {
     public PluginTreeItemView(CheckBoxTreeItem<String> root,
                               Map<String, PluginTreeItem> pluginMap) {
         this.root = root;
-        this.pluginMap = Map.copyOf(pluginMap);
+        this.pluginMap = ImmutableMap.copyOf(pluginMap);
     }
 
     /**
      * Builds a flat package view on the plugin viewer.
      */
     void buildFlat() {
-
         // Build multimap of fully qualified package names -> plugins.
-        TreeMultimap<String, PluginTreeItem> packages =
-                TreeMultimap.create(Collator.getInstance(), Comparator.naturalOrder());
+        TreeMultimap<String, PluginTreeItem> packages = TreeMultimap.create(Collator.getInstance(),
+                Comparator.naturalOrder());
 
-        pluginMap.forEach((k, v) ->
-                packages.put(v.getPlugin().getPackageName(), v));
+        pluginMap.forEach((k, v) -> packages.put(v.getPlugin().getPackageName(), v));
 
         // Add plugin items to packages as children.
         for (Entry<String, Collection<PluginTreeItem>> entry : packages.asMap().entrySet()) {
-
             // Create package.
             CheckBoxTreeItem<String> head = new CheckBoxTreeItem<>(entry.getKey());
             addTreeItemIcons(head, PACKAGE_IMG);
@@ -95,8 +99,7 @@ final class PluginTreeItemView {
     private CheckBoxTreeItem<String> buildNestedPackage(PluginTreeItem treeItem) {
         String packageName = treeItem.getPlugin().getPackageName();
         checkState(!packageName.isEmpty(), "All plugins except the API must have a package.");
-
-        List<String> packageDir = List.of(packageName.split("\\."));
+        ImmutableList<String> packageDir = ImmutableList.copyOf(PACKAGE_NAME_PATTERN.split(packageName));
         CheckBoxTreeItem<String> head = getPackage(packageDir.get(0));
         walkNestedPackage(1, head, treeItem, packageDir);
         return head;
@@ -108,12 +111,10 @@ final class PluginTreeItemView {
      * @param index The current index.
      * @param head The package head.
      * @param plugin The plugin tree item.
-     * @param packageDir The unmodifiable list of packages.
+     * @param packageDir The immutable list of packages.
      */
-    private void walkNestedPackage(int index,
-                                   CheckBoxTreeItem<String> head,
-                                   PluginTreeItem plugin,
-                                   List<String> packageDir) {
+    private void walkNestedPackage(int index, CheckBoxTreeItem<String> head, PluginTreeItem plugin,
+                                   ImmutableList<String> packageDir) {
         if (index == packageDir.size()) {
             head.getChildren().add(plugin);
             return;
@@ -151,8 +152,7 @@ final class PluginTreeItemView {
      */
     private void addNonDuplicateChild(CheckBoxTreeItem<String> newChild, CheckBoxTreeItem<String> root) {
         String newChildName = newChild.getValue();
-        boolean hasChild = root.getChildren().stream().anyMatch(child ->
-                child.getValue().equals(newChildName));
+        boolean hasChild = root.getChildren().stream().anyMatch(child -> child.getValue().equals(newChildName));
         if (!hasChild) {
             root.getChildren().add(newChild);
         }

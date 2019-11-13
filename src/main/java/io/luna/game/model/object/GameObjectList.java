@@ -53,7 +53,7 @@ public final class GameObjectList extends EntityList<GameObject> {
                 iteratorList.add(objects.iterator());
             }
         }
-        Iterator[] iteratorArray = Iterators.toArray(iteratorList.iterator(), Iterator.class);
+        Iterator<GameObject>[] iteratorArray = Iterators.toArray(iteratorList.iterator(), Iterator.class);
         Iterator<GameObject> all = Iterators.concat(iteratorArray); // Combine them.
         return Iterators.unmodifiableIterator(all); // Make them immutable.
     }

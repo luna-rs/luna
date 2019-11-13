@@ -1,6 +1,7 @@
 package io.luna.game.model.mob;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
@@ -8,6 +9,7 @@ import io.luna.game.model.mob.inter.StandardInterface;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -122,9 +124,9 @@ public final class PlayerAppearance {
     private static final ImmutableTable<Integer, Integer, Range<Integer>> VALID_MODELS;
 
     /**
-     * An unmodifiable map containing the valid color values.
+     * An immutable map containing the valid color values.
      */
-    private static final Map<Integer, Range<Integer>> VALID_COLORS;
+    private static final ImmutableMap<Integer, Range<Integer>> VALID_COLORS;
 
     static {
         // Initialize and cache valid appearance values.
@@ -157,7 +159,7 @@ public final class PlayerAppearance {
         colors.put(LEG_COLOR, Range.closed(0, 15));
         colors.put(FEET_COLOR, Range.closed(0, 5));
         colors.put(SKIN_COLOR, Range.closed(0, 7));
-        VALID_COLORS = Map.copyOf(colors);
+        VALID_COLORS = ImmutableMap.copyOf(colors);
     }
 
     /**
@@ -226,13 +228,8 @@ public final class PlayerAppearance {
      */
     public static boolean isAllValid(int[] appearance) {
         checkArgument(appearance.length == 13, "Invalid appearance set length.");
-
-        for (int index = 0; index < appearance.length; index++) {
-            if (!isAnyValid(index, appearance[GENDER], appearance[index])) {
-                return false;
-            }
-        }
-        return true;
+        return IntStream.range(0, appearance.length).allMatch(index ->
+                isAnyValid(index, appearance[GENDER], appearance[index]));
     }
 
     /**
