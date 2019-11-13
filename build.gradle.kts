@@ -28,7 +28,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("script-runtime"))
     implementation(kotlin("script-util"))
-    implementation(kotlin("reflect"))
+    implementation(kotlin("compiler"))
     implementation("org.openjfx:javafx-controls:11.0.1")
     implementation("org.openjfx:javafx-fxml:11.0.1")
     implementation("org.openjfx:javafx-swing:11.0.1")
