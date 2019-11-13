@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.3.11"
+    val kotlinVersion = "1.3.50"
     val jfxVersion = "0.0.8"
 
     java
@@ -12,10 +12,7 @@ plugins {
 }
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri("http://repo.maven.apache.org/maven2")
-    }
+    jcenter()
 }
 
 dependencies {
@@ -28,10 +25,10 @@ dependencies {
     implementation("com.google.guava:guava:27.0.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-script-util:1.3.11")
-    implementation("org.jetbrains.kotlin:kotlin-compiler:1.3.11")
+    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("script-runtime"))
+    implementation(kotlin("script-util"))
+    implementation(kotlin("compiler"))
     implementation("org.openjfx:javafx-controls:11.0.1")
     implementation("org.openjfx:javafx-fxml:11.0.1")
     implementation("org.openjfx:javafx-swing:11.0.1")
