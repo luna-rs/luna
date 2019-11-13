@@ -31,7 +31,7 @@ public final class CastOnPlayerMessageReader extends GameMessageReader {
 
     private static class InvalidSpellTargetException extends RuntimeException {
         InvalidSpellTargetException(int targetPlayerId) {
-            super("Target no longer exists.");
+            super("Player target with id:" + targetPlayerId + " no longer exists.");
         }
     }
 }
