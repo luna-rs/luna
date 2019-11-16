@@ -83,7 +83,9 @@ public final class Luna {
      */
     private static LunaSettings loadSettings() throws IOException {
         try (var bufferedReader = Files.newBufferedReader(Path.of("data", "luna.toml"))) {
-            return TOML.read(bufferedReader).to(LunaSettings.class);
+            LunaSettings settings = TOML.read(bufferedReader).to(LunaSettings.class);
+            bufferedReader.close();
+            return settings;
         }
     }
 
@@ -94,7 +96,9 @@ public final class Luna {
      */
     private static LoggingSettings loadLoggingSettings() throws IOException {
         try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
-            return TOML.read(bufferedReader).to(LoggingSettings.class);
+            LoggingSettings settings = TOML.read(bufferedReader).to(LoggingSettings.class);
+            bufferedReader.close();
+            return settings;
         }
     }
 
