@@ -25,7 +25,7 @@ final class PositionTest {
     @Test
     void invalidUpperZ() {
         assertThrows(IllegalArgumentException.class, () -> new Position(1, 1, 4),
-                "A position's Z axis (height) cannot exceed 3.");
+                "Z must be in range [0, 3] inclusively.");
     }
 
     @Test
