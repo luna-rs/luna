@@ -41,11 +41,13 @@ public final class Position {
     private transient ChunkPosition chunkPosition;
 
     /**
-     * Creates a new {@link Position}.
+     * Creates a new {@link Position}, where all {@code x, y, and z} are be non-negative.
      *
      * @param x The x coordinate.
      * @param y The y coordinate.
      * @param z The z coordinate.
+     * @throws IllegalArgumentException If either x, y, or z are negative.
+     * @throws IllegalArgumentException If z is not in the range [0-3], inclusively.
      */
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
@@ -92,12 +94,15 @@ public final class Position {
     /**
      * Determines if this position is within the given distance of another position.
      *
-     * @param other The position to compare.
-     * @param distance The distance from {@code other} to compare.
-     * @return {@code true} if {@code other} is within {@code distance}.
+     * @param other    The position to compare.
+     * @param distance The distance from {@code other} to compare. This parameter must be non-negative.
+     * @return {@code true} if {@code other} is within {@code distance}, and on the same plane.
+     * @throws IllegalArgumentException If distance < 0.
      */
     public boolean isWithinDistance(Position other, int distance) {
-        if (z != other.z) {
+        checkArgument(distance > 0, "Distance must be non-negative.");
+
+        if (z != other.z) { // check if position is on the same plane.
             return false;
         }
         int deltaX = Math.abs(other.x - x);
