@@ -41,7 +41,7 @@ public final class Position {
     private transient ChunkPosition chunkPosition;
 
     /**
-     * Creates a new {@link Position}, where all {@code x, y, and z} are be non-negative.
+     * Creates a new {@link Position}, where all {@code x, y, and z} are non-negative.
      *
      * @param x The x coordinate.
      * @param y The y coordinate.
