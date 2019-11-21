@@ -4,27 +4,27 @@ import io.luna.game.model.mob.Player;
 
 public class CastOnPlayerEvent extends PlayerEvent {
 
-    private final int spellCastedId;
-    private final int targetPlayerId;
+    private final int spellId;
+    private final Player target;
 
     /**
      * Creates a new {@link PlayerEvent}.
      *
-     * @param plr            The player casting a spell.
-     * @param spellCastedId  The id of the spell being casted.
-     * @param targetPlayerId The id of the targeted player.
+     * @param caster  The player casting a spell.
+     * @param spellId The id of the spell being casted.
+     * @param target  The targeted player.
      */
-    public CastOnPlayerEvent(Player plr, int spellCastedId, int targetPlayerId) {
-        super(plr);
-        this.spellCastedId = spellCastedId;
-        this.targetPlayerId = targetPlayerId;
+    public CastOnPlayerEvent(Player caster, int spellId, Player target) {
+        super(caster);
+        this.spellId = spellId;
+        this.target = target;
     }
 
     public int getIdOfSpell() {
-        return spellCastedId;
+        return spellId;
     }
 
-    public int getIdOfTargetPlayer() {
-        return targetPlayerId;
+    public Player getTarget() {
+        return target;
     }
 }
