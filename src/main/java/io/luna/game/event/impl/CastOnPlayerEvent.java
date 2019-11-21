@@ -2,6 +2,11 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
 
+/**
+ * The result of a player attempting to cast a spell onto another player.
+ *
+ * @see io.luna.net.msg.in.CastOnPlayerMessageReader
+ */
 public class CastOnPlayerEvent extends PlayerEvent {
 
     private final int spellId;

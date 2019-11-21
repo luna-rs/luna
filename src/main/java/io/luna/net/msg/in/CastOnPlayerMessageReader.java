@@ -11,6 +11,13 @@ import io.luna.net.msg.GameMessageReader;
 
 import java.util.Optional;
 
+/**
+ * A {@link GameMessageReader} that generates and submits a {@link CastOnPlayerEvent} when a player attempts to cast
+ * any spell onto
+ * another player.
+ *
+ * @see io.luna.game.action.ActionManager#submit
+ */
 public final class CastOnPlayerMessageReader extends GameMessageReader {
 
     @Override
