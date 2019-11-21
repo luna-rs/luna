@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.CastOnPlayerEvent;
 import io.luna.game.model.mob.MobList;
@@ -22,23 +23,35 @@ public final class CastOnPlayerMessageReader extends GameMessageReader {
 
     @Override
     public Event read(Player caster, GameMessage msg) {
-        int targetPlayerId = msg.getPayload().getShort(false, ValueType.ADD); // the id of the player
-        // targeted
-        int targetSpellId = msg.getPayload().getShort(false, ByteOrder.LITTLE); // the id of the spell casted
+        int targetId = msg.getPayload().getShort(false, ValueType.ADD);
+        int spellId = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
-        MobList<Player> players = caster.getWorld().getPlayers();
-        Optional<Player> targetPlayer = players.retrieve(targetPlayerId);
-
-        if (targetPlayer.isEmpty()) {
-            throw new InvalidSpellTargetException(targetPlayerId);
+        Optional<Player> targetPlayer = findTarget(caster, targetId);
+        if (targetPlayer.isPresent()) {
+            Player target = targetPlayer.get();
+            this.submitEventFor(target, new CastOnPlayerEvent(caster, spellId, target));
         }
-
-        return new CastOnPlayerEvent(caster, targetSpellId, targetPlayerId);
+        return null;
     }
 
-    private static class InvalidSpellTargetException extends RuntimeException {
-        InvalidSpellTargetException(int targetPlayerId) {
-            super("Player target with id:" + targetPlayerId + " no longer exists.");
-        }
+    /**
+     * Searches for the target player within the caster's {@link io.luna.game.model.World} instance.
+     *
+     * @param caster   The player casting the spell
+     * @param targetId The target player id to search for.
+     */
+    private Optional<Player> findTarget(Player caster, int targetId) {
+        MobList<Player> players = caster.getWorld().getPlayers();
+        return players.retrieve(targetId);
+    }
+
+    private void submitEventFor(Player target, CastOnPlayerEvent event) {
+        Player caster = event.getPlr();
+        caster.submitAction(new InteractionAction(caster, target) {
+            @Override
+            public void execute() {
+                caster.getPlugins().post(event);
+            }
+        });
     }
 }
