@@ -17,6 +17,7 @@ import java.util.Optional;
  * any spell onto
  * another player.
  *
+ * @author notjuanortiz
  * @see io.luna.game.action.ActionManager#submit
  */
 public final class CastOnPlayerMessageReader extends GameMessageReader {
