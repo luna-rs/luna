@@ -1,6 +1,5 @@
 package io.luna.game.model.chunk;
 
-import io.luna.LunaConstants;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -9,7 +8,6 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +16,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -29,6 +28,11 @@ import java.util.stream.StreamSupport;
 public final class ChunkManager implements Iterable<Chunk> {
 
     /**
+     * Determines the local player count at which prioritized updating will start.
+     */
+    public static final int LOCAL_MOB_THRESHOLD = 50;
+
+    /**
      * How many layers of chunks will be loaded around a player, when looking for viewable mobs.
      */
     public static final int RADIUS = 2;
@@ -36,7 +40,7 @@ public final class ChunkManager implements Iterable<Chunk> {
     /**
      * A map of loaded chunks.
      */
-    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128);
+    private final Map<ChunkPosition, Chunk> chunks = new ConcurrentHashMap<>(128);
 
     @Override
     public Spliterator<Chunk> spliterator() {
@@ -91,17 +95,22 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @return The update set.
      */
     private <T extends Mob> Set<T> getUpdateMobs(Player player, EntityType type) {
-        Set<T> updateSet = LunaConstants.STAGGERED_UPDATING ?
-                new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>();
-        ChunkPosition position = player.getChunkPosition();
+        Set<T> updateSet;
+        if (player.getLocalPlayers().size() > LOCAL_MOB_THRESHOLD && type == EntityType.PLAYER ||
+                player.getLocalNpcs().size() > LOCAL_MOB_THRESHOLD && type == EntityType.NPC) {
+            updateSet = new TreeSet<>(new ChunkMobComparator(player));
+        } else {
+            updateSet = new HashSet<>();
+        }
+
+        var chunkPosition = player.getChunkPosition();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                synchronized (chunks) {
-                    Set<T> mobs = load(position.translate(x, y)).getAll(type);
-                    for (T inside : mobs) {
-                        if (inside.isViewableFrom(player)) {
-                            updateSet.add(inside);
-                        }
+                var currentChunk = load(chunkPosition.translate(x, y));
+                Set<T> mobs = currentChunk.getAll(type);
+                for (T inside : mobs) {
+                    if (inside.isViewableFrom(player)) {
+                        updateSet.add(inside);
                     }
                 }
             }

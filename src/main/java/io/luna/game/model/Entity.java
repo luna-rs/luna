@@ -196,6 +196,7 @@ public abstract class Entity {
      */
     public final void setPosition(Position newPosition) {
         if (!newPosition.equals(position)) {
+            Position old = position;
             position = newPosition;
 
             if (state == EntityState.ACTIVE) {
