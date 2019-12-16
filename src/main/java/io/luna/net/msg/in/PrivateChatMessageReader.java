@@ -9,7 +9,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.util.LoggingSettings.FileOutputType;
-import io.luna.util.StringUtils;
+import io.luna.util.common.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 

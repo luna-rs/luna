@@ -12,7 +12,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.plugin.PluginManager;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
-import io.luna.util.ExecutorUtils;
+import io.luna.util.concurrent.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static io.luna.util.concurrent.ThreadUtils.awaitTerminationUninterruptibly;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination

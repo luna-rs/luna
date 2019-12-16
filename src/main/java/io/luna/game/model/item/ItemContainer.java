@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.item.ItemContainer.StackPolicy.ALWAYS;
 import static io.luna.game.model.item.ItemContainer.StackPolicy.STANDARD;
-import static io.luna.util.OptionalUtils.mapToInt;
-import static io.luna.util.OptionalUtils.matches;
+import static io.luna.util.common.OptionalUtils.mapToInt;
+import static io.luna.util.common.OptionalUtils.matches;
 import static java.util.Objects.requireNonNull;
 
 /**

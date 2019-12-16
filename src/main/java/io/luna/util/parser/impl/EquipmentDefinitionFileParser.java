@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
-import io.luna.util.GsonUtils;
+import io.luna.util.common.GsonUtils;
 import io.luna.util.parser.AbstractJsonFileParser;
 
 /**

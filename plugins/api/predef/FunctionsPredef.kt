@@ -8,7 +8,7 @@ import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.ObjectDefinition
-import io.luna.util.StringUtils
+import io.luna.util.common.StringUtils
 import java.time.Duration
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit

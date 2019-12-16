@@ -1,6 +1,6 @@
 package io.luna.game.model.mob;
 
-import io.luna.util.StringUtils;
+import io.luna.util.common.StringUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

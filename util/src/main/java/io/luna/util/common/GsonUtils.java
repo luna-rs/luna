@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.common;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;

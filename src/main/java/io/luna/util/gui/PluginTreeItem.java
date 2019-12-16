@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static io.luna.util.StringUtils.COMMA_JOINER;
+import static io.luna.util.common.StringUtils.COMMA_JOINER;
 import static io.luna.util.gui.PluginGuiImage.*;
 
 /**

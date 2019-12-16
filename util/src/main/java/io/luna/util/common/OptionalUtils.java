@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.common;
 
 import java.util.Objects;
 import java.util.Optional;

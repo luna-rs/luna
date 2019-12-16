@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.util.Tuple;
+import io.luna.util.common.Tuple;
 
 import java.util.Comparator;
 import java.util.function.BiFunction;

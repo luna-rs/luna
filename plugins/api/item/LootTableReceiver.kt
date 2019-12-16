@@ -1,7 +1,7 @@
 package api.item
 
 import api.predef.*
-import io.luna.util.Rational
+import io.luna.util.common.Rational
 
 /**
  * A model representing the primary [lootTable] receiver.

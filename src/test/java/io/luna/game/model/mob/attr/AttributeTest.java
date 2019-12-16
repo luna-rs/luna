@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.attr;
 
-import io.luna.util.GsonUtils;
+import io.luna.util.common.GsonUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

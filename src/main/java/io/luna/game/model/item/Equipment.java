@@ -13,9 +13,9 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.IntUnaryOperator;
 
-import static io.luna.util.OptionalUtils.ifPresent;
-import static io.luna.util.OptionalUtils.mapToInt;
-import static io.luna.util.OptionalUtils.matches;
+import static io.luna.util.common.OptionalUtils.ifPresent;
+import static io.luna.util.common.OptionalUtils.mapToInt;
+import static io.luna.util.common.OptionalUtils.matches;
 
 /**
  * An item container model representing a player's equipment.

@@ -2,7 +2,7 @@ package io.luna.game.model.mob.persistence;
 
 import io.luna.Luna;
 import io.luna.game.model.mob.Player;
-import io.luna.util.ReflectionUtils;
+import io.luna.util.common.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;

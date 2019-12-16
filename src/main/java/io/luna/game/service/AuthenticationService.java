@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.persistence.PlayerPersistence;
-import io.luna.util.ExecutorUtils;
+import io.luna.util.concurrent.ExecutorUtils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

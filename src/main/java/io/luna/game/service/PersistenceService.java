@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.persistence.PlayerData;
-import io.luna.util.ExecutorUtils;
+import io.luna.util.concurrent.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -18,7 +18,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static io.luna.util.concurrent.ThreadUtils.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**

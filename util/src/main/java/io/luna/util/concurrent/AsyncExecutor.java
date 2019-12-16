@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.concurrent;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;

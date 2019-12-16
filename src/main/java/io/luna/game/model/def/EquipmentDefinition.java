@@ -11,7 +11,7 @@ import io.luna.game.model.mob.Skill;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static io.luna.util.StringUtils.addArticle;
+import static io.luna.util.common.StringUtils.addArticle;
 
 /**
  * A model describing an equipment item definition.

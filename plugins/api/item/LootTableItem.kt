@@ -2,7 +2,7 @@ package api.item
 
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
-import io.luna.util.Rational
+import io.luna.util.common.Rational
 
 /**
  * A model representing an item within a [LootTable].

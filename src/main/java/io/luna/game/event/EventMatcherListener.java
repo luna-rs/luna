@@ -2,7 +2,7 @@ package io.luna.game.event;
 
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
-import io.luna.util.ReflectionUtils;
+import io.luna.util.common.ReflectionUtils;
 
 import java.util.function.Consumer;
 

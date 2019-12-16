@@ -3,3 +3,4 @@
  */
 
 rootProject.name = "luna"
+include("util")

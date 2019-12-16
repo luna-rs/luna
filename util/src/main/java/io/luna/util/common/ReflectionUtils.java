@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.common;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

@@ -3,7 +3,7 @@ package io.luna.util.parser.impl;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
-import io.luna.util.GsonUtils;
+import io.luna.util.common.GsonUtils;
 import io.luna.util.parser.AbstractJsonFileParser;
 
 /**

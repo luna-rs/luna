@@ -16,6 +16,7 @@ repositories {
 }
 
 dependencies {
+    api(project(":util"))
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.logging.log4j:log4j-core:2.11.1")
     implementation("org.apache.logging.log4j:log4j-api:2.11.1")

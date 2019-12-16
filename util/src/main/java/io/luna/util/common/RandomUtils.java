@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.common;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;

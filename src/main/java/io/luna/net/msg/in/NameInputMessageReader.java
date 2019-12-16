@@ -7,7 +7,7 @@ import io.luna.game.model.mob.inter.InputInterface;
 import io.luna.game.model.mob.inter.NameInputInterface;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.StringUtils;
+import io.luna.util.common.StringUtils;
 
 import java.util.Optional;
 import java.util.OptionalInt;

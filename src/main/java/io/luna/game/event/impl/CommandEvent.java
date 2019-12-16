@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.util.StringUtils;
+import io.luna.util.common.StringUtils;
 
 /**
  * An event sent when a player activates a command.

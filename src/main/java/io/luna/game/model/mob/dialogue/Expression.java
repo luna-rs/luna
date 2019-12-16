@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.net.msg.out.WidgetAnimationMessageWriter;
-import io.luna.util.RandomUtils;
+import io.luna.util.common.RandomUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

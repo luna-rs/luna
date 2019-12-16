@@ -4,7 +4,7 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
-import io.luna.util.StringUtils;
+import io.luna.util.common.StringUtils;
 
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which grants the Player an item.

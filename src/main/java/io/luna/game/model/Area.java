@@ -1,7 +1,7 @@
 package io.luna.game.model;
 
 import io.luna.game.model.mob.Player;
-import io.luna.util.RandomUtils;
+import io.luna.util.common.RandomUtils;
 
 import java.util.Objects;
 

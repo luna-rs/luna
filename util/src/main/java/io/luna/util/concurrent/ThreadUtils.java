@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.util.concurrent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;

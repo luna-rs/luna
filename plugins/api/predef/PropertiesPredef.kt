@@ -9,8 +9,8 @@ import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.plugin.KotlinBindings
 import io.luna.game.plugin.PluginBootstrap
-import io.luna.util.Rational
-import io.luna.util.ReflectionUtils
+import io.luna.util.common.Rational
+import io.luna.util.common.ReflectionUtils
 
 /**
  * The Kotlin bindings. Not accessible to scripts.

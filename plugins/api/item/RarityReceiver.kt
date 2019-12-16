@@ -1,6 +1,6 @@
 package api.item
 
-import io.luna.util.Rational
+import io.luna.util.common.Rational
 
 /**
  * A model representing the [LootTableReceiver.rarity] receiver.

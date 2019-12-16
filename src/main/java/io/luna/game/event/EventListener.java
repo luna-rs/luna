@@ -3,7 +3,7 @@ package io.luna.game.event;
 import com.google.common.base.MoreObjects;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
-import io.luna.util.ReflectionUtils;
+import io.luna.util.common.ReflectionUtils;
 
 import java.util.function.Consumer;
 
