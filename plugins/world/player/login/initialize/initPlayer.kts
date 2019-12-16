@@ -1,6 +1,6 @@
-
 import api.predef.*
 import api.punishment.PunishmentHandler
+import io.luna.Luna
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.AssignmentMessageWriter
@@ -46,8 +46,9 @@ fun init(plr: Player) {
     plr.skills.forEach { plr.queue(SkillUpdateMessageWriter(it.id)) }
 
     plr.sendMessage("Welcome to Luna.")
-    plr.sendMessage("You currently have " + plr.rights.formattedName + " privileges.")
-
+    if (Luna.settings().betaMode()) {
+       plr.sendMessage("Server currently running in ${Luna.settings().runtimeMode()} mode.")
+    }
     checkMute(plr)
 }
 

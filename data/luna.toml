@@ -1,9 +1,9 @@
 # Detailed descriptions of what these settings do can be found in the LunaConstants class.
 
+runtimeMode = "DEVELOPMENT"
 startingPosition = { x = 3093, y = 3244 }
 experienceMultiplier = 1.0
 serializer = "JsonPlayerSerializer"
 port = 43594
-resourceLeakDetection = "PARANOID"
 connectionLimit = 2
 pluginGui = false

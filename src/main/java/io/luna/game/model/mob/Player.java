@@ -449,7 +449,7 @@ public final class Player extends Mob {
         } else {
             // New player!
             setPosition(Luna.settings().startingPosition());
-            rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
+            rights = Luna.settings().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
         }
         settings.setPlayer(this);
