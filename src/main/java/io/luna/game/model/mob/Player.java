@@ -128,12 +128,12 @@ public final class Player extends Mob {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A set of local players.
+     * A set of local players. Should only be accessed from the updating threads.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>(255);
 
     /**
-     * A set of local npcs.
+     * A set of local npcs. Should only be accessed from the updating threads.
      */
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
 
@@ -387,7 +387,6 @@ public final class Player extends Mob {
         teleporting = false;
         chat = Optional.empty();
         forcedMovement = Optional.empty();
-        regionChanged = false;
     }
 
     @Override
@@ -802,14 +801,14 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return A set of local players.
+     * @return A set of local players. Should only be accessed from the updating threads.
      */
     public Set<Player> getLocalPlayers() {
         return localPlayers;
     }
 
     /**
-     * @return A set of local npcs.
+     * @return A set of local npcs. Should only be accessed from the updating threads.
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
