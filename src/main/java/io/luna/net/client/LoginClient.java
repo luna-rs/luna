@@ -113,11 +113,11 @@ public class LoginClient extends Client<LoginRequestMessage> {
         if (world.getPlayers().isFull()) {
             sendLoginResponse(player, LoginResponse.WORLD_FULL);
             return false;
-        } else if (world.getPlayer(player.getUsernameHash()).isPresent()) {
+        } else if (world.getLogoutService().isSavePending(player.getUsername()) || world.getPlayer(player.getUsernameHash()).isPresent()) {
             sendLoginResponse(player, LoginResponse.ACCOUNT_ONLINE);
             return false;
         } else {
-            var gameClient = new GameClient(channel, player, messageRepository);
+            var gameClient = new GameClient(channel, messageRepository);
             channel.attr(KEY).set(gameClient);
             player.setClient(gameClient);
 

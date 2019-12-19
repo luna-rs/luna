@@ -21,25 +21,25 @@ import java.util.List;
  * @param <R> The type representing converted tokens.
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class FileParser<P, T, R> implements Runnable {
+public abstract class AbstractFileParser<P, T, R> implements Runnable {
 
     /**
-     * The files to parse.
+     * The immutable list of files to parse.
      */
     private final ImmutableList<String> fileList;
 
     /**
      * The current parsing index.
      */
-    int currentIndex = 0;
+    int currentIndex;
 
     /**
-     * Creates a new {@link FileParser}.
+     * Creates a new {@link AbstractFileParser}.
      *
      * @param files The files to parse.
      */
-    public FileParser(String... files) {
-        fileList = ImmutableList.copyOf(files);
+    public AbstractFileParser(String... files) {
+        this.fileList = ImmutableList.copyOf(files);
     }
 
     @Override
@@ -97,9 +97,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
      * Parses all files in the {@link #fileList}.
      */
     public final synchronized void parseFiles() {
-        fileList.stream().
-                map(Paths::get).
-                forEach(this::parseFile);
+        fileList.stream().map(Paths::get).forEach(this::parseFile);
     }
 
     /**
@@ -126,7 +124,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
     }
 
     /**
-     * @return The files to parse.
+     * @return The immutable list of files to parse.
      */
     public ImmutableList<String> getFileList() {
         return fileList;

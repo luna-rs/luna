@@ -14,6 +14,11 @@ import io.luna.util.TickTimer
  */
 object Attr {
 
+    /**
+     * A set of valid collection types.
+     */
+    val VALID_COLLECTION_TYPES = setOf(Int::class, Long::class, String::class, Double::class, Boolean::class)
+
     init {
         val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -63,6 +68,31 @@ object Attr {
      */
     fun timer(initialTicks: Long = 0L): AttributeDelegate<TickTimer> {
         val attr = Attribute(TickTimer(world, initialTicks))
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates an [ArrayList] attribute with [initialValues].
+     */
+    inline fun <reified E> list(vararg initialValues: E): AttributeDelegate<ArrayList<E>> {
+        check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
+        val values = initialValues.toCollection(ArrayList())
+        val attr = Attribute(values)
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates a [HashMap] attribute with [initialValues].
+     */
+    inline fun <reified K, reified V> map(vararg initialValues: Pair<K, V>): AttributeDelegate<HashMap<K, V>> {
+        check(VALID_COLLECTION_TYPES.contains(K::class) && VALID_COLLECTION_TYPES.contains(V::class)) {
+            "Attribute collections can only hold Int, Long, Double, Boolean, or String types."
+        }
+        val map = HashMap<K, V>()
+        for (next in initialValues) {
+            map += next
+        }
+        val attr = Attribute(map)
         return AttributeDelegate(attr)
     }
 }

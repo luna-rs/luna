@@ -1,14 +1,13 @@
 package io.luna.game.model.mob;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 import com.google.common.collect.UnmodifiableIterator;
-import com.google.common.primitives.Ints;
 
 import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -22,9 +21,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class SkillSet implements Iterable<Skill> {
 
     /**
-     * An immutable list containing the experience needed for each level.
+     * An array containing the experience needed for each level.
      */
-    public static final ImmutableList<Integer> EXPERIENCE_TABLE;
+    public static final int[] EXPERIENCE_TABLE;
 
     /**
      * A range containing valid skill identifiers.
@@ -44,7 +43,7 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public static int experienceForLevel(int level) {
         checkArgument(level >= 1 && level <= 99, "level < 1 || level > 99");
-        return EXPERIENCE_TABLE.get(level);
+        return EXPERIENCE_TABLE[level];
     }
 
     /**
@@ -67,7 +66,7 @@ public final class SkillSet implements Iterable<Skill> {
         }
 
         for (int index = 99; index > 0; index--) {
-            if (EXPERIENCE_TABLE.get(index) > experience) {
+            if (EXPERIENCE_TABLE[index] > experience) {
                 continue;
             }
             return index;
@@ -83,7 +82,7 @@ public final class SkillSet implements Iterable<Skill> {
             points += Math.floor(lvl + 300.0 * Math.pow(2.0, lvl / 7.0));
             output = (int) Math.floor(points / 4);
         }
-        EXPERIENCE_TABLE = ImmutableList.copyOf(Ints.asList(experienceTable));
+        EXPERIENCE_TABLE = experienceTable;
     }
 
     /**
@@ -113,12 +112,7 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public SkillSet(Mob mob) {
         this.mob = mob;
-
-        // Populate the skill set.
-        skills = new Skill[size()];
-        for (int index = 0; index < skills.length; index++) {
-            skills[index] = new Skill(index, this);
-        }
+        this.skills = IntStream.range(0, size()).mapToObj(i -> new Skill(i, this)).toArray(Skill[]::new);
     }
 
     @Override
@@ -128,8 +122,7 @@ public final class SkillSet implements Iterable<Skill> {
 
     @Override
     public Spliterator<Skill> spliterator() {
-        return Spliterators.spliterator(skills,
-                Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED);
+        return Spliterators.spliterator(skills, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.ORDERED);
     }
 
     /**
@@ -150,6 +143,37 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
+     * Resets the dynamic level back to its static level.
+     *
+     * @param id The skill to reset.
+     * @return {@code true} if the skill was reset.
+     */
+    public boolean reset(int id) {
+        var resetSkill = skills[id];
+        int realLevel = resetSkill.getStaticLevel();
+        if (resetSkill.getLevel() != realLevel) {
+            resetSkill.setLevel(realLevel);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Resets all dynamic levels back to their static levels.
+     *
+     * @return {@code true} if at least one skill was reset.
+     */
+    public boolean resetAll() {
+        var changed = false;
+        for (int index = 0; index < skills.length; index++) {
+            if (reset(index)) {
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    /**
      * Returns a <strong>shallow</strong> copy of the backing array.
      *
      * @return A copy of the skills.
@@ -163,8 +187,7 @@ public final class SkillSet implements Iterable<Skill> {
      * array. The argued array must have a capacity equal to that of the backing array.
      */
     public void set(Skill[] newSkills) {
-        checkArgument(newSkills.length == skills.length,
-                "newSkills.length must equal skills.length");
+        checkArgument(newSkills.length == skills.length, "newSkills.length must equal skills.length");
 
         firingEvents = false;
         try {
@@ -212,21 +235,11 @@ public final class SkillSet implements Iterable<Skill> {
 
             double combatLvl;
             if (ran > attstr && ran > mag) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (ranged * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (ranged * 0.4875);
             } else if (mag > attstr) {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (magic * 0.4875);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (magic * 0.4875);
             } else {
-                combatLvl = defenceCalc +
-                        hitpointsCalc +
-                        prayerCalc +
-                        (attack * 0.325) +
-                        (strength * 0.325);
+                combatLvl = defenceCalc + hitpointsCalc + prayerCalc + (attack * 0.325) + (strength * 0.325);
             }
             combatLevel = (int) combatLvl;
         }

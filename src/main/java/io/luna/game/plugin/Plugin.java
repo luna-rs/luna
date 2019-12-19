@@ -30,12 +30,12 @@ public final class Plugin {
     private final String packageName;
 
     /**
-     * A set of script dependencies.
+     * An immutable set of script dependencies.
      */
     private final ImmutableSet<ScriptDependency> dependencies;
 
     /**
-     * A set of scripts.
+     * An immutable set of scripts.
      */
     private final ImmutableSet<Script> scripts;
 
@@ -69,14 +69,14 @@ public final class Plugin {
     }
 
     /**
-     * @return A set of script dependencies.
+     * @return An immutable set of script dependencies.
      */
     public ImmutableSet<ScriptDependency> getDependencies() {
         return dependencies;
     }
 
     /**
-     * @return A set of scripts.
+     * @return An immutable set of scripts.
      */
     public ImmutableSet<Script> getScripts() {
         return scripts;

@@ -1,7 +1,6 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -26,6 +25,11 @@ public class Npc extends Mob {
     private final int id;
 
     /**
+     * The base position. The one the class was created with.
+     */
+    private final Position basePosition;
+
+    /**
      * The definition.
      */
     private NpcDefinition definition;
@@ -41,6 +45,11 @@ public class Npc extends Mob {
     private OptionalInt transformId = OptionalInt.empty();
 
     /**
+     * If this NPC should respawn.
+     */
+    private boolean respawn;
+
+    /**
      * Creates a new {@link Npc}.
      *
      * @param context The context instance.
@@ -50,6 +59,7 @@ public class Npc extends Mob {
     public Npc(LunaContext context, int id, Position position) {
         super(context, EntityType.NPC);
         this.id = id; // Base identifier, for resetting transformations.
+        basePosition = position; // Base position, for respawning.
 
         // Set definition values.
         definition = NpcDefinition.ALL.retrieve(id);
@@ -128,7 +138,6 @@ public class Npc extends Mob {
     private void setSkills() {
         // Set the attack, strength, defence, ranged, and magic levels.
         combatDefinition.ifPresent(def -> {
-            ImmutableList<Integer> skills = def.getSkills();
             Skill attack = skill(Skill.ATTACK);
             Skill strength = skill(Skill.STRENGTH);
             Skill defence = skill(Skill.DEFENCE);
@@ -136,11 +145,11 @@ public class Npc extends Mob {
             Skill magic = skill(Skill.MAGIC);
             Skill hitpoints = skill(Skill.HITPOINTS);
 
-            attack.setLevel(skills.get(NpcCombatDefinition.ATTACK));
-            strength.setLevel(skills.get(NpcCombatDefinition.STRENGTH));
-            defence.setLevel(skills.get(NpcCombatDefinition.DEFENCE));
-            ranged.setLevel(skills.get(NpcCombatDefinition.RANGED));
-            magic.setLevel(skills.get(NpcCombatDefinition.MAGIC));
+            attack.setLevel(def.getSkill(NpcCombatDefinition.ATTACK));
+            strength.setLevel(def.getSkill(NpcCombatDefinition.STRENGTH));
+            defence.setLevel(def.getSkill(NpcCombatDefinition.DEFENCE));
+            ranged.setLevel(def.getSkill(NpcCombatDefinition.RANGED));
+            magic.setLevel(def.getSkill(NpcCombatDefinition.MAGIC));
             hitpoints.setLevel(def.getHitpoints());
         });
     }
@@ -150,6 +159,13 @@ public class Npc extends Mob {
      */
     public int getBaseId() {
         return id;
+    }
+
+    /**
+     * @return The base position. The one the class was created with.
+     */
+    public Position getBasePosition() {
+        return basePosition;
     }
 
     /**
@@ -171,5 +187,22 @@ public class Npc extends Mob {
      */
     public Optional<NpcCombatDefinition> getCombatDefinition() {
         return combatDefinition;
+    }
+
+    /**
+     * @return {@code true} if this NPC respawns, {@code false} otherwise.
+     */
+    public boolean isRespawn() {
+        return respawn;
+    }
+
+    /**
+     * Forces this NPC to respawn when killed.
+     *
+     * @return This instance, for chaining.
+     */
+    public Npc setRespawning() {
+        respawn = true;
+        return this;
     }
 }

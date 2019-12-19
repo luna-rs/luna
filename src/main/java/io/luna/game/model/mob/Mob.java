@@ -7,14 +7,18 @@ import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.mob.MobDeathTask.NpcDeathTask;
+import io.luna.game.model.mob.MobDeathTask.PlayerDeathTask;
 import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.task.Task;
 
 import java.util.Optional;
 import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.mob.Skill.HITPOINTS;
 
 /**
@@ -111,6 +115,16 @@ public abstract class Mob extends Entity {
     OptionalInt transformId = OptionalInt.empty();
 
     /**
+     * The player instance. May be null.
+     */
+    private Player playerInstance;
+
+    /**
+     * The npc instance. May be null.
+     */
+    private Npc npcInstance;
+
+    /**
      * Creates a new {@link Mob}.
      *
      * @param context The context instance.
@@ -118,6 +132,7 @@ public abstract class Mob extends Entity {
     public Mob(LunaContext context, Position position, EntityType type) {
         super(context, position, type);
     }
+
     /**
      * Creates a new {@link Mob}.
      *
@@ -172,26 +187,33 @@ public abstract class Mob extends Entity {
     /**
      * @return The current health of this mob.
      */
-    public final int getCurrentHealth() {
+    public final int getHealth() {
         return skill(HITPOINTS).getLevel();
     }
 
     /**
      * Sets the current health of this mob.
      *
-     * @param health The new health.
+     * @param amount The new health.
      */
-    public final void setCurrentHealth(int health) {
-        skill(HITPOINTS).setLevel(health);
+    public final void setHealth(int amount) {
+        var hp = skill(HITPOINTS);
+        if (hp.getLevel() > 0) {
+            hp.setLevel(amount);
+            if (hp.getLevel() <= 0) {
+                world.schedule(type == EntityType.PLAYER ? new PlayerDeathTask(asPlr()) :
+                        new NpcDeathTask(asNpc()));
+            }
+        }
     }
 
     /**
-     * Adds or subtracts {@code health} from the current health level.
+     * Adds or subtracts {@code amount} from the current health level.
      *
-     * @param health The amount to add or subtract.
+     * @param amount The amount to add or subtract.
      */
-    public final void changeCurrentHealth(int health) {
-        setCurrentHealth(getCurrentHealth() + health);
+    public final void addHealth(int amount) {
+        setHealth(getHealth() + amount);
     }
 
     /**
@@ -208,6 +230,57 @@ public abstract class Mob extends Entity {
      */
     public final void interruptAction() {
         actions.interrupt();
+    }
+
+    /**
+     * Damages the mob once.
+     */
+    public final void damage(Hit hit) {
+        if (primaryHit.isPresent()) {
+            secondaryHit(hit);
+        } else {
+            primaryHit(hit);
+        }
+        addHealth(-hit.getDamage());
+    }
+
+    /**
+     * Damages the mob twice.
+     */
+    public final void damage(Hit hit1, Hit hit2) {
+        damage(hit1);
+        damage(hit2);
+    }
+
+    /**
+     * Damages the mob three times.
+     */
+    public final void damage(Hit hit1, Hit hit2, Hit hit3) {
+        damage(hit1);
+        damage(hit2);
+        world.schedule(new Task(1) {
+            @Override
+            protected void execute() {
+                damage(hit3);
+                cancel();
+            }
+        });
+    }
+
+    /**
+     * Damages the mob four times.
+     */
+    public final void damage(Hit hit1, Hit hit2, Hit hit3, Hit hit4) {
+        damage(hit1);
+        damage(hit2);
+        world.schedule(new Task(1) {
+            @Override
+            protected void execute() {
+                damage(hit3);
+                damage(hit4);
+                cancel();
+            }
+        });
     }
 
     /**
@@ -229,7 +302,7 @@ public abstract class Mob extends Entity {
      * @param newAnimation The animation to perform.
      */
     public final void animation(Animation newAnimation) {
-        if (!animation.isPresent() ||
+        if (animation.isEmpty() ||
                 animation.filter(newAnimation::overrides).isPresent()) {
             animation = Optional.of(newAnimation);
             flags.flag(UpdateFlag.ANIMATION);
@@ -397,6 +470,35 @@ public abstract class Mob extends Entity {
     }
 
     /**
+     * Returns if this mob is alive.
+     */
+    public boolean isAlive() {
+        return skill(HITPOINTS).getLevel() > 0;
+    }
+
+    /**
+     * Returns this mob instance as a Player. Throws {@link IllegalStateException} if the mob is not a player.
+     */
+    public Player asPlr() {
+        checkState(type == EntityType.PLAYER, "Mob instance is not a Player.");
+        if (playerInstance == null) {
+            playerInstance = (Player) this;
+        }
+        return playerInstance;
+    }
+
+    /**
+     * Returns this mob instance as a Npc. Throws {@link IllegalStateException} if the mob is not a npc.
+     */
+    public Npc asNpc() {
+        checkState(type == EntityType.NPC, "Mob instance is not a Npc.");
+        if (npcInstance == null) {
+            npcInstance = (Npc) this;
+        }
+        return npcInstance;
+    }
+
+    /**
      * A function invoked when teleporting.
      *
      * @param newPosition The teleport position.
@@ -533,5 +635,26 @@ public abstract class Mob extends Entity {
      */
     public ActionManager getActions() {
         return actions;
+    }
+
+    /**
+     * @return The {@code x} coordinate.
+     */
+    public int getX() {
+        return position.getX();
+    }
+
+    /**
+     * @return The {@code y} coordinate.
+     */
+    public int getY() {
+        return position.getY();
+    }
+
+    /**
+     * @return The {@code z} coordinate.
+     */
+    public int getZ() {
+        return position.getZ();
     }
 }

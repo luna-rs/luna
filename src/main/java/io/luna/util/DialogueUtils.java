@@ -16,22 +16,22 @@ public final class DialogueUtils {
      * An immutable list of "Make item" model widgets.
      */
     private static final ImmutableList<int[]> MAKE_ITEM_MODELS = ImmutableList.of(
-            new int[]{8884},
-            new int[]{8869, 8870},
-            new int[]{8883, 8884, 8885},
-            new int[]{8902, 8903, 8904, 8905},
-            new int[]{8941, 8942, 8943, 8944, 8945}
+        new int[] {8884},
+        new int[] {8869, 8870},
+        new int[] {8883, 8884, 8885},
+        new int[] {8902, 8903, 8904, 8905},
+        new int[] {8941, 8942, 8943, 8944, 8945}
     );
 
     /**
      * An immutable list of "Make item" text widgets.
      */
     private static final ImmutableList<int[]> MAKE_ITEM_TEXTS = ImmutableList.of(
-            new int[]{8893},
-            new int[]{8873, 8876},
-            new int[]{8889, 8893, 8897},
-            new int[]{8908, 8912, 8916, 8920},
-            new int[]{8948, 8952, 8956, 8960, 8964}
+        new int[] {8893},
+        new int[] {8873, 8876},
+        new int[] {8889, 8893, 8897},
+        new int[] {8908, 8912, 8916, 8920},
+        new int[] {8948, 8952, 8956, 8960, 8964}
     );
 
     /**

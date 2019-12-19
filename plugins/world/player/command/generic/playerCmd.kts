@@ -1,6 +1,9 @@
 import api.event.Matcher
 import api.inter.QuestJournalInterface
-import api.predef.*
+import api.predef.CommandKey
+import api.predef.RIGHTS_PLAYER
+import api.predef.cmd
+import api.predef.world
 import com.google.common.collect.HashMultimap
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
@@ -43,7 +46,7 @@ cmd("commands", RIGHTS_PLAYER) {
 
     // Display them on the quest journal.
     val questJournal = QuestJournalInterface("@dbl@Luna ~ Commands")
-    for (rights in PlayerRights.ALL) {
+    for (rights in PlayerRights.values()) {
         questJournal.addLine("@dbl@${rights.formattedName} commands")
 
         for (name in commandMap[rights]) {

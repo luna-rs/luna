@@ -26,7 +26,7 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
         Hit hit = unwrap(player.getSecondaryHit());
         msg.put(hit.getDamage());
         msg.put(hit.getType().getOpcode(), ValueType.SUBTRACT);
-        msg.put(player.getCurrentHealth());
+        msg.put(player.getHealth());
         msg.put(player.getTotalHealth(), ValueType.NEGATE);
     }
 
@@ -35,7 +35,7 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
         Hit hit = unwrap(npc.getSecondaryHit());
         msg.put(hit.getDamage(), ValueType.ADD);
         msg.put(hit.getType().getOpcode(), ValueType.NEGATE);
-        msg.put(npc.getCurrentHealth(), ValueType.ADD);
+        msg.put(npc.getHealth(), ValueType.ADD);
         msg.put(npc.getTotalHealth());
     }
 

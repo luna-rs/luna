@@ -61,7 +61,7 @@ public final class NpcDefinition implements Definition {
     private final int walkRightAnimation;
 
     /**
-     * A set of actions.
+     * An immutable list of actions.
      */
     private final ImmutableList<String> actions;
 
@@ -160,7 +160,7 @@ public final class NpcDefinition implements Definition {
     }
 
     /**
-     * @return A set of actions.
+     * @return An immutable list of actions.
      */
     public ImmutableList<String> getActions() {
         return actions;

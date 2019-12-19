@@ -5,8 +5,8 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.block.AbstractUpdateBlockSet;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
-import io.luna.game.model.mob.block.UpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateState;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
@@ -24,7 +24,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
     /**
      * The player update block set.
      */
-    private final UpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
+    private final AbstractUpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
 
     @Override
     public ByteMessage write(Player player) {

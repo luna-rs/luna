@@ -118,12 +118,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     @SuppressWarnings("unchecked")
     public MobList(World world, int capacity) {
         this.world = world;
-        mobs = (E[]) new Mob[capacity + 1];
+        this.mobs = (E[]) new Mob[capacity + 1];
 
         // Initialize the index cache.
-        indexes = IntStream.rangeClosed(1, capacity)
-                .boxed()
-                .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
+        this.indexes = IntStream.rangeClosed(1, capacity).boxed()
+            .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
     }
 
     @Override
@@ -154,7 +153,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      */
     public Optional<E> findLast(Predicate<? super E> filter) {
         // Iterator doesn't support reverse iteration.
-        for (int index = capacity(); index > 1; index--) {
+        for (int index = capacity() - 1; index > 1; index--) {
             E mob = mobs[index];
             if (mob == null) {
                 continue;
@@ -214,12 +213,13 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.ACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
-            world.addPlayer((Player) mob);
+            world.addPlayer(mob.asPlr());
         }
     }
 
     /**
-     * Attempts to remove {@code mob}.
+     * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
+     * logout packet or use {@link Player#disconnect()} to destroy the player's connection.</strong>
      *
      * @param mob The mob to remove.
      */
@@ -229,7 +229,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.INACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
-            world.removePlayer((Player) mob);
+            checkState(mob.asPlr().getState() == EntityState.INACTIVE,
+                "Player must be inactive. Do not use MobList#remove(Mob) to logout players.");
+            world.removePlayer(mob.asPlr());
         }
 
         // Put back index, so other mobs can use it.

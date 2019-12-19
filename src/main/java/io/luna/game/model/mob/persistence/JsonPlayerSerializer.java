@@ -2,10 +2,8 @@ package io.luna.game.model.mob.persistence;
 
 import io.luna.game.model.mob.attr.Attribute;
 
-import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * A {@link PlayerSerializer} implementation that stores persistent player data in local {@code JSON} files.
@@ -17,7 +15,7 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
     /**
      * The path to the local files.
      */
-    private static final Path DIR = Paths.get("data", "saved_players");
+    private static final Path DIR = Path.of("data", "saved_players");
 
     static {
         try {
@@ -36,15 +34,12 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         if (!Files.exists(filePath)) {
             return null;
         }
-        String fileContents = new String(Files.readAllBytes(filePath));
+        String fileContents = Files.readString(filePath);
         return Attribute.getGsonInstance().fromJson(fileContents, PlayerData.class);
     }
 
     @Override
     public void save(String username, PlayerData data) throws Exception {
-        var fileWriter = new FileWriter(DIR.resolve(username + ".json").toFile());
-        try (fileWriter) {
-            fileWriter.write(Attribute.getGsonInstance().toJson(data, PlayerData.class));
-        }
+        Files.writeString(DIR.resolve(username + ".json"), Attribute.getGsonInstance().toJson(data, PlayerData.class));
     }
 }

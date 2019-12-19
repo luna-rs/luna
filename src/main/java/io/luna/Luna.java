@@ -2,13 +2,14 @@ package io.luna;
 
 import com.moandjiezana.toml.Toml;
 import io.luna.util.LoggingSettings;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
@@ -33,6 +34,11 @@ public final class Luna {
     private static final LoggingSettings loggingSettings;
 
     /**
+     * The mechanism used to read {@code .toml} files.
+     */
+    private static final Toml TOML = new Toml();
+
+    /**
      * A private constructor.
      */
     private Luna() {
@@ -42,6 +48,7 @@ public final class Luna {
         try {
             Thread.currentThread().setName("InitializationThread");
 
+            InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
             loggingSettings = loadLoggingSettings();
             System.setProperty("log4j2.configurationFactory", "io.luna.util.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
@@ -75,9 +82,8 @@ public final class Luna {
      * @return The settings object.
      */
     private static LunaSettings loadSettings() throws IOException {
-        var fileReader = new FileReader(Paths.get("data", "luna.toml").toFile());
-        try (var bufferedReader = new BufferedReader(fileReader)) {
-            return new Toml().read(bufferedReader).to(LunaSettings.class);
+        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "luna.toml"))) {
+            return TOML.read(bufferedReader).to(LunaSettings.class);
         }
     }
 
@@ -87,9 +93,8 @@ public final class Luna {
      * @return The logging settings object.
      */
     private static LoggingSettings loadLoggingSettings() throws IOException {
-        var fileReader = new FileReader(Paths.get("data", "logging.toml").toFile());
-        try (var bufferedReader = new BufferedReader(fileReader)) {
-           return new Toml().read(bufferedReader).to(LoggingSettings.class);
+        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
+            return TOML.read(bufferedReader).to(LoggingSettings.class);
         }
     }
 

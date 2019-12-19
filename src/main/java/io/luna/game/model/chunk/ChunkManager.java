@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -153,8 +152,8 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param entity The entity.
      */
     private void updateEntity(Player player, StationaryEntity entity) {
-        Optional<Player> updatePlr = entity.getPlayer();
-        boolean isUpdate = updatePlr.isEmpty() || updatePlr.map(player::equals).orElse(false);
+        Player updatePlr = entity.getPlayer();
+        boolean isUpdate = updatePlr == null || updatePlr.equals(player);
         if (isUpdate) {
             entity.show();
         }

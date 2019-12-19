@@ -4,14 +4,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.ObjectDefinition;
 import io.luna.util.GsonUtils;
-import io.luna.util.parser.JsonFileParser;
+import io.luna.util.parser.AbstractJsonFileParser;
 
 /**
- * A {@link JsonFileParser} implementation that reads Object definitions.
+ * A {@link AbstractJsonFileParser} implementation that reads Object definitions.
  *
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  */
-public final class ObjectDefinitionFileParser extends JsonFileParser<ObjectDefinition> {
+public final class ObjectDefinitionFileParser extends AbstractJsonFileParser<ObjectDefinition> {
 
     /**
      * Creates a new {@link ObjectDefinitionFileParser}.

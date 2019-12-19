@@ -1,9 +1,5 @@
 package io.luna.game.model;
 
-import com.google.common.collect.ImmutableList;
-
-import static io.luna.game.model.Position.HEIGHT_LEVELS;
-
 /**
  * Holds constants related to entities.
  *

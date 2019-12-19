@@ -1,6 +1,6 @@
 # An easier way to configure log4j2 settings. For more info on these settings see 'io.luna.util.LoggingSettings' or the wiki.
 
-rootLevel = "INFO"
+rootLevel = "DEBUG"
 formatType = "VERBOSE"
 outputType = "MIXED"
 activeFileLogs = [ "CONSOLE_ERR" ]

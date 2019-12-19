@@ -21,20 +21,20 @@ import static io.luna.game.model.mob.block.UpdateState.UPDATE_SELF;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public abstract class UpdateBlockSet<E extends Mob> {
+public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
     /**
-     * The update blocks.
+     * The immutable list of update blocks.
      */
     private final ImmutableList<UpdateBlock> updateBlocks;
 
     /**
-     * Creates a new {@link UpdateBlockSet}.
+     * Creates a new {@link AbstractUpdateBlockSet}.
      *
      * @param updateBlocks The update blocks.
      */
-    public UpdateBlockSet(ImmutableList<UpdateBlock> updateBlocks) {
-        this.updateBlocks = updateBlocks;
+    public AbstractUpdateBlockSet(List<UpdateBlock> updateBlocks) {
+        this.updateBlocks = ImmutableList.copyOf(updateBlocks);
     }
 
     /**
@@ -69,7 +69,6 @@ public abstract class UpdateBlockSet<E extends Mob> {
             UpdateFlag updateFlag = block.getFlag();
 
             if(mob.getType() == EntityType.PLAYER) {
-
                 // We are adding local players, so we need to force the appearance block.
                 if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
                     mask |= block.getMask(mob);

@@ -8,19 +8,19 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 
 /**
- * A {@link FileParser} implementation designed to parse {@code JSON} tokens.
+ * A {@link AbstractFileParser} implementation designed to parse {@code JSON} tokens.
  *
  * @param <R> The token object type.
  * @author lare96 <http://github.org/lare96>
  */
-public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject, R> {
+public abstract class AbstractJsonFileParser<R> extends AbstractFileParser<JsonArray, JsonObject, R> {
 
     /**
-     * Creates a new {@link JsonFileParser}.
+     * Creates a new {@link AbstractJsonFileParser}.
      *
      * @param files The files to parse.
      */
-    public JsonFileParser(String... files) {
+    public AbstractJsonFileParser(String... files) {
         super(files);
     }
 

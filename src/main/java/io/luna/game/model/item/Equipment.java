@@ -11,9 +11,11 @@ import io.luna.game.plugin.PluginManager;
 import java.util.BitSet;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.IntStream;
+import java.util.function.IntUnaryOperator;
 
-import static io.luna.util.OptionalUtils.*;
+import static io.luna.util.OptionalUtils.ifPresent;
+import static io.luna.util.OptionalUtils.mapToInt;
+import static io.luna.util.OptionalUtils.matches;
 
 /**
  * An item container model representing a player's equipment.
@@ -96,30 +98,31 @@ public final class Equipment extends ItemContainer {
         }
 
         /**
-         * Gets the bonuses of {@code item}.
-         *
-         * @param item The item to get the bonuses of.
-         * @return The item's bonuses.
-         */
-        private ImmutableList<Integer> getBonuses(Optional<Item> item) {
-            return item.map(Item::getEquipDef).
-                    map(EquipmentDefinition::getBonuses).orElse(EMPTY_BONUSES);
-        }
-
-        /**
          * Updates bonuses for two potential items.
          *
          * @param oldItem The old item.
          * @param newItem The new item.
          */
         private void updateBonus(Optional<Item> oldItem, Optional<Item> newItem) {
+            IntUnaryOperator oldBonusFunction, newBonusFunction;
 
-            // Retrieve old and new bonuses.
-            ImmutableList<Integer> oldBonuses = getBonuses(oldItem);
-            ImmutableList<Integer> newBonuses = getBonuses(newItem);
+            if (oldItem.isPresent()) {
+                var equipmentDefinition = oldItem.get().getEquipDef();
+                oldBonusFunction = equipmentDefinition::getBonus;
+            } else {
+                oldBonusFunction = id -> 0;
+            }
+
+            if (newItem.isPresent()) {
+                var equipmentDefinition = newItem.get().getEquipDef();
+                newBonusFunction = equipmentDefinition::getBonus;
+            } else {
+                newBonusFunction = id -> 0;
+            }
+
             for (int index = 0; index < bonuses.length; index++) {
-                int old = oldBonuses.get(index);
-                int replace = newBonuses.get(index);
+                int old = oldBonusFunction.applyAsInt(index);
+                int replace = newBonusFunction.applyAsInt(index);
 
                 // Bonus(es) nonzero, this index needs updating.
                 if (old != 0 || replace != 0) {
@@ -127,8 +130,7 @@ public final class Equipment extends ItemContainer {
                 }
 
                 // Apply old (-) and new (+) bonuses.
-                bonuses[index] -= old;
-                bonuses[index] += replace;
+                bonuses[index] = bonuses[index] - old + replace;
             }
         }
 
@@ -158,12 +160,6 @@ public final class Equipment extends ItemContainer {
             writeBonuses.clear();
         }
     }
-
-    /**
-     * An array of bonuses, all of which are {@code 0}.
-     */
-    private static final ImmutableList<Integer> EMPTY_BONUSES = IntStream.range(0, 12).boxed().
-            map(index -> 0).collect(ImmutableList.toImmutableList());
 
     /**
      * The head index.
@@ -281,10 +277,12 @@ public final class Equipment extends ItemContainer {
     public static final int PRAYER = 11;
 
     /**
-     * A list of bonus names.
+     * An immutable list of bonus names.
      */
-    public static final ImmutableList<String> BONUS_NAMES = ImmutableList.of("Stab", "Slash", "Crush",
-            "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range", "Strength", "Prayer");
+    public static final ImmutableList<String> BONUS_NAMES = ImmutableList.of(
+        "Stab", "Slash", "Crush", "Magic", "Range", "Stab",
+        "Slash", "Crush", "Magic", "Range", "Strength", "Prayer"
+    );
 
     /**
      * An error message.
@@ -451,7 +449,6 @@ public final class Equipment extends ItemContainer {
      * @return {@code true} if successful.
      */
     public boolean unequip(int equipmentIndex) {
-
         // Validate index.
         Item equipmentItem = get(equipmentIndex);
         if (equipmentItem == null) {
@@ -491,12 +488,5 @@ public final class Equipment extends ItemContainer {
         // Write them all.
         equipmentListener.writeBonuses.set(0, 12);
         equipmentListener.writeBonuses();
-    }
-
-    /**
-     * @return An array of equipment bonuses.
-     */
-    public int[] getBonuses() {
-        return bonuses;
     }
 }

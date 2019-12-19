@@ -9,7 +9,6 @@ import javafx.scene.Scene;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +23,7 @@ final class PluginGuiSettings {
     /**
      * The {@code settings.toml} directory.
      */
-    private static final Path SETTINGS_DIR = Paths.get("./data/gui/settings.toml");
+    private static final Path SETTINGS_DIR = Path.of("data", "gui", "settings.toml");
 
     /**
      * The plugin GUI.
@@ -88,7 +87,7 @@ final class PluginGuiSettings {
      */
     boolean save(Path path) {
         try {
-            Files.write(path, toToml().getBytes());
+            Files.writeString(path, toToml());
         } catch (IOException e) {
             gui.openErrorAlert(e);
             return false;
@@ -150,7 +149,7 @@ final class PluginGuiSettings {
 
         // Apply selected plugins.
         controller.getChangeListener().setFiringEvents(false);
-        if (selected.size() > 0) {
+        if (!selected.isEmpty()) {
             gui.getPluginItems().forEach((k, v) -> {
                 if (selected.contains(k)) {
                     v.setSelected(true);

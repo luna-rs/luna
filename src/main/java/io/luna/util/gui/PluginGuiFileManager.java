@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -89,9 +88,9 @@ final class PluginGuiFileManager {
      * @return The contents of the file.
      */
     private String loadFile(String name) {
-        Path filePath = Paths.get("./data/gui/").resolve(name);
+        var filePath = Path.of("data", "gui").resolve(name);
         try {
-            return new String(Files.readAllBytes(filePath));
+            return Files.readString(filePath);
         } catch (IOException e) {
             gui.openErrorAlert(e);
         }

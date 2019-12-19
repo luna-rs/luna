@@ -145,7 +145,7 @@ public final class WalkingQueue {
             current = next;
 
             if (mob.getType() == EntityType.PLAYER) {
-                Player player = (Player) mob;
+                Player player = mob.asPlr();
                 if (player.isRunning() || runningPath) {
                     next = decrementRunEnergy(player) ? this.current.poll() : null;
                     if (next != null) {
@@ -263,7 +263,7 @@ public final class WalkingQueue {
      * A function that implements an algorithm to restore run energy.
      */
     private void incrementRunEnergy() {
-        Player player = (Player) mob;
+        Player player = mob.asPlr();
 
         double runEnergy = player.getRunEnergy();
         if (runEnergy >= 100.0) {
