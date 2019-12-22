@@ -12,7 +12,6 @@ import java.util.*
  */
 class GroundItemTask : Task(100) {
 
-    // TODO Has not been tested at all.
     companion object {
 
         /**
