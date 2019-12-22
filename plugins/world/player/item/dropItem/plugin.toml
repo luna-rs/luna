@@ -1,0 +1,7 @@
+[metadata]
+name = "Pick up ground items"
+description = "A plugin that handles dropping items from the inventory."
+version = "1.0"
+authors = [
+  "lare96"
+]
