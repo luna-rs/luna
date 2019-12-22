@@ -1,5 +1,6 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -10,52 +11,24 @@ import io.luna.game.model.mob.Player;
 public final class PickupItemEvent extends PlayerEvent {
 
     /**
-     * The item's x coordinate.
+     * The ground item.
      */
-    private final int x;
-
-    /**
-     * The item's y coordinate.
-     */
-    private final int y;
-
-    /**
-     * The item identifier.
-     */
-    private final int id;
+    private final GroundItem item;
 
     /**
      * Creates a new {@link PickupItemEvent}.
      *
-     * @param x The item's x coordinate.
-     * @param y The item's y coordinate.
-     * @param id The item identifier.
+     * @param item The ground item.
      */
-    public PickupItemEvent(Player player, int x, int y, int id) {
+    public PickupItemEvent(Player player, GroundItem item) {
         super(player);
-        this.x = x;
-        this.y = y;
-        this.id = id;
+        this.item = item;
     }
 
     /**
-     * @return The item's x coordinate.
+     * @return The ground item.
      */
-    public int getX() {
-        return x;
-    }
-
-    /**
-     * @return The item's y coordinate.
-     */
-    public int getY() {
-        return y;
-    }
-
-    /**
-     * @return The item identifier.
-     */
-    public int getId() {
-        return id;
+    public GroundItem getItem() {
+        return item;
     }
 }
