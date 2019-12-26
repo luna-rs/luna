@@ -1,10 +1,7 @@
-import api.predef.RIGHTS_ADMIN
-import api.predef.ctx
-import api.predef.on
-import api.predef.world
+
+import api.predef.*
 import io.luna.game.event.impl.PlayerDeathEvent
 import io.luna.game.model.EntityType
-import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.Mob
@@ -49,10 +46,10 @@ fun dropItems(plr: Player, source: Mob?) {
         }
 
         val sourcePlayer = if (source?.type != EntityType.PLAYER) null else source.asPlr()
-        world.items.register(GroundItem(ctx, 526, 1, plr.position, sourcePlayer))
+        world.addItem(526, 1, plr.position, sourcePlayer)
         while (true) {
             val item = deathItems.poll() ?: break
-            world.items.register(GroundItem(ctx, item.id, item.amount, plr.position, sourcePlayer))
+            world.addItem(item.id, item.amount, plr.position, sourcePlayer)
         }
     }
 }
