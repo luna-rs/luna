@@ -122,6 +122,7 @@ public final class Item {
      * @param add The amount to add.
      * @return The new item.
      */
+    // TODO change to update amount
     public Item changeAmount(int add) {
         boolean positive = add > 0;
         int newAmount = amount + add;

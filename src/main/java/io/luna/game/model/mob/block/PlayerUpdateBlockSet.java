@@ -57,6 +57,7 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
                 player.setCachedBlock(blockMsg);
             }
         } finally {
+            // TODO Resource leak here? Could have something to do with caching the blocks?
             blockMsg.release();
         }
     }

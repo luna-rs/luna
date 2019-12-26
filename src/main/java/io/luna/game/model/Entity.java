@@ -4,6 +4,8 @@ import io.luna.LunaContext;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkPosition;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.MobList;
 import io.luna.game.plugin.PluginManager;
 import io.luna.game.service.GameService;
 
@@ -148,7 +150,9 @@ public abstract class Entity {
     }
 
     /**
-     * Sets the current state and invokes the corresponding state function.
+     * Sets the current state and invokes the corresponding state function. <strong>Warning:</strong> Do not call
+     * this directly unless you're familiar with the internal API. Use {@link MobList#add(Mob)}/
+     * {@link EntityList#register(StationaryEntity)} and the respective removal functions instead.
      *
      * @param newState The new state.
      */
@@ -161,7 +165,7 @@ public abstract class Entity {
         state = newState;
         switch (state) {
             case ACTIVE:
-                checkState(position != null, "Cannot be ACTIVE until position is set.");
+                checkState(position != null, this + " cannot be registered until its position is set.");
 
                 setCurrentChunk();
                 onActive();
@@ -209,13 +213,13 @@ public abstract class Entity {
         ChunkPosition next = position.getChunkPosition();
         if (currentChunk == null) {
             // We have no current chunk.
-            currentChunk = world.getChunks().getChunk(next);
+            currentChunk = world.getChunks().load(next);
             currentChunk.add(this);
         } else if (!currentChunk.getPosition().equals(next)) {
             // We have a chunk, and it's not equal to the new one.
             currentChunk.remove(this);
 
-            currentChunk = world.getChunks().getChunk(next);
+            currentChunk = world.getChunks().load(next);
             currentChunk.add(this);
         }
     }

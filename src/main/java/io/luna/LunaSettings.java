@@ -10,25 +10,13 @@ import io.netty.util.ResourceLeakDetector.Level;
  */
 public final class LunaSettings {
 
-    private Level resourceLeakDetection;
+    private LunaRuntimeMode runtimeMode;
     private int port;
     private int connectionLimit;
     private Position startingPosition;
     private double experienceMultiplier;
     private boolean pluginGui;
     private String serializer;
-
-    /**
-     * The resource leak detection level, should be {@code PARANOID} in a development environment and {@code
-     * DISABLED} in a production environment. Alternatively, {@code SIMPLE} can be used fine as a compromise in both
-     * scenarios.
-     * <p>
-     * Please note as the leak detection levels get higher, the tradeoff is a <strong>substantial</strong>
-     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
-     */
-    public Level resourceLeakDetection() {
-        return resourceLeakDetection;
-    }
 
     /**
      * The port that the server will be bound on.
@@ -73,6 +61,44 @@ public final class LunaSettings {
      */
     public String serializer() {
         return serializer;
+    }
+
+    /**
+     * Determines if luna is running in Beta mode.
+     */
+    public boolean betaMode() {
+        switch (runtimeMode) {
+            case DEVELOPMENT:
+            case BENCHMARK:
+                return true;
+            case PRODUCTION:
+                return false;
+        }
+        throw new IllegalStateException("Invalid runtime mode!");
+    }
+
+    /**
+     * Please note as the leak detection levels get higher, the tradeoff is a <strong>substantial</strong>
+     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
+     */
+    public Level resourceLeakDetection() {
+        switch (runtimeMode) {
+            case PRODUCTION:
+                return Level.DISABLED;
+            case BENCHMARK:
+                return Level.SIMPLE;
+            case DEVELOPMENT:
+                return Level.PARANOID;
+            default:
+                throw new IllegalStateException("Invalid runtime mode!");
+        }
+    }
+
+    /**
+     * Determines what mode Luna is running in.
+     */
+    public LunaRuntimeMode runtimeMode() {
+        return runtimeMode;
     }
 
     /**

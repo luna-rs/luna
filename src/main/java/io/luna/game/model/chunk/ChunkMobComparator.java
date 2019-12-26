@@ -44,7 +44,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
     /**
      * Creates a new {@link ChunkMobComparator}.
      *
-     * @param player The player  to compare mobs for.
+     * @param player The player to compare mobs for.
      */
     public ChunkMobComparator(Player player) {
         this.player = player;

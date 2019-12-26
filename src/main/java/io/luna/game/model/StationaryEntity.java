@@ -3,12 +3,13 @@ package io.luna.game.model;
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.ChunkPlacementMessageWriter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -21,19 +22,29 @@ public abstract class StationaryEntity extends Entity {
     /**
      * An enumerated type whose elements represent either a show or hide update.
      */
-    private enum UpdateType {
+    public enum UpdateType {
         SHOW, HIDE
     }
 
     /**
-     * The player to update for. If {@code null}, updates for all players.
+     * The player to update for. If empty, updates for all players.
      */
-    private final Player player;
+    private final Optional<Player> owner;
 
     /**
-     * An immutable list of the surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
+     * The position used for placement.
+     */
+    private final Position placement;
+
+    /**
+     * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
      */
     private ImmutableList<Set<Player>> surroundingPlayers;
+
+    /**
+     * If this entity is hidden.
+     */
+    private boolean hidden = true;
 
     /**
      * Creates a new local {@link StationaryEntity}.
@@ -41,11 +52,12 @@ public abstract class StationaryEntity extends Entity {
      * @param context The context instance.
      * @param position The position.
      * @param type The entity type.
-     * @param player The player to update for. If {@code null}, updates for all players.
+     * @param owner The player to update for. If empty, updates for all players.
      */
-    public StationaryEntity(LunaContext context, Position position, EntityType type, Player player) {
+    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> owner) {
         super(context, position, type);
-        this.player = player;
+        this.owner = owner;
+        placement = position;//new Position(getChunkPosition().getAbsX(), getChunkPosition().getAbsY());
     }
 
     /**
@@ -66,16 +78,24 @@ public abstract class StationaryEntity extends Entity {
 
     /**
      * Sends a packet to all applicable players to display this entity.
+     * <strong>This does NOT register the entity, so it cannot be interacted with by a Player.</strong>
+     * Use functions in {@link World} to register entities.
      */
     public final void show() {
-        applyUpdate(UpdateType.SHOW);
+        if (hidden) {
+            applyUpdate(UpdateType.SHOW);
+        }
     }
 
     /**
      * Sends a packet to all applicable players to hide this entity.
+     * <strong>This does NOT unregister the entity, it just makes it invisible to players.</strong>
+     * Use functions in {@link World} to unregister entities.
      */
     public final void hide() {
-        applyUpdate(UpdateType.HIDE);
+        if (!hidden) {
+            applyUpdate(UpdateType.HIDE);
+        }
     }
 
     /**
@@ -84,17 +104,19 @@ public abstract class StationaryEntity extends Entity {
      * @param updateType The update type to apply.
      */
     private void applyUpdate(UpdateType updateType) {
-        if (player != null && player.isViewableFrom(this)) {
+        if (owner.isPresent() && owner.get().isViewableFrom(this)) {
             // We have a player to update for.
-            sendUpdateMessage(player, updateType);
-            return;
+            sendUpdateMessage(owner.get(), updateType);
+        } else {
+            // We don't, so update for all viewable surrounding players.
+            for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
+                for (Player inside : chunkPlayers) {
+                    if (isViewableFrom(inside)) {
+                        sendUpdateMessage(inside, updateType);
+                    }
+                }
+            }
         }
-
-        // We don't, so update for all viewable surrounding players.
-        getSurroundingPlayers().stream()
-                .flatMap(Set::stream)
-                .filter(this::isViewableFrom)
-                .forEach(inside -> sendUpdateMessage(inside, updateType));
     }
 
     /**
@@ -103,51 +125,72 @@ public abstract class StationaryEntity extends Entity {
      * @param player The player.
      * @param updateType The update type to apply.
      */
-    private void sendUpdateMessage(Player player, UpdateType updateType) {
-        ChunkPosition chunkPosition = player.getChunkPosition();
-        int offset = chunkPosition.offset(position);
+    public void sendUpdateMessage(Player player, UpdateType updateType) {
+        player.queue(new ChunkPlacementMessageWriter(placement));
+
+        int offset = getChunkPosition().offset(position);
         if (updateType == UpdateType.SHOW) {
             player.queue(showMessage(offset));
+            hidden = false;
         } else if (updateType == UpdateType.HIDE) {
             player.queue(hideMessage(offset));
+            hidden = true;
         }
+    }
+
+    /**
+     * Determines if this item is visible to {@code player}.
+     *
+     * @param player The player.
+     * @return {@code true} if this item is visible to the player.
+     */
+    public boolean isVisibleTo(Player player) {
+        if (!player.isViewableFrom(this)) {
+            return false;
+        }
+        return isGlobal() || owner.filter(plrOwner -> plrOwner.equals(player)).isPresent();
     }
 
     /**
      * @return The player to update for.
      */
-    public final Player getPlayer() {
-        return player;
+    public final Optional<Player> getOwner() {
+        return owner;
     }
 
     /**
-     * @return {@code true} if this entity is updating for everyone.
+     * @return {@code true} if this entity is visible for everyone.
      */
     public final boolean isGlobal() {
-        return player == null;
+        return owner.isEmpty();
     }
 
     /**
-     * @return {@code true} if this entity is updating for just one player.
+     * @return {@code true} if this entity is visible for just one player.
      */
     public final boolean isLocal() {
-        return !isGlobal();
+        return owner.isPresent();
     }
 
     /**
-     * Returns an immutable {@link List} representing surrounding players. Each set represents players within a
-     * viewable chunk.
+     * @return {@code true} if this entity is invisible, {@code false} otherwise.
+     */
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    /**
+     * Returns an {@link ImmutableList} representing surrounding players. Each set represents players within a viewable
+     * chunk.
      * <p>
      * We retain references to the original sets instead of flattening them, so that they implicitly stay updated as
-     * players move in and out of view of this entity.
+     * players move in and out of view of this entity. This means we only have to build the returned list once.
      */
     public final ImmutableList<Set<Player>> getSurroundingPlayers() {
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
-
             // Retrieve viewable chunks.
             List<Chunk> viewableChunks = world.getChunks().getViewableChunks(position);
-
             for (Chunk chunk : viewableChunks) {
                 // Wrap players in immutable view, add it.
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));

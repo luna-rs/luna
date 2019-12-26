@@ -11,27 +11,29 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class SendChunkMessageWriter extends GameMessageWriter {
+public final class ChunkPlacementMessageWriter extends GameMessageWriter {
 
+    // TODO cache the placement chunk to avoid duplicate writes, do the same to ClearChunk
     /**
      * The position's chunk to mark.
      */
     private final Position position;
 
     /**
-     * Creates a new {@link SendChunkMessageWriter}.
+     * Creates a new {@link ChunkPlacementMessageWriter}.
      *
      * @param position The position's chunk to mark.
      */
-    public SendChunkMessageWriter(Position position) {
+    public ChunkPlacementMessageWriter(Position position) {
         this.position = position;
     }
 
     @Override
     public ByteMessage write(Player player) {
+        // TODO Check if marking the right chunk?
         ByteMessage msg = ByteMessage.message(85);
-        msg.put(position.getLocalY(player.getPosition()), ValueType.NEGATE);
-        msg.put(position.getLocalX(player.getPosition()), ValueType.NEGATE);
+        msg.put(position.getLocalY(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
+        msg.put(position.getLocalX(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
         return msg;
     }
 }

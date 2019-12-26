@@ -291,6 +291,45 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Attempts to remove {@code removeItems} and add {@code addItems}.
+     *
+     * @param addItems The items to add.
+     * @param removeItems The items to remove.
+     * @return {@code true} if at least one was added or removed.
+     */
+    public boolean updateAll(Iterable<? extends Item> addItems, Iterable<? extends Item> removeItems) {
+        boolean changed = false;
+        startBulkUpdate();
+        try {
+            for (Item item : removeItems) {
+                if (item == null) {
+                    continue;
+                }
+                // Bulk operation gets set to false in 'remove'.
+                startBulkUpdate();
+                if (remove(item)) {
+                    changed = true;
+                }
+            }
+
+            for (Item item : addItems) {
+                if (item == null) {
+                    continue;
+                }
+                // Bulk operation gets set to false in 'add'.
+                startBulkUpdate();
+                if (add(item)) {
+                    changed = true;
+                }
+            }
+            startBulkUpdate();
+        } finally {
+            finishBulkUpdate();
+        }
+        return changed;
+    }
+
+    /**
      * Attempts to add {@code items} to the closest available spots.
      *
      * @param items The items to add.
@@ -687,7 +726,7 @@ public class ItemContainer implements Iterable<Item> {
      */
     public void forItems(BiConsumer<Integer, Item> action) {
         boolean bulkUpdateInProgress = inBulkUpdate;
-        if(!bulkUpdateInProgress) {
+        if (!bulkUpdateInProgress) {
             startBulkUpdate();
         }
         try {
@@ -695,7 +734,7 @@ public class ItemContainer implements Iterable<Item> {
                 action.accept(index, get(index));
             }
         } finally {
-            if(!bulkUpdateInProgress) {
+            if (!bulkUpdateInProgress) {
                 finishBulkUpdate();
             }
         }

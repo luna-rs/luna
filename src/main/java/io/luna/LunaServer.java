@@ -88,6 +88,7 @@ public final class LunaServer {
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
+
         ResourceLeakDetector.setLevel(Luna.settings().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();

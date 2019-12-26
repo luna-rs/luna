@@ -8,9 +8,6 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.object.GameObject;
-import io.luna.game.model.object.ObjectDirection;
-import io.luna.game.model.object.ObjectType;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
@@ -38,17 +35,22 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         if (!validate(player, itemId, itemIndexId, itemInterfaceId, objectId, objectX, objectY)) {
             return null;
         }
-        Position position = new Position(objectX, objectY, player.getPosition().getZ());
+        // TODO vv Entity iteraction code is repeated a lot, find a way to streamline it (EntityInteractionEvent).
+        var objectPosition = new Position(objectX, objectY, player.getPosition().getZ());
+        var foundObject = player.getWorld().getObjects().findAll(objectPosition).stream().
+                filter(nextObject -> nextObject.getId() == objectId &&
+                        nextObject.getPosition().equals(objectPosition) &&
+                        nextObject.isVisibleTo(player)).findFirst();
+        if(foundObject.isEmpty()) { // Object doesn't exist.
+            return null;
+        }
 
-        // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        GameObject object = new GameObject(player.getContext(), objectId, position, ObjectType.DEFAULT,
-            ObjectDirection.WEST, null);
-        Event event = new ItemOnObjectEvent(player, itemId, itemIndexId,
-                itemInterfaceId, objectId, objectX, objectY);
-        player.submitAction(new InteractionAction(player, object) {
+        // Send the event once the player reaches the object.
+        var gameObject = foundObject.get();
+        player.submitAction(new InteractionAction(player, gameObject) {
             @Override
             public void execute() {
-                player.getPlugins().post(event);
+                player.getPlugins().post(new ItemOnObjectEvent(player,itemId, itemIndexId, itemInterfaceId, gameObject));
             }
         });
         return null;

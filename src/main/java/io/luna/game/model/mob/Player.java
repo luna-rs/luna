@@ -41,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -127,12 +128,12 @@ public final class Player extends Mob {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A set of local players.
+     * A set of local players. Should only be accessed from the updating threads.
      */
     private final Set<Player> localPlayers = new LinkedHashSet<>(255);
 
     /**
-     * A set of local npcs.
+     * A set of local npcs. Should only be accessed from the updating threads.
      */
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
 
@@ -140,11 +141,6 @@ public final class Player extends Mob {
      * A set of local objects.
      */
     private final Set<GameObject> localObjects = new HashSet<>(4);
-
-    /**
-     * A set of local items.
-     */
-    private final Set<GroundItem> localItems = new HashSet<>(4);
 
     /**
      * The appearance.
@@ -368,9 +364,8 @@ public final class Player extends Mob {
     @Override
     protected void onInactive() {
         actions.interrupt();
-        world.getPlayerMap().remove(getUsernameHash());
+        world.getPlayerMap().remove(getUsername());
         world.getAreas().notifyLogout(this);
-        removeLocalItems();
         removeLocalObjects();
         interfaces.close();
         plugins.post(new LogoutEvent(this));
@@ -386,7 +381,6 @@ public final class Player extends Mob {
         teleporting = false;
         chat = Optional.empty();
         forcedMovement = Optional.empty();
-        regionChanged = false;
     }
 
     @Override
@@ -449,7 +443,7 @@ public final class Player extends Mob {
         } else {
             // New player!
             setPosition(Luna.settings().startingPosition());
-            rights = LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
+            rights = Luna.settings().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
         }
         settings.setPlayer(this);
@@ -467,27 +461,15 @@ public final class Player extends Mob {
     }
 
     /**
-     * Removes all objects assigned to this player.
+     * Unregisters all assigned local objects.
      */
     public void removeLocalObjects() {
         if (localObjects.size() > 0) {
-            for (GameObject object : localObjects) {
-                world.getObjects().unregister(object);
+            Iterator<GameObject> objectIterator = localObjects.iterator();
+            while (objectIterator.hasNext()) {
+                world.getObjects().unregister(objectIterator.next());
+                objectIterator.remove();
             }
-            localObjects.clear();
-        }
-    }
-
-    /**
-     * Removes all ground items assigned to this player.
-     */
-    public void removeLocalItems() {
-        if (localItems.size() > 0) {
-            for (GroundItem item : localItems) {
-                // TODO If its a tickable item, don't remove.
-                world.getItems().unregister(item);
-            }
-            localItems.clear();
         }
     }
 
@@ -503,7 +485,8 @@ public final class Player extends Mob {
         } else if (bank.hasSpaceFor(item)) {
             bank.add(item);
         } else {
-            // TODO Drop item on the floor.
+            world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
+                    position, Optional.of(this)));
         }
     }
 
@@ -800,31 +783,17 @@ public final class Player extends Mob {
     }
 
     /**
-     * @return A set of local players.
+     * @return A set of local players. Should only be accessed from the updating threads.
      */
     public Set<Player> getLocalPlayers() {
         return localPlayers;
     }
 
     /**
-     * @return A set of local npcs.
+     * @return A set of local npcs. Should only be accessed from the updating threads.
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
-    }
-
-    /**
-     * @return A set of local objects.
-     */
-    public Set<GameObject> getLocalObjects() {
-        return localObjects;
-    }
-
-    /**
-     * @return A set of local items.
-     */
-    public Set<GroundItem> getLocalItems() {
-        return localItems;
     }
 
     /**

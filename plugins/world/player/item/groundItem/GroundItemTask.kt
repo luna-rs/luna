@@ -12,7 +12,6 @@ import java.util.*
  */
 class GroundItemTask : Task(100) {
 
-    // TODO Has not been tested at all.
     companion object {
 
         /**
@@ -51,8 +50,7 @@ class GroundItemTask : Task(100) {
      * Process expiration timers for all perishable items.
      */
     private fun processItems() {
-        val it = world.items.iterator()
-        for (item in it) {
+        for (item in world.items) {
             if (!item.isExpire) {
                 continue
             }
