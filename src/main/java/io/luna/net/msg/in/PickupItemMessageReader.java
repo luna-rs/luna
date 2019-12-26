@@ -51,7 +51,7 @@ public final class PickupItemMessageReader extends GameMessageReader {
             return null;
         }
 
-        var foundItem = player.getWorld().getItems().getFromPosition(position).stream().
+        var foundItem = player.getWorld().getItems().findAll(position).stream().
                 filter(item -> item.getId() == id &&
                 item.isVisibleTo(player)).findFirst();
         if(foundItem.isEmpty()) { // Item doesn't exist.

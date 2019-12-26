@@ -1,6 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 
 /**
  * An event sent when a player uses an item on an object.
@@ -25,19 +26,9 @@ public final class ItemOnObjectEvent extends PlayerEvent {
     private final int itemInterfaceId;
 
     /**
-     * The object identifier.
+     * The object.
      */
-    private final int objectId;
-
-    /**
-     * The object's x coordinate.
-     */
-    private final int objectX;
-
-    /**
-     * The object's y coordinate.
-     */
-    private final int objectY;
+    private final GameObject gameObject;
 
     /**
      * Creates a new {@link ItemOnObjectEvent}.
@@ -46,19 +37,14 @@ public final class ItemOnObjectEvent extends PlayerEvent {
      * @param itemId The item identifier.
      * @param itemIndex The item index.
      * @param itemInterfaceId The item interface identifier.
-     * @param objectId The object identifier.
-     * @param objectX The object's x coordinate.
-     * @param objectY The object's y coordinate.
+     * @param gameObject The object.
      */
-    public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, int objectId,
-                             int objectX, int objectY) {
+    public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, GameObject gameObject) {
         super(player);
         this.itemId = itemId;
         this.itemIndex = itemIndex;
         this.itemInterfaceId = itemInterfaceId;
-        this.objectId = objectId;
-        this.objectX = objectX;
-        this.objectY = objectY;
+        this.gameObject = gameObject;
     }
 
     /**
@@ -86,20 +72,13 @@ public final class ItemOnObjectEvent extends PlayerEvent {
      * @return The object identifier.
      */
     public int getObjectId() {
-        return objectId;
+        return gameObject.getId();
     }
 
     /**
-     * @return The object's x coordinate.
+     * @return The object.
      */
-    public int getObjectX() {
-        return objectX;
-    }
-
-    /**
-     * @return The object's y coordinate.
-     */
-    public int getObjectY() {
-        return objectY;
+    public GameObject getGameObject() {
+        return gameObject;
     }
 }

@@ -7,10 +7,10 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.World;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -23,39 +23,9 @@ import java.util.stream.Stream;
 public final class GroundItemList extends EntityList<GroundItem> {
 
     /**
-     * An {@link Iterator} that will unregister ground items on {@link #remove()}.
-     */
-    public final class GroundItemListIterator implements Iterator<GroundItem> {
-
-        // TODO Unit tests for this.
-        /**
-         *
-         */
-        private GroundItem lastItem;
-        private final Iterator<GroundItem> delegate = items.iterator();
-
-        @Override
-        public boolean hasNext() {
-            return delegate.hasNext();
-        }
-
-        @Override
-        public GroundItem next() {
-            lastItem = delegate.next();
-            return lastItem;
-        }
-
-        @Override
-        public void remove() {
-            delegate.remove();
-            unregister(lastItem);
-        }
-    }
-
-    /**
      * The ground items.
      */
-    private final Set<GroundItem> items = new HashSet<>(128);
+    private final List<GroundItem> items = new ArrayList<>(128);
 
     /**
      * Creates a new {@link GroundItemList}.
@@ -66,9 +36,12 @@ public final class GroundItemList extends EntityList<GroundItem> {
         super(world, EntityType.ITEM);
     }
 
+    /**
+     * @implSpec The spliterator reports the characteristics of SIZED, SUBSIZED, NONNULL, and IMMUTABLE.
+     */
     @Override
     public Spliterator<GroundItem> spliterator() {
-        return Spliterators.spliterator(iterator(), size(), Spliterator.NONNULL | Spliterator.IMMUTABLE);
+        return Spliterators.spliterator(items, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.DISTINCT);
     }
 
     @Override
@@ -77,21 +50,26 @@ public final class GroundItemList extends EntityList<GroundItem> {
     }
 
     @Override
-    protected void onRegister(GroundItem item) {
+    protected boolean onRegister(GroundItem item) {
         if (item.def().isStackable()) {
-            addStackable(item);
+            return addStackable(item);
         } else {
-            add(item);
+            return add(item);
         }
     }
 
     @Override
-    protected void onUnregister(GroundItem item) {
+    protected boolean onUnregister(GroundItem item) {
         if (item.def().isStackable()) {
-            removeStackable(item);
+            return removeStackable(item);
         } else {
-            remove(item);
+            return remove(item);
         }
+    }
+
+    @Override
+    public int size() {
+        return items.size();
     }
 
     /**
@@ -100,113 +78,165 @@ public final class GroundItemList extends EntityList<GroundItem> {
      * @param item The item.
      * @return {@code true} if successful.
      */
-    private void addStackable(GroundItem item) {
-        Position position = item.getPosition();
+    private boolean addStackable(GroundItem item) {
+        var position = item.getPosition();
         Optional<GroundItem> foundItem = findExisting(item);
         if (foundItem.isPresent()) {
-            GroundItem existing = foundItem.get();
+            var existing = foundItem.get();
             int newAmount = item.getAmount() + existing.getAmount();
             if (newAmount < 0) { // Overflow.
-                return;
+                return false;
             }
-            unregister(existing); // Remove existing.
 
-            // Add with new amount.
-            GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
-                    position, item.getPlayer());
-            items.add(newItem);
-            newItem.setState(EntityState.ACTIVE);
-            newItem.show();
-        } else if (checkItemAmount(position, 1)) {
-            items.add(item);
-            item.setState(EntityState.ACTIVE);
-            item.show();
-        }
-    }
-
-    private void removeStackable(GroundItem item) {
-        // TODO new item when items have different owners. that's it :) or look in client again?
-        int amount = item.getAmount();
-        Position position = item.getPosition();
-        Optional<GroundItem> foundItem = findExisting(item);
-        if (foundItem.isPresent()) {
-            GroundItem existing = foundItem.get();
-            int newAmount = item.getAmount() + existing.getAmount();
-            if (newAmount < 0) { // Overflow.
-                return;
+            if (removeFromSet(existing)) { // Remove some of the existing item, add with new amount.
+                return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
+                        position, item.getOwner()));
             }
-            unregister(existing); // Remove existing.
-
-            // Add with new amount.
-            GroundItem newItem = new GroundItem(item.getContext(), item.getId(), newAmount,
-                    position, item.getPlayer());
-            items.add(newItem);
-            newItem.show();
-        } else if (checkItemAmount(position, 1)) {
-            items.add(item);
-            item.show();
+        } else if (tileSpaceFor(position, 1)) {
+            return addToSet(item);
         }
-        // Remove stackable item.
-        //       return findExisting(item).map(it ->
-        //             items.remove(it) && unregister(it)).orElse(false);
+        return false;
     }
 
     /**
-     * Adds a unstackable ground item.
+     * Removes a stackable ground item.
+     *
+     * @param item The item.
+     * @return {@code true} if successful.
+     */
+    private boolean removeStackable(GroundItem item) {
+        int removeAmount = item.getAmount();
+        var position = item.getPosition();
+        Optional<GroundItem> foundItem = findExisting(item);
+        if (foundItem.isPresent()) {
+            var existing = foundItem.get();
+            int newAmount = existing.getAmount() - removeAmount;
+            if (newAmount <= 0) { // Remove all of the item.
+                return removeFromSet(existing);
+            }
+
+            if (removeFromSet(existing)) { // Remove item, add with new amount.
+                return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
+                        position, item.getOwner()));
+            }
+        }
+        return true; // Item wasn't found.
+    }
+
+    /**
+     * Adds unstackable ground items.
      *
      * @param item The item.
      * @return {@code true} if successful.
      */
     private boolean add(GroundItem item) {
-        int amount = item.getAmount();
-        if (!checkItemAmount(item.getPosition(), amount)) { // Too many items on one tile.
+        int addAmount = item.getAmount();
+        if (!tileSpaceFor(item.getPosition(), addAmount)) { // Too many items on one tile.
             return false;
+        }
+        if (addAmount == 1) {
+            return addToSet(item);
         }
 
         boolean failed = true;
-        for (int i = 0; i < amount; i++) { // Add items 1 by 1.
-            item = new GroundItem(item.getContext(), item.getId(), 1,
-                    item.getPosition(), item.getPlayer());
-            if (items.add(item) && register(item)) {
+        for (int i = 0; i < addAmount; i++) { // Add items 1 by 1.
+            if (addToSet(new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getOwner()))) {
                 failed = false;
             }
         }
         return !failed;
     }
 
-    private void remove(GroundItem item) {
-
+    /**
+     * Removes unstackable ground items.
+     *
+     * @param item The item.
+     * @return {@code true} if successful.
+     */
+    private boolean remove(GroundItem item) {
+        int loops = item.getAmount();
+        if (loops == 1) {
+            return findExisting(item).map(this::removeFromSet).orElse(true);
+        }
         boolean failed = true;
-        for (int i = 0; i < item.getAmount(); i++) {
-            Optional<GroundItem> foundItem = findExisting(item);
-            if (!foundItem.isPresent()) {
-                break; // No more items left to remove.
-            }
-
-            GroundItem found = foundItem.get();
-            if (items.remove(found) && unregister(found)) {
+        var iter = findAllExisting(item).iterator();
+        while (iter.hasNext()) {
+            var nextItem = iter.next();
+            if (removeFromSet(nextItem)) {
                 failed = false;
             }
+            if (--loops <= 0) {
+                break;
+            }
         }
+        return !failed;
     }
 
-    private boolean checkItemAmount(Position position, int addAmount) {
+    /**
+     * Determines if this tile has space for {@code addAmount} new item models.
+     *
+     * @param position The tile.
+     * @param addAmount The amount of item models.
+     * @return {@code true} if this tile has enough space.
+     */
+    private boolean tileSpaceFor(Position position, int addAmount) {
         return world.getChunks().load(position).stream(type).
                 filter(it -> it.getPosition().equals(position)).count() + addAmount <= 255;
     }
 
     /**
-     * Finds an existing ground item on the same tile and with the same identifier as {@code item}.
+     * Adds {@code item} to the backing set and makes it visible.
+     *
+     * @param item The item to add.
+     * @return {@code true} if successful.
+     */
+    private boolean addToSet(GroundItem item) {
+        if (items.add(item)) {
+            item.setState(EntityState.ACTIVE);
+            item.show();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes {@code item} from the backing set and makes it invisible.
+     *
+     * @param item The item to remove.
+     * @return {@code true} if successful.
+     */
+    private boolean removeFromSet(GroundItem item) {
+        if (items.remove(item)) {
+            item.hide();
+            item.setState(EntityState.INACTIVE);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Finds all existing ground items matching {@code item}.
      *
      * @param item The item to find.
-     * @return The found item.
+     * @return The found items.
      */
-    private Optional<GroundItem> findExisting(GroundItem item) {
+    private Stream<GroundItem> findAllExisting(GroundItem item) {
         Position position = item.getPosition();
         Stream<GroundItem> localItems = world.getChunks().
                 load(position).
                 stream(type);
         return localItems.filter(it -> it.getId() == item.getId() &&
-                it.getPosition().equals(position)).findFirst();
+                it.getPosition().equals(position) &&
+                it.getOwner().equals(item.getOwner()));
+    }
+
+    /**
+     * Finds an existing ground item matching {@code item}.
+     *
+     * @param item The item to find.
+     * @return The found item.
+     */
+    private Optional<GroundItem> findExisting(GroundItem item) {
+        return findAllExisting(item).findFirst();
     }
 }

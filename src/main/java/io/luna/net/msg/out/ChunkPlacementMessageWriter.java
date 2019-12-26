@@ -32,8 +32,8 @@ public final class ChunkPlacementMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         // TODO Check if marking the right chunk?
         ByteMessage msg = ByteMessage.message(85);
-        msg.put(position.getLocalY(player.getLastRegion()), ValueType.NEGATE); // Might be just getPosition???
-        msg.put(position.getLocalX(player.getLastRegion()), ValueType.NEGATE); // Might be just getPosition???
+        msg.put(position.getLocalY(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
+        msg.put(position.getLocalX(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
         return msg;
     }
 }

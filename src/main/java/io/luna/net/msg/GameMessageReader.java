@@ -48,7 +48,7 @@ public abstract class GameMessageReader {
      * @param msg The decoded message.
      * @throws Exception If any errors occur.
      */
-    public abstract Event read(Player player, GameMessage msg) throws Exception;
+    public abstract Event read(Player player, GameMessage msg) throws Exception; // TODO add another method for listeners that don't decode directly into an event
 
     /**
      * Handles a decoded game message and posts its returned {@link Event}.
@@ -60,6 +60,7 @@ public abstract class GameMessageReader {
         try {
 
             // Retrieve event and post it, if possible.
+            // TODO Add a reference to the world here?
             Event event = read(player, msg);
             if (event != null) {
                 player.getPlugins().post(event);

@@ -12,6 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -23,7 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class GroundItem extends StationaryEntity {
+public class GroundItem extends StationaryEntity {
 
     /**
      * The item identifier.
@@ -48,7 +49,7 @@ public final class GroundItem extends StationaryEntity {
      * @param amount The item amount.
      * @param position The position of the item.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) { // TODO remove Optional... just use null and then use ofNullable
+    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) {
         super(context, position, EntityType.ITEM, player);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
@@ -63,37 +64,49 @@ public final class GroundItem extends StationaryEntity {
     }
 
     @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
+    public final int hashCode() {
+        return Objects.hash(id, amount, position, getOwner());
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return this == obj;
+    public final boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof GroundItem) {
+            GroundItem other = (GroundItem) obj;
+            return id == other.id &&
+                    amount == other.amount &&
+                    Objects.equals(position, other.position) &&
+                    Objects.equals(getOwner(), other.getOwner());
+        }
+        return false;
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return MoreObjects.toStringHelper(this).
                 add("id", id).
                 add("amount", amount).
                 add("x", position.getX()).
                 add("y", position.getY()).
-                add("z", position.getZ()).toString();
+                add("z", position.getZ()).
+                add("owner", getOwner().map(Player::getUsername).orElse("null")).
+                toString();
     }
 
     @Override
-    public int size() {
+    public final int size() {
         return 0;
     }
 
     @Override
-    protected GameMessageWriter showMessage(int offset) {
+    protected final GameMessageWriter showMessage(int offset) {
         return new AddGroundItemMessageWriter(id, amount, offset);
     }
 
     @Override
-    protected GameMessageWriter hideMessage(int offset) {
+    protected final GameMessageWriter hideMessage(int offset) {
         return new RemoveGroundItemMessageWriter(id, offset);
     }
 
@@ -102,8 +115,8 @@ public final class GroundItem extends StationaryEntity {
      *
      * @param expire The value.
      */
-    public void setExpire(boolean expire) {
-        if (expire && !expireMinutes.isPresent()) {
+    public final void setExpire(boolean expire) {
+        if (expire && expireMinutes.isEmpty()) {
             expireMinutes = OptionalInt.of(0);
         } else if (!expire && expireMinutes.isPresent()) {
             expireMinutes = OptionalInt.empty();
@@ -114,7 +127,7 @@ public final class GroundItem extends StationaryEntity {
      * Sets the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
      * does not expire.
      */
-    public void setExpireMinutes(int minutes) {
+    public final void setExpireMinutes(int minutes) {
         checkState(isExpire(), "This item does not expire.");
         expireMinutes = OptionalInt.of(minutes);
     }
@@ -123,7 +136,8 @@ public final class GroundItem extends StationaryEntity {
      * Retrieves the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
      * does not expire.
      */
-    public int getExpireMinutes() {
+    public final int getExpireMinutes() {
+        checkState(isExpire(), "This item does not expire.");
         return expireMinutes.getAsInt();
     }
 
@@ -132,21 +146,21 @@ public final class GroundItem extends StationaryEntity {
      *
      * @return {@code true} if this item expires.
      */
-    public boolean isExpire() {
+    public final boolean isExpire() {
         return expireMinutes.isPresent();
     }
 
     /**
      * Retrieves the item definition instance.
      */
-    public ItemDefinition def() {
+    public final ItemDefinition def() {
         return ItemDefinition.ALL.retrieve(id);
     }
 
     /**
      * @return The item identifier.
      */
-    public int getId() {
+    public final int getId() {
         return id;
     }
 
@@ -155,7 +169,7 @@ public final class GroundItem extends StationaryEntity {
      *
      * @param amount The amount to change to. Cannot be negative.
      */
-    public void setAmount(int amount) {
+    public final void setAmount(int amount) {
         checkArgument(amount > 0, "amount cannot be < 0");
         hide();
         this.amount = amount;
@@ -165,7 +179,16 @@ public final class GroundItem extends StationaryEntity {
     /**
      * @return The item amount
      */
-    public int getAmount() {
+    public final int getAmount() {
         return amount;
+    }
+
+    /**
+     * Returns an item instance with this ground item's ID and amount.
+     *
+     * @return The item instance.
+     */
+    public final Item toItem() {
+        return new Item(id, amount);
     }
 }

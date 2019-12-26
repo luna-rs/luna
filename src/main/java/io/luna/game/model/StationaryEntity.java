@@ -29,7 +29,7 @@ public abstract class StationaryEntity extends Entity {
     /**
      * The player to update for. If empty, updates for all players.
      */
-    private final Optional<Player> player;
+    private final Optional<Player> owner;
 
     /**
      * The position used for placement.
@@ -52,12 +52,12 @@ public abstract class StationaryEntity extends Entity {
      * @param context The context instance.
      * @param position The position.
      * @param type The entity type.
-     * @param player The player to update for. If empty, updates for all players.
+     * @param owner The player to update for. If empty, updates for all players.
      */
-    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> player) {
+    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> owner) {
         super(context, position, type);
-        this.player = player;
-        placement = new Position(getChunkPosition().getAbsX(), getChunkPosition().getAbsY());
+        this.owner = owner;
+        placement = position;//new Position(getChunkPosition().getAbsX(), getChunkPosition().getAbsY());
     }
 
     /**
@@ -78,6 +78,8 @@ public abstract class StationaryEntity extends Entity {
 
     /**
      * Sends a packet to all applicable players to display this entity.
+     * <strong>This does NOT register the entity, so it cannot be interacted with by a Player.</strong>
+     * Use functions in {@link World} to register entities.
      */
     public final void show() {
         if (hidden) {
@@ -87,6 +89,8 @@ public abstract class StationaryEntity extends Entity {
 
     /**
      * Sends a packet to all applicable players to hide this entity.
+     * <strong>This does NOT unregister the entity, it just makes it invisible to players.</strong>
+     * Use functions in {@link World} to unregister entities.
      */
     public final void hide() {
         if (!hidden) {
@@ -100,17 +104,14 @@ public abstract class StationaryEntity extends Entity {
      * @param updateType The update type to apply.
      */
     private void applyUpdate(UpdateType updateType) {
-        if (player.isPresent() && player.get().isViewableFrom(this)) {
-
+        if (owner.isPresent() && owner.get().isViewableFrom(this)) {
             // We have a player to update for.
-            player.get().queue(new ChunkPlacementMessageWriter(placement));
-            sendUpdateMessage(player.get(), updateType);
+            sendUpdateMessage(owner.get(), updateType);
         } else {
             // We don't, so update for all viewable surrounding players.
             for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
                 for (Player inside : chunkPlayers) {
                     if (isViewableFrom(inside)) {
-                        inside.queue(new ChunkPlacementMessageWriter(placement));
                         sendUpdateMessage(inside, updateType);
                     }
                 }
@@ -125,35 +126,50 @@ public abstract class StationaryEntity extends Entity {
      * @param updateType The update type to apply.
      */
     public void sendUpdateMessage(Player player, UpdateType updateType) {
+        player.queue(new ChunkPlacementMessageWriter(placement));
+
         int offset = getChunkPosition().offset(position);
-        if (updateType == UpdateType.SHOW && hidden) {
+        if (updateType == UpdateType.SHOW) {
             player.queue(showMessage(offset));
             hidden = false;
-        } else if (updateType == UpdateType.HIDE && !hidden) {
+        } else if (updateType == UpdateType.HIDE) {
             player.queue(hideMessage(offset));
             hidden = true;
         }
     }
 
     /**
+     * Determines if this item is visible to {@code player}.
+     *
+     * @param player The player.
+     * @return {@code true} if this item is visible to the player.
+     */
+    public boolean isVisibleTo(Player player) {
+        if (!player.isViewableFrom(this)) {
+            return false;
+        }
+        return isGlobal() || owner.filter(plrOwner -> plrOwner.equals(player)).isPresent();
+    }
+
+    /**
      * @return The player to update for.
      */
-    public final Optional<Player> getPlayer() {
-        return player;
+    public final Optional<Player> getOwner() {
+        return owner;
     }
 
     /**
-     * @return {@code true} if this entity is updating for everyone.
+     * @return {@code true} if this entity is visible for everyone.
      */
     public final boolean isGlobal() {
-        return !player.isPresent();
+        return owner.isEmpty();
     }
 
     /**
-     * @return {@code true} if this entity is updating for just one player.
+     * @return {@code true} if this entity is visible for just one player.
      */
     public final boolean isLocal() {
-        return player.isPresent();
+        return owner.isPresent();
     }
 
     /**
@@ -168,7 +184,7 @@ public abstract class StationaryEntity extends Entity {
      * chunk.
      * <p>
      * We retain references to the original sets instead of flattening them, so that they implicitly stay updated as
-     * players move in and out of view of this entity.
+     * players move in and out of view of this entity. This means we only have to build the returned list once.
      */
     public final ImmutableList<Set<Player>> getSurroundingPlayers() {
         if (surroundingPlayers == null) {

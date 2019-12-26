@@ -12,6 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -19,7 +20,7 @@ import java.util.Optional;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class GameObject extends StationaryEntity {
+public class GameObject extends StationaryEntity {
 
     /**
      * The identifier.
@@ -37,12 +38,37 @@ public final class GameObject extends StationaryEntity {
     private final ObjectDirection direction;
 
     /**
-     * The  definition.
+     * The object's definition.
      */
     private final ObjectDefinition definition;
 
     /**
-     * Creates a new {@link GameObject}.
+     * If this object is dynamic.
+     */
+    private final boolean dynamic;
+
+    /**
+     * Creates a new {@link GameObject} that can be either static or dynamic.
+     *
+     * @param context The context instance.
+     * @param id The identifier.
+     * @param position The position.
+     * @param objectType The type.
+     * @param direction The direction.
+     * @param player The player to update for.
+     * @param dynamic If this object is dynamic.
+     */
+    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, Optional<Player> player, boolean dynamic) {
+        super(context, position, EntityType.OBJECT, player);
+        this.id = id;
+        this.objectType = objectType;
+        this.direction = direction;
+        this.dynamic = dynamic;
+        definition = ObjectDefinition.ALL.retrieve(id);
+    }
+
+    /**
+     * Creates a new dynamic {@link GameObject}.
      *
      * @param context The context instance.
      * @param id The identifier.
@@ -52,46 +78,53 @@ public final class GameObject extends StationaryEntity {
      * @param player The player to update for.
      */
     public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, Optional<Player> player) {
-        super(context, position, EntityType.OBJECT, player);
-        this.id = id;
-        this.objectType = objectType;
-        this.direction = direction;
-        definition = ObjectDefinition.ALL.retrieve(id);
+        this(context, id, position, objectType, direction, player, true);
     }
 
     @Override
-    public int hashCode() {
-        return System.identityHashCode(this);
+    public final int hashCode() {
+        return Objects.hash(id, position, objectType);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj == this;
+    public final boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof GameObject) {
+            GameObject other = (GameObject) obj;
+            return id == other.id &&
+                    Objects.equals(position, other.position) &&
+                    objectType == other.objectType;
+        }
+        return false;
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return MoreObjects.toStringHelper(this).
-                add("type", objectType).
+                add("id", id).
                 add("x", position.getX()).
                 add("y", position.getY()).
-                add("z", position.getZ()).toString();
+                add("z", position.getZ()).
+                add("type", objectType).
+                add("owner", getOwner().map(Player::getUsername).orElse("NULL/PUBLIC")).toString();
     }
 
     @Override
-    public int size() {
+    public final int size() {
         return definition.getSize();
     }
 
     @Override
-    protected GameMessageWriter showMessage(int offset) {
+    protected final GameMessageWriter showMessage(int offset) {
         int type = objectType.getId() << 2;
         int orientation = direction.getId() & 3;
         return new AddObjectMessageWriter(id, type, orientation, offset);
     }
 
     @Override
-    protected GameMessageWriter hideMessage(int offset) {
+    protected final GameMessageWriter hideMessage(int offset) {
         int type = objectType.getId() << 2;
         int orientation = direction.getId() & 3;
         return new RemoveObjectMessageWriter(type, orientation, offset);
@@ -100,28 +133,37 @@ public final class GameObject extends StationaryEntity {
     /**
      * @return The identifier.
      */
-    public int getId() {
+    public final int getId() {
         return id;
     }
 
     /**
      * @return The type.
      */
-    public ObjectType getObjectType() {
+    public final ObjectType getObjectType() {
         return objectType;
     }
 
     /**
      * @return The direction.
      */
-    public ObjectDirection getDirection() {
+    public final ObjectDirection getDirection() {
         return direction;
     }
 
     /**
      * @return The definition.
      */
-    public ObjectDefinition getDefinition() {
+    public final ObjectDefinition getDefinition() {
         return definition;
+    }
+
+    /**
+     * Returns if this object was spawned by the server. Objects loaded from the cache will return {@code false}.
+     *
+     * @return {@code true} if this object is dynamic.
+     */
+    public final boolean isDynamic() {
+        return dynamic;
     }
 }

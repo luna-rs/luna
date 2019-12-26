@@ -6,13 +6,11 @@ import io.luna.game.model.EntityList;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
-import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkManager;
-import io.luna.game.model.chunk.ChunkPosition;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -26,9 +24,14 @@ import java.util.Spliterators;
 public final class GameObjectList extends EntityList<GameObject> {
 
     /**
-     * The chunk manager.
+     * A set of objects spawned by the server.
      */
-    private final ChunkManager chunks;
+    private final Set<GameObject> dynamicSet = new HashSet<>(128);
+
+    /**
+     * A set of objects
+     */
+    private final Set<GameObject> staticSet = new HashSet<>(); // TODO Modify based on amount of cache objects.
 
     /**
      * Creates a new {@link EntityList}.
@@ -37,7 +40,6 @@ public final class GameObjectList extends EntityList<GameObject> {
      */
     public GameObjectList(World world) {
         super(world, EntityType.OBJECT);
-        chunks = world.getChunks();
     }
 
     @Override
@@ -49,50 +51,83 @@ public final class GameObjectList extends EntityList<GameObject> {
     /**
      * {@inheritDoc}
      * <br><br>
-     * <strong>Warning:</strong> This function can run pretty slow and therefore shouldn't be relied on in
-     * performance critical code.
+     * <strong>Warning:</strong> This function loops through every object in the World, including objects from the
+     * cache. It shouldn't be relied on in performance critical code.
+     * <br><br>
+     * If you only want to loop through spawned objects, use {@link #dynamicIterator()}.
      */
     @SuppressWarnings("unchecked")
     @Override
     public UnmodifiableIterator<GameObject> iterator() {
-        List<Iterator<GameObject>> iteratorList = new ArrayList<>();
-        for (Chunk chunk : chunks) {
-            Set<GameObject> objects = chunk.getAll(type);
-            if (!objects.isEmpty()) { // Retrieve iterators from chunk.
-                iteratorList.add(objects.iterator());
-            }
-        }
-        Iterator[] iteratorArray = Iterators.toArray(iteratorList.iterator(), Iterator.class);
-        Iterator<GameObject> all = Iterators.concat(iteratorArray); // Combine them.
+        Iterator<GameObject> all = Iterators.concat(dynamicIterator(), staticIterator()); // Combine them.
         return Iterators.unmodifiableIterator(all); // Make them immutable.
     }
 
     @Override
-    protected void onRegister(GameObject entity) {
-        ChunkPosition position = entity.getChunkPosition();
+    protected boolean onRegister(GameObject object) {
 
         // Check if an object will be replaced by this registration, and remove it.
-        Iterator<GameObject> iterator = chunks.load(position).iterator(type);
-        while (iterator.hasNext()) {
-            GameObject object = iterator.next();
-            if (object.getPosition().equals(entity.getPosition())
-                    && object.getObjectType() == entity.getObjectType()) {
-                object.clearCurrentChunk();
-                unregister(object);
-                iterator.remove();
-                break;
-            }
-        }
+        var existingObject = findAll(object.getPosition()).stream().
+                filter(nextObj -> Objects.equals(nextObj.getPosition(), object.getPosition()) &&
+                        nextObj.getObjectType() == object.getObjectType()).findFirst();
+        removeFromSet(existingObject);
 
-        // Set entity as active.
-        entity.show();
-        entity.setState(EntityState.ACTIVE);
+        // Set object as active.
+        boolean added = object.isDynamic() ? dynamicSet.add(object) : staticSet.add(object);
+        if (added) {
+            object.show();
+            object.setState(EntityState.ACTIVE);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    protected void onUnregister(GameObject entity) {
-        // Set entity as inactive.
-        entity.hide();
-        entity.setState(EntityState.INACTIVE);
+    protected boolean onUnregister(GameObject object) {
+        Optional<GameObject> existingObject = findAll(object.getPosition()).stream().
+                filter(object::equals).
+                findFirst();
+        return removeFromSet(existingObject);
+    }
+
+    @Override
+    public int size() {
+        return dynamicSet.size() + staticSet.size();
+    }
+
+    /**
+     * Removes {@code object} from one of the backing sets.
+     *
+     * @param object The object to remove.
+     * @return {@code true} if the object was removed.
+     */
+    private boolean removeFromSet(Optional<GameObject> object) {
+        if (object.isPresent()) {
+            var removeObject = object.get();
+            if (removeObject.isDynamic()) {
+                dynamicSet.remove(removeObject);
+            } else {
+                staticSet.remove(removeObject);
+            }
+            removeObject.hide();
+            removeObject.setState(EntityState.INACTIVE);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns an iterator over all spawned objects.
+     * @return
+     */
+    public UnmodifiableIterator<GameObject> dynamicIterator() {
+        return Iterators.unmodifiableIterator(dynamicSet.iterator());
+    }
+
+    /**
+     * Returns an iterator over all cache loaded objects.
+     */
+    public UnmodifiableIterator<GameObject> staticIterator() {
+        return Iterators.unmodifiableIterator(staticSet.iterator());
     }
 }

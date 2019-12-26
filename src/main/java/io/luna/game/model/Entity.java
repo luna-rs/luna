@@ -206,10 +206,6 @@ public abstract class Entity {
         }
     }
 
-    public final void clearCurrentChunk() {
-        currentChunk = null;
-    }
-
     /**
      * Sets the chunk depending on the current position.
      */

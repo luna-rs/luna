@@ -18,6 +18,44 @@ import java.util.stream.StreamSupport;
 public abstract class EntityList<E extends StationaryEntity> implements Iterable<E> {
 
     /**
+     * An {@link Iterator} implementation for this entity list that will unregister entities on {@link #remove()}.
+     */
+    public final class EntityListIterator implements Iterator<E> {
+
+        /**
+         * The last result of calling {@link #next()}.
+         */
+        private E lastEntity;
+
+        /**
+         * The delegate iterator.
+         */
+        private final Iterator<E> delegate;
+
+        public EntityListIterator(Collection<E> entities) {
+            delegate = entities.iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return delegate.hasNext();
+        }
+
+        @Override
+        public E next() {
+            lastEntity = delegate.next();
+            return lastEntity;
+        }
+
+        @Override
+        public void remove() {
+            delegate.remove();
+            lastEntity.hide();
+            lastEntity.setState(EntityState.INACTIVE);
+        }
+    }
+
+    /**
      * The world.
      */
     protected final World world;
@@ -26,11 +64,6 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * The type of the entities.
      */
     protected final EntityType type;
-
-    /**
-     * The amount of tracked entities.
-     */
-    private int size;
 
     /**
      * Creates a new {@link EntityList}.
@@ -54,14 +87,19 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      *
      * @param entity The entity.
      */
-    protected abstract void onRegister(E entity);
+    protected abstract boolean onRegister(E entity);
 
     /**
      * A function invoked when an entity is unregistered.
      *
      * @param entity The entity.
      */
-    protected abstract void onUnregister(E entity);
+    protected abstract boolean onUnregister(E entity);
+
+    /**
+     * Returns the current amount of registered entities.
+     */
+    public abstract int size();
 
     /**
      * Registers and shows {@code entity}.
@@ -72,9 +110,7 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
     public final boolean register(E entity) {
         if (entity.getType() == type &&
                 entity.getState() == EntityState.NEW) {
-            onRegister(entity);
-            size++;
-            return true;
+            return onRegister(entity);
         }
         return false;
     }
@@ -88,9 +124,7 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
     public final boolean unregister(E entity) {
         if (entity.getType() == type &&
                 entity.getState() == EntityState.ACTIVE) {
-            onUnregister(entity);
-            size--;
-            return true;
+            return onUnregister(entity);
         }
         return false;
     }
@@ -104,7 +138,7 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      */
     public final boolean removeFromPosition(Position position, Predicate<E> filter) {
         boolean removed = false;
-        for (E entity : getFromPosition(position)) {
+        for (E entity : findAll(position)) {
             if (position.equals(entity.position) &&
                     filter.test(entity) &&
                     unregister(entity)) {
@@ -120,18 +154,9 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @param position The position to unregister entities on.
      * @return The set of entities.
      */
-    public final Collection<E> getFromPosition(Position position) {
+    public final Collection<E> findAll(Position position) {
         ChunkManager chunks = world.getChunks();
         return chunks.load(position.getChunkPosition()).getAll(type);
-    }
-
-    /**
-     * The amount of registered entities.
-     *
-     * @return The size.
-     */
-    public final int size() {
-        return size;
     }
 
     /**

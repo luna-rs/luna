@@ -143,11 +143,6 @@ public final class Player extends Mob {
     private final Set<GameObject> localObjects = new HashSet<>(4);
 
     /**
-     * A set of local items.
-     */
-    private final Set<GroundItem> localItems = new HashSet<>(4);
-
-    /**
      * The appearance.
      */
     private final PlayerAppearance appearance = new PlayerAppearance();
@@ -369,9 +364,8 @@ public final class Player extends Mob {
     @Override
     protected void onInactive() {
         actions.interrupt();
-        world.getPlayerMap().remove(getUsernameHash());
+        world.getPlayerMap().remove(getUsername());
         world.getAreas().notifyLogout(this);
-        removeLocalItems();
         removeLocalObjects();
         interfaces.close();
         plugins.post(new LogoutEvent(this));
@@ -480,19 +474,6 @@ public final class Player extends Mob {
     }
 
     /**
-     * Unregisters all assigned local items.
-     */
-    public void removeLocalItems() {
-        if (localItems.size() > 0) {
-            Iterator<GroundItem> itemIterator = localItems.iterator();
-            while (itemIterator.hasNext()) {
-                world.getItems().unregister(itemIterator.next());
-                itemIterator.remove();
-            }
-        }
-    }
-
-    /**
      * Adds {@code item} to the inventory. If the inventory is full, add it to the bank. If the bank is full, will drop
      * it on the floor.
      *
@@ -504,7 +485,8 @@ public final class Player extends Mob {
         } else if (bank.hasSpaceFor(item)) {
             bank.add(item);
         } else {
-            // TODO Drop item on the floor.
+            world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
+                    position, Optional.of(this)));
         }
     }
 
@@ -812,20 +794,6 @@ public final class Player extends Mob {
      */
     public Set<Npc> getLocalNpcs() {
         return localNpcs;
-    }
-
-    /**
-     * @return A set of local objects.
-     */
-    public Set<GameObject> getLocalObjects() {
-        return localObjects;
-    }
-
-    /**
-     * @return A set of local items.
-     */
-    public Set<GroundItem> getLocalItems() {
-        return localItems;
     }
 
     /**

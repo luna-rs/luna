@@ -46,7 +46,7 @@ public final class KotlinInterpreter {
      */
     public void eval(Script script) {
         try {
-            interpreter.eval(script.getContents());
+            interpreter.eval(script.getContents()); // TODO Use script definitions,
         } catch (ScriptException e) {
             logger.fatal(new ParameterizedMessage("Script '{}' could not be interpreted.", script.getName()), e);
             System.exit(0);

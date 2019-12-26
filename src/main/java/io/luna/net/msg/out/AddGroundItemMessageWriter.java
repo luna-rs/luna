@@ -46,7 +46,7 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter {
         ByteMessage msg = ByteMessage.message(44);
         msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort(amount);
-        msg.put(offset);
+        msg.put(/*offset*/ 0);
         return msg;
     }
 }

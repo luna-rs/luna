@@ -14,25 +14,25 @@ import io.luna.net.msg.GameMessageWriter;
 public final class ClearChunkMessageWriter extends GameMessageWriter {
 
     /**
-     * The chunk.
+     * The chunk position.
      */
-    private final Position pos;
+    private final Position chunkPosition;
 
     /**
      * Creates a new {@link ClearChunkMessageWriter}.
      *
-     * @param pos The chunk.
+     * @param chunkPosition The chunk position.
      */
-    public ClearChunkMessageWriter(Position pos) {
-        this.pos = pos;
+    public ClearChunkMessageWriter(Position chunkPosition) {
+        this.chunkPosition = chunkPosition;
     }
 
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(64);
-        Position plrPos = player.getPosition();
-        msg.put(pos.getLocalX(plrPos), ValueType.NEGATE);
-        msg.put(pos.getLocalY(plrPos), ValueType.NEGATE);
+        var plrRegion = player.getLastRegion();
+        msg.put(chunkPosition.getLocalX(plrRegion), ValueType.NEGATE);
+        msg.put(chunkPosition.getLocalY(plrRegion), ValueType.SUBTRACT);
         return msg;
     }
 }

@@ -2,7 +2,6 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.RegionChangedEvent;
-import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
@@ -32,7 +31,6 @@ public final class RegionChangedMessageReader extends GameMessageReader {
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         if (player.isRegionChanged()) {
-            System.out.println("here");
             player.setRegionChanged(false);
             refreshDisplay(player);
             return new RegionChangedEvent(player);
@@ -54,31 +52,22 @@ public final class RegionChangedMessageReader extends GameMessageReader {
 
                 // Clear chunk.
                 Position chunkPos = chunk.getAbsolutePosition();
-                player.queue(new ClearChunkMessageWriter(chunkPos));
 
                 // Repopulate chunk with entities.
                 Iterator<GameObject> objectIterator = chunk.iterator(EntityType.OBJECT);
-                while (objectIterator.hasNext()) {
-                    GameObject object = objectIterator.next();
-                    if (object.getState() == EntityState.INACTIVE) {
-                        objectIterator.remove();
-                        continue;
-                    }
-                    player.sendMessage(object.getId());
-                    player.sendMessage(object.getPosition());
-                    player.sendMessage("---------------");
-                    // TODO Do not update cache loaded objects!
-                    showEntity(player, object);
-                }
-
                 Iterator<GroundItem> itemIterator = chunk.iterator(EntityType.ITEM);
-                while (itemIterator.hasNext()) {
-                    GroundItem item = itemIterator.next();
-                    if (item.getState() == EntityState.INACTIVE) {
-                        itemIterator.remove();
-                        continue;
+                if (objectIterator.hasNext() || itemIterator.hasNext()) {
+                    player.queue(new ClearChunkMessageWriter(chunkPos));
+                    while (objectIterator.hasNext()) {
+                        GameObject object = objectIterator.next();
+                        if(object.isDynamic()) {
+                            showEntity(player, object);
+                        }
                     }
-                    showEntity(player, item);
+                    while (itemIterator.hasNext()) {
+                        GroundItem item = itemIterator.next();
+                        showEntity(player, item);
+                    }
                 }
             }
         }
@@ -91,7 +80,7 @@ public final class RegionChangedMessageReader extends GameMessageReader {
      * @param entity The entity to show.
      */
     private void showEntity(Player player, StationaryEntity entity) {
-        Optional<Player> updatePlr = entity.getPlayer();
+        Optional<Player> updatePlr = entity.getOwner();
         boolean isUpdate = updatePlr.isEmpty() || updatePlr.get().equals(player);
         if (isUpdate) {
             // TODO Use group packet to show multiple entities?
