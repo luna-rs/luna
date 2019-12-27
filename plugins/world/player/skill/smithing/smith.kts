@@ -1,3 +1,5 @@
+package world.player.skill.smithing
+
 /*import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 

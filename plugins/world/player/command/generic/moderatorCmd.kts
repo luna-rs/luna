@@ -1,0 +1,1 @@
+package world.player.command.generic

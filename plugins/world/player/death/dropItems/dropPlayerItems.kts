@@ -1,3 +1,4 @@
+package world.player.death.dropItems
 
 import api.predef.*
 import io.luna.game.event.impl.PlayerDeathEvent

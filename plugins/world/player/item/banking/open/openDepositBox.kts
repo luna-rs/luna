@@ -1,6 +1,7 @@
+package world.player.item.banking.open
+
 import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
-import world.player.item.banking.open.DepositBoxInterface
 
 /**
  * A set of deposit boxes.

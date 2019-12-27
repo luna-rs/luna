@@ -2,9 +2,10 @@ package io.luna.game.model.chunk;
 
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,26 +19,30 @@ public final class ChunkRepositoryTest {
     /**
      * Test adding duplicate entities to a repository.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testAdd() {
-        ChunkRepository repository = new ChunkRepository();
-        Entity entity = mock(Entity.class);
-        when(entity.getType()).thenReturn(EntityType.PLAYER);
+        assertThrows(IllegalStateException.class, () -> {
+            ChunkRepository repository = new ChunkRepository();
+            Entity entity = mock(Entity.class);
+            when(entity.getType()).thenReturn(EntityType.PLAYER);
 
-        repository.add(entity);
-        repository.add(entity);
+            repository.add(entity);
+            repository.add(entity);
+        });
     }
 
     /**
      * Test removing non-existent entities from a repository.
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testRemove() {
-        ChunkRepository repository = new ChunkRepository();
-        Entity entity = mock(Entity.class);
-        when(entity.getType()).thenReturn(EntityType.PLAYER);
+        assertThrows(IllegalStateException.class, () -> {
+            ChunkRepository repository = new ChunkRepository();
+            Entity entity = mock(Entity.class);
+            when(entity.getType()).thenReturn(EntityType.PLAYER);
 
-        repository.remove(entity);
+            repository.remove(entity);
+        });
     }
 
     /**

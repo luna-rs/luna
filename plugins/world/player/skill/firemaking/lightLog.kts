@@ -1,3 +1,4 @@
+package world.player.skill.firemaking
 
 import api.predef.*
 import io.luna.game.event.impl.ItemOnItemEvent

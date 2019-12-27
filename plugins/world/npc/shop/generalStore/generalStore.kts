@@ -1,3 +1,4 @@
+package world.npc.shop.generalStore
 
 import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent

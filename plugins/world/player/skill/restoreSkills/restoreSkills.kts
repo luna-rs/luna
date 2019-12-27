@@ -1,3 +1,5 @@
+package world.player.skill.restoreSkills
+
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent

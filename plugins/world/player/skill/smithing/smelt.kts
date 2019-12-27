@@ -1,3 +1,5 @@
+package world.player.skill.smithing
+
 /*import io.luna.game.action.ProducingAction
 import io.luna.game.model.item.Equipment.HANDS
 import io.luna.game.model.item.{Equipment, Item}

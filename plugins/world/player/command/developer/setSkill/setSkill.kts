@@ -1,4 +1,5 @@
-import SetSkill.SetLevelInterface
+package world.player.command.developer.setSkill
+
 import api.predef.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.Player
@@ -8,6 +9,7 @@ import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.SkillUpdateMessageWriter
+import world.player.command.developer.setSkill.SetSkill.SetLevelInterface
 
 /**
  * A [StandardInterface] used to set skill levels.

@@ -1,9 +1,10 @@
+package world.player.skill.crafting.armorCrafting
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import world.player.skill.crafting.armorCrafting.HideArmor
 
 /**
  * An [InventoryAction] implementation that will make studded armor.

@@ -1,3 +1,5 @@
+package world.player.command.generic
+
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item

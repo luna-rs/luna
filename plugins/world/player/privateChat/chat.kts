@@ -1,3 +1,5 @@
+package world.player.privateChat
+
 import api.predef.*
 import io.luna.game.event.impl.PrivateChatEvent
 import io.luna.game.model.mob.Player

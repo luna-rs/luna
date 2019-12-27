@@ -1,10 +1,11 @@
+package world.player.skill.runecrafting
+
 import api.predef.*
 import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import world.player.skill.runecrafting.Altar
 
 /**
  * The entering an altar with a talisman animation.

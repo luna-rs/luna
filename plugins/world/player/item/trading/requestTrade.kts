@@ -1,9 +1,10 @@
+package world.player.item.trading
+
 import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.DistancedAction
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
-import world.player.item.trading.OfferTradeInterface
 
 /**
  * A [DistancedAction] that sends a trade request when close enough to a Player.

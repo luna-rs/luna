@@ -1,3 +1,5 @@
+package world.player.command.punishment
+
 import api.predef.*
 import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.CommandEvent

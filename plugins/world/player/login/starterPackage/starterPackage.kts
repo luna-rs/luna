@@ -1,3 +1,4 @@
+package world.player.login.starterPackage
 
 import api.predef.*
 import io.luna.game.event.impl.LoginEvent

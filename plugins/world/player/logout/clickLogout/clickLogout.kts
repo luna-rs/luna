@@ -1,3 +1,5 @@
+package world.player.logout.clickLogout
+
 import api.predef.*
 
 /**

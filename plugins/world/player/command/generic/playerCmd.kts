@@ -1,9 +1,8 @@
+package world.player.command.generic
+
 import api.event.Matcher
 import api.inter.QuestJournalInterface
-import api.predef.CommandKey
-import api.predef.RIGHTS_PLAYER
-import api.predef.cmd
-import api.predef.world
+import api.predef.*
 import com.google.common.collect.HashMultimap
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player

@@ -1,3 +1,4 @@
+package world.player.command.generic
 
 import api.predef.*
 import io.luna.game.model.mob.Animation

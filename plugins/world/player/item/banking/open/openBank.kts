@@ -1,3 +1,5 @@
+package world.player.item.banking.open
+
 import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 

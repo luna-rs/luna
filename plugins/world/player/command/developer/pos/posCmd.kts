@@ -1,3 +1,5 @@
+package world.player.command.developer.pos
+
 import api.predef.*
 import io.luna.game.model.mob.Player
 

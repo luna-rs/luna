@@ -1,3 +1,5 @@
+package world.player.skill.fishing.movingSpots
+
 import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent
 import io.luna.game.model.Position

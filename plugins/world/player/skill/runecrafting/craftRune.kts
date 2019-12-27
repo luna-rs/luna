@@ -1,10 +1,11 @@
+package world.player.skill.runecrafting
+
 import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Graphic
 import io.luna.game.model.mob.Player
-import world.player.skill.runecrafting.Rune
 
 /**
  * The rune essence identifier.

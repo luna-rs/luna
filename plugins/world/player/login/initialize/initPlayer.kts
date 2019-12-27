@@ -1,3 +1,5 @@
+package world.player.login.initialize
+
 import api.predef.*
 import api.punishment.PunishmentHandler
 import io.luna.Luna

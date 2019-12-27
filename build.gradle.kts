@@ -1,8 +1,9 @@
+
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.3.21"
+    val kotlinVersion = "1.3.60"
     val jfxVersion = "0.0.8"
 
     java
@@ -25,10 +26,11 @@ dependencies {
     implementation("com.google.guava:guava:27.0.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.github.classgraph:classgraph:4.8.59")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("script-runtime"))
-    implementation(kotlin("script-util"))
-    implementation(kotlin("compiler"))
+    implementation(kotlin("reflect"))
+    implementation(kotlin("scripting-common"))
     implementation("org.openjfx:javafx-controls:11.0.1")
     implementation("org.openjfx:javafx-fxml:11.0.1")
     implementation("org.openjfx:javafx-swing:11.0.1")
@@ -69,7 +71,7 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.withType<KotlinCompile> {
+tasks.withType<KotlinCompile>().all {
     kotlinOptions.jvmTarget = "1.8"
 }
 

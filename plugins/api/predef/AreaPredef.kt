@@ -23,7 +23,8 @@ import kotlin.reflect.jvm.jvmErasure
  */
 fun <E : Area> area(parentType: KClass<E>, receiver: AreaReceiver.() -> Unit): E {
     // TODO Unit tests
-    val primaryConstructor = parentType.primaryConstructor
+    // TODO find a different way to do this.
+   val primaryConstructor = parentType.primaryConstructor
     require(primaryConstructor != null) { "Parent area must have a primary constructor." }
 
     val parameters = primaryConstructor.parameters

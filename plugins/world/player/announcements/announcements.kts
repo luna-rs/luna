@@ -1,3 +1,5 @@
+package world.player.announcements
+
 import api.predef.*
 import io.luna.game.event.impl.ServerLaunchEvent
 

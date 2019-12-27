@@ -1,3 +1,5 @@
+package world.player.settings
+
 import api.predef.*
 import io.luna.game.model.mob.PlayerSettings.*
 
@@ -38,7 +40,7 @@ button(913) { plr.settings.mouseType = MouseType.TWO_BUTTONS }
 
 
 /**
- * Chat effect settings.
+ * world.player.privateChat.Chat effect settings.
  */
 button(915) { plr.settings.isChatEffects = true }
 

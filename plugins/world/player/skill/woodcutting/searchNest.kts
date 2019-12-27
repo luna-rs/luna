@@ -1,3 +1,4 @@
+package world.player.skill.woodcutting
 /*
 val emptyNest = Item(5075)
 val nests = lootTable {

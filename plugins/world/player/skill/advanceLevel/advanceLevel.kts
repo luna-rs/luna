@@ -1,5 +1,5 @@
+package world.player.skill.advanceLevel
 
-import AdvanceLevel.LevelUpInterface
 import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Graphic
@@ -8,6 +8,7 @@ import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mob.inter.DialogueInterface
 import io.luna.net.msg.out.SkillUpdateMessageWriter
+import world.player.skill.advanceLevel.AdvanceLevel.LevelUpInterface
 
 /**
  * A model representing [LevelUpInterface] data.

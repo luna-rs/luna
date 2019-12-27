@@ -1,9 +1,11 @@
-import MakeItem.MakeItemOption
+package world.player.`interface`.makeItem
+
 import api.predef.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 import io.luna.game.model.mob.inter.AmountInputInterface
+import world.player.`interface`.makeItem.MakeItem.MakeItemOption
 
 /**
  * A model representing an item on a [MakeItemDialogueInterface] interface.
