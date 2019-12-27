@@ -11,7 +11,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.VBox;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -372,7 +372,7 @@ final class PluginGuiController {
         changeListener.setFiringEvents(false);
         gui.getPluginItems().forEach((k, item) -> {
             item.setSelected(true);
-            gui.getSettings().getSelected().add(k);
+            //gui.getSettings().getSelected().add(k);
         });
         changeListener.setFiringEvents(true);
     }

@@ -16,14 +16,15 @@ import javafx.scene.control.DialogPane;
 import javafx.stage.Window;
 
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import java.awt.EventQueue;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -124,7 +125,7 @@ public final class PluginGui {
      *
      * @param plugins The plugin data.
      */
-    public PluginGui(Map<String, Plugin> plugins) {
+    public PluginGui(Map<Path, Plugin> plugins) {
         pluginItems = buildPluginItems(plugins);
     }
 
@@ -133,9 +134,9 @@ public final class PluginGui {
      * application is terminated.
      *
      * @return The selected plugins.
-     * @throws IOException        If any I/O errors occur.
+     * @throws IOException If any I/O errors occur.
      */
-    public Set<String> launch() throws IOException {
+    public Set<Path> launch() throws IOException {
         checkState(!Platform.isFxApplicationThread(), "Cannot be called from Javafx thread.");
 
         // Load application.
@@ -158,7 +159,7 @@ public final class PluginGui {
      * @param plugins The plugins in the plugin dir.
      * @return The immutable map of tree items.
      */
-    private ImmutableMap<String, PluginTreeItem> buildPluginItems(Map<String, Plugin> plugins) {
+    private ImmutableMap<String, PluginTreeItem> buildPluginItems(Map<Path, Plugin> plugins) {
         Map<String, PluginTreeItem> treeItems = new LinkedHashMap<>();
         for (Plugin plugin : plugins.values()) {
             PluginTreeItem item = new PluginTreeItem(plugin, controller);

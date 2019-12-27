@@ -2,6 +2,8 @@ package io.luna.game.plugin;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -25,6 +27,11 @@ public final class Plugin {
     private final PluginMetadata metadata;
 
     /**
+     * The root directory of this plugin.
+     */
+    private final Path dir;
+
+    /**
      * The fully qualified package name.
      */
     private final String packageName;
@@ -43,15 +50,32 @@ public final class Plugin {
      * Creates a new {@link Plugin}.
      *
      * @param metadata The metadata describing this plugin.
-     * @param packageName The fully qualified package name.
+     * @param pluginDir The directory of the plugin.
      * @param scripts A set of scripts.
      */
-    public Plugin(PluginMetadata metadata, String packageName,
-                  Set<ScriptDependency> dependencies, Set<Script> scripts) {
+    public Plugin(PluginMetadata metadata, Path pluginDir, Set<ScriptDependency> dependencies, Set<Script> scripts) {
         this.metadata = metadata;
-        this.packageName = packageName;
         this.scripts = ImmutableSet.copyOf(scripts);
         this.dependencies = ImmutableSet.copyOf(dependencies);
+        dir = pluginDir;
+        packageName = computePackageName(pluginDir);
+    }
+
+    /**
+     * Computes the fully qualified package name.
+     *
+     * @return The package name.
+     */
+    private String computePackageName(Path dir) {
+        String packageDir = dir.toString().
+                replace(File.separator, ".").
+                substring(2);
+        int firstIndex = packageDir.indexOf('.');
+        int lastIndex = packageDir.lastIndexOf('.');
+        if (firstIndex == lastIndex) {
+            return "";
+        }
+        return packageDir.substring(firstIndex + 1, lastIndex);
     }
 
     /**
@@ -59,6 +83,13 @@ public final class Plugin {
      */
     public PluginMetadata getMetadata() {
         return metadata;
+    }
+
+    /**
+     * @return The root directory of this plugin.
+     */
+    public Path getDir() {
+        return dir;
     }
 
     /**

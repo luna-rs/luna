@@ -4,6 +4,7 @@ import javafx.event.EventHandler;
 import javafx.scene.control.CheckBoxTreeItem;
 import javafx.scene.control.CheckBoxTreeItem.TreeModificationEvent;
 
+import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -17,7 +18,7 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
     /**
      * The set of selected plugins.
      */
-    private final Set<String> selectedPlugins;
+    private final Set<Path> selectedPlugins;
 
     /**
      * If selection events will be recorded.
@@ -29,7 +30,7 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
      *
      * @param selectedPlugins The set of selected plugins.
      */
-    PluginTreeChangeListener(Set<String> selectedPlugins) {
+    PluginTreeChangeListener(Set<Path> selectedPlugins) {
         this.selectedPlugins = selectedPlugins;
     }
 
@@ -60,15 +61,15 @@ final class PluginTreeChangeListener implements EventHandler<TreeModificationEve
         String name = item.getValue();
         if (evt.wasSelectionChanged()) {
             if (item.isSelected()) {
-                selectedPlugins.add(name);
+            //   selectedPlugins.add(name);
             } else {
-                selectedPlugins.remove(name);
+         //       selectedPlugins.remove(name);
             }
         } else if (evt.wasIndeterminateChanged()) {
             if (item.isIndeterminate() || !item.isSelected()) {
-                selectedPlugins.remove(name);
+              //  selectedPlugins.remove(name);
             } else if (item.isSelected()) {
-                selectedPlugins.add(name);
+               // selectedPlugins.add(name);
             }
         }
     }

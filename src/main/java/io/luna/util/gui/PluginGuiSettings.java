@@ -53,7 +53,7 @@ final class PluginGuiSettings {
     /**
      * A list of selected plugins.
      */
-    private final Set<String> selected = Sets.newConcurrentHashSet();
+    private final Set<Path> selected = Sets.newConcurrentHashSet();
 
     /**
      * Creates a new {@link PluginGuiSettings}.
@@ -75,7 +75,7 @@ final class PluginGuiSettings {
         settings.put("save_on_exit", saveOnExit);
         settings.put("retain_selection", retainSelection);
         settings.put("flatten_packages", flattenPackages);
-        settings.put("selected", selected.toArray());
+        settings.put("selected", selected.stream().map(Path::toString).toArray());
         return new TomlWriter().write(new Settings(settings));
     }
 
@@ -176,8 +176,10 @@ final class PluginGuiSettings {
         saveOnExit = settings.get("save_on_exit").getAsBoolean();
         retainSelection = settings.get("retain_selection").getAsBoolean();
         flattenPackages = settings.get("flatten_packages").getAsBoolean();
-        settings.getAsJsonArray("selected").
-                forEach(e -> selected.add(e.getAsString()));
+        settings.getAsJsonArray("selected").forEach(e -> {
+            String selectedPath = e.getAsString();
+            selected.add(Path.of(selectedPath));
+        });
     }
 
     /**
@@ -247,7 +249,7 @@ final class PluginGuiSettings {
     /**
      * @return A list of selected plugins.
      */
-    Set<String> getSelected() {
+    Set<Path> getSelected() {
         return selected;
     }
 
@@ -256,6 +258,7 @@ final class PluginGuiSettings {
      */
     private final class Settings {
         private final Map<String, Object> settings;
+
         private Settings(Map<String, Object> settings) {
             this.settings = settings;
         }

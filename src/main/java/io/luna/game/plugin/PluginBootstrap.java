@@ -2,16 +2,16 @@ package io.luna.game.plugin;
 
 import com.google.common.io.MoreFiles;
 import com.moandjiezana.toml.Toml;
+import io.github.classgraph.ClassGraph;
 import io.luna.LunaContext;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.event.EventMatcherListener;
-import io.luna.game.service.GameService;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
 import io.luna.util.Tuple;
 import io.luna.util.gui.PluginGui;
-import org.apache.logging.log4j.Level;
+import kotlin.script.templates.standard.ScriptTemplateWithArgs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -36,22 +35,6 @@ import java.util.stream.Collectors;
  * @author lare96 <http://github.org/lare96>
  */
 public final class PluginBootstrap {
-
-    /**
-     * A {@link RuntimeException} implementation thrown when a script file cannot be loaded.
-     */
-    private final class LoadScriptException extends RuntimeException {
-
-        /**
-         * Creates a new {@link LoadScriptException}.
-         *
-         * @param name The script name.
-         * @param e The reason for failure.
-         */
-        public LoadScriptException(String name, IOException e) {
-            super("Failed to read script " + name + ", its parent plugin will not be loaded.", e);
-        }
-    }
 
     /**
      * A task that will load a single plugin directory.
@@ -71,69 +54,50 @@ public final class PluginBootstrap {
         /**
          * The plugin directory.
          */
-        private final Path dir;
+        private final Path pluginDir;
 
         /**
          * The plugin metadata file directory.
          */
-        private final Path pluginMetadata;
+        private final Path pluginMetadataDir;
 
         /**
          * Creates a new {@link PluginDirLoader}.
          *
-         * @param dir The plugin directory.
-         * @param pluginMetadata The plugin metadata file directory.
+         * @param pluginDir The plugin directory.
+         * @param pluginMetadataDir The plugin metadata file directory.
          */
-        public PluginDirLoader(Path dir, Path pluginMetadata) {
-            this.dir = dir;
-            this.pluginMetadata = pluginMetadata;
+        public PluginDirLoader(Path pluginDir, Path pluginMetadataDir) {
+            this.pluginDir = pluginDir;
+            this.pluginMetadataDir = pluginMetadataDir;
         }
 
         @Override
         public void run() {
             //noinspection ConstantConditions
-            Set<String> fileList = Arrays.stream(dir.toFile().list()).
+            Set<String> kotlinFiles = Arrays.stream(pluginDir.toFile().list()).
                     filter(f -> f.endsWith(".kt") || f.endsWith(".kts")).
                     collect(Collectors.toSet());
 
             // Metadata TOML -> Java
-            PluginMetadata metadata = new Toml().read(pluginMetadata.toFile()).
+            var pluginMetadata = new Toml().read(pluginMetadataDir.toFile()).
                     getTable("metadata").to(PluginMetadata.class);
 
             // Check for duplicate plugins.
-            String pluginName = metadata.getName();
-            if (plugins.containsKey(pluginName)) {
-                // TODO Track plugins by path to plugin.toml... not name lmao
-                logger.warn("Plugin [" + pluginName + "] shares the same name as another plugin.");
-                return;
+            if (plugins.containsKey(pluginMetadataDir)) {
+                throw new IllegalStateException("Cannot have multiple plugins in the same directory (" + pluginDir + ").");
             }
-            // TODO throw exception instead?
 
             // Load all non-metadata plugin files.
-            try {
-                fileList.forEach(this::loadFile);
-            } catch (LoadScriptException e) {
-                logger.catching(Level.WARN, e);
-                return;
+            for (String nextFile : kotlinFiles) {
+                try {
+                    loadFile(nextFile);
+                } catch (IOException e) {
+                    logger.warn("An error occurred while loading plugin files.", e);
+                    return;
+                }
             }
-            plugins.put(pluginName, new Plugin(metadata, computePackageName(), dependencies, scripts));
-        }
-
-        /**
-         * Computes the fully qualified package name.
-         *
-         * @return The package name.
-         */
-        private String computePackageName() {
-            String packageDir = dir.toString().
-                    replace(File.separator, ".").
-                    substring(2);
-            int firstIndex = packageDir.indexOf('.');
-            int lastIndex = packageDir.lastIndexOf('.');
-            if (firstIndex == lastIndex) {
-                return "";
-            }
-            return packageDir.substring(firstIndex + 1, lastIndex);
+            plugins.put(pluginMetadataDir, new Plugin(pluginMetadata, pluginDir, dependencies, scripts));
         }
 
         /**
@@ -141,19 +105,15 @@ public final class PluginBootstrap {
          *
          * @param fileName The file to load.
          */
-        private void loadFile(String fileName) {
-            try {
-                Path path = dir.resolve(fileName);
-                if (fileName.endsWith(".kts")) {
-                    // Load script file.
-                    String scriptContents = Files.readString(path);
-                    scripts.add(new Script(fileName, path, scriptContents));
-                } else {
-                    // Load dependency file.
-                    dependencies.add(new ScriptDependency(fileName, path));
-                }
-            } catch (IOException e) {
-                throw new LoadScriptException(fileName, e);
+        private void loadFile(String fileName) throws IOException {
+            Path path = pluginDir.resolve(fileName);
+            if (fileName.endsWith(".kts")) {
+                // Load script file.
+                String scriptContents = Files.readString(path);
+                scripts.add(new Script(fileName, path));
+            } else {
+                // Load dependency file.
+                dependencies.add(new ScriptDependency(fileName, path));
             }
         }
     }
@@ -185,7 +145,7 @@ public final class PluginBootstrap {
     /**
      * A map of plugin names to instances.
      */
-    private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
+    private final Map<Path, Plugin> plugins = new ConcurrentHashMap<>();
 
     /**
      * The context instance.
@@ -211,23 +171,23 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     public Tuple<Integer, Integer> init(boolean displayGui) throws IOException {
-        PluginManager plugins = context.getPlugins();
-        GameService service = context.getGame();
+        var pluginManager = context.getPlugins();
+        var gameService = context.getGame();
 
         initFiles();
-        Tuple<Integer, Integer> pluginCount = initPlugins(displayGui);
+        var pluginCountTuple = initPlugins(displayGui);
 
-        EventListenerPipelineSet oldPipelines = plugins.getPipelines();
+        EventListenerPipelineSet oldPipelines = pluginManager.getPipelines();
         EventListenerPipelineSet newPipelines = bindings.getPipelines();
-        service.sync(() -> oldPipelines.replaceAll(newPipelines));
-        return pluginCount;
+        gameService.sync(() -> oldPipelines.replaceAll(newPipelines));
+        return pluginCountTuple;
     }
 
     /**
      * Concurrently parses files in the plugin directory and caches their contents.
      */
     private void initFiles() {
-        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "PluginDirInitThread");
+        var threadPool = new AsyncExecutor(ThreadUtils.cpuCount(), "PluginDirInitThread");
 
         // Traverse all paths and sub-paths.
         Iterable<Path> directories = MoreFiles.fileTraverser().depthFirstPreOrder(DIR);
@@ -236,14 +196,14 @@ public final class PluginBootstrap {
                 Path pluginMetadata = dir.resolve("plugin.toml");
                 if (Files.exists(pluginMetadata)) {
                     // Submit file tasks.
-                    executor.execute(new PluginDirLoader(dir, pluginMetadata));
+                    threadPool.execute(new PluginDirLoader(dir, pluginMetadata));
                 }
             }
         }
 
         // Await completion.
         try {
-            executor.await(true);
+            threadPool.await(true);
         } catch (ExecutionException e) {
             throw new CompletionException(e);
         }
@@ -257,16 +217,37 @@ public final class PluginBootstrap {
      * amount were loaded.
      * @throws IOException If an I/O error occurs.
      */
-    private Tuple<Integer, Integer> initPlugins(boolean displayGui) throws IOException {
+    private Tuple<Integer, Integer> initPlugins(boolean displayGui) {
 
         // Launch the GUI, determine selected plugins.
+        // TODO Fix the plugin GUI.
         int totalCount = plugins.size();
-        selectPlugins(displayGui);
+        //selectPlugins(displayGui);
 
         // Load all plugins.
-        KotlinInterpreter interpreter = new KotlinInterpreter();
-        for (Plugin other : plugins.values()) {
-            loadPlugin(other, interpreter);
+        // TODO Only initialize script if its plugin script/metadata was loaded.
+        var scriptArgs = new String[0];
+        try (var scanResult = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
+            for (var scriptClassMetadata : scanResult.getSubclasses("kotlin.script.templates.standard.ScriptTemplateWithArgs")) {
+                var scriptClass = scriptClassMetadata.loadClass(ScriptTemplateWithArgs.class);
+                try {
+                    // Initialize the script here.
+                    scriptClass.getConstructor(String[].class).newInstance((Object)scriptArgs);
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException("Error initializing script (" + scriptClass.getName() + ").");
+                }
+
+                // TODO Retrieve proper script data from metadata.
+                for (EventListener<?> listener : bindings.getListeners()) {
+                  //  listener.setScript(script);
+                    bindings.getPipelines().add(listener);
+                }
+                for (EventMatcherListener<?> listener : bindings.getMatchers()) {
+                   // listener.setScript(script);
+                }
+                bindings.getMatchers().clear();
+                bindings.getListeners().clear();
+            }
         }
 
         int selectedCount = plugins.size();
@@ -280,7 +261,7 @@ public final class PluginBootstrap {
      * @throws IOException If an I/O error occurs.
      */
     private void selectPlugins(boolean displayGui) throws IOException {
-        final Set<String> selectedPlugins = new HashSet<>();
+        var selectedPlugins = new HashSet<Path>();
         if (displayGui) {
             // Displays the GUI, grabs the plugin selection from the interface.
             PluginGui gui = new PluginGui(plugins);
@@ -301,29 +282,5 @@ public final class PluginBootstrap {
             }
         }
         plugins.keySet().retainAll(selectedPlugins);
-    }
-
-    /**
-     * Evaluates a single plugin directory.
-     *
-     * @param plugin The plugin to load.
-     * @param interpreter The Kotlin interpreter.
-     */
-    private void loadPlugin(Plugin plugin, KotlinInterpreter interpreter) {
-        for (Script script : plugin.getScripts()) {
-            // Evaluate the script.
-            interpreter.eval(script);
-
-            // Add all of its listeners, reflectively set the listener script.
-            for (EventListener<?> listener : bindings.getListeners()) {
-                listener.setScript(script);
-                bindings.getPipelines().add(listener);
-            }
-            for (EventMatcherListener<?> listener : bindings.getMatchers()) {
-                listener.setScript(script);
-            }
-            bindings.getMatchers().clear();
-            bindings.getListeners().clear();
-        }
     }
 }
