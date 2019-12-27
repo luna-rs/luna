@@ -20,7 +20,7 @@ final class EventListenerTest {
 
     @BeforeAll
     static void initScript() {
-        script = new Script(null, null, null);
+        script = new Script(null, null);
     }
 
     @BeforeEach
