@@ -1,4 +1,4 @@
-package world.player.skill.runecrafting
+package world.player.skill.runecrafting.enterAltar
 
 import io.luna.game.model.Position
 

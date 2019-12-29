@@ -1,4 +1,4 @@
-package world.player.skill.runecrafting
+package world.player.skill.runecrafting.craftRune
 
 /**
  * An enum representing a rune that can be crafted at an [Altar].
@@ -65,12 +65,12 @@ enum class Rune(val id: Int,
           level = 65,
           exp = 10.0),
     BLOOD(id = 565,
-          altar = 7141,
+          altar = 2490,
           multiplier = 99,
           level = 80,
           exp = 10.5),
     SOUL(id = 566,
-         altar = 7138,
+         altar = 2489,
          multiplier = 99,
          level = 95,
          exp = 11.0);

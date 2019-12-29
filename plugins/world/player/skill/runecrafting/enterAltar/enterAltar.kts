@@ -1,4 +1,4 @@
-package world.player.skill.runecrafting
+package world.player.skill.runecrafting.enterAltar
 
 import api.predef.*
 import io.luna.game.event.impl.ItemOnObjectEvent
