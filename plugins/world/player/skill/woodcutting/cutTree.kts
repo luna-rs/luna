@@ -1,1 +1,0 @@
-package world.player.skill.woodcutting
