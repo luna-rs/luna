@@ -102,6 +102,18 @@ fun World.addObject(id: Int,
 }
 
 /**
+ * Spawns a [GameObject] for [plr].
+ */
+fun World.addObject(id: Int,
+                    position: Position,
+                    type: ObjectType = ObjectType.DEFAULT,
+                    direction: ObjectDirection = ObjectDirection.WEST,
+                    plr: Player? = null): GameObject {
+    val obj = GameObject(ctx, id, position, type, direction, Optional.ofNullable(plr))
+    return addObject(obj)
+}
+
+/**
  * Despawns a [GameObject].
  */
 fun World.removeObject(obj: GameObject): Boolean = objects.unregister(obj)
@@ -119,7 +131,7 @@ fun World.removeObject(pos: Position, filter: GameObject.() -> Boolean = { true 
 fun World.addItem(item: GroundItem): GroundItem {
     return when {
         items.register(item) -> item
-        else -> throw IllegalStateException("$item Could not be spawned!")
+        else -> throw IllegalStateException("$item Could not be spawned!") // change to null
     }
 }
 
