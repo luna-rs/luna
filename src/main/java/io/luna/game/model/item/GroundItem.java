@@ -37,9 +37,9 @@ public class GroundItem extends StationaryEntity {
     private int amount;
 
     /**
-     * The current amount of expiration minutes.
+     * The current amount of expiration ticks.
      */
-    private OptionalInt expireMinutes = OptionalInt.of(0);
+    private OptionalInt expireTicks = OptionalInt.of(0);
 
     /**
      * Creates a new {@link GroundItem}.
@@ -75,10 +75,7 @@ public class GroundItem extends StationaryEntity {
         }
         if (obj instanceof GroundItem) {
             GroundItem other = (GroundItem) obj;
-            return id == other.id &&
-                    amount == other.amount &&
-                    Objects.equals(position, other.position) &&
-                    Objects.equals(getOwner(), other.getOwner());
+
         }
         return false;
     }
@@ -111,34 +108,58 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
+     * Returns {@code true} if these items have the same id and amount, are on the same position, and have the same owner.
+     * @param other The ground item to compare with.
+     * @return {@code true} if these ground items are identical.
+     */
+    public boolean isIdentical(GroundItem other) {
+        return id == other.id &&
+                amount == other.amount &&
+                Objects.equals(position, other.position) &&
+                Objects.equals(getOwner(), other.getOwner());
+    }
+
+    /**
      * Sets whether or not this item will expire or not.
      *
      * @param expire The value.
      */
     public final void setExpire(boolean expire) {
-        if (expire && expireMinutes.isEmpty()) {
-            expireMinutes = OptionalInt.of(0);
-        } else if (!expire && expireMinutes.isPresent()) {
-            expireMinutes = OptionalInt.empty();
+        if (expire && expireTicks.isEmpty()) {
+            expireTicks = OptionalInt.of(0);
+        } else if (!expire && expireTicks.isPresent()) {
+            expireTicks = OptionalInt.empty();
         }
     }
 
     /**
-     * Sets the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
+     * Add an expiration tick for this item. Will throw {@link IllegalStateException} if this item
      * does not expire.
+     *
+     * @return The new expiration minutes.
      */
-    public final void setExpireMinutes(int minutes) {
-        checkState(isExpire(), "This item does not expire.");
-        expireMinutes = OptionalInt.of(minutes);
+    public final int addExpireTick() {
+        int newValue = getExpireTicks() + 1;
+        setExpireTicks(newValue);
+        return newValue;
     }
 
     /**
-     * Retrieves the current expiration minutes for this item. Will throw {@link IllegalStateException} if this item
+     * Sets the current expiration ticks for this item. Will throw {@link IllegalStateException} if this item
      * does not expire.
      */
-    public final int getExpireMinutes() {
-        checkState(isExpire(), "This item does not expire.");
-        return expireMinutes.getAsInt();
+    public final void setExpireTicks(int ticks) {
+        checkState(isExpiring(), "This item does not expire.");
+        expireTicks = OptionalInt.of(ticks);
+    }
+
+    /**
+     * Retrieves the current expiration ticks for this item. Will throw {@link IllegalStateException} if this item
+     * does not expire.
+     */
+    public final int getExpireTicks() {
+        checkState(isExpiring(), "This item does not expire.");
+        return expireTicks.getAsInt();
     }
 
     /**
@@ -146,8 +167,8 @@ public class GroundItem extends StationaryEntity {
      *
      * @return {@code true} if this item expires.
      */
-    public final boolean isExpire() {
-        return expireMinutes.isPresent();
+    public final boolean isExpiring() {
+        return expireTicks.isPresent();
     }
 
     /**

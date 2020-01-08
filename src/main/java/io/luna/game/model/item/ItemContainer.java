@@ -431,6 +431,16 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Forwards to {@link #remove(Item)} with the amount as {@code 1}.
+     *
+     * @param id The ID to remove 1 of.
+     * @return {@code true} if successful.
+     */
+    public boolean remove(int id) {
+        return remove(-1, new Item(id));
+    }
+
+    /**
      * Attempts to remove {@code items} from the closest available spots.
      *
      * @param items The items to remove.
