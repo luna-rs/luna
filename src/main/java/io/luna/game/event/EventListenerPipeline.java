@@ -85,7 +85,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     private void handleException(ScriptExecutionException e) {
         var script = e.getScript();
         if (script != null) {
-            logger.warn("Failed to run a listener from script '" + script.getName() + "'", e);
+            logger.warn("Failed to run a listener from script '" + script.getInfo().getName()+ "'", e);
         } else {
             logger.catching(e);
         }

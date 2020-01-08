@@ -1,7 +1,0 @@
-[metadata]
-name = "Advance level"
-description = "A plugin that enables congratulatory level up messages."
-version = "1.0"
-authors = [
-  "lare96"
-]

@@ -8,6 +8,8 @@ import io.luna.util.TickTimer
 
 /**
  * A simple [TypeAdapter] implementation for [TickTimer].
+ *
+ * @author lare96
  */
 object TickTimerTypeAdapter : TypeAdapter<TickTimer>() {
 

@@ -1,6 +1,6 @@
 package io.luna.game.event;
 
-import io.luna.game.plugin.Script;
+import io.luna.game.plugin.RuntimeScript;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
 
@@ -18,7 +18,7 @@ public final class EventMatcherListener<E extends Event> {
     /**
      * The script containing this matcher listener.
      */
-    private final Script script;
+    private final RuntimeScript script;
 
     /**
      * The listener.
@@ -53,15 +53,15 @@ public final class EventMatcherListener<E extends Event> {
      *
      * @param newScript The script to set to.
      */
-    public void setScript(Script newScript) {
-        checkState(script == null, "Script already set.");
+    public void setScript(RuntimeScript newScript) {
+        checkState(script == null, "RuntimeScript already set.");
         ReflectionUtils.setField(this, "script", newScript);
     }
 
     /**
      * @return The script containing this matcher listener. Possibly {@code null}.
      */
-    public Script getScript() {
+    public RuntimeScript getScript() {
         return script;
     }
 

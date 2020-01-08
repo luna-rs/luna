@@ -4,6 +4,7 @@ import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.SkillSet
+import world.player.command.cmd
 
 /**
  * A command fthat makes all stats 99.

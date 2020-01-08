@@ -1,11 +1,11 @@
 package io.luna.game.model;
 
-import io.luna.game.model.chunk.ChunkManager;
-
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -133,19 +133,17 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * Unregisters all entities on {@code position} that match {@code filter}.
      *
      * @param position The position to unregister entities on.
-     * @param filter The filter to apply.
+     * @param test The filter to apply.
      * @return {@code true} if at least one entity was unregistered.
      */
-    public final boolean removeFromPosition(Position position, Predicate<E> filter) {
-        boolean removed = false;
-        for (E entity : findAll(position)) {
-            if (position.equals(entity.position) &&
-                    filter.test(entity) &&
-                    unregister(entity)) {
-                removed = true;
-            }
-        }
-        return removed;
+    public final boolean removeFromPosition(Position position, Predicate<E> test) {
+
+        List<E> toRemove = findAll(position).
+                filter(entity -> position.equals(entity.position)).
+                filter(test).
+                collect(Collectors.toList());
+        toRemove.forEach(this::unregister);
+        return !toRemove.isEmpty();
     }
 
     /**
@@ -154,9 +152,10 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      * @param position The position to unregister entities on.
      * @return The set of entities.
      */
-    public final Collection<E> findAll(Position position) {
-        ChunkManager chunks = world.getChunks();
-        return chunks.load(position.getChunkPosition()).getAll(type);
+    public final Stream<E> findAll(Position position) {
+        var chunkManager = world.getChunks();
+        Stream<E> insideChunk = chunkManager.load(position.getChunkPosition()).stream(type);
+        return insideChunk.filter(entity -> entity.position.equals(position));
     }
 
     /**

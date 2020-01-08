@@ -37,11 +37,11 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         }
         // TODO vv Entity iteraction code is repeated a lot, find a way to streamline it (EntityInteractionEvent).
         var objectPosition = new Position(objectX, objectY, player.getPosition().getZ());
-        var foundObject = player.getWorld().getObjects().findAll(objectPosition).stream().
+        var foundObject = player.getWorld().getObjects().findAll(objectPosition).
                 filter(nextObject -> nextObject.getId() == objectId &&
                         nextObject.getPosition().equals(objectPosition) &&
                         nextObject.isVisibleTo(player)).findFirst();
-        if(foundObject.isEmpty()) { // Object doesn't exist.
+        if (foundObject.isEmpty()) { // Object doesn't exist.
             return null;
         }
 
@@ -50,7 +50,7 @@ public final class ItemOnObjectMessageReader extends GameMessageReader {
         player.submitAction(new InteractionAction(player, gameObject) {
             @Override
             public void execute() {
-                player.getPlugins().post(new ItemOnObjectEvent(player,itemId, itemIndexId, itemInterfaceId, gameObject));
+                player.getPlugins().post(new ItemOnObjectEvent(player, itemId, itemIndexId, itemInterfaceId, gameObject));
             }
         });
         return null;

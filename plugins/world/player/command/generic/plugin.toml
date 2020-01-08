@@ -1,7 +1,0 @@
-[metadata]
-name = "Generic commands"
-description = "A plugin that enables generic player, moderator, admin, and developer commands."
-version = "1.0"
-authors = [
-  "lare96"
-]

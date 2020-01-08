@@ -10,7 +10,7 @@ import io.luna.util.TickTimer
 /**
  * A factory class for instantiating attributes.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 object Attr {
 

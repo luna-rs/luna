@@ -33,6 +33,12 @@ fun time(block: () -> Unit): Duration {
 fun <T> lazyVal(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 
 /**
+ * Computes and returns the name for [id].
+ */
+fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
+    .orElseThrow { NoSuchElementException("Name not found for item <$id>") }
+
+/**
  * Computes and returns the [ItemDefinition] for [id].
  */
 fun itemDef(id: Int): ItemDefinition = ItemDefinition.ALL.get(id)
@@ -71,14 +77,14 @@ fun addArticle(thing: Any?): String =
 fun rand() = ThreadLocalRandom.current()!!
 
 /**
- * Generates a random integer from [lower] to [upper] inclusive.
+ * Generates a random integer from [lower] to [upperInclusive] inclusive.
  */
-fun rand(lower: Int, upper: Int): Int = rand().nextInt((upper - lower) + 1) + lower
+fun rand(lower: Int, upperInclusive: Int): Int = rand().nextInt((upperInclusive - lower) + 1) + lower
 
 /**
- * Generates a random integer from 0 to [upper] inclusive.
+ * Generates a random integer from 0 to [upperInclusive] inclusive.
  */
-fun rand(upper: Int): Int = rand().nextInt(upper + 1)
+fun rand(upperInclusive: Int): Int = rand().nextInt(upperInclusive + 1)
 
 /**
  * Generates a random integer within [range].

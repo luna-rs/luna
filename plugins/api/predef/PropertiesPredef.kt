@@ -3,6 +3,8 @@ package api.predef
 import io.luna.game.event.EventListener
 import io.luna.game.event.EventMatcherListener
 import io.luna.game.model.EntityType
+import io.luna.game.model.item.Equipment
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerInteraction
 import io.luna.game.model.mob.PlayerRights
@@ -204,6 +206,45 @@ val Player.farming: Skill
 
 val Player.runecrafting: Skill
     get() = skill(SKILL_RUNECRAFTING)
+
+/***************************************
+ *                                     *
+ *  [Equipment] extension properties.  *
+ *                                     *
+ ***************************************/
+
+val Equipment.head: Item?
+    get() = this[Equipment.HEAD]
+
+val Equipment.cape: Item?
+    get() = this[Equipment.CAPE]
+
+val Equipment.amulet: Item?
+    get() = this[Equipment.AMULET]
+
+val Equipment.weapon: Item?
+    get() = this[Equipment.WEAPON]
+
+val Equipment.chest: Item?
+    get() = this[Equipment.CHEST]
+
+val Equipment.shield: Item?
+    get() = this[Equipment.SHIELD]
+
+val Equipment.legs: Item?
+    get() = this[Equipment.LEGS]
+
+val Equipment.hands: Item?
+    get() = this[Equipment.HANDS]
+
+val Equipment.feet: Item?
+    get() = this[Equipment.FEET]
+
+val Equipment.ring: Item?
+    get() = this[Equipment.RING]
+
+val Equipment.ammo: Item?
+    get() = this[Equipment.AMMUNITION]
 
 
 /**********************************

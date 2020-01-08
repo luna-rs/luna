@@ -69,6 +69,23 @@ public final class CommandEvent extends PlayerEvent {
     }
 
     /**
+     * Gets the entire string after the argument {@code index}.
+     *
+     * @param index The index to start at.
+     * @return The rest of the arguments, as one string.
+     */
+    public String getInputFrom(int index) {
+        StringBuilder sb = new StringBuilder();
+        for(int slot = 0; slot < args.length; slot++) {
+            if(slot >= index) {
+                sb.append(args[slot]).append(" ");
+            }
+        }
+        sb.setLength(sb.length() - 1);
+        return sb.toString();
+    }
+
+    /**
      * @return The command name.
      */
     public String getName() {

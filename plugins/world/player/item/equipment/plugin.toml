@@ -1,7 +1,0 @@
-[metadata]
-name = "Equipment"
-description = "A plugin that adds equipment support."
-version = "1.0"
-authors = [
-  "lare96"
-]

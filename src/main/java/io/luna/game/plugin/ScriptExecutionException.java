@@ -10,7 +10,7 @@ public final class ScriptExecutionException extends RuntimeException {
     /**
      * The failed script.
      */
-    private final Script script;
+    private final RuntimeScript script;
 
     /**
      * Creates a new {@link ScriptExecutionException}.
@@ -18,7 +18,7 @@ public final class ScriptExecutionException extends RuntimeException {
      * @param script The failed script.
      * @param cause The cause of the failure.
      */
-    public ScriptExecutionException(Script script, Exception cause) {
+    public ScriptExecutionException(RuntimeScript script, Exception cause) {
         super(cause);
         this.script = script;
     }
@@ -26,7 +26,7 @@ public final class ScriptExecutionException extends RuntimeException {
     /**
      * @return The failed script.
      */
-    public Script getScript() {
+    public RuntimeScript getScript() {
         return script;
     }
 }

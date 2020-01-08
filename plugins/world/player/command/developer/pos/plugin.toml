@@ -1,7 +1,0 @@
-[metadata]
-name = "Position commands"
-description = "A plugin that enables the ::pos and ::mypos commands."
-version = "1.0"
-authors = [
-  "lare96"
-]

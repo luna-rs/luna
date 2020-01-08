@@ -19,7 +19,7 @@ class FishAction(private val msg: NpcClickEvent,
         /**
          * Between 10 and 100 fishing actions for the 'random stop' effect.
          */
-        val RANDOM_FAIL_RATE = 10..100
+        val RANDOM_FAIL_RATE = 10..50
 
         /**
          * Ensures that fishing does not happen too fast. The minimum tick factor one can achieve with any tool.

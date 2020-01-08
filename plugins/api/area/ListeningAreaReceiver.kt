@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Player
 /**
  * An [AreaReceiver] implementation for standalone areas.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 class ListeningAreaReceiver : AreaReceiver() {
 

@@ -3,26 +3,9 @@ package world.player.command.punishment
 import api.predef.*
 import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.CommandEvent
-import io.luna.game.model.mob.Player
-import java.io.File
+import world.player.command.cmd
+import world.player.command.getPlayer
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-/**
- * The date formatter.
- */
-val df = DateTimeFormatter.ofPattern("MMMM d, uuuu")!!
-
-/**
- * The blacklist file.
- */
-val blacklistFile = File("./data/punishment/blacklist.txt")
-
-/**
- * Performs a lookup for the person we're punishing.
- */
-fun getPlayer(msg: CommandEvent, action: (Player) -> Unit) =
-    world.getPlayer(msg.args[0]).ifPresent(action)
 
 /**
  * Construct a string with punishment lift date ~ [yyyy-mm-dd].
@@ -88,15 +71,5 @@ cmd("mute", RIGHTS_MOD) {
         val duration = punishDuration(this)
         PunishmentHandler.mute(it, duration)
         plr.sendMessage("You have muted ${it.username} until ${PunishmentHandler.FORMATTER.format(duration)}.")
-    }
-}
-
-/**
- * Perform a forced disconnect on a player.
- */
-cmd("kick", RIGHTS_MOD) {
-    getPlayer(this) {
-        it.logout()
-        plr.sendMessage("You have kicked ${it.username}.")
     }
 }

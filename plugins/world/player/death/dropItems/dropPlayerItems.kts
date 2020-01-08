@@ -13,12 +13,12 @@ import java.util.*
 /**
  * The comparator that will be used to compare prices.
  */
-val PRICE_COMPARATOR = Comparator.comparingInt<Item> { it.itemDef.value }.reversed()
+val priceComparator: Comparator<Item> = Comparator.comparingInt<Item> { it.itemDef.value }.reversed()
 
 /**
  * Items will be lost if the player is below this rank.
  */
-val LOSE_ITEMS_BELOW = RIGHTS_ADMIN
+val loseItemsBelow = RIGHTS_ADMIN
 
 /**
  * Drop player items. Keep top 3, influenced by skulled status and prayer.
@@ -36,7 +36,7 @@ fun dropItems(plr: Player, source: Mob?) {
     removeItems(plr.equipment, deathItems)
 
     if (deathItems.size > 0) {
-        deathItems.sortWith(PRICE_COMPARATOR)
+        deathItems.sortWith(priceComparator)
         while (keepAmount > 0) {
             val keepItem = deathItems.poll()
             if (keepItem == null || !plr.inventory.hasSpaceFor(keepItem)) {
@@ -71,7 +71,7 @@ fun removeItems(items: ItemContainer, deathItems: LinkedList<Item>) {
  * Listen for death.
  */
 on(PlayerDeathEvent::class) {
-    if (plr.rights < LOSE_ITEMS_BELOW) {
+    if (plr.rights < loseItemsBelow) {
         dropItems(plr, source)
     }
 }

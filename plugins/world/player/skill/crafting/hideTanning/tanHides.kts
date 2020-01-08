@@ -72,12 +72,8 @@ fun open(plr: Player) = plr.interfaces.open(TanInterface())
 // Prepare tanning buttons and spawn tanner NPC.
 on(ServerLaunchEvent::class) {
 
-    // Spawn tanner at home.
-    world.addNpc(804,
-                 3093,
-                 3250)
+    world.addNpc(804, 3093, 3250)
 
-    // Register buttons 
     var button = 14817
     for (it in TanInterface.HIDES) {
         val make1 = button++
@@ -108,7 +104,5 @@ npc1(804) {
         .open()
 }
 
-/**
- * "Trade" option for tanner NPC.
- */
+// "Trade" option for tanner NPC.
 npc2(804) { open(plr) }
