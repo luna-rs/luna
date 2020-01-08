@@ -547,7 +547,7 @@
   {
     "opcode": 131,
     "size": 4,
-    "payload": "CastOnPlayerMessageReader"
+    "payload": "CastOnNpcMessageReader"
   },
   {
     "opcode": 132,
@@ -1034,7 +1034,8 @@
   },
   {
     "opcode": 249,
-    "size": 4
+    "size": 4,
+    "payload": "CastOnPlayerMessageReader"
   },
   {
     "opcode": 250,
