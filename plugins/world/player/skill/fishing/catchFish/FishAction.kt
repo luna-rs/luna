@@ -44,7 +44,7 @@ class FishAction(private val msg: NpcClickEvent,
                 mob.sendMessage("You need a Fishing level of ${tool.level} to fish here.")
                 false
             }
-            tool.bait != null && mob.inventory.contains(tool.bait) -> {
+            tool.bait != null && !mob.inventory.contains(tool.bait) -> {
                 // Check if we have required bait.
                 mob.sendMessage("You do not have the bait required to fish here.")
                 false
