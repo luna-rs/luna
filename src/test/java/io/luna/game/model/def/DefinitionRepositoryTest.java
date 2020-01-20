@@ -15,7 +15,9 @@ final class DefinitionRepositoryTest {
 
     @Test
     void testLock() {
+        // here we mock the abstract class to test functionality that exists within all implementations
         var repository = mock(DefinitionRepository.class, Mockito.CALLS_REAL_METHODS);
+
         repository.lock();
 
         var definition = new MockDefinition(1);
