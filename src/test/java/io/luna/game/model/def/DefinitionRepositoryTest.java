@@ -1,7 +1,5 @@
 package io.luna.game.model.def;
 
-import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
-import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
