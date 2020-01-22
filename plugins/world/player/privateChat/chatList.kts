@@ -1,10 +1,9 @@
 package world.player.privateChat
 
-import api.predef.*
-import io.luna.game.event.impl.LoginEvent
-import io.luna.game.event.impl.LogoutEvent
-import io.luna.game.event.impl.PrivateChatListChangeEvent
-import io.luna.game.event.impl.PrivateChatListChangeEvent.ChangeType.*
+
+import api.predef.on
+import api.predef.world
+import io.luna.game.event.impl.*
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.FriendsListStatusMessageWriter
 import io.luna.net.msg.out.UpdateFriendsListMessageWriter
@@ -14,8 +13,8 @@ import io.luna.net.msg.out.UpdateFriendsListMessageWriter
  */
 fun update(plr: Player) {
     plr.friends
-        .map { UpdateFriendsListMessageWriter(it, world.getPlayer(it).isPresent) }
-        .forEach { plr.queue(it) }
+            .map { UpdateFriendsListMessageWriter(it, world.getPlayer(it).isPresent) }
+            .forEach { plr.queue(it) }
 }
 
 /**
@@ -24,8 +23,8 @@ fun update(plr: Player) {
 fun updateOtherLists(plr: Player, online: Boolean) {
     val name = plr.usernameHash
     world.players.stream()
-        .filter { it.friends.contains(name) }
-        .forEach { it.queue(UpdateFriendsListMessageWriter(name, online)) }
+            .filter { it.friends.contains(name) }
+            .forEach { it.queue(UpdateFriendsListMessageWriter(name, online)) }
 }
 
 /**
@@ -70,16 +69,20 @@ fun removeIgnore(plr: Player, name: Long) {
     }
 }
 
-/**
- * Record friend and ignore list changes.
- */
-on(PrivateChatListChangeEvent::class) {
-    when (type!!) {
-        ADD_FRIEND -> addFriend(plr, name)
-        ADD_IGNORE -> addIgnore(plr, name)
-        REMOVE_FRIEND -> removeFriend(plr, name)
-        REMOVE_IGNORE -> removeIgnore(plr, name)
-    }
+on(CreateFriendedPlayerEvent::class) {
+    addFriend(plr, friendedName)
+}
+
+on(DeleteFriendedPlayerEvent::class) {
+    removeFriend(plr, friendedName)
+}
+
+on(CreateIgnoredPlayerEvent::class) {
+    addIgnore(plr, ignoredName)
+}
+
+on(DeleteIgnoredPlayerEvent::class) {
+    removeIgnore(plr, ignoredName)
 }
 
 /**
