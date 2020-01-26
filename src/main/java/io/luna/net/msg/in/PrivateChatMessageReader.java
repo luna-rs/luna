@@ -56,8 +56,8 @@ public final class PrivateChatMessageReader extends GameMessageReader {
      * Handles event posting for private chat.
      *
      * @param player The player.
-     * @param name   The receiver's name.
-     * @param msg    The payload.
+     * @param name The receiver's name.
+     * @param msg The payload.
      * @return The event.
      */
     private Event privateChat(Player player, long name, ByteMessage msg) {
