@@ -34,8 +34,8 @@ public final class PrivateChatListChangeEvent extends PlayerEvent {
      * Creates a new {@link PrivateChatListChangeEvent}.
      *
      * @param player The player.
-     * @param name   The changed friend/ignore.
-     * @param type   The type of change.
+     * @param name The changed friend/ignore.
+     * @param type The type of change.
      */
     public PrivateChatListChangeEvent(Player player, long name, ChangeType type) {
         super(player);
