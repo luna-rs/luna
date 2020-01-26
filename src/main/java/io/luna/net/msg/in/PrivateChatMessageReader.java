@@ -1,7 +1,11 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.*;
+import io.luna.game.event.impl.CreateFriendedPlayerEvent;
+import io.luna.game.event.impl.CreateIgnoredPlayerEvent;
+import io.luna.game.event.impl.DeleteFriendedPlayerEvent;
+import io.luna.game.event.impl.DeleteIgnoredPlayerEvent;
+import io.luna.game.event.impl.PrivateChatEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessage;
