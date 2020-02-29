@@ -7,7 +7,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.net.security.RsaKeyPair;
+import io.luna.security.RsaKeyPair;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
