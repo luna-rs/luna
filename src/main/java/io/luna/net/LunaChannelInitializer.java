@@ -5,6 +5,11 @@ import io.luna.net.client.Client;
 import io.luna.net.client.IdleClient;
 import io.luna.net.msg.login.LoginDecoder;
 import io.luna.net.msg.login.LoginEncoder;
+import io.luna.net.codec.login.LoginDecoder;
+import io.luna.net.codec.login.LoginEncoder;
+import io.luna.net.security.RsaKeyPair;
+import io.luna.net.security.RsaKeyPairReader;
+import io.luna.net.security.TomlRsaPrivateKeyPairReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -49,7 +54,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     /**
      * Creates a new {@link LunaChannelInitializer}.
      *
-     * @param context The context instance.
+     * @param context       The context instance.
      * @param channelFilter A channel handler that will filter channels.
      * @param msgRepository The message repository.
      */
@@ -67,7 +72,11 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
 
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
         ch.pipeline().addLast("channel-filter", channelFilter);
-        ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository));
+
+        RsaKeyPairReader reader = new TomlRsaPrivateKeyPairReader();
+        RsaKeyPair privateKeyPair = reader.read();
+
+        ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository, privateKeyPair));
         ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("upstream-handler", upstreamHandler);
     }
