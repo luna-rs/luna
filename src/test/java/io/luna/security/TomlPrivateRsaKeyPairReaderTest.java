@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TomlRsaPrivateKeyPairReaderTest {
+class TomlPrivateRsaKeyPairReaderTest {
 
     @Test
     void read() {
-        RsaKeyPairReader reader = new TomlRsaPrivateKeyPairReader();
+        RsaKeyPairReader reader = new TomlPrivateRsaKeyPairReader();
         RsaKeyPair keyPair = reader.read();
 
         assertNotNull(keyPair.modulus);

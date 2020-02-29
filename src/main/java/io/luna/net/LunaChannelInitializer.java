@@ -7,7 +7,7 @@ import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;
 import io.luna.security.RsaKeyPair;
 import io.luna.security.RsaKeyPairReader;
-import io.luna.security.TomlRsaPrivateKeyPairReader;
+import io.luna.security.TomlPrivateRsaKeyPairReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -67,7 +67,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
         this.channelFilter = channelFilter;
         this.msgRepository = msgRepository;
 
-        RsaKeyPairReader reader = new TomlRsaPrivateKeyPairReader();
+        RsaKeyPairReader reader = new TomlPrivateRsaKeyPairReader();
         this.privateKeyPair = reader.read();
     }
 
