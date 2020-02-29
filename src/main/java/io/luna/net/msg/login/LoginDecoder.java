@@ -7,7 +7,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.GsonUtils;
+import io.luna.net.security.RsaKeyPair;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -31,58 +31,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
 
-    /**
-     * A data class representing an RSA key-pair.
-     */
-    private static final class RsaPair {
 
-        /**
-         * The modulus.
-         */
-        private final String modulus;
-
-        /**
-         * The exponent.
-         */
-        private final String exponent;
-
-        /**
-         * Creates a new {@link RsaPair}.
-         *
-         * @param modulus The modulus.
-         * @param exponent The exponent.
-         */
-        private RsaPair(String modulus, String exponent) {
-            this.modulus = modulus;
-            this.exponent = exponent;
-        }
-
-        /**
-         * @return The modulus as a {@link BigInteger}.
-         */
-        public BigInteger computeModulus() {
-            return new BigInteger(modulus);
-        }
-
-        /**
-         * @return The exponent as a {@link BigInteger}.
-         */
-        public BigInteger getExponent() {
-            return new BigInteger(exponent);
-        }
-    }
-
-    static {
-        try {
-            // Initializes RSA modulus and exponent values.
-            Path rsaPath = Paths.get("data", "net", "rsa", "rsapriv.json");
-            RsaPair rsaPair = GsonUtils.readAsType(rsaPath, RsaPair.class);
-            RSA_MOD = rsaPair.computeModulus();
-            RSA_EXP = rsaPair.getExponent();
-        } catch (Exception e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
 
     /**
      * An enumerated type representing login decoder states.
@@ -92,21 +41,6 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
         LOGIN_TYPE,
         RSA_BLOCK
     }
-
-    /**
-     * The asynchronous logger.
-     */
-    private static final Logger logger = LogManager.getLogger();
-
-    /**
-     * The private RSA modulus value.
-     */
-    private static final BigInteger RSA_MOD;
-
-    /**
-     * The private RSA exponent value.
-     */
-    private static final BigInteger RSA_EXP;
 
     /**
      * A cryptographically secure RNG.
@@ -128,16 +62,19 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      */
     private final GameMessageRepository repository;
 
+    private final RsaKeyPair privateRsaKeyPair;
+
     /**
      * Creates a new {@link LoginDecoder}.
      *
      * @param context The context instance.
      * @param repository The message repository.
      */
-    public LoginDecoder(LunaContext context, GameMessageRepository repository) {
+    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKeyPair privateKeyPair) {
         super(DecodeState.HANDSHAKE);
         this.context = context;
         this.repository = repository;
+        this.privateRsaKeyPair = privateKeyPair;
     }
 
     @Override
@@ -250,7 +187,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             ByteBuf rsaBuffer = ByteMessage.pooledBuffer();
             try {
-                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXP, RSA_MOD).toByteArray());
+                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(privateRsaKeyPair.exponent, privateRsaKeyPair.modulus).toByteArray());
 
                 int rsaOpcode = rsaBuffer.readUnsignedByte();
                 checkState(rsaOpcode == 10, "rsaOpcode != 10");
