@@ -1,4 +1,4 @@
-package io.luna.net.security;
+package io.luna.security;
 
 import com.moandjiezana.toml.Toml;
 
