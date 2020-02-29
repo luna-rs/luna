@@ -67,12 +67,13 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      *
      * @param context The context instance.
      * @param repository The message repository.
+     * @param privateRsaKey The private RSA key.
      */
-    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateKey) {
+    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateKeyPair) {
         super(DecodeState.HANDSHAKE);
         this.context = context;
         this.repository = repository;
-        this.privateRsaKey = privateKey;
+        this.privateRsaKey = privateRsaKey;
     }
 
     @Override

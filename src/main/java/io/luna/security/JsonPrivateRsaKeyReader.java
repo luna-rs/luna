@@ -8,9 +8,9 @@ import java.math.BigInteger;
 /**
  * Responsible for reading a RSA private key from a TOML file.
  */
-public class TomlPrivateRsaKeyReader implements RsaKeyReader {
+public class JsonPrivateRsaKeyReader implements RsaKeyReader {
 
-    private final String filePath = "./data/rsa/rsapriv.toml";
+    private final String filePath = "./data/rsa/rsapriv.json";
 
     @Override
     public RsaKey read() {

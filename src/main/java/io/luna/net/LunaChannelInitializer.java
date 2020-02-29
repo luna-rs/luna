@@ -7,7 +7,6 @@ import io.luna.net.msg.login.LoginDecoder;
 import io.luna.net.msg.login.LoginEncoder;
 import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;
-import io.luna.security.RsaKey;
 import io.luna.security.RsaKeyReader;
 import io.luna.security.TomlPrivateRsaKeyReader;
 import io.luna.net.msg.GameMessageRepository;
