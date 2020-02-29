@@ -50,9 +50,9 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     private final GameMessageRepository msgRepository;
 
     /**
-     * The private RSA key pair, only to be seen by the server.
+     * The private RSA key, only to be seen by the server.
      */
-    private final RsaKey privateKeyPair;
+    private final RsaKey privateKey;
 
     /**
      * Creates a new {@link LunaChannelInitializer}.
@@ -68,7 +68,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
         this.msgRepository = msgRepository;
 
         RsaKeyReader reader = new TomlPrivateRsaKeyReader();
-        this.privateKeyPair = reader.read();
+        this.privateKey = reader.read();
     }
 
     @Override
@@ -78,7 +78,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
 
         ch.pipeline().addLast("read-timeout", new ReadTimeoutHandler(5));
         ch.pipeline().addLast("channel-filter", channelFilter);
-        ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository, privateKeyPair));
+        ch.pipeline().addLast("login-decoder", new LoginDecoder(context, msgRepository, privateKey));
         ch.pipeline().addLast("login-encoder", loginEncoder);
         ch.pipeline().addLast("upstream-handler", upstreamHandler);
     }
