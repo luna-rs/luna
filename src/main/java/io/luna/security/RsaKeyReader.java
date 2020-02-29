@@ -4,7 +4,7 @@ package io.luna.security;
 public interface RsaKeyReader {
 
     /**
-     * Reads an RSA key pair from memory.
+     * Reads an RSA key from memory.
      */
     RsaKey read();
 }

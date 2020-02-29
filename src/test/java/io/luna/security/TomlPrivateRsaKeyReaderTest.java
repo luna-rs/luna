@@ -9,9 +9,9 @@ class TomlPrivateRsaKeyReaderTest {
     @Test
     void read() {
         RsaKeyReader reader = new TomlPrivateRsaKeyReader();
-        RsaKey keyPair = reader.read();
+        RsaKey key = reader.read();
 
-        assertNotNull(keyPair.modulus);
-        assertNotNull(keyPair.exponent);
+        assertNotNull(key.modulus);
+        assertNotNull(key.exponent);
     }
 }
