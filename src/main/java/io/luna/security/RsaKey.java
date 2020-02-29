@@ -3,14 +3,14 @@ package io.luna.security;
 import java.math.BigInteger;
 
 /**
- * An RSA key pair consisting of a modulus and exponent.
+ * An RSA key consisting of a modulus and exponent.
  * <p>
  * For more information on the RSA encryption algorithm,
  * read <a href="https://www.comparitech.com/blog/information-security/rsa-encryption/"> this article.</a>
  * <br>
  * <b>NOTE: </b> Luna and/or it's contributors have no affiliation with the website linked above.
  */
-public class RsaKeyPair {
+public final class RsaKey {
     /**
      * The private RSA modulus value.
      */
@@ -21,7 +21,7 @@ public class RsaKeyPair {
      */
     public final BigInteger exponent;
 
-    RsaKeyPair(BigInteger modulus, BigInteger exponent) {
+    RsaKey(BigInteger modulus, BigInteger exponent) {
         this.modulus = modulus;
         this.exponent = exponent;
     }
