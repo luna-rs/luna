@@ -6,7 +6,7 @@ import java.io.File;
 import java.math.BigInteger;
 
 /**
- * Responsible for reading a RSA private key pair from a TOML file.
+ * Responsible for reading a RSA private key from a TOML file.
  */
 public class TomlPrivateRsaKeyReader implements RsaKeyReader {
 
@@ -18,7 +18,7 @@ public class TomlPrivateRsaKeyReader implements RsaKeyReader {
         File file = new File(filePath);
 
         if (!file.exists()) {
-            throw new IllegalStateException("Could not find RSA file at location: " + filePath);
+            throw new IllegalStateException("Could not find RSA key file at location: " + filePath);
         }
 
         Toml reader = new Toml().read(file).getTable("key");
