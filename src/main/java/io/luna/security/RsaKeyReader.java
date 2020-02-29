@@ -1,10 +1,10 @@
 package io.luna.security;
 
 
-public interface RsaKeyPairReader {
+public interface RsaKeyReader {
 
     /**
      * Reads an RSA key pair from memory.
      */
-    RsaKeyPair read();
+    RsaKey read();
 }

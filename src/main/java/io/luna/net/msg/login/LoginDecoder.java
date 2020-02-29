@@ -7,7 +7,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.security.RsaKeyPair;
+import io.luna.security.RsaKey;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -30,8 +30,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
-
-
 
     /**
      * An enumerated type representing login decoder states.
@@ -62,7 +60,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      */
     private final GameMessageRepository repository;
 
-    private final RsaKeyPair privateRsaKeyPair;
+    private final RsaKey privateRsaKey;
 
     /**
      * Creates a new {@link LoginDecoder}.
@@ -70,11 +68,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      * @param context The context instance.
      * @param repository The message repository.
      */
-    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKeyPair privateKeyPair) {
+    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateKey) {
         super(DecodeState.HANDSHAKE);
         this.context = context;
         this.repository = repository;
-        this.privateRsaKeyPair = privateKeyPair;
+        this.privateRsaKey = privateKey;
     }
 
     @Override
@@ -187,7 +185,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             ByteBuf rsaBuffer = ByteMessage.pooledBuffer();
             try {
-                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(privateRsaKeyPair.exponent, privateRsaKeyPair.modulus).toByteArray());
+                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(privateRsaKey.exponent, privateRsaKey.modulus).toByteArray());
 
                 int rsaOpcode = rsaBuffer.readUnsignedByte();
                 checkState(rsaOpcode == 10, "rsaOpcode != 10");

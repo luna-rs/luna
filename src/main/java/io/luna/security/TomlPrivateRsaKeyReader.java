@@ -8,12 +8,12 @@ import java.math.BigInteger;
 /**
  * Responsible for reading a RSA private key pair from a TOML file.
  */
-public class TomlPrivateRsaKeyPairReader implements RsaKeyPairReader {
+public class TomlPrivateRsaKeyReader implements RsaKeyReader {
 
     private final String filePath = "./data/rsa/rsapriv.toml";
 
     @Override
-    public RsaKeyPair read() {
+    public RsaKey read() {
 
         File file = new File(filePath);
 
@@ -25,6 +25,6 @@ public class TomlPrivateRsaKeyPairReader implements RsaKeyPairReader {
 
         BigInteger mod = new BigInteger(reader.getString("modulus"));
         BigInteger exp = new BigInteger(reader.getString("exponent"));
-        return new RsaKeyPair(mod, exp);
+        return new RsaKey(mod, exp);
     }
 }
