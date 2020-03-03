@@ -1,7 +1,9 @@
 package io.luna;
 
 import com.moandjiezana.toml.Toml;
-import io.luna.util.LoggingSettings;
+import io.luna.logging.LoggingSettings;
+import io.luna.logging.LoggingSettingsFileReader;
+import io.luna.logging.TomlLoggingSettingsFileReader;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
@@ -50,7 +52,7 @@ public final class Luna {
 
             InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
             loggingSettings = loadLoggingSettings();
-            System.setProperty("log4j2.configurationFactory", "io.luna.util.LoggingConfigurationFactory");
+            System.setProperty("log4j2.configurationFactory", "io.luna.logging.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
             System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
@@ -64,7 +66,8 @@ public final class Luna {
     /**
      * Invoked when this program is started, initializes Luna.
      *
-     * @param args The program arguments, always ignored.
+     * @param args
+     *         The program arguments, always ignored.
      */
     public static void main(String[] args) {
         try {
@@ -92,10 +95,9 @@ public final class Luna {
      *
      * @return The logging settings object.
      */
-    private static LoggingSettings loadLoggingSettings() throws IOException {
-        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
-            return TOML.read(bufferedReader).to(LoggingSettings.class);
-        }
+    private static LoggingSettings loadLoggingSettings() {
+        LoggingSettingsFileReader reader = new TomlLoggingSettingsFileReader(TOML);
+        return reader.read();
     }
 
     /**

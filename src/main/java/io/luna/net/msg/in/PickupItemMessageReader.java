@@ -6,10 +6,10 @@ import io.luna.game.event.impl.PickupItemEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
+import io.luna.logging.LoggerFileOutput;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -26,12 +26,12 @@ public final class PickupItemMessageReader extends GameMessageReader {
     /**
      * An asynchronous logger that will handle item pickup logs.
      */
-    private static final Logger logger = FileOutputType.ITEM_PICKUP.getLogger();
+    private static final Logger logger = LoggerFileOutput.ITEM_PICKUP.getLogger();
 
     /**
      * The {@code ITEM_PICKUP} logging level.
      */
-    private static final Level ITEM_PICKUP = FileOutputType.ITEM_PICKUP.getLevel();
+    private static final Level ITEM_PICKUP = LoggerFileOutput.ITEM_PICKUP.getLevel();
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {

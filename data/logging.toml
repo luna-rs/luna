@@ -1,4 +1,4 @@
-# An easier way to configure log4j2 settings. For more info on these settings see 'io.luna.util.LoggingSettings' or the wiki.
+# An easier way to configure log4j2 settings. For more info on these settings see 'io.luna.logging.LoggingSettings' or the wiki.
 
 rootLevel = "DEBUG"
 formatType = "VERBOSE"

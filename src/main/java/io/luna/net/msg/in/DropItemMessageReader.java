@@ -11,7 +11,7 @@ import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
+import io.luna.logging.LoggerFileOutput;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -31,12 +31,12 @@ public final class DropItemMessageReader extends GameMessageReader {
     /**
      * An asynchronous logger that will handle item drop logs.
      */
-    private static final Logger logger = FileOutputType.ITEM_DROP.getLogger();
+    private static final Logger logger = LoggerFileOutput.ITEM_DROP.getLogger();
 
     /**
      * The logging level.
      */
-    private static final Level ITEM_DROP = FileOutputType.ITEM_DROP.getLevel();
+    private static final Level ITEM_DROP = LoggerFileOutput.ITEM_DROP.getLevel();
 
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
