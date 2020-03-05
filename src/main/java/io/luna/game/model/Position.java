@@ -223,15 +223,6 @@ public final class Position {
     }
 
     /**
-     * Returns a new {@link RegionPosition} built from this position.
-     *
-     * @return The region position.
-     */
-    public RegionPosition getRegionPosition() {
-        return new RegionPosition(this);
-    }
-
-    /**
      * @return The x coordinate.
      */
     public int getX() {

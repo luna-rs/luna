@@ -26,29 +26,13 @@ fun localChunkPos(plr: Player) {
 }
 
 /**
- * Sends a message containing the region position.
- */
-fun regionPos(plr: Player) = plr.sendMessage(plr.position.regionPosition.toString())
-
-/**
- * Sends a message containing the local region position.
- */
-fun localRegionPos(plr: Player) {
-    val pos = plr.position
-    val region = plr.position.regionPosition
-    plr.sendMessage("LocalRegionPosition{x=${region.getLocalX(pos)}, y=${region.getLocalY(pos)}}")
-}
-
-/**
  * A listener for the "pos" command.
  */
 cmd("pos", RIGHTS_DEV) {
     plr.newDialogue().options(
             "Position", { currentPos(it) },
             "ChunkPosition", { chunkPos(it) },
-            "ChunkPosition (local)", { localChunkPos(it) },
-            "RegionPosition", { regionPos(it) },
-            "RegionPosition (local)", { localRegionPos(it) }).open()
+            "ChunkPosition (local)", { localChunkPos(it) }).open()
 }
 
 /**
