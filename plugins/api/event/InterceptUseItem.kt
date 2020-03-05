@@ -6,7 +6,7 @@ import io.luna.game.event.impl.ItemOnObjectEvent
 /**
  * A model that intercepts [ItemOnItemEvent]s and [ItemOnObjectEvent]s.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 class InterceptUseItem(private val id: Int) {
 

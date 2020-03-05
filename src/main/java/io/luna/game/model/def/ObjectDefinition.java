@@ -106,6 +106,9 @@ public final class ObjectDefinition implements Definition {
      * @return {@code true} if the actions are equal.
      */
     public boolean hasAction(int index, String action) {
+        if(index < 0 || index >= actions.size()) {
+            return false;
+        }
         return action.equals(actions.get(index));
     }
 

@@ -1,7 +1,7 @@
 package io.luna.game.event;
 
 import com.google.common.base.MoreObjects;
-import io.luna.game.plugin.Script;
+import io.luna.game.plugin.RuntimeScript;
 import io.luna.game.plugin.ScriptExecutionException;
 import io.luna.util.ReflectionUtils;
 
@@ -20,7 +20,7 @@ public final class EventListener<E extends Event> {
     /**
      * The encompassing script.
      */
-    private final Script script;
+    private final RuntimeScript script;
 
     /**
      * The type of event being intercepted.
@@ -70,15 +70,15 @@ public final class EventListener<E extends Event> {
      *
      * @param newScript The script to set to.
      */
-    public void setScript(Script newScript) {
-        checkState(script == null, "Script already set.");
+    public void setScript(RuntimeScript newScript) {
+        checkState(script == null, "RuntimeScript already set.");
         ReflectionUtils.setField(this, "script", newScript);
     }
 
     /**
      * @return The encompassing script. Possibly {@code null}.
      */
-    public Script getScript() {
+    public RuntimeScript getScript() {
         return script;
     }
 

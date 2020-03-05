@@ -183,6 +183,13 @@ public final class World {
     }
 
     /**
+     * Starts any miscellaneous world services. This function is applied on the game thread.
+     */
+    public void start() {
+        items.startExpirationTask();
+    }
+
+    /**
      * Adds a player to the backing concurrent map.
      */
     public void addPlayer(Player player) {

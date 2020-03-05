@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 
 /**
  * An object-click based event. Not intended for interception.
@@ -20,8 +20,8 @@ public class ObjectClickEvent extends PlayerEvent {
         /**
          * Creates a new {@link ObjectFirstClickEvent}.
          */
-        public ObjectFirstClickEvent(Player player, int id, int x, int y) {
-            super(player, id, x, y);
+        public ObjectFirstClickEvent(Player player, GameObject gameObject) {
+            super(player, gameObject);
         }
     }
 
@@ -35,8 +35,8 @@ public class ObjectClickEvent extends PlayerEvent {
         /**
          * Creates a new {@link ObjectSecondClickEvent}.
          */
-        public ObjectSecondClickEvent(Player player, int id, int x, int y) {
-            super(player, id, x, y);
+        public ObjectSecondClickEvent(Player player, GameObject gameObject) {
+            super(player, gameObject);
         }
     }
 
@@ -50,66 +50,52 @@ public class ObjectClickEvent extends PlayerEvent {
         /**
          * Creates a new {@link ObjectThirdClickEvent}.
          */
-        public ObjectThirdClickEvent(Player player, int id, int x, int y) {
-            super(player, id, x, y);
+        public ObjectThirdClickEvent(Player player, GameObject gameObject) {
+            super(player, gameObject);
         }
     }
 
     /**
-     * The object identifier.
+     * The clicked object.
      */
-    private final int id;
-
-    /**
-     * The object's x coordinate.
-     */
-    private final int x;
-
-    /**
-     * The object's y coordinate.
-     */
-    private final int y;
+    private final GameObject gameObject;
 
     /**
      * Creates a new {@link ObjectClickEvent}.
      *
      * @param player The player.
-     * @param id The object identifier.
-     * @param x The object's x coordinate.
-     * @param y The object's y coordinate.
+     * @param gameObject The clicked object.
      */
-    private ObjectClickEvent(Player player, int id, int x, int y) {
+    private ObjectClickEvent(Player player, GameObject gameObject) {
         super(player);
-        this.id = id;
-        this.x = x;
-        this.y = y;
-    }
-
-    /**
-     * Retrieves the object's definition.
-     */
-    public ObjectDefinition def() {
-        return ObjectDefinition.ALL.retrieve(id);
+        this.gameObject = gameObject;
     }
 
     /**
      * @return The object identifier.
      */
     public final int getId() {
-        return id;
+        return gameObject.getId();
     }
 
     /**
      * @return The object's x coordinate.
      */
     public final int getX() {
-        return x;
+        return gameObject.getPosition().getX();
     }
 
     /**
      * @return The object's y coordinate.
      */
     public final int getY() {
-        return y;
+        return gameObject.getPosition().getY();
+    }
+
+    /**
+     * @return The clicked object.
+     */
+    public GameObject getGameObject() {
+        return gameObject;
     }
 }

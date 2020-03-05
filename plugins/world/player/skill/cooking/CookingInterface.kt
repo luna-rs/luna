@@ -13,7 +13,7 @@ class CookingInterface(val food: Food, val usingFire: Boolean = false) : Dialogu
     override fun init(plr: Player): Boolean {
         val cooked = food.cooked
         plr.queue(WidgetItemModelMessageWriter(13716, 190, cooked))
-        plr.sendText(itemDef(cooked).name, 13717)
+        plr.sendText(itemName(cooked), 13717)
         return true
     }
 }

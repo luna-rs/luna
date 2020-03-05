@@ -1,7 +1,0 @@
-[metadata]
-name = "Pickup ground items"
-description = "A plugin that handles picking up items from the ground."
-version = "1.0"
-authors = [
-  "lare96"
-]

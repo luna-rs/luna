@@ -26,19 +26,21 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class ObjectClickMessageReader extends GameMessageReader {
 
+    // TODO Validation for everything here.
+
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         switch (opcode) {
-        case 132:
-            firstIndex(player, msg.getPayload());
-            break;
-        case 252:
-            secondIndex(player, msg.getPayload());
-            break;
-        case 70:
-            thirdIndex(player, msg.getPayload());
-            break;
+            case 132:
+                firstIndex(player, msg.getPayload());
+                break;
+            case 252:
+                secondIndex(player, msg.getPayload());
+                break;
+            case 70:
+                thirdIndex(player, msg.getPayload());
+                break;
         }
         return null;
     }
@@ -55,10 +57,7 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         checkState(evt.getId() > 0, "id out of range");
 
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        Position position = new Position(evt.getX(), evt.getY(), player.getPosition().getZ());
-        GameObject object = new GameObject(player.getContext(), evt.getId(), position, ObjectType.DEFAULT,
-            ObjectDirection.WEST, null);
-        player.submitAction(new InteractionAction(player, object) {
+        player.submitAction(new InteractionAction(player, evt.getGameObject()) {
             @Override
             public void execute() {
                 player.getPlugins().post(evt);
@@ -73,7 +72,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ValueType.ADD);
-        handleClick(player, new ObjectFirstClickEvent(player, id, x, y));
+        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
+        handleClick(player, new ObjectFirstClickEvent(player, object));
     }
 
     /**
@@ -83,7 +84,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
         int y = msg.getShort(true, ByteOrder.LITTLE);
         int x = msg.getShort(false, ValueType.ADD);
-        handleClick(player, new ObjectSecondClickEvent(player, id, x, y));
+        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
+        handleClick(player, new ObjectSecondClickEvent(player, object));
     }
 
     /**
@@ -93,6 +96,8 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         int x = msg.getShort(true, ByteOrder.LITTLE);
         int y = msg.getShort(false);
         int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        handleClick(player, new ObjectThirdClickEvent(player, id, x, y));
+        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
+        handleClick(player, new ObjectThirdClickEvent(player, object));
     }
 }

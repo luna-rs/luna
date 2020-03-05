@@ -1,7 +1,0 @@
-[metadata]
-name = "Ground item expiration"
-description = "A plugin that enables 'expiring' for spawned ground items."
-version = "1.0"
-authors = [
-  "lare96"
-]

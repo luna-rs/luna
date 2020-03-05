@@ -1,7 +1,0 @@
-[metadata]
-name = "Click option"
-description = "A plugin that enables the use of the 'Select an option' interfaces."
-version = "1.0"
-authors = [
-  "lare96"
-]

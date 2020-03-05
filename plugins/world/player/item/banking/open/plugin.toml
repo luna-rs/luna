@@ -1,7 +1,0 @@
-[metadata]
-name = "Open bank"
-description = "A plugin that enables opening the banking and deposit box interfaces."
-version = "1.0"
-authors = [
-  "lare96"
-]

@@ -27,7 +27,6 @@ import kotlin.reflect.KClass
  */
 abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
 
-
     companion object {
 
         /**

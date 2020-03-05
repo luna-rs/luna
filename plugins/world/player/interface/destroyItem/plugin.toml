@@ -1,7 +1,0 @@
-[metadata]
-name = "Destroy item"
-description = "A plugin that enables the use of 'Destroy item' interfaces."
-version = "1.0"
-authors = [
-  "lare96"
-]

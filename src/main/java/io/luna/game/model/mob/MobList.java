@@ -253,14 +253,13 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Retrieves the mob on {@code index}. Identical to {@code get(int)} but throws an exception if no mob is
-     * contained on the index.
+     * Retrieves the mob on {@code index}. Identical to {@code get(int)} but may return {@code Optional.empty}.
      *
      * @param index The index to retrieve.
      * @return The mob.
      */
     public Optional<E> retrieve(int index) {
-        return Optional.of(get(index));
+        return Optional.ofNullable(get(index));
     }
 
     /**

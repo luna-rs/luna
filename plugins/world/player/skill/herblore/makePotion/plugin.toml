@@ -1,7 +1,0 @@
-[metadata]
-name = "Make potion"
-description = "A plugin that enables making potions from unfinished potions."
-version = "1.0"
-authors = [
-  "lare96"
-]

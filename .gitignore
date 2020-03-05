@@ -6,6 +6,7 @@
 /luna.iml
 /plugins/sandbox/
 /bin/
+/out/
 
 ### Gradle ###
 .gradle

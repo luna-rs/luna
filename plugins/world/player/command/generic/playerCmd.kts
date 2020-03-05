@@ -8,6 +8,7 @@ import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.inter.NameInputInterface
+import world.player.command.cmd
 
 /**
  * A command that clears the inventory, bank, or equipment of a player.

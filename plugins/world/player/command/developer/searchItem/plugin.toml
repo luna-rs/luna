@@ -1,7 +1,0 @@
-[metadata]
-name = "Search item command"
-description = "A plugin that enables the ::search_item command, to make item spawning easier."
-version = "1.0"
-authors = [
-  "lare96"
-]

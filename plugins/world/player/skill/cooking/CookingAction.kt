@@ -43,7 +43,6 @@ class CookingAction(plr: Player,
         }
 
     override fun execute() {
-        val cooked = food.cooked
         mob.animation(if (usingFire) FIRE_ANIMATION else RANGE_ANIMATION)
 
         if (experience != null) {

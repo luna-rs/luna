@@ -29,7 +29,6 @@ class OpenReceiver {
     fun addListeners(shop: Shop) {
         val open: PlayerEvent.() -> Unit = { plr.interfaces.open(ShopInterface(shop)) }
         when {
-            // TODO Do reflectively, once Kotlin supports packages in its reflection API.
             button != null -> button(button!!, open)
             npc1 != null -> npc1(npc1!!, open)
             npc2 != null -> npc2(npc2!!, open)

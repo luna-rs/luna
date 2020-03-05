@@ -23,9 +23,9 @@ public final class Skill {
      * An immutable list of the names of all skills.
      */
     public static final ImmutableList<String> NAMES = ImmutableList.of(
-        "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
-        "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing",
-        "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming", "Runecrafting"
+            "Attack", "Defence", "Strength", "Hitpoints", "Ranged", "Prayer", "Magic",
+            "Cooking", "Woodcutting", "Fletching", "Fishing", "Firemaking", "Crafting", "Smithing",
+            "Mining", "Herblore", "Agility", "Thieving", "Slayer", "Farming", "Runecrafting"
     );
 
     /**
@@ -226,6 +226,18 @@ public final class Skill {
     }
 
     /**
+     * Restores depleted or buffed skills.
+     */
+    private void restoreSkills() {
+        if (!set.isRestoring()) {
+            if (level != staticLevel) {
+                var world = set.getMob().getWorld();
+                world.schedule(new SkillRestorationTask(set));
+            }
+        }
+    }
+
+    /**
      * Adds experience to this skill.
      *
      * @param amount The amount of experience to add.
@@ -299,6 +311,7 @@ public final class Skill {
         if (oldLevel == level) {
             return;
         }
+        restoreSkills();
         notifyListeners(experience, getStaticLevel(), oldLevel);
     }
 
@@ -313,7 +326,7 @@ public final class Skill {
         int bound = exceedStaticLevel ? getStaticLevel() + amount : getStaticLevel();
         int newAmount = getLevel() + amount;
 
-        newAmount = newAmount > bound ? bound : newAmount;
+        newAmount = Math.min(newAmount, bound);
         setLevel(newAmount);
     }
 

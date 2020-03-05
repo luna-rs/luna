@@ -53,6 +53,8 @@ public final class GameService extends AbstractScheduledService {
         public void running() {
             // The game thread is now running, synchronize launch event.
             sync(() -> {
+                world.start();
+
                 PluginManager plugins = context.getPlugins();
                 plugins.post(ServerLaunchEvent.INSTANCE);
             });

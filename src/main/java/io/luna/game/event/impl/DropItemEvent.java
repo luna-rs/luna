@@ -3,7 +3,7 @@ package io.luna.game.event.impl;
 import io.luna.game.model.mob.Player;
 
 /**
- * An event sent when a Player drops an item.
+ * An event sent when a Player drops an item from the inventory.
  *
  * @author lare96 <http://github.com/lare96>
  */

@@ -6,14 +6,19 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.World;
+import io.luna.game.task.Task;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * An {@link EntityList} implementation model for {@link GroundItem}s.
@@ -23,9 +28,120 @@ import java.util.stream.Stream;
 public final class GroundItemList extends EntityList<GroundItem> {
 
     /**
+     * A {@link Task} that will handle ground item expiration.
+     */
+    private final class ExpirationTask extends Task {
+
+        /**
+         * The amount of minutes it takes for a tradeable item to become global.
+         */
+        private static final int TRADEABLE_LOCAL_MINUTES = 1;
+
+        /**
+         * The amount of minutes it takes for an untradeable item to expire.
+         */
+        private static final int UNTRADEABLE_LOCAL_MINUTES = 3;
+
+        /**
+         * The amount of minutes it takes for a global item to expire.
+         */
+        private static final int GLOBAL_MINUTES = 3;
+
+        /**
+         * Creates a new {@link ExpirationTask}.
+         */
+        public ExpirationTask() {
+            super(false, 1);
+        }
+
+        /**
+         * A queue of items awaiting registration.
+         */
+        private final Queue<GroundItem> registerQueue = new ArrayDeque<>();
+
+        /**
+         * A queue of items awaiting unregistration.
+         */
+        private final Queue<GroundItem> unregisterQueue = new ArrayDeque<>();
+
+        @Override
+        protected boolean onSchedule() {
+            checkState(!expiring, "The expiration task has already been started.");
+            expiring = true;
+            return true;
+        }
+
+        @Override
+        protected void execute() {
+            processItems();
+            processUnregistrations();
+            processRegistrations();
+        }
+
+        /**
+         * Process expiration timers for all perishable items.
+         */
+        private void processItems() {
+            for (var item : world.getItems()) {
+                if (!item.isExpiring()) {
+                    continue;
+                }
+                boolean isTradeable = item.def().isTradeable();
+                int expireMinutes = item.addExpireTick();
+                if (item.isLocal()) {
+                    if (isTradeable && expireMinutes >= TRADEABLE_LOCAL_MINUTES) {
+                        // Item is tradeable and only visible to one player, make it global.
+                        var globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
+                                item.getPosition(), Optional.empty());
+                        unregisterQueue.add(item);
+                        registerQueue.add(globalItem);
+                    } else if (!isTradeable && expireMinutes >= UNTRADEABLE_LOCAL_MINUTES) {
+                        // Item is untradeable and only visible to one player, unregister it.
+                        unregisterQueue.add(item);
+                    }
+                } else if (item.isGlobal() && expireMinutes >= GLOBAL_MINUTES) {
+                    // Item is visible to everyone, unregister it.
+                    unregisterQueue.add(item);
+                }
+            }
+        }
+
+        /**
+         * Handle any new unregistrations from expiration timer processing.
+         */
+        private void processUnregistrations() {
+            for (; ; ) {
+                var nextItem = unregisterQueue.poll();
+                if (nextItem == null) {
+                    break;
+                }
+                world.getItems().unregister(nextItem);
+            }
+        }
+
+        /**
+         * Handle any new registrations from expiration timer processing.
+         */
+        private void processRegistrations() {
+            for (; ; ) {
+                var nextItem = registerQueue.poll();
+                if (nextItem == null) {
+                    break;
+                }
+                world.getItems().register(nextItem);
+            }
+        }
+    }
+
+    /**
      * The ground items.
      */
     private final List<GroundItem> items = new ArrayList<>(128);
+
+    /**
+     * If the expiration task was started.
+     */
+    private boolean expiring;
 
     /**
      * Creates a new {@link GroundItemList}.
@@ -70,6 +186,14 @@ public final class GroundItemList extends EntityList<GroundItem> {
     @Override
     public int size() {
         return items.size();
+    }
+
+    /**
+     * Starts the ground item expiration task. This will make it so that items are automatically unregistered after
+     * not being picked up for a certain amount of time.
+     */
+    public void startExpirationTask() {
+        world.schedule(new ExpirationTask());
     }
 
     /**

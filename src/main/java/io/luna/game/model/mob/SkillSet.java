@@ -106,6 +106,11 @@ public final class SkillSet implements Iterable<Skill> {
     private boolean firingEvents = true;
 
     /**
+     * If skills are being restored.
+     */
+    private boolean restoring;
+
+    /**
      * Creates a new {@link SkillSet}.
      *
      * @param mob The mob.
@@ -267,5 +272,22 @@ public final class SkillSet implements Iterable<Skill> {
      */
     public void setFiringEvents(boolean firingEvents) {
         this.firingEvents = firingEvents;
+    }
+
+    /**
+     * @return {@code true} if skills are being restored. This essentially means that the player's dynamic levels
+     * aren't equal to their static levels (98/99 Attack lvl, etc).
+     */
+    public boolean isRestoring() {
+        return restoring;
+    }
+
+    /**
+     * Sets if skills are being restored.
+     *
+     * @param restoring The new value.
+     */
+    public void setRestoring(boolean restoring) {
+        this.restoring = restoring;
     }
 }

@@ -7,7 +7,7 @@ import kotlin.reflect.KProperty
 /**
  * A delegate that forwards to the player's attribute map.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 class AttributeDelegate<T : Any>(val attr: Attribute<T>) {
 

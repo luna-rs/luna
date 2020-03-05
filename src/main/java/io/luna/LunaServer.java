@@ -9,7 +9,6 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
-import io.luna.util.Tuple;
 import io.luna.util.parser.impl.BlacklistFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.ItemDefinitionFileParser;
@@ -25,7 +24,6 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -69,9 +67,9 @@ public final class LunaServer {
     /**
      * Runs the individual tasks that start Luna.
      *
-     * @throws IOException If any I/O errors occur.
+     * @throws ReflectiveOperationException If an error occurs while instancing plugins.
      */
-    public void init() throws IOException {
+    public void init() throws ReflectiveOperationException {
         Stopwatch launchTimer = Stopwatch.createStarted();
 
         initLaunchTasks();
@@ -115,14 +113,11 @@ public final class LunaServer {
     /**
      * Initializes the {@link PluginBootstrap}.
      *
-     * @throws IOException If any I/O errors occur.
+     * @throws ReflectiveOperationException If an error occurs while instancing plugins.
      */
-    private void initPlugins() throws IOException {
+    private void initPlugins() throws ReflectiveOperationException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        Tuple<Integer, Integer> pluginCount = bootstrap.init(Luna.settings().pluginGui());
-
-        String fractionString = pluginCount.first() + "/" + pluginCount.second();
-        logger.info("{} Kotlin plugins have been loaded into memory.", fractionString);
+        logger.info("{} Kotlin plugins have been loaded.", bootstrap.start());
     }
 
     /**

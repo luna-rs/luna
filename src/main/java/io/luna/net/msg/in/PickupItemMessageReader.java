@@ -42,7 +42,7 @@ public final class PickupItemMessageReader extends GameMessageReader {
         checkState(ItemDefinition.isIdValid(id), "invalid item id");
 
         // Invalid item id.
-        if(!ItemDefinition.isIdValid(id)) {
+        if (!ItemDefinition.isIdValid(id)) {
             return null;
         }
 
@@ -51,20 +51,28 @@ public final class PickupItemMessageReader extends GameMessageReader {
             return null;
         }
 
-        var foundItem = player.getWorld().getItems().findAll(position).stream().
+        var foundItem = player.getWorld().getItems().findAll(position).
                 filter(item -> item.getId() == id &&
-                item.isVisibleTo(player)).findFirst();
-        if(foundItem.isEmpty()) { // Item doesn't exist.
+                        item.isVisibleTo(player)).findFirst();
+        if (foundItem.isEmpty()) { // Item doesn't exist.
             return null;
         }
 
         // Send the event once the player reaches the item.
-        var item = foundItem.get();
-        player.submitAction(new InteractionAction(player, item) {
+        var groundItem = foundItem.get();
+        player.submitAction(new InteractionAction(player, groundItem) {
             @Override
             public void execute() {
-                player.getPlugins().post(new PickupItemEvent(player,item));
-                logger.log(ITEM_PICKUP, "{}: {}(x{})", player.getUsername(), item.def().getName(), box(item.getAmount()));
+                var item = groundItem.toItem();
+                if (!player.getInventory().hasSpaceFor(item)) {
+                    player.sendMessage("You do not have enough space in your inventory.");
+                    return;
+                }
+                if (world.getItems().unregister(groundItem)) {
+                    player.getInventory().add(item);
+                    player.getPlugins().post(new PickupItemEvent(player, groundItem));
+                    logger.log(ITEM_PICKUP, "{}: {}(x{})", player.getUsername(), groundItem.def().getName(), box(item.getAmount()));
+                }
             }
         });
         return null;

@@ -9,8 +9,6 @@ import io.luna.game.model.def.ItemDefinition
  */
 class SellReceiver(private val shop: ShopReceiver, private val noted: Boolean) {
 
-    // TODO Update wiki
-
     /**
      * Returns an instance of this receiver that works with noted items.
      */

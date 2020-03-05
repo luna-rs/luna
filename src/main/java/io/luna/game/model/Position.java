@@ -100,7 +100,7 @@ public final class Position {
      * @throws IllegalArgumentException If distance < 0.
      */
     public boolean isWithinDistance(Position other, int distance) {
-        checkArgument(distance > 0, "Distance must be non-negative.");
+        checkArgument(distance >= 0, "Distance must be non-negative.");
 
         if (z != other.z) { // check if position is on the same plane.
             return false;
@@ -141,6 +141,9 @@ public final class Position {
      * @return The translated position.
      */
     public Position translate(int amountX, int amountY, int amountZ) {
+        if(amountX == 0 && amountY == 0 && amountZ == 0) {
+            return this;
+        }
         return new Position(x + amountX, y + amountY, z + amountZ);
     }
 

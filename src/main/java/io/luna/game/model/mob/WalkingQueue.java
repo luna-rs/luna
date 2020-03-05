@@ -171,6 +171,30 @@ public final class WalkingQueue {
     }
 
     /**
+     * Walks to the specified offsets.
+     *
+     * @param offsetX The {@code x} offset.
+     * @param offsetY The {@code y} offset.
+     */
+    public void walk(int offsetX, int offsetY) {
+        var newPosition = mob.getPosition().translate(offsetX, offsetY);
+        addFirst(new Step(newPosition));
+    }
+
+    /**
+     * Walks to the specified {@code firstPos} and then {@code otherPos}.
+     *
+     * @param firstPos The first position.
+     * @param otherPos The other positions.
+     */
+    public void walk(Position firstPos, Position... otherPos) {
+        addFirst(new Step(firstPos));
+        for (var nextPos : otherPos) {
+            add(new Step(nextPos));
+        }
+    }
+
+    /**
      * Adds an initial step to this walking queue.
      *
      * @param step The step to add.

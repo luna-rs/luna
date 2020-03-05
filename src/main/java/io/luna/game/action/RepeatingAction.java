@@ -8,8 +8,7 @@ import io.luna.game.task.TaskState;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * An {@link Action} implementation that automatically repeats for a specified duration, up until the maximum amount of
- * repetitions.
+ * An {@link Action} implementation that automatically repeats for a specified duration.
  *
  * @author lare96 <http://github.com/lare96>
  */
@@ -56,9 +55,9 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     private final Worker worker;
 
     /**
-     * The amount of times this action repeats.
+     * The amount of times this action repeats. Default value is {@code Integer.MAX_VALUE}.
      */
-    private int maxRepeats;
+    private int maxRepeats = Integer.MAX_VALUE;
 
     /**
      * The current repetition counter.
@@ -127,7 +126,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     }
 
     /**
-     * Sets the maximum amount of times this action will repeat.
+     * Sets the maximum amount of times this action will repeat. Default value is {@code Integer.MAX_VALUE}.
      */
     public final void setRepeat(int amount) {
         checkArgument(amount > 0, "Amount of repetitions must be above 0.");

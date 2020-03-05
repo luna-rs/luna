@@ -3,7 +3,7 @@ package api.area
 /**
  * A receiver for registering area implementations.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 open class AreaReceiver {
 
