@@ -16,6 +16,8 @@ repositories {
     jcenter()
 }
 
+val junitVersion: String by project
+
 dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.logging.log4j:log4j-core:2.11.1")
@@ -36,9 +38,9 @@ dependencies {
     implementation("org.openjfx:javafx-swing:11.0.1")
     implementation("com.zaxxer:HikariCP:3.3.0")
     implementation("org.mockito:mockito-core:2.24.5")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:+")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:+")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:+")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 }
 
 group = "luna"
