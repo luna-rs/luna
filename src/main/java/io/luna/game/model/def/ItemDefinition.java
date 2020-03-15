@@ -1,7 +1,6 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 import java.util.OptionalInt;
 

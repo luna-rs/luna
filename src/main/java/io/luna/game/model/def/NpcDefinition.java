@@ -1,7 +1,6 @@
 package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.game.model.def.DefinitionRepository.ArrayDefinitionRepository;
 
 /**
  * A definition model describing a non-player mob.
