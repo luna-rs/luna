@@ -3,7 +3,7 @@ package io.luna.logging;
 /**
  * The console output type. Determines if logs will go to {@link System#out} or {@link System#err}.
  */
-enum ConsoleOutputLogLevel {
+enum OutputType {
 
     /**
      * Sends all log output to {@link System#out} (white text).

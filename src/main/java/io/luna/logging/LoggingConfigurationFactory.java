@@ -61,13 +61,13 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
 
         // Build console appenders.
         var outputType = Luna.loggingSettings().outputType();
-        if (outputType == ConsoleOutputLogLevel.OUT) {
+        if (outputType == OutputType.OUT) {
             builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_OUT)
                     .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
-        } else if (outputType == ConsoleOutputLogLevel.ERR) {
+        } else if (outputType == OutputType.ERR) {
             builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_ERR)
                     .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
-        } else if (outputType == ConsoleOutputLogLevel.MIXED) {
+        } else if (outputType == OutputType.MIXED) {
             builder.add(builder.newAppender("sout", "Console").addAttribute("target", Target.SYSTEM_OUT)
                     .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "INFO", "TRACE")));
             builder.add(builder.newAppender("serr", "Console").addAttribute("target", Target.SYSTEM_ERR)
@@ -78,17 +78,17 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         var newFileLogs = EnumSet.noneOf(FileOutputType.class);
         var activeFileLogs = Luna.loggingSettings().activeFileLogs();
         for (var type : FileOutputType.values()) {
-            if (type == FileOutputType.CONSOLE_OUT && outputType == ConsoleOutputLogLevel.ERR) {
+            if (type == FileOutputType.CONSOLE_OUT && outputType == OutputType.ERR) {
                 continue;
             }
-            if (type == FileOutputType.CONSOLE_ERR && outputType == ConsoleOutputLogLevel.OUT) {
+            if (type == FileOutputType.CONSOLE_ERR && outputType == OutputType.OUT) {
                 continue;
             }
             if (activeFileLogs.contains(type)) {
                 var fileName = type.getFileName();
                 var fileAppender = builder.newAppender(fileName, "RandomAccessFile")
                         .addAttribute("fileName", "./data/logs/" + fileName + ".txt");
-                if (outputType == ConsoleOutputLogLevel.MIXED) {
+                if (outputType == OutputType.MIXED) {
                     if (type == FileOutputType.CONSOLE_OUT) {
                         fileAppender.add(getLevelRangeFilter(builder, "INFO", "TRACE"));
                     } else if (type == FileOutputType.CONSOLE_ERR) {
@@ -108,9 +108,9 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
 
         // Create and configure root logger.
         var rootLogger = builder.newRootLogger(Luna.loggingSettings().rootLevel());
-        if (outputType == ConsoleOutputLogLevel.OUT || outputType == ConsoleOutputLogLevel.ERR) {
+        if (outputType == OutputType.OUT || outputType == OutputType.ERR) {
             rootLogger.add(builder.newAppenderRef("console"));
-        } else if (outputType == ConsoleOutputLogLevel.MIXED) {
+        } else if (outputType == OutputType.MIXED) {
             rootLogger.add(builder.newAppenderRef("sout"));
             rootLogger.add(builder.newAppenderRef("serr"));
         }

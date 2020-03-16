@@ -24,7 +24,7 @@ public final class LoggingSettings {
     /**
      * The output type. Determines which stream logs will be sent to.
      */
-    private ConsoleOutputLogLevel outputType;
+    private OutputType outputType;
 
     /**
      * The active file logs. Determines what will be logged to text files.
@@ -48,7 +48,7 @@ public final class LoggingSettings {
     /**
      * @return The output type. Determines which stream logs will be sent to.
      */
-    public ConsoleOutputLogLevel outputType() {
+    public OutputType outputType() {
         return outputType;
     }
 
