@@ -61,6 +61,30 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
+     * Stationary entities rely solely on identity when compared because entities in chunks are held in a HashSet
+     * datatype.
+     * <br><br>
+     * Weird issues can occur with a equals/hashcode implementation that is too strict, and there isn't much use in
+     * having an implementation that is lenient.
+     */
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
+    /**
+     * Stationary entities rely solely on identity when compared because entities in chunks are held in a HashSet
+     * datatype.
+     * <br><br>
+     * Weird issues can occur with a equals/hashcode implementation that is too strict, and there isn't much use in
+     * having an implementation that is lenient.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
+
+    /**
      * Creates a {@link GameMessageWriter} that shows this entity.
      *
      * @param offset The chunk offset.
@@ -156,6 +180,13 @@ public abstract class StationaryEntity extends Entity {
      */
     public final Optional<Player> getOwner() {
         return owner;
+    }
+
+    /**
+     * @return The player to update for, or {@code null}.
+     */
+    public final Player getOwnerInstance() {
+        return owner.orElse(null);
     }
 
     /**
