@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 /**
  * The file output type. Holds data for file loggers.
  */
-public enum LoggerFileOutput {
+public enum FileOutputType {
 
     /**
      * Log all {@link System#out} data to a text file.
@@ -50,9 +50,9 @@ public enum LoggerFileOutput {
     private final String loggerName;
 
     /**
-     * Creates a new {@link LoggerFileOutput}.
+     * Creates a new {@link FileOutputType}.
      */
-    LoggerFileOutput(String loggerName) {
+    FileOutputType(String loggerName) {
         this.loggerName = loggerName;
     }
 

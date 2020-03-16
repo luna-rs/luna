@@ -5,7 +5,7 @@ import io.luna.game.event.impl.CommandEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.logging.LoggerFileOutput;
+import io.luna.logging.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -20,12 +20,12 @@ public final class CommandMessageReader extends GameMessageReader {
     /**
      * An asynchronous logger that will handle command logs.
      */
-    private static final Logger logger = LoggerFileOutput.COMMANDS.getLogger();
+    private static final Logger logger = FileOutputType.COMMANDS.getLogger();
 
     /**
      * The {@code COMMANDS} logging level.
      */
-    private static final Level COMMANDS = LoggerFileOutput.COMMANDS.getLevel();
+    private static final Level COMMANDS = FileOutputType.COMMANDS.getLevel();
 
     @Override
     public Event read(Player player, GameMessage msg) {

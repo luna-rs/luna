@@ -55,7 +55,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         builder.setStatusLevel(Level.WARN);
 
         // Add custom logging levels.
-        for (var type : LoggerFileOutput.values()) {
+        for (var type : FileOutputType.values()) {
             builder.add(builder.newCustomLevel(type.name(), 700));
         }
 
@@ -75,13 +75,13 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         }
 
         // Build file appenders.
-        var newFileLogs = EnumSet.noneOf(LoggerFileOutput.class);
+        var newFileLogs = EnumSet.noneOf(FileOutputType.class);
         var activeFileLogs = Luna.loggingSettings().activeFileLogs();
-        for (var type : LoggerFileOutput.values()) {
-            if (type == LoggerFileOutput.CONSOLE_OUT && outputType == ConsoleOutputLogLevel.ERR) {
+        for (var type : FileOutputType.values()) {
+            if (type == FileOutputType.CONSOLE_OUT && outputType == ConsoleOutputLogLevel.ERR) {
                 continue;
             }
-            if (type == LoggerFileOutput.CONSOLE_ERR && outputType == ConsoleOutputLogLevel.OUT) {
+            if (type == FileOutputType.CONSOLE_ERR && outputType == ConsoleOutputLogLevel.OUT) {
                 continue;
             }
             if (activeFileLogs.contains(type)) {
@@ -89,13 +89,13 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
                 var fileAppender = builder.newAppender(fileName, "RandomAccessFile")
                         .addAttribute("fileName", "./data/logs/" + fileName + ".txt");
                 if (outputType == ConsoleOutputLogLevel.MIXED) {
-                    if (type == LoggerFileOutput.CONSOLE_OUT) {
+                    if (type == FileOutputType.CONSOLE_OUT) {
                         fileAppender.add(getLevelRangeFilter(builder, "INFO", "TRACE"));
-                    } else if (type == LoggerFileOutput.CONSOLE_ERR) {
+                    } else if (type == FileOutputType.CONSOLE_ERR) {
                         fileAppender.add(getLevelRangeFilter(builder, "FATAL", "WARN"));
                     }
                 }
-                if (type == LoggerFileOutput.CONSOLE_OUT || type == LoggerFileOutput.CONSOLE_ERR) {
+                if (type == FileOutputType.CONSOLE_OUT || type == FileOutputType.CONSOLE_ERR) {
                     fileAppender.add(getPatternLayout(builder));
                 } else {
                     fileAppender.add(builder.newLayout("PatternLayout")
@@ -114,13 +114,13 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
             rootLogger.add(builder.newAppenderRef("sout"));
             rootLogger.add(builder.newAppenderRef("serr"));
         }
-        if (newFileLogs.contains(LoggerFileOutput.CONSOLE_OUT)) {
-            rootLogger.add(builder.newAppenderRef(LoggerFileOutput.CONSOLE_OUT.getFileName()));
-            newFileLogs.remove(LoggerFileOutput.CONSOLE_OUT);
+        if (newFileLogs.contains(FileOutputType.CONSOLE_OUT)) {
+            rootLogger.add(builder.newAppenderRef(FileOutputType.CONSOLE_OUT.getFileName()));
+            newFileLogs.remove(FileOutputType.CONSOLE_OUT);
         }
-        if (newFileLogs.contains(LoggerFileOutput.CONSOLE_ERR)) {
-            rootLogger.add(builder.newAppenderRef(LoggerFileOutput.CONSOLE_ERR.getFileName()));
-            newFileLogs.remove(LoggerFileOutput.CONSOLE_ERR);
+        if (newFileLogs.contains(FileOutputType.CONSOLE_ERR)) {
+            rootLogger.add(builder.newAppenderRef(FileOutputType.CONSOLE_ERR.getFileName()));
+            newFileLogs.remove(FileOutputType.CONSOLE_ERR);
         }
         builder.add(rootLogger);
 

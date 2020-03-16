@@ -29,7 +29,7 @@ public final class LoggingSettings {
     /**
      * The active file logs. Determines what will be logged to text files.
      */
-    private Set<LoggerFileOutput> activeFileLogs;
+    private Set<FileOutputType> activeFileLogs;
 
     /**
      * @return The root level. Determines which logging levels are displayed to the console.
@@ -55,7 +55,7 @@ public final class LoggingSettings {
     /**
      * @return The active file logs. Determines what will be logged to text files.
      */
-    public ImmutableSet<LoggerFileOutput> activeFileLogs() {
+    public ImmutableSet<FileOutputType> activeFileLogs() {
         return ImmutableSet.copyOf(activeFileLogs);
     }
 }
