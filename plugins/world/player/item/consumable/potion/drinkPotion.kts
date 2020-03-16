@@ -3,11 +3,9 @@ package world.player.item.consume.potion
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.action.ThrottledAction
-import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
-import java.util.*
 
 /**
  * Throttles how often a player can drink potions.
@@ -49,8 +47,7 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
                 // Send consume messages.
                 plr.sendMessage("You drink some of your ${potion.formattedName}.")
 
-                val dosesLeft = potion.getDosesLeft(id)
-                when (dosesLeft) {
+                when (val dosesLeft = potion.getDosesLeft(id)) {
                     0 -> plr.sendMessage("You have finished your potion.")
                     1 -> plr.sendMessage("You have 1 dose left.")
                     else -> plr.sendMessage("You have $dosesLeft doses left.")
@@ -65,14 +62,6 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
 }
 
 // Initialize potion drinking event listeners here.
-ItemDefinition.ALL
-    .stream()
-    .filter(Objects::nonNull)
-    .forEach {
-        val potion = Potion.DOSE_TO_POTION[it.id]
-        if (potion != null) {
-            item1(it.id) {
-                drink(plr, Item(id), potion, index)
-            }
-        }
-    }
+Potion.DOSE_TO_POTION.entries.forEach { (id, potion) ->
+    item1(id) { drink(plr, Item(id), potion, index) }
+}

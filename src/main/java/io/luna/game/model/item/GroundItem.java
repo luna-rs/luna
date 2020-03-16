@@ -65,19 +65,12 @@ public class GroundItem extends StationaryEntity {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, amount, position, getOwner());
+        return System.identityHashCode(this);
     }
 
     @Override
     public final boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof GroundItem) {
-            GroundItem other = (GroundItem) obj;
-
-        }
-        return false;
+        return this == obj;
     }
 
     @Override
@@ -109,6 +102,7 @@ public class GroundItem extends StationaryEntity {
 
     /**
      * Returns {@code true} if these items have the same id and amount, are on the same position, and have the same owner.
+     *
      * @param other The ground item to compare with.
      * @return {@code true} if these ground items are identical.
      */

@@ -33,19 +33,19 @@ public final class GroundItemList extends EntityList<GroundItem> {
     private final class ExpirationTask extends Task {
 
         /**
-         * The amount of minutes it takes for a tradeable item to become global.
+         * The amount of ticks it takes for a tradeable item to become global.
          */
-        private static final int TRADEABLE_LOCAL_MINUTES = 1;
+        private static final int TRADEABLE_LOCAL_TICKS = 100;
 
         /**
-         * The amount of minutes it takes for an untradeable item to expire.
+         * The amount of ticks it takes for an untradeable item to expire.
          */
-        private static final int UNTRADEABLE_LOCAL_MINUTES = 3;
+        private static final int UNTRADEABLE_LOCAL_TICKS = 300;
 
         /**
-         * The amount of minutes it takes for a global item to expire.
+         * The amount of ticks it takes for a global item to expire.
          */
-        private static final int GLOBAL_MINUTES = 3;
+        private static final int GLOBAL_TICKS = 300;
 
         /**
          * Creates a new {@link ExpirationTask}.
@@ -87,19 +87,19 @@ public final class GroundItemList extends EntityList<GroundItem> {
                     continue;
                 }
                 boolean isTradeable = item.def().isTradeable();
-                int expireMinutes = item.addExpireTick();
+                int expireTicks = item.addExpireTick();
                 if (item.isLocal()) {
-                    if (isTradeable && expireMinutes >= TRADEABLE_LOCAL_MINUTES) {
+                    if (isTradeable && expireTicks >= TRADEABLE_LOCAL_TICKS) {
                         // Item is tradeable and only visible to one player, make it global.
                         var globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
                                 item.getPosition(), Optional.empty());
                         unregisterQueue.add(item);
                         registerQueue.add(globalItem);
-                    } else if (!isTradeable && expireMinutes >= UNTRADEABLE_LOCAL_MINUTES) {
+                    } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
                         // Item is untradeable and only visible to one player, unregister it.
                         unregisterQueue.add(item);
                     }
-                } else if (item.isGlobal() && expireMinutes >= GLOBAL_MINUTES) {
+                } else if (item.isGlobal() && expireTicks >= GLOBAL_TICKS) {
                     // Item is visible to everyone, unregister it.
                     unregisterQueue.add(item);
                 }
