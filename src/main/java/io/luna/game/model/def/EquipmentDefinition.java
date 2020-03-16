@@ -3,7 +3,6 @@ package io.luna.game.model.def;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
-import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;

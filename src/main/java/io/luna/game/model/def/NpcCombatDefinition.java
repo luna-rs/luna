@@ -1,7 +1,5 @@
 package io.luna.game.model.def;
 
-import io.luna.game.model.def.DefinitionRepository.MapDefinitionRepository;
-
 import java.util.Arrays;
 
 /**
