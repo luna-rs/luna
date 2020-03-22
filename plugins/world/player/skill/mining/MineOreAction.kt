@@ -28,13 +28,26 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
          */
         val BASE_MINE_RATE = 25
 
-        val BASE_GEM_CHANCE = 2
+        /**
+         * The base chance of mining a gem, the lower this number the more likely a gem will be mined.
+         */
+        val BASE_GEM_CHANCE = 256
+
+        /**
+         * The mining animation delay.
+         */
+        private val ANIMATION_DELAY = 4
 
         /**
          * All gems that can be received, in order of lowest level -> highest.
          */
         val GEMS = Gem.ALL.sortedBy { it.level }
     }
+
+    /**
+     * The counter for the mining animation delay.
+     */
+    private var animationDelay = 0
 
     override fun executeIf(start: Boolean) = when {
         mob.mining.level < ore.level -> {
@@ -49,7 +62,6 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         // Check if rock isn't already mined and if we still have a pickaxe.
         rockObj.state == EntityState.INACTIVE || !Pickaxe.hasPick(mob, pick) -> false
         else -> {
-            mob.animation(pick.animation)
             if (start) {
                 mob.sendMessage("You swing your pick at the rock.")
                 delay = getMiningDelay()
@@ -59,7 +71,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun execute() {
-        if (!mob.inventory.isFull && rand().nextInt(256) == 0) {
+        if (!mob.inventory.isFull && rand().nextInt(BASE_GEM_CHANCE) == 0) {
             dropGem()
         } else {
             mob.sendMessage("You manage to mine some ${ore.typeName.toLowerCase()}.")
@@ -69,8 +81,19 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         val removeChance = ore.depletionChance
         if (removeChance != null && (removeChance == 1 || rand().nextInt(removeChance) == 0)) {
             deleteAndRespawnRock()
+            interrupt()
+        } else {
+            delay = getMiningDelay()
         }
-        delay = getMiningDelay()
+    }
+
+    override fun process() {
+        if (animationDelay > 0) {
+            animationDelay--
+        } else {
+            mob.animation(pick.animation)
+            animationDelay = ANIMATION_DELAY
+        }
     }
 
     override fun add(): List<Item?> = listOf(Item(ore.item))
@@ -78,14 +101,15 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     override fun stop() = mob.animation(Animation.CANCEL)
 
     override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is MineOreAction -> rockObj == other.rockObj
-            else -> false
-        }
+            when (other) {
+                is MineOreAction -> rockObj == other.rockObj
+                else -> false
+            }
 
     private fun deleteAndRespawnRock() {
         if (world.removeObject(rockObj)) {
-            val emptyId = Ore.EMPTY_MAP[rockObj.id]
+            logger.info("here2")
+            val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
             if (emptyId != null) {
                 world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
             }
@@ -117,12 +141,12 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
     private fun dropGem() {
         var foundGem: Gem? = null
-        var chance = BASE_GEM_CHANCE
+        var chance = 2
         for (gem in GEMS) {
             if (rand().nextInt(chance) == 0) {
                 foundGem = gem
             } else {
-                chance += BASE_GEM_CHANCE
+                chance += 2
             }
         }
         if (foundGem == null) {

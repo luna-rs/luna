@@ -12,11 +12,14 @@ fun mineRock(plr: Player, ore: Ore, obj: GameObject) {
     if (pick != null) {
         plr.submitAction(MineOreAction(plr, pick, ore, obj))
     } else {
-        plr.sendMessage("You need a pickaxe to mine ores.")
+        plr.sendMessage("You need a pickaxe which you have the required level to use.")
     }
 }
 
 // Add listeners for all ores.
 Ore.ROCK_MAP.entries.forEach { (oreId, ore) ->
     object1(oreId) { mineRock(plr, ore, gameObject) }
+}
+Ore.EMPTY_ROCKS.forEach {
+    object1(it) { plr.sendMessage("There is no ore left in the rock.") }
 }

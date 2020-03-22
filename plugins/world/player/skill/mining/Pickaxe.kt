@@ -20,19 +20,19 @@ enum class Pickaxe(val level: Int, val itemId: Int, val animation: Animation, va
     STEEL(level = 5,
           itemId = 1269,
           animation = Animation(627),
-          strength = 3),
+          strength = 4),
     MITHRIL(level = 20,
             itemId = 1273,
             animation = Animation(629),
-            strength = 4),
+            strength = 5),
     ADAMANT(level = 30,
             itemId = 1271,
             animation = Animation(628),
-            strength = 5),
+            strength = 6),
     RUNE(level = 40,
          itemId = 1275,
          animation = Animation(624),
-         strength = 6);
+         strength = 7);
 
 
     companion object {

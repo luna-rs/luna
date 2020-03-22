@@ -76,8 +76,7 @@ public abstract class StationaryEntity extends Entity {
      * Stationary entities rely solely on identity when compared because entities in chunks are held in a HashSet
      * datatype.
      * <br><br>
-     * Weird issues can occur with a equals/hashcode implementation that is too strict, and there isn't much use in
-     * having an implementation that is lenient.
+     * Weird issues can occur with a equals/hashcode implementation that is too strict.
      */
     @Override
     public boolean equals(Object obj) {

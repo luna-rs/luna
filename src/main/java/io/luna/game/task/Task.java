@@ -1,8 +1,10 @@
 package io.luna.game.task;
 
+import io.luna.game.service.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ConcurrentModificationException;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -104,6 +106,18 @@ public abstract class Task {
             onCancel();
             state = TaskState.CANCELLED;
         }
+    }
+
+    /**
+     * A function executed every tick while this task is active.
+     * <p>
+     * <strong>Tasks should not be scheduled within this method or a {@link ConcurrentModificationException} will be
+     * thrown.</strong> To get around this, use {@link GameService#sync(Runnable)}.
+     *
+     * @throws ConcurrentModificationException If a task is scheduled within this function.
+     */
+    protected void onProcess() throws ConcurrentModificationException {
+
     }
 
     /**
