@@ -5,7 +5,6 @@ import io.luna.game.action.Action
 import io.luna.game.action.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.`object`.GameObject
-import io.luna.game.model.`object`.ObjectType
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
@@ -79,11 +78,10 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         if (world.removeObject(treeObj)) {
             val stumpId = TreeStump.TREE_ID_MAP[treeObj.id]?.stumpId
             if (stumpId != null) {
-                world.addObject(stumpId, treeObj.position, ObjectType.DEFAULT, treeObj.direction, null)
+                world.addObject(stumpId, treeObj.position, treeObj.objectType, treeObj.direction, treeObj.ownerInstance)
             }
             world.scheduleOnce(tree.respawnTicks) {
-                world.removeObject(treeObj.position)
-                world.addObject(treeObj.id, treeObj.position, treeObj.objectType, treeObj.direction, null)
+                world.addObject(treeObj.id, treeObj.position, treeObj.objectType, treeObj.direction, treeObj.ownerInstance)
             }
         }
     }

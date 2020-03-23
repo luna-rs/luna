@@ -5,8 +5,6 @@ import com.google.common.collect.UnmodifiableIterator;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,68 +24,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.com/lare96>
  */
 public abstract class DefinitionRepository<T extends Definition> implements Iterable<T> {
-
-    /**
-     * An implementation of {@link DefinitionRepository} that is backed internally by an array.
-     */
-    static final class ArrayDefinitionRepository<T extends Definition> extends DefinitionRepository<T> {
-
-        /**
-         * An array of definitions.
-         */
-        public final T[] definitions;
-
-        /**
-         * Creates a new {@link ArrayDefinitionRepository}.
-         *
-         * @param length The length of the backing array.
-         */
-        @SuppressWarnings("unchecked")
-        public ArrayDefinitionRepository(int length) {
-            definitions = (T[]) new Definition[length];
-        }
-
-        @Override
-        void put(int id, T definition) {
-            definitions[id] = definition;
-        }
-
-        @Override
-        public Optional<T> get(int id) {
-            return Optional.ofNullable(definitions[id]);
-        }
-
-        @Override
-        public Iterator<T> newIterator() {
-            return Iterators.forArray(definitions);
-        }
-    }
-
-    /**
-     * An implementation of {@link DefinitionRepository} that is backed internally by a {@link LinkedHashMap}.
-     */
-    static final class MapDefinitionRepository<V extends Definition> extends DefinitionRepository<V> {
-
-        /**
-         * A map of definitions.
-         */
-        private final Map<Integer, V> definitions = new LinkedHashMap<>();
-
-        @Override
-        void put(int id, V definition) {
-            definitions.put(id, definition);
-        }
-
-        @Override
-        public Optional<V> get(int id) {
-            return Optional.ofNullable(definitions.get(id));
-        }
-
-        @Override
-        public Iterator<V> newIterator() {
-            return definitions.values().iterator();
-        }
-    }
 
     /**
      * If this repository is read-only.

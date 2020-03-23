@@ -12,6 +12,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.Attribute;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -48,6 +50,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
         LOGIN_TYPE,
         RSA_BLOCK
     }
+
+    /**
+     * The asynchronous logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The private RSA modulus value.
@@ -113,6 +120,13 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
     @Override
     protected void resetState() {
         rsaBlockSize = 0;
+    }
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.error("An error was thrown by the login decoder!", cause);
+        ctx.channel().close();
     }
 
     /**

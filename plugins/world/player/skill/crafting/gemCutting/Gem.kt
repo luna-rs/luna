@@ -66,6 +66,11 @@ enum class Gem(val uncut: Int,
         const val CHISEL = 1755
 
         /**
+         * The list of values.
+         */
+        val ALL = listOf(*values())
+
+        /**
          * Mappings of [Gem.uncut] to [Gem].
          */
         val UNCUT_TO_GEM = values().associateBy { it.uncut }

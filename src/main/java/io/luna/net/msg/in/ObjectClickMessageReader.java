@@ -7,6 +7,7 @@ import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectDirection;
@@ -16,6 +17,11 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
+import javafx.geometry.Pos;
+
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -26,20 +32,18 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class ObjectClickMessageReader extends GameMessageReader {
 
-    // TODO Validation for everything here.
-
     @Override
     public Event read(Player player, GameMessage msg) throws Exception {
         int opcode = msg.getOpcode();
         switch (opcode) {
             case 132:
-                firstIndex(player, msg.getPayload());
+                firstIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
                 break;
             case 252:
-                secondIndex(player, msg.getPayload());
+                secondIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
                 break;
             case 70:
-                thirdIndex(player, msg.getPayload());
+                thirdIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
                 break;
         }
         return null;
@@ -68,36 +72,42 @@ public final class ObjectClickMessageReader extends GameMessageReader {
     /**
      * Handle an object click for the first index.
      */
-    private void firstIndex(Player player, ByteMessage msg) {
+    private void firstIndex(Player player, World world, int z, ByteMessage msg) {
         int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
         int id = msg.getShort(false);
         int y = msg.getShort(false, ValueType.ADD);
-        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
-                ObjectDirection.WEST, null);
+        Position position = new Position(x, y, z);
+        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
         handleClick(player, new ObjectFirstClickEvent(player, object));
     }
 
     /**
      * Handle an object click for the second index.
      */
-    private void secondIndex(Player player, ByteMessage msg) {
+    private void secondIndex(Player player, World world, int z, ByteMessage msg) {
         int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
         int y = msg.getShort(true, ByteOrder.LITTLE);
         int x = msg.getShort(false, ValueType.ADD);
-        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
-                ObjectDirection.WEST, null);
+        Position position = new Position(x, y, z);
+        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
         handleClick(player, new ObjectSecondClickEvent(player, object));
     }
 
     /**
      * Handle an object click for the third index.
      */
-    private void thirdIndex(Player player, ByteMessage msg) {
+    private void thirdIndex(Player player, World world, int z, ByteMessage msg) {
         int x = msg.getShort(true, ByteOrder.LITTLE);
         int y = msg.getShort(false);
         int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        GameObject object = new GameObject(player.getContext(), id, new Position(x, y, player.getZ()), ObjectType.DEFAULT,
-                ObjectDirection.WEST, null);
+        Position position = new Position(x, y, z);
+        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
         handleClick(player, new ObjectThirdClickEvent(player, object));
+    }
+
+    // TODO Only in use until cache loading, after cache loading is done proper verification will take over.
+    private GameObject computeDefaultObject(Player player, int id, Position position) {
+        return new GameObject(player.getContext(), id, position, ObjectType.DEFAULT,
+                ObjectDirection.WEST, null);
     }
 }

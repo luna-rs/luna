@@ -2,12 +2,10 @@ package world.player.item.consume.food
 
 import api.predef.*
 import io.luna.game.action.ThrottledAction
-import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import world.player.item.consume.food.Food.Companion.lastEat
-import java.util.*
 
 /**
  * The food eating animation.
@@ -46,14 +44,6 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
 }
 
 // Initialize food eating event listeners here.
-ItemDefinition.ALL
-    .stream()
-    .filter(Objects::nonNull)
-    .forEach {
-        val food = Food.ID_TO_FOOD[it.id]
-        if (food != null) {
-            item1(it.id) {
-                eat(plr, Item(id), food, index)
-            }
-        }
-    }
+Food.ID_TO_FOOD.entries.forEach { (id, food) ->
+    item1(id) { eat(plr, Item(id), food, index) }
+}

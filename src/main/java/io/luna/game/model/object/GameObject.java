@@ -12,7 +12,6 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -82,25 +81,6 @@ public class GameObject extends StationaryEntity {
     }
 
     @Override
-    public final int hashCode() {
-        return Objects.hash(id, position, objectType);
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof GameObject) {
-            GameObject other = (GameObject) obj;
-            return id == other.id &&
-                    Objects.equals(position, other.position) &&
-                    objectType == other.objectType;
-        }
-        return false;
-    }
-
-    @Override
     public final String toString() {
         return MoreObjects.toStringHelper(this).
                 add("id", id).
@@ -128,6 +108,16 @@ public class GameObject extends StationaryEntity {
         int type = objectType.getId() << 2;
         int orientation = direction.getId() & 3;
         return new RemoveObjectMessageWriter(type, orientation, offset);
+    }
+
+    /**
+     * Determines if this object will replace {@code object} on the map and vice-versa.
+     *
+     * @param object The object to check.
+     */
+    public boolean replaces(GameObject object) {
+        return position.equals(object.position) &&
+                type == object.type;
     }
 
     /**

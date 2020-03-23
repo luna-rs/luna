@@ -27,6 +27,11 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
         }
 
         @Override
+        protected void onProcess() {
+           process();
+        }
+
+        @Override
         protected boolean onSchedule() {
             return start();
         }
@@ -122,6 +127,13 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      * Function called when this action is stopped (interrupted).
      */
     public void stop() {
+
+    }
+
+    /**
+     * Forwards to {@link Task#onProcess()}. Called every tick while this action is active.
+     */
+    public void process() {
 
     }
 
