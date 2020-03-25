@@ -1,4 +1,4 @@
-package io.luna.util.parser;
+package io.luna.files;
 
 import java.io.BufferedReader;
 import java.util.Scanner;
