@@ -68,8 +68,7 @@ public final class GameObjectList extends EntityList<GameObject> {
 
         // Check if an object will be replaced by this registration, and remove it.
         var existingObject = findAll(object.getPosition()).
-                filter(nextObj -> Objects.equals(nextObj.getPosition(), object.getPosition()) &&
-                        nextObj.getObjectType() == object.getObjectType()).findFirst();
+                filter(object::replaces).findFirst();
         removeFromSet(existingObject);
 
         // Set object as active.
@@ -85,7 +84,7 @@ public final class GameObjectList extends EntityList<GameObject> {
     @Override
     protected boolean onUnregister(GameObject object) {
         Optional<GameObject> existingObject = findAll(object.getPosition()).
-                filter(object::equals).
+                filter(object::replaces).
                 findFirst();
         return removeFromSet(existingObject);
     }

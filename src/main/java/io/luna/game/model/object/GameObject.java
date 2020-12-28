@@ -111,6 +111,16 @@ public class GameObject extends StationaryEntity {
     }
 
     /**
+     * Determines if this object will replace {@code object} on the map and vice-versa.
+     *
+     * @param object The object to check.
+     */
+    public boolean replaces(GameObject object) {
+        return position.equals(object.position) &&
+                type == object.type;
+    }
+
+    /**
      * @return The identifier.
      */
     public final int getId() {

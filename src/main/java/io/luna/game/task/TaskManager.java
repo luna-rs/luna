@@ -57,8 +57,10 @@ public final class TaskManager {
                 continue;
             }
 
+
             /* If it's ready to execute, add to execution queue. We pass tasks to a different collection
             to avoid a ConcurrentModificationException if tasks are scheduled within tasks.  */
+            task.onProcess();
             if (task.isReady()) {
                 executing.add(task);
             }

@@ -222,7 +222,7 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Queues a task to be ran on the next tick.
+     * Queues a task to be ran on the game thread at the start of the next tick.
      *
      * @param t The task to run.
      */
