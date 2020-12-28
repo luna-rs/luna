@@ -42,7 +42,7 @@ class LightLogAction(plr: Player, var delayTicks: Int, val log: Log) : Condition
                 mob.sendMessage("You cannot light a fire here.")
                 false
             }
-            mob.fishing.level < log.level -> {
+            mob.firemaking.level < log.level -> {
                 mob.sendMessage("You need a Firemaking level of ${log.level} to light this.")
                 false
             }
