@@ -1,6 +1,7 @@
 package api.event
 
 import api.predef.*
+import com.google.common.collect.ArrayListMultimap
 import io.luna.game.event.Event
 import io.luna.game.event.EventMatcher
 import io.luna.game.event.EventMatcherListener
@@ -14,6 +15,7 @@ import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
+import io.luna.game.event.impl.ServerLaunchEvent
 import kotlin.reflect.KClass
 
 /**
@@ -82,13 +84,31 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
 
             // Add all of the matcher's listeners.
             ALL.values.forEach { it.addListener() }
+
+            // Small optimization, put all keys with only one listener into a different map.
+            on(ServerLaunchEvent::class) {
+                var singularCount = 0
+                var multiCount = 0
+                for (matcher in ALL.values) {
+                    val result = matcher.optimize()
+                    singularCount += result.first
+                    multiCount += result.second
+                }
+                logger.debug("Action map optimization | singular: {} mappings, multi: {} mappings.",
+                             singularCount, multiCount)
+            }
         }
     }
 
     /**
      * The map of event keys to action function instances. Will be used to match arguments.
      */
-    private val actions = mutableMapOf<K, EventMatcherListener<E>>()
+    private val actions = HashMap<K, EventMatcherListener<E>>(128)
+
+    /**
+     * The map of event keys to multiple action function instances. Will be used to match arguments.
+     */
+    private val multiActions = ArrayListMultimap.create<K, EventMatcherListener<E>>(128, 16)
 
     /**
      * Computes a lookup key from the event instance.
@@ -98,17 +118,21 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     /**
      * A set containing all keys in this matcher.
      */
-    fun keys(): Set<K> = actions.keys
+    fun keys(): Set<K> {
+        val singular = actions.keys
+        val multi = multiActions.asMap().keys
+        val keys = HashSet<K>(singular.size + multi.size)
+        keys.addAll(singular)
+        keys.addAll(multi)
+        return keys
+    }
 
     /**
      * Adds or replaces an optimized listener key -> value pair.
      */
     operator fun set(key: K, value: E.() -> Unit) {
         val matcherListener = EventMatcherListener(value)
-        val previous = actions.put(key, matcherListener)
-        if (previous != null) {
-            throw DuplicateMatchException(key, eventType)
-        }
+        multiActions.put(key, matcherListener)
         scriptMatchers += matcherListener
     }
 
@@ -126,12 +150,37 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      */
     private fun match(msg: E): Boolean {
         val actionKey = key(msg)
+
+        // Try a singular action.
         val action = actions[actionKey]
         if (action != null) {
             action.apply(msg)
             return true
+        } else {
+            // If not found, try multiple actions.
+            val multiAction = multiActions[actionKey]
+            if (multiAction.size > 0) {
+                multiAction.forEach { it.apply(msg) }
+                return true
+            }
+            return false
         }
-        return false
+    }
+
+    /**
+     * Optimizes this matcher by putting all keys with only one listener into a different map.
+     */
+    private fun optimize(): Pair<Int, Int> {
+        val iterator = multiActions.asMap().entries.iterator()
+        while (iterator.hasNext()) {
+            val next = iterator.next()
+            val actionList = next.value
+            if (actionList.size == 1) {
+                actions[next.key] = actionList.first()
+                iterator.remove()
+            }
+        }
+        return actions.size to multiActions.size()
     }
 
     /**
@@ -184,4 +233,3 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
         override fun key(msg: ItemOnObjectEvent) = Pair(msg.itemId, msg.objectId)
     }
 }
-
