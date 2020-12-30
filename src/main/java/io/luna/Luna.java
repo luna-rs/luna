@@ -66,8 +66,7 @@ public final class Luna {
     /**
      * Invoked when this program is started, initializes Luna.
      *
-     * @param args
-     *         The program arguments, always ignored.
+     * @param args The program arguments, always ignored.
      */
     public static void main(String[] args) {
         try {
