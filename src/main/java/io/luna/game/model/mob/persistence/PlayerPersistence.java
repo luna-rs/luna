@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.persistence;
 
 import io.luna.Luna;
+import io.luna.LunaSettings;
 import io.luna.game.model.mob.Player;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +49,7 @@ public final class PlayerPersistence {
      */
     public void save(String username, PlayerData data) throws Exception {
         if (data.needsHash) {
-            data.password = BCrypt.hashpw(data.plainTextPassword, BCrypt.gensalt());
+            data.password = BCrypt.hashpw(data.plainTextPassword, BCrypt.gensalt(Luna.settings().passwordStrength()));
         }
         serializer.save(username, data);
     }

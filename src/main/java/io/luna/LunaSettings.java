@@ -17,6 +17,7 @@ public final class LunaSettings {
     private double experienceMultiplier;
     private boolean pluginGui;
     private String serializer;
+    private int passwordStrength;
 
     /**
      * The port that the server will be bound on.
@@ -61,6 +62,15 @@ public final class LunaSettings {
      */
     public String serializer() {
         return serializer;
+    }
+
+    /**
+     * How strong BCrypt password encryption will be. CPU usage increases by a factor of 2 for every +1 added to this
+     * value. Values valid are 4-30. Ideally, this value should be set to where each password verification/hashing takes
+     * around 150-250ms.
+     */
+    public int passwordStrength() {
+        return passwordStrength;
     }
 
     /**

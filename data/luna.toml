@@ -7,3 +7,4 @@ serializer = "JsonPlayerSerializer"
 port = 43594
 connectionLimit = 2
 pluginGui = false
+passwordStrength = 10
