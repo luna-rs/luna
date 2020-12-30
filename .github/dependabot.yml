@@ -4,7 +4,7 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
-    time: "9:25"
-    day: "Wednesday"
+    time: "09:30"
+    day: "wednesday"
     timezone: "Canada/Eastern"
-    open-pull-requests-limit: 10
+  open-pull-requests-limit: 10
