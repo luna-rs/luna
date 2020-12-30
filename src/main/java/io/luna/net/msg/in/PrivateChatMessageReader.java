@@ -1,9 +1,11 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.CreateFriendedPlayerEvent;
+import io.luna.game.event.impl.CreateIgnoredPlayerEvent;
+import io.luna.game.event.impl.DeleteFriendedPlayerEvent;
+import io.luna.game.event.impl.DeleteIgnoredPlayerEvent;
 import io.luna.game.event.impl.PrivateChatEvent;
-import io.luna.game.event.impl.PrivateChatListChangeEvent;
-import io.luna.game.event.impl.PrivateChatListChangeEvent.ChangeType;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessage;
@@ -41,13 +43,13 @@ public final class PrivateChatMessageReader extends GameMessageReader {
         checkState(name > 0, "Name value must be above 0.");
         switch (opcode) {
             case 188:
-                return new PrivateChatListChangeEvent(player, name, ChangeType.ADD_FRIEND);
+                return new CreateFriendedPlayerEvent(player, name);
             case 215:
-                return new PrivateChatListChangeEvent(player, name, ChangeType.REMOVE_FRIEND);
+                return new DeleteFriendedPlayerEvent(player, name);
             case 133:
-                return new PrivateChatListChangeEvent(player, name, ChangeType.ADD_IGNORE);
+                return new CreateIgnoredPlayerEvent(player, name);
             case 74:
-                return new PrivateChatListChangeEvent(player, name, ChangeType.REMOVE_IGNORE);
+                return new DeleteIgnoredPlayerEvent(player, name);
             case 126:
                 return privateChat(player, name, msg.getPayload());
         }
