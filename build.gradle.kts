@@ -27,7 +27,7 @@ dependencies {
     implementation("io.netty:netty-all:4.1.56.Final")
     implementation("com.google.guava:guava:30.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
-    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("org.mindrot:jbcrypt:0.4-atlassian-1")
     implementation("io.github.classgraph:classgraph:4.8.59")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("script-runtime"))
