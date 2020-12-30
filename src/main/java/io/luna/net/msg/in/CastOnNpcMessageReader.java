@@ -16,8 +16,7 @@ import java.util.Optional;
 
 /**
  * A {@link GameMessageReader} that generates and submits a {@link CastOnNpcEvent} when a player attempts to cast
- * any spell onto
- * an npc.
+ * any spell onto an npc.
  *
  * @author searledan
  * @see io.luna.game.action.ActionManager#submit
@@ -32,7 +31,7 @@ public final class CastOnNpcMessageReader extends GameMessageReader {
         Optional<Npc> targetNpc = findTarget(caster, targetId);
         if (targetNpc.isPresent()) {
             Npc target = targetNpc.get();
-            this.submitEventFor(target, new CastOnNpcEvent(caster, spellId, target));
+            submitEventFor(target, new CastOnNpcEvent(caster, spellId, target));
         }
         return null;
     }
