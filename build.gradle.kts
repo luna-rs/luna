@@ -19,6 +19,7 @@ repositories {
 val junitVersion: String by project
 
 dependencies {
+    implementation(project("network"))
     implementation("com.google.code.gson:gson:2.8.5")
     implementation("org.apache.logging.log4j:log4j-core:2.14.0")
     implementation("org.apache.logging.log4j:log4j-api:2.14.0")

@@ -1,6 +1,6 @@
 package io.luna.net.codec.login;
 
-import io.luna.net.codec.IsaacCipher;
+import io.luna.network.codec.IsaacCipher;
 import io.netty.channel.ChannelPipeline;
 
 /**

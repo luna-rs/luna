@@ -1,4 +1,4 @@
-package io.luna.net.codec;
+package io.luna.network.codec;
 
 /**
  * An enum representing endianness of game messages.
