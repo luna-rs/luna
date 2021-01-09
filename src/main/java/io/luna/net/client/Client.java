@@ -1,7 +1,6 @@
 package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
-import io.luna.net.LunaChannelFilter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
@@ -134,13 +133,6 @@ public abstract class Client<I> {
     final String getIpAddressFrom(Channel channel) {
         InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
         return socketAddress.getAddress().getHostAddress();
-    }
-
-    /**
-     * @return The client's channel filter.
-     */
-    public final LunaChannelFilter getChannelFilter() {
-        return channel.attr(LunaChannelFilter.KEY).get();
     }
 
     /**
