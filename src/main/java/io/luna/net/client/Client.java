@@ -2,12 +2,12 @@ package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
 import io.luna.net.LunaChannelFilter;
-import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.TypeParameterMatcher;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 /**
@@ -47,7 +47,7 @@ public abstract class Client<I> {
      */
     Client(Channel channel) {
         this.channel = channel;
-        ipAddress = NetworkUtils.getIpAddress(channel);
+        ipAddress = getIpAddressFrom(channel);
         parameterMatcher = TypeParameterMatcher.find(this, Client.class, "I");
     }
 
@@ -125,6 +125,15 @@ public abstract class Client<I> {
      */
     public final Channel getChannel() {
         return channel;
+    }
+
+    /**
+     * @param channel
+     * @return The connected remote address the argued channel.
+     */
+    final String getIpAddressFrom(Channel channel) {
+        InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
+        return socketAddress.getAddress().getHostAddress();
     }
 
     /**
