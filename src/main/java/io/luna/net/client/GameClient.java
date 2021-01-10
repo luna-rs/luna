@@ -5,6 +5,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.Client;
 import io.netty.channel.Channel;
 
 import java.util.Queue;
@@ -49,7 +50,7 @@ public class GameClient extends Client<GameMessage> {
     }
 
     @Override
-    void onMessageReceived(GameMessage msg) {
+    public void onMessageReceived(GameMessage msg) {
         if (!decodedMessages.offer(msg)) {
            msg.getPayload().releaseAll();
         }

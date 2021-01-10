@@ -1,7 +1,7 @@
 package io.luna.net.msg;
 
-import io.luna.network.codec.ByteMessage;
-import io.luna.network.codec.MessageType;
+import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.MessageType;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;

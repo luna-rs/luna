@@ -1,4 +1,4 @@
-package io.luna.network.codec;
+package io.luna.net.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.DefaultByteBufHolder;

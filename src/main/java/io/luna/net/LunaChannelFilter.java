@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import io.luna.Luna;
-import io.luna.network.codec.ByteMessage;
+import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
 import io.netty.buffer.ByteBuf;

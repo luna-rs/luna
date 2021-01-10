@@ -2,11 +2,11 @@ package io.luna.net.codec.login;
 
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
-import io.luna.net.client.Client;
+import io.luna.net.Client;
 import io.luna.net.client.LoginClient;
-import io.luna.network.codec.ByteMessage;
-import io.luna.network.codec.IsaacCipher;
-import io.luna.network.codec.ProgressiveMessageDecoder;
+import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.IsaacCipher;
+import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

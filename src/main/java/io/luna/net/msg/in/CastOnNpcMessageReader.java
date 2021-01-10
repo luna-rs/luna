@@ -6,8 +6,8 @@ import io.luna.game.event.impl.CastOnNpcEvent;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.network.codec.ByteOrder;
-import io.luna.network.codec.ValueType;
+import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 

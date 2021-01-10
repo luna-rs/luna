@@ -1,5 +1,6 @@
 package io.luna.net.client;
 
+import io.luna.net.Client;
 import io.netty.channel.Channel;
 
 /**
@@ -20,7 +21,7 @@ public class IdleClient extends Client<Object> {
     }
 
     @Override
-    void onMessageReceived(Object msg) {
+    public void onMessageReceived(Object msg) {
         throw new UnsupportedOperationException("Not ready for I/O.");
     }
 }

@@ -1,7 +1,7 @@
 package io.luna.net.msg;
 
 import io.luna.game.model.mob.Player;
-import io.luna.network.codec.ByteMessage;
+import io.luna.net.codec.ByteMessage;
 
 /**
  * An abstraction model that converts raw written byte messages into game messages.

@@ -1,4 +1,4 @@
-package io.luna.network.codec;
+package io.luna.net.codec;
 
 /**
  * An enum representing different types of outgoing data.

@@ -1,7 +1,7 @@
 package io.luna.net.codec.game;
 
-import io.luna.network.codec.IsaacCipher;
-import io.luna.network.codec.MessageType;
+import io.luna.net.codec.IsaacCipher;
+import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

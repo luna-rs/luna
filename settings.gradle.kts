@@ -4,4 +4,4 @@
 
 rootProject.name = "luna"
 
-include("network")
+include(":network")

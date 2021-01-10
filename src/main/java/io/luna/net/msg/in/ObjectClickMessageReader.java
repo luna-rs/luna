@@ -12,9 +12,9 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
-import io.luna.network.codec.ByteMessage;
-import io.luna.network.codec.ByteOrder;
-import io.luna.network.codec.ValueType;
+import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 

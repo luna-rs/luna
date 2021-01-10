@@ -1,9 +1,9 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
-import io.luna.network.codec.ByteMessage;
-import io.luna.network.codec.MessageType;
-import io.luna.network.codec.ValueType;
+import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.MessageType;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**

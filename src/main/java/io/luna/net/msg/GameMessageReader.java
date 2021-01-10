@@ -2,7 +2,7 @@ package io.luna.net.msg;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.mob.Player;
-import io.luna.network.codec.ByteMessage;
+import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;

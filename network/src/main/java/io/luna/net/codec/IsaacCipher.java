@@ -1,4 +1,4 @@
-package io.luna.network.codec;
+package io.luna.net.codec;
 
 /**
  * <p> An implementation of the <a href="http://www.burtleburtle.net/bob/rand/isaacafa.html">ISAAC</a> psuedorandom number

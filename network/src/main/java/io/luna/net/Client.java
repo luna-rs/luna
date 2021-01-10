@@ -1,4 +1,4 @@
-package io.luna.net.client;
+package io.luna.net;
 
 import com.google.common.base.MoreObjects;
 import io.netty.channel.Channel;
@@ -27,7 +27,7 @@ public abstract class Client<I> {
     /**
      * The underlying channel.
      */
-    final Channel channel;
+    protected final Channel channel;
 
     /**
      * The IP address.
@@ -44,7 +44,7 @@ public abstract class Client<I> {
      *
      * @param channel The underlying channel.
      */
-    Client(Channel channel) {
+    protected Client(Channel channel) {
         this.channel = channel;
         ipAddress = getIpAddressFrom(channel);
         parameterMatcher = TypeParameterMatcher.find(this, Client.class, "I");
@@ -78,7 +78,7 @@ public abstract class Client<I> {
      * @param msg The message to handle.
      * @throws Exception If any errors occur.
      */
-    abstract void onMessageReceived(I msg) throws Exception;
+    protected abstract void onMessageReceived(I msg) throws Exception;
 
     /**
      * Called when the underlying channel is disconnected.
