@@ -355,20 +355,20 @@ public final class Player extends Mob {
 
     @Override
     protected void onActive() {
-        world.getAreas().notifyLogin(this);
+        this.getWorld().getAreas().notifyLogin(this);
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
-        plugins.post(new LoginEvent(this));
+        this.getPlugins().post(new LoginEvent(this));
     }
 
     @Override
     protected void onInactive() {
         actions.interrupt();
-        world.getPlayerMap().remove(getUsername());
-        world.getAreas().notifyLogout(this);
+        this.getWorld().getPlayerMap().remove(getUsername());
+        this.getWorld().getAreas().notifyLogout(this);
         removeLocalObjects();
         interfaces.close();
-        plugins.post(new LogoutEvent(this));
+        this.getPlugins().post(new LogoutEvent(this));
     }
 
     @Override
@@ -414,7 +414,7 @@ public final class Player extends Mob {
 
     @Override
     protected void onPositionChange(Position oldPos) {
-        world.getAreas().notifyPositionChange(this, oldPos, position);
+        this.getWorld().getAreas().notifyPositionChange(this, oldPos, position);
     }
 
     /**
@@ -423,7 +423,7 @@ public final class Player extends Mob {
      * @return The result of the save task.
      */
     public ListenableFuture<Void> save() {
-        return world.getPersistenceService().save(this);
+        return this.getWorld().getPersistenceService().save(this);
     }
 
     /**
@@ -456,7 +456,7 @@ public final class Player extends Mob {
         if (getState() == EntityState.ACTIVE) {
             setState(EntityState.INACTIVE);
             createSaveData();
-            world.getLogoutService().submit(getUsername(), this);
+            this.getWorld().getLogoutService().submit(getUsername(), this);
         }
     }
 
@@ -467,7 +467,7 @@ public final class Player extends Mob {
         if (localObjects.size() > 0) {
             Iterator<GameObject> objectIterator = localObjects.iterator();
             while (objectIterator.hasNext()) {
-                world.getObjects().unregister(objectIterator.next());
+                this.getWorld().getObjects().unregister(objectIterator.next());
                 objectIterator.remove();
             }
         }
@@ -485,7 +485,7 @@ public final class Player extends Mob {
         } else if (bank.hasSpaceFor(item)) {
             bank.add(item);
         } else {
-            world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
+            this.getWorld().getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
                     position, Optional.of(this)));
         }
     }
