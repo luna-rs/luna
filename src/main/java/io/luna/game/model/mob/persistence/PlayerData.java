@@ -66,7 +66,7 @@ public final class PlayerData {
         player.getIgnores().addAll(ignores);
         player.setUnbanDate(unbanDate);
         player.setUnmuteDate(unmuteDate);
-        player.setRunEnergy(runEnergy, false);
+        player.setRunEnergy(runEnergy);
         player.setWeight(weight, false);
         player.getAttributes().load(attributes);
     }

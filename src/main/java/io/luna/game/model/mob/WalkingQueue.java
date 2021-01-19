@@ -163,7 +163,9 @@ public final class WalkingQueue {
         }
 
         if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
-            incrementRunEnergy();
+            Player player = mob.asPlr();
+            incrementRunEnergy(player);
+            player.updateRunEnergy();
         }
 
         mob.setWalkingDirection(walkingDirection);
@@ -274,20 +276,22 @@ public final class WalkingQueue {
                 .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
         double newValue = player.getRunEnergy() - energyReduction;
         if (newValue <= 0.0) {
-            player.setRunEnergy(0.0, true);
+            player.setRunEnergy(0.0);
+            player.updateRunEnergy();
+
             player.setRunning(false);
             runningPath = false;
             return false;
         }
-        player.setRunEnergy(newValue, true);
+        player.setRunEnergy(newValue);
+        player.updateRunEnergy();
         return true;
     }
 
     /**
      * A function that implements an algorithm to restore run energy.
      */
-    private void incrementRunEnergy() {
-        Player player = mob.asPlr();
+    void incrementRunEnergy(Player player) {
 
         double runEnergy = player.getRunEnergy();
         if (runEnergy >= 100.0) {
@@ -300,7 +304,8 @@ public final class WalkingQueue {
         double newValue = runEnergy + energyRestoration;
         newValue = Math.min(newValue, 100.0);
 
-        player.setRunEnergy(newValue, true);
+        player.setRunEnergy(newValue);
+        player.updateRunEnergy();
     }
 
     /**

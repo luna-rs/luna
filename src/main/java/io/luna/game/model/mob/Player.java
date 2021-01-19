@@ -608,19 +608,23 @@ public final class Player extends Mob {
     /**
      * Sets the run energy percentage.
      *
-     * @param newRunEnergy The value to set to.
+     * @param runEnergy The value to set to.
      */
-    public void setRunEnergy(double newRunEnergy, boolean update) {
-        if (newRunEnergy > 100.0) {
-            newRunEnergy = 100.0;
+    public void setRunEnergy(double runEnergy) {
+        if (runEnergy > 100.0) {
+            runEnergy = 100.0;
         }
 
-        if (runEnergy != newRunEnergy) {
-            runEnergy = newRunEnergy;
-            if (update) {
-                queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
-            }
+        if (runEnergy < 0) {
+            runEnergy = 0;
         }
+
+        this.runEnergy = runEnergy;
+    }
+
+    /** Updates the client with the current run energy. */
+    public void updateRunEnergy() {
+        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
     /**
@@ -635,7 +639,8 @@ public final class Player extends Mob {
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        setRunEnergy(newEnergy, true);
+        setRunEnergy(newEnergy);
+        updateRunEnergy();
     }
 
     /**
