@@ -81,8 +81,9 @@ public final class AttributeMap {
      * @param attr The attribute to set.
      * @param value The value to set it to.
      * @param <T> The attribute type.
+     * @return The previous value, possibly null if there was no value.
      */
-    public <T> void set(Attribute<T> attr, T value) {
+    public <T> T set(Attribute<T> attr, T value) {
         requireNonNull(value, "Value cannot be null.");
         var previousValue = attributes.put(attr, value);
         lastKey = attr;
@@ -90,7 +91,9 @@ public final class AttributeMap {
         if (attr.isPersistent() && previousValue == null) {
             // There's now proper mapping for a loaded attribute, remove it.
             loadedAttributes.remove(attr.getPersistenceKey());
+            return null;
         }
+        return (T) previousValue;
     }
 
     /**
@@ -133,6 +136,10 @@ public final class AttributeMap {
      * @return {@code true} if there is a value for {@code attr}.
      */
     public boolean has(Attribute<?> attr) {
-        return attributes.containsKey(attr);
+        if (!attributes.containsKey(attr)) {
+            String key = attr.getPersistenceKey();
+            return key != null && loadedAttributes.containsKey(key);
+        }
+        return true;
     }
 }
