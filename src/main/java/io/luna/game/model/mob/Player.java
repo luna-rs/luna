@@ -643,6 +643,16 @@ public final class Player extends Mob {
         updateRunEnergy();
     }
 
+    boolean hasEnoughEnergyToRun() {
+        return runEnergyAfterReduction() >= 0;
+    }
+
+    /** @return the remaining {@code runEnergy} after a running a single step.*/
+    double runEnergyAfterReduction() {
+        double energyReduction = 0.117 * 2 * Math
+                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * getWeight());
+        return getRunEnergy() - energyReduction;
+    }
     /**
      * @return The combined weight of the inventory and equipment.
      */

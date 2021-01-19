@@ -147,7 +147,7 @@ public final class WalkingQueue {
             if (mob.getType() == EntityType.PLAYER) {
                 Player player = mob.asPlr();
                 if (player.isRunning() || runningPath) {
-                    if (hasEnoughEnergyToRun(player)) {
+                    if (player.hasEnoughEnergyToRun()) {
                         useEnergy(player);
                         player.updateRunEnergy();
                         nextStep = this.currentQueue.poll();
@@ -177,23 +177,12 @@ public final class WalkingQueue {
         mob.setRunningDirection(runningDirection);
     }
 
-    double getRemainingEnergy(double weight, double runEnergy) {
-        double energyReduction = 0.117 * 2 * Math
-                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * weight);
-        return runEnergy - energyReduction;
-    }
-
-    boolean hasEnoughEnergyToRun(Player player) {
-        double energyRemaining = getRemainingEnergy(player.getWeight(), player.getRunEnergy());
-        return energyRemaining >= 0;
-    }
-
     /**
      * Depletes a player's energy. If the player doesn't have enough energy, the player will stop running.
      */
     void useEnergy(Player player) {
-        double energyLeft = getRemainingEnergy(player.getWeight(), player.getRunEnergy());
-        if (hasEnoughEnergyToRun(player)) {
+        double energyLeft = player.runEnergyAfterReduction();
+        if (player.hasEnoughEnergyToRun()) {
             player.setRunEnergy(energyLeft);
         } else {
             player.setRunEnergy(0.0);
