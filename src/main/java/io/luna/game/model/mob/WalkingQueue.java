@@ -147,7 +147,11 @@ public final class WalkingQueue {
             if (mob.getType() == EntityType.PLAYER) {
                 Player player = mob.asPlr();
                 if (player.isRunning() || runningPath) {
-                    nextStep = decrementRunEnergy(player) ? this.currentQueue.poll() : null;
+                    if (decrementRunEnergy(player)) {
+                        nextStep = this.currentQueue.poll();
+                    } else {
+                        nextStep = null;
+                    }
                     if (nextStep != null) {
                         restoreEnergy = false;
                         previousQueue.add(nextStep);
@@ -156,7 +160,6 @@ public final class WalkingQueue {
                     }
                 }
             }
-
 
             Position newPosition = new Position(currentStep.getX(), currentStep.getY(), mob.getPosition().getZ());
             mob.setPosition(newPosition);
@@ -204,7 +207,6 @@ public final class WalkingQueue {
     public void addFirst(Step step) {
         currentQueue.clear();
         runningPath = false;
-
         Queue<Step> backtrack = new ArrayDeque<>();
         for (; ; ) {
             Step prev = previousQueue.pollLast();
@@ -305,7 +307,6 @@ public final class WalkingQueue {
         newValue = Math.min(newValue, 100.0);
 
         player.setRunEnergy(newValue);
-        player.updateRunEnergy();
     }
 
     /**
