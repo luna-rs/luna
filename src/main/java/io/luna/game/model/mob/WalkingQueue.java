@@ -147,7 +147,9 @@ public final class WalkingQueue {
             if (mob.getType() == EntityType.PLAYER) {
                 Player player = mob.asPlr();
                 if (player.isRunning() || runningPath) {
-                    if (decrementRunEnergy(player)) {
+                    if (hasEnoughEnergyToRun(player)) {
+                        useEnergy(player);
+                        player.updateRunEnergy();
                         nextStep = this.currentQueue.poll();
                     } else {
                         nextStep = null;
@@ -173,6 +175,31 @@ public final class WalkingQueue {
 
         mob.setWalkingDirection(walkingDirection);
         mob.setRunningDirection(runningDirection);
+    }
+
+    double getRemainingEnergy(double weight, double runEnergy) {
+        double energyReduction = 0.117 * 2 * Math
+                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * weight);
+        return runEnergy - energyReduction;
+    }
+
+    boolean hasEnoughEnergyToRun(Player player) {
+        double energyRemaining = getRemainingEnergy(player.getWeight(), player.getRunEnergy());
+        return energyRemaining >= 0;
+    }
+
+    /**
+     * Depletes a player's energy. If the player doesn't have enough energy, the player will stop running.
+     */
+    void useEnergy(Player player) {
+        double energyLeft = getRemainingEnergy(player.getWeight(), player.getRunEnergy());
+        if (hasEnoughEnergyToRun(player)) {
+            player.setRunEnergy(energyLeft);
+        } else {
+            player.setRunEnergy(0.0);
+            player.setRunning(false);
+            runningPath = false;
+        }
     }
 
     /**
@@ -265,29 +292,6 @@ public final class WalkingQueue {
     public void clear() {
         currentQueue.clear();
         previousQueue.clear();
-    }
-
-    /**
-     * A function that implements an algorithm to deplete run energy.
-     *
-     * @return {@code false} if the player can no longer run.
-     */
-    private boolean decrementRunEnergy(Player player) {
-        double totalWeight = player.getWeight();
-        double energyReduction = 0.117 * 2 * Math
-                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
-        double newValue = player.getRunEnergy() - energyReduction;
-        if (newValue <= 0.0) {
-            player.setRunEnergy(0.0);
-            player.updateRunEnergy();
-
-            player.setRunning(false);
-            runningPath = false;
-            return false;
-        }
-        player.setRunEnergy(newValue);
-        player.updateRunEnergy();
-        return true;
     }
 
     /**
