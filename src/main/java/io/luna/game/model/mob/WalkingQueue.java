@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  * @author Graham
  */
-public final class WalkingQueue {
+public class WalkingQueue {
 
     // TODO Rewrite
 
