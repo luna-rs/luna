@@ -115,7 +115,6 @@ public class WalkingQueue {
      * If the current path is a running path.
      */
     private boolean runningPath;
-
     /**
      * Create a new {@link WalkingQueue}.
      *
@@ -149,7 +148,7 @@ public class WalkingQueue {
                 if (player.isRunning() || runningPath) {
                     if (player.hasEnoughEnergyToRun()) {
                         useEnergy(player);
-                        player.updateRunEnergy();
+                        updateEnergy();
                         nextStep = this.currentQueue.poll();
                     } else {
                         nextStep = null;
@@ -170,11 +169,15 @@ public class WalkingQueue {
         if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
             Player player = mob.asPlr();
             incrementRunEnergy(player);
-            player.updateRunEnergy();
+            updateEnergy();
         }
 
         mob.setWalkingDirection(walkingDirection);
         mob.setRunningDirection(runningDirection);
+    }
+
+    void updateEnergy(){
+        mob.asPlr().updateRunEnergy();
     }
 
     /**
