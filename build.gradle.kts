@@ -25,7 +25,7 @@ dependencies {
     implementation("org.slf4j:slf4j-nop:1.7.30")
     implementation("com.lmax:disruptor:3.4.2")
     implementation("io.netty:netty-all:4.1.56.Final")
-    implementation("com.google.guava:guava:30.1-jre")
+    implementation("com.google.guava:guava:30.1.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4-atlassian-1")
     implementation("io.github.classgraph:classgraph:4.8.59")
