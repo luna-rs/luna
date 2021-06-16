@@ -37,7 +37,7 @@ dependencies {
     implementation("org.openjfx:javafx-fxml:11.0.1")
     implementation("org.openjfx:javafx-swing:11.0.1")
     implementation("com.zaxxer:HikariCP:3.4.5")
-    implementation("org.mockito:mockito-core:2.24.5")
+    implementation("org.mockito:mockito-core:3.11.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
