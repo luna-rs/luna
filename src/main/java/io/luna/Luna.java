@@ -2,8 +2,6 @@ package io.luna;
 
 import com.moandjiezana.toml.Toml;
 import io.luna.logging.LoggingSettings;
-import io.luna.logging.LoggingSettingsFileReader;
-import io.luna.logging.TomlLoggingSettingsFileReader;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
@@ -94,9 +92,10 @@ public final class Luna {
      *
      * @return The logging settings object.
      */
-    private static LoggingSettings loadLoggingSettings() {
-        LoggingSettingsFileReader reader = new TomlLoggingSettingsFileReader(TOML);
-        return reader.read();
+    private static LoggingSettings loadLoggingSettings() throws IOException {
+        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
+            return TOML.read(bufferedReader).to(LoggingSettings.class);
+        }
     }
 
     /**
