@@ -6,10 +6,10 @@ import io.luna.game.event.impl.PickupItemEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
+import io.luna.logging.FileOutputType;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 

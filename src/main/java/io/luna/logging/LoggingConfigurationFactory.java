@@ -1,8 +1,6 @@
-package io.luna.util;
+package io.luna.logging;
 
 import io.luna.Luna;
-import io.luna.util.LoggingSettings.FileOutputType;
-import io.luna.util.LoggingSettings.OutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter.Result;
 import org.apache.logging.log4j.core.LoggerContext;

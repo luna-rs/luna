@@ -5,7 +5,7 @@ import io.luna.game.event.impl.CommandEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
+import io.luna.logging.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
