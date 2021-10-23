@@ -1,7 +1,6 @@
 package io.luna.net;
 
 import io.luna.LunaContext;
-import io.luna.net.client.Client;
 import io.luna.net.client.IdleClient;
 import io.luna.net.codec.login.LoginDecoder;
 import io.luna.net.codec.login.LoginEncoder;

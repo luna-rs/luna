@@ -3,7 +3,6 @@ package io.luna.net.msg.in;
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.CastOnNpcEvent;
-import io.luna.game.event.impl.CastOnPlayerEvent;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;

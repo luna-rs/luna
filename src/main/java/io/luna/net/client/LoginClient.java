@@ -13,6 +13,7 @@ import io.luna.net.codec.login.LoginRequestMessage;
 import io.luna.net.codec.login.LoginResponse;
 import io.luna.net.codec.login.LoginResponseMessage;
 import io.luna.net.msg.GameMessageRepository;
+import io.luna.net.Client;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import org.mindrot.jbcrypt.BCrypt;
@@ -59,7 +60,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
     }
 
     @Override
-    void onMessageReceived(LoginRequestMessage msg) {
+    public void onMessageReceived(LoginRequestMessage msg) {
         String username = msg.getUsername();
         String password = msg.getPassword();
         var player = new Player(context, new PlayerCredentials(username, password));

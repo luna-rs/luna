@@ -1,6 +1,5 @@
 package io.luna.net.msg.out;
 
-import io.luna.game.event.impl.PlayerEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;

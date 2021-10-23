@@ -1,7 +1,7 @@
 package io.luna.net.codec.login;
 
 import io.luna.game.model.mob.PlayerRights;
-import io.luna.net.client.Client;
+import io.luna.net.Client;
 
 /**
  * An immutable model representing login response data.

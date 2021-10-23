@@ -1,6 +1,5 @@
 package io.luna.net;
 
-import io.luna.net.client.Client;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

@@ -1,13 +1,12 @@
-package io.luna.net.client;
+package io.luna.net;
 
 import com.google.common.base.MoreObjects;
-import io.luna.net.LunaChannelFilter;
-import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.TypeParameterMatcher;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 /**
@@ -28,7 +27,7 @@ public abstract class Client<I> {
     /**
      * The underlying channel.
      */
-    final Channel channel;
+    protected final Channel channel;
 
     /**
      * The IP address.
@@ -45,9 +44,9 @@ public abstract class Client<I> {
      *
      * @param channel The underlying channel.
      */
-    Client(Channel channel) {
+    protected Client(Channel channel) {
         this.channel = channel;
-        ipAddress = NetworkUtils.getIpAddress(channel);
+        ipAddress = getIpAddressFrom(channel);
         parameterMatcher = TypeParameterMatcher.find(this, Client.class, "I");
     }
 
@@ -79,7 +78,7 @@ public abstract class Client<I> {
      * @param msg The message to handle.
      * @throws Exception If any errors occur.
      */
-    abstract void onMessageReceived(I msg) throws Exception;
+    protected abstract void onMessageReceived(I msg) throws Exception;
 
     /**
      * Called when the underlying channel is disconnected.
@@ -128,10 +127,12 @@ public abstract class Client<I> {
     }
 
     /**
-     * @return The client's channel filter.
+     * @param channel
+     * @return The connected remote address the argued channel.
      */
-    public final LunaChannelFilter getChannelFilter() {
-        return channel.attr(LunaChannelFilter.KEY).get();
+    final String getIpAddressFrom(Channel channel) {
+        InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
+        return socketAddress.getAddress().getHostAddress();
     }
 
     /**

@@ -17,11 +17,6 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import javafx.geometry.Pos;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkState;
 
