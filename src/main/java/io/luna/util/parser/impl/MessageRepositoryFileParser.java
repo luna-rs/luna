@@ -7,7 +7,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.parser.AbstractJsonFileParser;
+import io.luna.files.AbstractJsonFileParser;
 
 import java.lang.reflect.Field;
 

@@ -3,7 +3,7 @@ package io.luna.util.parser.impl;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InetAddresses;
 import io.luna.net.LunaChannelFilter;
-import io.luna.util.parser.AbstractNewLineFileParser;
+import io.luna.files.AbstractNewLineFileParser;
 
 /**
  * A {@link AbstractNewLineFileParser} implementation that parses blacklisted addresses.
