@@ -201,7 +201,7 @@ public abstract class Mob extends Entity {
         if (hp.getLevel() > 0) {
             hp.setLevel(amount);
             if (hp.getLevel() <= 0) {
-                world.schedule(type == EntityType.PLAYER ? new PlayerDeathTask(asPlr()) :
+                this.getWorld().schedule(type == EntityType.PLAYER ? new PlayerDeathTask(asPlr()) :
                         new NpcDeathTask(asNpc()));
             }
         }
@@ -258,7 +258,7 @@ public abstract class Mob extends Entity {
     public final void damage(Hit hit1, Hit hit2, Hit hit3) {
         damage(hit1);
         damage(hit2);
-        world.schedule(new Task(1) {
+        this.getWorld().schedule(new Task(1) {
             @Override
             protected void execute() {
                 damage(hit3);
@@ -273,7 +273,7 @@ public abstract class Mob extends Entity {
     public final void damage(Hit hit1, Hit hit2, Hit hit3, Hit hit4) {
         damage(hit1);
         damage(hit2);
-        world.schedule(new Task(1) {
+        this.getWorld().schedule(new Task(1) {
             @Override
             protected void execute() {
                 damage(hit3);

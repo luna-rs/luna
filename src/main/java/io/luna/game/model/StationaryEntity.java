@@ -220,7 +220,7 @@ public abstract class StationaryEntity extends Entity {
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
             // Retrieve viewable chunks.
-            List<Chunk> viewableChunks = world.getChunks().getViewableChunks(position);
+            List<Chunk> viewableChunks = this.getWorld().getChunks().getViewableChunks(position);
             for (Chunk chunk : viewableChunks) {
                 // Wrap players in immutable view, add it.
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));

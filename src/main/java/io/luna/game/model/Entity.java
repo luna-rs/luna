@@ -25,21 +25,6 @@ public abstract class Entity {
     protected final LunaContext context;
 
     /**
-     * The plugin manager.
-     */
-    protected final PluginManager plugins;
-
-    /**
-     * The game service.
-     */
-    protected final GameService service;
-
-    /**
-     * The world.
-     */
-    protected final World world;
-
-    /**
      * The type.
      */
     protected final EntityType type;
@@ -70,11 +55,6 @@ public abstract class Entity {
         this.context = context;
         this.position = position;
         this.type = type;
-
-        plugins = context.getPlugins();
-        service = context.getGame();
-        world = context.getWorld();
-
     }
 
     /**
@@ -86,10 +66,6 @@ public abstract class Entity {
     public Entity(LunaContext context, EntityType type) {
         this.context = context;
         this.type = type;
-
-        plugins = context.getPlugins();
-        service = context.getGame();
-        world = context.getWorld();
     }
 
     /**
@@ -213,13 +189,13 @@ public abstract class Entity {
         ChunkPosition next = position.getChunkPosition();
         if (currentChunk == null) {
             // We have no current chunk.
-            currentChunk = world.getChunks().load(next);
+            currentChunk = this.getWorld().getChunks().load(next);
             currentChunk.add(this);
         } else if (!currentChunk.getPosition().equals(next)) {
             // We have a chunk, and it's not equal to the new one.
             currentChunk.remove(this);
 
-            currentChunk = world.getChunks().load(next);
+            currentChunk = this.getWorld().getChunks().load(next);
             currentChunk.add(this);
         }
     }
@@ -244,21 +220,21 @@ public abstract class Entity {
      * @return The plugin manager.
      */
     public final PluginManager getPlugins() {
-        return plugins;
+        return context.getPlugins();
     }
 
     /**
      * @return The game service.
      */
     public final GameService getService() {
-        return service;
+        return context.getGame();
     }
 
     /**
      * @return The world.
      */
     public final World getWorld() {
-        return world;
+        return context.getWorld();
     }
 
     /**
@@ -293,7 +269,7 @@ public abstract class Entity {
      * @return The chunk manager.
      */
     public ChunkManager getChunks() {
-        return world.getChunks();
+        return this.getWorld().getChunks();
     }
 
     /**
