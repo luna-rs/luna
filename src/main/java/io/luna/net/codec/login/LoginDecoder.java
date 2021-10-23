@@ -1,6 +1,5 @@
 package io.luna.net.codec.login;
 
-import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
 import io.luna.net.client.Client;
 import io.luna.net.client.LoginClient;
@@ -8,6 +7,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
+import io.luna.security.RsaKey;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -15,7 +15,6 @@ import io.netty.util.Attribute;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
@@ -29,18 +28,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
 
-    static {
-        try {
-            // Initializes RSA modulus and exponent values.
-            Toml tomlReader = new Toml().
-                    read(new File("./data/rsa/rsapriv.toml")).
-                    getTable("key");
-            RSA_MOD = new BigInteger(tomlReader.getString("modulus"));
-            RSA_EXP = new BigInteger(tomlReader.getString("exponent"));
-        } catch (Exception e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
+    private final RsaKey privateRsaKey;
 
     /**
      * An enumerated type representing login decoder states.
@@ -50,21 +38,6 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
         LOGIN_TYPE,
         RSA_BLOCK
     }
-
-    /**
-     * The asynchronous logger.
-     */
-    private static final Logger logger = LogManager.getLogger();
-
-    /**
-     * The private RSA modulus value.
-     */
-    private static final BigInteger RSA_MOD;
-
-    /**
-     * The private RSA exponent value.
-     */
-    private static final BigInteger RSA_EXP;
 
     /**
      * A cryptographically secure RNG.
@@ -91,11 +64,13 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      *
      * @param context The context instance.
      * @param repository The message repository.
+     * @param privateRsaKey The private RSA key.
      */
-    public LoginDecoder(LunaContext context, GameMessageRepository repository) {
+    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateRsaKey) {
         super(DecodeState.HANDSHAKE);
         this.context = context;
         this.repository = repository;
+        this.privateRsaKey = privateRsaKey;
     }
 
     @Override
@@ -206,7 +181,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
             ByteBuf rsaBuffer = ByteMessage.pooledBuffer();
             try {
-                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(RSA_EXP, RSA_MOD).toByteArray());
+                rsaBuffer.writeBytes(new BigInteger(rsaBytes).modPow(privateRsaKey.exponent, privateRsaKey.modulus).toByteArray());
 
                 int rsaOpcode = rsaBuffer.readUnsignedByte();
                 checkState(rsaOpcode == 10, "rsaOpcode != 10");
