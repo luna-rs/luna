@@ -79,20 +79,19 @@ public final class PersistenceService extends AbstractIdleService {
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> transform(String username, Consumer<PlayerData> action) {
+        if(world.getPlayerMap().containsKey(username)) {
+            Optional<Player> optionalPlayer = world.getPlayer(username);
+            if (optionalPlayer.isEmpty()) {
+                throw new IllegalStateException("Player exists in player map but not game map.");
+            }
+            Player player = optionalPlayer.get();
+            PlayerData saveData = player.createSaveData();
+            action.accept(saveData);
+            return world.getPersistenceService().save(username, saveData);
+        }
+
         logger.trace("Sending data transformation request for {} to a worker...", username);
         return worker.submit(() -> {
-            if (world.getPlayerMap().containsKey(username)) {
-                GameService gameService = world.getContext().getGame();
-                gameService.sync(() -> {
-                    Optional<Player> optionalPlayer = world.getPlayer(username);
-                    if (optionalPlayer.isEmpty()) {
-                        throw new IllegalStateException("Player exists in player map but not game map.");
-                    }
-                    action.accept(optionalPlayer.get().createSaveData());
-                });
-                return null;
-            }
-
             var timer = Stopwatch.createStarted();
             var data = AuthenticationService.PERSISTENCE.load(username);
             if (data == null) {

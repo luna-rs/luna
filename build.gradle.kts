@@ -57,8 +57,16 @@ java {
 
 sourceSets {
     main {
+        java {
+            srcDir("src/main/java")
+        }
         withConvention(KotlinSourceSet::class) {
             kotlin.srcDirs("plugins")
+        }
+    }
+    test {
+        java {
+            srcDir("src/test/java")
         }
     }
 }

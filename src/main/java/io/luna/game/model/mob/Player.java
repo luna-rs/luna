@@ -429,8 +429,9 @@ public final class Player extends Mob {
     /**
      * Prepares the save data to be serialized by a {@link LogoutService} worker.
      */
-    public void createSaveData() {
+    public PlayerData createSaveData() {
         saveData = new PlayerData().save(this);
+        return saveData;
     }
 
     /**
