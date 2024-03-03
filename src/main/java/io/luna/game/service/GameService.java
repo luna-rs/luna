@@ -1,10 +1,12 @@
 package io.luna.game.service;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.model.World;
@@ -23,6 +25,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.util.concurrent.Futures.getUnchecked;
+import static com.google.common.util.concurrent.Uninterruptibles.*;
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
 
 /**
@@ -180,11 +184,14 @@ public final class GameService extends AbstractScheduledService {
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
 
+        // Run last minute game tasks from other threads.
+        runSynchronizationTasks();
+
         // Will stop any current and future logins.
         loginService.stopAsync().awaitTerminated();
 
-        // Run last minute game tasks from other threads.
-        runSynchronizationTasks();
+        // Save all players and wait for it to complete.
+        getUnchecked(world.getPersistenceService().saveAll());
 
         // Synchronously disconnect all players.
         world.getPlayers().forEach(player -> {
@@ -206,6 +213,9 @@ public final class GameService extends AbstractScheduledService {
      * @param ticks The amount of ticks to schedule for.
      */
     public void scheduleSystemUpdate(int ticks) {
+
+        // Preliminary save of all players.
+        world.getPersistenceService().saveAll();
 
         // Send out system update messages.
         for (Player player : world.getPlayers()) {

@@ -137,13 +137,7 @@ public final class PersistenceService extends AbstractIdleService {
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> save(Player player) {
-        String username = player.getUsername();
-        if (world.getLogoutService().hasRequest(username)) {
-            // The LogoutService will handle the saving.
-            IllegalStateException ex = new IllegalStateException("This player is already being serviced by LogoutService.");
-            return Futures.immediateFailedFuture(ex);
-        }
-        return save(username, player.createSaveData());
+        return save(player.getUsername(), player.createSaveData());
     }
 
     /**
