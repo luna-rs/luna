@@ -3,7 +3,6 @@ package io.luna;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
-import io.luna.game.model.Music;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -14,6 +13,7 @@ import io.luna.util.parser.impl.BlacklistFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.ItemDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
+import io.luna.util.parser.impl.MusicDefinitionFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.NpcDefinitionFileParser;
 import io.luna.util.parser.impl.ObjectDefinitionFileParser;
@@ -129,11 +129,11 @@ public final class LunaServer {
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
         executor.execute(new ItemDefinitionFileParser());
+        executor.execute(new MusicDefinitionFileParser());
         executor.execute(new NpcCombatDefinitionFileParser());
         executor.execute(new NpcDefinitionFileParser());
         executor.execute(new ObjectDefinitionFileParser());
         executor.execute(new BlacklistFileParser(channelFilter));
-        Music.loadMusic();
 
         try {
             int count = executor.size();

@@ -1,12 +1,10 @@
-package world.player.logout.clickLogout
+package world.player.logout.logoutButton
 
 import api.predef.*
-import io.luna.game.model.Music
 
 /**
  * Disconnect player if the logout button is clicked.
  */
 button(2458) {
-    Music.stopMusic(plr)
     plr.logout()
 }
