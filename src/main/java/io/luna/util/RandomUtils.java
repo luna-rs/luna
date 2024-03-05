@@ -3,6 +3,8 @@ package io.luna.util;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -167,7 +169,6 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static <T> T random(List<T> list) {
-        // TODO Separate LinkedList implementation.
         return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 

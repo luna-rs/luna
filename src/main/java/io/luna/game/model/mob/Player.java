@@ -7,6 +7,7 @@ import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
+import io.luna.game.event.impl.RegionIdChangedEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
@@ -57,12 +58,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  */
 public final class Player extends Mob {
-
-    /**
-     * Integer representing last song played, and Array of unlocked songs.
-     */
-    public int lastSong = -1;
-    public int[] unlockedSongs = new int[600];
 
     /**
      * An enum representing prayer icons.
@@ -192,6 +187,11 @@ public final class Player extends Mob {
      * The settings.
      */
     private PlayerSettings settings = new PlayerSettings();
+
+    /**
+     * The music tab data.
+     */
+    private PlayerMusicTab musicTab = new PlayerMusicTab();
 
     /**
      * The cached update block.
@@ -421,6 +421,20 @@ public final class Player extends Mob {
     @Override
     protected void onPositionChange(Position oldPos) {
         world.getAreas().notifyPositionChange(this, oldPos, position);
+        checkRegionId(oldPos);
+    }
+
+    /**
+     * Sends a {@link RegionIdChangedEvent} if the region ID has changed as a result of a position change.
+     *
+     * @param oldPos The old position.
+     */
+    private void checkRegionId(Position oldPos) {
+        int oldId = oldPos.getRegionPosition().getId();
+        int newId = position.getRegionPosition().getId();
+        if (oldId != newId) {
+            context.getPlugins().post(new RegionIdChangedEvent(this, oldPos, position, oldId, newId));
+        }
     }
 
     /**
@@ -817,6 +831,22 @@ public final class Player extends Mob {
      */
     public PlayerSettings getSettings() {
         return settings;
+    }
+
+    /**
+     * Sets the music tab data.
+     *
+     * @param musicTab The new value.
+     */
+    public void setMusicTab(PlayerMusicTab musicTab) {
+        this.musicTab = musicTab;
+    }
+
+    /**
+     * @return The music tab data.
+     */
+    public PlayerMusicTab getMusicTab() {
+        return musicTab;
     }
 
     /**
