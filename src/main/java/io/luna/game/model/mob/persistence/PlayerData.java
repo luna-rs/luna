@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A model acting as a proxy for {@link Player} save data. It primarily ensures thread safety for interactions between
@@ -43,7 +44,7 @@ public final class PlayerData {
     public LocalDateTime unmuteDate;
     public double runEnergy;
     public double weight;
-    public Map<String, Object> attributes;
+    public List<Object> attributes;
 
     // Used by the LogoutService for password hashing.
     transient volatile boolean needsHash;

@@ -4,8 +4,11 @@ import api.predef.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import io.luna.game.action.TimeSource
+import io.luna.game.model.item.ItemContainer
+import io.luna.game.model.item.ItemContainer.StackPolicy
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.util.TickTimer
+
 
 /**
  * A factory class for instantiating attributes.
@@ -23,8 +26,8 @@ object Attr {
         val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 
-        // Register type adapters.
-        builder.registerTypeAdapter(TickTimer::class.java, TickTimerTypeAdapter)
+        // Register special types.
+        Attribute.addSpecialType(builder, ItemContainer::class.java, ItemContainerTypeAdapter)
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())
@@ -54,6 +57,15 @@ object Attr {
      * Creates a [Boolean] attribute with [initialValue] (default `false`).
      */
     fun boolean(initialValue: Boolean = false) = AttributeDelegate(Attribute(initialValue))
+
+    /**
+     * Creates an [ItemContainer] attribute.
+     */
+    fun itemContainer(capacity: Int, stackPolicy: StackPolicy, refreshWidgetId: Int):
+            AttributeDelegate<ItemContainer> {
+        val attr = Attribute(ItemContainer(capacity, stackPolicy, refreshWidgetId))
+        return AttributeDelegate(attr)
+    }
 
     /**
      * Creates a [TimeSource] attribute.

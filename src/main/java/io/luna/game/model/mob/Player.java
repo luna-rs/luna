@@ -219,11 +219,6 @@ public final class Player extends Mob {
     private boolean regionChanged;
 
     /**
-     * The running direction.
-     */
-    private Direction runningDirection = Direction.NONE;
-
-    /**
      * The chat message.
      */
     private Optional<Chat> chat = Optional.empty();
@@ -928,22 +923,6 @@ public final class Player extends Mob {
      */
     public void setRegionChanged(boolean regionChanged) {
         this.regionChanged = regionChanged;
-    }
-
-    /**
-     * @return The running direction.
-     */
-    public Direction getRunningDirection() {
-        return runningDirection;
-    }
-
-    /**
-     * Sets the running direction.
-     *
-     * @param runningDirection The value to set to.
-     */
-    public void setRunningDirection(Direction runningDirection) {
-        this.runningDirection = runningDirection;
     }
 
     /**
