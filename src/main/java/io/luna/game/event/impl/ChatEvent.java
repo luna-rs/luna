@@ -2,12 +2,16 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
 
+import java.time.Instant;
+
 /**
  * An event sent when a player talks.
  *
  * @author lare96 <http://github.org/lare96>
  */
 public final class ChatEvent extends PlayerEvent {
+
+    // TODO Every player has public chat history
 
     /**
      * The chat effects.
@@ -28,6 +32,12 @@ public final class ChatEvent extends PlayerEvent {
      * The message.
      */
     private final byte[] message;
+
+    /**
+     * A timestamp of when it occurred, not precise.
+     */
+    private final Instant timestamp = Instant.now();
+
 
     /**
      * Creates a new {@link ChatEvent}.
@@ -73,4 +83,12 @@ public final class ChatEvent extends PlayerEvent {
     public byte[] getMessage() {
         return message;
     }
+
+    /**
+     * @return The timestamp of the message.
+     */
+    public Instant getTimestamp() {
+        return timestamp;
+    }
 }
+
