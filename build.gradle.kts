@@ -35,7 +35,7 @@ dependencies {
     implementation(kotlin("scripting-common"))
     implementation("org.openjfx:javafx-controls:11.0.1")
     implementation("org.openjfx:javafx-fxml:11.0.1")
-    implementation("org.openjfx:javafx-swing:11.0.1")
+    implementation("org.openjfx:javafx-swing:21.0.2")
     implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("org.mockito:mockito-core:5.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
