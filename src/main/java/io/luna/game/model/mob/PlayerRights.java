@@ -12,6 +12,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public enum PlayerRights {
     
     // Order matters, because >=/<= use compareTo in Kotlin.
+    // TODO proper documentation, emphasis on significance of order. Deprecate the java methods and use compareTo in Java
+    // as well for consistency
     PLAYER(0, 0),
     MODERATOR(1, 1),
     ADMINISTRATOR(2, 2),
