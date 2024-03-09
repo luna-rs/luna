@@ -25,15 +25,15 @@ public final class FacePositionUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Position position = unwrap(player.getFacePosition());
-        msg.putShort((position.getX() + 1) << 1, ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort((position.getY() + 1) << 1, ByteOrder.LITTLE);
+        msg.putShort(2 * position.getX() + 1, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(2 * position.getY() + 1, ByteOrder.LITTLE);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         Position position = unwrap(npc.getFacePosition());
-        msg.putShort(position.getX(), ByteOrder.LITTLE);
-        msg.putShort(position.getY(), ByteOrder.LITTLE);
+        msg.putShort(2 * position.getX() + 1, ByteOrder.LITTLE);
+        msg.putShort(2 * position.getY() + 1, ByteOrder.LITTLE);
     }
 
     @Override
