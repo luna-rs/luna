@@ -70,7 +70,7 @@ public final class LunaServer {
      *
      * @throws ReflectiveOperationException If an error occurs while instancing plugins.
      */
-    public void init() throws ReflectiveOperationException {
+    public void init() throws ReflectiveOperationException, InterruptedException {
         Stopwatch launchTimer = Stopwatch.createStarted();
 
         initLaunchTasks();
@@ -87,7 +87,6 @@ public final class LunaServer {
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
-
         ResourceLeakDetector.setLevel(Luna.settings().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -102,13 +101,16 @@ public final class LunaServer {
     /**
      * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
-    private void initServices() {
+    private void initServices() throws InterruptedException {
         var gameService = context.getGame();
         var loginService = context.getWorld().getLoginService();
         var logoutService = context.getWorld().getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
         logger.info("All services are now running.");
+
+        // Wait for last minute Kotlin tasks before we let payers login.
+        gameService.getSynchronizer().await();
     }
 
     /**
@@ -138,7 +140,7 @@ public final class LunaServer {
         try {
             int count = executor.size();
             if (count > 0) {
-                logger.info("Waiting for {} launch task(s) to complete...", box(count));
+                logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
                 executor.await(true);
             }
         } catch (ExecutionException e) {

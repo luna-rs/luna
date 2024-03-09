@@ -9,7 +9,8 @@ package io.luna.game.event;
 public class Event {
 
     /**
-     * The pipeline this event is passing through. Might be {@code null}.
+     * The pipeline this event is passing through. Might be {@code null}, always {@code null} for events that are
+     * {@code lazy-posted} (see {@link EventListenerPipeline#lazyPost(Event)}).
      */
     private EventListenerPipeline pipeline;
 

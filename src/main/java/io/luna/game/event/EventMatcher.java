@@ -39,7 +39,7 @@ public final class EventMatcher<E extends Event> {
      * @param msg The message to match.
      * @return {@code true} if the event was matched.
      */
-    public final boolean match(E msg) {
+    public boolean match(E msg) {
         return matchFunc.apply(msg);
     }
 }

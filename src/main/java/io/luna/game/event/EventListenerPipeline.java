@@ -1,10 +1,14 @@
 package io.luna.game.event;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+import io.luna.game.event.impl.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerShutdownEvent;
 import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,10 +75,34 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
                 }
             }
         } catch (ScriptExecutionException e) {
-            handleException(e);
+            handleException(e, false);
         } finally {
             msg.setPipeline(null);
         }
+    }
+
+    /**
+     * Lazily posts an event by wrapping the logic for all listeners in a {@link Runnable} to be executed later on.
+     * Used to handle events like {@link ServerLaunchEvent} and {@link ServerShutdownEvent}.
+     * <br>
+     * <strong>Warning: By default, every single listener in the pipeline is included. Use the returned list in order
+     * to actually post the events.</strong>
+     *
+     * @param msg The message to post lazily.
+     * @return The list of wrapped post events, each {@link Runnable} is an event that needs to be handled.
+     */
+    public ImmutableList<Runnable> lazyPost(E msg) {
+        ImmutableList.Builder<Runnable> taskBuilder = ImmutableList.builder();
+        for (EventListener<E> eventListener : listeners) {
+            taskBuilder.add(() -> {
+                try {
+                    eventListener.apply(msg);
+                } catch (ScriptExecutionException e) {
+                    handleException(e, true);
+                }
+            });
+        }
+        return taskBuilder.build();
     }
 
     /**
@@ -82,10 +110,12 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      *
      * @param e The exception to handle.
      */
-    private void handleException(ScriptExecutionException e) {
+    private void handleException(ScriptExecutionException e, boolean lazy) {
         var script = e.getScript();
         if (script != null) {
-            logger.warn("Failed to run a listener from script '" + script.getInfo().getName()+ "'", e);
+            String s = lazy ? "lazy-run" : "run";
+            logger.warn(new ParameterizedMessage("Failed to {} a listener from script '{}'", s,
+                    script.getInfo().getName()), e);
         } else {
             logger.catching(e);
         }
