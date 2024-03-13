@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     val kotlinVersion = "1.3.60"
-    val jfxVersion = "0.0.8"
+    val jfxVersion = "0.1.0"
 
     java
     application
