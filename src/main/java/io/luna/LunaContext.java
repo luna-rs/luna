@@ -9,7 +9,7 @@ import io.luna.game.service.GameService;
  *
  * @author lare96 <http://github.org/lare96>
  */
-public final class LunaContext {
+public class LunaContext {
 
     /**
      * The world.

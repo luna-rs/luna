@@ -9,7 +9,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class PlayerSettings {
+public class PlayerSettings {
 
     /**
      * An enumerated type whose elements represent brightness levels.
