@@ -40,6 +40,11 @@ public abstract class Task {
     /**
      * The execution counter. This task is ran when it reaches the delay.
      */
+    private int delayCounter;
+
+    /**
+     * The amount of times {@link #execute()} has been called since the creation of the task.
+     */
     private int executionCounter;
 
     /**
@@ -79,8 +84,8 @@ public abstract class Task {
      * @return {@code true} if this task is ready to be ran.
      */
     final boolean isReady() {
-        if (++executionCounter >= delay && state == TaskState.RUNNING) {
-            executionCounter = 0;
+        if (++delayCounter >= delay && state == TaskState.RUNNING) {
+            delayCounter = 0;
             return true;
         }
         return false;
@@ -94,6 +99,8 @@ public abstract class Task {
             execute();
         } catch (Exception e) {
             onException(e);
+        } finally {
+            executionCounter++;
         }
     }
 
@@ -104,6 +111,7 @@ public abstract class Task {
     public final void cancel() {
         if (state != TaskState.CANCELLED) {
             onCancel();
+            executionCounter = 0;
             state = TaskState.CANCELLED;
         }
     }
@@ -194,6 +202,13 @@ public abstract class Task {
      */
     void setState(TaskState state) {
         this.state = state;
+    }
+
+    /**
+     * @return The amount of times {@link #execute()} has been called since the creation of the task.
+     */
+    public int getExecutionCounter() {
+        return executionCounter;
     }
 
     /**
