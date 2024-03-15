@@ -26,11 +26,6 @@ public final class DialogueQueue {
     private final Queue<DialogueInterface> dialogues;
 
     /**
-     * The action to execute at the tail of the dialogue.
-     */
-    private Consumer<Player> tailAction; // TODO rename
-
-    /**
      * Creates a new {@link DialogueQueue}.
      *
      * @param player The player.
@@ -42,15 +37,6 @@ public final class DialogueQueue {
     }
 
     /**
-     * Sets a new action to execute at the tail of the dialogue.
-     *
-     * @param tailAction The new value.
-     */
-    public void setTailAction(Consumer<Player> tailAction) {
-        this.tailAction = tailAction;
-    }
-
-    /**
      * Advances this dialogue queue by {@code 1}, and displays the next dialogue.
      */
     public void advance() {
@@ -58,9 +44,6 @@ public final class DialogueQueue {
         if (nextDialogue != null) {
             player.getInterfaces().open(nextDialogue);
         } else {
-            if (tailAction != null) {
-                tailAction.accept(player);
-            }
             AbstractInterfaceSet interfaces = player.getInterfaces();
             if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
                 interfaces.close();

@@ -20,10 +20,8 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
             else -> throw IllegalArgumentException("'option' must be between 1-5 inclusive.")
         }
 
-        if (plr.dialogues.isEmpty && inter.isOpen) {
+        if (plr.dialogues.isEmpty  && inter.isOpen) {
             plr.interfaces.close()
-        } else {
-            plr.advanceDialogues()
         }
     }
 }

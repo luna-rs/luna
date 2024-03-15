@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -13,9 +14,36 @@ import static com.google.common.base.Preconditions.checkState;
  * A builder that uses chaining to enable the dynamic and concise construction of dialogues. Unless otherwise
  * necessary, this model should be accessed through {@link Player#newDialogue()}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class DialogueQueueBuilder {
+
+    /**
+     * Represents a single dialogue option.
+     */
+    public static final class DialogueOption {
+
+        /**
+         * The name of this option.
+         */
+        private final String name;
+
+        /**
+         * What happens when this option is clicked.
+         */
+        private final Consumer<Player> action;
+
+        /**
+         * Creates a new {@link DialogueOption}.
+         *
+         * @param name The name of this option.
+         * @param action What happens when this option is clicked.
+         */
+        public DialogueOption(String name, Consumer<Player> action) {
+            this.name = name;
+            this.action = action;
+        }
+    }
 
     /**
      * The player.
@@ -105,6 +133,42 @@ public final class DialogueQueueBuilder {
         checkLocked();
         dialogues.add(new TextDialogueInterface(text));
         return this;
+    }
+
+    /**
+     * Shortcut to {@link OptionDialogueInterface#OptionDialogueInterface(String...)} with a dynamic amount of options.
+     * The limit is {@code 5}.
+     *
+     * @return This builder, for chaining.
+     */
+    public DialogueQueueBuilder options(List<DialogueOption> options) {
+        // TODO Unlimited options? With "pages" functionality?
+        checkLocked();
+        switch (options.size()) {
+            case 0:
+            case 1:
+                throw new IllegalStateException("The minimum amount of options is 2.");
+            case 2:
+                return options(options.get(0).name, options.get(0).action,
+                        options.get(1).name, options.get(1).action);
+            case 3:
+                return options(options.get(0).name, options.get(0).action,
+                        options.get(1).name, options.get(1).action,
+                        options.get(2).name, options.get(2).action);
+            case 4:
+                return options(options.get(0).name, options.get(0).action,
+                        options.get(1).name, options.get(1).action,
+                        options.get(2).name, options.get(2).action,
+                        options.get(3).name, options.get(3).action);
+            case 5:
+                return options(options.get(0).name, options.get(0).action,
+                        options.get(1).name, options.get(1).action,
+                        options.get(2).name, options.get(2).action,
+                        options.get(3).name, options.get(3).action,
+                        options.get(4).name, options.get(4).action);
+            default:
+                throw new IllegalStateException("The maximum amount of options is 5.");
+        }
     }
 
     /**
@@ -254,18 +318,18 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Attaches the argued consumer to the last appended dialogue, to be ran when the dialogue opens.
+     * Attaches the argued consumer to the first appended dialogue, to be run when the first dialogue opens.
      *
      * @param action The action to run.
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder openAction(Consumer<Player> action) {
+    public DialogueQueueBuilder first(Consumer<Player> action) {
         checkLocked();
 
-        DialogueInterface lastDialogue = dialogues.peekLast();
+        DialogueInterface firstDialogue = dialogues.peekFirst();
 
-        checkState(lastDialogue != null, "No past dialogue to attach action to.");
-        lastDialogue.setOpenAction(action);
+        checkState(firstDialogue != null, "No first dialogue to attach action to.");
+        firstDialogue.setOpenAction(action);
         return this;
     }
 
@@ -277,23 +341,23 @@ public final class DialogueQueueBuilder {
     }
 
     /**
-     * Attaches the argued consumer to the dialogue queue, to be ran when the dialogue is forwarded.
+     * Attaches the argued consumer to the last appended dialogue, to be run when the last dialogue is forwarded.
      *
      * @param action The action to run.
      * @return This builder, for chaining.
      */
-    public void then(Consumer<Player> action) {
+    public DialogueQueueBuilder then(Consumer<Player> action) {
         checkLocked();
         if (dialogues.isEmpty()) {
             action.accept(player);
         } else {
-            DialogueQueue queue = new DialogueQueue(player, dialogues);
-            queue.advance();
-            queue.setTailAction(action);
+            DialogueInterface lastDialogue = dialogues.peekLast();
 
-            player.setDialogues(queue);
+            checkState(lastDialogue != null, "No last dialogue to attach action to.");
+            lastDialogue.setCloseAction(action);
         }
         locked = true;
+        return this;
     }
 
     /**
