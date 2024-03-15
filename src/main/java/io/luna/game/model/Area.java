@@ -3,6 +3,8 @@ package io.luna.game.model;
 import io.luna.game.model.mob.Player;
 import io.luna.util.RandomUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -10,7 +12,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A model representing a square-shaped 2D/3D area on the map. Usually registered with an {@link AreaManager}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class Area {
 
@@ -149,6 +151,19 @@ public class Area {
     public int width() {
         // Areas are inclusive to base coordinates, so we add 1.
         return (northEastX - southWestX) + 1;
+    }
+
+    /**
+     * Computes every single possible {@Link Position} contained within this area.
+     */
+    public List<Position> computeAllPositions() { // cache when first building the area, test
+        List<Position> positions = new ArrayList<>();
+        for(int x = southWestX; x <= northEastX; x++) {
+            for(int y = southWestY; y <= northEastY; y++) {
+                positions.add(new Position(x, y));
+            }
+        }
+        return positions;
     }
 
     /**
