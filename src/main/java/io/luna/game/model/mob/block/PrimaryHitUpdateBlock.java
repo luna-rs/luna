@@ -42,11 +42,11 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 32;
+        return 0x20;
     }
 
     @Override
     public int getNpcMask() {
-        return 64;
+        return 0x40;
     }
 }

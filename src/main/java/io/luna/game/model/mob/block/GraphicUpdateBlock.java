@@ -37,11 +37,11 @@ public final class GraphicUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 256;
+        return 0x100;
     }
 
     @Override
     public int getNpcMask() {
-        return 128;
+        return 0x80;
     }
 }

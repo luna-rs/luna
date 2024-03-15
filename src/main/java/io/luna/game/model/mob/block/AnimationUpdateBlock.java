@@ -43,6 +43,6 @@ public final class AnimationUpdateBlock extends UpdateBlock {
 
     @Override
     public int getNpcMask() {
-        return 16;
+        return 0x10;
     }
 }

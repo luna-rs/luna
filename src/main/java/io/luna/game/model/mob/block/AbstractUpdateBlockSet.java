@@ -90,8 +90,8 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
         }
 
         // Encode the update mask.
-        if (mask >= 256) {
-            mask |= 64;
+        if (mask >= 0x100) {
+            mask |= 0x40;
             blockMsg.putShort(mask, ByteOrder.LITTLE);
         } else {
             blockMsg.put(mask);

@@ -39,6 +39,6 @@ public final class InteractionUpdateBlock extends UpdateBlock {
 
     @Override
     public int getNpcMask() {
-        return 32;
+        return 0x20;
     }
 }

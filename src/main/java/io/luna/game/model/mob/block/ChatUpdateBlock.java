@@ -32,6 +32,6 @@ public final class ChatUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 128;
+        return 0x80;
     }
 }

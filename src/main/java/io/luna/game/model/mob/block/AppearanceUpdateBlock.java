@@ -16,7 +16,7 @@ import java.util.function.Function;
 /**
  * An {@link UpdateBlock} implementation that handles the {@code APPEARANCE} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AppearanceUpdateBlock extends UpdateBlock {
 
@@ -32,8 +32,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         ByteMessage buf = ByteMessage.raw();
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
-            buf.put(player.getPrayerIcon().getId()); // Prayer icon. // TODO fix with new client
-            buf.put(player.getSkullIcon().getId()); // Skull icon. // TODO fix with new client
+            buf.put(player.getPrayerIcon().getId()); // Prayer icon.
+            buf.put(player.getSkullIcon().getId()); // Skull icon.
 
             // Transform the player if needed.
             OptionalInt transformId = player.getTransformId();
@@ -63,7 +63,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 16;
+        return 0x10;
     }
 
     /**

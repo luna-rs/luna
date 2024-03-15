@@ -34,6 +34,6 @@ public final class ForcedMovementUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 1024;
+        return 0x400;
     }
 }

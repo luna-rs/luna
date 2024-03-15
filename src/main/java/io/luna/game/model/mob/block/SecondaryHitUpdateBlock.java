@@ -41,7 +41,7 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 512;
+        return 0x200;
     }
 
     @Override
