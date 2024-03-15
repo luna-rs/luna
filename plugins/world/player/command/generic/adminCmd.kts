@@ -1,6 +1,7 @@
 package world.player.command.generic
 
 import api.predef.*
+import io.luna.Luna
 import io.luna.game.model.Position
 import io.luna.game.model.RegionPosition
 import io.luna.game.model.item.Item
@@ -70,3 +71,8 @@ cmd("item", RIGHTS_ADMIN) {
     val amount = if (args.size == 2) asInt(1) else 1
     plr.inventory.add(Item(id, amount))
 }
+
+/**
+ * A command that teleports the player home.
+ */
+cmd("home", RIGHTS_ADMIN) { plr.teleport(Luna.settings().startingPosition()) }
