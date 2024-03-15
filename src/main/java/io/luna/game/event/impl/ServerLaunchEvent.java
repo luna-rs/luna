@@ -1,23 +1,34 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
+import io.luna.util.AsyncExecutor;
 
 /**
- * An event sent when the server launches.
+ * A specialized event type sent when the server fully launches. All code is ran on the game thread. To load blocking resources,
+ * please use the provided {@link AsyncExecutor}. The game will not go online until all asynchronous tasks complete.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ServerLaunchEvent extends Event {
 
     /**
-     * Singleton instance.
+     * The executor to handle tasks.
      */
-    public static final Event INSTANCE = new ServerLaunchEvent();
+    private final AsyncExecutor taskPool;
 
     /**
-     * Private constructor.
+     * Creates a new {@link ServerShutdownEvent}.
+     *
+     * @param taskPool The executor to handle tasks.
      */
-    private ServerLaunchEvent() {
-        super();
+    public ServerLaunchEvent(AsyncExecutor taskPool) {
+        this.taskPool = taskPool;
+    }
+
+    /**
+     * The executor to handle tasks.
+     */
+    public AsyncExecutor getTaskPool() {
+        return taskPool;
     }
 }

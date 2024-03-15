@@ -8,7 +8,7 @@ import io.luna.net.msg.out.WidgetItemModelMessageWriter
 /**
  * A [DialogueInterface] that opens the cook food dialogue.
  */
-class CookingInterface(val food: Food, val usingFire: Boolean = false) : DialogueInterface(1743) {
+class CookingInterface(val food: Food, val usingFire: Boolean) : DialogueInterface(1743) {
 
     override fun init(plr: Player): Boolean {
         val cooked = food.cooked

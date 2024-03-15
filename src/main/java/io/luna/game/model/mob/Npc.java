@@ -40,11 +40,6 @@ public class Npc extends Mob {
     private Optional<NpcCombatDefinition> combatDefinition;
 
     /**
-     * The transformation identifier.
-     */
-    private OptionalInt transformId = OptionalInt.empty();
-
-    /**
      * If this NPC should respawn.
      */
     private boolean respawn;

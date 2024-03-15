@@ -3,6 +3,7 @@ package io.luna.game.model.mob.persistence;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerMusicTab;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.PlayerSettings;
 import io.luna.game.model.mob.Skill;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A model acting as a proxy for {@link Player} save data. It primarily ensures thread safety for interactions between
@@ -31,6 +33,7 @@ public final class PlayerData {
     public String lastIp;
     public int[] appearance;
     public PlayerSettings settings;
+    public PlayerMusicTab musicTab;
     public List<IndexedItem> inventory;
     public List<IndexedItem> bank;
     public List<IndexedItem> equipment;
@@ -41,7 +44,7 @@ public final class PlayerData {
     public LocalDateTime unmuteDate;
     public double runEnergy;
     public double weight;
-    public Map<String, Object> attributes;
+    public List<Object> attributes;
 
     // Used by the LogoutService for password hashing.
     transient volatile boolean needsHash;
@@ -57,6 +60,7 @@ public final class PlayerData {
         player.setRights(rights);
         player.setLastIp(lastIp);
         player.getAppearance().setValues(appearance);
+        player.setMusicTab(musicTab);
         player.setSettings(settings);
         player.getInventory().init(inventory);
         player.getBank().init(bank);
@@ -91,6 +95,7 @@ public final class PlayerData {
         lastIp = player.getClient().getIpAddress();
         appearance = player.getAppearance().toArray();
         settings = player.getSettings().copy();
+        musicTab = player.getMusicTab().copy();
         inventory = player.getInventory().toList();
         bank = player.getBank().toList();
         equipment = player.getEquipment().toList();

@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class AreaManager implements Iterable<Area> {
 
+    // TODO Controllers instead of being attached to areas
     /**
      * The world.
      */

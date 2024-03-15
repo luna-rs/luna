@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.3.60"
+    val kotlinVersion = "1.9.23"
     val jfxVersion = "0.0.8"
 
     java
@@ -20,24 +20,24 @@ val junitVersion: String by project
 
 dependencies {
     implementation("com.google.code.gson:gson:2.8.5")
-    implementation("org.apache.logging.log4j:log4j-core:2.14.0")
-    implementation("org.apache.logging.log4j:log4j-api:2.14.0")
-    implementation("org.slf4j:slf4j-nop:1.7.30")
+    implementation("org.apache.logging.log4j:log4j-core:2.23.1")
+    implementation("org.apache.logging.log4j:log4j-api:2.23.1")
+    implementation("org.slf4j:slf4j-nop:2.0.12")
     implementation("com.lmax:disruptor:3.4.2")
-    implementation("io.netty:netty-all:4.1.56.Final")
+    implementation("io.netty:netty-all:4.1.107.Final")
     implementation("com.google.guava:guava:30.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4-atlassian-1")
-    implementation("io.github.classgraph:classgraph:4.8.59")
+    implementation("io.github.classgraph:classgraph:4.8.168")
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("script-runtime"))
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
-    implementation("org.openjfx:javafx-controls:11.0.1")
+    implementation("org.openjfx:javafx-controls:21.0.2")
     implementation("org.openjfx:javafx-fxml:11.0.1")
-    implementation("org.openjfx:javafx-swing:11.0.1")
+    implementation("org.openjfx:javafx-swing:21.0.2")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.mockito:mockito-core:2.24.5")
+    implementation("org.mockito:mockito-core:5.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
@@ -57,8 +57,16 @@ java {
 
 sourceSets {
     main {
+        java {
+            srcDir("src/main/java")
+        }
         withConvention(KotlinSourceSet::class) {
             kotlin.srcDirs("plugins")
+        }
+    }
+    test {
+        java {
+            srcDir("src/test/java")
         }
     }
 }

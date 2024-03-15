@@ -7,6 +7,7 @@ import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
+import io.luna.game.event.impl.RegionIdChangedEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
@@ -188,6 +189,11 @@ public final class Player extends Mob {
     private PlayerSettings settings = new PlayerSettings();
 
     /**
+     * The music tab data.
+     */
+    private PlayerMusicTab musicTab = new PlayerMusicTab();
+
+    /**
      * The cached update block.
      */
     private ByteMessage cachedBlock;
@@ -211,11 +217,6 @@ public final class Player extends Mob {
      * If the region has changed.
      */
     private boolean regionChanged;
-
-    /**
-     * The running direction.
-     */
-    private Direction runningDirection = Direction.NONE;
 
     /**
      * The chat message.
@@ -415,6 +416,20 @@ public final class Player extends Mob {
     @Override
     protected void onPositionChange(Position oldPos) {
         world.getAreas().notifyPositionChange(this, oldPos, position);
+        checkRegionId(oldPos);
+    }
+
+    /**
+     * Sends a {@link RegionIdChangedEvent} if the region ID has changed as a result of a position change.
+     *
+     * @param oldPos The old position.
+     */
+    private void checkRegionId(Position oldPos) {
+        int oldId = oldPos.getRegionPosition().getId();
+        int newId = position.getRegionPosition().getId();
+        if (oldId != newId) {
+            context.getPlugins().post(new RegionIdChangedEvent(this, oldPos, position, oldId, newId));
+        }
     }
 
     /**
@@ -429,8 +444,9 @@ public final class Player extends Mob {
     /**
      * Prepares the save data to be serialized by a {@link LogoutService} worker.
      */
-    public void createSaveData() {
+    public PlayerData createSaveData() {
         saveData = new PlayerData().save(this);
+        return saveData;
     }
 
     /**
@@ -813,6 +829,22 @@ public final class Player extends Mob {
     }
 
     /**
+     * Sets the music tab data.
+     *
+     * @param musicTab The new value.
+     */
+    public void setMusicTab(PlayerMusicTab musicTab) {
+        this.musicTab = musicTab;
+    }
+
+    /**
+     * @return The music tab data.
+     */
+    public PlayerMusicTab getMusicTab() {
+        return musicTab;
+    }
+
+    /**
      * Sets if this player is running.
      *
      * @param running The new value.
@@ -891,22 +923,6 @@ public final class Player extends Mob {
      */
     public void setRegionChanged(boolean regionChanged) {
         this.regionChanged = regionChanged;
-    }
-
-    /**
-     * @return The running direction.
-     */
-    public Direction getRunningDirection() {
-        return runningDirection;
-    }
-
-    /**
-     * Sets the running direction.
-     *
-     * @param runningDirection The value to set to.
-     */
-    public void setRunningDirection(Direction runningDirection) {
-        this.runningDirection = runningDirection;
     }
 
     /**
