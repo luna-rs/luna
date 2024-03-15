@@ -6,24 +6,33 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
 import io.luna.LunaContext;
+import io.luna.game.event.Event;
+import io.luna.game.event.impl.ServerShutdownEvent;
 import io.luna.game.event.impl.ServerLaunchEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.plugin.PluginManager;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
+import io.luna.util.AsyncExecutor;
 import io.luna.util.ExecutorUtils;
+import io.luna.util.ThreadUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -51,12 +60,14 @@ public final class GameService extends AbstractScheduledService {
 
         @Override
         public void running() {
-            // The game thread is now running, synchronize launch event.
+            // Start the game world and run startup logic from Kotlin scripts.
             sync(() -> {
                 world.start();
+                runKotlinTasks(ServerLaunchEvent::new, "Waiting for {} Kotlin startup task(s) to complete...");
 
-                PluginManager plugins = context.getPlugins();
-                plugins.post(ServerLaunchEvent.INSTANCE);
+                // Synchronizes with the lock in LunaServer. Players won't be able to login until the startup
+                // tasks are complete, so it's fine to block the game thread.
+                synchronizer.countDown();
             });
         }
 
@@ -95,6 +106,11 @@ public final class GameService extends AbstractScheduledService {
      * The synchronization executor.
      */
     private final GameServiceExecutor gameExecutor = new GameServiceExecutor();
+
+    /**
+     * The synchronizer for the Kotlin startup tasks.
+     */
+    private final CountDownLatch synchronizer = new CountDownLatch(1);
 
     /**
      * The context instance.
@@ -170,6 +186,26 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
+     * Runs both synchronous and asynchronous logic from Kotlin scripts and waits for it to complete.
+     *
+     * @param eventFunction Produces the event message to pass.
+     * @param waitingMessage The message to log while waiting for tasks to complete.
+     */
+    private <E extends Event> void runKotlinTasks(Function<AsyncExecutor, E> eventFunction, String waitingMessage) {
+        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
+        context.getPlugins().lazyPost(eventFunction.apply(executor)).forEach(Runnable::run);
+        try {
+            int count = executor.size();
+            if (count > 0) {
+                logger.info(waitingMessage, box(count));
+                executor.await(true);
+            }
+        } catch (ExecutionException e) {
+            throw new CompletionException(e.getCause());
+        }
+    }
+
+    /**
      * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to properly save resources before the
      * application exits. This method will block for as long as it needs to until all important threads have completed their tasks.
      * <p>
@@ -180,11 +216,17 @@ public final class GameService extends AbstractScheduledService {
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
 
-        // Will stop any current and future logins.
-        loginService.stopAsync().awaitTerminated();
+        // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
+        runKotlinTasks(ServerShutdownEvent::new, "Waiting for {} Kotlin shutdown task(s) to complete...");
 
         // Run last minute game tasks from other threads.
         runSynchronizationTasks();
+
+        // Will stop any current and future logins.
+        loginService.stopAsync().awaitTerminated();
+
+        // Save all players and wait for it to complete.
+        getUnchecked(world.getPersistenceService().saveAll());
 
         // Synchronously disconnect all players.
         world.getPlayers().forEach(player -> {
@@ -206,6 +248,9 @@ public final class GameService extends AbstractScheduledService {
      * @param ticks The amount of ticks to schedule for.
      */
     public void scheduleSystemUpdate(int ticks) {
+
+        // Preliminary save of all players.
+        world.getPersistenceService().saveAll();
 
         // Send out system update messages.
         for (Player player : world.getPlayers()) {
@@ -269,5 +314,12 @@ public final class GameService extends AbstractScheduledService {
      */
     public Executor getExecutor() {
         return gameExecutor;
+    }
+
+    /**
+     * @return The synchronizer for the Kotlin startup tasks.
+     */
+    public CountDownLatch getSynchronizer() {
+        return synchronizer;
     }
 }

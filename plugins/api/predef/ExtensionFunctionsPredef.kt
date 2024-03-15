@@ -2,18 +2,23 @@ package api.predef
 
 import io.luna.game.model.Position
 import io.luna.game.model.World
-import io.luna.game.model.`object`.GameObject
-import io.luna.game.model.`object`.ObjectDirection
-import io.luna.game.model.`object`.ObjectType
 import io.luna.game.model.chunk.ChunkManager
+import io.luna.game.model.def.MusicDefinition
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.PlayerMusicTab
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.`object`.GameObject
+import io.luna.game.model.`object`.ObjectDirection
+import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
+import io.luna.net.msg.out.ColorChangeMessageWriter
 import io.luna.net.msg.out.ConfigMessageWriter
+import io.luna.net.msg.out.MusicMessageWriter
+import java.awt.Color
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -29,6 +34,31 @@ import kotlin.reflect.KProperty
  * Queues a [ConfigMessageWriter] message.
  */
 fun Player.sendConfig(id: Int, state: Int) = queue(ConfigMessageWriter(id, state))
+
+/**
+ * Plays music for the player.
+ */
+fun Player.sendMusic(def: MusicDefinition) {
+    val id = def.id
+    if (musicTab.lastPlayed != id && id != -1) {
+        musicTab.lastPlayed = id
+        queue(MusicMessageWriter(id))
+        queue(ColorChangeMessageWriter(def.lineId, Color.GREEN))
+        sendText(def.name, 4439)
+        musicTab.unlocked.add(PlayerMusicTab.UnlockedSong(id, def.lineId))
+    }
+}
+
+/**
+ * Stops music for the player.
+ */
+fun Player.stopMusic() {
+    if (musicTab.lastPlayed != -1) {
+        musicTab.lastPlayed = -1
+        sendText(if (musicTab.isAutomaticMode) "AUTO" else "MAN", 4439)
+        queue(MusicMessageWriter(-1))
+    }
+}
 
 
 /********************************

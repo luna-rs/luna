@@ -81,7 +81,7 @@ public final class AsyncExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
-        checkState(isRunning(), "No workers available to run tasks."); // TODO change message
+        checkState(isRunning(), "This executor is no longer running.");
 
         ListenableFuture<?> pending = threadPool.submit(command);
         pendingTasks.offer(pending);

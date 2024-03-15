@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.Luna;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mob.Player;
@@ -20,9 +21,10 @@ public final class ButtonClickMessageReader extends GameMessageReader {
     public Event read(Player player, GameMessage msg) throws Exception {
         int buttonId = msg.getPayload().getShort(false);
         checkState(buttonId >= 0, "buttonId < 0");
-        if (player.getRights().equalOrGreater(PlayerRights.DEVELOPER)) {
-            player.sendMessage("[Debug] Button: " + buttonId);
+        ButtonClickEvent evt = new ButtonClickEvent(player, buttonId);
+        if (Luna.settings().betaMode()) {
+            player.sendMessage(evt);
         }
-        return new ButtonClickEvent(player, buttonId);
+        return evt;
     }
 }

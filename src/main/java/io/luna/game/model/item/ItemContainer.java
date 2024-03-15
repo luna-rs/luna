@@ -233,7 +233,7 @@ public class ItemContainer implements Iterable<Item> {
         } else {
             // Add non-stackable item.
             int remaining = computeRemainingSize();
-            int until = remaining > item.getAmount() ? item.getAmount() : remaining;
+            int until = Math.min(remaining, item.getAmount());
 
             startBulkUpdate();
             try {

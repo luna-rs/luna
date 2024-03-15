@@ -108,7 +108,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
         checkState(!locked, "Cannot add definitions to a locked repository.");
 
         int id = definition.getId();
-        checkState(!get(id).isPresent(), "Cannot have two definitions mapped to the same identifier.");
+        checkState(!get(id).isPresent(), "Identifier ["+id+"] already mapped to a definition.");
 
         put(id, definition);
         size++;

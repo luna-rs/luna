@@ -1,4 +1,4 @@
-package io.luna.net.codec.login;
+package io.luna.net.msg.login;
 
 import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;

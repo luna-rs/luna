@@ -35,7 +35,7 @@ public final class SqlConnectionPool {
     /**
      * The database login password.
      */
-    private static final String PASSWORD = "H55yPGC9CkVcNwcqGJPT";
+    private static final String PASSWORD = "guMQRNYf44fxERs4uHxLCWjCQ";
 
     /**
      * A builder for this connection pool.

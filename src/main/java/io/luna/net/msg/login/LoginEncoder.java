@@ -1,4 +1,4 @@
-package io.luna.net.codec.login;
+package io.luna.net.msg.login;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;

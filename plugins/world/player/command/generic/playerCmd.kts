@@ -29,6 +29,7 @@ cmd("changepass", RIGHTS_PLAYER) {
         override fun onNameInput(player: Player?, value: String?) {
             plr.password = value
             plr.sendMessage("Your password has been changed to $value.")
+            plr.save()
         }
     })
 }
@@ -60,9 +61,9 @@ cmd("commands", RIGHTS_PLAYER) {
 }
 
 /**
- * A command that tell how many players are currently online.
+ * A command that tells how many players are currently online.
  */
 cmd("players", RIGHTS_PLAYER) {
-    plr.sendMessage("Player online: ${world.players.size()}.")
+    plr.sendMessage("Players online: ${world.players.size()}.")
 }
 

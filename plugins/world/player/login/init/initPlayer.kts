@@ -4,10 +4,12 @@ import api.predef.*
 import api.punishment.PunishmentHandler
 import io.luna.Luna
 import io.luna.game.event.impl.LoginEvent
+import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.AssignmentMessageWriter
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
+import world.minigame.party_room.drop_party.DropPartyOption.depositItems
 import java.time.format.DateTimeFormatter
 
 /**
@@ -39,6 +41,8 @@ fun init(plr: Player) {
     plr.interactions.show(INTERACTION_TRADE)
 
     plr.equipment.loadBonuses()
+    plr.depositItems.setListeners(PlayerRefreshListener(plr, "You can only deposit 8 items at a time."))
+
     plr.inventory.refreshPrimary(plr)
     plr.equipment.refreshPrimary(plr)
 
@@ -49,7 +53,7 @@ fun init(plr: Player) {
 
     plr.sendMessage("Welcome to Luna.")
     if (Luna.settings().betaMode()) {
-       plr.sendMessage("Server currently running in ${Luna.settings().runtimeMode()} mode.")
+        plr.sendMessage("Server currently running in ${Luna.settings().runtimeMode()} mode.")
     }
     checkMute(plr)
 }

@@ -35,6 +35,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             msg.startBitAccess();
 
             handleMovement(player, msg);
+
             blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
 
             msg.putBits(8, player.getLocalPlayers().size());

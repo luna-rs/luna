@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
@@ -71,20 +72,26 @@ public final class PersistenceService extends AbstractIdleService {
     }
 
     /**
-     * Asynchronously loads a player's data, applies {@code action} to it, and then saves the modified data. The task will fail
-     * if the player is logged in.
+     * Asynchronously loads a player's data, applies {@code action} to it, and then saves the modified data.
      *
      * @param username The username of the player.
      * @param action The action to apply.
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> transform(String username, Consumer<PlayerData> action) {
+        if(world.getPlayerMap().containsKey(username)) {
+            Optional<Player> optionalPlayer = world.getPlayer(username);
+            if (optionalPlayer.isEmpty()) {
+                throw new IllegalStateException("Player exists in player map but not game map.");
+            }
+            Player player = optionalPlayer.get();
+            PlayerData saveData = player.createSaveData();
+            action.accept(saveData);
+            return world.getPersistenceService().save(username, saveData);
+        }
+
         logger.trace("Sending data transformation request for {} to a worker...", username);
         return worker.submit(() -> {
-            if (world.getPlayerMap().containsKey(username)) {
-                throw new IllegalStateException("Cannot perform data transformation on logged in player.");
-            }
-
             var timer = Stopwatch.createStarted();
             var data = AuthenticationService.PERSISTENCE.load(username);
             if (data == null) {
@@ -129,14 +136,7 @@ public final class PersistenceService extends AbstractIdleService {
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> save(Player player) {
-        String username = player.getUsername();
-        if (world.getLogoutService().hasRequest(username)) {
-            // The LogoutService will handle the saving.
-            IllegalStateException ex = new IllegalStateException("This player is already being serviced by LogoutService.");
-            return Futures.immediateFailedFuture(ex);
-        }
-        player.createSaveData();
-        return save(username, player.getSaveData());
+        return save(player.getUsername(), player.createSaveData());
     }
 
     /**

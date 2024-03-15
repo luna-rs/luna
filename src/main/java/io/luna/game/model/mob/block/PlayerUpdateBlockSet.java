@@ -18,16 +18,16 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
      * An immutable list of update blocks.
      */
     private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-        new GraphicUpdateBlock(),
-        new AnimationUpdateBlock(),
-        new ForcedChatUpdateBlock(),
-        new ChatUpdateBlock(),
-        new ForcedMovementUpdateBlock(),
-        new InteractionUpdateBlock(),
-        new AppearanceUpdateBlock(),
-        new FacePositionUpdateBlock(),
-        new PrimaryHitUpdateBlock(),
-        new SecondaryHitUpdateBlock()
+            new GraphicUpdateBlock(),
+            new AnimationUpdateBlock(),
+            new ForcedChatUpdateBlock(),
+            new ChatUpdateBlock(),
+            new ForcedMovementUpdateBlock(),
+            new InteractionUpdateBlock(),
+            new AppearanceUpdateBlock(),
+            new FacePositionUpdateBlock(),
+            new PrimaryHitUpdateBlock(),
+            new SecondaryHitUpdateBlock()
     );
 
     /**

@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.Luna;
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ObjectClickEvent;
@@ -19,6 +20,7 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import javafx.geometry.Pos;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -59,6 +61,9 @@ public final class ObjectClickMessageReader extends GameMessageReader {
         checkState(evt.getX() >= 0, "x coordinate out of range");
         checkState(evt.getY() >= 0, "y coordinate out of range");
         checkState(evt.getId() > 0, "id out of range");
+        if(Luna.settings().betaMode()) {
+            player.sendMessage(evt.getGameObject());
+        }
 
         // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
         player.submitAction(new InteractionAction(player, evt.getGameObject()) {
@@ -108,6 +113,6 @@ public final class ObjectClickMessageReader extends GameMessageReader {
     // TODO Only in use until cache loading, after cache loading is done proper verification will take over.
     private GameObject computeDefaultObject(Player player, int id, Position position) {
         return new GameObject(player.getContext(), id, position, ObjectType.DEFAULT,
-                ObjectDirection.WEST, null);
+                ObjectDirection.WEST, Optional.empty());
     }
 }

@@ -66,10 +66,11 @@ public final class LogoutService extends AuthenticationService<Player> {
             try {
                 var timer = Stopwatch.createStarted();
                 PERSISTENCE.save(request);
-                pendingSaves.remove(username);
                 logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {
                 logger.error(new ParameterizedMessage("Issue servicing {}'s logout request!", username), e);
+            } finally {
+                pendingSaves.remove(username);
             }
         });
         logger.info("{} has logged out.", username);

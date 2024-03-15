@@ -88,7 +88,7 @@ public class GameObject extends StationaryEntity {
                 add("y", position.getY()).
                 add("z", position.getZ()).
                 add("type", objectType).
-                add("owner", getOwner().map(Player::getUsername).orElse("NULL/PUBLIC")).toString();
+                add("owner", getOwner().map(Player::getUsername).orElse("PUBLIC")).toString();
     }
 
     @Override

@@ -15,6 +15,23 @@ public final class RegionPosition {
     public static final int SIZE = 64;
 
     /**
+     * The multiplicative factor to get the region ID.
+     */
+    public static final int MULTIPLICATIVE_FACTOR = 256;
+
+    /**
+     * Returns the base {@link Position} from region {@code id}.
+     *
+     * @param id The region id.
+     * @return The position in the region.
+     */
+    public static Position getPositionInRegion(int id) {
+        int regionX = id / MULTIPLICATIVE_FACTOR;
+        int regionY = id - (regionX * MULTIPLICATIVE_FACTOR);
+        return new Position(regionX * SIZE, regionY * SIZE);
+    }
+
+    /**
      * The center x coordinate.
      */
     private final int x;
@@ -47,7 +64,7 @@ public final class RegionPosition {
     private RegionPosition(int x, int y) {
         this.x = x;
         this.y = y;
-        id = (x * 256) + y;
+        id = (x * MULTIPLICATIVE_FACTOR) + y;
     }
 
     @Override

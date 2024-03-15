@@ -1,5 +1,6 @@
 package io.luna.game.plugin;
 
+import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.event.Event;
 import io.luna.game.event.EventListenerPipeline;
@@ -43,6 +44,21 @@ public final class PluginManager {
             return;
         }
         pipeline.post(msg);
+    }
+
+    /**
+     * Lazily traverses the event across its designated pipeline. See {@link EventListenerPipeline#lazyPost(Event)} for
+     * more info.
+     *
+     * @param msg The event to post.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ImmutableList<Runnable> lazyPost(Event msg) {
+        EventListenerPipeline pipeline = pipelines.get(msg.getClass());
+        if (pipeline == null) {
+            return ImmutableList.of();
+        }
+        return pipeline.lazyPost(msg);
     }
 
     /**

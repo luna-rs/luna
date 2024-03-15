@@ -2,17 +2,27 @@ package world.player.command.generic
 
 import api.predef.*
 import io.luna.game.model.Position
+import io.luna.game.model.RegionPosition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.SkillSet
 import world.player.command.cmd
 
 /**
- * A command fthat makes all stats 99.
+ * A command that makes all stats 99.
  */
 cmd("master", RIGHTS_ADMIN) {
     plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
     plr.hitpoints.level = 99
     plr.sendMessage("You have set all your skills to level 99.")
+}
+
+/**
+ * A command that teleports you to the specified region.
+ */
+cmd("region", RIGHTS_ADMIN) {
+    val id = asInt(0)
+    val pos = RegionPosition.getPositionInRegion(id)
+    plr.teleport(pos)
 }
 
 /**

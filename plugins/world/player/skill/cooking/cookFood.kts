@@ -13,7 +13,7 @@ val fires = setOf(2732)
 /**
  * The range objects.
  */
-val ranges = setOf(114, 2728, 4172, 8750, 2732, 2728, 2729, 2730, 2731, 2859, 3039)
+val ranges = setOf(114, 2728, 4172, 8750, 2728, 2729, 2730, 2731, 2859, 3039)
 
 /**
  * Opens the [CookingInterface] if the food is non-null.

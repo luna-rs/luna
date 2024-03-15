@@ -1,4 +1,4 @@
-package world.player.skill.mining
+package world.player.skill.mining.mineOre
 
 import api.predef.*
 import io.luna.game.action.Action
@@ -9,6 +9,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
 import world.player.skill.crafting.gemCutting.Gem
+import world.player.skill.mining.Ore
+import world.player.skill.mining.Pickaxe
 
 /**
  * An [InventoryAction] that will enable the mining of rocks.
