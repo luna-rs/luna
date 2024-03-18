@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
  * A model representing a manager for a repository of {@link StationaryEntity}s. It handles the registration and
  * tracking of the world's entities.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public abstract class EntityList<E extends StationaryEntity> implements Iterable<E> {
 
@@ -144,6 +144,22 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
                 collect(Collectors.toList());
         toRemove.forEach(this::unregister);
         return !toRemove.isEmpty();
+    }
+
+    /**
+     * Determines if {@code position} is occupied by at least 1 entity of type {@code <E>}. More efficient than using
+     * {@link #findAll(Position)}.
+     *
+     * @param position The position to check.
+     * @return {@code true} if occupied.
+     */
+    public final boolean isOccupied(Position position) {
+        for(Entity entity : world.getChunks().load(position).getAll(type)) {
+            if(entity.getPosition().equals(position)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -3,7 +3,9 @@ package io.luna.game.model;
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Player;
+import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.ChunkPlacementMessageWriter;
 
@@ -11,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * An abstraction model representing non-moving {@link Entity}.
@@ -30,11 +33,6 @@ public abstract class StationaryEntity extends Entity {
      * The player to update for. If empty, updates for all players.
      */
     private final Optional<Player> owner;
-
-    /**
-     * The position used for placement.
-     */
-    private final Position placement;
 
     /**
      * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
@@ -57,7 +55,6 @@ public abstract class StationaryEntity extends Entity {
     public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> owner) {
         super(context, position, type);
         this.owner = owner;
-        placement = position;//new Position(getChunkPosition().getAbsX(), getChunkPosition().getAbsY());
     }
 
     /**
@@ -126,16 +123,25 @@ public abstract class StationaryEntity extends Entity {
      *
      * @param updateType The update type to apply.
      */
-    private void applyUpdate(UpdateType updateType) {
+    private void applyUpdate(UpdateType type) {
+        applyUpdate(plr -> sendUpdateMessage(plr, type, true));
+    }
+
+    /**
+     * Updates this entity, either locally or globally.
+     *
+     * @param action The update type to apply.
+     */
+    public void applyUpdate(Consumer<Player> action) {
         if (owner.isPresent() && owner.get().isViewableFrom(this)) {
             // We have a player to update for.
-            sendUpdateMessage(owner.get(), updateType);
+            action.accept(owner.get());
         } else {
             // We don't, so update for all viewable surrounding players.
             for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
                 for (Player inside : chunkPlayers) {
                     if (isViewableFrom(inside)) {
-                        sendUpdateMessage(inside, updateType);
+                        action.accept(inside);
                     }
                 }
             }
@@ -143,23 +149,48 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
+     * Marks a chunk for placement of an entity.
+     *
+     * @param player The player to mark for.
+     */
+    public void sendPlacementMessage(Player player) {
+        Chunk chunk = currentChunk;
+        if (chunk == null) {
+            chunk = world.getChunks().load(position);
+        }
+        player.queue(new ChunkPlacementMessageWriter(player.getLastRegion(), chunk));
+    }
+
+    /**
      * Sends an update message to {@code player}.
      *
      * @param player The player.
      * @param updateType The update type to apply.
+     * @param send If any data should be queued.
      */
-    public void sendUpdateMessage(Player player, UpdateType updateType) {
-        player.queue(new ChunkPlacementMessageWriter(placement));
-
+    public GameMessageWriter sendUpdateMessage(Player player, UpdateType updateType, boolean send) {
+        if (send) {
+            sendPlacementMessage(player);
+        }
         int offset = getChunkPosition().offset(position);
         if (updateType == UpdateType.SHOW) {
-            player.queue(showMessage(offset));
+            GameMessageWriter msg = showMessage(offset);
             hidden = false;
+            if (send) {
+                player.queue(msg);
+            }
+            return msg;
         } else if (updateType == UpdateType.HIDE) {
-            player.queue(hideMessage(offset));
+            GameMessageWriter msg = hideMessage(offset);
             hidden = true;
+            if (send) {
+                player.queue(msg);
+            }
+            return msg;
         }
+        throw new IllegalStateException("Invalid update type.");
     }
+
 
     /**
      * Determines if this item is visible to {@code player}.

@@ -1,6 +1,8 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.Position;
+import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
@@ -13,27 +15,32 @@ import io.luna.net.msg.GameMessageWriter;
  */
 public final class ChunkPlacementMessageWriter extends GameMessageWriter {
 
-    // TODO cache the placement chunk to avoid duplicate writes, do the same to ClearChunk
     /**
-     * The position's chunk to mark.
+     * The base position.
      */
-    private final Position position;
+    private final Position basePosition;
+
+    /**
+     * The placement position.
+     */
+    private final Position placementPosition;
 
     /**
      * Creates a new {@link ChunkPlacementMessageWriter}.
      *
-     * @param position The position's chunk to mark.
+     * @param basePosition The base position.
+     * @param placementChunk The placement chunk.
      */
-    public ChunkPlacementMessageWriter(Position position) {
-        this.position = position;
+    public ChunkPlacementMessageWriter(Position basePosition, Chunk placementChunk) {
+        this.basePosition = basePosition;
+        placementPosition = placementChunk.getPosition().getAbsolutePosition();
     }
 
     @Override
     public ByteMessage write(Player player) {
-        // TODO Check if marking the right chunk?
         ByteMessage msg = ByteMessage.message(85);
-        msg.put(position.getLocalY(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
-        msg.put(position.getLocalX(/*player.getPosition()*/ player.getLastRegion()), ValueType.NEGATE);
+        msg.put(placementPosition.getLocalY(basePosition), ValueType.NEGATE);
+        msg.put(placementPosition.getLocalX(basePosition), ValueType.NEGATE);
         return msg;
     }
 }

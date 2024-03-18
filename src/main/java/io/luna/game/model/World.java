@@ -23,7 +23,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -163,11 +162,6 @@ public final class World {
     private final ConcurrentMap<String, Player> playerMap;
 
     /**
-     * An immutable view of {@link #playerMap}.
-     */
-    private final Map<String, Player> immutablePlayerMap;
-
-    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -175,7 +169,6 @@ public final class World {
     public World(LunaContext context) {
         this.context = context;
         this.playerMap = new ConcurrentHashMap<>();
-        this.immutablePlayerMap = Collections.unmodifiableMap(playerMap);
 
         // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
@@ -247,6 +240,7 @@ public final class World {
                 }
                 player.getClient().handleDecodedMessages(player);
                 player.getWalking().process();
+                player.sendRegionUpdate();
                 player.getClient().flush();
             } catch (Exception e) {
                 player.logout();

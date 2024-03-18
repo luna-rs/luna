@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
@@ -12,11 +13,25 @@ import io.luna.net.msg.GameMessageWriter;
  */
 public final class RegionChangeMessageWriter extends GameMessageWriter {
 
+    /**
+     * The new region.
+     */
+    private final Position position;
+
+    /**
+     * Creates a new {@link RegionChangeMessageWriter}.
+     *
+     * @param position The new region.
+     */
+    public RegionChangeMessageWriter(Position position) {
+        this.position = position;
+    }
+
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(73);
-        msg.putShort(player.getPosition().getBottomLeftChunkX() + 6, ValueType.ADD);
-        msg.putShort(player.getPosition().getBottomLeftChunkY() + 6);
+        msg.putShort(position.getCentralChunkX(), ValueType.ADD);
+        msg.putShort(position.getCentralChunkY());
         return msg;
     }
 }

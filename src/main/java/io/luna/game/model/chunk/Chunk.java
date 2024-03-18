@@ -3,8 +3,17 @@ package io.luna.game.model.chunk;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.StationaryEntity.UpdateType;
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
+import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -95,16 +104,32 @@ public final class Chunk {
     }
 
     /**
+     * Sends the necessary updates required to display every entity for {@code player}.
+     *
+     * @param player The player to display updates for.
+     */
+    public void sendGroupedUpdate(Player player) {
+        List<GameMessageWriter> messages = new ArrayList<>();
+        for (Entity e : repository) {
+            if (e.getType() == EntityType.OBJECT && !((GameObject) e).isDynamic()) {
+                return;
+            }
+            if (e instanceof StationaryEntity) {
+                var entity = (StationaryEntity) e;
+                Optional<Player> updatePlr = entity.getOwner();
+                boolean isUpdate = updatePlr.isEmpty() || updatePlr.get().equals(player);
+                if (isUpdate) {
+                    messages.add(entity.sendUpdateMessage(player, UpdateType.SHOW, false));
+                }
+            }
+        }
+        player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), this, messages));
+    }
+
+    /**
      * @return The position.
      */
     public ChunkPosition getPosition() {
         return position;
-    }
-
-    /**
-     * @return This chunk's absolute position.
-     */
-    public Position getAbsolutePosition() {
-        return new Position(position.getAbsX(), position.getAbsY());
     }
 }

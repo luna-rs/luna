@@ -10,6 +10,7 @@ import io.luna.game.model.def.ObjectDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
+import io.luna.net.msg.out.AnimateGameObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
 import java.util.Optional;
@@ -98,16 +99,28 @@ public class GameObject extends StationaryEntity {
 
     @Override
     protected final GameMessageWriter showMessage(int offset) {
-        int type = objectType.getId() << 2;
-        int orientation = direction.getId() & 3;
-        return new AddObjectMessageWriter(id, type, orientation, offset);
+        return new AddObjectMessageWriter(id, objectType.getId(), direction.getId(), offset);
     }
 
     @Override
     protected final GameMessageWriter hideMessage(int offset) {
-        int type = objectType.getId() << 2;
-        int orientation = direction.getId() & 3;
-        return new RemoveObjectMessageWriter(type, orientation, offset);
+        return new RemoveObjectMessageWriter(objectType.getId(), direction.getId(), offset);
+    }
+
+    /**
+     * Animates this object with ID {@code animationId}.
+     *
+     * @param animationId The ID to animate this object with.
+     */
+    public void animate(int animationId) {
+        if (!isHidden()) {
+            applyUpdate(plr -> {
+                sendPlacementMessage(plr);
+                int offset = getChunkPosition().offset(position);
+                plr.queue(new AnimateGameObjectMessageWriter(offset, objectType.getId(),
+                        direction.getId(), animationId));
+            });
+        }
     }
 
     /**

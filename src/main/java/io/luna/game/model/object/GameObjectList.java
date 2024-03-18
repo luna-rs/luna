@@ -74,8 +74,8 @@ public final class GameObjectList extends EntityList<GameObject> {
         // Set object as active.
         boolean added = object.isDynamic() ? dynamicSet.add(object) : staticSet.add(object);
         if (added) {
-            object.show();
             object.setState(EntityState.ACTIVE);
+            object.show();
             return true;
         }
         return false;

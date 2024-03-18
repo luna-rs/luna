@@ -8,10 +8,10 @@ import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.event.impl.RegionIdChangedEvent;
-import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
@@ -589,7 +589,7 @@ public final class Player extends Mob {
         if (lastRegion == null || needsRegionUpdate()) {
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionChangeMessageWriter());
+            queue(new RegionChangeMessageWriter(position));
         }
     }
 
@@ -601,8 +601,7 @@ public final class Player extends Mob {
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
         int deltaY = position.getLocalY(lastRegion);
-
-        return deltaX < 16 || deltaX >= 88 || deltaY < 16 || deltaY > 88; // TODO does last y need >= ?
+        return deltaX <= 15 || deltaX >= 88 || deltaY <= 15 || deltaY >= 88;
     }
 
     /**
@@ -1044,13 +1043,6 @@ public final class Player extends Mob {
      */
     public void resetDialogues() {
         setDialogues(null);
-    }
-
-    /**
-     * Advances the current dialogue queue.
-     */
-    public void advanceDialogues() {
-        dialogues.ifPresent(DialogueQueue::advance);
     }
 
     /**

@@ -1,10 +1,14 @@
 package io.luna.game.model.chunk;
 
+import com.google.common.collect.Iterators;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,7 +19,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public final class ChunkRepository {
+public final class ChunkRepository implements Iterable<Entity> {
 
     /**
      * The map of entities.
@@ -28,7 +32,6 @@ public final class ChunkRepository {
     protected ChunkRepository() {
     }
 
-    // TODO Rename this and test file
     {
         // Use enum map to split up entities by type.
         entities = new EnumMap<>(EntityType.class);
@@ -68,5 +71,11 @@ public final class ChunkRepository {
      */
     public <E extends Entity> Set<E> setOf(EntityType type) {
         return (Set<E>) entities.get(type);
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Entity> iterator() {
+        return entities.values().stream().flatMap(Collection::stream).iterator();
     }
 }

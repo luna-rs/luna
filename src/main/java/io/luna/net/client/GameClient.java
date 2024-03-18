@@ -68,7 +68,6 @@ public class GameClient extends Client<GameMessage> {
             GameMessageReader reader = repository.get(msg.getOpcode());
             reader.postEvent(player, msg);
         }
-        player.sendRegionUpdate();
     }
 
     /**

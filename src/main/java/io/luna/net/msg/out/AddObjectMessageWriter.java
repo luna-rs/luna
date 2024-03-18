@@ -51,9 +51,9 @@ public final class AddObjectMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(151);
-        msg.put(offset, ValueType.SUBTRACT);
+        msg.put(offset, ValueType.ADD);
         msg.putShort(id, ByteOrder.LITTLE);
-        msg.put(type + direction, ValueType.SUBTRACT);
+        msg.put((type << 2) + (direction & 3), ValueType.SUBTRACT);
         return msg;
     }
 }

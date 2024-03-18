@@ -60,6 +60,11 @@ public abstract class Entity {
     protected Chunk currentChunk;
 
     /**
+     * If this entity can be interacted with.
+     */
+    private boolean interactable = true;
+
+    /**
      * Creates a new {@link Entity}.
      *
      * @param context The context instance.
@@ -286,7 +291,7 @@ public abstract class Entity {
      * @return A new instance of the chunk position.
      */
     public final ChunkPosition getChunkPosition() {
-        return position.getChunkPosition();
+        return currentChunk.getPosition();
     }
 
     /**
@@ -301,5 +306,21 @@ public abstract class Entity {
      */
     public Chunk getCurrentChunk() {
         return currentChunk;
+    }
+
+    /**
+     * Sets if this entity can be interacted with.
+     *
+     * @param interactable The new value.
+     */
+    public void setInteractable(boolean interactable) {
+        this.interactable = interactable;
+    }
+
+    /**
+     * @return If this entity can be interacted with.
+     */
+    public boolean isInteractable() {
+        return interactable;
     }
 }

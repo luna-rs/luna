@@ -22,6 +22,7 @@ public enum EntityType {
      */
     OBJECT,
 
+
     /**
      * A player mob.
      */
@@ -30,7 +31,12 @@ public enum EntityType {
     /**
      * A non-player mob.
      */
-    NPC;
+    NPC,
+
+    /**
+     * A projectile.
+     */
+    PROJECTILE;
 
     /**
      * An immutable enum set of these values.

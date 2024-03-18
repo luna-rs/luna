@@ -9,7 +9,9 @@ import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.ObjectDefinition
 import io.luna.util.StringUtils
+import java.text.NumberFormat
 import java.time.Duration
+import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 
@@ -25,6 +27,18 @@ fun time(block: () -> Unit): Duration {
     val stopwatch = Stopwatch.createStarted()
     block()
     return stopwatch.elapsed()
+}
+
+/**
+ * The number formatter. Uses the UK locale.
+ */
+private val FORMAT = NumberFormat.getInstance(Locale.UK)
+
+/**
+ * Format a number.
+ */
+fun numF(input: Any): String {
+    return FORMAT.format(input)
 }
 
 /**
@@ -107,6 +121,7 @@ fun <R, C, V> immutableTableOf(vararg entries: TableEntry<R, C, V>): Table<R, C,
             val key = entry.first
             ImmutableTable.of(key.first, key.second, entry.second)
         }
+
         else -> {
             val table = ImmutableTable.builder<R, C, V>()
             for (entry in entries) {

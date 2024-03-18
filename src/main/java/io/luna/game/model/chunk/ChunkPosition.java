@@ -5,6 +5,8 @@ import io.luna.game.model.Position;
 
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * A model representing the coordinates of a Chunk (8x8 tiles) on the Runescape map.
  *
@@ -33,7 +35,7 @@ public final class ChunkPosition {
      * @param position The position to get the region coordinates of.
      */
     public ChunkPosition(Position position) {
-        this(position.getBottomLeftChunkX(), position.getBottomLeftChunkY());
+        this(position.getTopLeftChunkX(), position.getTopLeftChunkY());
     }
 
     /**
@@ -76,10 +78,11 @@ public final class ChunkPosition {
      * @return The offset.
      */
     public int offset(Position position) {
-        // TODO Do it the proper way, through offsets.
         int deltaX = position.getX() - getAbsX();
         int deltaY = position.getY() - getAbsY();
-        return 0;// deltaX << 4 | deltaY;
+        checkState(deltaX >= 0 && deltaX < ChunkPosition.SIZE, "Invalid X delta.");
+        checkState(deltaY >= 0 && deltaY < ChunkPosition.SIZE, "Invalid Y delta.");
+        return deltaX << 4 | deltaY;
     }
 
     /**
@@ -100,14 +103,14 @@ public final class ChunkPosition {
      * @return The absolute {@code x} coordinate.
      */
     public int getAbsX() {
-        return (x + 6) * 8;
+        return SIZE * (x + 6);
     }
 
     /**
      * @return The absolute {@code y} coordinate.
      */
     public int getAbsY() {
-        return (y + 6) * 8;
+        return SIZE * (y + 6);
     }
 
     /**
@@ -142,5 +145,12 @@ public final class ChunkPosition {
      */
     public int getY() {
         return y;
+    }
+
+    /**
+     * @return The absolute position of this chunk.
+     */
+    public Position getAbsolutePosition() {
+        return new Position(getAbsX(), getAbsY());
     }
 }

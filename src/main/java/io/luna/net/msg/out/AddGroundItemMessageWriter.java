@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that displays a ground item.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AddGroundItemMessageWriter extends GameMessageWriter {
 
@@ -46,7 +46,7 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter {
         ByteMessage msg = ByteMessage.message(44);
         msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort(amount);
-        msg.put(/*offset*/ 0);
+        msg.put(offset);
         return msg;
     }
 }

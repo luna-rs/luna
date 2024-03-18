@@ -1,5 +1,6 @@
 package api.predef
 
+import com.google.common.primitives.Ints
 import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.chunk.ChunkManager
@@ -19,17 +20,12 @@ import io.luna.net.msg.out.ColorChangeMessageWriter
 import io.luna.net.msg.out.ConfigMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
 import java.awt.Color
+import java.time.Duration
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-
-/*****************************
- *                           *
- *  [Player] ext. functions  *
- *                           *
- ****************************/
-
+// TODO better packaging
 /**
  * Queues a [ConfigMessageWriter] message.
  */
@@ -60,13 +56,6 @@ fun Player.stopMusic() {
     }
 }
 
-
-/********************************
- *                              *
- *  [Attribute] ext. functions  *
- *                              *
- *******************************/
-
 /**
  * An extension property that adds a getter delegate to [Attribute].
  */
@@ -78,13 +67,6 @@ operator fun <T> Attribute<T>.getValue(plr: Player, property: KProperty<*>): T =
 operator fun <T> Attribute<T>.setValue(plr: Player, property: KProperty<*>, value: T) {
     plr.attributes[this] = value
 }
-
-
-/*****************************
- *                           *
- *  [World] ext. functions   *
- *                           *
- ****************************/
 
 /**
  * Spawns an [Npc].
@@ -213,6 +195,16 @@ fun World.schedule(delay: Int, instant: Boolean = false, action: (Task) -> Unit)
 }
 
 /**
+ * Schedules a recurring task.
+ */
+fun World.schedule(duration: Duration, instant: Boolean = false, action: (Task) -> Unit) {
+    schedule(duration.toTicks()) {
+        action(it)
+        it.cancel()
+    }
+}
+
+/**
  * Schedules a task that suspends after one execution.
  */
 fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
@@ -221,13 +213,6 @@ fun World.scheduleOnce(delay: Int, action: (Task) -> Unit) {
         it.cancel()
     }
 }
-
-
-/***********************************
- *                                 *
- *  [ChunkManager] ext. functions  *
- *                                 *
- **********************************/
 
 /**
  * Shortcut to [ChunkManager.getViewableEntities] for [Player]s.
@@ -249,13 +234,6 @@ fun ChunkManager.getViewableItems(position: Position) = getViewableEntities<Grou
  */
 fun ChunkManager.getViewableObjects(position: Position) = getViewableEntities<GameObject>(position, TYPE_OBJECT)
 
-
-/*******************************************
- *                                         *
- *  [AbstractInterfaceSet] ext. functions  *
- *                                         *
- ******************************************/
-
 /**
  * Returns the currently open [StandardInterface] if it matches [interClass].
  */
@@ -272,13 +250,6 @@ fun <T : StandardInterface> AbstractInterfaceSet.isOpen(interClass: KClass<T>): 
     return currentStandard.filter { jClass.isInstance(it) }.isPresent
 }
 
-
-/****************************
- *                          *
- *  [Array] ext. functions  *
- *                          *
- ***************************/
-
 /**
  * Randomizes the elements within the array. This function modifies the backing array.
  */
@@ -292,13 +263,6 @@ fun <T> Array<T>.shuffle() {
         i--
     }
 }
-
-
-/**********************************
- *                                *
- *  [OptionalInt] ext. functions  *
- *                                *
- *********************************/
 
 /**
  * Adds a map function to OptionalInt.
@@ -320,4 +284,8 @@ fun OptionalInt.mapToInt(mapper: (Int) -> Int): OptionalInt {
         return OptionalInt.of(newValue)
     }
     return OptionalInt.empty()
+}
+
+fun Duration.toTicks(): Int {
+    return Ints.saturatedCast(toMillis() / 600)
 }

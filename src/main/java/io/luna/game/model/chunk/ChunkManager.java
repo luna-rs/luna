@@ -3,9 +3,12 @@ package io.luna.game.model.chunk;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.net.msg.out.ClearChunkMessageWriter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +38,7 @@ public final class ChunkManager implements Iterable<Chunk> {
     /**
      * How many layers of chunks will be loaded around a player, when looking for viewable mobs.
      */
-    public static final int RADIUS = 2;
+    public static final int RADIUS = 3;
 
     /**
      * A map of loaded chunks.
@@ -159,6 +162,27 @@ public final class ChunkManager implements Iterable<Chunk> {
             }
         }
         return viewable;
+    }
+
+    /**
+     * Refreshes {@link StationaryEntity}s within all viewable chunks of {@code player}.
+     *
+     * @param player The player.
+     */
+    public void sendViewableEntities(Player player) {
+        World world = player.getWorld();
+        ChunkPosition position = player.getChunkPosition();
+
+        // Load chunks in viewable radius, double the viewing radius because this is only called when
+        // the region changed packet is sent.
+        for (int x = -RADIUS * 2; x < RADIUS * 2; x++) {
+            for (int y = -RADIUS * 2; y < RADIUS * 2; y++) {
+                // Clear, then repopulate the chunk with entities.
+                Chunk chunk = world.getChunks().load(position.translate(x, y));
+                player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
+                chunk.sendGroupedUpdate(player);
+            }
+        }
     }
 
     /**

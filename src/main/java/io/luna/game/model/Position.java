@@ -94,7 +94,7 @@ public final class Position {
     /**
      * Determines if this position is within the given distance of another position.
      *
-     * @param other    The position to compare.
+     * @param other The position to compare.
      * @param distance The distance from {@code other} to compare. This parameter must be non-negative.
      * @return {@code true} if {@code other} is within {@code distance}, and on the same plane.
      * @throws IllegalArgumentException If distance < 0.
@@ -121,6 +121,13 @@ public final class Position {
     }
 
     /**
+     * Forwards to {@link #isViewable(Position)} with {@link Entity#getPosition()} as the argument.
+     */
+    public boolean isViewable(Entity other) {
+        return isViewable(other.getPosition());
+    }
+
+    /**
      * Returns the longest distance between this position and {@code other}.
      *
      * @param other The other position.
@@ -141,7 +148,7 @@ public final class Position {
      * @return The translated position.
      */
     public Position translate(int amountX, int amountY, int amountZ) {
-        if(amountX == 0 && amountY == 0 && amountZ == 0) {
+        if (amountX == 0 && amountY == 0 && amountZ == 0) {
             return this;
         }
         return new Position(x + amountX, y + amountY, z + amountZ);
@@ -160,12 +167,26 @@ public final class Position {
     }
 
     /**
+     * Gets the central x coordinate of this position's chunk.
+     */
+    public int getCentralChunkX() {
+        return x / 8;
+    }
+
+    /**
+     * Gets the central y coordinate of this position's chunk.
+     */
+    public int getCentralChunkY() {
+        return y / 8;
+    }
+
+    /**
      * Returns the formatted x coordinate of this position's chunk.
      *
      * @return The bottom-left chunk x.
      */
-    public int getBottomLeftChunkX() {
-        return (x / 8) - 6;
+    public int getTopLeftChunkX() {
+        return x / 8 - 6;
     }
 
     /**
@@ -173,8 +194,8 @@ public final class Position {
      *
      * @return The bottom-left chunk y.
      */
-    public int getBottomLeftChunkY() {
-        return (y / 8) - 6;
+    public int getTopLeftChunkY() {
+        return y / 8 - 6;
     }
 
     /**
@@ -183,7 +204,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalX(Position base) {
-        return x - (base.getBottomLeftChunkX() * 8);
+        return x - base.getTopLeftChunkX() * 8;
     }
 
     /**
@@ -192,7 +213,7 @@ public final class Position {
      * @param base The base chunk.
      */
     public int getLocalY(Position base) {
-        return y - (base.getBottomLeftChunkY() * 8);
+        return y - base.getTopLeftChunkY() * 8;
     }
 
     /**
