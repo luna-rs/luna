@@ -23,7 +23,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.23.1")
     implementation("org.apache.logging.log4j:log4j-api:2.23.1")
     implementation("org.slf4j:slf4j-nop:2.0.12")
-    implementation("com.lmax:disruptor:3.4.2")
+    implementation("com.lmax:disruptor:4.0.0")
     implementation("io.netty:netty-all:4.1.107.Final")
     implementation("com.google.guava:guava:30.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
