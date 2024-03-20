@@ -33,7 +33,7 @@ dependencies {
     implementation(kotlin("script-runtime"))
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
-    implementation("org.openjfx:javafx-controls:21.0.2")
+    implementation("org.openjfx:javafx-controls:22")
     implementation("org.openjfx:javafx-fxml:11.0.1")
     implementation("org.openjfx:javafx-swing:21.0.2")
     implementation("com.zaxxer:HikariCP:5.1.0")
