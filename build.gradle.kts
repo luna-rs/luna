@@ -24,7 +24,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-api:2.23.1")
     implementation("org.slf4j:slf4j-nop:2.0.12")
     implementation("com.lmax:disruptor:3.4.2")
-    implementation("io.netty:netty-all:4.1.107.Final")
+    implementation("io.netty:netty-all:4.1.108.Final")
     implementation("com.google.guava:guava:30.1-jre")
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.mindrot:jbcrypt:0.4-atlassian-1")
