@@ -1,4 +1,0 @@
-This GUI is used to manage plugins within the Luna project. You may select and deselect whichever plugins you would like to be active or inactive. Please direct any comments, questions, and/or concerns to the Github page. A link to it can be found within the "About" menu section.
-
-
-Much thanks to Freepik from www.flaticon.com for the application icon!

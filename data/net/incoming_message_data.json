@@ -5,7 +5,8 @@
   },
   {
     "opcode": 1,
-    "size": 0
+    "size": 12,
+    "payload": "ItemOnItemMessageReader"
   },
   {
     "opcode": 2,
@@ -13,12 +14,13 @@
   },
   {
     "opcode": 3,
-    "size": 1
+    "size": 6,
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 4,
-    "size": -1,
-    "payload": "ChatMessageReader"
+    "size": 6,
+    "payload": "ItemClickMessageReader"
   },
   {
     "opcode": 5,
@@ -26,7 +28,8 @@
   },
   {
     "opcode": 6,
-    "size": 0
+    "size": 0,
+    "payload": "RegionChangedMessageReader"
   },
   {
     "opcode": 7,
@@ -34,7 +37,8 @@
   },
   {
     "opcode": 8,
-    "size": 0
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 9,
@@ -54,11 +58,12 @@
   },
   {
     "opcode": 13,
-    "size": 0
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 14,
-    "size": 8
+    "size": 0
   },
   {
     "opcode": 15,
@@ -66,21 +71,20 @@
   },
   {
     "opcode": 16,
-    "size": 6
+    "size": 0
   },
   {
     "opcode": 17,
-    "size": 2,
-    "payload": "NpcClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 18,
-    "size": 2,
-    "payload": "NpcClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 19,
-    "size": 0
+    "size": 4,
+    "payload": "MouseClickMessageReader"
   },
   {
     "opcode": 20,
@@ -88,24 +92,25 @@
   },
   {
     "opcode": 21,
-    "size": 2,
-    "payload": "NpcClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 22,
-    "size": 0
+    "size": 2,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 23,
-    "size": 6
-  },
-  {
-    "opcode": 24,
     "size": 0
   },
   {
+    "opcode": 24,
+    "size": 6,
+    "payload": "ItemClickMessageReader"
+  },
+  {
     "opcode": 25,
-    "size": 12
+    "size": 0
   },
   {
     "opcode": 26,
@@ -117,7 +122,8 @@
   },
   {
     "opcode": 28,
-    "size": 0
+    "size": -1,
+    "payload": "WalkingMessageReader"
   },
   {
     "opcode": 29,
@@ -129,7 +135,8 @@
   },
   {
     "opcode": 31,
-    "size": 0
+    "size": 4,
+    "payload": "MagicOnPlayerMessageReader"
   },
   {
     "opcode": 32,
@@ -145,11 +152,12 @@
   },
   {
     "opcode": 35,
-    "size": 8
+    "size": 0
   },
   {
     "opcode": 36,
-    "size": 4
+    "size": 8,
+    "payload": "MagicOnItemMessageReader"
   },
   {
     "opcode": 37,
@@ -161,26 +169,25 @@
   },
   {
     "opcode": 39,
-    "size": 2
-  },
-  {
-    "opcode": 40,
-    "size": 2,
-    "payload": "ContinueDialogueMessageReader"
-  },
-  {
-    "opcode": 41,
-    "size": 6,
-    "payload": "EquipItemMessageReader"
-  },
-  {
-    "opcode": 42,
     "size": 0
   },
   {
+    "opcode": 40,
+    "size": 0,
+    "payload": "SpamDataMessageReader"
+  },
+  {
+    "opcode": 41,
+    "size": 0
+  },
+  {
+    "opcode": 42,
+    "size": 2,
+    "payload": "NpcClickMessageReader"
+  },
+  {
     "opcode": 43,
-    "size": 6,
-    "payload": "WidgetItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 44,
@@ -188,7 +195,8 @@
   },
   {
     "opcode": 45,
-    "size": -1
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 46,
@@ -204,11 +212,13 @@
   },
   {
     "opcode": 49,
-    "size": 0
+    "size": -1,
+    "payload": "ChatMessageReader"
   },
   {
     "opcode": 50,
-    "size": 0
+    "size": 6,
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 51,
@@ -220,28 +230,31 @@
   },
   {
     "opcode": 53,
-    "size": 12,
-    "payload": "ItemOnItemMessageReader"
+    "size": 0
   },
   {
     "opcode": 54,
-    "size": 0
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 55,
-    "size": 0
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 56,
-    "size": 0
+    "size": -1,
+    "payload": "CommandMessageReader"
   },
   {
     "opcode": 57,
-    "size": 0
+    "size": 8,
+    "payload": "ItemOnNpcMessageReader"
   },
   {
     "opcode": 58,
-    "size": 8
+    "size": 0
   },
   {
     "opcode": 59,
@@ -249,12 +262,11 @@
   },
   {
     "opcode": 60,
-    "size": 8,
-    "payload": "NameInputMessageReader"
+    "size": 0
   },
   {
     "opcode": 61,
-    "size": 8
+    "size": 0
   },
   {
     "opcode": 62,
@@ -278,7 +290,8 @@
   },
   {
     "opcode": 67,
-    "size": 0
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 68,
@@ -290,29 +303,29 @@
   },
   {
     "opcode": 70,
-    "size": 6
-  },
-  {
-    "opcode": 71,
     "size": 0
   },
   {
+    "opcode": 71,
+    "size": 6,
+    "payload": "PickupItemMessageReader"
+  },
+  {
     "opcode": 72,
-    "size": 2,
-    "payload": "NpcClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 73,
-    "size": 2
+    "size": 0
   },
   {
     "opcode": 74,
-    "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "size": 0
   },
   {
     "opcode": 75,
-    "size": 6
+    "size": 4,
+    "payload": "AmountInputMessageReader"
   },
   {
     "opcode": 76,
@@ -320,19 +333,23 @@
   },
   {
     "opcode": 77,
-    "size": -1
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 78,
-    "size": 0
+    "size": 4,
+    "payload": "SpamDataMessageReader"
   },
   {
     "opcode": 79,
-    "size": 6
+    "size": 2,
+    "payload": "ButtonClickMessageReader"
   },
   {
     "opcode": 80,
-    "size": 0
+    "size": 2,
+    "payload": "AudioErrorMessageReader"
   },
   {
     "opcode": 81,
@@ -344,7 +361,8 @@
   },
   {
     "opcode": 83,
-    "size": 0
+    "size": 8,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 84,
@@ -352,16 +370,15 @@
   },
   {
     "opcode": 85,
-    "size": 1
+    "size": 0
   },
   {
     "opcode": 86,
-    "size": 4
+    "size": 0
   },
   {
     "opcode": 87,
-    "size": 6,
-    "payload": "DropItemMessageReader"
+    "size": 0
   },
   {
     "opcode": 88,
@@ -377,7 +394,8 @@
   },
   {
     "opcode": 91,
-    "size": 0
+    "size": 6,
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 92,
@@ -393,7 +411,8 @@
   },
   {
     "opcode": 95,
-    "size": 3
+    "size": 4,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 96,
@@ -405,8 +424,7 @@
   },
   {
     "opcode": 98,
-    "size": -1,
-    "payload": "WalkingMessageReader"
+    "size": 0
   },
   {
     "opcode": 99,
@@ -414,12 +432,12 @@
   },
   {
     "opcode": 100,
-    "size": 0
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 101,
-    "size": 13,
-    "payload": "DesignPlayerMessageReader"
+    "size": 0
   },
   {
     "opcode": 102,
@@ -427,12 +445,12 @@
   },
   {
     "opcode": 103,
-    "size": -1,
-    "payload": "CommandMessageReader"
+    "size": 0
   },
   {
     "opcode": 104,
-    "size": 0
+    "size": 4,
+    "payload": "MagicOnNpcMessageReader"
   },
   {
     "opcode": 105,
@@ -456,7 +474,8 @@
   },
   {
     "opcode": 110,
-    "size": 0
+    "size": 0,
+    "payload": "CloseWindowMessageReader"
   },
   {
     "opcode": 111,
@@ -464,7 +483,8 @@
   },
   {
     "opcode": 112,
-    "size": 0
+    "size": 2,
+    "payload": "NpcClickMessageReader"
   },
   {
     "opcode": 113,
@@ -480,12 +500,12 @@
   },
   {
     "opcode": 116,
-    "size": 0
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 117,
-    "size": 6,
-    "payload": "WidgetItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 118,
@@ -493,25 +513,26 @@
   },
   {
     "opcode": 119,
-    "size": 0
+    "size": 1,
+    "payload": "FlashingTabClickMessageReader"
   },
   {
     "opcode": 120,
-    "size": 1
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 121,
-    "size": 0,
-    "payload": "RegionChangedMessageReader"
+    "size": 0
   },
   {
     "opcode": 122,
-    "size": 6,
-    "payload": "ItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 123,
-    "size": 0
+    "size": 7,
+    "payload": "SwapItemsMessageReader"
   },
   {
     "opcode": 124,
@@ -523,8 +544,8 @@
   },
   {
     "opcode": 126,
-    "size": -1,
-    "payload": "PrivateChatMessageReader"
+    "size": 1,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 127,
@@ -532,32 +553,27 @@
   },
   {
     "opcode": 128,
-    "size": 2
+    "size": 0
   },
   {
     "opcode": 129,
-    "size": 6,
-    "payload": "WidgetItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 130,
-    "size": 0,
-    "payload": "CloseWindowMessageReader"
+    "size": 0
   },
   {
     "opcode": 131,
-    "size": 4,
-    "payload": "CastOnNpcMessageReader"
+    "size": 0
   },
   {
     "opcode": 132,
-    "size": 6,
-    "payload": "ObjectClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 133,
-    "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "size": 0
   },
   {
     "opcode": 134,
@@ -565,12 +581,12 @@
   },
   {
     "opcode": 135,
-    "size": 6,
-    "payload": "WidgetItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 136,
-    "size": 0
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 137,
@@ -582,16 +598,17 @@
   },
   {
     "opcode": 139,
-    "size": 2,
-    "payload": "PlayerClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 140,
-    "size": 0
+    "size": 4,
+    "payload": "ArrowKeyMessageReader"
   },
   {
     "opcode": 141,
-    "size": 0
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 142,
@@ -599,7 +616,8 @@
   },
   {
     "opcode": 143,
-    "size": 0
+    "size": 8,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 144,
@@ -607,8 +625,7 @@
   },
   {
     "opcode": 145,
-    "size": 6,
-    "payload": "WidgetItemClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 146,
@@ -636,11 +653,12 @@
   },
   {
     "opcode": 152,
-    "size": 1
+    "size": 12,
+    "payload": "ItemOnObjectMessageReader"
   },
   {
     "opcode": 153,
-    "size": 2
+    "size": 0
   },
   {
     "opcode": 154,
@@ -648,20 +666,20 @@
   },
   {
     "opcode": 155,
-    "size": 2,
-    "payload": "NpcClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 156,
-    "size": 6
+    "size": 0
   },
   {
     "opcode": 157,
-    "size": 0
+    "size": 4
   },
   {
     "opcode": 158,
-    "size": 0
+    "size": 6,
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 159,
@@ -669,11 +687,13 @@
   },
   {
     "opcode": 160,
-    "size": 0
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 161,
-    "size": 0
+    "size": 6,
+    "payload": "ItemClickMessageReader"
   },
   {
     "opcode": 162,
@@ -681,16 +701,17 @@
   },
   {
     "opcode": 163,
-    "size": 0
+    "size": 13,
+    "payload": "DesignPlayerMessageReader"
   },
   {
     "opcode": 164,
-    "size": -1,
-    "payload": "WalkingMessageReader"
+    "size": 0
   },
   {
     "opcode": 165,
-    "size": -1
+    "size": 1,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 166,
@@ -702,7 +723,8 @@
   },
   {
     "opcode": 168,
-    "size": 0
+    "size": 0,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 169,
@@ -714,7 +736,8 @@
   },
   {
     "opcode": 171,
-    "size": 0
+    "size": -1,
+    "payload": "MouseFlaggedMessageReader"
   },
   {
     "opcode": 172,
@@ -722,7 +745,8 @@
   },
   {
     "opcode": 173,
-    "size": 0
+    "size": 3,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 174,
@@ -734,11 +758,13 @@
   },
   {
     "opcode": 176,
-    "size": 0
+    "size": 3,
+    "payload": "PrivacyOptionMessageReader"
   },
   {
     "opcode": 177,
-    "size": 0
+    "size": 6,
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 178,
@@ -754,7 +780,8 @@
   },
   {
     "opcode": 181,
-    "size": 8
+    "size": 6,
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 182,
@@ -762,16 +789,16 @@
   },
   {
     "opcode": 183,
-    "size": 3
-  },
-  {
-    "opcode": 184,
     "size": 0
   },
   {
+    "opcode": 184,
+    "size": 10,
+    "payload": "ReportPlayerMessageReader"
+  },
+  {
     "opcode": 185,
-    "size": 2,
-    "payload": "ButtonClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 186,
@@ -779,16 +806,16 @@
   },
   {
     "opcode": 187,
-    "size": 0
+    "size": 1,
+    "payload": "FocusChangedMessageReader"
   },
   {
     "opcode": 188,
-    "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "size": 0
   },
   {
     "opcode": 189,
-    "size": 1
+    "size": 0
   },
   {
     "opcode": 190,
@@ -800,8 +827,7 @@
   },
   {
     "opcode": 192,
-    "size": 12,
-    "payload": "ItemOnObjectMessageReader"
+    "size": 0
   },
   {
     "opcode": 193,
@@ -809,7 +835,8 @@
   },
   {
     "opcode": 194,
-    "size": 0
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 195,
@@ -821,7 +848,7 @@
   },
   {
     "opcode": 197,
-    "size": 0
+    "size": 4
   },
   {
     "opcode": 198,
@@ -833,7 +860,7 @@
   },
   {
     "opcode": 200,
-    "size": 2
+    "size": 0
   },
   {
     "opcode": 201,
@@ -841,11 +868,13 @@
   },
   {
     "opcode": 202,
-    "size": 0
+    "size": 0,
+    "payload": "PlayerTimeoutMessageReader"
   },
   {
     "opcode": 203,
-    "size": 0
+    "size": 6,
+    "payload": "ItemClickMessageReader"
   },
   {
     "opcode": 204,
@@ -857,7 +886,8 @@
   },
   {
     "opcode": 206,
-    "size": 0
+    "size": 8,
+    "payload": "NameInputMessageReader"
   },
   {
     "opcode": 207,
@@ -865,8 +895,7 @@
   },
   {
     "opcode": 208,
-    "size": 4,
-    "payload": "AmountInputMessageReader"
+    "size": 0
   },
   {
     "opcode": 209,
@@ -874,11 +903,13 @@
   },
   {
     "opcode": 210,
-    "size": 4
+    "size": 8,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 211,
-    "size": 0
+    "size": 12,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 212,
@@ -886,17 +917,16 @@
   },
   {
     "opcode": 213,
-    "size": 0
+    "size": -1,
+    "payload": "WalkingMessageReader"
   },
   {
     "opcode": 214,
-    "size": 7,
-    "payload": "SwapItemsMessageReader"
+    "size": 0
   },
   {
     "opcode": 215,
-    "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "size": 0
   },
   {
     "opcode": 216,
@@ -904,11 +934,12 @@
   },
   {
     "opcode": 217,
-    "size": 0
+    "size": 8,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 218,
-    "size": 10
+    "size": 0
   },
   {
     "opcode": 219,
@@ -924,7 +955,8 @@
   },
   {
     "opcode": 222,
-    "size": 0
+    "size": 3,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 223,
@@ -940,15 +972,18 @@
   },
   {
     "opcode": 226,
-    "size": -1
+    "size": 2,
+    "payload": "ContinueDialogueMessageReader"
   },
   {
     "opcode": 227,
-    "size": 0
+    "size": 9,
+    "payload": "PrivateChatMessageReader"
   },
   {
     "opcode": 228,
-    "size": 6
+    "size": 6,
+    "payload": "ItemClickMessageReader"
   },
   {
     "opcode": 229,
@@ -956,11 +991,13 @@
   },
   {
     "opcode": 230,
-    "size": 1
+    "size": 6,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 231,
-    "size": 0
+    "size": 6,
+    "payload": "WidgetItemClickMessageReader"
   },
   {
     "opcode": 232,
@@ -968,11 +1005,12 @@
   },
   {
     "opcode": 233,
-    "size": 0
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 234,
-    "size": 6
+    "size": 0
   },
   {
     "opcode": 235,
@@ -980,16 +1018,15 @@
   },
   {
     "opcode": 236,
-    "size": 6,
-    "payload": "PickupItemMessageReader"
+    "size": 0
   },
   {
     "opcode": 237,
-    "size": 8
+    "size": 0
   },
   {
     "opcode": 238,
-    "size": 1
+    "size": 0
   },
   {
     "opcode": 239,
@@ -1001,7 +1038,8 @@
   },
   {
     "opcode": 241,
-    "size": 4
+    "size": 6,
+    "payload": "ObjectClickMessageReader"
   },
   {
     "opcode": 242,
@@ -1013,29 +1051,31 @@
   },
   {
     "opcode": 244,
-    "size": 0
+    "size": -1,
+    "payload": "SpamDataMessageReader"
   },
   {
     "opcode": 245,
-    "size": 0
+    "size": 2,
+    "payload": "PlayerClickMessageReader"
   },
   {
     "opcode": 246,
-    "size": -1
-  },
-  {
-    "opcode": 247,
     "size": 0
   },
   {
-    "opcode": 248,
+    "opcode": 247,
     "size": -1,
     "payload": "WalkingMessageReader"
   },
   {
+    "opcode": 248,
+    "size": 0,
+    "payload": "KeepAliveMessageReader"
+  },
+  {
     "opcode": 249,
-    "size": 4,
-    "payload": "CastOnPlayerMessageReader"
+    "size": 0
   },
   {
     "opcode": 250,
@@ -1047,12 +1087,11 @@
   },
   {
     "opcode": 252,
-    "size": 6,
-    "payload": "ObjectClickMessageReader"
+    "size": 0
   },
   {
     "opcode": 253,
-    "size": 6
+    "size": 0
   },
   {
     "opcode": 254,
@@ -1060,10 +1099,6 @@
   },
   {
     "opcode": 255,
-    "size": 0
-  },
-  {
-    "opcode": 256,
     "size": 0
   }
 ]

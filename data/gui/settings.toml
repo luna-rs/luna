@@ -1,6 +1,0 @@
-[settings]
-dark_mode = false
-save_on_exit = true
-retain_selection = false
-flatten_packages = true
-selected = ["Private chat", "Punishment commands", "Fill water", "Fletching", "Herblore", "Set skill command", "Position commands", "Fishing", "Search item command", "Generic developer commands", "Click option", "Eat food", "Make item", "Logout", "Trading", "Settings", "Shops", "Drink potions", "Banking", "Destroy item", "Login", "Advance level", "Runecrafting", "General store", "Equipment", "Restore prayer", "Announcements", "Prayer"]

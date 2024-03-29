@@ -3,7 +3,7 @@
 runtimeMode = "DEVELOPMENT"
 startingPosition = { x = 3093, y = 3244 }
 experienceMultiplier = 1.0
-serializer = "JsonPlayerSerializer"
+serializer = "SqlPlayerSerializer"
 port = 43594
 connectionLimit = 2
 pluginGui = false
