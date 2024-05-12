@@ -6,8 +6,6 @@ import io.luna.util.StringUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.apache.logging.log4j.util.Unbox.box;
-
 /**
  * A utility class that generates random credentials for {@link Bot} types.
  *
@@ -43,9 +41,10 @@ public final class BotCredentials {
             if (attempts >= MAXIMUM_GENERATION_ATTEMPTS) {
                 throw new IllegalStateException("Username generation for bot failed, too many attempts!");
             }
+            int random = ThreadLocalRandom.current().nextInt(1, 100);
             String baseUsername = temporary ? BASE_TEMPORARY_USERNAME : BASE_USERNAME;
             int count = (temporary ? world.getBots().getTemporaryCount() :
-                    world.getBots().getPersistentCount()) + 1 + attempts;
+                    world.getBots().getPersistentCount()) + 1 + attempts + random;
             String genUsername = baseUsername + count;
             if (world.getPlayerMap().containsKey(genUsername) || world.getBots().contains(genUsername)) {
                 attempts++;

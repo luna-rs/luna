@@ -2,7 +2,6 @@ package io.luna.game.model.mob.bot;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
-import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.task.Task;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -30,11 +28,6 @@ public final class BotRepository implements Iterable<String> {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The context.
-     */
-    private final LunaContext context;
-
-    /**
      * The world.
      */
     private final World world;
@@ -52,11 +45,10 @@ public final class BotRepository implements Iterable<String> {
     /**
      * Creates a new {@link BotRepository}.
      *
-     * @param context The context.
+     * @param world The world.
      */
-    public BotRepository(LunaContext context) {
-        this.context = context;
-        world = context.getWorld();
+    public BotRepository(World world) {
+        this.world = world;
     }
 
     /**
@@ -124,7 +116,7 @@ public final class BotRepository implements Iterable<String> {
      * Populates this repository with all persisted bot usernames and logs in the bots.
      */
     public void load() {
-        if (!persistentNames.isEmpty()) {
+        if (persistentNames.isEmpty()) {
             try {
                 Set<String> loadedNames = world.getPersistenceService().loadBotUsernames();
                 if (!loadedNames.isEmpty()) {
@@ -134,8 +126,9 @@ public final class BotRepository implements Iterable<String> {
                     world.schedule(new Task(10) {
                         @Override
                         protected void execute() {
+                            cancel();
                             for (String username : persistentNames) {
-                                Bot newBot = new Bot.Builder(context).setUsername(username).build();
+                                Bot newBot = new Bot.Builder(world.getContext()).setUsername(username).build();
                                 newBot.login();
                             }
                         }
@@ -143,7 +136,7 @@ public final class BotRepository implements Iterable<String> {
                     logger.info("Logging in {} persistent bot(s).", box(persistentNames.size()));
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                logger.catching(e);
             }
         }
     }
