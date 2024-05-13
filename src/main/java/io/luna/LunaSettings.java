@@ -6,17 +6,17 @@ import io.netty.util.ResourceLeakDetector.Level;
 /**
  * Holds settings parsed from the {@code ./data/luna.json} file. Effectively constants, as they are only modified by GSON.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class LunaSettings {
 
-    private LunaRuntime runtimeMode;
-    private int port;
-    private int connectionLimit;
-    private Position startingPosition;
-    private double experienceMultiplier;
-    private String serializer;
-    private int passwordStrength;
+    private final LunaRuntime runtimeMode;
+    private final int port;
+    private final int connectionLimit;
+    private final Position startingPosition;
+    private final double experienceMultiplier;
+    private final String serializer;
+    private final int passwordStrength;
 
     /**
      * The port that the server will be bound on.
@@ -105,7 +105,15 @@ public final class LunaSettings {
     /**
      * To prevent public instantiation.
      */
-    private LunaSettings() {
-
+    private LunaSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
+                         double experienceMultiplier, String serializer, int passwordStrength) {
+        // Will never be called.
+        this.runtimeMode = runtimeMode;
+        this.port = port;
+        this.connectionLimit = connectionLimit;
+        this.startingPosition = startingPosition;
+        this.experienceMultiplier = experienceMultiplier;
+        this.serializer = serializer;
+        this.passwordStrength = passwordStrength;
     }
 }
