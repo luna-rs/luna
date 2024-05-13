@@ -2,7 +2,11 @@ package io.luna.game.action;
 
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.task.Task;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A {@link DistancedAction} implementation that interacts with an entity when an appropriate distance has been reached.
@@ -12,25 +16,64 @@ import io.luna.game.model.mob.Player;
 public abstract class InteractionAction extends DistancedAction<Player> {
 
     /**
+     * A task that keeps track of the interaction and cancels the focus of the entity being interacted with.
+     */
+    private final class InteractionTask extends Task {
+
+
+        /**
+         * Creates a new {@link InteractionTask}.
+         */
+        public InteractionTask() {
+            super(false, 1);
+        }
+
+        @Override
+        protected void execute() {
+            Npc interactNpc = (Npc) interactWith;
+            if (interactNpc.getInteractingWith().isEmpty() ||
+                    !interactNpc.getInteractingWith().get().equals(mob)) {
+                // Do nothing and cancel if NPC is not interacting with anyone or anyone but the original mob.
+                cancel();
+            } else if (mob.getInteractingWith().isEmpty() ||
+                    !mob.getInteractingWith().get().equals(mob)) {
+                // If the original mob that initiated the interaction has left it, we leave too.
+                interactNpc.resetInteractingWith();
+                cancel();
+            }
+        }
+    }
+
+    /**
      * The entity to interact with.
      */
-    private final Entity interact;
+    private final Entity interactWith;
 
     /**
      * Creates a new {@link InteractionAction}.
      *
      * @param player The interacting player.
-     * @param interact The entity to interact with.
+     * @param interactWith The entity to interact with.
      */
-    public InteractionAction(Player player, Entity interact) {
-        super(player, interact.getPosition(), interact.size());
-        this.interact = interact;
+    public InteractionAction(Player player, Entity interactWith) {
+        super(player, interactWith.getPosition(), interactWith.size());
+        checkArgument(interactWith.getType() != EntityType.PROJECTILE, "Projectiles cannot be interacted with.");
+        this.interactWith = interactWith;
     }
 
     @Override
     public void withinDistance() {
-        if (interact.getType() != EntityType.ITEM) {
-            mob.interact(interact);
+        if (!interactWith.isInteractable()) {
+            return;
+        }
+
+        if (interactWith.getType() != EntityType.ITEM) {
+            mob.interact(interactWith);
+            if (interactWith.getType() == EntityType.NPC) {
+                Npc interactNpc = (Npc) interactWith;
+                interactNpc.interact(mob);
+                world.schedule(new InteractionTask());
+            }
         }
         mob.getWalking().clear();
         execute();
@@ -41,13 +84,13 @@ public abstract class InteractionAction extends DistancedAction<Player> {
         // Ignore interaction action if the entity being interacted with is the same.
         if (other instanceof InteractionAction) {
             InteractionAction action = (InteractionAction) other;
-            return interact.equals(action.interact);
+            return interactWith.equals(action.interactWith);
         }
         return false;
     }
 
     /**
-     * Function executed once the mob has interacted with {@link #interact}.
+     * Function executed once the mob has interacted with {@link #interactWith}.
      */
     public abstract void execute();
 }

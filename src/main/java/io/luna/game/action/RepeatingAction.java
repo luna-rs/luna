@@ -48,7 +48,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
                 return;
             }
             repeat();
-            if (maxRepeats > 0 && ++currentRepeats >= maxRepeats) {
+            if (maxCycles > 0 && ++currentCycles >= maxCycles) {
                 cancel();
             }
         }
@@ -62,12 +62,12 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     /**
      * The amount of times this action repeats. Default value is {@code Integer.MAX_VALUE}.
      */
-    private int maxRepeats = Integer.MAX_VALUE;
+    private int maxCycles = Integer.MAX_VALUE;
 
     /**
      * The current repetition counter.
      */
-    private int currentRepeats;
+    private int currentCycles;
 
     /**
      * Creates a new {@link RepeatingAction}.
@@ -142,7 +142,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      */
     public final void setRepeat(int amount) {
         checkArgument(amount > 0, "Amount of repetitions must be above 0.");
-        maxRepeats = amount;
+        maxCycles = amount;
     }
 
     /**
@@ -158,6 +158,13 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      */
     public final void setDelay(int newDelay) {
         worker.setDelay(newDelay);
+    }
+
+    /**
+     * @return The amount of times this action has repeated.
+     */
+    public final int getExecutions() {
+        return currentCycles;
     }
 
     /**

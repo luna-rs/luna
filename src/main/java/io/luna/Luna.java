@@ -1,6 +1,6 @@
 package io.luna;
 
-import com.moandjiezana.toml.Toml;
+import io.luna.util.GsonUtils;
 import io.luna.util.LoggingSettings;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
@@ -8,13 +8,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Instantiates a {@link LunaServer} that will start Luna.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class Luna {
 
@@ -32,11 +31,6 @@ public final class Luna {
      * The log4j2 settings.
      */
     private static final LoggingSettings loggingSettings;
-
-    /**
-     * The mechanism used to read {@code .toml} files.
-     */
-    private static final Toml TOML = new Toml();
 
     /**
      * A private constructor.
@@ -82,9 +76,7 @@ public final class Luna {
      * @return The settings object.
      */
     private static LunaSettings loadSettings() throws IOException {
-        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "luna.toml"))) {
-            return TOML.read(bufferedReader).to(LunaSettings.class);
-        }
+        return GsonUtils.readAsType(Paths.get("data", "luna.json"), LunaSettings.class);
     }
 
     /**
@@ -93,9 +85,7 @@ public final class Luna {
      * @return The logging settings object.
      */
     private static LoggingSettings loadLoggingSettings() throws IOException {
-        try (var bufferedReader = Files.newBufferedReader(Path.of("data", "logging.toml"))) {
-            return TOML.read(bufferedReader).to(LoggingSettings.class);
-        }
+        return GsonUtils.readAsType(Paths.get("data", "logging.json"), LoggingSettings.class);
     }
 
     /**

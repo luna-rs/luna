@@ -4,18 +4,17 @@ import io.luna.game.model.Position;
 import io.netty.util.ResourceLeakDetector.Level;
 
 /**
- * Holds settings parsed from the {@code ./data/luna.toml} file. Effectively constants, as they are only modified by GSON.
+ * Holds settings parsed from the {@code ./data/luna.json} file. Effectively constants, as they are only modified by GSON.
  *
  * @author lare96 <http://github.com/lare96>
  */
 public final class LunaSettings {
 
-    private LunaRuntimeMode runtimeMode;
+    private LunaRuntime runtimeMode;
     private int port;
     private int connectionLimit;
     private Position startingPosition;
     private double experienceMultiplier;
-    private boolean pluginGui;
     private String serializer;
     private int passwordStrength;
 
@@ -46,14 +45,6 @@ public final class LunaSettings {
      */
     public double experienceMultiplier() {
         return experienceMultiplier;
-    }
-
-    /**
-     * If the plugin GUI should be opened on startup. The plugin GUI is an interactive interface that allows
-     * for plugins to be enabled, disabled, and reloaded. If this value is false all plugins will be loaded.
-     */
-    public boolean pluginGui() {
-        return pluginGui;
     }
 
     /**
@@ -107,7 +98,7 @@ public final class LunaSettings {
     /**
      * Determines what mode Luna is running in.
      */
-    public LunaRuntimeMode runtimeMode() {
+    public LunaRuntime runtimeMode() {
         return runtimeMode;
     }
 

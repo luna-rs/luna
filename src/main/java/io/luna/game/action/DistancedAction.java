@@ -7,7 +7,7 @@ import io.luna.game.model.mob.Mob;
  * An {@link Action} implementation that executes when the mob is within a certain range of a position, and interrupts
  * itself afterwards.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class DistancedAction<T extends Mob> extends RepeatingAction<T> {
 

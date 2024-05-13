@@ -7,9 +7,14 @@ import io.luna.game.service.GameService;
 /**
  * A model representing a single instance of Runescape. Only one instance should exist at a time.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LunaContext {
+
+    /**
+     * The server.
+     */
+    private final LunaServer server;
 
     /**
      * The world.
@@ -29,7 +34,8 @@ public final class LunaContext {
     /**
      * A package-private constructor.
      */
-    LunaContext() {
+    LunaContext(LunaServer server) {
+        this.server = server;
     }
 
     /**
@@ -51,5 +57,12 @@ public final class LunaContext {
      */
     public PluginManager getPlugins() {
         return plugins;
+    }
+
+    /**
+     * @return The server.
+     */
+    public LunaServer getServer() {
+        return server;
     }
 }

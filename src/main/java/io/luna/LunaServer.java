@@ -3,20 +3,23 @@ package io.luna;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+import io.luna.game.cache.Cache;
+import io.luna.game.cache.codec.ItemDefinitionDecoder;
+import io.luna.game.cache.codec.NpcDefinitionDecoder;
+import io.luna.game.cache.codec.ObjectDefinitionDecoder;
+import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
-import io.luna.util.parser.impl.BlacklistFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.ItemDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.MusicDefinitionFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.NpcDefinitionFileParser;
-import io.luna.util.parser.impl.ObjectDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -35,9 +38,10 @@ import static org.apache.logging.log4j.util.Unbox.box;
 /**
  * A model that handles Server initialization logic.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LunaServer {
+
 
     /**
      * The asynchronous logger.
@@ -47,7 +51,7 @@ public final class LunaServer {
     /**
      * A Luna context instance.
      */
-    private final LunaContext context = new LunaContext();
+    private final LunaContext context = new LunaContext(this);
 
     /**
      * A channel handler that will filter channels.
@@ -60,6 +64,11 @@ public final class LunaServer {
     private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
+     * The cache resource.
+     */
+    private final Cache cache = new Cache();
+
+    /**
      * A package-private constructor.
      */
     LunaServer() {
@@ -68,11 +77,12 @@ public final class LunaServer {
     /**
      * Runs the individual tasks that start Luna.
      *
-     * @throws ReflectiveOperationException If an error occurs while instancing plugins.
+     * @throws Exception If an error occurs.
      */
-    public void init() throws ReflectiveOperationException, InterruptedException {
+    public void init() throws Exception {
         Stopwatch launchTimer = Stopwatch.createStarted();
 
+        initCache();
         initLaunchTasks();
         initPlugins();
         initServices();
@@ -84,6 +94,17 @@ public final class LunaServer {
     }
 
     /**
+     * Initializes the cache resource and the cache decoders.
+     */
+    private void initCache() throws Exception {
+        cache.open();
+        cache.runDecoders(new ObjectDefinitionDecoder(),
+                new ItemDefinitionDecoder(),
+                new NpcDefinitionDecoder(),
+                new VarBitDefinitionDecoder());
+    }
+
+    /**
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
@@ -91,7 +112,6 @@ public final class LunaServer {
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
-
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
@@ -109,7 +129,7 @@ public final class LunaServer {
         allServices.startAsync().awaitHealthy();
         logger.info("All services are now running.");
 
-        // Wait for last minute Kotlin tasks before we let payers login.
+        // Wait for last minute Kotlin tasks before we let players login.
         gameService.getSynchronizer().await();
     }
 
@@ -134,8 +154,6 @@ public final class LunaServer {
         executor.execute(new MusicDefinitionFileParser());
         executor.execute(new NpcCombatDefinitionFileParser());
         executor.execute(new NpcDefinitionFileParser());
-        executor.execute(new ObjectDefinitionFileParser());
-        executor.execute(new BlacklistFileParser(channelFilter));
 
         try {
             int count = executor.size();
@@ -146,5 +164,26 @@ public final class LunaServer {
         } catch (ExecutionException e) {
             throw new CompletionException(e.getCause());
         }
+    }
+
+    /**
+     * @return A channel handler that will filter channels.
+     */
+    public LunaChannelFilter getChannelFilter() {
+        return channelFilter;
+    }
+
+    /**
+     * @return A message repository.
+     */
+    public GameMessageRepository getMessageRepository() {
+        return messageRepository;
+    }
+
+    /**
+     * @return The cache resource.
+     */
+    public Cache getCache() {
+        return cache;
     }
 }

@@ -1,6 +1,7 @@
 package io.luna.game.action;
 
 import io.luna.game.model.item.Item;
+import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
 
 import java.util.List;
@@ -11,7 +12,41 @@ import java.util.List;
  *
  * @author lare96 <http://github.com/lare96>
  */
-public abstract class InventoryAction extends RepeatingAction<Player> {
+public abstract class ItemContainerAction extends RepeatingAction<Player> {
+
+    /**
+     * An {@link ItemContainerAction} implementation that works with the inventory.
+     */
+    public static abstract class InventoryAction extends ItemContainerAction {
+
+        /**
+         * Creates a new {@link InventoryAction}.
+         *
+         * @param player The player.
+         * @param instant If this action executes instantly.
+         * @param delay The delay of this action.
+         * @param times The amount of times to repeat.
+         */
+        public InventoryAction(Player player, boolean instant, int delay, int times) {
+            super(player, player.getInventory(), instant, delay, times);
+        }
+
+        /**
+         * Creates a new {@link InventoryAction}.
+         *
+         * @param player The player.
+         * @param instant If this action executes instantly.
+         * @param times The amount of times to repeat.
+         */
+        public InventoryAction(Player player, boolean instant, int times) {
+            super(player, player.getInventory(), instant, 1, times);
+        }
+    }
+
+    /**
+     * The item container.
+     */
+    private final ItemContainer container;
 
     /**
      * The items being added.
@@ -24,27 +59,30 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
     protected List<Item> currentRemove;
 
     /**
-     * Creates a new {@link InventoryAction}.
+     * Creates a new {@link ItemContainerAction}.
      *
      * @param player The player.
+     * @param container The container.
      * @param instant If this action executes instantly.
      * @param delay The delay of this action.
      * @param times The amount of times to repeat.
      */
-    public InventoryAction(Player player, boolean instant, int delay, int times) {
+    public ItemContainerAction(Player player, ItemContainer container, boolean instant, int delay, int times) {
         super(player, instant, delay);
+        this.container = container;
         setRepeat(times);
     }
 
     /**
-     * Creates a new {@link InventoryAction} with a delay of {@code 1}.
+     * Creates a new {@link ItemContainerAction} with a delay of {@code 1}.
      *
      * @param player The player.
+     * @param container The container.
      * @param instant If this action executes instantly.
      * @param times The amount of times to repeat.
      */
-    public InventoryAction(Player player, boolean instant, int times) {
-        this(player, instant, 1, times);
+    public ItemContainerAction(Player player, ItemContainer container, boolean instant, int times) {
+        this(player,container, instant, 1, times);
     }
 
     @Override
@@ -60,24 +98,29 @@ public abstract class InventoryAction extends RepeatingAction<Player> {
             return;
         }
 
-        var inventory = mob.getInventory();
         currentRemove = remove();
-        if (!inventory.containsAll(currentRemove)) {
+        if (isInterrupted() || !container.containsAll(currentRemove)) {
+            if(getExecutions() == 0) {
+                mob.sendMessage("You do not have enough materials to do this.");
+            }
             interrupt();
             return;
         }
 
         currentAdd = add();
-        int addSpaces = inventory.computeSpaceForAll(currentRemove);
-        int removeSpaces = inventory.computeSpaceForAll(currentAdd);
+        int addSpaces = container.computeSpaceForAll(currentRemove);
+        int removeSpaces = container.computeSpaceForAll(currentAdd);
         int requiredSpaces = removeSpaces - addSpaces;
-        if (requiredSpaces > inventory.computeRemainingSize()) {
+        if(isInterrupted()) {
+            return;
+        }
+        if (requiredSpaces > container.computeRemainingSize()) {
             mob.sendMessage("You do not have enough space in your inventory.");
             interrupt();
             return;
         }
-        inventory.removeAll(currentRemove);
-        inventory.addAll(currentAdd);
+        container.removeAll(currentRemove);
+        container.addAll(currentAdd);
         execute();
     }
 

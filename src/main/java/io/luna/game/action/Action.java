@@ -13,7 +13,7 @@ import io.luna.game.model.mob.Mob;
  * such as during walking, unregistering, teleporting, etc.
  *
  * @param <T> The mob that this Action is dedicated to.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class Action<T extends Mob> {
 

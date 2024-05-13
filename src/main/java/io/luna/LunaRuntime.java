@@ -3,9 +3,9 @@ package io.luna;
 /**
  * An enumerated type representing the different modes Luna can be ran in.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public enum LunaRuntimeMode {
+public enum LunaRuntime {
 
     /**
      * The server will run in development mode. Use this setting when running Luna locally and on beta servers.
@@ -14,7 +14,7 @@ public enum LunaRuntimeMode {
 
     /**
      * The server will run in benchmark mode. Exactly like the {@code DEVELOPMENT} mode, except cycle time debug
-     * statements are printed and login positions are scattered.
+     * statements are printed.
      */
     BENCHMARK,
 
