@@ -17,13 +17,14 @@
 -- Dumping structure for table luna_players.main_data
 CREATE TABLE IF NOT EXISTS `main_data` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(12) NOT NULL,
   `password` varchar(72) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `username` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `bot` bit(1) NOT NULL,
   `rights` varchar(50) NOT NULL,
   `json_data` text NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Data exporting was unselected.
 

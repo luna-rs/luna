@@ -1,0 +1,208 @@
+1 Magic Attack
+2 Goblins Death
+3 weird sound then goblins?
+4 goblins?
+5 goblins dieing?
+6 high sound
+7 goblins?
+10 cutting a gem or something
+12 mining?
+13 mining or maybe a blocked attack
+15 block attack with something metal?/smithing
+16 smithing something on a anvil
+17...18... - smithing
+23 blocked attack?
+24 some attack?
+25 blocked attack?
+27 mining?
+29 blocked attack?
+31 block?
+32 block?
+37 picklocking a chest or something THIEF
+41 fart and then BOOOM! LOOOL
+42 looks like something with WOODCUTTING
+46 something magic? not rly usefull
+48 looks like something unlocking, not sure
+49 something magic? not rly usefull
+50 unlocking something
+52 unlocking something
+53 magic? doesnt sound usefull
+54 looks like 53 but louder
+60 unlock smth
+61 squeecky stair/floor ?
+62 unlock smth
+65 filling something with water ?
+67 some gate that opens?
+68 block?
+70 some gate making a sound, looks like i heard it on real rs before CLOSING the gate														/* Sound list 100% by NoobScape of rune-server.org */
+71 same as 70 but OPENING the gate
+81 a door
+82 weird sound o.O not really usefull
+83 same as 82 but backwards
+84 a gate
+88 Woodcutting ?
+89 somethign with woodcutting ?
+90 Woodcutting ?
+97 HIGH ALCHEMY MAGIC
+98 LOW ALCHEMY MAGIC
+99 Confuse/Curse/Weaken CASTING MAGIC
+100 Confuse/Curse/Weaken ON TARGET MAGIC
+101 something with 99/100
+109 fail when maging
+111 ??? looks like water ?
+114 some enchanting spell or bonus to bananas or something, not sure wich one!
+116 looks like 115
+117 115 again
+118 115 again
+119 looks like 99 etc
+120 looks like 99 etc again
+121 looks like 99 etc AGAIN
+122 ??? mutated strikes?
+123 ??? mutated strikes?
+124 ??? mutated strikes?
+125 looks like 99 etc again...
+126 looks like 99 again omg
+127 99 ffs stop it :(
+128 casting stikes etc
+129 strike etc on target
+130 casting a strik etc																																	/* Sound list 100% by NoobScape of rune-server.org */
+131 strik etc on target
+132 casting  a strike etc
+133 strike etc on target
+134 casting something again
+135 that but on the target
+136 some encahnt spell?
+137 some enchant spell?
+138 some enchant spell?
+139 some ench spell?
+140 some ench spell?
+141 some ench spell 2x
+142 some ench spell?
+143 some ench spell weird one
+144 some ench spell?
+145 some ench spell werid one
+146 some ench spell?
+147 some ench spell???
+149 148 but failing it
+150 something with 148 & failing
+151 BINDING!!
+152 Binding on target!!
+153 BIND TARGET
+155 casting a BLAST or something												/* DO NOT LEECH U NUB */
+156 blast on target
+157 casting a BLASt again
+158 blast on target
+159 RETRIBUTION??? not sure
+160 casting a bolt?
+161 bolg on traget
+162 casting a strike?
+163 that on the target
+165 some spell cant fnid name
+166 looks like 165
+167 looks like 165 i think its a curse?
+168 FREEZING ANCIENTS
+169 FREEZING
+170 FREEZING
+171 FREEZING
+172 not sure???
+173 FREEZING
+175 ??? LOUD sound
+186 Entangle/snare or something?
+190 a spell on a target idk wihc one
+191 some spell that fails on a target
+192 some enchant or somehitng????,
+195 OLD TELEPORT idk if theres a new one?
+196 ??? nothing heard :s
+197 ?? looks like teleporting or smth
+199 ??? enchanting smth?
+200 teleport
+201 teleport arived
+202 some curse??
+204 some very high annoying tone sound
+206 lol wtf?
+207 water blast
+208 water blast hit
+209 water bolt
+210 water bolt hit
+211 water strike
+212 water strike hit
+213 water wave
+214 water wave hit
+215 weaken
+216 air blast
+217 air blast hit
+218 air bolt
+219 air bolt hit
+220 air strike
+221 air strike hit
+222 air wave
+223 air wave hit
+227 spell splash
+229 casting a spell again..
+250 some attack?
+251 some monster scream?
+252 some monster scream?
+253 some monster scream?
+254 some attack?
+305 - lesser demon hit, different???
+400 - lesser demon hit
+404 lesser demon defence
+403 lesser demon death
+505 female death
+506 female defence
+511 npc hits you with no armour
+512 male death
+513 male defence
+516 YOU get hit
+517 ""
+518 You hit another player - no armour
+519 "" - but i think they hit you
+524 bears attack
+525 chicken attack
+530 you block with shield
+534 imp attack
+535 imp death
+536 imp defence
+537 spider attack
+538 spider death
+539 spider defence
+544 wolf attack
+545 wolf defence
+546 wolf defence 2
+558 smithing
+1753 - Construction sound?
+1754 - get hit, weird??
+2401 - potion drinking
+2500+ - weapon attacking sounds
+2577 - cooking
+2582 - picking up items
+2586 - crafting gems
+2599 - lighting fire
+2594 - lighting fire - succeed
+2606 - stringing bow
+2609 - filling something with water
+2644 - setting net trap
+2646 - setting bird trap
+2652 - catching a salamander
+2659/2661 - no more ores left in this rock kinda thing
+2662 - turning on prayers
+2663 - turning off prayers
+2672 - running out of prayer points
+2673 - somthing todo with prayer
+2693/2695/2700 - ranging with arrows
+2720 - ABYSSAL WHIP!!!
+2725 - smelting in a furnace
+2727 - fail at pickpocketing(stun)
+2734 - woodcutting tree cut down
+2738 - bury bones
+2739 - drop item
+2746-2755 - armour blocking sounds
+3770 - hammering anvil
+1270/2655 Level up lamp',
+2240+ Equiping armour
+3610 Snake death
+3609 Snake attack
+3611 - scorpion attack
+3612 - scorpion defence
+4500 - destroy item
+4580 Drink potion

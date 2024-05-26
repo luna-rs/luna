@@ -20,7 +20,7 @@
   {
     "opcode": 4,
     "size": 6,
-    "payload": "ItemClickMessageReader"
+    "payload": "DropItemMessageReader"
   },
   {
     "opcode": 5,
@@ -97,7 +97,7 @@
   {
     "opcode": 22,
     "size": 2,
-    "payload": "DebugMessageReader"
+    "payload": "SpamDataMessageReader"
   },
   {
     "opcode": 23,
@@ -106,7 +106,7 @@
   {
     "opcode": 24,
     "size": 6,
-    "payload": "ItemClickMessageReader"
+    "payload": "EquipItemMessageReader"
   },
   {
     "opcode": 25,
@@ -519,7 +519,7 @@
   {
     "opcode": 120,
     "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "payload": "UpdateFriendListMessageReader"
   },
   {
     "opcode": 121,
@@ -608,7 +608,7 @@
   {
     "opcode": 141,
     "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "payload": "UpdateFriendListMessageReader"
   },
   {
     "opcode": 142,
@@ -617,7 +617,7 @@
   {
     "opcode": 143,
     "size": 8,
-    "payload": "DebugMessageReader"
+    "payload": "ItemOnPlayerMessageReader"
   },
   {
     "opcode": 144,
@@ -688,7 +688,7 @@
   {
     "opcode": 160,
     "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "payload": "UpdateFriendListMessageReader"
   },
   {
     "opcode": 161,
@@ -848,7 +848,8 @@
   },
   {
     "opcode": 197,
-    "size": 4
+    "size": 4,
+    "payload": "DebugMessageReader"
   },
   {
     "opcode": 198,
@@ -935,7 +936,7 @@
   {
     "opcode": 217,
     "size": 8,
-    "payload": "PrivateChatMessageReader"
+    "payload": "UpdateFriendListMessageReader"
   },
   {
     "opcode": 218,
@@ -977,7 +978,7 @@
   },
   {
     "opcode": 227,
-    "size": 9,
+    "size": -1,
     "payload": "PrivateChatMessageReader"
   },
   {

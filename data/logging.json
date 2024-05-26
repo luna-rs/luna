@@ -1,0 +1,11 @@
+{
+  "root_level": "DEBUG",
+  "format_type": "VERBOSE",
+  "output_type": "MIXED",
+  "active_file_logs": [
+    "CONSOLE_ERR",
+    "CHAT",
+    "COMMANDS",
+    "PRIVATE_MESSAGE"
+  ]
+}

@@ -1,0 +1,442 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+normal tzhaar npc
+
+2602 = walk
+2603 = stand
+2604 = stand with staff
+2605 = block
+2606 = block but fast
+2607 = dead
+2608 = dead
+2609 = atck with non wep only arm
+2610 = hit with wep
+2611 = range atk
+2612 = dagger atk
+2613 = mage atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tz-kih emote
+
+2619 = stand = too walk :P
+2620 = dead
+2621 = atk
+2622 = block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tz-kek emote id 2737
+
+2623 = walk
+2624 = stand
+2625 = atk
+2626 = block
+2627 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tok-xil emote
+
+2628 = atk
+2629 = block
+2630 = dead
+2631 = stand
+2632 = walk
+2633 = range atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+yt-mejkot emote
+
+2634 = walk
+2635 = block
+2636 = stand
+2636 = atk
+2637 = atk too lol
+2638 = dead
+2639 = heal like barrage rofl!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ket-zek emote
+
+2642 = stand
+2643 = walk
+2644 = melee atk
+2645 = block
+2646 = dead
+2647 = mage atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tztok-jad
+
+2650 = stand
+2651 = walk
+2652 = range atk
+2653 = block
+2654 = dead
+2655 = melee atk
+2656 = mage atk
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end of the tzhaar emote
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+k.B.D or dragon emote
+
+79   = walk
+80   = melee atk with claw
+81   = fire breath atk
+89   = block
+90   = stand
+91   = melee atk with head
+92   = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+demon emote
+
+63   = walk
+64   = atk slash
+65   = block
+66   = stand
+67-68= dead
+69   = mage atk with strik-blast
+70   = block but is not normal
+71   = shrink
+72   = re Grow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+chaos elemental emote!
+
+3144 = walk
+3146 = mage atk
+3147 = dead
+3148 = stand
+3149 = tele atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+giant emote!
+
+127  = walk
+128  = slash with sword
+129  = block
+130  = stand
+131  = dead
+132  = mage atk like god spell
+133  = tele shrink
+134  = tele re-Grow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+abyssal demon emote
+
+1536 = stand
+1537 = atk
+1538 = die
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+giants mole emote
+
+3309 = stand
+3310 = die
+3311 = block
+3312 = atk
+3313 = walk
+3314 = make a hole and in :P
+3315 = out the hole!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dark beast emote
+
+2729 = stand
+2730 = block
+2731 = walk
+2732 = dead
+2733 = atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dagnnoth emote
+
+1338 = stand
+1339 = walk
+1340 = block
+1341 = melee atk
+1342 = dead
+1343 = range atk
+1344 = swim
+1345 = swim
+1346 = swim
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dagnnoth kings emote!
+
+2849 = walk
+2850 = stand
+2851 = melee atk1
+2852 = block
+2853 = melee atk2
+2854 = mage atk
+2855 = range atk
+2856 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+monkey guard (Gorila)
+
+1400 = run
+1401 = stand
+1402 = atk
+1403 = block
+1404 = dead
+1405 = heal he self
+1406 = stam
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+azinian avatar emote!
+
+1838 = stand
+1839 = walk
+1840 = melee atk
+1841 = dead
+1842 = block
+1843 = range atk
+1844 = magic atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+strange plant emote
+
+352  = stand
+353  = atk
+354  = block
+355  = dead
+356  = walk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+baby dragon emote
+
+21   = walk
+25   = atk
+26   = block
+27   = stand
+28   = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+kurask emote
+
+1510 = walk
+1511 = stand
+1512 = atk
+1513 = dead
+1514 = idk what he do like stand lol
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dust devil
+
+1555 = block
+1556 = stand
+1557 = atk
+1558 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+gargoyle
+
+1515 = stand-walk
+1516 = stand-walk
+1517 = atk
+1518 = dead
+1519 = block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ghost emote
+
+120  = walk
+121  = walk
+122  = walk
+123  = atk
+124  = block
+125  = stand
+126  = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ninja and zombie monkey emote
+
+1380 = walk
+1381 = run
+1382 = zombie walk
+1383 = atk with non wep
+1384 = dead
+1385 = walk
+1386 = stand
+1387 = stand
+1388 = stand (best stand beter use this)
+1389 = ?????
+1390 = dead real one dead
+1391 = dead fake dead
+1392 = melee atk
+1393 = block
+1394 = range atk
+1395 = range block
+1396 = spin atk
+1397 = walk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Basilisk
+
+1544 = walk
+1545 = stand
+1546 = attack
+1547 = block
+1548 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bloodveld
+
+1549 = walk
+1550 = block
+1551 = stand
+1552 = attack
+1553 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cockatrice
+
+1559 = walk
+1560 = idk i think atk
+1561 = stand
+1562 = attk
+1563 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Rock slug
+
+1564 = walk
+1565 = stand
+1566 = stand2
+1567 = atk
+1568 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+banshee
+
+1521 = stand
+1522 = stand too
+1523 = atk
+1524 = dead
+1525 = block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Nechryael
+
+1526 = walk
+1527 = stand
+1528 = attk
+1529 = lol he can mage barrage
+1530 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pyrefiend
+
+1578 = stand
+1579 = walk
+1580 = dead
+1581 = block
+1582 = atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+jellie
+
+1583 = stand
+1584 = walk
+1585 = block
+1586 = attk
+1587 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Crawling hand
+
+1588 = stand
+1589 = walk
+1590 = dead
+1591 = block
+1592 = atk
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Turoth
+
+1593 = walk
+1594 = stand
+1595 = atk
+1596 = block
+1597 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Agrith-Na-Na
+
+3498 = stand
+3499 = walk
+3500 = block
+3501 = atk
+3502 = magic atk
+3503 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Dessourt
+
+3504 = stand
+3505 = block
+3506 = walk
+3507 = walk
+3508 = atk
+3509 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+wolfman
+
+1079 = walk
+1080 = atk
+1081 = block
+1082 = dead
+1083 = stand
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ghast
+
+1085 = walk
+1086 = stand
+1087 = atk
+1088 = block
+1089 = dead
+1090 = dead 2
+1091 = walk but it ghostly
+1092 = stand it ghostly
+1093 = atk it ghosly
+1094 = block it ghosly
+1095 = dead ghosly
+1096 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+troll emote
+
+1139 = walk
+1140 = walk
+1141 = walk
+1142 = atk
+
+not full!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+gnome
+
+189  = walk
+190  = range atk
+191  = atk non wep
+192  = atk with wep
+193  = idk
+194  = block
+195  = stand
+196  = dead
+197  = god spell atk
+198  = idk he clap
+199  = stand
+200  = idk he clap and it fast
+201  = atk fast
+202  = he got something walk
+203  = lol idk what he done!!!! he fall with something
+204  = gnome matrix lol
+205  = he fall dooood
+206  = he using busing down
+207  = he fall dood again
+208  = doood fall doood again...
+209  = fall dood fall dood fall dood...
+210  = football gnome ftw!!
+211  = gnome cheeeeer
+212  = gnome that want fly...
+213  = bush
+214  = idk what....
+215  = same one but not same way...
+216  = he say something block...
+217  = i hate gnome idk what this is...
+218  = spin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+shost shade
+
+1281 = walk
+1282 = stand
+1283 = magic atk
+1284 = atk
+1285 = dead
+1286 = block
+1287 = dead
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Spinolyp
+
+2863 = walk
+2864 = bove water
+2865 = under water
+2866 = under water long
+2867 = stand
+2868 = atk
+2869 = block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+killerwatt
+
+3160 = stand
+3161 = walk
+3162 = dead
+3163 = atk
+3164 = atk2
+3165 = block
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

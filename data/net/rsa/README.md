@@ -2,9 +2,9 @@
 
 This folder contains the default generated RSA keys for Luna.
 
-The values for the _public key_ (rsapub.toml) go client side. If you don't have a setting, you may have to enable RSA in your client.
+The values for the _public key_ (rsapub.json) go client side. If you don't have a setting, you may have to enable RSA in your client.
 
-The _private key_ (rsapriv.toml) stays in this folder as is. The values will be automatically parsed on startup.
+The _private key_ (rsapriv.json) stays in this folder as is. The values will be automatically parsed on startup.
 
 
 # Generating New Keys
