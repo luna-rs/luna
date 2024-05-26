@@ -5,9 +5,11 @@ import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.codec.ItemDefinitionDecoder;
+import io.luna.game.cache.codec.MapDecoder;
 import io.luna.game.cache.codec.NpcDefinitionDecoder;
 import io.luna.game.cache.codec.ObjectDefinitionDecoder;
 import io.luna.game.cache.codec.VarBitDefinitionDecoder;
+import io.luna.game.cache.codec.VarpDefinitionDecoder;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -15,11 +17,9 @@ import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
-import io.luna.util.parser.impl.ItemDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.MusicDefinitionFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
-import io.luna.util.parser.impl.NpcDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -42,16 +42,15 @@ import static org.apache.logging.log4j.util.Unbox.box;
  */
 public final class LunaServer {
 
-
     /**
      * The asynchronous logger.
      */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A Luna context instance.
+     * The context.
      */
-    private final LunaContext context = new LunaContext(this);
+    private final LunaContext context;
 
     /**
      * A channel handler that will filter channels.
@@ -64,14 +63,10 @@ public final class LunaServer {
     private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
-     * The cache resource.
-     */
-    private final Cache cache = new Cache();
-
-    /**
      * A package-private constructor.
      */
-    LunaServer() {
+    LunaServer(LunaContext context) {
+        this.context = context;
     }
 
     /**
@@ -97,11 +92,14 @@ public final class LunaServer {
      * Initializes the cache resource and the cache decoders.
      */
     private void initCache() throws Exception {
+        Cache cache = context.getCache();
         cache.open();
-        cache.runDecoders(new ObjectDefinitionDecoder(),
+        cache.runDecoders(context, new ObjectDefinitionDecoder(),
                 new ItemDefinitionDecoder(),
                 new NpcDefinitionDecoder(),
-                new VarBitDefinitionDecoder());
+                new VarBitDefinitionDecoder(),
+                new VarpDefinitionDecoder(),
+                new MapDecoder());
     }
 
     /**
@@ -150,16 +148,15 @@ public final class LunaServer {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
         executor.execute(new MessageRepositoryFileParser(messageRepository));
         executor.execute(new EquipmentDefinitionFileParser());
-        executor.execute(new ItemDefinitionFileParser());
         executor.execute(new MusicDefinitionFileParser());
         executor.execute(new NpcCombatDefinitionFileParser());
-        executor.execute(new NpcDefinitionFileParser());
 
         try {
             int count = executor.size();
             if (count > 0) {
                 logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
                 executor.await(true);
+                context.getCache().waitForDecoders();
             }
         } catch (ExecutionException e) {
             throw new CompletionException(e.getCause());
@@ -178,12 +175,5 @@ public final class LunaServer {
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
-    }
-
-    /**
-     * @return The cache resource.
-     */
-    public Cache getCache() {
-        return cache;
     }
 }

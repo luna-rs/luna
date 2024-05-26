@@ -1,5 +1,9 @@
 package io.luna;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.item.Item;
 import io.luna.util.GsonUtils;
 import io.luna.util.LoggingSettings;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -62,12 +66,13 @@ public final class Luna {
      */
     public static void main(String[] args) {
         try {
-            var luna = new LunaServer();
-            luna.init();
+            var context = new LunaContext();
+            context.getServer().init();
         } catch (Exception e) {
             logger.fatal("Luna could not be started.", e);
             System.exit(0);
         }
+
     }
 
     /**

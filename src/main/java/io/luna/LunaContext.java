@@ -1,5 +1,6 @@
 package io.luna;
 
+import io.luna.game.cache.Cache;
 import io.luna.game.model.World;
 import io.luna.game.plugin.PluginManager;
 import io.luna.game.service.GameService;
@@ -12,9 +13,14 @@ import io.luna.game.service.GameService;
 public final class LunaContext {
 
     /**
+     * The cache resource.
+     */
+    private final Cache cache = new Cache();
+
+    /**
      * The server.
      */
-    private final LunaServer server;
+    private final LunaServer server = new LunaServer(this);
 
     /**
      * The world.
@@ -34,8 +40,14 @@ public final class LunaContext {
     /**
      * A package-private constructor.
      */
-    LunaContext(LunaServer server) {
-        this.server = server;
+    LunaContext() {
+    }
+
+    /**
+     * @return The cache resource.
+     */
+    public Cache getCache() {
+        return cache;
     }
 
     /**
