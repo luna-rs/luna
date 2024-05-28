@@ -313,7 +313,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                         }
                     }
                 }
-                tileMap.put(index, new MapTileGrid(tiles));
+                tileMap.put(index, new MapTileGrid(index.getRegion(), tiles));
             } finally {
                 data.release();
             }

@@ -8,7 +8,7 @@ import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
 import io.luna.game.cache.CacheUtils;
 import io.luna.game.model.def.NpcDefinition;
-import io.luna.game.model.def.EntityVarpDefinition;
+import io.luna.game.model.def.VarpChildDefinition;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
@@ -23,8 +23,8 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
     @Override
     public void decode(Cache cache, Builder<NpcDefinition> decodedObjects) throws Exception {
         Archive config = Archive.decode(cache.getFile(0, 2));
-        ByteBuf dataBuf = config.getFileData("loc.dat");
-        ByteBuf idxBuf = config.getFileData("loc.idx");
+        ByteBuf dataBuf = config.getFileData("npc.dat");
+        ByteBuf idxBuf = config.getFileData("npc.idx");
 
         try {
             int count = idxBuf.readShort();
@@ -69,7 +69,7 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
         String[] actions = new String[10];
         boolean minimapVisible = true;
         int combatLevel = 1;
-        EntityVarpDefinition transformDef = new EntityVarpDefinition(-1, -1, ImmutableList.of());
+        VarpChildDefinition varpDef = new VarpChildDefinition(-1, -1, ImmutableList.of());
 
         Arrays.fill(actions, "null");
         while (true) {
@@ -78,7 +78,7 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
             if (opcode == 0) {
                 return new NpcDefinition(id, name, description, size, standAnimation, walkAnimation, turnAnimationId,
                         turnRightAnimationId, turnLeftAnimationId, degreesToTurn, ImmutableList.copyOf(actions),
-                        minimapVisible, combatLevel, transformDef);
+                        minimapVisible, combatLevel, varpDef);
             } else if (opcode == 1) {
                 int length = data.readUnsignedByte();
                 for (int index = 0; index < length; index++) {
@@ -136,7 +136,7 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
                 for (int i = 0; i <= childCount; i++) {
                     children.add((int) data.readShort());
                 }
-                transformDef = new EntityVarpDefinition(varBitId, varpId, children.build());
+                varpDef = new VarpChildDefinition(varBitId, varpId, children.build());
             }
         }
     }

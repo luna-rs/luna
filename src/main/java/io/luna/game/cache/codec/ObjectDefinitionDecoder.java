@@ -8,7 +8,7 @@ import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
 import io.luna.game.cache.CacheUtils;
 import io.luna.game.model.def.GameObjectDefinition;
-import io.luna.game.model.def.EntityVarpDefinition;
+import io.luna.game.model.def.VarpChildDefinition;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
@@ -69,16 +69,15 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
         boolean interactive = false;
         String[] actions = new String[10];
         boolean obstructive = false;
-        EntityVarpDefinition transformDef = new EntityVarpDefinition(-1, -1, ImmutableList.of());
+        VarpChildDefinition varpDef = new VarpChildDefinition(-1, -1, ImmutableList.of());
 
         Arrays.fill(actions, "null");
         while (true) {
             int opcode = data.readUnsignedByte();
 
             if (opcode == 0) {
-
                 return new GameObjectDefinition(id, name, description, width, length, solid, impenetrable, interactive,
-                        animationId, ImmutableList.copyOf(actions), obstructive, transformDef);
+                        animationId, ImmutableList.copyOf(actions), obstructive, varpDef);
             } else if (opcode == 1) {
                 int amount = data.readUnsignedByte();
                 for (int i = 0; i < amount; i++) {
@@ -137,7 +136,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
                 for (int i = 0; i <= childCount; i++) {
                     children.add((int) data.readShort());
                 }
-                transformDef = new EntityVarpDefinition(varBitId, varpId, children.build());
+                varpDef = new VarpChildDefinition(varBitId, varpId, children.build());
             }
         }
     }
