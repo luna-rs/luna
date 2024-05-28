@@ -3,16 +3,45 @@ package io.luna.game.cache.map;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import io.luna.game.model.Position;
+import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 
-public class MapObject {
+/**
+ * Represents a static {@link GameObject} on the map that was decoded from the cache.
+ *
+ * @author lare96
+ */
+public final class MapObject {
 
+    /**
+     * The object id.
+     */
     private final int objectId;
+
+    /**
+     * The object position.
+     */
     private final Position position;
+
+    /**
+     * The object type.
+     */
     private final ObjectType type;
+
+    /**
+     * The object direction.
+     */
     private final ObjectDirection rotation;
 
+    /**
+     * Creates a new {@link MapObject}.
+     *
+     * @param objectId The object id.
+     * @param position The object position.
+     * @param type The object type.
+     * @param rotation The object direction.
+     */
     public MapObject(int objectId, Position position, ObjectType type, ObjectDirection rotation) {
         this.objectId = objectId;
         this.position = position;
@@ -20,28 +49,30 @@ public class MapObject {
         this.rotation = rotation;
     }
 
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("objectId", objectId)
-                .add("position", position)
-                .add("type", type)
-                .add("rotation", rotation)
-                .toString();
-    }
-
+    /**
+     * @return The object id.
+     */
     public int getObjectId() {
         return objectId;
     }
 
+    /**
+     * @return The object position.
+     */
     public Position getPosition() {
         return position;
     }
 
+    /**
+     * @return The object type.
+     */
     public ObjectType getType() {
         return type;
     }
 
+    /**
+     * @return The object direction.
+     */
     public ObjectDirection getRotation() {
         return rotation;
     }
