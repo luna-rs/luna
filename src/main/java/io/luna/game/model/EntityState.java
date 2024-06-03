@@ -3,7 +3,7 @@ package io.luna.game.model;
 /**
  * An enum representing states an entity can be in.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public enum EntityState {
 

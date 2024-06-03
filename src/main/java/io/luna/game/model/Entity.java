@@ -1,23 +1,31 @@
 package io.luna.game.model;
 
+import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkManager;
-import io.luna.game.model.chunk.ChunkPosition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
+import io.luna.game.model.mob.Player;
 import io.luna.game.plugin.PluginManager;
 import io.luna.game.service.GameService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing anything that can be interacted with.
+ * A model representing anything that can be interacted with in the game world.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class Entity {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The context instance.
@@ -57,7 +65,7 @@ public abstract class Entity {
     /**
      * The current chunk.
      */
-    protected Chunk currentChunk;
+    protected ChunkRepository chunkRepository;
 
     /**
      * If this entity can be interacted with.
@@ -79,7 +87,6 @@ public abstract class Entity {
         plugins = context.getPlugins();
         service = context.getGame();
         world = context.getWorld();
-
     }
 
     /**
@@ -157,12 +164,11 @@ public abstract class Entity {
     /**
      * Sets the current state and invokes the corresponding state function. <strong>Warning:</strong> Do not call
      * this directly unless you're familiar with the internal API. Use {@link MobList#add(Mob)}/
-     * {@link EntityList#register(StationaryEntity)} and the respective removal functions instead.
+     * {@link StationaryEntityList#register(StationaryEntity)} and the respective removal functions instead.
      *
      * @param newState The new state.
      */
     public final void setState(EntityState newState) {
-        // TODO Might need to be volatile/atomic "state"
         checkArgument(newState != EntityState.NEW, "Cannot set state to NEW.");
         checkArgument(newState != state, "State already equal to " + newState + ".");
         checkArgument(state != EntityState.INACTIVE, "INACTIVE state cannot be changed.");
@@ -171,6 +177,15 @@ public abstract class Entity {
         switch (state) {
             case ACTIVE:
                 checkState(position != null, this + " cannot be registered until its position is set.");
+
+                if (type == EntityType.PLAYER) {
+                    Player player = (Player) this;
+                    if (!player.getControllers().onPositionChange(player, position)) {
+                        position = Luna.settings().startingPosition();
+                        player.sendMessage("You have been teleported ::home, because you logged out in an invalid area.");
+                        logger.warn("Player {} logged out in unexpected area! Teleporting them to ::home...", player.getUsername());
+                    }
+                }
 
                 setCurrentChunk();
                 onActive();
@@ -190,7 +205,7 @@ public abstract class Entity {
      *
      * @param oldPos The old position.
      */
-    protected void onPositionChange(Position oldPos) {
+    protected void onPositionChanged(Position oldPos) {
 
     }
 
@@ -201,12 +216,20 @@ public abstract class Entity {
      */
     public final void setPosition(Position newPosition) {
         if (!newPosition.equals(position)) {
+
+            if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
+                Player player = (Player) this;
+                if (!player.getControllers().onPositionChange(player, newPosition)) {
+                    return;
+                }
+            }
+
             Position old = position;
             position = newPosition;
 
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
-                onPositionChange(old);
+                onPositionChanged(old);
             }
         }
     }
@@ -215,17 +238,17 @@ public abstract class Entity {
      * Sets the chunk depending on the current position.
      */
     private void setCurrentChunk() {
-        ChunkPosition next = position.getChunkPosition();
-        if (currentChunk == null) {
+        Chunk nextChunk = position.getChunk();
+        if (chunkRepository == null) {
             // We have no current chunk.
-            currentChunk = world.getChunks().load(next);
-            currentChunk.add(this);
-        } else if (!currentChunk.getPosition().equals(next)) {
+            chunkRepository = world.getChunks().load(nextChunk);
+            chunkRepository.add(this);
+        } else if (!chunkRepository.getChunk().equals(nextChunk)) {
             // We have a chunk, and it's not equal to the new one.
-            currentChunk.remove(this);
+            chunkRepository.remove(this);
 
-            currentChunk = world.getChunks().load(next);
-            currentChunk.add(this);
+            chunkRepository = world.getChunks().load(nextChunk);
+            chunkRepository.add(this);
         }
     }
 
@@ -233,8 +256,8 @@ public abstract class Entity {
      * Removes this Entity from its current chunk.
      */
     private void removeCurrentChunk() {
-        if (currentChunk != null) {
-            currentChunk.remove(this);
+        if (chunkRepository != null) {
+            chunkRepository.remove(this);
         }
     }
 
@@ -290,22 +313,15 @@ public abstract class Entity {
     /**
      * @return A new instance of the chunk position.
      */
-    public final ChunkPosition getChunkPosition() {
-        return currentChunk.getPosition();
-    }
-
-    /**
-     * @return The chunk manager.
-     */
-    public ChunkManager getChunks() {
-        return world.getChunks();
+    public final Chunk getChunk() {
+        return chunkRepository.getChunk();
     }
 
     /**
      * @return The current chunk.
      */
-    public Chunk getCurrentChunk() {
-        return currentChunk;
+    public ChunkRepository getChunkRepository() {
+        return chunkRepository;
     }
 
     /**

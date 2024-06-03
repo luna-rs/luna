@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * An enum representing different entity types.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public enum EntityType {
 
@@ -21,7 +21,6 @@ public enum EntityType {
      * A game object.
      */
     OBJECT,
-
 
     /**
      * A player mob.
@@ -36,7 +35,12 @@ public enum EntityType {
     /**
      * A projectile.
      */
-    PROJECTILE;
+    PROJECTILE,
+
+    /**
+     * A graphic.
+     */
+    GRAPHIC;
 
     /**
      * An immutable enum set of these values.
