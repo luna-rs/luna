@@ -6,7 +6,7 @@ import io.luna.game.model.Entity;
 /**
  * An entity-based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 class EntityEvent extends Event {
 

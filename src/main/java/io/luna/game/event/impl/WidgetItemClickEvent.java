@@ -1,18 +1,19 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An item widget-click based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class WidgetItemClickEvent extends PlayerEvent {
+public class WidgetItemClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * An event sent when a player clicks a widget item's first index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class WidgetItemFirstClickEvent extends WidgetItemClickEvent {
 
@@ -32,7 +33,7 @@ public class WidgetItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks a widget item's second index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class WidgetItemSecondClickEvent extends WidgetItemClickEvent {
 
@@ -52,7 +53,7 @@ public class WidgetItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks a widget item's third index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class WidgetItemThirdClickEvent extends WidgetItemClickEvent {
 
@@ -72,7 +73,7 @@ public class WidgetItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks a widget item's fourth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class WidgetItemFourthClickEvent extends WidgetItemClickEvent {
 
@@ -92,7 +93,7 @@ public class WidgetItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks a widget item's fifth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class WidgetItemFifthClickEvent extends WidgetItemClickEvent {
 

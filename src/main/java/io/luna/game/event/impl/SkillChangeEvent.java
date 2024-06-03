@@ -5,7 +5,7 @@ import io.luna.game.model.mob.Mob;
 /**
  * An event sent when a mob's skills change.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class SkillChangeEvent extends MobEvent {
 
@@ -25,7 +25,7 @@ public final class SkillChangeEvent extends MobEvent {
     private final int oldLvl;
 
     /**
-     * The id of the skill whose experience was changed.
+     * The id of the skill that was changed.
      */
     private final int id;
 
@@ -35,7 +35,7 @@ public final class SkillChangeEvent extends MobEvent {
      * @param oldExp The old amount of experience.
      * @param oldStaticLvl The old static level.
      * @param oldLvl The old level.
-     * @param id The id of the skill whose experience was changed.
+     * @param id The id of the skill that was changed.
      */
     public SkillChangeEvent(Mob mob, double oldExp, int oldStaticLvl, int oldLvl, int id) {
         super(mob);
@@ -67,7 +67,7 @@ public final class SkillChangeEvent extends MobEvent {
     }
 
     /**
-     * @return The id of the skill whose experience was changed.
+     * @return The id of the skill that was changed.
      */
     public int getId() {
         return id;

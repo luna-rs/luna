@@ -1,19 +1,20 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 import io.luna.game.model.object.GameObject;
 
 /**
  * An object-click based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class ObjectClickEvent extends PlayerEvent {
+public class ObjectClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * An event sent when a player clicks an object's first index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ObjectFirstClickEvent extends ObjectClickEvent {
 
@@ -28,7 +29,7 @@ public class ObjectClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an object's second index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ObjectSecondClickEvent extends ObjectClickEvent {
 
@@ -43,7 +44,7 @@ public class ObjectClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an object's third index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ObjectThirdClickEvent extends ObjectClickEvent {
 
@@ -58,7 +59,7 @@ public class ObjectClickEvent extends PlayerEvent {
     /**
      * The clicked object.
      */
-    private final GameObject gameObject;
+    public  GameObject gameObject;
 
     /**
      * Creates a new {@link ObjectClickEvent}.

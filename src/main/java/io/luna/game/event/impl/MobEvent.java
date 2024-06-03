@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Mob;
 /**
  * A mob-based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class MobEvent extends Event {
 

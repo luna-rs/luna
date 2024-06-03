@@ -1,22 +1,21 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 import java.time.Instant;
 
 /**
  * An event sent when a player talks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ChatEvent extends PlayerEvent {
-
-    // TODO Every player has public chat history
+public final class ChatEvent extends PlayerEvent implements ControllableEvent {
 
     /**
-     * The chat effects.
+     * The chat effect.
      */
-    private final int effects;
+    private final int effect;
 
     /**
      * The chat color.
@@ -29,12 +28,17 @@ public final class ChatEvent extends PlayerEvent {
     private final int messageLength;
 
     /**
-     * The message.
+     * The packed message.
      */
     private final byte[] message;
 
     /**
-     * A timestamp of when it occurred, not precise.
+     * The unpacked message.
+     */
+    private final String unpackedMessage;
+
+    /**
+     * A timestamp of when it occurred.
      */
     private final Instant timestamp = Instant.now();
 
@@ -43,24 +47,26 @@ public final class ChatEvent extends PlayerEvent {
      * Creates a new {@link ChatEvent}.
      *
      * @param player The player.
-     * @param effects The chat effects.
+     * @param effect The chat effects.
      * @param color The chat color.
      * @param messageLength The message length.
      * @param message The message.
+     * @param unpackedMessage The unpacked message.
      */
-    public ChatEvent(Player player, int effects, int color, int messageLength, byte[] message) {
+    public ChatEvent(Player player, int effect, int color, int messageLength, byte[] message, String unpackedMessage) {
         super(player);
-        this.effects = effects;
+        this.effect = effect;
         this.color = color;
         this.messageLength = messageLength;
         this.message = message;
+        this.unpackedMessage = unpackedMessage;
     }
 
     /**
      * @return The chat effects.
      */
-    public int getEffects() {
-        return effects;
+    public int getEffect() {
+        return effect;
     }
 
     /**
@@ -82,6 +88,13 @@ public final class ChatEvent extends PlayerEvent {
      */
     public byte[] getMessage() {
         return message;
+    }
+
+    /**
+     * @return The unpacked message.
+     */
+    public String getUnpackedMessage(){
+        return unpackedMessage;
     }
 
     /**

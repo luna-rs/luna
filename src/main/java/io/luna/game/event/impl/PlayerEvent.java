@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player;
 /**
  * A player-based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class PlayerEvent extends Event {
 

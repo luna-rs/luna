@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * A model that can be matched to an event to by an {@link EventMatcher}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class EventMatcherListener<E extends Event> {
 

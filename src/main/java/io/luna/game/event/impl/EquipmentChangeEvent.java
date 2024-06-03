@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 /**
  * An event sent when the equipment of a player changes.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class EquipmentChangeEvent extends PlayerEvent {
 
@@ -31,6 +31,7 @@ public final class EquipmentChangeEvent extends PlayerEvent {
     /**
      * Creates a new {@link EquipmentChangeEvent}.
      *
+     * @param player The player.
      * @param index The index.
      * @param oldItem The old item on the index.
      * @param newItem The new item on the index.

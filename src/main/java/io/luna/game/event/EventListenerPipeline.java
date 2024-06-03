@@ -3,8 +3,8 @@ package io.luna.game.event;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-import io.luna.game.event.impl.ServerLaunchEvent;
-import io.luna.game.event.impl.ServerShutdownEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +18,7 @@ import java.util.List;
  * it, in order to be intercepted by listeners.
  *
  * @param <E> The type of event that will traverse this pipeline.
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class EventListenerPipeline<E extends Event> implements Iterable<EventListener<E>> {
 

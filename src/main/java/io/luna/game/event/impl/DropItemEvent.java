@@ -1,13 +1,14 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
- * An event sent when a Player drops an item from the inventory.
+ * An event sent when a player drops an item from the inventory.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class DropItemEvent extends PlayerEvent {
+public final class DropItemEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The item identifier.

@@ -1,13 +1,14 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
- * An event sent when a Player clicks an item to equip it.
+ * An event sent when a player clicks an item in the inventory to equip it.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class EquipItemEvent extends PlayerEvent {
+public final class EquipItemEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The clicked index.
@@ -38,8 +39,6 @@ public final class EquipItemEvent extends PlayerEvent {
         this.itemId = itemId;
         this.interfaceId = interfaceId;
     }
-
-    // TODO don't terminate event
 
     /**
      * @return The clicked index.

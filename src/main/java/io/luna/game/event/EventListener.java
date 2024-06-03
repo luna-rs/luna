@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkState;
  * A listener that intercepts events.
  *
  * @param <E> The type of event being intercepted.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class EventListener<E extends Event> {
 

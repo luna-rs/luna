@@ -2,13 +2,14 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An event sent when a player picks up an item.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class PickupItemEvent extends PlayerEvent {
+public final class PickupItemEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The ground item.

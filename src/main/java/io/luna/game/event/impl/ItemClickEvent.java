@@ -1,18 +1,19 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An item-click based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class ItemClickEvent extends PlayerEvent {
+public class ItemClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * An event sent when a player clicks an item's first index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ItemFirstClickEvent extends ItemClickEvent {
 
@@ -27,7 +28,7 @@ public class ItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an item's second index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ItemSecondClickEvent extends ItemClickEvent {
 
@@ -42,7 +43,7 @@ public class ItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an item's third index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ItemThirdClickEvent extends ItemClickEvent {
 
@@ -57,7 +58,7 @@ public class ItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an item's fourth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ItemFourthClickEvent extends ItemClickEvent {
 
@@ -72,7 +73,7 @@ public class ItemClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an item's fifth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class ItemFifthClickEvent extends ItemClickEvent {
 

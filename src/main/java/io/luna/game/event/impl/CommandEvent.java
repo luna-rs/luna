@@ -1,14 +1,15 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 import io.luna.util.StringUtils;
 
 /**
  * An event sent when a player activates a command.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class CommandEvent extends PlayerEvent {
+public final class CommandEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The command name.
@@ -54,18 +55,6 @@ public final class CommandEvent extends PlayerEvent {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    /**
-     * Replaces a character of the argument at {@code index}.
-     *
-     * @param index The index.
-     * @param oldChar The character to replace.
-     * @param newChar The character to replace with.
-     * @return The argument, with the characters replaced.
-     */
-    public String replace(int index, char oldChar, char newChar) {
-        return args[index].replace(oldChar, newChar);
     }
 
     /**

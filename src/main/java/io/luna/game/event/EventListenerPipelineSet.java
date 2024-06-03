@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * A set of pipelines mapped to their respective event traversal types.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class EventListenerPipelineSet implements Iterable<EventListenerPipeline<?>> {
 

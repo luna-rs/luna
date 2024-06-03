@@ -1,13 +1,15 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
+import io.luna.util.StringUtils;
 
 /**
  * An event sent when a player sends a private message.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class PrivateChatEvent extends PlayerEvent {
+public final class PrivateChatEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The name of the receiver.
@@ -20,6 +22,11 @@ public final class PrivateChatEvent extends PlayerEvent {
     private final byte[] message;
 
     /**
+     * The unpacked message.
+     */
+    private final String unpackedMessage;
+
+    /**
      * Creates a new {@link PrivateChatEvent}.
      *
      * @param player The player.
@@ -30,6 +37,7 @@ public final class PrivateChatEvent extends PlayerEvent {
         super(player);
         this.name = name;
         this.message = message;
+        unpackedMessage = StringUtils.unpackText(message);
     }
 
     /**
@@ -44,5 +52,12 @@ public final class PrivateChatEvent extends PlayerEvent {
      */
     public byte[] getMessage() {
         return message;
+    }
+
+    /**
+     * @return The unpacked message.
+     */
+    public String getUnpackedMessage() {
+        return unpackedMessage;
     }
 }

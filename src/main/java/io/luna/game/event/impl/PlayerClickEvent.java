@@ -1,18 +1,19 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
- * An player-click based event. Not intended for interception.
+ * A player-click based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class PlayerClickEvent extends PlayerEvent {
+public class PlayerClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
-     * An event sent when a player clicks an another PLayer's first interaction index.
+     * An event sent when a player clicks another player's fourth interaction index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class PlayerFourthClickEvent extends PlayerClickEvent {
 
@@ -27,37 +28,37 @@ public class PlayerClickEvent extends PlayerEvent {
     /**
      * The index of the other player.
      */
-    private final int index;
+    private final int targetIndex;
 
     /**
      * The other player.
      */
-    private final Player other;
+    private final Player target;
 
     /**
      * Creates a new {@link PlayerClickEvent}.
      *
      * @param player The player.
-     * @param index The index of the other player.
-     * @param other The other player.
+     * @param targetIndex The index of the other player.
+     * @param target The other player.
      */
-    public PlayerClickEvent(Player player, int index, Player other) {
+    public PlayerClickEvent(Player player, int targetIndex, Player target) {
         super(player);
-        this.index = index;
-        this.other = other;
+        this.targetIndex = targetIndex;
+        this.target = target;
     }
 
     /**
      * @return The index of the other player.
      */
-    public int getIndex() {
-        return index;
+    public int getTargetIndex() {
+        return targetIndex;
     }
 
     /**
      * @return The other player.
      */
-    public Player getOther() {
-        return other;
+    public Player getTarget() {
+        return target;
     }
 }

@@ -1,15 +1,15 @@
 package io.luna.game.event.impl;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An event sent when a player clicks a button on an interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ButtonClickEvent extends PlayerEvent {
+public final class ButtonClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * The clicked button.

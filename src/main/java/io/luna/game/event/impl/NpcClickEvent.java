@@ -2,18 +2,19 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An npc-click based event. Not intended for interception.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class NpcClickEvent extends PlayerEvent {
+public class NpcClickEvent extends PlayerEvent implements ControllableEvent {
 
     /**
      * An event sent when a player clicks an npc's first index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class NpcFirstClickEvent extends NpcClickEvent {
 
@@ -28,7 +29,7 @@ public class NpcClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an npc's second index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class NpcSecondClickEvent extends NpcClickEvent {
 
@@ -43,7 +44,7 @@ public class NpcClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an npc's third index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class NpcThirdClickEvent extends NpcClickEvent {
 
@@ -58,7 +59,7 @@ public class NpcClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an npc's fourth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class NpcFourthClickEvent extends NpcClickEvent {
 
@@ -73,7 +74,7 @@ public class NpcClickEvent extends PlayerEvent {
     /**
      * An event sent when a player clicks an npc's fifth index.
      *
-     * @author lare96 <http://github.org/lare96>
+     * @author lare96
      */
     public static final class NpcFifthClickEvent extends NpcClickEvent {
 
