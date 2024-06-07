@@ -2,18 +2,25 @@ package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
-import io.luna.game.model.chunk.ChunkPosition;
+import io.luna.game.model.chunk.Chunk;
+import org.checkerframework.checker.units.qual.A;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A model representing a single tile on the Runescape map.
+ * A {@link Location} made up of a single tile on the Runescape map.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class Position {
+public final class Position implements Location {
+
+    /**
+     * The maximum amount of tiles a player can view.
+     */
+    public static final int VIEWING_DISTANCE = 15;
 
     /**
      * A {@link Range} of all height levels.
@@ -36,9 +43,14 @@ public final class Position {
     private final int z;
 
     /**
-     * The chunk position.
+     * The lazy loaded chunk containing this position.
      */
-    private transient ChunkPosition chunkPosition;
+    private transient final AtomicReference<Chunk> chunk = new AtomicReference<>();
+
+    /**
+     * The lazy loaded region containing this position.
+     */
+    private transient final AtomicReference<Region> region = new AtomicReference<>();
 
     /**
      * Creates a new {@link Position}, where all {@code x, y, and z} are non-negative.
@@ -52,7 +64,7 @@ public final class Position {
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
         checkArgument(y >= 0, "y < 0");
-        checkArgument(z >= 0 && z <= 3, "z < 0 || z > 3");
+        //checkArgument(z >= 0 && z <= 3, "z < 0 || z > 3");
 
         this.x = x;
         this.y = y;
@@ -67,6 +79,11 @@ public final class Position {
      */
     public Position(int x, int y) {
         this(x, y, 0);
+    }
+
+    @Override
+    public boolean contains(Position position) {
+        return position.equals(this);
     }
 
     @Override
@@ -114,10 +131,10 @@ public final class Position {
      * Determines if this position is viewable from another position.
      *
      * @param other The position to compare.
-     * @return {@code true} if {@code other} is within {@link  EntityConstants#VIEWING_DISTANCE}.
+     * @return {@code true} if {@code other} is within {@link  #VIEWING_DISTANCE}.
      */
     public boolean isViewable(Position other) {
-        return isWithinDistance(other, EntityConstants.VIEWING_DISTANCE);
+        return isWithinDistance(other, VIEWING_DISTANCE);
     }
 
     /**
@@ -164,6 +181,10 @@ public final class Position {
      */
     public Position translate(int amountX, int amountY) {
         return translate(amountX, amountY, z);
+    }
+
+    public Position setZ(int newZ) {
+        return new Position(x, y, newZ);
     }
 
     /**
@@ -217,42 +238,31 @@ public final class Position {
     }
 
     /**
-     * Returns the local x coordinate within the chunk of this position.
+     * Returns the {@link Chunk} that this position is contained in.
      *
-     * @return The local x coordinate.
+     * @return The chunk.
      */
-    public int getLocalX() {
-        return getLocalX(this);
+    public Chunk getChunk() {
+        return chunk.updateAndGet(oldChunk -> {
+            if (oldChunk == null) {
+                return new Chunk(this);
+            }
+            return oldChunk;
+        });
     }
 
     /**
-     * Returns the local y coordinate within the chunk of this position.
+     * Returns the {@link Region} that this position is contained in.
      *
-     * @return The local y coordinate.
+     * @return The region.
      */
-    public int getLocalY() {
-        return getLocalY(this);
-    }
-
-    /**
-     * Returns a new {@link ChunkPosition} built from this position.
-     *
-     * @return The chunk position.
-     */
-    public ChunkPosition getChunkPosition() {
-        if (chunkPosition == null) {
-            chunkPosition = new ChunkPosition(this);
-        }
-        return chunkPosition;
-    }
-
-    /**
-     * Returns a new {@link RegionPosition} built from this position.
-     *
-     * @return The region position.
-     */
-    public RegionPosition getRegionPosition() {
-        return new RegionPosition(this);
+    public Region getRegion() {
+        return region.updateAndGet(oldRegion -> {
+            if(oldRegion == null) {
+                return new Region(this);
+            }
+            return oldRegion;
+        });
     }
 
     /**
