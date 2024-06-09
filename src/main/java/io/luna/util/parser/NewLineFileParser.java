@@ -1,22 +1,23 @@
 package io.luna.util.parser;
 
 import java.io.BufferedReader;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 /**
- * A {@link AbstractFileParser} implementation designated for files that have tokens separated by a new line.
+ * A {@link FileParser} implementation designated for files that have tokens separated by a new line.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public abstract class AbstractNewLineFileParser extends AbstractFileParser<Scanner, String, String> {
+public abstract class NewLineFileParser extends FileParser<Scanner, String, String> {
 
     /**
-     * Creates a new {@link AbstractNewLineFileParser}.
+     * Creates a new {@link NewLineFileParser}.
      *
-     * @param files The files to parse.
+     * @param filePath The file to parse.
      */
-    public AbstractNewLineFileParser(String... files) {
-        super(files);
+    public NewLineFileParser(Path filePath) {
+        super(filePath);
     }
 
     /**
@@ -42,17 +43,17 @@ public abstract class AbstractNewLineFileParser extends AbstractFileParser<Scann
     }
 
     @Override
-    public String parse(Scanner parser) throws Exception {
+    public String parse(Scanner parser) {
         return parser.nextLine();
     }
 
     @Override
-    public Scanner newParser(BufferedReader reader) throws Exception {
+    public Scanner newParser(BufferedReader reader) {
         return new Scanner(reader);
     }
 
     @Override
-    public boolean hasNext(Scanner parser) throws Exception {
+    public boolean hasNext(Scanner parser) {
         return parser.hasNextLine();
     }
 

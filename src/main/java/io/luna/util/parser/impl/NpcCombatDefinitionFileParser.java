@@ -4,24 +4,26 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
-import io.luna.util.parser.AbstractJsonFileParser;
+import io.luna.util.parser.JsonFileParser;
+
+import java.nio.file.Paths;
 
 /**
- * A {@link AbstractJsonFileParser} implementation that reads NPC combat definitions.
+ * A {@link JsonFileParser} implementation that reads NPC combat definitions.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public class NpcCombatDefinitionFileParser extends AbstractJsonFileParser<NpcCombatDefinition> {
+public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefinition> {
 
     /**
      * Creates a new {@link NpcCombatDefinitionFileParser}.
      */
     public NpcCombatDefinitionFileParser() {
-        super("./data/def/npcs/npc_combat_defs.json");
+        super(Paths.get("data", "game", "def", "npc_combat.json"));
     }
 
     @Override
-    public NpcCombatDefinition convert(JsonObject token) throws Exception {
+    public NpcCombatDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int respawnTicks = token.get("respawn_ticks").getAsInt();
         boolean aggressive = token.get("aggressive?").getAsBoolean();
@@ -40,7 +42,7 @@ public class NpcCombatDefinitionFileParser extends AbstractJsonFileParser<NpcCom
     }
 
     @Override
-    public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) {
         NpcCombatDefinition.ALL.storeAndLock(tokenObjects);
     }
 }

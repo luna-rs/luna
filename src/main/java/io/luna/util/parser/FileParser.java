@@ -5,28 +5,24 @@ import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An abstraction model that provides functions for parsing of various types of files. File parser implementations
- * should always abort the parsing process completely upon encountering any errors. This is because file parsers
- * handle sensitive data (ie. IP bans) that cannot be fragmented.
- * <p>
- * All file parser implementations should be safe to use across multiple threads.
+ * An abstraction model that provides functions for parsing of various types of files. All file parser implementations
+ * should be safe to use across multiple threads.
  *
  * @param <P> The token parser type.
- * @param <T> The token type.
- * @param <R> The type representing converted tokens.
- * @author lare96 <http://github.org/lare96>
+ * @param <T> The un-parsed token type.
+ * @param <R> The parsed token type.
+ * @author lare96
  */
-public abstract class AbstractFileParser<P, T, R> implements Runnable {
+public abstract class FileParser<P, T, R> implements Runnable {
 
     /**
      * The immutable list of files to parse.
      */
-    private final ImmutableList<String> fileList;
+    private final Path filePath;
 
     /**
      * The current parsing index.
@@ -34,17 +30,17 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
     int currentIndex;
 
     /**
-     * Creates a new {@link AbstractFileParser}.
+     * Creates a new {@link FileParser}.
      *
-     * @param files The files to parse.
+     * @param filePath The file to parse.
      */
-    public AbstractFileParser(String... files) {
-        this.fileList = ImmutableList.copyOf(files);
+    public FileParser(Path filePath) {
+        this.filePath = filePath;
     }
 
     @Override
     public final void run() {
-        parseFiles();
+       parseFile(filePath);
     }
 
     /**
@@ -54,7 +50,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
      * @return The parsed token.
      * @throws Exception If any errors occur while parsing the token.
      */
-    public abstract T parse(P parser) throws Exception;
+    public abstract T parse(P parser);
 
     /**
      * Converts a single token into a token Object, or {@code null} if this token should be silently
@@ -63,7 +59,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
      * @param token The token to convert.
      * @return The token Object.
      */
-    public abstract R convert(T token) throws Exception;
+    public abstract R convert(T token);
 
     /**
      * Determines if the parser can parse another token.
@@ -72,7 +68,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
      * @return {@code true} if another token can be parsed.
      * @throws Exception If any errors occur while determining if a token can be parsed.
      */
-    public abstract boolean hasNext(P parser) throws Exception;
+    public abstract boolean hasNext(P parser);
 
     /**
      * Creates and returns a new parser that will parse tokens contained within {@code in}.
@@ -81,7 +77,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
      * @return The new file parser.
      * @throws Exception If any errors occur while creating the parser.
      */
-    public abstract P newParser(BufferedReader reader) throws Exception;
+    public abstract P newParser(BufferedReader reader);
 
     /**
      * A function called when all tokens have been parsed.
@@ -89,15 +85,8 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
      * @param tokenObjects An immutable list of all token objects.
      * @throws Exception If any errors occur while notifying this listener.
      */
-    public void onCompleted(ImmutableList<R> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<R> tokenObjects) {
 
-    }
-
-    /**
-     * Parses all files in the {@link #fileList}.
-     */
-    public final synchronized void parseFiles() {
-        fileList.stream().map(Paths::get).forEach(this::parseFile);
     }
 
     /**
@@ -112,7 +101,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
 
             while (hasNext(parser)) {
                 R tokenObj = convert(parse(parser));
-                if(tokenObj != null) {
+                if (tokenObj != null) {
                     tokenObjects.add(tokenObj);
                     currentIndex++;
                 }
@@ -126,7 +115,7 @@ public abstract class AbstractFileParser<P, T, R> implements Runnable {
     /**
      * @return The immutable list of files to parse.
      */
-    public ImmutableList<String> getFileList() {
-        return fileList;
+    public Path getFilePath() {
+        return filePath;
     }
 }

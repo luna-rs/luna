@@ -5,24 +5,26 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
 import io.luna.util.GsonUtils;
-import io.luna.util.parser.AbstractJsonFileParser;
+import io.luna.util.parser.JsonFileParser;
+
+import java.nio.file.Paths;
 
 /**
- * A {@link AbstractJsonFileParser} implementation that reads equipment definitions.
+ * A {@link JsonFileParser} implementation that reads equipment definitions.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class EquipmentDefinitionFileParser extends AbstractJsonFileParser<EquipmentDefinition> {
+public final class EquipmentDefinitionFileParser extends JsonFileParser<EquipmentDefinition> {
 
     /**
      * Creates a new {@link EquipmentDefinitionFileParser}.
      */
     public EquipmentDefinitionFileParser() {
-        super("./data/def/items/equipment_defs.json");
+        super(Paths.get("data", "game", "def", "equipment.json"));
     }
 
     @Override
-    public EquipmentDefinition convert(JsonObject token) throws Exception {
+    public EquipmentDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         int index = token.get("index").getAsInt();
         boolean twoHanded = token.get("two_handed?").getAsBoolean();
@@ -34,7 +36,7 @@ public final class EquipmentDefinitionFileParser extends AbstractJsonFileParser<
     }
 
     @Override
-    public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) {
         EquipmentDefinition.ALL.storeAndLock(tokenObjects);
     }
 }

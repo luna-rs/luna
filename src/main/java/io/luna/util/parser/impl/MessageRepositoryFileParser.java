@@ -7,19 +7,20 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.parser.AbstractJsonFileParser;
+import io.luna.util.parser.JsonFileParser;
 
 import java.lang.reflect.Field;
+import java.nio.file.Paths;
 
 /**
- * A {@link AbstractJsonFileParser} implementation that parses incoming message listener metadata.
+ * A {@link JsonFileParser} implementation that parses incoming message listener metadata.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class MessageRepositoryFileParser extends AbstractJsonFileParser<GameMessageReader> {
+public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader> {
 
     /**
-     * A default implementation of a {@link GameMessageReader}. It does nothing.
+     * A default implementation of a {@link GameMessageReader} that does nothing.
      */
     private static final class DefaultMessageReader extends GameMessageReader {
 
@@ -45,12 +46,12 @@ public final class MessageRepositoryFileParser extends AbstractJsonFileParser<Ga
      * @param repository The message repository.
      */
     public MessageRepositoryFileParser(GameMessageRepository repository) {
-        super("./data/io/message_repo.json");
+        super(Paths.get("data", "net", "incoming_message_data.json"));
         this.repository = repository;
     }
 
     @Override
-    public GameMessageReader convert(JsonObject token) throws Exception {
+    public GameMessageReader convert(JsonObject token) {
         int opcode = token.get("opcode").getAsInt();
         int size = token.get("size").getAsInt();
         String className = token.has("payload") ? token.get("payload").getAsString() : null;
@@ -58,7 +59,7 @@ public final class MessageRepositoryFileParser extends AbstractJsonFileParser<Ga
     }
 
     @Override
-    public void onCompleted(ImmutableList<GameMessageReader> tokenObjects) throws Exception {
+    public void onCompleted(ImmutableList<GameMessageReader> tokenObjects) {
         tokenObjects.forEach(repository::put);
         repository.lock();
     }
@@ -72,26 +73,28 @@ public final class MessageRepositoryFileParser extends AbstractJsonFileParser<Ga
      * @return The message listener instance.
      * @throws ReflectiveOperationException If any errors occur while creating the listener instance.
      */
-    private GameMessageReader createReader(int opcode, int size, String className)
-            throws ReflectiveOperationException {
+    private GameMessageReader createReader(int opcode, int size, String className) {
+        try {
+            // Create class and instance from qualified name.
+            Object readerInstance = className != null ?
+                    Class.forName(DIR + className).getDeclaredConstructor().newInstance() : new DefaultMessageReader();
 
-        // Create class and instance from qualified name.
-        Object readerInstance = className != null ?
-                Class.forName(DIR + className).getDeclaredConstructor().newInstance() : new DefaultMessageReader();
+            // Retrieve opcode and size fields.
+            Class<?> readerClass = readerInstance.getClass().getSuperclass();
+            Field opcodeField = readerClass.getDeclaredField("opcode");
+            Field sizeField = readerClass.getDeclaredField("size");
 
-        // Retrieve opcode and size fields.
-        Class<?> readerClass = readerInstance.getClass().getSuperclass();
-        Field opcodeField = readerClass.getDeclaredField("opcode");
-        Field sizeField = readerClass.getDeclaredField("size");
+            // Make them accessible.
+            opcodeField.setAccessible(true);
+            sizeField.setAccessible(true);
 
-        // Make them accessible.
-        opcodeField.setAccessible(true);
-        sizeField.setAccessible(true);
+            // Reflectively set the values.
+            opcodeField.setInt(readerInstance, opcode);
+            sizeField.setInt(readerInstance, size);
 
-        // Reflectively set the values.
-        opcodeField.setInt(readerInstance, opcode);
-        sizeField.setInt(readerInstance, size);
-
-        return (GameMessageReader) readerInstance;
+            return (GameMessageReader) readerInstance;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
