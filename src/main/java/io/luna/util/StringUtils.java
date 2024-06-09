@@ -1,13 +1,14 @@
 package io.luna.util;
 
 import com.google.common.base.Joiner;
+import io.luna.net.codec.ByteMessage;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A static-utility class that contains functions for manipulating strings.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class StringUtils {
 
@@ -37,7 +38,7 @@ public final class StringUtils {
     /**
      * The character table that will aid in unpacking text.
      */
-    private static final char[] CHAR_TABLE = new char[]{
+    private static final char[] FREQUENCY_ORDERED_CHARS = new char[]{
         ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
         'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
         'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
@@ -66,17 +67,51 @@ public final class StringUtils {
             int val = message[i / 2] >> (4 - 4 * (i % 2)) & 0xf;
             if (highNibble == -1) {
                 if (val < 13)
-                    decodeBuf[idx++] = CHAR_TABLE[val];
+                    decodeBuf[idx++] = FREQUENCY_ORDERED_CHARS[val];
                 else
                     highNibble = val;
             } else {
-                decodeBuf[idx++] = CHAR_TABLE[((highNibble << 4) + val) - 195];
+                decodeBuf[idx++] = FREQUENCY_ORDERED_CHARS[((highNibble << 4) + val) - 195];
                 highNibble = -1;
             }
         }
         return new String(decodeBuf, 0, idx);
     }
+    public static void packText(String str, ByteMessage buf) {
+        if (str.length() > 80)
+            str = str.substring(0, 80);
+        str = str.toLowerCase();
 
+        int carry = -1;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            int index = 0;
+            for (int j = 0; j < FREQUENCY_ORDERED_CHARS.length; j++) {
+                if (c != FREQUENCY_ORDERED_CHARS[j])
+                    continue;
+                index = j;
+                break;
+            }
+
+            if (index > 12)
+                index += 195;
+            if (carry == -1) {
+                if (index < 13)
+                    carry = index;
+                else
+                    buf.put(index);
+            } else if (index < 13) {
+                buf.put((carry << 4) + index);
+                carry = -1;
+            } else {
+                buf.put((carry << 4) + (index >> 4));
+                carry = index & 0xf;
+            }
+        }
+
+        if (carry != -1)
+            buf.put(carry << 4);
+    }
     /**
      * Computes the indefinite article of {@code thing}.
      *

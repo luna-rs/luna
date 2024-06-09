@@ -25,6 +25,24 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class RandomUtils {
 
+
+    /**
+     * Determines if {@code rational} will be picked based on its rarity.
+     *
+     * @return {@code true} if picked, {@code false} otherwise.
+     */
+    public static boolean rollSuccess(Rational rational) {
+        if (rational.getNumerator() <= 0) {
+            return false;
+        } else if (rational.getNumerator() >= rational.getDenominator()) {
+            return true;
+        } else if (ThreadLocalRandom.current().nextInt(0, rational.getDenominator()) < rational.getNumerator()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Returns a pseudo-random {@code int} value between inclusive {@code min} and inclusive {@code max}.
      *

@@ -82,7 +82,7 @@ public final class SqlConnectionPool {
          */
         public SqlConnectionPool build() throws SQLException {
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:mysql://" + HOST + ":" + PORT + "/" + database + "");
+            config.setJdbcUrl("jdbc:mysql://" + HOST + ":" + PORT + "/" + database);
             config.setUsername(USERNAME);
             config.setPassword(PASSWORD);
             config.setPoolName(poolName);

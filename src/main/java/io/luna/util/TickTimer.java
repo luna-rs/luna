@@ -9,7 +9,7 @@ import java.time.Duration;
  * A model that computes the elapsed ticks between two points in time. Tick timing should be used strictly for game based
  * timing operations, otherwise {@link Stopwatch} should be used.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class TickTimer implements Comparable<Long> {
 

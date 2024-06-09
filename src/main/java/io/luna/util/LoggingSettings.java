@@ -5,12 +5,13 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * A collection of log4j2 settings loaded from the {@code logging.toml} file.
+ * A collection of log4j2 settings loaded from the {@code logging.json} file.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LoggingSettings {
 
@@ -179,6 +180,9 @@ public final class LoggingSettings {
      * @return The active file logs. Determines what will be logged to text files.
      */
     public ImmutableSet<FileOutputType> activeFileLogs() {
+        if(activeFileLogs == null || activeFileLogs.isEmpty()) {
+            return ImmutableSet.copyOf(EnumSet.allOf(FileOutputType.class));
+        }
         return ImmutableSet.copyOf(activeFileLogs);
     }
 }

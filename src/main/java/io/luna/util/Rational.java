@@ -1,5 +1,7 @@
 package io.luna.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -8,9 +10,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A model representing a rational number.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class Rational extends Number {
+public final class Rational extends Number implements Comparable<Rational>{
 
     /**
      * A rational number describing an {@code ALWAYS} chance (100%, 1 in 1 chance).
@@ -97,7 +99,7 @@ public final class Rational extends Number {
 
     @Override
     public int hashCode() {
-        return Objects.hash(numerator, denominator);
+        return Objects.hash(doubleValue());
     }
 
     @Override
@@ -108,7 +110,7 @@ public final class Rational extends Number {
 
         if (obj instanceof Rational) {
             Rational other = (Rational) obj;
-            return numerator == other.numerator && denominator == other.denominator;
+            return doubleValue() == other.doubleValue();
         }
 
         return false;
@@ -141,7 +143,7 @@ public final class Rational extends Number {
 
     @Override
     public long longValue() {
-        return (long) intValue();
+        return intValue();
     }
 
     @Override
@@ -240,5 +242,10 @@ public final class Rational extends Number {
      */
     public int getDenominator() {
         return denominator;
+    }
+
+    @Override
+    public int compareTo(@NotNull Rational o) {
+        return Double.compare(doubleValue(), o.doubleValue());
     }
 }

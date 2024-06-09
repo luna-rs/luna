@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A static-utility class that contains functions for manipulating threads.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ThreadUtils {
 
@@ -34,9 +34,7 @@ public final class ThreadUtils {
      * @param unit The time unit.
      */
     public static void awaitTerminationUninterruptibly(ExecutorService service, long timeout, TimeUnit unit) {
-        //  ----------- Code snippet taken from Google Guava.
         boolean interrupted = false;
-
         try {
             while (true) {
                 try {
@@ -51,6 +49,5 @@ public final class ThreadUtils {
                 Thread.currentThread().interrupt();
             }
         }
-        // -----------
     }
 }
