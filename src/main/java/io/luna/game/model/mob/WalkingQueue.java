@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96 <http://github.org/lare96>
  * @author Graham
  */
-public final class WalkingQueue {
+public class WalkingQueue {
 
     // TODO Rewrite
 
@@ -94,12 +94,12 @@ public final class WalkingQueue {
     /**
      * A deque of current steps.
      */
-    private final Deque<Step> current = new ArrayDeque<>();
+    private final Deque<Step> currentQueue = new ArrayDeque<>();
 
     /**
      * A deque of previous steps.
      */
-    private final Deque<Step> previous = new ArrayDeque<>();
+    private final Deque<Step> previousQueue = new ArrayDeque<>();
 
     /**
      * The mob.
@@ -115,7 +115,6 @@ public final class WalkingQueue {
      * If the current path is a running path.
      */
     private boolean runningPath;
-
     /**
      * Create a new {@link WalkingQueue}.
      *
@@ -131,43 +130,68 @@ public final class WalkingQueue {
      */
     public void process() {
         // TODO clean up function
-        Step current = new Step(mob.getPosition());
+        Step currentStep = new Step(mob.getPosition());
 
         Direction walkingDirection = Direction.NONE;
         Direction runningDirection = Direction.NONE;
 
         boolean restoreEnergy = true;
 
-        Step next = this.current.poll();
-        if (next != null) {
-            previous.add(next);
-            walkingDirection = Direction.between(current, next);
-            current = next;
+        Step nextStep = this.currentQueue.poll();
+        if (nextStep != null) {
+            previousQueue.add(nextStep);
+            walkingDirection = Direction.between(currentStep, nextStep);
+            currentStep = nextStep;
 
             if (mob.getType() == EntityType.PLAYER) {
                 Player player = mob.asPlr();
                 if (player.isRunning() || runningPath) {
-                    next = decrementRunEnergy(player) ? this.current.poll() : null;
-                    if (next != null) {
+                    if (player.hasEnoughEnergyToRun()) {
+                        useEnergy(player);
+                        updateEnergy();
+                        nextStep = this.currentQueue.poll();
+                    } else {
+                        nextStep = null;
+                    }
+                    if (nextStep != null) {
                         restoreEnergy = false;
-                        previous.add(next);
-                        runningDirection = Direction.between(current, next);
-                        current = next;
+                        previousQueue.add(nextStep);
+                        runningDirection = Direction.between(currentStep, nextStep);
+                        currentStep = nextStep;
                     }
                 }
             }
 
-
-            Position newPosition = new Position(current.getX(), current.getY(), mob.getPosition().getZ());
+            Position newPosition = new Position(currentStep.getX(), currentStep.getY(), mob.getPosition().getZ());
             mob.setPosition(newPosition);
         }
 
         if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
-            incrementRunEnergy();
+            Player player = mob.asPlr();
+            incrementRunEnergy(player);
+            updateEnergy();
         }
 
         mob.setWalkingDirection(walkingDirection);
         mob.setRunningDirection(runningDirection);
+    }
+
+    void updateEnergy(){
+        mob.asPlr().updateRunEnergy();
+    }
+
+    /**
+     * Depletes a player's energy. If the player doesn't have enough energy, the player will stop running.
+     */
+    void useEnergy(Player player) {
+        double energyLeft = player.runEnergyAfterReduction();
+        if (player.hasEnoughEnergyToRun()) {
+            player.setRunEnergy(energyLeft);
+        } else {
+            player.setRunEnergy(0.0);
+            player.setRunning(false);
+            runningPath = false;
+        }
     }
 
     /**
@@ -200,23 +224,22 @@ public final class WalkingQueue {
      * @param step The step to add.
      */
     public void addFirst(Step step) {
-        current.clear();
+        currentQueue.clear();
         runningPath = false;
-
         Queue<Step> backtrack = new ArrayDeque<>();
         for (; ; ) {
-            Step prev = previous.pollLast();
+            Step prev = previousQueue.pollLast();
             if (prev == null) {
                 break;
             }
             backtrack.add(prev);
             if (prev.equals(step)) {
                 backtrack.forEach(this::add);
-                previous.clear();
+                previousQueue.clear();
                 return;
             }
         }
-        previous.clear();
+        previousQueue.clear();
 
         add(step);
     }
@@ -227,7 +250,7 @@ public final class WalkingQueue {
      * @param next The step to add.
      */
     public void add(Step next) {
-        Step last = current.peekLast();
+        Step last = currentQueue.peekLast();
         if (last == null) {
             last = new Step(mob.getPosition());
         }
@@ -251,7 +274,7 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
-            current.add(new Step(nextX - deltaX, nextY - deltaY));
+            currentQueue.add(new Step(nextX - deltaX, nextY - deltaY));
         }
     }
 
@@ -259,35 +282,14 @@ public final class WalkingQueue {
      * Clears the current and previous steps.
      */
     public void clear() {
-        current.clear();
-        previous.clear();
-    }
-
-    /**
-     * A function that implements an algorithm to deplete run energy.
-     *
-     * @return {@code false} if the player can no longer run.
-     */
-    private boolean decrementRunEnergy(Player player) {
-        double totalWeight = player.getWeight();
-        double energyReduction = 0.117 * 2 * Math
-                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
-        double newValue = player.getRunEnergy() - energyReduction;
-        if (newValue <= 0.0) {
-            player.setRunEnergy(0.0, true);
-            player.setRunning(false);
-            runningPath = false;
-            return false;
-        }
-        player.setRunEnergy(newValue, true);
-        return true;
+        currentQueue.clear();
+        previousQueue.clear();
     }
 
     /**
      * A function that implements an algorithm to restore run energy.
      */
-    private void incrementRunEnergy() {
-        Player player = mob.asPlr();
+    void incrementRunEnergy(Player player) {
 
         double runEnergy = player.getRunEnergy();
         if (runEnergy >= 100.0) {
@@ -300,7 +302,7 @@ public final class WalkingQueue {
         double newValue = runEnergy + energyRestoration;
         newValue = Math.min(newValue, 100.0);
 
-        player.setRunEnergy(newValue, true);
+        player.setRunEnergy(newValue);
     }
 
     /**
@@ -309,7 +311,7 @@ public final class WalkingQueue {
      * @return The amount of remaining steps.
      */
     public int getRemainingSteps() {
-        return current.size();
+        return currentQueue.size();
     }
 
     /**

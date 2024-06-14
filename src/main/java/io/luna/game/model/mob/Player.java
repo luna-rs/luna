@@ -623,19 +623,23 @@ public final class Player extends Mob {
     /**
      * Sets the run energy percentage.
      *
-     * @param newRunEnergy The value to set to.
+     * @param runEnergy The value to set to.
      */
-    public void setRunEnergy(double newRunEnergy, boolean update) {
-        if (newRunEnergy > 100.0) {
-            newRunEnergy = 100.0;
+    public void setRunEnergy(double runEnergy) {
+        if (runEnergy > 100.0) {
+            runEnergy = 100.0;
         }
 
-        if (runEnergy != newRunEnergy) {
-            runEnergy = newRunEnergy;
-            if (update) {
-                queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
-            }
+        if (runEnergy < 0) {
+            runEnergy = 0;
         }
+
+        this.runEnergy = runEnergy;
+    }
+
+    /** Updates the client with the current run energy. */
+    public void updateRunEnergy() {
+        queue(new UpdateRunEnergyMessageWriter((int) runEnergy));
     }
 
     /**
@@ -650,9 +654,20 @@ public final class Player extends Mob {
         } else if (newEnergy < 0.0) {
             newEnergy = 0.0;
         }
-        setRunEnergy(newEnergy, true);
+        setRunEnergy(newEnergy);
+        updateRunEnergy();
     }
 
+    boolean hasEnoughEnergyToRun() {
+        return runEnergyAfterReduction() >= 0;
+    }
+
+    /** @return the remaining {@code runEnergy} after a running a single step.*/
+    double runEnergyAfterReduction() {
+        double energyReduction = 0.117 * 2 * Math
+                .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * getWeight());
+        return getRunEnergy() - energyReduction;
+    }
     /**
      * @return The combined weight of the inventory and equipment.
      */
