@@ -62,7 +62,7 @@ public class TickTimer implements Comparable<Long> {
     }
 
     /**
-     * Reset the current duration to {@link World#getCurrentTick()} ticks.
+     * Resets the current duration ({@link #getDurationTicks()}) to 0 ticks.
      */
     public final void reset() {
         snapshot = world.getCurrentTick();

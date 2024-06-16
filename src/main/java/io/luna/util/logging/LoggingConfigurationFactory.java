@@ -1,8 +1,8 @@
-package io.luna.util;
+package io.luna.util.logging;
 
 import io.luna.Luna;
-import io.luna.util.LoggingSettings.FileOutputType;
-import io.luna.util.LoggingSettings.OutputType;
+import io.luna.util.logging.LoggingSettings.FileOutputType;
+import io.luna.util.logging.LoggingSettings.OutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter.Result;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -23,7 +23,7 @@ import java.util.EnumSet;
 /**
  * The log4j2 {@link ConfigurationFactory} that will dynamically build logging configurations according to the {@link LoggingSettings}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 @Plugin(name = "LoggingConfigurationFactory", category = ConfigurationFactory.CONFIGURATION_FACTORY_PROPERTY)
 @Order(Integer.MAX_VALUE)
@@ -62,7 +62,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         }
 
         // Build console appenders.
-        var outputType = Luna.loggingSettings().outputType();
+        var outputType = Luna.settings().logging().outputType();
         if (outputType == OutputType.OUT) {
             builder.add(builder.newAppender("console", "Console").addAttribute("target", Target.SYSTEM_OUT)
                     .add(getPatternLayout(builder)).add(getLevelRangeFilter(builder, "FATAL", "TRACE")));
@@ -78,7 +78,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
 
         // Build file appenders.
         var newFileLogs = EnumSet.noneOf(FileOutputType.class);
-        var activeFileLogs = Luna.loggingSettings().activeFileLogs();
+        var activeFileLogs = Luna.settings().logging().activeFileLogs();
         for (var type : FileOutputType.values()) {
             if (type == FileOutputType.CONSOLE_OUT && outputType == OutputType.ERR) {
                 continue;
@@ -109,7 +109,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
         }
 
         // Create and configure root logger.
-        var rootLogger = builder.newRootLogger(Luna.loggingSettings().rootLevel());
+        var rootLogger = builder.newRootLogger(Luna.settings().logging().rootLevel());
         if (outputType == OutputType.OUT || outputType == OutputType.ERR) {
             rootLogger.add(builder.newAppenderRef("console"));
         } else if (outputType == OutputType.MIXED) {
@@ -143,7 +143,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
      */
     private LayoutComponentBuilder getPatternLayout(ConfigurationBuilder<BuiltConfiguration> builder) {
         var pattern = "";
-        var formatType = Luna.loggingSettings().formatType();
+        var formatType = Luna.settings().logging().formatType();
         switch (formatType) {
             case BASIC:
                 pattern = "[%d{dd MMM yyyy, h:mm:ss a}] [%level] %msg%n";

@@ -1,15 +1,15 @@
-package io.luna.util;
+package io.luna.util.logging;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * A collection of log4j2 settings loaded from the {@code logging.json} file.
+ * Holds settings parsed from the "logging" section in {@code ./data/luna.json} file.
  *
  * @author lare96
  */
@@ -138,22 +138,22 @@ public final class LoggingSettings {
     /**
      * The root level. Determines which logging levels are displayed to the console.
      */
-    private String rootLevel;
+    private final String rootLevel;
 
     /**
      * The format type. Determines how the logging looks in the console.
      */
-    private FormatType formatType;
+    private final FormatType formatType;
 
     /**
      * The output type. Determines which stream logs will be sent to.
      */
-    private OutputType outputType;
+    private final OutputType outputType;
 
     /**
      * The active file logs. Determines what will be logged to text files.
      */
-    private Set<FileOutputType> activeFileLogs;
+    private final Set<FileOutputType> activeFileLogs;
 
     /**
      * @return The root level. Determines which logging levels are displayed to the console.
@@ -177,12 +177,20 @@ public final class LoggingSettings {
     }
 
     /**
-     * @return The active file logs. Determines what will be logged to text files.
+     * @return The unmodifiable set of active file logs. Determines what will be logged to text files.
      */
-    public ImmutableSet<FileOutputType> activeFileLogs() {
+    public Set<FileOutputType> activeFileLogs() {
         if(activeFileLogs == null || activeFileLogs.isEmpty()) {
-            return ImmutableSet.copyOf(EnumSet.allOf(FileOutputType.class));
+            return Collections.unmodifiableSet(EnumSet.allOf(FileOutputType.class));
         }
-        return ImmutableSet.copyOf(activeFileLogs);
+        return Collections.unmodifiableSet(activeFileLogs);
+    }
+
+    // Never called.
+    private LoggingSettings(String rootLevel, FormatType formatType, OutputType outputType, Set<FileOutputType> activeFileLogs) {
+        this.rootLevel = rootLevel;
+        this.formatType = formatType;
+        this.outputType = outputType;
+        this.activeFileLogs = activeFileLogs;
     }
 }

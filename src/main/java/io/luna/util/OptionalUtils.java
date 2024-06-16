@@ -13,7 +13,7 @@ import java.util.function.ToIntFunction;
  * A static-utility class that contains functions for the Optional API. These functions are meant to be
  * statically imported when used.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class OptionalUtils {
 

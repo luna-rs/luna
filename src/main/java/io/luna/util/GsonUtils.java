@@ -5,14 +5,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
  * A static-utility class that contains functions for Google GSON.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class GsonUtils {
 
@@ -42,6 +46,15 @@ public final class GsonUtils {
     public static void writeJson(JsonElement element, Path path) throws IOException {
         try (FileWriter fw = new FileWriter(path.toFile())) {
             fw.append(GSON.toJson(element));
+        }
+    }
+
+    /**
+     * Shortcut function to {@link Gson#fromJson(Reader, Type)}.
+     */
+    public static <T> T readAsType(Path path, Class<T> clazz) throws IOException {
+        try (BufferedReader br = Files.newBufferedReader(path)) {
+            return GSON.fromJson(br, clazz);
         }
     }
 

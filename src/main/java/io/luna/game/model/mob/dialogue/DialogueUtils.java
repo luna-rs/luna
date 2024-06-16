@@ -1,14 +1,15 @@
-package io.luna.util;
+package io.luna.game.model.mob.dialogue;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
+import io.luna.util.StringUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A static-utility class that contains functions for handling dialogues.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class DialogueUtils {
 
@@ -16,23 +17,42 @@ public final class DialogueUtils {
      * An immutable list of "Make item" model widgets.
      */
     private static final ImmutableList<int[]> MAKE_ITEM_MODELS = ImmutableList.of(
-        new int[] {8884},
-        new int[] {8869, 8870},
-        new int[] {8883, 8884, 8885},
-        new int[] {8902, 8903, 8904, 8905},
-        new int[] {8941, 8942, 8943, 8944, 8945}
+            new int[]{8884},
+            new int[]{8869, 8870},
+            new int[]{8883, 8884, 8885},
+            new int[]{8902, 8903, 8904, 8905},
+            new int[]{8941, 8942, 8943, 8944, 8945}
     );
 
     /**
      * An immutable list of "Make item" text widgets.
      */
     private static final ImmutableList<int[]> MAKE_ITEM_TEXTS = ImmutableList.of(
-        new int[] {8893},
-        new int[] {8873, 8876},
-        new int[] {8889, 8893, 8897},
-        new int[] {8908, 8912, 8916, 8920},
-        new int[] {8948, 8952, 8956, 8960, 8964}
+            new int[]{8893},
+            new int[]{8873, 8876},
+            new int[]{8889, 8893, 8897},
+            new int[]{8908, 8912, 8916, 8920},
+            new int[]{8948, 8952, 8956, 8960, 8964}
     );
+
+    /**
+     * Fix for the make item 5-options interface dialogue. Reduces the name by one word and makes it white.
+     *
+     * @param str The item name.
+     * @return The fixed item name.
+     */
+    public static String makeItem5OptionsNameFix(String str) {
+        String[] parts = str.split(" ");
+        if (parts.length > 1) {
+            StringBuilder strBuilder = new StringBuilder("@whi@");
+            for (int index = 1; index < parts.length; index++) {
+                String nextPart = parts[index];
+                strBuilder.append(StringUtils.capitalize(nextPart)).append(' ');
+            }
+            return strBuilder.toString().trim();
+        }
+        return "@whi@" + str;
+    }
 
     /**
      * Returns the correct NPC dialogue based on the length.
@@ -129,11 +149,10 @@ public final class DialogueUtils {
     public static int makeItemDialogue(int length) {
         switch (length) {
             case 1:
+            case 3:
                 return 8880;
             case 2:
                 return 8866;
-            case 3:
-                return 8880;
             case 4:
                 return 8899;
             case 5:

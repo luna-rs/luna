@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
  * An {@link Executor} implementation that asynchronously executes a series of user-defined tasks, and
  * provides functionality to wait until they're completed.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class AsyncExecutor implements Executor {
 
@@ -70,15 +70,6 @@ public final class AsyncExecutor implements Executor {
         this(threadCount, new ThreadFactoryBuilder().setNameFormat(threadName).build());
     }
 
-    /**
-     * Creates a new {@link AsyncExecutor} using the default thread factory.
-     *
-     * @param threadCount The thread pool worker count.
-     */
-    public AsyncExecutor(int threadCount) {
-        this(threadCount, new ThreadFactoryBuilder().setNameFormat("AsyncExecutorThread").build());
-    }
-
     @Override
     public void execute(Runnable command) {
         checkState(isRunning(), "This executor is no longer running.");
@@ -89,7 +80,7 @@ public final class AsyncExecutor implements Executor {
 
     /**
      * Waits as long as necessary for all pending tasks to complete, performing shutdown operations if
-     * necessary. When this method returns successfully, {@link #size()} {@code == 0}.
+     * necessary. When this method returns successfully, {@link #getTaskCount()} {@code == 0}.
      *
      * @param terminate If the backing thread pool should be terminated once all tasks finish.
      * @throws ExecutionException If a pending task throws an exception.
@@ -119,7 +110,7 @@ public final class AsyncExecutor implements Executor {
      *
      * @return The amount of pending tasks.
      */
-    public int size() { //TODO rename to getPendingCount or something
+    public int getTaskCount() {
         pendingTasks.removeIf(Future::isDone);
         return pendingTasks.size();
     }
@@ -131,17 +122,25 @@ public final class AsyncExecutor implements Executor {
      * @return {@code true} if all pending tasks are done.
      */
     public boolean isDone() {
-        return size() == 0;
+        return getTaskCount() == 0;
     }
 
     /**
      * Returns if this executor is running. If {@code false} new tasks cannot be added and
-     * {@link #size()} {@code == 0}.
+     * {@link #getTaskCount()} {@code == 0}.
      *
      * @return {@code true} if the backing thread pool isn't shutdown.
      */
     public boolean isRunning() {
         return !threadPool.isShutdown();
+    }
+
+    /**
+     * Shuts down the backing executor. All pending tasks will be interrupted, and no new tasks
+     * will be accepted.
+     */
+    public void shutdown() {
+        threadPool.shutdownNow();
     }
 
     /**

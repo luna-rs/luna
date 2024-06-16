@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A static-utility class that contains functions for manipulating {@link Executor}s.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class ExecutorUtils {
 
@@ -54,13 +54,26 @@ public final class ExecutorUtils {
         return threadPool(name, ThreadUtils.cpuCount());
     }
 
+    /**
+     * Generates a {@link ThreadFactory} for {@code classType}.
+     *
+     * @param classType The class type.
+     * @return The generated thread factory.
+     */
     public static ThreadFactory threadFactory(Class<?> classType) {
         return threadFactory(classType.getSimpleName() + "Thread");
     }
 
+    /**
+     * Generates a {@link ThreadFactory} with {@code nameFormat}.
+     *
+     * @param nameFormat The name of the threads.
+     * @return The generated thread factory.
+     */
     public static ThreadFactory threadFactory(String nameFormat) {
         return new ThreadFactoryBuilder().setNameFormat(nameFormat).build();
     }
+
     /**
      * Prevent instantiation.
      */

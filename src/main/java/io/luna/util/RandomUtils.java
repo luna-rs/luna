@@ -19,7 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * because of the way that {@code ThreadLocalRandom} works, even in completely single-threaded situations it runs up
  * to three times faster than {@code Random}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  * @see <a href= "http://java-performance.info/java-util-random-java-util-concurrent-threadlocalrandom-multithreaded-environments/"
  * >java.util.Random and java.util.concurrent.ThreadLocalRandom in multithreaded environments</a>
  */
