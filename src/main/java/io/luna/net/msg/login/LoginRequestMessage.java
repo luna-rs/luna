@@ -6,7 +6,7 @@ import io.netty.channel.ChannelPipeline;
 /**
  * An immutable model representing data that will be used to prepare the Player for gameplay.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LoginRequestMessage {
 

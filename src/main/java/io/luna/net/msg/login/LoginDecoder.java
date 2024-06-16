@@ -1,6 +1,5 @@
 package io.luna.net.msg.login;
 
-import com.moandjiezana.toml.Toml;
 import io.luna.LunaContext;
 import io.luna.net.client.Client;
 import io.luna.net.client.LoginClient;
@@ -8,15 +7,18 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.IsaacCipher;
 import io.luna.net.codec.ProgressiveMessageDecoder;
 import io.luna.net.msg.GameMessageRepository;
+import io.luna.util.GsonUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.timeout.ReadTimeoutException;
 import io.netty.util.Attribute;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.math.BigInteger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.Random;
 
@@ -25,18 +27,58 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * A {@link ByteToMessageDecoder} implementation that decodes a {@link LoginRequestMessage}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
+
+    /**
+     * A data class representing an RSA key-pair.
+     */
+    private static final class RsaPair {
+
+        /**
+         * The modulus.
+         */
+        private final String modulus;
+
+        /**
+         * The exponent.
+         */
+        private final String exponent;
+
+        /**
+         * Creates a new {@link RsaPair}.
+         *
+         * @param modulus The modulus.
+         * @param exponent The exponent.
+         */
+        private RsaPair(String modulus, String exponent) {
+            this.modulus = modulus;
+            this.exponent = exponent;
+        }
+
+        /**
+         * @return The modulus as a {@link BigInteger}.
+         */
+        public BigInteger computeModulus() {
+            return new BigInteger(modulus);
+        }
+
+        /**
+         * @return The exponent as a {@link BigInteger}.
+         */
+        public BigInteger getExponent() {
+            return new BigInteger(exponent);
+        }
+    }
 
     static {
         try {
             // Initializes RSA modulus and exponent values.
-            Toml tomlReader = new Toml().
-                    read(new File("./data/rsa/rsapriv.toml")).
-                    getTable("key");
-            RSA_MOD = new BigInteger(tomlReader.getString("modulus"));
-            RSA_EXP = new BigInteger(tomlReader.getString("exponent"));
+            Path rsaPath = Paths.get("data", "net", "rsa", "rsapriv.json");
+            RsaPair rsaPair = GsonUtils.readAsType(rsaPath, RsaPair.class);
+            RSA_MOD = rsaPair.computeModulus();
+            RSA_EXP = rsaPair.getExponent();
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -125,7 +167,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error("An error was thrown by the login decoder!", cause);
+        String message = cause.getMessage();
+        boolean ignoreMessage = (message == null || "null".equals(message)) && cause instanceof ReadTimeoutException;
+        if (!ignoreMessage) {
+            logger.error("An error was thrown by the login decoder!", cause);
+        }
         ctx.channel().close();
     }
 
@@ -137,11 +183,9 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      */
     private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf in) {
         if (in.readableBytes() >= 2) {
-            int opcode = in.readUnsignedByte(); // TODO Ondemand?
-
+            int opcode = in.readUnsignedByte();
             @SuppressWarnings("unused") int nameHash = in.readUnsignedByte();
 
-            // TODO WHEN AN EXCEPTION IS THROWN HERE THE PLAYER GETS STUCK LOGGED IN?
             checkState(opcode == 14, "opcode != 14");
 
             ByteBuf msg = ByteMessage.pooledBuffer(17);
@@ -189,7 +233,7 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
             checkState(magicId == 255, "magicId != 255");
 
             int clientVersion = in.readUnsignedShort();
-            checkState(clientVersion == 317, "clientVersion != 317");
+            checkState(clientVersion == 377, "clientVersion != 377");
 
             @SuppressWarnings("unused") int memoryVersion = in.readUnsignedByte();
 

@@ -6,7 +6,7 @@ import io.luna.net.client.Client;
  * An enumerated type whose values represent login responses. Any response other than {@link #NORMAL} will
  * cause the {@link Client} to disconnect.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum LoginResponse {
     NORMAL(2),

@@ -6,7 +6,7 @@ import io.luna.net.client.Client;
 /**
  * An immutable model representing login response data.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LoginResponseMessage {
 

@@ -8,7 +8,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 /**
  * A {@link MessageToByteEncoder} implementation that encodes the login response.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 @Sharable public final class LoginEncoder extends MessageToByteEncoder<LoginResponseMessage> {
 
