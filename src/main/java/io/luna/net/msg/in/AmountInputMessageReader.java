@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
+import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.AmountInputInterface;
@@ -15,13 +15,13 @@ import java.util.OptionalInt;
  * A {@link GameMessageReader} implementation that intercepts data for when a number is entered on an
  * {@link AmountInputInterface}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
-public final class AmountInputMessageReader extends GameMessageReader {
+public final class AmountInputMessageReader extends GameMessageReader<NullEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
-        OptionalInt number = OptionalInt.of(msg.getPayload().getInt());
+    public NullEvent decode(Player player, GameMessage msg) {
+        OptionalInt number = OptionalInt.of(msg.getPayload().getInt(false));
         AbstractInterfaceSet interfaces = player.getInterfaces();
 
         Optional<InputInterface> inputOptional = interfaces.getCurrentInput();
@@ -29,6 +29,6 @@ public final class AmountInputMessageReader extends GameMessageReader {
             inputOptional.get().applyInput(player, number, Optional.empty());
             interfaces.resetCurrentInput();
         }
-        return null;
+        return NullEvent.INSTANCE;
     }
 }

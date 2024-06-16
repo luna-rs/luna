@@ -1,30 +1,32 @@
 package io.luna.net.msg.in;
 
 import io.luna.Luna;
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.ButtonClickEvent;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerRights;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data sent when a widget is clicked.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ButtonClickMessageReader extends GameMessageReader {
+public final class ButtonClickMessageReader extends GameMessageReader<ButtonClickEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public ButtonClickEvent decode(Player player, GameMessage msg) {
         int buttonId = msg.getPayload().getShort(false);
-        checkState(buttonId >= 0, "buttonId < 0");
-        ButtonClickEvent evt = new ButtonClickEvent(player, buttonId);
-        if (Luna.settings().betaMode()) {
-            player.sendMessage(evt);
+        return new ButtonClickEvent(player, buttonId);
+    }
+
+    @Override
+    public boolean validate(Player player, ButtonClickEvent event) {
+        if (event.getId() < 0) {
+            return false;
         }
-        return evt;
+        if (Luna.settings().game().betaMode()) {
+            player.sendMessage(event);
+        }
+        return true;
     }
 }

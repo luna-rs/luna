@@ -1,6 +1,5 @@
 package io.luna.net.msg.out;
 
-import io.luna.LunaContext;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
@@ -10,10 +9,11 @@ import io.luna.game.model.mob.block.AbstractUpdateBlockSet;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.block.UpdateState;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Iterator;
 
@@ -25,9 +25,15 @@ import java.util.Iterator;
 public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
     /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
      * The player update block set.
      */
     private final AbstractUpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
+
 
     @Override
     public ByteMessage write(Player player) {
@@ -79,7 +85,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
             }
         } catch (Exception e) {
             msg.release();
-            throw new RuntimeException(e);
+            logger.catching(e);
         } finally {
             blockMsg.release();
         }

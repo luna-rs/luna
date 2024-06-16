@@ -11,6 +11,8 @@ import io.luna.game.model.mob.block.UpdateState;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Iterator;
 
@@ -20,6 +22,11 @@ import java.util.Iterator;
  * @author lare96
  */
 public final class NpcUpdateMessageWriter extends GameMessageWriter {
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * The NPC update block set.
@@ -73,7 +80,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             }
         } catch (Exception e) {
             msg.release();
-            throw new RuntimeException(e);
+            logger.catching(e);
         } finally {
             blockMsg.release();
         }

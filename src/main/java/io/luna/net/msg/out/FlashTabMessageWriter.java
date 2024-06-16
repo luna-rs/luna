@@ -31,7 +31,7 @@ public final class FlashTabMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(24);
-        msg.put(tab.getId(), ValueType.SUBTRACT);
+        msg.put(tab.getIndex(), ValueType.SUBTRACT);
         return msg;
     }
 }

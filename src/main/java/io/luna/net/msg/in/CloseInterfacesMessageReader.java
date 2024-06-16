@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
+import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -9,13 +9,13 @@ import io.luna.net.msg.GameMessageReader;
  * A {@link GameMessageReader} implementation that intercepts data for when a close button
  * on an interface is clicked.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
-public final class CloseWindowMessageReader extends GameMessageReader {
+public final class CloseInterfacesMessageReader extends GameMessageReader<NullEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public NullEvent decode(Player player, GameMessage msg) {
         player.getInterfaces().close();
-        return null;
+        return NullEvent.INSTANCE;
     }
 }

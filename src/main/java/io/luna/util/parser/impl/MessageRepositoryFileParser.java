@@ -2,7 +2,7 @@ package io.luna.util.parser.impl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
-import io.luna.game.event.Event;
+import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -17,16 +17,16 @@ import java.nio.file.Paths;
  *
  * @author lare96
  */
-public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader> {
+public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader<?>> {
 
     /**
      * A default implementation of a {@link GameMessageReader} that does nothing.
      */
-    private static final class DefaultMessageReader extends GameMessageReader {
+    private static final class DefaultMessageReader extends GameMessageReader<NullEvent> {
 
         @Override
-        public Event read(Player player, GameMessage msg) throws Exception {
-            return null;
+        public NullEvent decode(Player player, GameMessage msg) {
+            return NullEvent.INSTANCE;
         }
     }
 
@@ -51,7 +51,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     }
 
     @Override
-    public GameMessageReader convert(JsonObject token) {
+    public GameMessageReader<?> convert(JsonObject token) {
         int opcode = token.get("opcode").getAsInt();
         int size = token.get("size").getAsInt();
         String className = token.has("payload") ? token.get("payload").getAsString() : null;
@@ -59,7 +59,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     }
 
     @Override
-    public void onCompleted(ImmutableList<GameMessageReader> tokenObjects) {
+    public void onCompleted(ImmutableList<GameMessageReader<?>> tokenObjects) {
         tokenObjects.forEach(repository::put);
         repository.lock();
     }
@@ -71,9 +71,8 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
      * @param size The size.
      * @param className The simple class name.
      * @return The message listener instance.
-     * @throws ReflectiveOperationException If any errors occur while creating the listener instance.
      */
-    private GameMessageReader createReader(int opcode, int size, String className) {
+    private GameMessageReader<?> createReader(int opcode, int size, String className) {
         try {
             // Create class and instance from qualified name.
             Object readerInstance = className != null ?
@@ -92,7 +91,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
             opcodeField.setInt(readerInstance, opcode);
             sizeField.setInt(readerInstance, size);
 
-            return (GameMessageReader) readerInstance;
+            return (GameMessageReader<?>) readerInstance;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

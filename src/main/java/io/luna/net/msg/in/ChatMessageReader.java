@@ -1,25 +1,22 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.ChatEvent;
 import io.luna.game.model.mob.Chat;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
 import io.luna.util.StringUtils;
+import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data sent on manual chat.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ChatMessageReader extends GameMessageReader {
+public final class ChatMessageReader extends GameMessageReader<ChatEvent> {
 
     /**
      * An asynchronous logger that will handle chat logs.
@@ -32,21 +29,23 @@ public final class ChatMessageReader extends GameMessageReader {
     private static final Level CHAT = FileOutputType.CHAT.getLevel();
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
-        int effects = msg.getPayload().get(false, ValueType.SUBTRACT);
-        int color = msg.getPayload().get(false, ValueType.SUBTRACT);
-        int size = (msg.getSize() - 2);
-        byte[] message = msg.getPayload().getBytesReverse(size, ValueType.ADD);
+    public ChatEvent decode(Player player, GameMessage msg) {
+        int color = msg.getPayload().get(false, ValueType.NEGATE);
+        int effect = msg.getPayload().get(false, ValueType.ADD);
+        int size = msg.getSize() - 2;
+        byte[] message = msg.getPayload().getBytes(size);
+        String unpackedMessage = StringUtils.unpackText(message);
+        return new ChatEvent(player, effect, color, size, message, unpackedMessage);
+    }
 
-        checkState(effects >= 0, "invalid effects value");
-        checkState(color >= 0, "invalid color value");
-        checkState(size > 0, "invalid size, not large enough");
+    @Override
+    public boolean validate(Player player, ChatEvent event) {
+        return event.getEffect() >= 0 && event.getColor() >= 0 && size >= 1 && !player.isMuted();
+    }
 
-        if (player.isMuted()) {
-            return null;
-        }
-        logger.log(CHAT, "{}: {}", player::getUsername, () -> StringUtils.unpackText(message));
-        player.chat(new Chat(message, color, effects));
-        return new ChatEvent(player, effects, color, size, message);
+    @Override
+    public void handle(Player player, ChatEvent event) {
+        logger.log(CHAT, "{}: {}", player::getUsername, event::getUnpackedMessage);
+        player.chat(new Chat(event.getMessage(), event.getColor(), event.getEffect()));
     }
 }

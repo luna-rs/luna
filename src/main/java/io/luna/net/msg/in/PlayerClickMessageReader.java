@@ -1,46 +1,54 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
+import io.luna.game.event.impl.PlayerClickEvent;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerFifthClickEvent;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent;
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerSecondClickEvent;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerThirdClickEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data sent on Player interaction menu clicks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class PlayerClickMessageReader extends GameMessageReader {
+public final class PlayerClickMessageReader extends GameMessageReader<PlayerClickEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public PlayerClickEvent decode(Player player, GameMessage msg) {
+        World world = player.getWorld();
         int opcode = msg.getOpcode();
+        ByteMessage payload = msg.getPayload();
+        int playerIndex;
         switch (opcode) {
-            case 139:
-                return fourthIndex(player, msg.getPayload());
+            case 245:
+                playerIndex = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                return new PlayerFirstClickEvent(player, world.getPlayers().get(playerIndex));
+            case 233:
+                playerIndex = payload.getShort(ValueType.ADD);
+                return new PlayerSecondClickEvent(player, world.getPlayers().get(playerIndex));
+            case 194:
+                playerIndex = payload.getShort(ByteOrder.LITTLE);
+                return new PlayerThirdClickEvent(player, world.getPlayers().get(playerIndex));
+            case 116:
+                playerIndex = payload.getShort(ByteOrder.LITTLE);
+                return new PlayerFourthClickEvent(player, world.getPlayers().get(playerIndex));
+            case 45:
+                playerIndex = payload.getShort(ValueType.ADD);
+                return new PlayerFifthClickEvent(player, world.getPlayers().get(playerIndex));
         }
-        return null;
+        throw new IllegalStateException("invalid opcode");
     }
 
-    /**
-     * The fourth interaction index.
-     *
-     * @param player The player.
-     * @param msg The buffer.
-     * @return The event to post.
-     */
-    private Event fourthIndex(Player player, ByteMessage msg) {
-        int index = msg.getShort(true, ByteOrder.LITTLE);
-        World world = player.getWorld();
-        Player other = world.getPlayers().get(index);
-        // TODO Change isViewable to canFindPath, after pathfinding
-        if (other == null || !other.isViewableFrom(player) || other.equals(player)) {
-            return null;
-        }
-        return new PlayerFourthClickEvent(player, index, other);
+    @Override
+    public boolean validate(Player player, PlayerClickEvent event) {
+        return event.getTargetPlr() != null;
     }
 }

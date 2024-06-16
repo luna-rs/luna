@@ -1,6 +1,5 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.WalkingEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.WalkingQueue;
@@ -12,53 +11,63 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
 /**
- * A {@link GameMessageReader} implementation that intercepts player movement data.
+ * A {@link GameMessageReader} implementation that intercepts player movement data when performing minimap, yellow,
+ * and red clicks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class WalkingMessageReader extends GameMessageReader {
+public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public WalkingEvent decode(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
         int size = msg.getSize();
         ByteMessage payload = msg.getPayload();
 
-        WalkingQueue walkingQueue = player.getWalking();
-        if (walkingQueue.isLocked()) {
-            return null;
-        }
-
-        if (opcode == 248) { // Minimap click.
+        if (opcode == 213) { // Minimap click.
             size -= 14;
             player.interruptAction();
             player.resetInteractingWith();
-        } else if (opcode == 164) { // Yellow <x> click.
+        } else if (opcode == 28) { // Yellow <x> click.
             player.interruptAction();
             player.resetInteractingWith();
-        } else if (opcode == 98) { // Red <x> click.
-            // impl
+        } else if (opcode == 247) { // Red <x> click.
         }
         player.getInterfaces().applyActionClose();
 
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];
 
-        int x = payload.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+        int firstStepX = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+        boolean running = payload.get() == 1;
+        int firstStepY = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
         for (int i = 0; i < pathSize; i++) {
             path[i][0] = payload.get();
             path[i][1] = payload.get();
         }
-        int y = payload.getShort(false, ByteOrder.LITTLE);
-        boolean running = payload.get(false, ValueType.SUBTRACT) == 1;
 
-        walkingQueue.setRunningPath(running);
-        walkingQueue.clear();
         Step[] steps = new Step[pathSize + 1];
-        walkingQueue.addFirst(steps[0] = new Step(x, y));
+        steps[0] = new Step(firstStepX, firstStepY);
         for (int i = 0; i < pathSize; i++) {
-            walkingQueue.add(steps[i + 1] = new Step(path[i][0] + x, path[i][1] + y));
+            steps[i + 1] = new Step(path[i][0] + firstStepX, path[i][1] + firstStepY);
         }
         return new WalkingEvent(player, steps, running);
+    }
+
+    @Override
+    public boolean validate(Player player, WalkingEvent event) {
+        return !player.getWalking().isLocked();
+    }
+
+    @Override
+    public void handle(Player player, WalkingEvent event) {
+        WalkingQueue walking = player.getWalking();
+        Step[] path = event.getPath();
+        walking.clear();
+        walking.addFirst(path[0]);
+        for (int index = 0; index < path.length; index++) {
+            walking.add(path[index + 1]);
+        }
+        walking.setRunningPath(event.isRunning() || player.isRunning());
     }
 }

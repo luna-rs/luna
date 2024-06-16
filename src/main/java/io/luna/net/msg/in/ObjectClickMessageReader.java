@@ -1,118 +1,73 @@
 package io.luna.net.msg.in;
 
-import io.luna.Luna;
-import io.luna.game.action.InteractionAction;
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.ObjectClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectSecondClickEvent;
 import io.luna.game.event.impl.ObjectClickEvent.ObjectThirdClickEvent;
 import io.luna.game.model.Position;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
-import io.luna.game.model.object.ObjectDirection;
-import io.luna.game.model.object.ObjectType;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import javafx.geometry.Pos;
-
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data sent object clicks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ObjectClickMessageReader extends GameMessageReader {
+public final class ObjectClickMessageReader extends GameMessageReader<ObjectClickEvent> {
 
     @Override
-    public Event read(Player player, GameMessage msg) throws Exception {
+    public ObjectClickEvent decode(Player player, GameMessage msg) {
         int opcode = msg.getOpcode();
+        ByteMessage payload = msg.getPayload();
+        int objectX;
+        int objectY;
+        int objectId;
+        GameObject gameObject;
         switch (opcode) {
-            case 132:
-                firstIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
-                break;
-            case 252:
-                secondIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
-                break;
-            case 70:
-                thirdIndex(player, player.getWorld(), player.getPosition().getZ(), msg.getPayload());
-                break;
+            case 181:
+                objectX = payload.getShort(true, ValueType.ADD);
+                objectY = payload.getShort(false, ByteOrder.LITTLE);
+                objectId = payload.getShort(false, ByteOrder.LITTLE);
+                gameObject = findObject(player, objectX, objectY, objectId);
+                return new ObjectFirstClickEvent(player, gameObject);
+            case 241:
+                objectId = payload.getShort(false);
+                objectX = payload.getShort(true);
+                objectY = payload.getShort(false, ValueType.ADD);
+                gameObject = findObject(player, objectX, objectY, objectId);
+                return new ObjectSecondClickEvent(player, gameObject);
+            case 50:
+                objectX = payload.getShort(true, ByteOrder.LITTLE);
+                objectY = payload.getShort(false);
+                objectId = payload.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+                gameObject = findObject(player, objectX, objectY, objectId);
+                return new ObjectThirdClickEvent(player, gameObject);
         }
-        return null;
+        throw new IllegalStateException("invalid opcode");
+    }
+
+    @Override
+    public boolean validate(Player player, ObjectClickEvent event) {
+        return event.getGameObject() != null;
     }
 
     /**
-     * Handle an object click for any index.
+     * Retrieves an existing game object instance from the packet data.
      *
      * @param player The player.
-     * @param evt The interaction event.
+     * @param objectX The x coordinate of the object.
+     * @param objectY The y coordinate of the object.
+     * @param objectId The object ID.
+     * @return The game object, {@code null} if none matching the criteria were found.
      */
-    private void handleClick(Player player, ObjectClickEvent evt) {
-        checkState(evt.getX() >= 0, "x coordinate out of range");
-        checkState(evt.getY() >= 0, "y coordinate out of range");
-        checkState(evt.getId() > 0, "id out of range");
-        if(Luna.settings().betaMode()) {
-            player.sendMessage(evt.getGameObject());
-        }
-
-        // TODO Validate that an object really exists at 'position'. This can only be done after cache loading.
-        player.submitAction(new InteractionAction(player, evt.getGameObject()) {
-            @Override
-            public void execute() {
-                player.getPlugins().post(evt);
-            }
-        });
-    }
-
-    /**
-     * Handle an object click for the first index.
-     */
-    private void firstIndex(Player player, World world, int z, ByteMessage msg) {
-        int x = msg.getShort(true, ValueType.ADD, ByteOrder.LITTLE);
-        int id = msg.getShort(false);
-        int y = msg.getShort(false, ValueType.ADD);
-        Position position = new Position(x, y, z);
-        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
-        handleClick(player, new ObjectFirstClickEvent(player, object));
-    }
-
-    /**
-     * Handle an object click for the second index.
-     */
-    private void secondIndex(Player player, World world, int z, ByteMessage msg) {
-        int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        int y = msg.getShort(true, ByteOrder.LITTLE);
-        int x = msg.getShort(false, ValueType.ADD);
-        Position position = new Position(x, y, z);
-        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
-        handleClick(player, new ObjectSecondClickEvent(player, object));
-    }
-
-    /**
-     * Handle an object click for the third index.
-     */
-    private void thirdIndex(Player player, World world, int z, ByteMessage msg) {
-        int x = msg.getShort(true, ByteOrder.LITTLE);
-        int y = msg.getShort(false);
-        int id = msg.getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        Position position = new Position(x, y, z);
-        GameObject object = world.getObjects().findAll(position).findFirst().orElse(computeDefaultObject(player, id, position));
-        handleClick(player, new ObjectThirdClickEvent(player, object));
-    }
-
-    // TODO Only in use until cache loading, after cache loading is done proper verification will take over.
-    private GameObject computeDefaultObject(Player player, int id, Position position) {
-        return new GameObject(player.getContext(), id, position, ObjectType.DEFAULT,
-                ObjectDirection.WEST, Optional.empty());
+    private GameObject findObject(Player player, int objectX, int objectY, int objectId) {
+        return player.getWorld().getObjects().findAll(new Position(objectX, objectY, player.getZ())).
+                filter(object -> object.getId() == objectId && object.isVisibleTo(player)).
+                findFirst().orElse(null);
     }
 }

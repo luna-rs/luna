@@ -1,11 +1,10 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.Event;
 import io.luna.game.event.impl.CommandEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.LoggingSettings.FileOutputType;
+import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -13,9 +12,9 @@ import org.apache.logging.log4j.Logger;
  * A {@link GameMessageReader} implementation that decodes data sent when a {@link Player} tries to
  * activate a command.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class CommandMessageReader extends GameMessageReader {
+public final class CommandMessageReader extends GameMessageReader<CommandEvent> {
 
     /**
      * An asynchronous logger that will handle command logs.
@@ -28,18 +27,19 @@ public final class CommandMessageReader extends GameMessageReader {
     private static final Level COMMANDS = FileOutputType.COMMANDS.getLevel();
 
     @Override
-    public Event read(Player player, GameMessage msg) {
-        String string = msg.getPayload().getString();
-        string = string.toLowerCase();
+    public CommandEvent decode(Player player, GameMessage msg) {
+        String string = msg.getPayload().getString().toLowerCase();
         int index = string.indexOf(' ');
-
-        logger.log(COMMANDS, "{}: {}", player.getUsername(), string);
         if (index == -1) {
-            return new CommandEvent(player, string);
+            return new CommandEvent(player, string, string);
         }
-
         String name = string.substring(0, index);
         String[] args = string.substring(index + 1).split(" ");
-        return new CommandEvent(player, name, args);
+        return new CommandEvent(player, string, name, args);
+    }
+
+    @Override
+    public void handle(Player player, CommandEvent event) {
+        logger.log(COMMANDS, "{}: {}", player.getUsername(), event.getCompleteString());
     }
 }
