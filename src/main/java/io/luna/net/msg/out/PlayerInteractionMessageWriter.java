@@ -10,7 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that displays or hides player interactions.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class PlayerInteractionMessageWriter extends GameMessageWriter {
 
@@ -30,10 +30,10 @@ public final class PlayerInteractionMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(104, MessageType.VAR);
+        ByteMessage msg = ByteMessage.message(157, MessageType.VAR);
         msg.put(interaction.getIndex(), ValueType.NEGATE);
-        msg.put(interaction.isPinned() ? 1 : 0, ValueType.ADD);
         msg.putString(interaction.getName());
+        msg.put(interaction.isPinned() ? 1 : 0, ValueType.ADD);
         return msg;
     }
 }

@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that sets a widget to be hidden until hovered over.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class WidgetVisibilityMessageWriter extends GameMessageWriter {
 

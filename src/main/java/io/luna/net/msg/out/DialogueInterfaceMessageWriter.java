@@ -10,7 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
  * A {@link GameMessageWriter} implementation that displays an interface on the chatbox area of the
  * gameframe. Use {@link DialogueInterface} instead of using this packet directly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class DialogueInterfaceMessageWriter extends GameMessageWriter {
 
@@ -30,8 +30,8 @@ public final class DialogueInterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(164);
-        msg.putShort(id, ByteOrder.LITTLE);
+        ByteMessage msg = ByteMessage.message(109);
+        msg.putShort(id);
         return msg;
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * A {@link GameMessageWriter} implementation that displays an item on a widget.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
 
@@ -59,7 +59,7 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(34, MessageType.VAR_SHORT);
+        ByteMessage msg = ByteMessage.message(134, MessageType.VAR_SHORT);
         msg.putShort(id);
 
         for (IndexedItem item : items) {

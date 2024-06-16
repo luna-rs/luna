@@ -2,7 +2,6 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
@@ -43,10 +42,10 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(44);
-        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort(amount);
-        msg.put(offset);
+        ByteMessage msg = ByteMessage.message(107);
+        msg.putShort(id);
+        msg.put(offset, ValueType.NEGATE);
+        msg.putShort(amount, ValueType.ADD);
         return msg;
     }
 }

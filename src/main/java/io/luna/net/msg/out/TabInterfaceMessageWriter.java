@@ -9,14 +9,14 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that displays an interface on a sidebar tab.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class TabInterfaceMessageWriter extends GameMessageWriter {
 
     /**
      * The tab index.
      */
-    private final TabIndex index;
+    private final TabIndex tab;
 
     /**
      * The interface identifier.
@@ -26,19 +26,19 @@ public final class TabInterfaceMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link TabInterfaceMessageWriter}.
      *
-     * @param index The tab index.
+     * @param tab The tab index.
      * @param id The interface identifier.
      */
-    public TabInterfaceMessageWriter(TabIndex index, int id) {
-        this.index = index;
+    public TabInterfaceMessageWriter(TabIndex tab, int id) {
+        this.tab = tab;
         this.id = id;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(71);
-        msg.putShort(id);
-        msg.put(index.getId(), ValueType.ADD);
+        ByteMessage msg = ByteMessage.message(10);
+        msg.put(tab.getId(), ValueType.SUBTRACT);
+        msg.putShort(id, ValueType.ADD);
         return msg;
     }
 }

@@ -8,7 +8,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that sends a private message.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class PrivateChatMessageWriter extends GameMessageWriter {
 
@@ -35,7 +35,7 @@ public final class PrivateChatMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(196, MessageType.VAR);
+        ByteMessage msg = ByteMessage.message(135, MessageType.VAR);
         msg.putLong(name);
         msg.putInt(player.newPrivateMessageId());
         msg.put(player.getRights().getClientValue());

@@ -3,13 +3,15 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.StandardInterface;
 import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
  * A {@link GameMessageWriter} that opens an interface.  Use {@link StandardInterface} instead of using this
  * packet directly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class InterfaceMessageWriter extends GameMessageWriter {
 
@@ -29,8 +31,8 @@ public final class InterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(97);
-        msg.putShort(id);
+        ByteMessage msg = ByteMessage.message(159);
+        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         return msg;
     }
 }

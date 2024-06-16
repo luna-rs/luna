@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that assigns a client-sided index and members status.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AssignmentMessageWriter extends GameMessageWriter {
 
@@ -29,9 +29,9 @@ public final class AssignmentMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(249);
-        msg.put(members ? 1 : 0, ValueType.ADD);
-        msg.putShort(player.getIndex(), ValueType.ADD, ByteOrder.LITTLE);
+        ByteMessage msg = ByteMessage.message(126);
+        msg.put(members ? 1 : 0);
+        msg.putShort(player.getIndex(), ByteOrder.LITTLE);
         return msg;
     }
 }

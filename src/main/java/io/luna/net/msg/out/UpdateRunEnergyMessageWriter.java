@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 /**
  * A {@link GameMessageWriter} implementation that displays the run energy value.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
 
@@ -27,6 +27,9 @@ public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
         this.energy = OptionalInt.of(energy);
     }
 
+    /**
+     * Creates a new {@link UpdateRunEnergyMessageWriter} where the energy is updated to the user's current amount.
+     */
     public UpdateRunEnergyMessageWriter() {
         energy = OptionalInt.empty();
     }
@@ -34,7 +37,7 @@ public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         int runEnergy = energy.orElse((int) player.getRunEnergy());
-        ByteMessage msg = ByteMessage.message(110);
+        ByteMessage msg = ByteMessage.message(125);
         msg.put(runEnergy);
         return msg;
     }

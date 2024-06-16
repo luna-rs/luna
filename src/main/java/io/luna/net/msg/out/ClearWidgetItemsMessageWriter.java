@@ -6,29 +6,29 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that plays a song.
+ * A {@link GameMessageWriter} implementation that clears all items on a widget.
  *
  * @author lare96
  */
-public final class MusicMessageWriter extends GameMessageWriter {
+public final class ClearWidgetItemsMessageWriter extends GameMessageWriter {
 
     /**
-     * The song identifier.
+     * The widget identifier.
      */
     private final int id;
 
     /**
-     * Creates a new {@link MusicMessageWriter}.
+     * Creates a new {@link ClearWidgetItemsMessageWriter}.
      *
-     * @param id The song identifier.
+     * @param id The widget identifier.
      */
-    public MusicMessageWriter(int id) {
+    public ClearWidgetItemsMessageWriter(int id) {
         this.id = id;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(74);
+        ByteMessage msg = ByteMessage.message(219);
         msg.putShort(id, ByteOrder.LITTLE);
         return msg;
     }

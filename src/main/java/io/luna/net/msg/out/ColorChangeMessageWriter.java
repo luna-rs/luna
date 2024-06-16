@@ -11,7 +11,7 @@ import java.awt.Color;
 /**
  * A {@link GameMessageWriter} implementation that changes the color of the text on an interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ColorChangeMessageWriter extends GameMessageWriter {
 
@@ -39,9 +39,9 @@ public final class ColorChangeMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         int encodedColor = 0;
-        encodedColor += (int) (color.getRed()/8 * Math.pow(2, 10));
-        encodedColor += (int) (color.getGreen()/8 * Math.pow(2, 5));
-        encodedColor += (int) (color.getBlue()/8 * Math.pow(2,0));
+        encodedColor += (int) (color.getRed() / 8 * Math.pow(2, 10));
+        encodedColor += (int) (color.getGreen() / 8 * Math.pow(2, 5));
+        encodedColor += (int) (color.getBlue() / 8 * Math.pow(2, 0));
         ByteMessage msg = ByteMessage.message(122);
         msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putShort(encodedColor, ValueType.ADD, ByteOrder.LITTLE);

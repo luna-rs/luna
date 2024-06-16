@@ -8,7 +8,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} that sends a game message.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class GameChatboxMessageWriter extends GameMessageWriter {
 
@@ -28,8 +28,15 @@ public final class GameChatboxMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(253, MessageType.VAR);
+        ByteMessage msg = ByteMessage.message(63, MessageType.VAR);
         msg.putString(message.toString());
         return msg;
+    }
+
+    /**
+     * @return The message.
+     */
+    public Object getMessage() {
+        return message;
     }
 }

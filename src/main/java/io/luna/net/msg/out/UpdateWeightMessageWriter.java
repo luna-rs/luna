@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that displays the weight value.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class UpdateWeightMessageWriter extends GameMessageWriter {
 
@@ -27,7 +27,7 @@ public final class UpdateWeightMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(240);
+        ByteMessage msg = ByteMessage.message(174);
         msg.putShort(weight);
         return msg;
     }

@@ -14,7 +14,7 @@ import java.util.Collection;
 /**
  * A {@link GameMessageWriter} implementation that displays a group of items on a widget.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class WidgetItemsMessageWriter extends GameMessageWriter {
 
@@ -51,24 +51,24 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
+        ByteMessage msg = ByteMessage.message(206, MessageType.VAR_SHORT);
         msg.putShort(id);
         msg.putShort(items.size());
 
         for (Item item : items) {
             if (item == null) {
-                msg.put(0);
                 msg.putShort(0, ValueType.ADD, ByteOrder.LITTLE);
+                msg.put(0, ValueType.NEGATE);
                 continue;
             }
 
-            if (item.getAmount() >= 255) {
-                msg.put(255);
-                msg.putInt(item.getAmount(), ByteOrder.INVERSE_MIDDLE);
-            } else {
-                msg.put(item.getAmount());
-            }
             msg.putShort(item.getId() + 1, ValueType.ADD, ByteOrder.LITTLE);
+            if (item.getAmount() >= 255) {
+                msg.put(255, ValueType.NEGATE);
+                msg.putInt(item.getAmount(), ByteOrder.LITTLE);
+            } else {
+                msg.put(item.getAmount(), ValueType.NEGATE);
+            }
         }
         return msg;
     }

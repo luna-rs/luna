@@ -2,12 +2,14 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
  * A {@link GameMessageWriter} implementation that animates a widget.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class WidgetAnimationMessageWriter extends GameMessageWriter {
 
@@ -34,9 +36,9 @@ public final class WidgetAnimationMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(200);
-        msg.putShort(widgetId);
-        msg.putShort(animationId);
+        ByteMessage msg = ByteMessage.message(2);
+        msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(animationId,ValueType.ADD);
         return msg;
     }
 }

@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
  * A {@link GameMessageWriter} implementation that displays a system update message. This packet does not
  * log the player out or terminate the server.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class SystemUpdateMessageWriter extends GameMessageWriter {
 
@@ -29,7 +29,7 @@ public final class SystemUpdateMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(114);
+        ByteMessage msg = ByteMessage.message(190);
         msg.putShort(ticks, ByteOrder.LITTLE);
         return msg;
     }

@@ -1,17 +1,16 @@
 package io.luna.net.msg.out;
 
-import io.luna.game.event.impl.PlayerEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays text on a widget. Keep in mind that this model does not make
- * use of any caching mechanisms, which can interfere with {@link Player#sendText(Object, int)} functionality.
+ * A {@link GameMessageWriter} implementation that displays text on a widget.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class WidgetTextMessageWriter extends GameMessageWriter {
 
@@ -38,9 +37,9 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(126, MessageType.VAR_SHORT);
+        ByteMessage msg = ByteMessage.message(232, MessageType.VAR_SHORT);
+        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.putString(text);
-        msg.putShort(id, ValueType.ADD);
         return msg;
     }
 }

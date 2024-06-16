@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that adds an object.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AddObjectMessageWriter extends GameMessageWriter {
 
@@ -50,10 +50,10 @@ public final class AddObjectMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(151);
+        ByteMessage msg = ByteMessage.message(152);
+        msg.put((type << 2) + (direction & 3), ValueType.NEGATE);
+        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
         msg.put(offset, ValueType.ADD);
-        msg.putShort(id, ByteOrder.LITTLE);
-        msg.put((type << 2) + (direction & 3), ValueType.SUBTRACT);
         return msg;
     }
 }

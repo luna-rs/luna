@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.LunaContext;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
@@ -7,7 +8,9 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.AbstractUpdateBlockSet;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.block.UpdateState;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
@@ -17,7 +20,7 @@ import java.util.Iterator;
 /**
  * A {@link GameMessageWriter} implementation that sends a player update message.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
@@ -28,23 +31,20 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(81, MessageType.VAR_SHORT);
+        ByteMessage msg = ByteMessage.message(90, MessageType.VAR_SHORT);
         ByteMessage blockMsg = ByteMessage.raw();
 
         try {
             msg.startBitAccess();
-
-            handleMovement(player, msg);
-
+            handleMovement(player, msg, true);
             blockSet.encode(player, blockMsg, UpdateState.UPDATE_SELF);
 
             msg.putBits(8, player.getLocalPlayers().size());
             Iterator<Player> iterator = player.getLocalPlayers().iterator();
             while (iterator.hasNext()) {
                 Player other = iterator.next();
-
-                if (other.isViewableFrom(player) && other.getState() == EntityState.ACTIVE && !other.isRegionChanged()) {
-                    handleMovement(other, msg);
+                if (other.isViewableFrom(player) && other.getState() == EntityState.ACTIVE && !other.isTeleporting()) {
+                    handleMovement(other, msg, false);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                 } else {
                     msg.putBit(true);
@@ -55,7 +55,6 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
             ChunkManager chunks = player.getWorld().getChunks();
             int playersAdded = 0;
-
             for (Player other : chunks.getUpdatePlayers(player)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
@@ -71,7 +70,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                 }
             }
 
-            if (blockMsg.getBuffer().writerIndex() > 0) {
+            if (blockMsg.getBuffer().readableBytes() > 0) {
                 msg.putBits(11, 2047);
                 msg.endBitAccess();
                 msg.putBytes(blockMsg);
@@ -91,33 +90,35 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
      * Adds {@code addPlayer} in the view of {@code player}.
      */
     private void addPlayer(ByteMessage msg, Player player, Player addPlayer) {
-        msg.putBits(11, addPlayer.getIndex());
-        msg.putBit(true);
-        msg.putBit(true);
-
         int deltaX = addPlayer.getPosition().getX() - player.getPosition().getX();
         int deltaY = addPlayer.getPosition().getY() - player.getPosition().getY();
-        msg.putBits(5, deltaY);
+
+        msg.putBits(11, addPlayer.getIndex());
         msg.putBits(5, deltaX);
+        msg.putBit(true);
+        msg.putBit(true);
+        msg.putBits(5, deltaY);
     }
 
     /**
      * Handles running, walking, and teleportation movement for {@code player}.
      */
-    private void handleMovement(Player player, ByteMessage msg) {
+    private void handleMovement(Player player, ByteMessage msg, boolean updateTeleport) {
         boolean needsUpdate = !player.getFlags().isEmpty();
-
-        if (player.isTeleporting()) {
+        if(updateTeleport && player.getFlags().size() == 1 && player.getFlags().get(UpdateFlag.CHAT)) {
+            // Needs update needs to be false if were only forcing chat
+            needsUpdate = false;
+        }
+        if (player.isTeleporting() && updateTeleport) {
             Position position = player.getPosition();
 
             msg.putBit(true);
             msg.putBits(2, 3);
+            msg.putBit(true);
             msg.putBits(2, position.getZ());
-            msg.putBit(!player.isRegionChanged());
-            msg.putBit(needsUpdate);
-
             msg.putBits(7, position.getLocalY(player.getLastRegion()));
             msg.putBits(7, position.getLocalX(player.getLastRegion()));
+            msg.putBit(needsUpdate);
             return;
         }
 

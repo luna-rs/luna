@@ -8,7 +8,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that removes an object.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class RemoveObjectMessageWriter extends GameMessageWriter {
 
@@ -42,9 +42,9 @@ public final class RemoveObjectMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(101);
-        msg.put((type << 2) + (direction & 3), ValueType.NEGATE);
-        msg.put(offset);
+        ByteMessage msg = ByteMessage.message(88);
+        msg.put(offset, ValueType.SUBTRACT);
+        msg.put((type << 2) + (direction & 3), ValueType.SUBTRACT);
         return msg;
     }
 }

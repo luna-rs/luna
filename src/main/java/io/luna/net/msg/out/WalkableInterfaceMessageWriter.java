@@ -10,7 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
  * A {@link GameMessageWriter} implementation that displays a walkable interface. Use {@link WalkableInterface}
  * instead of using this packet directly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class WalkableInterfaceMessageWriter extends GameMessageWriter {
 
@@ -30,8 +30,8 @@ public final class WalkableInterfaceMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(208);
-        msg.putShort(id, ByteOrder.LITTLE);
+        ByteMessage msg = ByteMessage.message(50);
+        msg.putShort(id);
         return msg;
     }
 }

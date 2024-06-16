@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that plays a sound.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class SoundMessageWriter extends GameMessageWriter {
 

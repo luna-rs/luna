@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that displays or removes the multi-combat sign.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class MultiCombatMessageWriter extends GameMessageWriter {
 
@@ -27,7 +27,7 @@ public final class MultiCombatMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(61);
+        ByteMessage msg = ByteMessage.message(233);
         msg.put(display ? 1 : 0);
         return msg;
     }

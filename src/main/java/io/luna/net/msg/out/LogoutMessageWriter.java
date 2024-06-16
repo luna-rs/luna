@@ -5,14 +5,15 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that disconnects a player.
+ * A {@link GameMessageWriter} implementation that disconnects a player. Use {@link Player#logout()} instead of using
+ * this directly.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class LogoutMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        return ByteMessage.message(109);
+        return ByteMessage.message(5);
     }
 }

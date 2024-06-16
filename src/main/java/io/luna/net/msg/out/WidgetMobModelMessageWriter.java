@@ -11,7 +11,7 @@ import java.util.OptionalInt;
 /**
  * A {@link GameMessageWriter} implementation that writes a Player or NPC head model on a widget.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class WidgetMobModelMessageWriter extends GameMessageWriter {
 
@@ -50,11 +50,11 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg;
         if (npcId.isPresent()) {
-            msg = ByteMessage.message(75);
-            msg.putShort(npcId.getAsInt(), ValueType.ADD, ByteOrder.LITTLE);
-            msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
+            msg = ByteMessage.message(162);
+            msg.putShort(npcId.getAsInt(), ValueType.ADD);
+            msg.putShort(widgetId, ByteOrder.LITTLE);
         } else {
-            msg = ByteMessage.message(185);
+            msg = ByteMessage.message(255);
             msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
         }
         return msg;
