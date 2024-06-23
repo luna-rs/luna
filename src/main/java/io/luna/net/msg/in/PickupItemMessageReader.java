@@ -35,8 +35,8 @@ public final class PickupItemMessageReader extends GameMessageReader<PickupItemE
 
     @Override
     public PickupItemEvent decode(Player player, GameMessage msg) {
-        int itemId = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        int itemX = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+        int itemId = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
+        int itemX = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
         int itemY = msg.getPayload().getShort(false, ValueType.ADD);
         Position itemPosition = new Position(itemX, itemY, player.getPosition().getZ());
         GroundItem groundItem = player.getWorld().getItems().findAll(itemPosition).

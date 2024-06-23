@@ -32,7 +32,7 @@ public final class RegionChangeMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(222);
         msg.putShort(position.getCentralChunkY());
-        msg.putShort(position.getCentralChunkX(), ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(position.getCentralChunkX(), ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }
 }

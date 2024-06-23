@@ -13,7 +13,7 @@ import static java.util.Objects.requireNonNull;
  * the client.
  *
  * @param <E> The Enum type representing the state of this decoder.
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class ProgressiveMessageDecoder<E extends Enum<E>> extends ByteToMessageDecoder {
 

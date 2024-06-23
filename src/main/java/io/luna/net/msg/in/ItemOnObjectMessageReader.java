@@ -24,7 +24,7 @@ public final class ItemOnObjectMessageReader extends GameMessageReader<ItemOnObj
         int itemId = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         int objectY = msg.getPayload().getShort(true, ByteOrder.LITTLE);
         int itemIndexId = msg.getPayload().getShort(true);
-        int objectX = msg.getPayload().getShort(true, ValueType.ADD, ByteOrder.LITTLE);
+        int objectX = msg.getPayload().getShort(true, ByteOrder.LITTLE, ValueType.ADD);
 
         Position objectPosition = new Position(objectX, objectY, player.getPosition().getZ());
         GameObject gameObject = player.getWorld().getObjects().findAll(objectPosition).

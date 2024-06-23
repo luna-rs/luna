@@ -3,7 +3,7 @@ package io.luna.net.codec;
 /**
  * An enum representing endianness of game messages.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public enum ByteOrder {
 

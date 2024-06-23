@@ -52,7 +52,7 @@ public final class AddObjectMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(152);
         msg.put((type << 2) + (direction & 3), ValueType.NEGATE);
-        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
         msg.put(offset, ValueType.ADD);
         return msg;
     }

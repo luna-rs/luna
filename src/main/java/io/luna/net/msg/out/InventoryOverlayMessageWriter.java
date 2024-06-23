@@ -40,7 +40,7 @@ public final class InventoryOverlayMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(128);
         msg.putShort(interfaceId, ValueType.ADD);
-        msg.putShort(overlayInterfaceId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(overlayInterfaceId, ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }
 }

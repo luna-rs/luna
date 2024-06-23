@@ -21,7 +21,7 @@ public final class ItemOnNpcMessageReader extends GameMessageReader<ItemOnNpcEve
         World world = player.getWorld();
         int npcIndex = msg.getPayload().getShort();
         int itemId = msg.getPayload().getShort(ByteOrder.LITTLE);
-        int itemInterfaceId = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int itemInterfaceId = msg.getPayload().getShort(ByteOrder.LITTLE, ValueType.ADD);
         int itemIndex = msg.getPayload().getShort();
         return new ItemOnNpcEvent(player, itemId, itemIndex, itemInterfaceId, world.getNpcs().get(npcIndex));
     }

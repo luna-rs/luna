@@ -3,7 +3,7 @@ package io.luna.net.codec;
 /**
  * An enum representing different types of outgoing data.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public enum MessageType {
 

@@ -29,7 +29,7 @@ public final class PlayerClickMessageReader extends GameMessageReader<PlayerClic
         int playerIndex;
         switch (opcode) {
             case 245:
-                playerIndex = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                playerIndex = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
                 return new PlayerFirstClickEvent(player, world.getPlayers().get(playerIndex));
             case 233:
                 playerIndex = payload.getShort(ValueType.ADD);

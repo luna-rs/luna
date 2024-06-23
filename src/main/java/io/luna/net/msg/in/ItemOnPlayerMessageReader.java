@@ -20,7 +20,7 @@ public final class ItemOnPlayerMessageReader extends GameMessageReader<ItemOnPla
     public ItemOnPlayerEvent decode(Player player, GameMessage msg) {
         World world = player.getWorld();
         int itemId = msg.getPayload().getShort(ByteOrder.LITTLE);
-        int itemIndex = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int itemIndex = msg.getPayload().getShort(ByteOrder.LITTLE, ValueType.ADD);
         int itemInterfaceId = msg.getPayload().getShort();
         int playerIndex = msg.getPayload().getShort(ValueType.ADD);
         return new ItemOnPlayerEvent(player, itemId, itemIndex, itemInterfaceId, world.getPlayers().get(playerIndex));

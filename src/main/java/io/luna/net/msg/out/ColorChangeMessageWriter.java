@@ -43,8 +43,8 @@ public final class ColorChangeMessageWriter extends GameMessageWriter {
         encodedColor += (int) (color.getGreen() / 8 * Math.pow(2, 5));
         encodedColor += (int) (color.getBlue() / 8 * Math.pow(2, 0));
         ByteMessage msg = ByteMessage.message(122);
-        msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort(encodedColor, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
+        msg.putShort(encodedColor, ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }
 }

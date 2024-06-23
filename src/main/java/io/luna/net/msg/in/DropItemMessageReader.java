@@ -39,8 +39,8 @@ public final class DropItemMessageReader extends GameMessageReader<DropItemEvent
     @Override
     public DropItemEvent decode(Player player, GameMessage msg) {
         int index = msg.getPayload().getShort(false, ByteOrder.LITTLE);
-        int itemId = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE);
-        int widgetId = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+        int itemId = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
+        int widgetId = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
         return new DropItemEvent(player, itemId, widgetId, index);
     }
 

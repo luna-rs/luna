@@ -55,7 +55,7 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
             msg.putShort(widgetId, ByteOrder.LITTLE);
         } else {
             msg = ByteMessage.message(255);
-            msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
         }
         return msg;
     }

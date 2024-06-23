@@ -41,17 +41,17 @@ public final class WidgetItemClickMessageReader extends GameMessageReader<Widget
                 return new WidgetItemSecondClickEvent(player, index, interfaceId, itemId);
             case 91:
                 itemId = payload.getShort(ByteOrder.LITTLE);
-                index = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                index = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
                 interfaceId = payload.getShort();
                 return new WidgetItemThirdClickEvent(player, index, interfaceId, itemId);
             case 231:
-                interfaceId = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                interfaceId = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
                 index = payload.getShort(ByteOrder.LITTLE);
                 itemId = payload.getShort();
                 return new WidgetItemFourthClickEvent(player, index, interfaceId, itemId);
             case 158:
-                index = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
-                itemId = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                index = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
+                itemId = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
                 interfaceId = payload.getShort(ByteOrder.LITTLE);
                 return new WidgetItemFifthClickEvent(player, index, interfaceId, itemId);
         }

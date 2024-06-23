@@ -17,7 +17,7 @@ public final class SwapItemsMessageReader extends GameMessageReader<NullEvent> {
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {   // TODO fix insert mode
-        int toIndex = msg.getPayload().getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int toIndex = msg.getPayload().getShort(ByteOrder.LITTLE, ValueType.ADD);
         int insertionMode = msg.getPayload().get(false, ValueType.ADD);
         int interfaceId = msg.getPayload().getShort(ValueType.ADD);
         int fromIndex = msg.getPayload().getShort(ByteOrder.LITTLE);

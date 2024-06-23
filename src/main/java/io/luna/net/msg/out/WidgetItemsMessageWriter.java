@@ -57,12 +57,12 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
 
         for (Item item : items) {
             if (item == null) {
-                msg.putShort(0, ValueType.ADD, ByteOrder.LITTLE);
+                msg.putShort(0, ByteOrder.LITTLE, ValueType.ADD);
                 msg.put(0, ValueType.NEGATE);
                 continue;
             }
 
-            msg.putShort(item.getId() + 1, ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(item.getId() + 1, ByteOrder.LITTLE, ValueType.ADD);
             if (item.getAmount() >= 255) {
                 msg.put(255, ValueType.NEGATE);
                 msg.putInt(item.getAmount(), ByteOrder.LITTLE);

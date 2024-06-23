@@ -32,7 +32,7 @@ public final class NpcClickMessageReader extends GameMessageReader<NpcClickEvent
                 npcIndex = payload.getShort(ByteOrder.LITTLE);
                 return new NpcFirstClickEvent(player, world.getNpcs().get(npcIndex));
             case 13:
-                npcIndex = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+                npcIndex = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
                 return new NpcSecondClickEvent(player, world.getNpcs().get(npcIndex));
             case 67:
                 npcIndex = payload.getShort(ValueType.ADD);

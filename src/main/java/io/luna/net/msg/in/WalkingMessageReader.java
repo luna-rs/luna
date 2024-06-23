@@ -38,9 +38,9 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];
 
-        int firstStepX = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int firstStepX = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
         boolean running = payload.get() == 1;
-        int firstStepY = payload.getShort(ValueType.ADD, ByteOrder.LITTLE);
+        int firstStepY = payload.getShort(ByteOrder.LITTLE, ValueType.ADD);
         for (int i = 0; i < pathSize; i++) {
             path[i][0] = payload.get();
             path[i][1] = payload.get();

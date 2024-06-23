@@ -37,7 +37,7 @@ public final class WidgetAnimationMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(2);
-        msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
         msg.putShort(animationId,ValueType.ADD);
         return msg;
     }

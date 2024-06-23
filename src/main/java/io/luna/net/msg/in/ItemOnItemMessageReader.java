@@ -21,7 +21,7 @@ public final class ItemOnItemMessageReader extends GameMessageReader<ItemOnItemE
         int usedIndex = msg.getPayload().getShort(false, ByteOrder.LITTLE);
 
         int usedId = msg.getPayload().getShort(false, ByteOrder.LITTLE);
-        int targetInterfaceId = msg.getPayload().getShort(false, ValueType.ADD, ByteOrder.LITTLE);
+        int targetInterfaceId = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
 
         int targetIndex = msg.getPayload().getShort(false, ValueType.ADD);
         int usedInterfaceId = msg.getPayload().getShort(false, ValueType.ADD);

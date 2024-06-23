@@ -46,7 +46,7 @@ public final class WidgetItemModelMessageWriter extends GameMessageWriter {
         ByteMessage msg = ByteMessage.message(21);
         msg.putShort(scale);
         msg.putShort(itemId, ByteOrder.LITTLE);
-        msg.putShort(widgetId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }
 }
