@@ -3,7 +3,7 @@ package io.luna.game.task;
 /**
  * An enumerated type whose elements represent the possible states that a {@link Task} can be in.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum TaskState {
 

@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 /**
  * A model containing functions to handle processing of tasks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class TaskManager {
 

@@ -6,6 +6,8 @@ import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.msg.GameMessageWriter;
 import io.netty.channel.Channel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -13,19 +15,24 @@ import java.util.concurrent.ArrayBlockingQueue;
 /**
  * A {@link Client} implementation model representing post-login I/O communications.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public class GameClient extends Client<GameMessage> {
 
     /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
      * The decoded packets.
      */
-    private final Queue<GameMessage> decodedMessages = new ArrayBlockingQueue<>(15);
+    protected final Queue<GameMessage> pendingReadMessages = new ArrayBlockingQueue<>(15);
 
     /**
      * The message repository.
      */
-    private final GameMessageRepository repository;
+    protected final GameMessageRepository repository;
 
     /**
      * If the client is awaiting logout.
@@ -49,24 +56,27 @@ public class GameClient extends Client<GameMessage> {
     }
 
     @Override
-    void onMessageReceived(GameMessage msg) {
-        if (!decodedMessages.offer(msg)) {
-           msg.getPayload().releaseAll();
+   public  void onMessageReceived(GameMessage msg) {
+        if (!pendingReadMessages.offer(msg)) {
+            msg.getPayload().releaseAll();
         }
     }
 
     /**
      * Handles decoded game packets and posts their created events to all applicable plugin listeners.
-     * Fires a region update afterwards, if needed.
      */
     public void handleDecodedMessages(Player player) {
         for (; ; ) {
-            var msg = decodedMessages.poll();
+            GameMessage msg = pendingReadMessages.poll();
             if (msg == null) {
                 break;
             }
-            GameMessageReader reader = repository.get(msg.getOpcode());
-            reader.postEvent(player, msg);
+            GameMessageReader<?> reader = repository.get(msg.getOpcode());
+            if (reader == null) {
+                logger.warn("No assigned reader for opcode {}, size {}", msg.getOpcode(), msg.getSize());
+                continue;
+            }
+            reader.submitMessage(player, msg);
         }
     }
 
@@ -78,7 +88,7 @@ public class GameClient extends Client<GameMessage> {
      */
     public void queue(GameMessageWriter msg, Player player) {
         if (channel.isActive()) {
-            channel.write(msg.toGameMsg(player), channel.voidPromise());
+            channel.write(msg.toGameMessage(player), channel.voidPromise());
         }
     }
 
@@ -104,5 +114,12 @@ public class GameClient extends Client<GameMessage> {
      */
     public boolean isPendingLogout() {
         return pendingLogout;
+    }
+
+    /**
+     * @return The game message repository.
+     */
+    public GameMessageRepository getRepository() {
+        return repository;
     }
 }

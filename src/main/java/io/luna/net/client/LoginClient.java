@@ -20,7 +20,7 @@ import org.mindrot.jbcrypt.BCrypt;
 /**
  * A {@link Client} implementation model representing login protocol I/O communications.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public class LoginClient extends Client<LoginRequestMessage> {
 
@@ -64,8 +64,9 @@ public class LoginClient extends Client<LoginRequestMessage> {
         String password = msg.getPassword();
         var player = new Player(context, new PlayerCredentials(username, password));
 
-        if (!username.matches("^[a-z0-9_ ]{1,12}$") || password.isEmpty() || password.length() > 20) {
-            // Username/password format invalid, drop connection.
+        if (!username.matches("^[a-z0-9_ ]{1,12}$") ||
+                password.isEmpty() || password.length() > 20) {
+            // Username/password format invalid, drop connection. Or we're already loading player data.
             channel.close();
         } else {
             // Passed initial check, submit login request.

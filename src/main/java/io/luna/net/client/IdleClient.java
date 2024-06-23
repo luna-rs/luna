@@ -6,7 +6,7 @@ import io.netty.channel.Channel;
  * A {@link Client} implementation model representing pre-login I/O communications. Throws an exception if
  * any messages are received as the client is not yet ready to handle them.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public class IdleClient extends Client<Object> {
 

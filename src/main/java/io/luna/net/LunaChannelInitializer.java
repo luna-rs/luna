@@ -16,7 +16,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
  * A {@link ChannelInitializer} implementation that will initialize {@link SocketChannel}s before they are
  * registered.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 @Sharable
 public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {

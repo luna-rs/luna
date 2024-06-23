@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
  * A {@link ChannelInboundHandlerAdapter} implementation that handles upstream messages from Netty.
  * Only one instance of this class should ever exist.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 @Sharable
 public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
@@ -38,7 +38,7 @@ public final class LunaUpstreamHandler extends ChannelInboundHandlerAdapter {
     /**
      * A default access level constructor.
      */
-    LunaUpstreamHandler() {
+    public LunaUpstreamHandler() {
     }
 
     @Override

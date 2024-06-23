@@ -1,13 +1,14 @@
 package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
+import io.luna.game.model.mob.bot.BotChannel;
 import io.luna.net.LunaChannelFilter;
-import io.luna.util.NetworkUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.TypeParameterMatcher;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Objects;
  * can override the various event listeners to control client functions.
  *
  * @param <I> The type of event that this client is listening for.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class Client<I> {
 
@@ -24,6 +25,24 @@ public abstract class Client<I> {
      * An attribute key used to retrieve the client instance.
      */
     public static final AttributeKey<Client<?>> KEY = AttributeKey.valueOf("Client.key");
+
+    /**
+     * Retrieves the IP address for {@code channel}.
+     *
+     * @param channel The channel.
+     * @return The IP address of the channel.
+     */
+    public static String getIpAddress(Channel channel) {
+        if(channel == BotChannel.CHANNEL) {
+            return "bot-client";
+        }
+        try {
+            InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
+            return socketAddress.getAddress().getHostAddress();
+        } catch (NullPointerException e) {
+            return "localhost";
+        }
+    }
 
     /**
      * The underlying channel.
@@ -47,7 +66,7 @@ public abstract class Client<I> {
      */
     Client(Channel channel) {
         this.channel = channel;
-        ipAddress = NetworkUtils.getIpAddress(channel);
+        ipAddress = getIpAddress(channel);
         parameterMatcher = TypeParameterMatcher.find(this, Client.class, "I");
     }
 
@@ -58,19 +77,19 @@ public abstract class Client<I> {
         }
         if (obj instanceof Client<?>) {
             Client<?> other = (Client<?>) obj;
-            return ipAddress.equals(other.ipAddress);
+            return channel.equals(other.channel);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ipAddress);
+        return Objects.hash(channel);
     }
 
     @Override
     public final String toString() {
-        return MoreObjects.toStringHelper(this).add("ip", ipAddress).toString();
+        return MoreObjects.toStringHelper(this).add("ip", ipAddress).add("channel", channel).toString();
     }
 
     /**

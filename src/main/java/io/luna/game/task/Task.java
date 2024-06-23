@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * A model representing a cyclic unit of work carried out strictly on the game thread.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class Task {
 
@@ -154,13 +154,13 @@ public abstract class Task {
     }
 
     /**
-     * Attaches a new key.
+     * Sets a new key.
      *
      * @param newKey The key to attach.
      * @return This task instance, for chaining.
      */
-    public Task attach(Object newKey) {
-        checkState(!key.isPresent(), "Task already has an attachment.");
+    public Task setKey(Object newKey) {
+        checkState(key.isEmpty(), "Task already has an attachment.");
         key = Optional.ofNullable(newKey);
         return this;
     }
