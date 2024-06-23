@@ -9,7 +9,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * A model representing an incoming or outgoing packet of data.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class GameMessage {
 

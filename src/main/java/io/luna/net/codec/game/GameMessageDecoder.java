@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * A {@link ProgressiveMessageDecoder} implementation that decodes game messages.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMessageDecoder.DecodeState> {
 

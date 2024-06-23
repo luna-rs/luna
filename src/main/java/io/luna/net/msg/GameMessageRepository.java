@@ -6,12 +6,11 @@ import com.google.common.collect.UnmodifiableIterator;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Iterable} implementation containing mappings of {@link GameMessageReader}s to their opcode
- * identifiers, and functions to retrieve said message readers.
+ * An {@link Iterable} implementation containing mappings of {@link GameMessageReader} types to their opcodes.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class GameMessageRepository implements Iterable<GameMessageReader> {
+public final class GameMessageRepository implements Iterable<GameMessageReader<?>> {
 
     /**
      * If this repository is locked.
@@ -19,10 +18,10 @@ public final class GameMessageRepository implements Iterable<GameMessageReader> 
     private volatile boolean locked;
 
     /**
-     * An array of message readers. This array is effectively immutable since it is never exposed
-     * outside of this class.
+     * An array of message decoders. This array is effectively immutable since it is never exposed outside of this
+     * class.
      */
-    private final GameMessageReader[] readers = new GameMessageReader[257];
+    private final GameMessageReader<?>[] readers = new GameMessageReader[256];
 
     /**
      * Adds a reader to this repository.
@@ -30,7 +29,7 @@ public final class GameMessageRepository implements Iterable<GameMessageReader> 
      * @param messageReader The reader to add.
      * @throws IllegalStateException If this repository is locked.
      */
-    public void put(GameMessageReader messageReader) throws IllegalStateException {
+    public void put(GameMessageReader<?> messageReader) throws IllegalStateException {
         checkState(!locked, "This repository is locked.");
 
         int opcode = messageReader.getOpcode();
@@ -44,7 +43,7 @@ public final class GameMessageRepository implements Iterable<GameMessageReader> 
      * @param opcode The opcode of the reader to retrieve.
      * @return The reader.
      */
-    public GameMessageReader get(int opcode) {
+    public GameMessageReader<?> get(int opcode) {
         return readers[opcode];
     }
 
@@ -66,7 +65,7 @@ public final class GameMessageRepository implements Iterable<GameMessageReader> 
     }
 
     @Override
-    public UnmodifiableIterator<GameMessageReader> iterator() {
+    public UnmodifiableIterator<GameMessageReader<?>> iterator() {
         return Iterators.forArray(readers);
     }
 }

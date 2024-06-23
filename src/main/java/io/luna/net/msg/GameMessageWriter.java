@@ -4,9 +4,9 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 
 /**
- * An abstraction model that converts raw written byte messages into game messages.
+ * An abstraction model that converts raw written {@link ByteMessage} buffers into {@link GameMessage} types.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class GameMessageWriter {
 
@@ -24,7 +24,7 @@ public abstract class GameMessageWriter {
      * @param player The player.
      * @return The converted game message.
      */
-    public final GameMessage toGameMsg(Player player) {
+    public final GameMessage toGameMessage(Player player) {
         ByteMessage raw = write(player);
         return new GameMessage(raw.getOpcode(), raw.getType(), raw);
     }

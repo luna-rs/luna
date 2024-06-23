@@ -1,7 +1,13 @@
 package io.luna.net.msg;
 
+import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.InteractableEvent;
+import io.luna.game.event.impl.NullEvent;
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.controller.ControllableEvent;
+import io.luna.net.client.Client;
 import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,11 +16,12 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * An abstraction model listener that posts events after reading data from decoded game messages.
+ * An abstraction model that decodes, validates, and handles incoming messages from the {@link Client}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @param <E> The type of event to decode and verify.
+ * @author lare96
  */
-public abstract class GameMessageReader {
+public abstract class GameMessageReader<E extends Event> {
 
     /**
      * The asynchronous logger.
@@ -41,29 +48,67 @@ public abstract class GameMessageReader {
     }
 
     /**
-     * Reads a decoded game message and posts an {@link Event} containing the decoded data. A return
-     * value of {@code null} indicates that no event needs to be posted.
+     * Decodes raw buffer data into an {@link Event} type. Use {@link NullEvent} for incoming messages that have
+     * no event data to create.
      *
      * @param player The player.
-     * @param msg The decoded message.
-     * @throws Exception If any errors occur.
+     * @param msg The raw message data.
      */
-    public abstract Event read(Player player, GameMessage msg) throws Exception; // TODO add another method for listeners that don't decode directly into an event
+    public abstract E decode(Player player, GameMessage msg);
 
     /**
-     * Handles a decoded game message and posts its returned {@link Event}.
+     * Validates the decoded {@link Event} before its handled and posted to plugins.
      *
      * @param player The player.
-     * @param msg The decoded game message.
+     * @param event The event to validate.
+     * @return {@code true} if the event is valid.
      */
-    public final void postEvent(Player player, GameMessage msg) {
-        try {
+    public boolean validate(Player player, E event) {
+        return true;
+    }
 
-            // Retrieve event and post it, if possible.
-            // TODO Add a reference to the world here?
-            Event event = read(player, msg);
-            if (event != null) {
-                player.getPlugins().post(event);
+    /**
+     * Handles a decoded and validated event before its posted to plugins.
+     *
+     * @param player The player.
+     * @param event The event to handle.
+     */
+    public void handle(Player player, E event) {
+
+    }
+
+    /**
+     * Submits a raw {@link GameMessage} to be decoded and handled.
+     *
+     * @param player The player.
+     * @param msg The game message.
+     */
+    public final void submitMessage(Player player, GameMessage msg) {
+        try {
+            // Decode event object from raw client data.
+            E event = decode(player, msg);
+
+            // Validate the event with the decoder and the current controller if needed.
+            if (event != NullEvent.INSTANCE && validate(player, event)) {
+                if (event instanceof ControllableEvent) {
+                    if (!player.getControllers().onEvent((ControllableEvent) event)) {
+                        return;
+                    }
+                }
+
+                // Handle it and post to plugins.
+                player.getTimeout().reset();
+                if (event instanceof InteractableEvent) {
+                    Entity interactingWith = ((InteractableEvent) event).target();
+                    player.submitAction(new InteractionAction(player, interactingWith) {
+                        @Override
+                        public void execute() {
+                            postEvent(player, event);
+                        }
+                    });
+                } else {
+                    postEvent(player, event);
+                }
             }
         } catch (Exception e) {
 
@@ -83,6 +128,17 @@ public abstract class GameMessageReader {
                 payload.releaseAll();
             }
         }
+    }
+
+    /**
+     * Handles the event and posts it to plugins.
+     *
+     * @param player The player to handle and post for.
+     * @param event The event to handle and post.
+     */
+    private void postEvent(Player player, E event) {
+        handle(player, event);
+        player.getPlugins().post(event);
     }
 
     /**
