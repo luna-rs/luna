@@ -16,7 +16,9 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
@@ -24,10 +26,12 @@ import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An {@link AbstractIdleService} responsible for arbitrary loads and saves. This service exists to take any potential
- * load off of the {@link LoginService} and {@link LogoutService}. It's backed by a single thread, so requests are considered low priority
+ * load off of the {@link LoginService} and {@link LogoutService}.
+ * <p>
+ * It's backed by a single thread, so requests are considered low priority
  * and are not guaranteed to execute right away. All functions can be used safely across multiple threads.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class PersistenceService extends AbstractIdleService {
 
@@ -54,7 +58,7 @@ public final class PersistenceService extends AbstractIdleService {
     public PersistenceService(World world) {
         this.world = world;
 
-        var threadFactory = ExecutorUtils.threadFactory(PersistenceService.class);
+        ThreadFactory threadFactory = ExecutorUtils.threadFactory(PersistenceService.class);
         worker = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
     }
 
@@ -79,7 +83,7 @@ public final class PersistenceService extends AbstractIdleService {
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> transform(String username, Consumer<PlayerData> action) {
-        if(world.getPlayerMap().containsKey(username)) {
+        if (world.getPlayerMap().containsKey(username)) {
             Optional<Player> optionalPlayer = world.getPlayer(username);
             if (optionalPlayer.isEmpty()) {
                 throw new IllegalStateException("Player exists in player map but not game map.");
@@ -92,8 +96,8 @@ public final class PersistenceService extends AbstractIdleService {
 
         logger.trace("Sending data transformation request for {} to a worker...", username);
         return worker.submit(() -> {
-            var timer = Stopwatch.createStarted();
-            var data = AuthenticationService.PERSISTENCE.load(username);
+            Stopwatch timer = Stopwatch.createStarted();
+            PlayerData data = AuthenticationService.PERSISTENCE.load(username);
             if (data == null) {
                 throw new NoSuchElementException("No player data available for " + username);
             }
@@ -120,9 +124,6 @@ public final class PersistenceService extends AbstractIdleService {
         return worker.submit(() -> {
             var timer = Stopwatch.createStarted();
             var data = AuthenticationService.PERSISTENCE.load(username);
-            if (data == null) {
-                throw new NoSuchElementException("No player data available for " + username);
-            }
             logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return data;
         });
@@ -192,5 +193,39 @@ public final class PersistenceService extends AbstractIdleService {
             logger.debug("Mass save complete (took {}ms).", box(timer.elapsed().toMillis()));
             return null;
         });
+    }
+
+    /**
+     * Deletes the record of save data for {@code username}. The player should be logged out when using this
+     * to prevent re-saving of the deleted data.
+     *
+     * @param username The username of the player to delete.
+     * @return A listenable future describing the result of the deletion.
+     */
+    public ListenableFuture<Boolean> delete(String username) {
+        if (world.getLogoutService().hasRequest(username) || world.getPlayerMap().containsKey(username)) {
+            IllegalStateException exception =
+                    new IllegalStateException("The player should be fully logged out before deleting its record to prevent overwrites!");
+            return Futures.immediateFailedFuture(exception);
+        }
+        return worker.submit(() -> {
+            Stopwatch timer = Stopwatch.createStarted();
+            boolean result = AuthenticationService.PERSISTENCE.delete(username);
+            if (result) {
+                logger.info("Save record for {} has been deleted (took {}ms).", username, box(timer.elapsed().toMillis()));
+            } else {
+                logger.warn("Could not find record to delete for {}.", username);
+            }
+            return result;
+        });
+    }
+
+    /**
+     * Loads usernames of all persistent bots being tracked by the current serializer.
+     *
+     * @return A listenable future with a set of bot usernames as the result.
+     */
+    public ListenableFuture<Set<String>> loadBotUsernames() {
+        return worker.submit(AuthenticationService.PERSISTENCE::loadBotUsernames);
     }
 }
