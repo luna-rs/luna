@@ -6,9 +6,10 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
 import io.luna.LunaContext;
+import io.luna.LunaServer;
 import io.luna.game.event.Event;
-import io.luna.game.event.impl.ServerShutdownEvent;
-import io.luna.game.event.impl.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
@@ -16,9 +17,9 @@ import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.ThreadUtils;
+import io.luna.util.benchmark.BenchmarkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Queue;
 import java.util.concurrent.Callable;
@@ -38,7 +39,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
  * of the main game thread.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class GameService extends AbstractScheduledService {
 
@@ -48,7 +49,7 @@ public final class GameService extends AbstractScheduledService {
     private final class GameServiceExecutor implements Executor {
 
         @Override
-        public void execute(@NotNull Runnable command) {
+        public void execute(Runnable command) {
             sync(command);
         }
     }
@@ -123,6 +124,11 @@ public final class GameService extends AbstractScheduledService {
     private final World world;
 
     /**
+     * The server instance.
+     */
+    private final LunaServer server;
+
+    /**
      * A thread pool for general purpose low-overhead tasks.
      */
     private final ListeningExecutorService fastPool;
@@ -135,21 +141,16 @@ public final class GameService extends AbstractScheduledService {
     public GameService(LunaContext context) {
         this.context = context;
         world = context.getWorld();
+        server = context.getServer();
         fastPool = ExecutorUtils.threadPool(serviceName() + "Worker");
         addListener(new GameServiceListener(), MoreExecutors.directExecutor());
     }
 
     @Override
     protected void runOneIteration() {
-        try {
-            // Do stuff from other threads.
-            runSynchronizationTasks();
-
-            // Run the main game loop.
-            world.loop();
-        } catch (Exception e) {
-            logger.catching(e);
-        }
+        server.getBenchmarkManager().startBenchmark(BenchmarkType.GAME_LOOP);
+        loop();
+        server.getBenchmarkManager().finishBenchmark(BenchmarkType.GAME_LOOP);
     }
 
     @Override
@@ -163,6 +164,21 @@ public final class GameService extends AbstractScheduledService {
             gracefulShutdown();
         } catch (Exception e) {
             logger.fatal("Luna could not be terminated gracefully!", e);
+        }
+    }
+
+    /**
+     * Runs the entire game loop including synchronization tasks.
+     */
+    private void loop() {
+        try {
+            // Do stuff from other threads.
+            runSynchronizationTasks();
+
+            // Run the main game loop.
+            world.loop();
+        } catch (Exception e) {
+            logger.catching(e);
         }
     }
 
@@ -195,7 +211,7 @@ public final class GameService extends AbstractScheduledService {
         AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
         context.getPlugins().lazyPost(eventFunction.apply(executor)).forEach(Runnable::run);
         try {
-            int count = executor.size();
+            int count = executor.getTaskCount();
             if (count > 0) {
                 logger.info(waitingMessage, box(count));
                 executor.await(true);
@@ -237,6 +253,9 @@ public final class GameService extends AbstractScheduledService {
         // Wait for the disconnected players to be saved.
         logoutService.stopAsync().awaitTerminated();
 
+        // Close cache resource.
+        context.getCache().close();
+
         // Wait for general-purpose tasks to complete.
         fastPool.shutdown();
         awaitTerminationUninterruptibly(fastPool);
@@ -248,7 +267,6 @@ public final class GameService extends AbstractScheduledService {
      * @param ticks The amount of ticks to schedule for.
      */
     public void scheduleSystemUpdate(int ticks) {
-
         // Preliminary save of all players.
         world.getPersistenceService().saveAll();
 
@@ -267,7 +285,33 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Queues a task to be ran on the game thread at the start of the next tick.
+     * Queues a task to be run on the game thread at the start of the next tick. This is useful when you are performing
+     * work on another thread, but a portion still needs to be run on the game thread. For example
+     * <pre>
+     * {@code
+     * // We're on the game thread.
+     * GameService service = player.getService();
+     * player.sendMessage("You will be awarded your prize within one minute if you qualify.");
+     * service.submit(() -> {
+     *      // Now we're in a pooled thread.
+     *
+     *      // Takes 5-10s to complete.
+     *      Prize prize = Prize.slowlyRetrieveData(player.getUsername());
+     *
+     *      if(prize.isQualified()) {
+     *          // This code needs to be run on the game thread to ensure thread safety.
+     *          service.sync(() -> {
+     *             player.sendMessage("You qualified! Your prize was sent to your bank!");
+     *             player.getBank().addAll(prize.getItems());
+     *          });
+     *      } else {
+     *          // This as well.
+     *          service.sync(() -> player.sendMessage("You didn't qualify. Bummer."));
+     *      }
+     * });
+     * }
+     * </pre>
+     * The same code can also be expressed more succinctly using {@link ListenableFuture} and {@link #gameExecutor}.
      *
      * @param t The task to run.
      */

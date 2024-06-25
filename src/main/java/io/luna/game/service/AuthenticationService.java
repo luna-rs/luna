@@ -6,7 +6,6 @@ import io.luna.game.model.World;
 import io.luna.game.model.mob.persistence.PlayerPersistence;
 import io.luna.util.ExecutorUtils;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * and out. This is necessary in order to avoid overworking the networking threads.
  *
  * @param <T> The request type.
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 abstract class AuthenticationService<T> extends AbstractIdleService {
 
@@ -41,7 +40,7 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     /**
      * The map of pending requests.
      */
-    final Map<String, T> pending = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, T> pending = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link AuthenticationService}.
@@ -59,7 +58,7 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     }
 
     /**
-     * Iterates the set of pending requests and finishes them.
+     * Iterates the set of pending requests and finalizes them.
      */
     public final void finishRequests() {
         if (state() == State.RUNNING) {
@@ -95,24 +94,29 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
      * @param request The request.
      */
     public final void submit(String username, T request) {
-        if (state() == State.RUNNING && !pending.containsKey(username)) {
-            addRequest(username, request);
+        if (state() == State.RUNNING) {
+            // Atomically compute the value (or no value) since we have multiple login workers potentially
+            // accessing this.
+            pending.computeIfAbsent(username, key -> addRequest(username, request) ? request : null);
         }
     }
 
     /**
-     * Invoked before the request is added to the pending set. This function must make an attempt to add the request to
-     * the pending set, either in the calling thread or another thread.
+     * Determines if the request can be added to {@link #pending}.
+     *
+     * @return {@code true} to add the request, {@code false} to cancel.
      */
-    abstract void addRequest(String username, T request);
+    abstract boolean addRequest(String username, T request);
 
     /**
-     * Invoked to determine if the request can be removed from the pending set. Return {@code true} to remove the request.
+     * Determines if the request is no longer pending and can be finalized.
+     *
+     * @return {@code true} if the request is no longer pending.
      */
     abstract boolean canFinishRequest(String username, T request);
 
     /**
-     * Invoked after the request has been removed from the pending set. Perform finalization processing here.
+     * Run after the request is finalized and removed from {@link #pending}.
      */
     abstract void finishRequest(String username, T request);
 }
