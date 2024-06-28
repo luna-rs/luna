@@ -2,11 +2,10 @@ package io.luna.game.model.object;
 
 import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
-import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.def.ObjectDefinition;
+import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
@@ -16,11 +15,42 @@ import io.luna.net.msg.out.RemoveObjectMessageWriter;
 import java.util.Optional;
 
 /**
- * An {@link Entity} implementation representing an object in the Runescape world.
+ * A {@link StationaryEntity} representing an object on the map.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public class GameObject extends StationaryEntity {
+
+    /**
+     * Creates a dynamic {@link GameObject}. Dynamic objects are spawned and deleted by the server as needed.
+     *
+     * @param context The context instance.
+     * @param id The identifier.
+     * @param position The position.
+     * @param objectType The type.
+     * @param direction The direction.
+     * @param player The player to update for.
+     * @return The dynamic {@link GameObject}.
+     */
+    public static GameObject createDynamic(LunaContext context, int id, Position position, ObjectType objectType,
+                                           ObjectDirection direction, Optional<Player> player) {
+        return new GameObject(context, id, position, objectType, direction, player, true);
+    }
+
+    /**
+     * Creates a static {@link GameObject}. Static objects exist natively and are updated for everyone by default.
+     *
+     * @param context The context instance.
+     * @param id The identifier.
+     * @param position The position.
+     * @param objectType The type.
+     * @param direction The direction.
+     * @return The static {@link GameObject}.
+     */
+    public static GameObject createStatic(LunaContext context, int id, Position position, ObjectType objectType,
+                                          ObjectDirection direction) {
+        return new GameObject(context, id, position, objectType, direction, Optional.empty(), false);
+    }
 
     /**
      * The identifier.
@@ -40,7 +70,7 @@ public class GameObject extends StationaryEntity {
     /**
      * The object's definition.
      */
-    private final ObjectDefinition definition;
+    private final GameObjectDefinition definition;
 
     /**
      * If this object is dynamic.
@@ -64,21 +94,7 @@ public class GameObject extends StationaryEntity {
         this.objectType = objectType;
         this.direction = direction;
         this.dynamic = dynamic;
-        definition = ObjectDefinition.ALL.retrieve(id);
-    }
-
-    /**
-     * Creates a new dynamic {@link GameObject}.
-     *
-     * @param context The context instance.
-     * @param id The identifier.
-     * @param position The position.
-     * @param objectType The type.
-     * @param direction The direction.
-     * @param player The player to update for.
-     */
-    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, Optional<Player> player) {
-        this(context, id, position, objectType, direction, player, true);
+        definition = GameObjectDefinition.ALL.get(id).orElse(null);
     }
 
     @Override
@@ -108,18 +124,19 @@ public class GameObject extends StationaryEntity {
     }
 
     /**
-     * Animates this object with ID {@code animationId}.
-     *
-     * @param animationId The ID to animate this object with.
+     * Animates this object.
      */
-    public void animate(int animationId) {
+    public void animate() {
         if (!isHidden()) {
-            applyUpdate(plr -> {
-                sendPlacementMessage(plr);
-                int offset = getChunkPosition().offset(position);
-                plr.queue(new AnimateGameObjectMessageWriter(offset, objectType.getId(),
-                        direction.getId(), animationId));
-            });
+            int animationId = definition.getAnimationId();
+            if (animationId > 0) {
+                applyUpdate(plr -> {
+                    sendPlacementMessage(plr);
+                    int offset = getChunk().offset(position);
+                    plr.queue(new AnimateGameObjectMessageWriter(offset, objectType.getId(),
+                            direction.getId(), animationId));
+                });
+            }
         }
     }
 
@@ -130,7 +147,8 @@ public class GameObject extends StationaryEntity {
      */
     public boolean replaces(GameObject object) {
         return position.equals(object.position) &&
-                type == object.type;
+                type == object.type &&
+                getOwner().equals(object.getOwner());
     }
 
     /**
@@ -157,14 +175,13 @@ public class GameObject extends StationaryEntity {
     /**
      * @return The definition.
      */
-    public final ObjectDefinition getDefinition() {
+    public final GameObjectDefinition getDefinition() {
         return definition;
     }
 
     /**
-     * Returns if this object was spawned by the server. Objects loaded from the cache will return {@code false}.
-     *
-     * @return {@code true} if this object is dynamic.
+     * @return {@code true} if this object was spawned by the server. Objects loaded from the cache will return
+     * {@code false}.
      */
     public final boolean isDynamic() {
         return dynamic;

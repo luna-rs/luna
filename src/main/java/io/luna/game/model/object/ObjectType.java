@@ -1,12 +1,13 @@
 package io.luna.game.model.object;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * An enumerated type whose elements represent different object types.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum ObjectType {
-    // TODO Better naming!
     STRAIGHT_WALL(0, ObjectGroup.WALL),
     DIAGONAL_CORNER_WALL(1, ObjectGroup.WALL),
     ENTIRE_WALL(2, ObjectGroup.WALL),
@@ -30,6 +31,16 @@ public enum ObjectType {
     STRAIGHT_BOTTOM_EDGE_CONNECTING_ROOF(20, ObjectGroup.INTERACTABLE),
     STRAIGHT_BOTTOM_EDGE_CONNECTING_CORNER_ROOF(21, ObjectGroup.INTERACTABLE),
     GROUND_PROP(22, ObjectGroup.GROUND_DECORATION);
+
+    public static final ImmutableMap<Integer, ObjectType> ALL;
+
+    static {
+        ImmutableMap.Builder<Integer, ObjectType> map = ImmutableMap.builder();
+        for(ObjectType next: ObjectType.values()) {
+            map.put(next.id, next);
+        }
+        ALL = map.build();
+    }
 
     /**
      * The type identifier.

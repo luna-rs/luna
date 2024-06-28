@@ -2,39 +2,38 @@ package io.luna.game.model.object;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
-import io.luna.game.model.EntityList;
+import io.luna.game.cache.Cache;
+import io.luna.game.model.StationaryEntityList;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 
 /**
- * An {@link EntityList} implementation model for {@link GameObject}s. Iterating on instances of this should be avoided
- * because of the slow {@link #iterator()} implementation.
+ * A {@link StationaryEntityList} that tracks all {@link GameObject} types existing natively and spawned by the server.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class GameObjectList extends EntityList<GameObject> {
+public final class GameObjectList extends StationaryEntityList<GameObject> {
 
     /**
-     * A set of objects spawned by the server.
+     * A set of objects that were spawned by the server.
      */
-    private final Set<GameObject> dynamicSet = new HashSet<>(128);
+    private final Set<GameObject> dynamicObjects = new HashSet<>(128);
 
     /**
-     * A set of objects
+     * A set of objects existing natively on the map. Decoded from the {@link Cache} resource.
      */
-    private final Set<GameObject> staticSet = new HashSet<>(); // TODO Modify based on amount of cache objects.
+    private final Set<GameObject> staticObjects = new HashSet<>(1_376_518);
 
     /**
-     * Creates a new {@link EntityList}.
+     * Creates a new {@link StationaryEntityList}.
      *
      * @param world The world.
      */
@@ -50,11 +49,13 @@ public final class GameObjectList extends EntityList<GameObject> {
 
     /**
      * {@inheritDoc}
-     * <br><br>
-     * <strong>Warning:</strong> This function loops through every object in the World, including objects from the
-     * cache. It shouldn't be relied on in performance critical code.
-     * <br><br>
-     * If you only want to loop through spawned objects, use {@link #dynamicIterator()}.
+     * <p>
+     * <strong>Warning:</strong> The returned iterator is a combination of both {@link #dynamicIterator()} and
+     * {@link #staticIterator()}.
+     * <p>
+     * If you only want to iterate over server spawned objects, use {@link #dynamicIterator()}.
+     * <p>
+     * If you only want to iterate over objects existing natively, use {@link #staticIterator()}.
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -66,16 +67,20 @@ public final class GameObjectList extends EntityList<GameObject> {
     @Override
     protected boolean onRegister(GameObject object) {
 
-        // Check if an object will be replaced by this registration, and remove it.
-        var existingObject = findAll(object.getPosition()).
-                filter(object::replaces).findFirst();
-        removeFromSet(existingObject);
+        if (object.isDynamic()) {
+            // Check if an object will be replaced by this registration, and remove it.
+            var existingObject = findAll(object.getPosition()).
+                    filter(object::replaces).findFirst();
+            removeFromSet(existingObject);
+        }
 
         // Set object as active.
-        boolean added = object.isDynamic() ? dynamicSet.add(object) : staticSet.add(object);
+        boolean added = object.isDynamic() ? dynamicObjects.add(object) : staticObjects.add(object);
         if (added) {
             object.setState(EntityState.ACTIVE);
-            object.show();
+            if (object.isDynamic()) {
+                object.show();
+            }
             return true;
         }
         return false;
@@ -84,14 +89,14 @@ public final class GameObjectList extends EntityList<GameObject> {
     @Override
     protected boolean onUnregister(GameObject object) {
         Optional<GameObject> existingObject = findAll(object.getPosition()).
-                filter(object::replaces).
+                filter(object::replaces). // TODO object.equals?
                 findFirst();
         return removeFromSet(existingObject);
     }
 
     @Override
     public int size() {
-        return dynamicSet.size() + staticSet.size();
+        return dynamicObjects.size() + staticObjects.size();
     }
 
     /**
@@ -104,9 +109,9 @@ public final class GameObjectList extends EntityList<GameObject> {
         if (object.isPresent()) {
             var removeObject = object.get();
             if (removeObject.isDynamic()) {
-                dynamicSet.remove(removeObject);
+                dynamicObjects.remove(removeObject);
             } else {
-                staticSet.remove(removeObject);
+                staticObjects.remove(removeObject);
             }
             removeObject.hide();
             removeObject.setState(EntityState.INACTIVE);
@@ -116,17 +121,16 @@ public final class GameObjectList extends EntityList<GameObject> {
     }
 
     /**
-     * Returns an iterator over all spawned objects.
-     * @return
+     * Returns an iterator over all server spawned objects.
      */
     public UnmodifiableIterator<GameObject> dynamicIterator() {
-        return Iterators.unmodifiableIterator(dynamicSet.iterator());
+        return Iterators.unmodifiableIterator(dynamicObjects.iterator());
     }
 
     /**
      * Returns an iterator over all cache loaded objects.
      */
     public UnmodifiableIterator<GameObject> staticIterator() {
-        return Iterators.unmodifiableIterator(staticSet.iterator());
+        return Iterators.unmodifiableIterator(staticObjects.iterator());
     }
 }
