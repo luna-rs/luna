@@ -21,6 +21,8 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      */
     private final boolean running;
 
+    private final int pathSize;
+
     /**
      * Creates a new {@link WalkingEvent}.
      *
@@ -28,10 +30,11 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      * @param path The path that the player will walk.
      * @param running If the player is running.
      */
-    public WalkingEvent(Player player, Step[] path, boolean running) {
+    public WalkingEvent(Player player, Step[] path, boolean running, int pathSize) {
         super(player);
         this.path = path;
         this.running = running;
+        this.pathSize = pathSize;
     }
 
     /**
@@ -46,5 +49,9 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      */
     public boolean isRunning() {
         return running;
+    }
+
+    public int getPathSize() {
+        return pathSize;
     }
 }

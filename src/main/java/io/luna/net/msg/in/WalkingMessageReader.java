@@ -51,7 +51,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         for (int i = 0; i < pathSize; i++) {
             steps[i + 1] = new Step(path[i][0] + firstStepX, path[i][1] + firstStepY);
         }
-        return new WalkingEvent(player, steps, running);
+        return new WalkingEvent(player, steps, running, pathSize);
     }
 
     @Override
@@ -65,7 +65,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         Step[] path = event.getPath();
         walking.clear();
         walking.addFirst(path[0]);
-        for (int index = 0; index < path.length; index++) {
+        for (int index = 0; index < event.getPathSize(); index++) {
             walking.add(path[index + 1]);
         }
         walking.setRunningPath(event.isRunning() || player.isRunning());
