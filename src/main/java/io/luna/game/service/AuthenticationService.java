@@ -54,7 +54,8 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
 
     @Override
     protected final void startUp() throws Exception {
-        // Persistence services don't require startup operations.
+        // Ensure serializer is initialized.
+        PERSISTENCE.getSerializer().init(world.getContext());
     }
 
     /**
