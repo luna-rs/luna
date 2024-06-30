@@ -8,30 +8,9 @@ import io.luna.net.codec.ByteMessage;
  * An {@link AbstractUpdateBlockSet} implementation that handles the encoding of {@link Npc} update
  * blocks.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
-
-    /**
-     * An immutable list of update blocks.
-     */
-    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-        new AnimationUpdateBlock(),
-        new SecondaryHitUpdateBlock(),
-        new GraphicUpdateBlock(),
-        new InteractionUpdateBlock(),
-        new ForcedChatUpdateBlock(),
-        new PrimaryHitUpdateBlock(),
-        new TransformUpdateBlock(),
-        new FacePositionUpdateBlock()
-    );
-
-    /**
-     * Creates a new {@link NpcUpdateBlockSet}.
-     */
-    public NpcUpdateBlockSet() {
-        super(UPDATE_BLOCKS);
-    }
 
     @Override
     public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
@@ -41,5 +20,19 @@ public class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
     @Override
     public void encodeBlock(Npc npc, UpdateBlock block, ByteMessage blockMsg) {
         block.encodeForNpc(npc, blockMsg);
+    }
+
+    @Override
+    public ImmutableList<UpdateBlock> computeBlocks() {
+        return ImmutableList.of(
+                new TransformUpdateBlock(),
+                new InteractionUpdateBlock(),
+                new PrimaryHitUpdateBlock(),
+                new GraphicUpdateBlock(),
+                new ForcedChatUpdateBlock(),
+                new FacePositionUpdateBlock(),
+                new AnimationUpdateBlock(),
+                new SecondaryHitUpdateBlock()
+        );
     }
 }

@@ -14,7 +14,7 @@ import java.util.OptionalInt;
  * A model representing an update block within an update block set. Implementations <strong>must be
  * stateless</strong> so instances can be shared concurrently.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class UpdateBlock {
 

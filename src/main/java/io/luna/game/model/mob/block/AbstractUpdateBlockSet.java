@@ -19,7 +19,7 @@ import static io.luna.game.model.mob.block.UpdateState.UPDATE_SELF;
  * A model representing a group of update blocks that need to be encoded. Implementations <strong>must be
  * stateless</strong> so instances can be shared concurrently.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
@@ -30,11 +30,9 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
     /**
      * Creates a new {@link AbstractUpdateBlockSet}.
-     *
-     * @param updateBlocks The update blocks.
      */
-    public AbstractUpdateBlockSet(List<UpdateBlock> updateBlocks) {
-        this.updateBlocks = ImmutableList.copyOf(updateBlocks);
+    public AbstractUpdateBlockSet() {
+        updateBlocks = computeBlocks();
     }
 
     /**
@@ -56,6 +54,11 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     public abstract void encodeBlock(E mob, UpdateBlock block, ByteMessage blockMsg);
 
     /**
+     * Computes the immutable list of update blocks. Update blocks are handled in the order they are provided here.
+     */
+    public abstract ImmutableList<UpdateBlock> computeBlocks();
+
+    /**
      * Encodes the backing group of update blocks.
      *
      * @param mob The mob.
@@ -67,8 +70,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
         int mask = 0;
         for (UpdateBlock block : updateBlocks) {
             UpdateFlag updateFlag = block.getFlag();
-
-            if(mob.getType() == EntityType.PLAYER) {
+            if (mob.getType() == EntityType.PLAYER) {
                 // We are adding local players, so we need to force the appearance block.
                 if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
                     mask |= block.getMask(mob);
@@ -89,17 +91,19 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
             }
         }
 
-        // Encode the update mask.
-        if (mask >= 0x100) {
-            mask |= 0x40;
-            blockMsg.putShort(mask, ByteOrder.LITTLE);
-        } else {
-            blockMsg.put(mask);
-        }
+        if (!encodeBlocks.isEmpty()) {
+            // Encode the update mask.
+            if (mask >= 0x100 && mob.getType() == EntityType.PLAYER) {
+                mask |= 0x20;
+                blockMsg.putShort(mask, ByteOrder.LITTLE);
+            } else {
+                blockMsg.put(mask);
+            }
 
-        // And finally, encode the update blocks!
-        for (UpdateBlock block : encodeBlocks) {
-            encodeBlock(mob, block, blockMsg);
+            // And finally, encode the update blocks!
+            for (UpdateBlock block : encodeBlocks) {
+                encodeBlock(mob, block, blockMsg);
+            }
         }
     }
 

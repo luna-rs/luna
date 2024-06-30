@@ -10,32 +10,9 @@ import static io.luna.game.model.mob.block.UpdateState.UPDATE_LOCAL;
  * An {@link AbstractUpdateBlockSet} implementation that handles the encoding of {@link Player} update
  * blocks.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
-
-    /**
-     * An immutable list of update blocks.
-     */
-    private static final ImmutableList<UpdateBlock> UPDATE_BLOCKS = ImmutableList.of(
-            new GraphicUpdateBlock(),
-            new AnimationUpdateBlock(),
-            new ForcedChatUpdateBlock(),
-            new ChatUpdateBlock(),
-            new ForcedMovementUpdateBlock(),
-            new InteractionUpdateBlock(),
-            new AppearanceUpdateBlock(),
-            new FacePositionUpdateBlock(),
-            new PrimaryHitUpdateBlock(),
-            new SecondaryHitUpdateBlock()
-    );
-
-    /**
-     * Creates a new {@link PlayerUpdateBlockSet}.
-     */
-    public PlayerUpdateBlockSet() {
-        super(UPDATE_BLOCKS);
-    }
 
     @Override
     public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
@@ -52,7 +29,7 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
             encodeBlockSet(player, blockMsg, state);
             msg.putBytes(blockMsg);
 
-            // TODO We can probably cache update blocks in any phase.
+            // TODO We can probably cache update blocks in any phase. More research needed
             if (isCachingBlocks) {
                 player.setCachedBlock(blockMsg);
             }
@@ -65,5 +42,21 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
     @Override
     public void encodeBlock(Player player, UpdateBlock block, ByteMessage blockMsg) {
         block.encodeForPlayer(player, blockMsg);
+    }
+
+    @Override
+    public ImmutableList<UpdateBlock> computeBlocks() {
+        return ImmutableList.of(
+                new AnimationUpdateBlock(),
+                new ForcedChatUpdateBlock(),
+                new ForcedMovementUpdateBlock(),
+                new InteractionUpdateBlock(),
+                new FacePositionUpdateBlock(),
+                new GraphicUpdateBlock(),
+                new AppearanceUpdateBlock(),
+                new SecondaryHitUpdateBlock(),
+                new ChatUpdateBlock(),
+                new PrimaryHitUpdateBlock()
+        );
     }
 }

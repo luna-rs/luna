@@ -11,7 +11,7 @@ import io.luna.net.codec.ValueType;
 /**
  * An {@link UpdateBlock} implementation for the {@code ANIMATION} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AnimationUpdateBlock extends UpdateBlock {
 
@@ -25,24 +25,24 @@ public final class AnimationUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Animation animation = unwrap(player.getAnimation());
-        msg.putShort(animation.getId(), ByteOrder.LITTLE);
-        msg.put(animation.getDelay(), ValueType.NEGATE);
+        msg.putShort(animation.getId());
+        msg.put(animation.getDelay(), ValueType.ADD);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         Animation animation = unwrap(npc.getAnimation());
-        msg.putShort(animation.getId(), ByteOrder.LITTLE);
-        msg.put(animation.getDelay());
+        msg.putShort(animation.getId());
+        msg.put(animation.getDelay(), ValueType.SUBTRACT);
     }
 
     @Override
     public int getPlayerMask() {
-        return 8;
+        return 0x8;
     }
 
     @Override
     public int getNpcMask() {
-        return 0x10;
+        return 0x2;
     }
 }

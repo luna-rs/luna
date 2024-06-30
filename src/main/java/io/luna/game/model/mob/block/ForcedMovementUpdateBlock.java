@@ -9,7 +9,7 @@ import io.luna.net.codec.ValueType;
 /**
  * An {@link UpdateBlock} implementation for the {@code FORCED_MOVEMENT} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ForcedMovementUpdateBlock extends UpdateBlock {
 
@@ -34,6 +34,6 @@ public final class ForcedMovementUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 0x400;
+        return 0x100;
     }
 }

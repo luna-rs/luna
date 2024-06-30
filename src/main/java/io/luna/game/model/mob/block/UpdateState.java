@@ -3,7 +3,7 @@ package io.luna.game.model.mob.block;
 /**
  * An enum representing update states.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public enum UpdateState {
 

@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
  * A {@link NoSuchElementException} implementation that indicates a value used to build an update block
  * does not exist.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public class NoBlockValueException extends NoSuchElementException {
 

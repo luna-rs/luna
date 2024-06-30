@@ -32,13 +32,14 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         ByteMessage buf = ByteMessage.raw();
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
-            buf.put(player.getPrayerIcon().getId()); // Prayer icon.
             buf.put(player.getSkullIcon().getId()); // Skull icon.
+            buf.put(player.getPrayerIcon().getId()); // Prayer icon.
 
             // Transform the player if needed.
             OptionalInt transformId = player.getTransformId();
             if (transformId.isPresent()) {
-                buf.putShort(-1);
+                buf.put(255);
+                buf.put(255);
                 buf.putShort(transformId.getAsInt());
             } else {
                 // Otherwise encode equipment.
@@ -50,12 +51,14 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
             buf.putLong(player.getUsernameHash()); // Username.
             buf.put(player.getCombatLevel()); // Combat level.
-            buf.putShort(0); // Skill level for Burthrope games' room.
+            buf.putShort(0); // TODO Skill level for Burthrope games' room.
 
             // Append appearance block to block set buffer.
             int currentIndex = buf.getBuffer().writerIndex();
-            msg.put(currentIndex, ValueType.NEGATE);
-            msg.putBytes(buf);
+            byte[] rawBytes = new byte[buf.getBuffer().readableBytes()];
+            buf.getBuffer().getBytes(0, rawBytes);
+            msg.put(currentIndex);
+            msg.putBytesReverse(rawBytes);
         } finally {
             buf.release();
         }
@@ -63,7 +66,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 0x10;
+        return 0x4;
     }
 
     /**
@@ -77,33 +80,43 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         Equipment equipment = player.getEquipment();
         PlayerAppearance appearance = player.getAppearance();
 
-        buf.putShort(512 + getId(equipment, Equipment.HEAD)); // Helmet model.
-        buf.putShort(512 + getId(equipment, Equipment.CAPE)); // Cape model.
-        buf.putShort(512 + getId(equipment, Equipment.AMULET)); // Amulet model.
-        buf.putShort(512 + getId(equipment, Equipment.WEAPON)); // Weapon model.
+        // Helmet, cape, amulet, weapon models.
+        for (int index = 0; index < 4; index++) {
+            int id = getId(equipment, index);
+            if (id > 0) {
+                buf.putShort(0x200 + id);
+            } else {
+                buf.put(0);
+            }
+        }
 
         // Chest model.
         if (equipment.occupied(Equipment.CHEST)) {
-            buf.putShort(512 + equipment.get(Equipment.CHEST).getId());
+            buf.putShort(0x200 + getId(equipment, Equipment.CHEST));
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.CHEST));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.CHEST));
         }
 
-        buf.putShort(512 + getId(equipment, Equipment.SHIELD)); // Shield model.
+        // Shield model.
+        if(equipment.occupied(Equipment.SHIELD)) {
+            buf.putShort(0x200 + getId(equipment, Equipment.SHIELD));
+        } else {
+            buf.put(0);
+        }
 
         // Arms model.
         boolean isFullBody = getDef(equipment, Equipment.CHEST, EquipmentDefinition::isFullBody);
         if (isFullBody) {
             buf.put(0);
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.ARMS));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.ARMS));
         }
 
         // Legs model.
         if (equipment.occupied(Equipment.LEGS)) {
-            buf.putShort(512 + equipment.computeIdForIndex(Equipment.LEGS).getAsInt());
+            buf.putShort(0x200 + getId(equipment,Equipment.LEGS));
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.LEGS));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.LEGS));
         }
 
         // Head model.
@@ -111,28 +124,28 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         if (isFullHelmet) {
             buf.put(0);
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.HEAD));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.HEAD));
         }
 
         // Hands model.
         if (equipment.occupied(Equipment.HANDS)) {
-            buf.putShort(512 + equipment.computeIdForIndex(Equipment.HANDS).getAsInt());
+            buf.putShort(0x200 + getId(equipment,Equipment.HANDS));
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.HANDS));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.HANDS));
         }
 
         // Feet model.
         if (equipment.occupied(Equipment.FEET)) {
-            buf.putShort(512 + equipment.computeIdForIndex(Equipment.FEET).getAsInt());
+            buf.putShort(0x200 + getId(equipment, Equipment.FEET));
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.FEET));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.FEET));
         }
 
         // Beard model.
         if (appearance.isFemale() || isFullHelmet) {
             buf.put(0);
         } else {
-            buf.putShort(256 + appearance.get(PlayerAppearance.BEARD));
+            buf.putShort(0x100 + appearance.get(PlayerAppearance.BEARD));
         }
     }
 

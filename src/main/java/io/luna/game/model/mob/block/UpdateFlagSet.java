@@ -1,13 +1,17 @@
 package io.luna.game.model.mob.block;
 
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.EnumSet;
+import java.util.Iterator;
 
 /**
  * A model that manages update flags for mobs.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class UpdateFlagSet {
+public final class UpdateFlagSet implements Iterable<UpdateFlag> {
 
     /**
      * An enum representing update flags.
@@ -30,6 +34,12 @@ public final class UpdateFlagSet {
      * A set that tracks flagged update blocks.
      */
     private final EnumSet<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
+
+    @NotNull
+    @Override
+    public Iterator<UpdateFlag> iterator() {
+        return flags.iterator();
+    }
 
     /**
      * Flag an update block.
@@ -73,5 +83,8 @@ public final class UpdateFlagSet {
      */
     public void clear() {
         flags.clear();
+    }
+    public int size() {
+        return flags.size();
     }
 }

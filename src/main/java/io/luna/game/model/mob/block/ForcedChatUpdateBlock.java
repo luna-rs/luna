@@ -8,7 +8,7 @@ import io.luna.net.codec.ByteMessage;
 /**
  * An {@link UpdateBlock} implementation for the {@code FORCED_CHAT} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ForcedChatUpdateBlock extends UpdateBlock {
 
@@ -33,11 +33,11 @@ public final class ForcedChatUpdateBlock extends UpdateBlock {
 
     @Override
     public int getPlayerMask() {
-        return 4;
+        return 0x10;
     }
 
     @Override
     public int getNpcMask() {
-        return 1;
+        return 0x20;
     }
 }

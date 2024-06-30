@@ -9,7 +9,7 @@ import io.luna.net.codec.ValueType;
 /**
  * An {@link UpdateBlock} implementation for the {@code TRANSFORM} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class TransformUpdateBlock extends UpdateBlock {
 
@@ -23,11 +23,11 @@ public final class TransformUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         int transformId = unwrap(npc.getTransformId());
-        msg.putShort(transformId, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(transformId, ValueType.ADD);
     }
 
     @Override
     public int getNpcMask() {
-        return 2;
+        return 0x1;
     }
 }

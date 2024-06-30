@@ -11,7 +11,7 @@ import io.luna.net.codec.ValueType;
 /**
  * An {@link UpdateBlock} implementation for the {@code FACE_POSITION} update block.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class FacePositionUpdateBlock extends UpdateBlock {
 
@@ -25,24 +25,24 @@ public final class FacePositionUpdateBlock extends UpdateBlock {
     @Override
     public void encodeForPlayer(Player player, ByteMessage msg) {
         Position position = unwrap(player.getFacePosition());
-        msg.putShort(2 * position.getX() + 1, ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort(2 * position.getY() + 1, ByteOrder.LITTLE);
+        msg.putShort(position.getX() * 2 + 1);
+        msg.putShort(position.getY() * 2 + 1);
     }
 
     @Override
     public void encodeForNpc(Npc npc, ByteMessage msg) {
         Position position = unwrap(npc.getFacePosition());
-        msg.putShort(2 * position.getX() + 1, ByteOrder.LITTLE);
-        msg.putShort(2 * position.getY() + 1, ByteOrder.LITTLE);
+        msg.putShort(position.getX() * 2 + 1, ByteOrder.LITTLE, ValueType.ADD);
+        msg.putShort(position.getY() * 2 + 1, ByteOrder.LITTLE);
     }
 
     @Override
     public int getPlayerMask() {
-        return 2;
+        return 0x2;
     }
 
     @Override
     public int getNpcMask() {
-        return 4;
+        return 0x8;
     }
 }
