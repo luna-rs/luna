@@ -2,7 +2,7 @@ package io.luna.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.Arrays;
+import java.util.function.Function;
 
 /**
  * A static-utility class that contains functions for manipulating the reflection API.
@@ -79,12 +79,11 @@ public final class ReflectionUtils {
      * @param parameters The parameters, if any.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T newInstanceOf(String className, Object... parameters) throws ClassCastException, ReflectionException {
+    public static <T> T newInstanceOf(String className, Function<Class<T>, Constructor<T>> constructorFunction,
+                                      Object... parameters) throws ClassCastException, ReflectionException {
         try {
-            Class[] parameterTypes = Arrays.stream(parameters).map(Object::getClass).toArray(Class[]::new);
-            Class forClass = Class.forName(className);
-
-            Constructor<T> constructor = forClass.getDeclaredConstructor(parameterTypes);
+            Class<?> forClass = Class.forName(className);
+            Constructor<T> constructor = constructorFunction.apply((Class<T>) forClass);
             constructor.setAccessible(true);
             return constructor.newInstance(parameters);
         } catch (ReflectiveOperationException e) {
