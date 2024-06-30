@@ -1,9 +1,12 @@
-package io.luna.game.model.mob;
+package io.luna.game.model.mob.block;
+
+import com.google.common.base.MoreObjects;
+import io.luna.util.StringUtils;
 
 /**
  * A model representing a line of player chat.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class Chat {
 
@@ -20,19 +23,26 @@ public final class Chat {
     /**
      * The message effects.
      */
-    private final int effects;
+    private final int effect;
 
     /**
      * Creates a new {@link Chat}.
      *
      * @param message The message.
      * @param color The message color.
-     * @param effects The message effects.
+     * @param effect The message effects.
      */
-    public Chat(byte[] message, int color, int effects) {
+    public Chat(byte[] message, int color, int effect) {
         this.message = message;
         this.color = color;
-        this.effects = effects;
+        this.effect = effect;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("color", color).
+                add("effects", effect).
+                add("message", StringUtils.unpackText(message)).toString();
     }
 
     /**
@@ -52,7 +62,7 @@ public final class Chat {
     /**
      * @return The message effects.
      */
-    public int getEffects() {
-        return effects & 0xff;
+    public int getEffect() {
+        return effect & 0xff;
     }
 }

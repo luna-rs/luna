@@ -1,9 +1,9 @@
-package io.luna.game.model.mob;
+package io.luna.game.model.mob.block;
 
 /**
  * A model representing an animation performed by a mob.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class Animation {
 
@@ -12,6 +12,7 @@ public final class Animation {
      */
     public enum AnimationPriority {
         LOW(-1),
+
         NORMAL(0),
         HIGH(1);
 

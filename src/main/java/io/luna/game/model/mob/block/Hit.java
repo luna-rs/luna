@@ -1,9 +1,9 @@
-package io.luna.game.model.mob;
+package io.luna.game.model.mob.block;
 
 /**
  * A model representing a hitsplat on a mob.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class Hit {
 
