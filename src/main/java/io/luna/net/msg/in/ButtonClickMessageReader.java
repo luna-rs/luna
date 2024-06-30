@@ -21,12 +21,13 @@ public final class ButtonClickMessageReader extends GameMessageReader<ButtonClic
 
     @Override
     public boolean validate(Player player, ButtonClickEvent event) {
-        if (event.getId() < 0) {
-            return false;
-        }
+        return event.getId() >= 0;
+    }
+
+    @Override
+    public void handle(Player player, ButtonClickEvent event) {
         if (Luna.settings().game().betaMode()) {
-            player.sendMessage(event);
+            player.sendMessage("[ButtonClickMessageReader]: " + event.getId());
         }
-        return true;
     }
 }
