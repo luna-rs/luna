@@ -14,9 +14,9 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A model representing metadata for a player-assigned value.
+ * A model representing metadata for a attribute value.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class Attribute<T> {
 
@@ -89,6 +89,17 @@ public final class Attribute<T> {
     public Attribute(T initialValue) {
         this.initialValue = requireNonNull(initialValue, "Initial value cannot be <null>.");
         valueType = (Class<T>) initialValue.getClass();
+    }
+
+    /**
+     * Creates a new {@link Attribute} that might not have an initial value.
+     *
+     * @param type The type of the value.
+     * @param initialValue The initial value, possibly {@code null}.
+     */
+    public Attribute(Class<T> type, T initialValue) {
+        this.initialValue = initialValue;
+        valueType = type;
     }
 
     /**
