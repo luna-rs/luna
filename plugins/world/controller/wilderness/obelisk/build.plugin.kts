@@ -1,6 +1,6 @@
-package world.areas.wilderness.obelisk
+package world.controller.wilderness.obelisk
 
-import api.bootstrap.plugin
+import api.plugin.plugin
 
 plugin {
     name = "Obelisks"
