@@ -11,7 +11,7 @@ import java.util.Optional;
  * A model representing the displayed interactions when right-clicking a Player, along with functions that
  * manipulate those interactions.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class PlayerInteractionMenu implements Iterable<PlayerInteraction> {
 

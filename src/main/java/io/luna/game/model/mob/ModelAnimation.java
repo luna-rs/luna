@@ -3,7 +3,7 @@ package io.luna.game.model.mob;
 /**
  * A model representing the default animation of a {@link Player} model.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class ModelAnimation {
 
@@ -15,37 +15,37 @@ public final class ModelAnimation {
         /**
          * The standing animation.
          */
-        private int standingId = 808;
+        private int standingId = 0x328;
 
         /**
          * The standing and turning animation.
          */
-        private int standingTurnId = 823;
+        private int standingTurnId = 0x337;
 
         /**
          * The walking animation.
          */
-        private int walkingId = 819;
+        private int walkingId = 0x333;
 
         /**
          * The 180 degree turning animation.
          */
-        private int turning180DegreesId = 820;
+        private int turning180DegreesId = 0x334;
 
         /**
          * The 90 degree clockwise turning animation.
          */
-        private int turning90DegreesCwId = 821;
+        private int turning90DegreesCwId = 0x335;
 
         /**
          * The 90 degree counterclockwise turning animation.
          */
-        private int turning90DegreesCcwId = 822;
+        private int turning90DegreesCcwId = 0x336;
 
         /**
          * The running animation.
          */
-        private int runningId = 824;
+        private int runningId = 0x338;
 
 
         /**
@@ -164,12 +164,12 @@ public final class ModelAnimation {
     /**
      * The 90 degree clockwise turning animation.
      */
-    private final int turning90DegreesCwId;
+    private final int turningRightId;
 
     /**
      * The 90 degree counterclockwise turning animation.
      */
-    private final int turning90DegreesCcwId;
+    private final int turningLeftId;
 
     /**
      * The running animation.
@@ -183,18 +183,18 @@ public final class ModelAnimation {
      * @param standingTurnId The standing and turning animation.
      * @param walkingId The walking animation.
      * @param turning180DegreesId The 180 degree turning animation.
-     * @param turning90DegreesCwId The 90 degree clockwise turning animation.
-     * @param turning90DegreesCcwId The 90 degree counterclockwise turning animation.
+     * @param turningRightId The 90 degree clockwise turning animation.
+     * @param turningLeftId The 90 degree counterclockwise turning animation.
      * @param runningId The running animation.
      */
     private ModelAnimation(int standingId, int standingTurnId, int walkingId, int turning180DegreesId,
-                          int turning90DegreesCwId, int turning90DegreesCcwId, int runningId) {
+                           int turningRightId, int turningLeftId, int runningId) {
         this.standingId = standingId;
         this.standingTurnId = standingTurnId;
         this.walkingId = walkingId;
         this.turning180DegreesId = turning180DegreesId;
-        this.turning90DegreesCwId = turning90DegreesCwId;
-        this.turning90DegreesCcwId = turning90DegreesCcwId;
+        this.turningRightId = turningRightId;
+        this.turningLeftId = turningLeftId;
         this.runningId = runningId;
     }
 
@@ -229,15 +229,15 @@ public final class ModelAnimation {
     /**
      * @return The 90 degree clockwise turning animation.
      */
-    public int getTurning90DegreesCwId() {
-        return turning90DegreesCwId;
+    public int getTurningRightId() {
+        return turningRightId;
     }
 
     /**
      * @return The 90 degree counterclockwise turning animation.
      */
-    public int getTurning90DegreesCcwId() {
-        return turning90DegreesCcwId;
+    public int getTurningLeftId() {
+        return turningLeftId;
     }
 
     /**

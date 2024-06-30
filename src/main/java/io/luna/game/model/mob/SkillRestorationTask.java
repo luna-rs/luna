@@ -5,7 +5,7 @@ import io.luna.game.task.Task;
 /**
  * A task that will restore boosted and depleted skills every minute.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class SkillRestorationTask extends Task {
 
@@ -38,18 +38,18 @@ public final class SkillRestorationTask extends Task {
     @Override
     protected void execute() {
         boolean done = true;
-        for (var next : skills) {
-            int level = next.getLevel();
-            int staticLevel = next.getStaticLevel();
-            if (next.getId() == Skill.PRAYER) {
+        for (Skill nextSkill : skills) {
+            int level = nextSkill.getLevel();
+            int staticLevel = nextSkill.getStaticLevel();
+            if (nextSkill.getId() == Skill.PRAYER) {
                 continue;
             }
             if (level != staticLevel) {
               done = false;
               if(level < staticLevel) {
-                  next.addLevels(1, false);
+                  nextSkill.addLevels(1, false);
               } else {
-                  next.removeLevels(1);
+                  nextSkill.removeLevels(1);
               }
             }
         }

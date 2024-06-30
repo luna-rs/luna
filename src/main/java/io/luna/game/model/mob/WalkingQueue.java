@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import com.google.common.base.MoreObjects;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -7,14 +8,13 @@ import io.luna.game.model.Position;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
-import java.util.Queue;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A model representing an implementation of the walking queue.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  * @author Graham
  */
 public final class WalkingQueue {
@@ -24,7 +24,7 @@ public final class WalkingQueue {
     /**
      * A model representing a step in the walking queue.
      */
-    public static final class Step {
+    public static final class Step {// todo delete
 
         /**
          * The x coordinate.
@@ -74,6 +74,14 @@ public final class WalkingQueue {
         @Override
         public int hashCode() {
             return Objects.hash(x, y);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("x", x)
+                    .add("y", y)
+                    .toString();
         }
 
         /**
@@ -137,32 +145,27 @@ public final class WalkingQueue {
         Direction runningDirection = Direction.NONE;
 
         boolean restoreEnergy = true;
-
         Step next = this.current.poll();
         if (next != null) {
             previous.add(next);
             walkingDirection = Direction.between(current, next);
             current = next;
-
-            if (mob.getType() == EntityType.PLAYER) {
-                Player player = mob.asPlr();
-                if (player.isRunning() || runningPath) {
-                    next = decrementRunEnergy(player) ? this.current.poll() : null;
-                    if (next != null) {
-                        restoreEnergy = false;
-                        previous.add(next);
-                        runningDirection = Direction.between(current, next);
-                        current = next;
-                    }
+            if (runningPath) {
+                next = decrementRunEnergy() ? this.current.poll() : null;
+                if (next != null) {
+                    restoreEnergy = false;
+                    previous.add(next);
+                    runningDirection = Direction.between(current, next);
+                    current = next;
+                } else {
+                    runningPath = false;
                 }
             }
-
-
             Position newPosition = new Position(current.getX(), current.getY(), mob.getPosition().getZ());
             mob.setPosition(newPosition);
         }
 
-        if (restoreEnergy && mob.getType() == EntityType.PLAYER) {
+        if (restoreEnergy) {
             incrementRunEnergy();
         }
 
@@ -200,7 +203,7 @@ public final class WalkingQueue {
      * @param step The step to add.
      */
     public void addFirst(Step step) {
-        current.clear();
+        /*current.clear();
         runningPath = false;
 
         Queue<Step> backtrack = new ArrayDeque<>();
@@ -216,8 +219,7 @@ public final class WalkingQueue {
                 return;
             }
         }
-        previous.clear();
-
+        previous.clear();*/ // TODO test more
         add(step);
     }
 
@@ -268,7 +270,11 @@ public final class WalkingQueue {
      *
      * @return {@code false} if the player can no longer run.
      */
-    private boolean decrementRunEnergy(Player player) {
+    private boolean decrementRunEnergy() {
+        if (mob.getType() != EntityType.PLAYER) {
+            return true;
+        }
+        Player player = (Player) mob;
         double totalWeight = player.getWeight();
         double energyReduction = 0.117 * 2 * Math
                 .pow(Math.E, 0.0027725887222397812376689284858327062723020005374410 * totalWeight);
@@ -287,6 +293,8 @@ public final class WalkingQueue {
      * A function that implements an algorithm to restore run energy.
      */
     private void incrementRunEnergy() {
+        if (mob.getType() != EntityType.PLAYER)
+            return;
         Player player = mob.asPlr();
 
         double runEnergy = player.getRunEnergy();
@@ -327,7 +335,6 @@ public final class WalkingQueue {
      * @param runningPath The new value.
      */
     public void setRunningPath(boolean runningPath) {
-        checkState(mob.getType() == EntityType.PLAYER, "cannot change running value for NPCs");
         this.runningPath = runningPath;
     }
 
@@ -344,6 +351,9 @@ public final class WalkingQueue {
      * @param locked The new value.
      */
     public void setLocked(boolean locked) {
+        if (locked) {
+            clear();
+        }
         this.locked = locked;
     }
 }

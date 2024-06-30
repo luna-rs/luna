@@ -15,7 +15,7 @@ import java.util.OptionalInt;
 /**
  * A model representing a non-player-controlled mob.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class Npc extends Mob {
 

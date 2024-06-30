@@ -10,6 +10,9 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.MobDeathTask.NpcDeathTask;
 import io.luna.game.model.mob.MobDeathTask.PlayerDeathTask;
 import io.luna.game.model.mob.attr.AttributeMap;
+import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.block.Hit;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
@@ -24,7 +27,7 @@ import static io.luna.game.model.mob.Skill.HITPOINTS;
 /**
  * A model representing an entity able to move around.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class Mob extends Entity {
 
@@ -195,7 +198,8 @@ public abstract class Mob extends Entity {
      *
      * @param amount The new health.
      */
-    public final void setHealth(int amount) {
+    public final void setHealth(int amount) { // TODO rename into dealdamage or something, hp.getLevel() portion is
+        // confusing when you just want to modify the skill itself
         var hp = skill(HITPOINTS);
         if (hp.getLevel() > 0) {
             hp.setLevel(amount);
@@ -393,7 +397,7 @@ public abstract class Mob extends Entity {
             face(entity.getPosition());
         }
         interactingWith = Optional.ofNullable(entity);
-    }
+    } // TODO Reloading region resets interaction for both this and position
 
     /**
      * Resets the current {@link Entity} we are interacting with.

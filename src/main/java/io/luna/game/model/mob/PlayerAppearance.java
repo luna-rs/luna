@@ -6,18 +6,21 @@ import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
 import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.util.RandomUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
 
 /**
  * A model containing player appearance data.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class PlayerAppearance {
 
@@ -128,6 +131,20 @@ public final class PlayerAppearance {
      * An immutable map containing the valid color values.
      */
     private static final ImmutableMap<Integer, Range<Integer>> VALID_COLORS;
+
+    public static int[] randomValues() {
+        int[] appearance = new int[13];
+        int index = 0;
+        int gender = ThreadLocalRandom.current().nextInt(3) == 1 ? 1 : 0;
+        appearance[index++] = gender;
+        for (int loops = 0; loops < 7; loops++) {
+            appearance[index] = RandomUtils.random(VALID_MODELS.get(gender, index++));
+        }
+        for (int loops = 0; loops < 5; loops++) {
+            appearance[index] = RandomUtils.random(VALID_COLORS.get(index++));
+        }
+        return appearance;
+    }
 
     static {
         // Initialize and cache valid appearance values.

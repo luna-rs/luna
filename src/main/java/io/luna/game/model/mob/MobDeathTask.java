@@ -2,12 +2,12 @@ package io.luna.game.model.mob;
 
 import io.luna.Luna;
 import io.luna.LunaContext;
-import io.luna.game.event.impl.NpcDeathEvent;
-import io.luna.game.event.impl.PlayerDeathEvent;
+import io.luna.game.event.impl.DeathEvent;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
 import io.luna.game.model.def.NpcCombatDefinition;
-import io.luna.game.model.mob.Animation.AnimationPriority;
+import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.Player.SkullIcon;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
@@ -19,7 +19,7 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 /**
  * A {@link Task} that handles the death process for a {@link Mob}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public abstract class MobDeathTask<T extends Mob> extends Task {
 
@@ -44,10 +44,10 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     mob.getInterfaces().close();
                     break;
                 case DEATH:
-                    mob.getPlugins().post(new PlayerDeathEvent(mob, source));
+                    mob.getPlugins().post(new DeathEvent(mob, source));
                     break;
                 case POST_DEATH:
-                    mob.teleport(Luna.settings().startingPosition());
+                    mob.teleport(Luna.settings().game().startingPosition());
                     mob.animation(new Animation(65535));
                     mob.queue(new WalkableInterfaceMessageWriter(65535));
                     mob.getSkills().resetAll();
@@ -80,7 +80,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                             mob.animation(new Animation(def.getDeathAnimation(), AnimationPriority.HIGH)));
                     break;
                 case DEATH:
-                    mob.getPlugins().post(new NpcDeathEvent(mob, source));
+                    mob.getPlugins().post(new DeathEvent(mob, source));
                     world.getNpcs().remove(mob);
                     break;
                 case POST_DEATH:

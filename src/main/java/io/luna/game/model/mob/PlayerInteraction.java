@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * the name "Attack" are <strong>always</strong> pinned as long as the combat level of the Player interacting
  * is higher than the Player being interacted with.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class PlayerInteraction {
 

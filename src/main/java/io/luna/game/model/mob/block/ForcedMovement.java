@@ -1,12 +1,13 @@
-package io.luna.game.model.mob;
+package io.luna.game.model.mob.block;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
+import io.luna.game.model.mob.Player;
 
 /**
  * A model representing a route for forced player movement.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ForcedMovement {
 

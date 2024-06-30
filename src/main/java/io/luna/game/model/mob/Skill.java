@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A model representing a skill within a skill set.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class Skill {
 
@@ -244,7 +244,7 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
-        amount = amount * Luna.settings().experienceMultiplier();
+        amount = amount * Luna.settings().game().experienceMultiplier();
         setExperience(experience + amount);
     }
 
@@ -286,6 +286,11 @@ public final class Skill {
             staticLevel = SkillSet.levelForExperience((int) experience);
         }
         return staticLevel;
+    }
+
+    public void setStaticLevel(int level) {
+        setExperience(SkillSet.experienceForLevel(level));
+
     }
 
     /**

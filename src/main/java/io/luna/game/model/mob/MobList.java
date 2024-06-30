@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkState;
  * are cached in order to improve performance.
  *
  * @param <E> The type of mobs to contain.
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class MobList<E extends Mob> implements Iterable<E> {
 
@@ -219,7 +219,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
-     * logout packet or use {@link Player#disconnect()} to destroy the player's connection.</strong>
+     * logout packet or use {@link Player#disconnect()} to disconnect the player.</strong>
      *
      * @param mob The mob to remove.
      */
@@ -249,6 +249,9 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @return The mob.
      */
     public E get(int index) {
+        if (index < 0 || index >= capacity()) {
+            return null;
+        }
         return mobs[index];
     }
 

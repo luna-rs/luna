@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A model representing a group of skills.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class SkillSet implements Iterable<Skill> {
 
@@ -79,8 +79,8 @@ public final class SkillSet implements Iterable<Skill> {
         int points = 0, output = 0;
         for (int lvl = 1; lvl <= 99; lvl++) {
             experienceTable[lvl] = output;
-            points += Math.floor(lvl + 300.0 * Math.pow(2.0, lvl / 7.0));
-            output = (int) Math.floor(points / 4);
+            points += (int) Math.floor(lvl + 300.0 * Math.pow(2.0, lvl / 7.0));
+            output = (int) Math.floor(points / 4.0);
         }
         EXPERIENCE_TABLE = experienceTable;
     }
@@ -232,7 +232,7 @@ public final class SkillSet implements Iterable<Skill> {
 
             double defenceCalc = defence * 0.25;
             double hitpointsCalc = hitpoints * 0.25;
-            double prayerCalc = (prayer / 2) * 0.25;
+            double prayerCalc = (prayer / 2.0) * 0.25;
 
             double mag = magic * 1.5;
             double ran = ranged * 1.5;
@@ -275,8 +275,7 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * @return {@code true} if skills are being restored. This essentially means that the player's dynamic levels
-     * aren't equal to their static levels (98/99 Attack lvl, etc).
+     * @return {@code true} if skills are being restored.
      */
     public boolean isRestoring() {
         return restoring;

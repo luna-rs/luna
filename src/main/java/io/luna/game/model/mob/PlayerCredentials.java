@@ -5,7 +5,7 @@ import io.luna.util.StringUtils;
 /**
  * A model representing a player's credentials.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class PlayerCredentials {
 

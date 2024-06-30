@@ -8,7 +8,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ValueType;
 
 import java.util.OptionalInt;
 import java.util.function.Function;
@@ -176,8 +175,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         buf.putShort(model.getStandingTurnId());
         buf.putShort(model.getWalkingId());
         buf.putShort(model.getTurning180DegreesId());
-        buf.putShort(model.getTurning90DegreesCwId());
-        buf.putShort(model.getTurning90DegreesCcwId());
+        buf.putShort(model.getTurningRightId());
+        buf.putShort(model.getTurningLeftId());
         buf.putShort(model.getRunningId());
     }
 
