@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
+import io.luna.LunaContext;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.Attribute;
 import io.luna.util.SqlConnectionPool;
@@ -11,11 +12,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A {@link PlayerSerializer} implementation that stores persistent player data in an {@code SQL} database.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class SqlPlayerSerializer extends PlayerSerializer {
 
@@ -27,16 +30,16 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     /**
      * The connection pool.
      */
-    private final SqlConnectionPool connectionPool;
+    private final SqlConnectionPool connectionPool = new SqlConnectionPool.Builder()
+            .poolName("PlayerDataPersistence")
+            .database("luna_players")
+            .build();
 
     /**
      * Creates a new {@link SqlPlayerSerializer}.
      */
-    public SqlPlayerSerializer() throws SQLException {
-        connectionPool = new SqlConnectionPool.Builder()
-                .poolName("PlayerDataPersistence")
-                .database("luna_players")
-                .build();
+    public SqlPlayerSerializer(LunaContext context) throws SQLException {
+        super(context);
     }
 
     @Override
@@ -76,6 +79,38 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
         }
     }
 
+    @Override
+    public Set<String> loadBotUsernames() throws Exception {
+        Set<String> names = new HashSet<>();
+        try (Connection connection = connectionPool.take();
+             PreparedStatement loadData = connection.prepareStatement("SELECT username FROM main_data WHERE bot = 1;")) {
+            try (var results = loadData.executeQuery()) {
+                while (results.next()) {
+                    names.add(results.getString("username"));
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Persistent bot data could not be loaded.", e);
+        }
+        return names;
+    }
+
+    @Override
+    public boolean delete(String username) throws Exception {
+        // TODO Delete skills data
+        try (Connection connection = connectionPool.take();
+             PreparedStatement loadData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;")) {
+            loadData.setString(1, username);
+            if (loadData.executeUpdate() < 1) {
+                return false;
+            }
+        } catch (Exception e) {
+            logger.warn(new ParameterizedMessage("Could not delete record for {}.", username), e);
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Saves a new player to the database.
      *
@@ -85,35 +120,35 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
      * @throws SQLException If any errors occur.
      */
     private void saveNewPlayer(Connection connection, String username, PlayerData data) throws SQLException {
-        try (var insertPlayer = connection.prepareStatement("INSERT INTO main_data (username, password, rights, json_data) VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-             var insertSkills = connection.prepareStatement("INSERT INTO skills_data (player_id,attack_xp,attack_level,defence_xp,defence_level,strength_xp,strength_level,hitpoints_xp,hitpoints_level," +
+        try (var insertPlayer = connection.prepareStatement("INSERT INTO main_data (username, password, bot, rights, json_data) VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+             var insertSkills = connection.prepareStatement("INSERT INTO skills_data (id,attack_xp,attack_level,defence_xp,defence_level,strength_xp,strength_level,hitpoints_xp,hitpoints_level," +
                      "ranged_xp,ranged_level,prayer_xp,prayer_level,magic_xp,magic_level,cooking_xp,cooking_level,woodcutting_xp,woodcutting_level,fletching_xp,fletching_level,fishing_xp,fishing_level," +
                      "firemaking_xp,firemaking_level,crafting_xp,crafting_level,smithing_xp,smithing_level,mining_xp,mining_level,herblore_xp,herblore_level,agility_xp,agility_level,thieving_xp,thieving_level," +
                      "slayer_xp,slayer_level,farming_xp,farming_level,runecrafting_xp,runecrafting_level,total_level) " +
                      "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-             var updateJsonData = connection.prepareStatement("UPDATE main_data SET json_data = ? WHERE player_id = ?;")) {
-
+             var updateJsonData = connection.prepareStatement("UPDATE main_data SET json_data = ? WHERE id = ?;")) {
             // Insert player data to the main table.
             insertPlayer.setString(1, username);
             insertPlayer.setString(2, data.password);
-            insertPlayer.setString(3, data.rights.name());
-            insertPlayer.setString(4, "");
+            insertPlayer.setBoolean(3, data.bot);
+            insertPlayer.setString(4, data.rights.name());
+            insertPlayer.setString(5, "[]");
             insertPlayer.executeUpdate();
 
             // Get database ID.
-            int playerId = -1;
+            int databaseId = -1;
             try (var results = insertPlayer.getGeneratedKeys()) {
                 if (results.next()) {
-                    playerId = results.getInt(1);
+                    databaseId = results.getInt(1);
                 }
             }
-            if (playerId == -1) {
+            if (databaseId == -1) {
                 connection.rollback();
                 return;
             }
 
             // Insert player data to the skills table.
-            insertSkills.setInt(1, playerId);
+            insertSkills.setInt(1, databaseId);
             addSkillParameters(2, data.skills, insertSkills);
             if (insertSkills.executeUpdate() < 1) {
                 connection.rollback();
@@ -121,9 +156,9 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
             }
 
             // Update json data with database ID.
-            data.databaseId = playerId;
+            data.databaseId = databaseId;
             updateJsonData.setString(1, Attribute.getGsonInstance().toJson(data));
-            updateJsonData.setInt(2, playerId);
+            updateJsonData.setInt(2, databaseId);
             if (updateJsonData.executeUpdate() < 1) {
                 connection.rollback();
                 return;
@@ -145,11 +180,11 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
      * @throws SQLException If any errors occur.
      */
     private void saveExistingPlayer(Connection connection, PlayerData data) throws SQLException {
-        try (var updatePlayer = connection.prepareStatement("UPDATE main_data SET password = ?, rights = ?, json_data = ? WHERE player_id = ?;", Statement.RETURN_GENERATED_KEYS);
+        try (var updatePlayer = connection.prepareStatement("UPDATE main_data SET password = ?, rights = ?, json_data = ? WHERE id = ?;", Statement.RETURN_GENERATED_KEYS);
              var updateSkills = connection.prepareStatement("UPDATE skills_data SET attack_xp = ?,attack_level = ?,defence_xp = ?,defence_level = ?,strength_xp = ?,strength_level = ?,hitpoints_xp = ?,hitpoints_level = ?," +
                      "ranged_xp = ?,ranged_level = ?,prayer_xp = ?,prayer_level = ?,magic_xp = ?,magic_level = ?,cooking_xp = ?,cooking_level = ?,woodcutting_xp = ?,woodcutting_level = ?,fletching_xp = ?,fletching_level = ?,fishing_xp = ?,fishing_level = ?," +
                      "firemaking_xp = ?,firemaking_level = ?,crafting_xp = ?,crafting_level = ?,smithing_xp = ?,smithing_level = ?,mining_xp = ?,mining_level = ?,herblore_xp = ?,herblore_level = ?,agility_xp = ?,agility_level = ?,thieving_xp = ?,thieving_level = ?," +
-                     "slayer_xp = ?,slayer_level = ?,farming_xp = ?,farming_level = ?,runecrafting_xp = ?,runecrafting_level = ?,total_level = ? WHERE player_id = ?;")) {
+                     "slayer_xp = ?,slayer_level = ?,farming_xp = ?,farming_level = ?,runecrafting_xp = ?,runecrafting_level = ?,total_level = ? WHERE id = ?;")) {
 
             // Update player data in the main table.
             updatePlayer.setString(1, data.password);

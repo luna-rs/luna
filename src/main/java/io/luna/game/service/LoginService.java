@@ -130,13 +130,20 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         logger.fatal("The login service has been shutdown.");
     }
 
+    /**
+     * Starts a worker that will handle a load request and returns the future result of the task.
+     *
+     * @param username The username of the player being loaded.
+     * @param request The request to handle.
+     * @return The result of the load ({@code true} if the login response was normal).
+     */
     private Callable<Boolean> startWorker(String username, LoginRequest request) {
         return () -> {
             var client = request.client;
             try {
                 var player = request.player;
                 var timer = Stopwatch.createStarted();
-                var loadedData = PERSISTENCE.load(username);
+                var loadedData = world.getSerializerManager().getSerializer().load(username);
                 var response = client.getLoginResponse(loadedData, player.getPassword());
                 if (response == LoginResponse.NORMAL) {
                     request.loadedData = loadedData;

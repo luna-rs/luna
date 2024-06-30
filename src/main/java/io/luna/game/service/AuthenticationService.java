@@ -3,7 +3,6 @@ package io.luna.game.service;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.game.model.World;
-import io.luna.game.model.mob.persistence.PlayerPersistence;
 import io.luna.util.ExecutorUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,11 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lare96
  */
 abstract class AuthenticationService<T> extends AbstractIdleService {
-
-    /**
-     * The player persistence manager.
-     */
-    static final PlayerPersistence PERSISTENCE = new PlayerPersistence();
 
     /**
      * The amount of requests to service per tick.
@@ -54,8 +48,7 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
 
     @Override
     protected final void startUp() throws Exception {
-        // Ensure serializer is initialized.
-        PERSISTENCE.getSerializer().init(world.getContext());
+        // Persistence services don't require startup operations.
     }
 
     /**
