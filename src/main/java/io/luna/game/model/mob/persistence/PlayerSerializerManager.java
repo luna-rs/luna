@@ -60,7 +60,13 @@ public class PlayerSerializerManager {
         String name = Luna.settings().game().serializer();
         try {
             String fullName = "io.luna.game.model.mob.persistence." + name;
-            return ReflectionUtils.newInstanceOf(fullName, world.getContext());
+            return ReflectionUtils.newInstanceOf(fullName, type -> {
+                try {
+                    return type.getDeclaredConstructor(LunaContext.class);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            }, world.getContext());
         } catch (ClassCastException e) {
             logger.fatal(new ParameterizedMessage("{} not an instance of PlayerSerializer, using PassivePlayerSerializer instead.", name), e);
             return DEFAULT.apply(world.getContext());
@@ -68,6 +74,9 @@ public class PlayerSerializerManager {
     }
 
     public PlayerSerializer getSerializer() {
+        if(serializer == null) {
+            throw new NullPointerException("Serializer was not properly computed!");
+        }
         return serializer;
     }
 }
