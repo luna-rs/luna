@@ -104,7 +104,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     boolean canFinishRequest(String username, LogoutRequest request) {
         Player player = request.player;
 
-        return (/* TODO No combat for 10 seconds? && */ player.getControllers().onLogout(player)) ||
+        return (/* TODO No combat for 10 seconds? && */ player.getControllers().checkLogout()) ||
                 request.isTimeout();
     }
 

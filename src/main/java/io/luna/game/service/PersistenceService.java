@@ -48,11 +48,6 @@ public final class PersistenceService extends AbstractIdleService {
     private final World world;
 
     /**
-     * The serializer manager.
-     */
-    private final PlayerSerializerManager serializerManager;
-
-    /**
      * The worker that will run all persistence tasks.
      */
     private final ListeningExecutorService worker;
@@ -64,8 +59,6 @@ public final class PersistenceService extends AbstractIdleService {
      */
     public PersistenceService(World world) {
         this.world = world;
-
-        serializerManager = world.getSerializerManager();
 
         ThreadFactory threadFactory = ExecutorUtils.threadFactory(PersistenceService.class);
         worker = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
@@ -107,6 +100,7 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending data transformation request for {} to a worker...", username);
         return worker.submit(() -> {
             Stopwatch timer = Stopwatch.createStarted();
+            PlayerSerializerManager serializerManager = world.getSerializerManager();
             PlayerData data = serializerManager.getSerializer().load(username);
             if (data == null) {
                 throw new NoSuchElementException("No player data available for " + username);
@@ -133,7 +127,7 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending load request for {} to a worker...", username);
         return worker.submit(() -> {
             var timer = Stopwatch.createStarted();
-            var data = serializerManager.getSerializer().load(username);
+            var data = world.getSerializerManager().getSerializer().load(username);
             logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return data;
         });
@@ -167,7 +161,7 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending save request for {} to a worker...", username);
         return worker.submit(() -> {
             var timer = Stopwatch.createStarted();
-            serializerManager.getSerializer().save(username, data);
+            world.getSerializerManager().getSerializer().save(username, data);
             logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return null;
         });
@@ -185,7 +179,7 @@ public final class PersistenceService extends AbstractIdleService {
     public ListenableFuture<Void> saveAll() {
         logger.trace("Sending mass save request to a worker...");
         List<PlayerData> saveList = new ArrayList<>(world.getPlayers().size());
-        for(Player player : world.getPlayers()) {
+        for (Player player : world.getPlayers()) {
             String username = player.getUsername();
             if (world.getLogoutService().hasRequest(username)) {
                 // The LogoutService will handle the saving.
@@ -202,7 +196,7 @@ public final class PersistenceService extends AbstractIdleService {
                     continue;
                 }
                 try {
-                    serializerManager.getSerializer().save(username, data);
+                    world.getSerializerManager().getSerializer().save(username, data);
                     logger.trace("Saved {}'s data.", username);
                 } catch (Exception e) {
                     logger.error(new ParameterizedMessage("Issue saving {}'s data during mass save.", username), e);
@@ -228,7 +222,7 @@ public final class PersistenceService extends AbstractIdleService {
         }
         return worker.submit(() -> {
             Stopwatch timer = Stopwatch.createStarted();
-            boolean successful = serializerManager.getSerializer().delete(username);
+            boolean successful = world.getSerializerManager().getSerializer().delete(username);
             if (successful) {
                 logger.info("Save record for {} has been deleted (took {}ms).", username, box(timer.elapsed().toMillis()));
             } else {
