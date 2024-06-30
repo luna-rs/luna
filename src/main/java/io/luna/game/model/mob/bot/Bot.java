@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -38,8 +37,6 @@ import static java.util.Objects.requireNonNull;
  * All passwords for bots by default are randomized series of numbers and letters. Bots are seen as regular players
  * by the server, the only big differences really being persistence and the way networking is handled. For more info
  * see {@link BotRepository} (persistence) and {@link BotClient} (networking).
- * <p>
- * <p>
  * All logic processing is done through a {@link BotScript} which controls how the bot will function in the world, and
  * {@link BotClient} gives access to all bot IO. For bots that are persisted and automatically login when the server
  * starts, see {@link BotRepository}.
@@ -208,7 +205,7 @@ public final class Bot extends Player {
         }
 
         // Load data for bot based on username.
-        ListenableFuture<PlayerData> result = world.getPersistenceService().load(username, true);
+        ListenableFuture<PlayerData> result = world.getPersistenceService().load(username);
         result.addListener(() -> {
             PlayerData data = Futures.getUnchecked(result);
             if (data != null && temporary) {
@@ -296,9 +293,9 @@ public final class Bot extends Player {
     public void randomizeEquipment() {
         Multimap<Integer, EquipmentDefinition> sorted = ArrayListMultimap.create();
         EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this)).forEach(def -> sorted.put(def.getIndex(), def));
-        for (var lol : sorted.asMap().entrySet()) {
-            int index = lol.getKey();
-            List<EquipmentDefinition> equipmentList = new ArrayList<>(lol.getValue());
+        for (var entry : sorted.asMap().entrySet()) {
+            int index = entry.getKey();
+            List<EquipmentDefinition> equipmentList = new ArrayList<>(entry.getValue());
 
             getEquipment().set(index, new Item(RandomUtils.random(equipmentList).getId()));
         }

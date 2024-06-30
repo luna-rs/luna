@@ -3,7 +3,6 @@ package io.luna.game.model.mob.bot;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
@@ -41,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Manages the data for and building of all incoming and outgoing messages. This class should ideally be the main
@@ -174,7 +172,7 @@ public final class BotMessageHandler {
             msg.putShort(itemId, ByteOrder.LITTLE);
             msg.putShort(localObject.getPosition().getY(), ByteOrder.LITTLE);
             msg.putShort(useInventoryIndex);
-            msg.putShort(localObject.getPosition().getX(), ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(localObject.getPosition().getX(), ByteOrder.LITTLE, ValueType.ADD);
             client.queueSimulated(new GameMessage(152, MessageType.FIXED, msg));
             return true;
         }
@@ -195,7 +193,7 @@ public final class BotMessageHandler {
             msg.putShort(targetId);
             msg.putShort(useInventoryIndex, ByteOrder.LITTLE);
             msg.putShort(usedId, ByteOrder.LITTLE);
-            msg.putShort(3214, ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
             msg.putShort(withInventoryIndex, ValueType.ADD);
             msg.putShort(3214, ValueType.ADD);
             client.queueSimulated(new GameMessage(1, MessageType.FIXED, msg));
@@ -219,7 +217,7 @@ public final class BotMessageHandler {
             ByteMessage msg = ByteMessage.raw();
             msg.putShort(localNpc.getIndex());
             msg.putShort(itemId, ByteOrder.LITTLE);
-            msg.putShort(3214, ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
             msg.putShort(useInventoryIndex);
             client.queueSimulated(new GameMessage(57, MessageType.FIXED, msg));
             return true;
@@ -241,7 +239,7 @@ public final class BotMessageHandler {
             }
             ByteMessage msg = ByteMessage.raw();
             msg.putShort(itemId, ByteOrder.LITTLE);
-            msg.putShort(useInventoryIndex, ValueType.ADD, ByteOrder.LITTLE);
+            msg.putShort(useInventoryIndex, ByteOrder.LITTLE, ValueType.ADD);
             msg.putShort(3214);
             msg.putShort(localPlayer.getIndex(), ValueType.ADD);
             client.queueSimulated(new GameMessage(143, MessageType.FIXED, msg));
@@ -456,8 +454,8 @@ public final class BotMessageHandler {
         }
         ByteMessage msg = ByteMessage.raw();
         msg.putShort(inventoryIndex, ByteOrder.LITTLE);
-        msg.putShort(itemId, ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort(3214, ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
+        msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
         client.queueSimulated(new GameMessage(4, MessageType.FIXED, msg));
         return true;
     }
@@ -586,7 +584,7 @@ public final class BotMessageHandler {
                 opcode = 112;
                 break;
             case 2:
-                msg.putShort(index, ValueType.ADD, ByteOrder.LITTLE);
+                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
                 opcode = 13;
                 break;
             case 3:
@@ -617,8 +615,8 @@ public final class BotMessageHandler {
             return false;
         }
         ByteMessage msg = ByteMessage.raw();
-        msg.putShort(localItem.getId(), ValueType.ADD, ByteOrder.LITTLE);
-        msg.putShort(localItem.getPosition().getX(), ValueType.ADD, ByteOrder.LITTLE);
+        msg.putShort(localItem.getId(), ByteOrder.LITTLE, ValueType.ADD);
+        msg.putShort(localItem.getPosition().getX(), ByteOrder.LITTLE, ValueType.ADD);
         msg.putShort(localItem.getPosition().getY(), ValueType.ADD);
         client.queueSimulated(new GameMessage(71, MessageType.FIXED, msg));
         return true;
@@ -667,7 +665,7 @@ public final class BotMessageHandler {
             case 3:
                 msg.putShort(x, ByteOrder.LITTLE);
                 msg.putShort(y);
-                msg.putShort(id, ValueType.ADD, ByteOrder.LITTLE);
+                msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
                 opcode = 50;
                 break;
         }
@@ -692,7 +690,7 @@ public final class BotMessageHandler {
         int opcode = -1;
         switch (option) {
             case 1:
-                msg.putShort(index, ValueType.ADD, ByteOrder.LITTLE);
+                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
                 opcode = 245;
                 break;
             case 2:

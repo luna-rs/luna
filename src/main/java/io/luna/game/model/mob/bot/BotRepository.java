@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import io.luna.game.model.World;
+import io.luna.game.model.mob.persistence.PlayerSerializerManager;
 import io.luna.game.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -118,7 +119,8 @@ public final class BotRepository implements Iterable<String> {
     public void load() {
         if (persistentNames.isEmpty()) {
             try {
-                Set<String> loadedNames = world.getPersistenceService().loadBotUsernames();
+                PlayerSerializerManager serializerManager = world.getSerializerManager();
+                Set<String> loadedNames = serializerManager.getSerializer().loadBotUsernames();
                 if (!loadedNames.isEmpty()) {
                     persistentNames.addAll(loadedNames);
 
