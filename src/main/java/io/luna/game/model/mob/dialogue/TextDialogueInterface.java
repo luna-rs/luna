@@ -3,12 +3,11 @@ package io.luna.game.model.mob.dialogue;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
-import io.luna.util.DialogueUtils;
 
 /**
  * A {@link DialogueInterface} that opens a dialogue with text and no head model.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class TextDialogueInterface extends DialogueInterface {
 

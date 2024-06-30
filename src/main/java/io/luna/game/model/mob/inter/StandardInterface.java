@@ -6,7 +6,7 @@ import io.luna.net.msg.out.InterfaceMessageWriter;
 /**
  * An {@link AbstractInterface} implementation representing the most common standard interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class StandardInterface extends AbstractInterface {
 

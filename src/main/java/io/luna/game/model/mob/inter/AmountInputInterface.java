@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 /**
  * An {@link InputInterface} implementation that opens an "Enter amount" interface.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class AmountInputInterface extends InputInterface {
 

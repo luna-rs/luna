@@ -6,7 +6,7 @@ import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 /**
  * An {@link AbstractInterface} implementation that opens a walkable interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class WalkableInterface extends AbstractInterface {
 

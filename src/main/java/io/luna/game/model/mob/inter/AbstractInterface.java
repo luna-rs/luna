@@ -5,9 +5,9 @@ import io.luna.game.model.mob.Player;
 import java.util.OptionalInt;
 
 /**
- * A stateful abstraction model representing an interface that can be opened and closed on a Player's screen.
+ * A stateful abstraction model representing an interface.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class AbstractInterface {
 

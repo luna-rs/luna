@@ -8,7 +8,7 @@ import java.util.OptionalInt;
 /**
  * An {@link AbstractInterface} implementation that opens an input interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class InputInterface extends AbstractInterface {
 

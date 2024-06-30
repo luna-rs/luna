@@ -6,7 +6,7 @@ import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 /**
  * A {@link StandardInterface} implementation that opens standard and inventory overlay interfaces.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class InventoryOverlayInterface extends StandardInterface {
 

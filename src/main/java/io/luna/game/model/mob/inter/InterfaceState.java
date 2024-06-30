@@ -3,7 +3,7 @@ package io.luna.game.model.mob.inter;
 /**
  * An enumerated type whose elements represent all possible states for an interface to be in.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public enum InterfaceState {
 

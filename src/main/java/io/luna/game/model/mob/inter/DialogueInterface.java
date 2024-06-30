@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 /**
  * An {@link AbstractInterface} implementation that opens a dialogue interface.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public class DialogueInterface extends StandardInterface {
 
@@ -79,5 +79,9 @@ public class DialogueInterface extends StandardInterface {
      */
     public void setCloseAction(Consumer<Player> closeAction) {
         this.closeAction = closeAction;
+    }
+
+    public boolean hasCloseAction() {
+        return closeAction != null;
     }
 }

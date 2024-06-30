@@ -10,7 +10,7 @@ import java.util.Optional;
 /**
  * A collection of {@link AbstractInterface}s that are displayed on the Player's game screen.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class AbstractInterfaceSet {
 
@@ -175,10 +175,10 @@ public final class AbstractInterfaceSet {
      *
      * @param type The type to cast to.
      * @param <I> The type.
-     * @return The casted interface.
+     * @return The cast interface.
      */
     public <I extends StandardInterface> Optional<I> standardTo(Class<I> type) {
-        if (!currentStandard.isPresent()) {
+        if (currentStandard.isEmpty()) {
             return Optional.empty();
         }
 
@@ -219,10 +219,10 @@ public final class AbstractInterfaceSet {
      *
      * @param type The type to cast to.
      * @param <I> The type.
-     * @return The casted interface.
+     * @return The cast interface.
      */
     public <I extends InputInterface> Optional<I> inputTo(Class<I> type) {
-        if (!currentInput.isPresent()) {
+        if (currentInput.isEmpty()) {
             return Optional.empty();
         }
 
@@ -256,10 +256,10 @@ public final class AbstractInterfaceSet {
      *
      * @param type The type to cast to.
      * @param <I> The type.
-     * @return The casted interface.
+     * @return The cast interface.
      */
     public <I extends WalkableInterface> Optional<I> walkableTo(Class<I> type) {
-        if (!currentWalkable.isPresent()) {
+        if (currentWalkable.isEmpty()) {
             return Optional.empty();
         }
 

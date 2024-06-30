@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * An enumerated type whose elements represent dialogue facial expressions.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum Expression {
 

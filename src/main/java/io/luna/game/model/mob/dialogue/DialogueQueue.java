@@ -11,7 +11,7 @@ import java.util.function.Consumer;
  * A model representing a queue of {@link DialogueInterface}s that will be shown in sequential order. New
  * instances of this class should be created through the {@link DialogueQueueBuilder}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class DialogueQueue {
 

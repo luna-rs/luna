@@ -3,7 +3,7 @@ package io.luna.game.model.mob.inter;
 /**
  * An enumerated type representing the {@code 3} main types of interfaces.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum InterfaceType {
 

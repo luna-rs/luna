@@ -9,7 +9,7 @@ import io.luna.util.StringUtils;
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which grants the Player an item.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class GiveItemDialogueInterface extends DialogueInterface {
 
