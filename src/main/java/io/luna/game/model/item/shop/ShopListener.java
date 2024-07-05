@@ -12,7 +12,7 @@ import java.util.OptionalInt;
  * A {@link RefreshListener} implementation that queues display messages and triggers restock task
  * scheduling.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class ShopListener extends RefreshListener {
 
@@ -47,13 +47,26 @@ public final class ShopListener extends RefreshListener {
     public void displayUpdate(ItemContainer items, List<IndexedItem> updateItems,
                               WidgetIndexedItemsMessageWriter msg) {
 
-        // Determine if a restock is needed. Will usually only loop once.
-        for (int index = 0; index < updateItems.size(); index++) {
-            IndexedItem item = updateItems.get(index);
-            if (item != null && item.getAmount() == 0) {
-                shop.restockItems();
-                break;
+        // Determine if a restock is needed.
+        for (IndexedItem item : updateItems) {
+            if (item == null) {
+                continue;
             }
+            int itemIndex = item.getIndex();
+            double originalAmount = shop.getAmountMap()[itemIndex].orElse(-1);
+            if (originalAmount <= 0) { // Item is not restockable
+                continue;
+            }
+            double currentAmount = item.getAmount();
+            double percent = Math.floor((currentAmount / originalAmount) * 100.0);
+            double requiredPercent = shop.getRestockPolicy().getStartPercent();
+            if (percent <= requiredPercent) {
+                shop.getNeedsRestock().add(itemIndex);
+            }
+        }
+
+        if (!shop.getNeedsRestock().isEmpty()) {
+            shop.restockItems();
         }
 
         // Queue message for whoever has shop open.
@@ -62,6 +75,6 @@ public final class ShopListener extends RefreshListener {
 
     @Override
     public void onCapacityExceeded(ItemContainer items) {
-        throw new IllegalStateException("Shop capacity exceeded.");
+        throw new IllegalStateException("Shop '" + shop.getName() + "' item capacity exceeded.");
     }
 }

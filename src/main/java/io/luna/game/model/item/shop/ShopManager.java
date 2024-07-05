@@ -9,10 +9,10 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
- * A model that manages global shop instances. Shops are mapped by their names and interned for speedier
- * lookups (some of the time).
+ * A model that manages global shop instances. Shops are created dynamically, registered within this model, and are
+ * then retrievable by their {@link Shop#getName()}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class ShopManager {
 
@@ -32,7 +32,7 @@ public final class ShopManager {
      * @param shop The shop.
      */
     public void register(Shop shop) {
-        String name = shop.getName().intern();
+        String name = shop.getName();
         if (shops.put(name, shop) != null) {
             logger.warn("Shop with name '" + name + "' was overwritten because it already exists.");
         }
@@ -47,7 +47,7 @@ public final class ShopManager {
      */
     public Shop get(String name) {
         return lookup(name).orElseThrow(() ->
-                new NoSuchElementException("Shop with name '" + name + "' does not exist."));
+                new NoSuchElementException("Shop '" + name + "' does not exist."));
     }
 
     /**

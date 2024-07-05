@@ -4,10 +4,12 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.task.Task;
 
+import java.util.Iterator;
+
 /**
  * A {@link Task} implementation that will restock shop items.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class RestockTask extends Task {
 
@@ -35,7 +37,7 @@ public final class RestockTask extends Task {
     @Override
     protected boolean onSchedule() {
         if (restockPolicy != RestockPolicy.DISABLED) {
-            setDelay(restockPolicy.getTickRate());
+            setDelay(restockPolicy.getRate());
             return true;
         }
         return false;
@@ -43,38 +45,29 @@ public final class RestockTask extends Task {
 
     @Override
     protected void execute() {
-        // TODO Find a way to do this without looping through entire shop (Maybe use a bitset?)
-        ItemContainer container = shop.getContainer();
-        boolean cancelTask = true;
-        for (int index = 0; index < container.capacity(); index++) {
-            Item item = container.get(index);
-            if (item != null && restock(index, item)) {
-                // We had to restock an item, so don't cancel.
-                cancelTask = false;
+        ItemContainer items = shop.getContainer();
+        Iterator<Integer> restockIterator = shop.getNeedsRestock().iterator();
+
+        // Loop through all indexes that need restocking.
+        while (restockIterator.hasNext()) {
+            int restockIndex = restockIterator.next();
+            Item restockItem = items.get(restockIndex);
+            int initialAmount = shop.getAmountMap()[restockIndex].orElse(-1);
+
+            // The item is not restockable, or has been restocked. Remove it.
+            if(initialAmount == -1 || restockItem.getAmount() >= initialAmount) {
+                restockIterator.remove();
+                continue;
             }
+
+            // Increase by restock amount, to a maximum of the initial amount.
+            int newAmount = Math.min(restockPolicy.getAmount() + restockItem.getAmount(), initialAmount);
+            items.set(restockIndex, restockItem.withAmount(newAmount));
         }
 
-        if (cancelTask) {
-            // No more items to restock.
+        // No more items to restock.
+        if (shop.getNeedsRestock().isEmpty()) {
             cancel();
         }
-    }
-
-    /**
-     * Restocks the single {@code item} at {@code index}.
-     *
-     * @param index The index to restock.
-     * @param item The item to restock.
-     * @return {@code true} if a restock was performed.
-     */
-    private boolean restock(int index, Item item) {
-        int initialAmount = shop.getAmountMap()[index].orElse(-1);
-        if (item.getAmount() < initialAmount) {
-            // Increase by restock amount, to a maximum of the initial amount.
-            int newAmount = Math.min(restockPolicy.getStockAmount() + item.getAmount(), initialAmount);
-            shop.getContainer().set(index, item.withAmount(newAmount));
-            return true;
-        }
-        return false;
     }
 }

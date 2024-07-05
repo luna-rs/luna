@@ -5,13 +5,14 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
+import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
  * An {@link InventoryOverlayInterface} implementation that opens a shop.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class ShopInterface extends InventoryOverlayInterface {
 
@@ -52,7 +53,7 @@ public final class ShopInterface extends InventoryOverlayInterface {
 
         container.refreshPrimary(player); // Refresh shop.
         shop.getViewing().add(player);
-        player.sendText(shop.getName(), 3901);
+        player.queue(new WidgetTextMessageWriter(shop.getName(), 3901));
     }
 
     @Override

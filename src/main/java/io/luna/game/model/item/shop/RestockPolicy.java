@@ -1,76 +1,136 @@
 package io.luna.game.model.item.shop;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing a policy for how items are restocked in {@link Shop}s.
+ * A model representing a policy for how items are restocked in {@link Shop} types.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class RestockPolicy {
 
     /**
+     * A builder for {@link RestockPolicy} instances.
+     */
+    private static final class Builder {
+
+        /**
+         * The amount to be restocked.
+         */
+        private int amount = -1;
+
+        /**
+         * The rate at which the restock occurs.
+         */
+        private int rate = -1;
+
+        /**
+         * The amount that the restock will start at. Defaults to 0.
+         */
+        private int startPercent = 0;
+
+        /**
+         * Sets the amount to be restocked.
+         */
+        public Builder setAmount(int amount) {
+            this.amount = amount;
+            return this;
+        }
+
+        /**
+         * Sets the rate at which the restock occurs.
+         */
+        public Builder setRate(int rate) {
+            this.rate = rate;
+            return this;
+
+        }
+
+        /**
+         * Sets the percentage of items remaining that the restock will start at. Defaults to 0.
+         */
+        public Builder setStartPercent(int startPercent) {
+            this.startPercent = startPercent;
+            return this;
+        }
+
+        /**
+         * Creates a new {@link RestockPolicy} with the specified values.
+         */
+        public RestockPolicy build() {
+            checkState(amount == -1 || amount > 0, "[amount] must be -1 or > 0");
+            checkState(rate == -1 || rate > 0, "[rate] must be -1 or > 0");
+            checkState(startPercent >= 0 && startPercent <= 99, "[startPercent] must be >= 0 or <= 99");
+            return new RestockPolicy(amount, rate, startPercent);
+        }
+    }
+
+    /**
      * The {@code DISABLED} restock policy. No items are restocked.
      */
-    public static final RestockPolicy DISABLED = new RestockPolicy();
+    public static final RestockPolicy DISABLED = new Builder().build();
 
     /**
      * The {@code SLOW} restock policy. One item is restocked every {@code 15} seconds.
      */
-    public static final RestockPolicy SLOW = new RestockPolicy(1, 25);
+    public static final RestockPolicy SLOW = new Builder().setAmount(1).setRate(25).build();
 
     /**
      * The {@code DEFAULT} restock policy. One item is restocked every {@code 4.8} seconds.
      */
-    public static final RestockPolicy DEFAULT = new RestockPolicy(1, 8);
+    public static final RestockPolicy DEFAULT = new Builder().setAmount(1).setRate(8).build();
 
     /**
      * The {@code FAST} restock policy. One item is restocked every {@code 0.6} seconds.
      */
-    public static final RestockPolicy FAST = new RestockPolicy(1, 1);
+    public static final RestockPolicy FAST = new Builder().setAmount(1).setRate(1).build();
 
     /**
      * The amount to be restocked.
      */
-    private final int stockAmount;
+    private final int amount;
 
     /**
-     * The rate in which the restock occurs.
+     * The rate at which the restock occurs.
      */
-    private final int tickRate;
+    private final int rate;
+
+    /**
+     * The percentage of items remaining that the restock will start at.
+     */
+    private final int startPercent;
 
     /**
      * Creates a new {@link RestockPolicy}.
      *
-     * @param stockAmount The amount to be restocked.
-     * @param tickRate The rate in which the restock occurs.
+     * @param amount The amount to be restocked.
+     * @param rate The rate in which the restock occurs.
+     * @param startPercent The percentage of items remaining that the restock will start at.
      */
-    public RestockPolicy(int stockAmount, int tickRate) {
-        checkArgument(stockAmount > 0, "Stock amount must be > 0.");
-        checkArgument(tickRate > 0, "Tick rate must be > 0.");
-        this.stockAmount = stockAmount;
-        this.tickRate = tickRate;
-    }
-
-    /**
-     * Creates a new {@code DISABLED} {@link RestockPolicy}. Should only be invoked once.
-     */
-    private RestockPolicy() {
-        stockAmount = -1;
-        tickRate = -1;
+    private RestockPolicy(int amount, int rate, int startPercent) {
+        this.amount = amount;
+        this.rate = rate;
+        this.startPercent = startPercent;
     }
 
     /**
      * @return The amount to be restocked.
      */
-    public int getStockAmount() {
-        return stockAmount;
+    public int getAmount() {
+        return amount;
     }
 
     /**
-     * @return The rate in which the restock occurs.
+     * @return The rate at which the restock occurs.
      */
-    public int getTickRate() {
-        return tickRate;
+    public int getRate() {
+        return rate;
+    }
+
+    /**
+     * @return The percentage of items remaining that the restock will start at.
+     */
+    public int getStartPercent() {
+        return startPercent;
     }
 }

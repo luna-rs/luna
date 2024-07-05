@@ -5,10 +5,9 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 
 /**
- * The enumerated type whose elements represent currencies that can be used to purchase items
- * from shops.
+ * An enumerated type representing the currencies that can be used to purchase items from {@link Shop} types.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum Currency {
     COINS(995),

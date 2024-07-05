@@ -20,14 +20,10 @@ import java.util.Set;
 /**
  * A model representing a single shop where items can be bought and sold.
  *
- * @author lare96 <http://github.com/lare96>
- * @author natis1 <http://github.com/natis1>
- *
+ * @author lare96
+ * @author natis1
  */
 public final class Shop {
-
-    // "Magic numbers" for the buy and sell functions.
-    // Can be configured before compiling to change how shops price goods.
 
     /**
      * By what amount does an uncommon item decrease in value when overstocked by 1.
@@ -89,7 +85,7 @@ public final class Shop {
      * no greater than the amount of items purchased minus 1, may occur because it doesn't calculate each item bought
      * individually. This means that 2 items sold for 0.7 coins each will yield 1 coin, instead of the 0 coins you
      * would get in vanilla behavior.
-     *
+     * <p>
      * This behavior can be changed, resulting in a much less efficient price calculating formula, but which ultimately
      * is slightly more authentic (but perhaps less desirable) to the original game.
      */
@@ -145,6 +141,10 @@ public final class Shop {
      */
     private RestockTask restockTask;
 
+    /**
+     * A set of indexes that need restocking.
+     */
+    private final Set<Integer> needsRestock = new HashSet<>();
 
     /**
      * Creates a new {@link Shop}.
@@ -320,7 +320,7 @@ public final class Shop {
 
     /**
      * Computes the buy value of {@code item}.
-     *
+     * <p>
      * This is based on extensive black-box testing of modern OSRS's shops, and assuming that none of the code for shop prices
      * has changed since RS2. The principal difference between this function and most private servers is that this one
      * accounts for the different shop formulas used with items that the store normally stocks
@@ -383,7 +383,7 @@ public final class Shop {
 
         // First, find the number of items purchased at the maximum possible price.
         // We check if any items are bought at maximum price
-        int maxPriceItems = ( (expectedAmount - amountStocked + amountBought) * priceChange >= (maxPrice - 1.0))
+        int maxPriceItems = ((expectedAmount - amountStocked + amountBought) * priceChange >= (maxPrice - 1.0))
                 // and then set the number bought at that price
                 ? (expectedAmount - itemsToReachMaxPrice - amountStocked + amountBought) : 0;
         // This formula above only applies if you are not at the max price from the start. if you are, then all
@@ -405,17 +405,14 @@ public final class Shop {
 
         if (PERFECT_PRECISION_TRANSACTIONS) {
             for (int i = 0; i < minPriceItems; i++) {
-                totalMoney += minPrice * value;
+                totalMoney += (int) (minPrice * value);
             }
             for (int i = 0; i < maxPriceItems; i++) {
-                totalMoney += maxPrice * value;
+                totalMoney += (int) (maxPrice * value);
             }
             // Now iterate over each item
             for (int i = startingIndex; i <= endingIndex; i++) {
-                totalMoney += ((expectedAmount - amountStocked + i) * priceChange + 1.0) * value;
-            }
-            if (totalMoney < amountBought) {
-                totalMoney = amountBought;
+                totalMoney += (int) (((expectedAmount - amountStocked + i) * priceChange + 1.0) * value);
             }
         } else {
 
@@ -430,22 +427,22 @@ public final class Shop {
             valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
             // round and return
             totalMoney = (int) ((value * valueMod) + 0.5);
-            if (totalMoney < amountBought) {
-                totalMoney = amountBought;
-            }
+        }
+        if (totalMoney < amountBought) {
+            totalMoney = amountBought;
         }
         return totalMoney;
     }
 
     /**
      * Computes the sell value of {@code item}.
-     *
+     * <p>
      * This is based on extensive black-box testing of modern OSRS's shops, and assuming that none of the code for
      * shop sell prices has changed too much.
-     *
+     * <p>
      * In general stores sell values scale with every item sold, starting at 40% of base value,
      * and decreasing by 3% for every item that the shop already has.
-     *
+     * <p>
      * In specialty stores. Sell values start at 55% of base value, and decrease by 2% for every item the shop
      * has overstocked.
      *
@@ -481,7 +478,7 @@ public final class Shop {
         double valueMod = amountSold * startingPrice;
 
         // First, find the number of items sold at the maximum possible price.
-        int maxPriceItems = ( (expectedAmount - amountStocked) * priceChange >= (maxPrice - startingPrice))
+        int maxPriceItems = ((expectedAmount - amountStocked) * priceChange >= (maxPrice - startingPrice))
                 // and then set the number sold at that price
                 ? (expectedAmount - itemsToReachMaxPrice - amountStocked) : 0;
         if (maxPriceItems > amountSold) {
@@ -502,14 +499,14 @@ public final class Shop {
         // Even though this is less code, it takes about an order of magnitude more time to run.
         if (PERFECT_PRECISION_TRANSACTIONS) {
             for (int i = 0; i < minPriceItems; i++) {
-                totalMoney += minPrice * value;
+                totalMoney += (int) (minPrice * value);
             }
             for (int i = 0; i < maxPriceItems; i++) {
-                totalMoney += maxPrice * value;
+                totalMoney += (int) (maxPrice * value);
             }
             // Now iterate over each item
             for (int i = startingIndex; i <= endingIndex; i++) {
-                totalMoney += ((expectedAmount - amountStocked - i) * priceChange + startingPrice) * value;
+                totalMoney += (int) (((expectedAmount - amountStocked - i) * priceChange + startingPrice) * value);
             }
             return totalMoney;
         } else {
@@ -520,7 +517,7 @@ public final class Shop {
             double startingPriceMod = (expectedAmount - amountStocked - startingIndex) * priceChange;
             double endingPriceMod = (expectedAmount - amountStocked - endingIndex) * priceChange;
             double netPriceMod = (endingPriceMod + startingPriceMod);
-            valueMod += netPriceMod * (double)(netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
+            valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
             totalMoney = (int) (value * valueMod);
         }
         return totalMoney;
@@ -561,7 +558,8 @@ public final class Shop {
     }
 
     /**
-     * Schedules a restock task. Will create a new one if needed.
+     * Prompts this shop to start restocking. Will only create a new task if a previously running one was cancelled.
+     * If a restock task is already running, this does nothing.
      */
     void restockItems() {
         if (restockPolicy != RestockPolicy.DISABLED) {
@@ -625,5 +623,12 @@ public final class Shop {
      */
     OptionalInt[] getAmountMap() {
         return amountMap;
+    }
+
+    /**
+     * @return A set of indexes that need restocking.
+     */
+    public Set<Integer> getNeedsRestock() {
+        return needsRestock;
     }
 }

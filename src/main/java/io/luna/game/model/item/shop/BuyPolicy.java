@@ -1,9 +1,9 @@
 package io.luna.game.model.item.shop;
 
 /**
- * The enumerated type whose elements represent a shop's buy policy.
+ * An enumerated type representing the possible buy policies of a {@link Shop}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public enum BuyPolicy {
 
