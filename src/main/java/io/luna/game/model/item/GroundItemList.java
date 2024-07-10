@@ -1,7 +1,7 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.Iterators;
-import io.luna.game.model.EntityList;
+import io.luna.game.model.StationaryEntityList;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
@@ -21,11 +21,11 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link EntityList} implementation model for {@link GroundItem}s.
+ * An {@link StationaryEntityList} implementation model for {@link GroundItem}s.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class GroundItemList extends EntityList<GroundItem> {
+public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
     /**
      * A {@link Task} that will handle ground item expiration.
@@ -62,7 +62,7 @@ public final class GroundItemList extends EntityList<GroundItem> {
         /**
          * A queue of items awaiting unregistration.
          */
-        private final Queue<GroundItem> unregisterQueue = new ArrayDeque<>();
+        private final Queue<GroundItem> expiredQueue = new ArrayDeque<>();
 
         @Override
         protected boolean onSchedule() {
@@ -74,8 +74,8 @@ public final class GroundItemList extends EntityList<GroundItem> {
         @Override
         protected void execute() {
             processItems();
-            processUnregistrations();
-            processRegistrations();
+            removeExpiredItems();
+            addGlobalItems();
         }
 
         /**
@@ -91,27 +91,27 @@ public final class GroundItemList extends EntityList<GroundItem> {
                 if (item.isLocal()) {
                     if (isTradeable && expireTicks >= TRADEABLE_LOCAL_TICKS) {
                         // Item is tradeable and only visible to one player, make it global.
-                        var globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
+                        GroundItem globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
                                 item.getPosition(), Optional.empty());
-                        unregisterQueue.add(item);
+                        expiredQueue.add(item);
                         registerQueue.add(globalItem);
                     } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
                         // Item is untradeable and only visible to one player, unregister it.
-                        unregisterQueue.add(item);
+                        expiredQueue.add(item);
                     }
                 } else if (item.isGlobal() && expireTicks >= GLOBAL_TICKS) {
                     // Item is visible to everyone, unregister it.
-                    unregisterQueue.add(item);
+                    expiredQueue.add(item);
                 }
             }
         }
 
         /**
-         * Handle any new unregistrations from expiration timer processing.
+         * Unregisters any expired items from the world.
          */
-        private void processUnregistrations() {
+        private void removeExpiredItems() {
             for (; ; ) {
-                var nextItem = unregisterQueue.poll();
+                var nextItem = expiredQueue.poll();
                 if (nextItem == null) {
                     break;
                 }
@@ -120,9 +120,9 @@ public final class GroundItemList extends EntityList<GroundItem> {
         }
 
         /**
-         * Handle any new registrations from expiration timer processing.
+         * Registers previously expired tradeable local items as global.
          */
-        private void processRegistrations() {
+        private void addGlobalItems() {
             for (; ; ) {
                 var nextItem = registerQueue.poll();
                 if (nextItem == null) {

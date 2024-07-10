@@ -5,6 +5,7 @@ import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.AbstractInterface;
 import io.luna.net.msg.out.WidgetItemsMessageWriter;
 
 import java.util.ArrayDeque;
@@ -33,12 +34,14 @@ import static io.luna.util.OptionalUtils.matches;
 import static java.util.Objects.requireNonNull;
 
 /**
- * A model representing a traversable group of items whose container adheres to a strict set of rules. These
- * rules dictate how items are stored and displayed.
+ * A model representing a traversable group of items that adhere to a strict set of rules. These rules dictate how
+ * items are stored and displayed on {@link AbstractInterface} types.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public class ItemContainer implements Iterable<Item> {
+
+    // TODO delete/reorganize functions more
 
     /**
      * A fail-safe iterator for items within this container.
@@ -112,7 +115,7 @@ public class ItemContainer implements Iterable<Item> {
     /**
      * The items.
      */
-    private Item[] items;
+    private final Item[] items;
 
     /**
      * The size.
@@ -208,9 +211,18 @@ public class ItemContainer implements Iterable<Item> {
         checkArgument(preferredIndex >= -1, "Preferred index must be above or equal to -1.");
 
         // Determine best index to place on.
-        int addIndex = computeAddIndex(preferredIndex, item);
+        int addIndex = preferredIndex;
+        if (isStackable(item)) {
+            addIndex = computeIndexForId(item.getId()).orElse(-1);
+        } else if (addIndex != -1) {
+            addIndex = occupied(addIndex) ? -1 : addIndex;
+        }
         if (addIndex == -1) {
-            // Not enough space.
+            addIndex = nextFreeIndex().orElse(-1);
+        }
+
+        // Not enough space.
+        if (addIndex == -1) {
             fireCapacityExceededEvent();
             return false;
         }
@@ -228,7 +240,7 @@ public class ItemContainer implements Iterable<Item> {
             } else {
                 // Increase amount on current spot.
                 int amount = item.getAmount();
-                set(addIndex, current.changeAmount(amount));
+                set(addIndex, current.addAmount(amount));
             }
         } else {
             // Add non-stackable item.
@@ -265,6 +277,16 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
+     * Forwards to {@link #add(Item)} with the amount as {@code 1}.
+     *
+     * @param id The ID to add 1 of.
+     * @return {@code true} if successful.
+     */
+    public boolean add(int id) {
+        return add(new Item(id));
+    }
+
+    /**
      * Attempts to add {@code items} to the closest available spots.
      *
      * @param items The items to add.
@@ -291,79 +313,6 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Attempts to remove {@code removeItems} and add {@code addItems}.
-     *
-     * @param addItems The items to add.
-     * @param removeItems The items to remove.
-     * @return {@code true} if at least one was added or removed.
-     */
-    public boolean updateAll(Iterable<? extends Item> addItems, Iterable<? extends Item> removeItems) {
-        boolean changed = false;
-        startBulkUpdate();
-        try {
-            for (Item item : removeItems) {
-                if (item == null) {
-                    continue;
-                }
-                // Bulk operation gets set to false in 'remove'.
-                startBulkUpdate();
-                if (remove(item)) {
-                    changed = true;
-                }
-            }
-
-            for (Item item : addItems) {
-                if (item == null) {
-                    continue;
-                }
-                // Bulk operation gets set to false in 'add'.
-                startBulkUpdate();
-                if (add(item)) {
-                    changed = true;
-                }
-            }
-            startBulkUpdate();
-        } finally {
-            finishBulkUpdate();
-        }
-        return changed;
-    }
-
-    /**
-     * Attempts to add {@code items} to the closest available spots.
-     *
-     * @param items The items to add.
-     * @return {@code true} if at least one was added.
-     */
-    public boolean addAll(Item... items) {
-        if (items.length == 0) {
-            return false;
-        }
-        return addAll(Arrays.asList(items));
-    }
-
-    /**
-     * Determines which index {@code item} will be placed on.
-     *
-     * @param preferredIndex The preferred index.
-     * @param item The item to place.
-     * @return The index, or {@code -1} if no index is available.
-     */
-    private int computeAddIndex(int preferredIndex, Item item) {
-        int index = preferredIndex;
-        if (isStackable(item)) {
-            index = computeIndexForId(item.getId()).orElse(-1);
-        } else if (index != -1) {
-            index = occupied(index) ? -1 : index;
-        }
-
-        if (index == -1) {
-            return nextFreeIndex().orElse(-1);
-        }
-        return index;
-    }
-
-    /**
      * Attempts to remove {@code item} from {@code preferredIndex}.
      *
      * @param preferredIndex The preferred index to remove the item from.
@@ -374,9 +323,15 @@ public class ItemContainer implements Iterable<Item> {
         checkArgument(preferredIndex >= -1, "Preferred index must be above or equal to -1.");
 
         // Determine best index to remove from.
-        int removeIndex = computeRemoveIndex(preferredIndex, item);
+        int removeIndex = -1;
+        if (preferredIndex == -1 || !occupied(preferredIndex)) {
+            removeIndex = computeIndexForId(item.getId()).orElse(-1);
+        } else if (item.getId() == get(preferredIndex).getId()) {
+            removeIndex = preferredIndex;
+        }
+
+        // Item doesn't exist.
         if (removeIndex == -1) {
-            // Item doesn't exist.
             return false;
         }
 
@@ -389,18 +344,16 @@ public class ItemContainer implements Iterable<Item> {
             } else {
                 // Change item amount.
                 int amount = item.getAmount();
-                set(removeIndex, current.changeAmount(-amount));
+                set(removeIndex, current.addAmount(-amount));
             }
         } else {
             // Remove non-stackable item.
             int until = computeAmountForId(item.getId());
-            until = item.getAmount() > until ? until : item.getAmount();
+            until = Math.min(item.getAmount(), until);
 
             startBulkUpdate();
             try {
                 for (int removed = 0; removed < until; removed++) {
-
-                    // TODO compute next index from index...
                     // Calculate next free index if needed.
                     boolean isItemPresent = computeIdForIndex(removeIndex).orElse(-1) == item.getId();
                     removeIndex = isItemPresent ? removeIndex : computeIndexForId(item.getId()).orElse(-1);
@@ -467,33 +420,103 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Attempts to remove {@code items} from the closest available spots.
+     * Attempts to remove {@code removeItems} and add {@code addItems}.
      *
-     * @param items The items to remove.
-     * @return {@code true} if at least one was removed.
+     * @param addItems The items to add.
+     * @param removeItems The items to remove.
+     * @return {@code true} if at least one was added or removed.
      */
-    public boolean removeAll(Item... items) {
-        if (items.length == 0) {
-            return false;
+    public boolean updateAll(Iterable<? extends Item> addItems, Iterable<? extends Item> removeItems) {
+        boolean changed = false;
+        startBulkUpdate();
+        try {
+            for (Item item : removeItems) {
+                if (item == null) {
+                    continue;
+                }
+                // Bulk operation gets set to false in 'remove'.
+                startBulkUpdate();
+                if (remove(item)) {
+                    changed = true;
+                }
+            }
+
+            for (Item item : addItems) {
+                if (item == null) {
+                    continue;
+                }
+                // Bulk operation gets set to false in 'add'.
+                startBulkUpdate();
+                if (add(item)) {
+                    changed = true;
+                }
+            }
+            startBulkUpdate();
+        } finally {
+            finishBulkUpdate();
         }
-        return removeAll(Arrays.asList(items));
+        return changed;
     }
 
     /**
-     * Determines which index {@code item} will be removed from.
+     * Replaces the first occurrence of {@code oldId} with {@code newId}.
      *
-     * @param preferredIndex The preferred index.
-     * @param item The item to remove.
-     * @return The index, or {@code -1} if no index is available.
+     * @param oldId The old item identifier.
+     * @param newId The new item identifier.
+     * @return {@code true} if successful.
      */
-    private int computeRemoveIndex(int preferredIndex, Item item) {
-        if (preferredIndex == -1 || !occupied(preferredIndex)) {
-            return computeIndexForId(item.getId()).orElse(-1);
+    public final boolean replace(int oldId, int newId) {
+        checkArgument(!isStackable(oldId) && !isStackable(newId), "Cannot replace stackable items.");
+
+        for (int index = 0; index < capacity; index++) {
+            Item item = get(index);
+            if (item != null && item.getId() == oldId) {
+                Item newItem = item.withId(newId);
+                set(index, newItem);
+                return true;
+            }
         }
-        if (item.getId() == get(preferredIndex).getId()) {
-            return preferredIndex;
+        return false;
+    }
+
+    /**
+     * Replaces {@code amount} occurrences of {@code oldId} with {@code newId}.
+     *
+     * @param oldId The old item identifier.
+     * @param newId The new item identifier.
+     * @param amount The amount of occurrences to replace.
+     * @return the total amount of items replaced.
+     */
+    public final int replace(int oldId, int newId, int amount) {
+        int count = 0;
+        startBulkUpdate();
+        try {
+            for (int index = 0; index < capacity; index++) {
+                if (count >= amount) {
+                    break;
+                }
+                Item item = get(index);
+                if (item != null && item.getId() == oldId) {
+                    Item newItem = item.withId(newId);
+                    set(index, newItem);
+                    count += item.getAmount();
+                }
+            }
+        } finally {
+            finishBulkUpdate();
         }
-        return -1;
+        return count;
+    }
+
+    /**
+     * Replaces all occurrences of {@code oldId} with {@code newId}.
+     *
+     * @param oldId The old item identifier.
+     * @param newId The new item identifier.
+     * @return the total amount of items replaced.
+     */
+    public final int replaceAll(int oldId, int newId) {
+        return replace(oldId, newId, Integer.MAX_VALUE);
     }
 
     /**
@@ -586,155 +609,11 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Replaces the first occurrence of {@code oldId} with {@code newId}.
-     *
-     * @param oldId The old item identifier.
-     * @param newId The new item identifier.
-     * @return {@code true} if successful.
-     */
-    public final boolean replace(int oldId, int newId) {
-        checkArgument(!isStackable(oldId) && !isStackable(newId), "Cannot replace stackable items.");
-
-        for (int index = 0; index < capacity; index++) {
-            Item item = get(index);
-            if (item != null && item.getId() == oldId) {
-                Item newItem = item.withId(newId);
-                set(index, newItem);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Replaces {@code amount} occurrences of {@code oldId} with {@code newId}.
-     *
-     * @param oldId The old item identifier.
-     * @param newId The new item identifier.
-     * @param amount The amount of occurrences to replace.
-     * @return {@code true} if at least one replace occurred.
-     */
-    public final boolean replace(int oldId, int newId, int amount) {
-        checkArgument(!isStackable(oldId) && !isStackable(newId), "Cannot replace stackable items.");
-
-        int times = 0;
-        startBulkUpdate();
-        try {
-            for (int index = 0; index < capacity; index++) {
-                if (times >= amount) {
-                    break;
-                }
-                Item item = get(index);
-                if (item != null && item.getId() == oldId) {
-                    Item newItem = item.withId(newId);
-                    set(index, newItem);
-                    times++;
-                }
-            }
-        } finally {
-            finishBulkUpdate();
-        }
-        return times > 0;
-    }
-
-    /**
-     * Replaces all occurrences of {@code oldId} with {@code newId}. Returns {@code true} if at least one
-     * was replaced.
-     *
-     * @param oldId The old item identifier.
-     * @param newId The new item identifier.
-     * @return {@code true}  if at least one item was replaced.
-     */
-    public final boolean replaceAll(int oldId, int newId) {
-        return replace(oldId, newId, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Determines if there is enough space for {@code items} to be added.
-     *
-     * @param items The items.
-     * @return {@code true} if there's enough space for {@code items}.
-     */
-    public final boolean hasSpaceForAll(Item... items) {
-        int count = 0;
-        for (Item item : items) {
-            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
-
-            if (count > computeRemainingSize()) {
-                // Can't fit, no point in checking other items.
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Determines if there is enough space for {@code item} to be added.
-     *
-     * @param item The items.
-     * @return {@code true} if there's enough space for {@code item}.
-     */
-    public final boolean hasSpaceFor(Item item) {
-        return computeSpaceFor(item) <= computeRemainingSize();
-    }
-
-    /**
-     * Computes the amount of space required to hold {@code items}.
-     *
-     * @param items The items.
-     * @return The amount of space required.
-     */
-    public final int computeSpaceForAll(Item... items) {
-        return computeSpaceForAll(Arrays.asList(items));
-    }
-
-    /**
-     * Computes the amount of space required to hold {@code items}.
-     *
-     * @param items The items.
-     * @return The amount of space required.
-     */
-    public final int computeSpaceForAll(Iterable<? extends Item> items) {
-        int count = 0;
-        for (Item item : items) {
-            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
-        }
-        return count;
-    }
-
-    /**
-     * Computes the amount of space required to hold {@code item}.
-     *
-     * @param item The item.
-     * @return The amount of space required.
-     */
-    public final int computeSpaceFor(Item item) {
-        if (isStackable(item)) {
-            // See if there's an index for the item.
-            int index = computeIndexForId(item.getId()).orElse(-1);
-            if (index == -1) {
-                // There isn't, we require a space.
-                return 1;
-            } else if (get(index).getAmount() + item.getAmount() < 0) {
-                // There is, and trying to add onto it will result in an overflow.
-                // TODO Maybe add an event for overflow?
-                return Integer.MAX_VALUE;
-            } else {
-                // There is, no space needed.
-                return 0;
-            }
-        }
-
-        // Non-stackable items are equal to the amount.
-        return item.getAmount();
-    }
-
-    /**
      * Performs an indexed loop of the container and executes an action containing the index and item as arguments.
      *
      * @param action The action to execute.
      */
-    public void forItems(BiConsumer<Integer, Item> action) {
+    public void forIndexedItems(BiConsumer<Integer, Item> action) {
         boolean bulkUpdateInProgress = inBulkUpdate;
         if (!bulkUpdateInProgress) {
             startBulkUpdate();
@@ -748,6 +627,32 @@ public class ItemContainer implements Iterable<Item> {
                 finishBulkUpdate();
             }
         }
+    }
+
+    /**
+     * Determines if {@code id} exists on {@code index}.
+     *
+     * @param index The index.
+     * @param id The identifier.
+     * @return {@code true} if present within this container.
+     */
+    public boolean contains(int index, int id) {
+        OptionalInt lookupId = computeIdForIndex(index);
+        if (lookupId.isEmpty()) {
+            return false;
+        }
+        return lookupId.getAsInt() == id;
+    }
+
+    /**
+     * Determines if {@code item} exists on {@code index}.
+     *
+     * @param index The index.
+     * @param item The item.
+     * @return {@code true} if present within this container.
+     */
+    public boolean contains(int index, Item item) {
+        return Optional.ofNullable(get(index)).map(it -> it.contains(item)).isPresent();
     }
 
     /**
@@ -823,20 +728,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return {@code true} if {@code item} is present in this container.
      */
     public final boolean contains(Item item) {
-        return stream().anyMatch(it -> it.contains(item));
-    }
-
-    /**
-     * Determines if all of {@code items} are present.
-     *
-     * @param items The items to look for.
-     * @return {@code true} if {@code items} are all present in this container.
-     */
-    public final boolean containsAll(Item... items) {
-        if (items.length == 0) {
-            return true;
-        }
-        return containsAll(Arrays.asList(items));
+        return computeAmountForId(item.getId()) >= item.getAmount();
     }
 
     /**
@@ -878,6 +770,77 @@ public class ItemContainer implements Iterable<Item> {
         }
         return false;
     }
+
+    /**
+     * Determines if there is enough space for {@code item} to be added.
+     *
+     * @param item The items.
+     * @return {@code true} if there's enough space for {@code item}.
+     */
+    public final boolean hasSpaceFor(Item item) {
+        return computeSpaceFor(item) <= computeRemainingSize();
+    }
+
+    /**
+     * Determines if there is enough space for {@code items} to be added.
+     *
+     * @param items The items.
+     * @return {@code true} if there's enough space for {@code items}.
+     */
+    public final boolean hasSpaceForAll(Iterable<? extends Item> items) {
+        int count = 0;
+        for (Item item : items) {
+            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
+
+            if (count > computeRemainingSize()) {
+                // Can't fit, no point in checking other items.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Computes the amount of space required to hold {@code items}.
+     *
+     * @param items The items.
+     * @return The amount of space required.
+     */
+    public final int computeSpaceForAll(Iterable<? extends Item> items) {
+        int count = 0;
+        for (Item item : items) {
+            count = IntMath.saturatedAdd(count, computeSpaceFor(item));
+        }
+        return count;
+    }
+
+    /**
+     * Computes the amount of space required to hold {@code item}.
+     *
+     * @param item The item.
+     * @return The amount of space required.
+     */
+    public final int computeSpaceFor(Item item) {
+        if (isStackable(item)) {
+            // See if there's an index for the item.
+            int index = computeIndexForId(item.getId()).orElse(-1);
+            if (index == -1) {
+                // There isn't, we require a space.
+                return 1;
+            } else if (get(index).getAmount() + item.getAmount() < 0) {
+                // There is, and trying to add onto it will result in an overflow.
+                // TODO Maybe add an event for overflow?
+                return Integer.MAX_VALUE;
+            } else {
+                // There is, no space needed.
+                return 0;
+            }
+        }
+
+        // Non-stackable items are equal to the amount.
+        return item.getAmount();
+    }
+
 
     /**
      * Determines if {@code item} will stack when in this container.
@@ -1069,42 +1032,12 @@ public class ItemContainer implements Iterable<Item> {
     }
 
     /**
-     * Determines if {@code indexes} are all occupied.
-     *
-     * @param indexes The indexes to check.
-     * @return {@code true} if {@code indexes} are all occupied.
-     */
-    public final boolean allOccupied(int... indexes) {
-        for (int index : indexes) {
-            if (!occupied(index)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Determines if any {@code indexes} are occupied.
-     *
-     * @param indexes The indexes to check.
-     * @return {@code true} if any {@code indexes} are occupied.
-     */
-    public final boolean anyOccupied(int... indexes) {
-        for (int index : indexes) {
-            if (occupied(index)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Shifts all items to the left, clearing all {@code null} elements in between {@code non-null} elements.
      */
     public void clearSpaces() {
         if (size > 0) {
             // Create queue of pending indexes and cache this container's size.
-            Queue<Integer> indexes = new ArrayDeque<>(8);
+            Queue<Integer> indexes = new ArrayDeque<>();
             int shiftAmount = size;
 
             startBulkUpdate();

@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player;
 /**
  * An item container model representing a player's inventory.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class Inventory extends ItemContainer {
 

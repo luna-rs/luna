@@ -5,7 +5,7 @@ import java.util.Optional;
 /**
  * A model representing a listener for an item container.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public interface ItemContainerListener {
 

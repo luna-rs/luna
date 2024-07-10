@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * A model representing an item paired with an index.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class IndexedItem {
 

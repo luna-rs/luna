@@ -20,7 +20,7 @@ import static io.luna.util.OptionalUtils.matches;
 /**
  * An item container model representing a player's equipment.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class Equipment extends ItemContainer {
 

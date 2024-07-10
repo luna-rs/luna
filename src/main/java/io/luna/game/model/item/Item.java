@@ -11,9 +11,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A model representing a single item.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class Item {
+
+    // TODO item attributes?
 
     /**
      * The identifier.
@@ -122,13 +124,12 @@ public final class Item {
      * @param add The amount to add.
      * @return The new item.
      */
-    // TODO change to update amount
-    public Item changeAmount(int add) {
+    public Item addAmount(int add) {
         boolean positive = add > 0;
         int newAmount = amount + add;
 
         // Handle potential overflows and underflows.
-        if(newAmount < 0) {
+        if (newAmount < 0) {
             newAmount = positive ? Integer.MAX_VALUE : 0;
         }
         return new Item(id, newAmount);
@@ -145,6 +146,15 @@ public final class Item {
             return this;
         }
         return new Item(id, newAmount);
+    }
+
+    /**
+     * @return The unnoted item definition of this item. If this item definition is already unnoted, returns the same value as
+     * {@link #getItemDef()}.
+     */
+    public ItemDefinition getUnnotedItemDef() {
+        ItemDefinition current = getItemDef();
+        return current.getUnnotedId().isPresent() ? ItemDefinition.ALL.retrieve(current.getUnnotedId().getAsInt()) : current;
     }
 
     /**

@@ -1,17 +1,26 @@
 package io.luna.game.model.item;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.InventoryOverlayInterface;
-import io.luna.net.msg.out.ConfigMessageWriter;
+import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.varp.PersistentVarp;
+import io.luna.net.msg.out.WidgetItemsMessageWriter;
+import io.luna.net.msg.out.WidgetTextMessageWriter;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.OptionalInt;
 
 /**
  * An item container model representing a player's bank.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class Bank extends ItemContainer {
 
@@ -34,6 +43,72 @@ public final class Bank extends ItemContainer {
     }
 
     /**
+     * An interface that uses the banking interface to display miscellaneous items.
+     */
+    public static abstract class DynamicBankInterface extends StandardInterface {
+
+        /**
+         * The widgets to clear when the interface opens.
+         */
+        private static final ImmutableList<WidgetTextMessageWriter> CLEAR_WIDGETS = ImmutableList.of(
+                new WidgetTextMessageWriter("", 5388),
+                new WidgetTextMessageWriter("", 5389),
+                new WidgetTextMessageWriter("", 5390),
+                new WidgetTextMessageWriter("", 5391),
+                new WidgetTextMessageWriter("", 8132),
+                new WidgetTextMessageWriter("", 8133));
+
+        /**
+         * The title.
+         */
+        private final String title;
+
+        /**
+         * Creates a new {@link DynamicBankInterface}.
+         */
+        public DynamicBankInterface(String title) {
+            super(5292);
+            this.title = title;
+        }
+
+        /**
+         * Builds the list of items that will be displayed.
+         */
+        public abstract List<Item> buildDisplayItems(Player player);
+
+        @Override
+        public void onOpen(Player player) {
+            List<Item> displayItems = buildDisplayItems(player);
+            Multiset<Integer> reduceItems = HashMultiset.create();
+            Iterator<Item> displayItemsIterator = displayItems.iterator();
+            while (displayItemsIterator.hasNext()) {
+                Item item = displayItemsIterator.next();
+                reduceItems.add(item.getId(), item.getAmount());
+                displayItemsIterator.remove();
+            }
+            for (Entry<Integer> entry : reduceItems.entrySet()) {
+                int id = entry.getElement();
+                int amount = entry.getCount();
+                displayItems.add(new Item(id, amount));
+            }
+            player.queue(new WidgetItemsMessageWriter(5382, displayItems));
+            CLEAR_WIDGETS.forEach(player::queue);
+            player.sendText(title, 5383);
+        }
+
+        @Override
+        public void onClose(Player player) {
+            player.sendText("The Bank of Runescape", 5383);
+            player.sendText("Withdraw as:", 5388);
+            player.sendText("Item", 5389);
+            player.sendText("Rearrange mode:", 5390);
+            player.sendText("Note", 5391);
+            player.sendText("Insert", 8132);
+            player.sendText("Swap", 8133);
+        }
+    }
+
+    /**
      * The player.
      */
     private final Player player;
@@ -46,12 +121,7 @@ public final class Bank extends ItemContainer {
     /**
      * The banking interface.
      */
-    private BankInterface bankInterface = new BankInterface();
-
-    /**
-     * If currently withdrawing items noted.
-     */
-    private boolean withdrawAsNote;
+    private final BankInterface bankInterface = new BankInterface();
 
     /**
      * Creates a new {@link Bank}.
@@ -63,7 +133,7 @@ public final class Bank extends ItemContainer {
         this.player = player;
         inventory = player.getInventory();
 
-        setListeners(new PlayerRefreshListener(player, "You do not have enough bank space to deposit that."));
+        setListeners(new PlayerRefreshListener(player, bankInterface, "You do not have enough bank space to deposit that."));
     }
 
     /**
@@ -73,7 +143,7 @@ public final class Bank extends ItemContainer {
         if (!isOpen()) {
             disableEvents();
             try {
-                setWithdrawAsNote(false);
+                player.getVarpManager().setAndSendValue(PersistentVarp.WITHDRAW_AS_NOTE, 0);
 
                 // Display items on interface.
                 clearSpaces();
@@ -107,7 +177,7 @@ public final class Bank extends ItemContainer {
         // Get correct item identifier and amount to deposit.
         int id = item.getItemDef().getUnnotedId().orElse(item.getId());
         int existingAmount = inventory.computeAmountForId(item.getId());
-        amount = amount > existingAmount ? existingAmount : amount;
+        amount = Math.min(amount, existingAmount);
         item = item.withAmount(amount);
 
         // Determine if enough space in bank.
@@ -149,10 +219,10 @@ public final class Bank extends ItemContainer {
         // Get correct item identifier and amount to withdraw.
         int id = item.getId();
         int existingAmount = item.getAmount();
-        amount = amount > existingAmount ? existingAmount : amount;
+        amount = Math.min(amount, existingAmount);
 
-        if (withdrawAsNote) {
-            OptionalInt notedId = item.getItemDef().getNotedId();
+        if (player.getVarpManager().getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1) {
+            OptionalInt notedId = item.getItemDef().getUnnotedId();
             if (notedId.isPresent()) {
                 id = notedId.getAsInt();
             } else {
@@ -163,7 +233,7 @@ public final class Bank extends ItemContainer {
         // For non-stackable items, make the amount equal to free slots left if necessary.
         ItemDefinition withdrawItemDef = ItemDefinition.ALL.retrieve(id);
         if (!withdrawItemDef.isStackable()) {
-            amount = amount > remaining ? remaining : amount;
+            amount = Math.min(amount, remaining);
         }
 
         // Withdraw the item.
@@ -182,16 +252,5 @@ public final class Bank extends ItemContainer {
      */
     public boolean isOpen() {
         return bankInterface.isOpen();
-    }
-
-    public boolean isWithdrawAsNote() {
-        return withdrawAsNote;
-    }
-
-    public void setWithdrawAsNote(boolean value) {
-        if (withdrawAsNote != value) {
-            withdrawAsNote = value;
-            player.queue(new ConfigMessageWriter(115, value ? 1 : 0));
-        }
     }
 }

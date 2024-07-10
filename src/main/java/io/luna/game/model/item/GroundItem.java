@@ -10,6 +10,7 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
+import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 
 import java.util.Objects;
@@ -22,7 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * An {@link Entity} implementation representing an item on a tile.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public class GroundItem extends StationaryEntity {
 
@@ -114,7 +115,7 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Sets whether or not this item will expire or not.
+     * Sets whether this item will expire or not.
      *
      * @param expire The value.
      */
@@ -152,8 +153,7 @@ public class GroundItem extends StationaryEntity {
      * does not expire.
      */
     public final int getExpireTicks() {
-        checkState(isExpiring(), "This item does not expire.");
-        return expireTicks.getAsInt();
+        return expireTicks.orElseThrow(() -> new IllegalStateException("This item does not expire."));
     }
 
     /**
@@ -180,15 +180,18 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Hides this item, changes its amount, and then shows it again.
+     * Updates the amount of this item in real time using {@link UpdateGroundItemMessageWriter}.
      *
-     * @param amount The amount to change to. Cannot be negative.
+     * @param value The amount to change to. Cannot be negative.
      */
-    public final void setAmount(int amount) {
-        checkArgument(amount > 0, "amount cannot be < 0");
-        hide();
-        this.amount = amount;
-        show();
+    public final void updateAmount(int value) {
+        checkArgument(value > 0, "amount cannot be < 0");
+        int offset = getChunk().offset(position);
+        applyUpdate(plr -> {
+            sendPlacementMessage(plr);
+            plr.queue(new UpdateGroundItemMessageWriter(offset, id, amount, value));
+        });
+        amount = value;
     }
 
     /**

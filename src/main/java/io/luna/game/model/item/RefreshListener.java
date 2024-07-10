@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.inter.StandardInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.OptionalInt;
  * A listener that tracks indexes that need to be refreshed and forwards the resulting display update
  * messages to listener functions.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public abstract class RefreshListener implements ItemContainerListener {
 
@@ -27,7 +28,7 @@ public abstract class RefreshListener implements ItemContainerListener {
          */
         private final Player player;
 
-
+        private final StandardInterface inter;
         /**
          * The message displayed when the capacity has been exceeded.
          */
@@ -39,15 +40,22 @@ public abstract class RefreshListener implements ItemContainerListener {
          * @param player The player.
          * @param capacityMessage The message sent when capacity is exceeded.
          */
-        public PlayerRefreshListener(Player player, String capacityMessage) {
+        public PlayerRefreshListener(Player player, StandardInterface inter, String capacityMessage) {
             this.player = player;
+            this.inter = inter;
             this.capacityMessage = capacityMessage;
+        }
+
+        public PlayerRefreshListener(Player player, String capacityMessage) {
+            this(player, null, capacityMessage);
         }
 
         @Override
         public void displayUpdate(ItemContainer items, List<IndexedItem> updateItems,
                                   WidgetIndexedItemsMessageWriter msg) {
-            player.queue(msg);
+            if (inter == null || inter.isOpen()) {
+                player.queue(msg);
+            }
         }
 
         @Override

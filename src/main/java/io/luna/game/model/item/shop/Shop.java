@@ -264,7 +264,7 @@ public final class Shop {
                 return container.remove(buyItem);
             } else {
                 // Decrement item on shop window.
-                container.set(index, shopItem.changeAmount(-buyAmount));
+                container.set(index, shopItem.addAmount(-buyAmount));
                 return true;
             }
         }
