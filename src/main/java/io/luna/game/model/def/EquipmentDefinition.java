@@ -15,7 +15,7 @@ import static io.luna.util.StringUtils.addArticle;
 /**
  * A model describing an equipment item definition.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class EquipmentDefinition implements Definition {
 

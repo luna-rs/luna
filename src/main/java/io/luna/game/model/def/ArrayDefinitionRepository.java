@@ -27,8 +27,12 @@ public final class ArrayDefinitionRepository<T extends Definition> extends Defin
     }
 
     @Override
-    void put(int id, T definition) {
+    boolean put(int id, T definition) {
+        if(definitions[id] != null) {
+            return false;
+        }
         definitions[id] = definition;
+        return true;
     }
 
     @Override

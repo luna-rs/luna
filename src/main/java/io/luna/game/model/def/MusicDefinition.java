@@ -2,6 +2,7 @@ package io.luna.game.model.def;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.luna.game.model.Region;
 
 import java.util.Optional;
 
@@ -20,7 +21,7 @@ public final class MusicDefinition implements Definition {
     /**
      * A repository of all regions identifiers to music definitions.
      */
-    private static volatile ImmutableMap<Integer, MusicDefinition> ALL_REGIONS;
+    private static ImmutableMap<Integer, MusicDefinition> ALL_REGIONS;
 
     /**
      * Attempts to find the proper song to play based on region ID.
@@ -39,8 +40,8 @@ public final class MusicDefinition implements Definition {
         if (ALL_REGIONS == null) {
             var builder = ImmutableMap.<Integer, MusicDefinition>builder();
             for (MusicDefinition def : ALL) {
-                for (int addRegion : def.regions) {
-                    builder.put(addRegion, def);
+                for (Region region : def.regions) {
+                    builder.put(region.getId(), def);
                 }
             }
             ALL_REGIONS = builder.build();
@@ -71,7 +72,7 @@ public final class MusicDefinition implements Definition {
     /**
      * The regions this song is played in.
      */
-    private final ImmutableSet<Integer> regions;
+    private final ImmutableSet<Region> regions;
 
     /**
      * Creates a new {@link MusicDefinition}.
@@ -82,7 +83,7 @@ public final class MusicDefinition implements Definition {
      * @param buttonId The song button id.
      * @param regions The regions this song is played in.
      */
-    public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<Integer> regions) {
+    public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<Region> regions) {
         this.id = id;
         this.name = name;
         this.lineId = lineId;
@@ -119,7 +120,7 @@ public final class MusicDefinition implements Definition {
     /**
      * @return The regions this song is played in.
      */
-    public ImmutableSet<Integer> getRegions() {
+    public ImmutableSet<Region> getRegions() {
         return regions;
     }
 

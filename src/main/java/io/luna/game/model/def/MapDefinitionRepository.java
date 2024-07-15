@@ -16,8 +16,8 @@ public final class MapDefinitionRepository<V extends Definition> extends Definit
     private final Map<Integer, V> definitions = new LinkedHashMap<>();
 
     @Override
-    void put(int id, V definition) {
-        definitions.put(id, definition);
+    boolean put(int id, V definition) {
+        return definitions.put(id, definition) == null;
     }
 
     @Override

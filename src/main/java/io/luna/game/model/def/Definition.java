@@ -3,7 +3,7 @@ package io.luna.game.model.def;
 /**
  * A model representing a definition within a {@link DefinitionRepository}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public interface Definition {
 

@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * A definition model describing an attackable non-player.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class NpcCombatDefinition implements Definition {
 

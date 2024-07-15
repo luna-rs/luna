@@ -1,10 +1,13 @@
 package io.luna.game.model.def;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,7 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
  * A model representing a repository for a definition implementation. Definition repositories are immutable
  * after they are locked and ordered by definition identifier.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class DefinitionRepository<T extends Definition> implements Iterable<T> {
 
@@ -46,13 +49,18 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
                 Spliterator.ORDERED | Spliterator.IMMUTABLE);
     }
 
+    @Override
+    public String toString() {
+        return Iterables.toString(this);
+    }
+
     /**
      * Stores {@code definition} in this repository. Should only ever be used by this class.
      *
-     * @param id         The definition identifier.
+     * @param id The definition identifier.
      * @param definition The definition.
      */
-    abstract void put(int id, T definition);
+    abstract boolean put(int id, T definition);
 
     /**
      * Performs a lookup for the definition with {@code id}. Wraps the result in an optional.
@@ -100,6 +108,24 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
     }
 
     /**
+     * Finds all definitions that match {@code predicate}.
+     *
+     * @param predicate The predicate.
+     * @return The matching definitions.
+     */
+    public List<T> lookupAll(Predicate<T> predicate) {
+        List<T> list = new ArrayList<>();
+        Iterator<T> it = newIterator();
+        while (it.hasNext()) {
+            T next = it.next();
+            if (next != null && predicate.test(next)) {
+                list.add(next);
+            }
+        }
+        return list;
+    }
+
+    /**
      * Attempts to store {@code definition} in this repository.
      *
      * @param definition The definition to store.
@@ -108,9 +134,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
         checkState(!locked, "Cannot add definitions to a locked repository.");
 
         int id = definition.getId();
-        checkState(!get(id).isPresent(), "Identifier ["+id+"] already mapped to a definition.");
-
-        put(id, definition);
+        checkState(put(id, definition), "Identifier [" + id + "] already mapped to a definition.");
         size++;
     }
 

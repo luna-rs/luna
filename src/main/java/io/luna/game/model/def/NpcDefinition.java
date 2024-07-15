@@ -5,14 +5,14 @@ import com.google.common.collect.ImmutableList;
 /**
  * A definition model describing a non-player mob.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class NpcDefinition implements Definition {
 
     /**
      * The definition count.
      */
-    public static final int SIZE = 8152;
+    public static final int SIZE = 14974;
 
     /**
      * The NPC definition repository.
@@ -20,74 +20,111 @@ public final class NpcDefinition implements Definition {
     public static final DefinitionRepository<NpcDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
-     * The identifier.
+     * The NPC id.
      */
     private final int id;
 
     /**
-     * The name.
+     * The NPC name.
      */
     private final String name;
 
     /**
-     * The examine text.
+     * The NPC description.
      */
-    private final String examine;
+    private final String description;
 
     /**
-     * The size.
+     * The NPC size.
      */
     private final int size;
 
     /**
-     * The walking animation.
+     * The NPC stand animation.
      */
-    private final int walkAnimation;
+    private final int standAnimationId;
 
     /**
-     * The walking-back animation.
+     * The NPC walk animation.
      */
-    private final int walkBackAnimation;
+    private final int walkAnimationId;
 
     /**
-     * The walking-left animation.
+     * The NPC turn back animation.
      */
-    private final int walkLeftAnimation;
+    private final int turnBackAnimationId;
 
     /**
-     * The walking-right animation.
+     * The NPC turn right animation.
      */
-    private final int walkRightAnimation;
+    private final int turnRightAnimationId;
 
     /**
-     * An immutable list of actions.
+     * The NPC turn left animation.
+     */
+    private final int turnLeftAnimationId;
+
+    /**
+     * The NPC degrees to turn.
+     */
+    private final int degreesToTurn;
+
+    /**
+     * The NPC context menu actions.
      */
     private final ImmutableList<String> actions;
 
     /**
+     * If the NPC is visible on the minimap.
+     */
+    private final boolean minimapVisible;
+
+    /**
+     * The NPC combat level.
+     */
+    private final int combatLevel;
+
+    /**
+     * The NPC transformation varP definition.
+     */
+    private final VarpChildDefinition varpDef;
+
+    /**
      * Creates a new {@link NpcDefinition}.
      *
-     * @param id The identifier.
-     * @param name The name.
-     * @param examine The examine text.
-     * @param size The size.
-     * @param walkAnimation The walking animation.
-     * @param walkBackAnimation The walking-back animation.
-     * @param walkLeftAnimation The walking-left animation.
-     * @param walkRightAnimation The walking-right animation.
-     * @param actions A list of actions.
+     * @param id The NPC id.
+     * @param name The NPC name.
+     * @param description The NPC description.
+     * @param size The NPC size.
+     * @param standAnimationId The NPC stand animation.
+     * @param walkAnimationId The NPC walk animation.
+     * @param turnBackAnimationId The NPC turn back animation.
+     * @param turnRightAnimationId The NPC turn right animation.
+     * @param turnLeftAnimationId The NPC turn left animation.
+     * @param degreesToTurn The NPC degrees to turn.
+     * @param actions The NPC context menu actions.
+     * @param minimapVisible If the NPC is visible on the minimap.
+     * @param combatLevel The NPC combat level.
+     * @param varpDef The NPC transformation varP definition.
      */
-    public NpcDefinition(int id, String name, String examine, int size, int walkAnimation, int walkBackAnimation,
-                         int walkLeftAnimation, int walkRightAnimation, String[] actions) {
+    public NpcDefinition(int id, String name, String description, int size, int standAnimationId, int walkAnimationId,
+                         int turnBackAnimationId, int turnRightAnimationId, int turnLeftAnimationId, int degreesToTurn,
+                         ImmutableList<String> actions, boolean minimapVisible, int combatLevel,
+                         VarpChildDefinition varpDef) {
         this.id = id;
         this.name = name;
-        this.examine = examine;
+        this.description = description;
         this.size = size;
-        this.walkAnimation = walkAnimation;
-        this.walkBackAnimation = walkBackAnimation;
-        this.walkLeftAnimation = walkLeftAnimation;
-        this.walkRightAnimation = walkRightAnimation;
-        this.actions = ImmutableList.copyOf(actions);
+        this.standAnimationId = standAnimationId;
+        this.walkAnimationId = walkAnimationId;
+        this.turnBackAnimationId = turnBackAnimationId;
+        this.turnRightAnimationId = turnRightAnimationId;
+        this.turnLeftAnimationId = turnLeftAnimationId;
+        this.degreesToTurn = degreesToTurn;
+        this.actions = actions;
+        this.minimapVisible = minimapVisible;
+        this.combatLevel = combatLevel;
+        this.varpDef = varpDef;
     }
 
 
@@ -102,66 +139,99 @@ public final class NpcDefinition implements Definition {
         return action.equals(actions.get(index));
     }
 
-    /**
-     * @return The identifier.
-     */
+    @Override
     public int getId() {
         return id;
     }
 
     /**
-     * @return The name.
+     * @return The NPC name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The examine text.
+     * @return The NPC description.
      */
-    public String getExamine() {
-        return examine;
+    public String getDescription() {
+        return description;
     }
 
     /**
-     * @return The size.
+     * @return The NPC size.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * @return The walking animation.
+     * @return The NPC stand animation.
      */
-    public int getWalkAnimation() {
-        return walkAnimation;
+    public int getStandAnimationId() {
+        return standAnimationId;
     }
 
     /**
-     * @return The walking-back animation.
+     * @return The NPC walk animation.
      */
-    public int getWalkBackAnimation() {
-        return walkBackAnimation;
+    public int getWalkAnimationId() {
+        return walkAnimationId;
     }
 
     /**
-     * @return The walking-left animation.
+     * @return The NPC turn back animation.
      */
-    public int getWalkLeftAnimation() {
-        return walkLeftAnimation;
+    public int getTurnBackAnimationId() {
+        return turnBackAnimationId;
     }
 
     /**
-     * @return The walking-right animation.
+     * @return The NPC turn right animation.
      */
-    public int getWalkRightAnimation() {
-        return walkRightAnimation;
+    public int getTurnRightAnimationId() {
+        return turnRightAnimationId;
     }
 
     /**
-     * @return An immutable list of actions.
+     * @return The NPC turn left animation.
+     */
+    public int getTurnLeftAnimationId() {
+        return turnLeftAnimationId;
+    }
+
+    /**
+     * @return The NPC degrees to turn.
+     */
+    public int getDegreesToTurn() {
+        return degreesToTurn;
+    }
+
+    /**
+     * @return The NPC context menu actions.
      */
     public ImmutableList<String> getActions() {
         return actions;
+    }
+
+    /**
+     * @return If the NPC is visible on the minimap.
+     */
+    public boolean isMinimapVisible() {
+        return minimapVisible;
+    }
+
+    /**
+     * @return The NPC combat level.
+     */
+    public int getCombatLevel() {
+        return combatLevel;
+    }
+
+    /**
+     * @return The NPC transformation varP definition.
+     */
+    public VarpChildDefinition getVarpDef() {
+        return varpDef;
     }
 }
