@@ -1,10 +1,10 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.msg.in.MagicOnNpcMessageReader;
 import io.luna.net.msg.in.MagicOnPlayerMessageReader;
@@ -17,35 +17,40 @@ import io.luna.net.msg.in.MagicOnPlayerMessageReader;
 public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
 
     /**
-     * The result of a player attempting to cast a spell onto an npc.
+     * The result of a player attempting to cast a spell onto a npc.
      *
      * @author searledan
      * @see MagicOnNpcMessageReader
      */
-    public static final class CastOnNpcEvent extends UseSpellEvent {
+    public static final class MagicOnNpcEvent extends UseSpellEvent implements InteractableEvent {
 
         /**
          * The spell target.
          */
-        private final Npc target;
+        private final Npc targetNpc;
 
         /**
          * Creates a new {@link PlayerEvent}.
          *
          * @param caster The player casting a spell.
-         * @param spellId The id of the spell being casted.
-         * @param target The targeted npc.
+         * @param spellId The id of the spell being cast.
+         * @param targetNpc The targeted npc.
          */
-        public CastOnNpcEvent(Player caster, int spellId, Npc target) {
+        public MagicOnNpcEvent(Player caster, int spellId, Npc targetNpc) {
             super(caster, spellId);
-            this.target = target;
+            this.targetNpc = targetNpc;
+        }
+
+        @Override
+        public Entity target() {
+            return targetNpc;
         }
 
         /**
          * @return The spell target.
          */
-        public Npc getTarget() {
-            return target;
+        public Npc getTargetNpc() {
+            return targetNpc;
         }
     }
 
@@ -55,30 +60,35 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
      * @author notjuanortiz
      * @see MagicOnPlayerMessageReader
      */
-    public static final class CastOnPlayerEvent extends UseSpellEvent {
+    public static final class MagicOnPlayerEvent extends UseSpellEvent implements InteractableEvent {
 
         /**
          * The spell target.
          */
-        private final Player target;
+        private final Player targetPlr;
 
         /**
          * Creates a new {@link PlayerEvent}.
          *
          * @param caster The player casting a spell.
          * @param spellId The id of the spell being casted.
-         * @param target The targeted player.
+         * @param targetPlr The targeted player.
          */
-        public CastOnPlayerEvent(Player caster, int spellId, Player target) {
+        public MagicOnPlayerEvent(Player caster, int spellId, Player targetPlr) {
             super(caster, spellId);
-            this.target = target;
+            this.targetPlr = targetPlr;
+        }
+
+        @Override
+        public Entity target() {
+            return targetPlr;
         }
 
         /**
          * @return The spell target.
          */
-        public Player getTarget() {
-            return target;
+        public Player getTargetPlr() {
+            return targetPlr;
         }
     }
 
@@ -87,7 +97,7 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class CastOnItemEvent extends UseSpellEvent {
+    public static final class MagicOnItemEvent extends UseSpellEvent {
 
         /**
          * The target interface identifier.
@@ -105,7 +115,7 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         private final int targetItemId;
 
         /**
-         * Creates a new {@link CastOnItemEvent}.
+         * Creates a new {@link MagicOnItemEvent}.
          *
          * @param plr The player.
          * @param spellId The spell identifier.
@@ -113,7 +123,7 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
          * @param targetItemIndex The target item index.
          * @param targetItemId The target item identifier.
          */
-        public CastOnItemEvent(Player plr, int spellId, int targetItemInterface, int targetItemIndex, int targetItemId) {
+        public MagicOnItemEvent(Player plr, int spellId, int targetItemInterface, int targetItemIndex, int targetItemId) {
             super(plr, spellId);
             this.targetItemInterface = targetItemInterface;
             this.targetItemIndex = targetItemIndex;
@@ -147,30 +157,35 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class CastOnGroundItemEvent extends UseSpellEvent {
+    public static final class MagicOnGroundItemEvent extends UseSpellEvent implements InteractableEvent {
 
         /**
          * The target ground item.
          */
-        private final GroundItem target;
+        private final GroundItem targetItem;
 
         /**
-         * Creates a new {@link CastOnGroundItemEvent}.
+         * Creates a new {@link MagicOnGroundItemEvent}.
          *
          * @param plr The player.
          * @param spellId The spell identifier.
-         * @param target The target ground item.
+         * @param targetItem The target ground item.
          */
-        public CastOnGroundItemEvent(Player plr, int spellId, GroundItem target) {
+        public MagicOnGroundItemEvent(Player plr, int spellId, GroundItem targetItem) {
             super(plr, spellId);
-            this.target = target;
+            this.targetItem = targetItem;
+        }
+
+        @Override
+        public Entity target() {
+            return targetItem;
         }
 
         /**
          * @return The target ground item.
          */
-        public GroundItem getTarget() {
-            return target;
+        public GroundItem getTargetItem() {
+            return targetItem;
         }
     }
 
@@ -179,30 +194,35 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class CastOnObjectEvent extends UseSpellEvent {
+    public static final class MagicOnObjectEvent extends UseSpellEvent implements InteractableEvent{
 
         /**
          * The target object.
          */
-        private final GameObject target;
+        private final GameObject targetObject;
 
         /**
-         * Creates a new {@link CastOnGroundItemEvent}.
+         * Creates a new {@link MagicOnGroundItemEvent}.
          *
          * @param plr The player.
          * @param spellId The spell identifier.
-         * @param target The target object.
+         * @param targetObject The target object.
          */
-        public CastOnObjectEvent(Player plr, int spellId, GameObject target) {
+        public MagicOnObjectEvent(Player plr, int spellId, GameObject targetObject) {
             super(plr, spellId);
-            this.target = target;
+            this.targetObject = targetObject;
+        }
+
+        @Override
+        public Entity target() {
+            return targetObject;
         }
 
         /**
          * @return The target object.
          */
-        public GameObject getTarget() {
-            return target;
+        public GameObject getTargetObject() {
+            return targetObject;
         }
     }
 

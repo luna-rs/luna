@@ -1,17 +1,62 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * A player-click based event. Not intended for interception.
  *
  * @author lare96
  */
-public class PlayerClickEvent extends PlayerEvent implements ControllableEvent {
+public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, InteractableEvent {
 
     /**
-     * An event sent when a player clicks another player's fourth interaction index.
+     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     *
+     * @author lare96
+     */
+    public static final class PlayerFirstClickEvent extends PlayerClickEvent {
+
+        /**
+         * Creates a new {@link PlayerFourthClickEvent}.
+         */
+        public PlayerFirstClickEvent(Player player, Player targetPlr) {
+            super(player, targetPlr);
+        }
+    }
+
+    /**
+     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     *
+     * @author lare96
+     */
+    public static final class PlayerSecondClickEvent extends PlayerClickEvent {
+
+        /**
+         * Creates a new {@link PlayerFourthClickEvent}.
+         */
+        public PlayerSecondClickEvent(Player player,  Player targetPlr) {
+            super(player,  targetPlr);
+        }
+    }
+
+    /**
+     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     *
+     * @author lare96
+     */
+    public static final class PlayerThirdClickEvent extends PlayerClickEvent {
+
+        /**
+         * Creates a new {@link PlayerFourthClickEvent}.
+         */
+        public PlayerThirdClickEvent(Player player,  Player targetPlr) {
+            super(player, targetPlr);
+        }
+    }
+
+    /**
+     * An event sent when a player clicks antargetPlr player's fourth interaction index.
      *
      * @author lare96
      */
@@ -20,45 +65,50 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link PlayerFourthClickEvent}.
          */
-        public PlayerFourthClickEvent(Player player, int index, Player other) {
-            super(player, index, other);
+        public PlayerFourthClickEvent(Player player, Player targetPlr) {
+            super(player, targetPlr);
+        }
+    }
+    /**
+     * An event sent when a player clicks antargetPlr player's fourth interaction index.
+     *
+     * @author lare96
+     */
+    public static final class PlayerFifthClickEvent extends PlayerClickEvent {
+
+        /**
+         * Creates a new {@link PlayerFourthClickEvent}.
+         */
+        public PlayerFifthClickEvent(Player player, Player targetPlr) {
+            super(player, targetPlr);
         }
     }
 
     /**
-     * The index of the other player.
-     */
-    private final int targetIndex;
-
-    /**
      * The other player.
      */
-    private final Player target;
+    private final Player targetPlr;
 
     /**
      * Creates a new {@link PlayerClickEvent}.
      *
      * @param player The player.
-     * @param targetIndex The index of the other player.
-     * @param target The other player.
+     * @param targetPlr The other player.
      */
-    public PlayerClickEvent(Player player, int targetIndex, Player target) {
+    public PlayerClickEvent(Player player, Player targetPlr) {
         super(player);
-        this.targetIndex = targetIndex;
-        this.target = target;
+        this.targetPlr = targetPlr;
     }
 
-    /**
-     * @return The index of the other player.
-     */
-    public int getTargetIndex() {
-        return targetIndex;
+    @Override
+    public Entity target() {
+        return targetPlr;
     }
 
     /**
      * @return The other player.
      */
-    public Player getTarget() {
-        return target;
+    public Player getTargetPlr() {
+        return targetPlr;
     }
 }

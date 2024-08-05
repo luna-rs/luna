@@ -1,7 +1,6 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 import io.luna.game.model.object.GameObject;
 
 /**
