@@ -1,7 +1,6 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An item widget-click based event. Not intended for interception.

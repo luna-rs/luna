@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.controller;
 
 import com.google.common.collect.Iterators;
+import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import org.jetbrains.annotations.NotNull;
@@ -105,6 +106,7 @@ public final class ControllerManager implements Iterable<PlayerController> {
                 if (controller.canExit(player)) {
                     registered.remove(key);
                 } else {
+
                     return false;
                 }
             } else if (alreadyRegistered && !controller.canMove(player, newPos)) {

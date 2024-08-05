@@ -1,8 +1,8 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 import io.luna.game.model.object.GameObject;
 
 /**
@@ -17,7 +17,7 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class ItemOnItemEvent extends UseItemEvent implements ControllableEvent {
+    public static final class ItemOnItemEvent extends UseItemEvent {
 
         /**
          * The target item identifier.
@@ -86,7 +86,7 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class ItemOnNpcEvent extends UseItemEvent implements ControllableEvent {
+    public static final class ItemOnNpcEvent extends UseItemEvent implements InteractableEvent {
 
         /**
          * The target npc.
@@ -107,6 +107,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
             this.targetNpc = targetNpc;
         }
 
+        @Override
+        public Entity target() {
+            return targetNpc;
+        }
+
         /**
          * @return The target npc.
          */
@@ -120,7 +125,7 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class ItemOnObjectEvent extends UseItemEvent implements ControllableEvent {
+    public static final class ItemOnObjectEvent extends UseItemEvent implements InteractableEvent {
 
         /**
          * The object.
@@ -139,6 +144,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, GameObject gameObject) {
             super(player, itemId, itemIndex, itemInterfaceId);
             this.gameObject = gameObject;
+        }
+
+        @Override
+        public Entity target() {
+            return gameObject;
         }
 
         /**
@@ -161,7 +171,7 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class ItemOnPlayerEvent extends UseItemEvent implements ControllableEvent {
+    public static final class ItemOnPlayerEvent extends UseItemEvent implements InteractableEvent {
 
         /**
          * The target player.
@@ -180,6 +190,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         public ItemOnPlayerEvent(Player player, int usedId, int usedIndex, int usedInterfaceId, Player targetPlayer) {
             super(player, usedId, usedIndex, usedInterfaceId);
             this.targetPlayer = targetPlayer;
+        }
+
+        @Override
+        public Entity target() {
+            return targetPlayer;
         }
 
         /**

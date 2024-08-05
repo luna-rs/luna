@@ -2,7 +2,6 @@ package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.WalkingQueue.Step;
-import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
  * An event sent when a player walks.

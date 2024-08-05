@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.controller;
 
+import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.service.LogoutService;
 

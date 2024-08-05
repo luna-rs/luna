@@ -1,15 +1,15 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
 
 /**
- * An npc-click based event. Not intended for interception.
+ * A npc-click based event. Not intended for interception.
  *
  * @author lare96
  */
-public class NpcClickEvent extends PlayerEvent implements ControllableEvent {
+public class NpcClickEvent extends PlayerEvent implements ControllableEvent, InteractableEvent {
 
     /**
      * An event sent when a player clicks an npc's first index.
@@ -89,23 +89,28 @@ public class NpcClickEvent extends PlayerEvent implements ControllableEvent {
     /**
      * The non-player character.
      */
-    private final Npc npc;
+    private final Npc targetNpc;
 
     /**
      * Creates a new {@link NpcClickEvent}.
      *
      * @param player The player.
-     * @param npc The non-player character.
+     * @param targetNpc The non-player character.
      */
-    private NpcClickEvent(Player player, Npc npc) {
+    private NpcClickEvent(Player player, Npc targetNpc) {
         super(player);
-        this.npc = npc;
+        this.targetNpc = targetNpc;
+    }
+
+    @Override
+    public Entity target() {
+        return targetNpc;
     }
 
     /**
      * @return The non-player character.
      */
-    public Npc getNpc() {
-        return npc;
+    public Npc getTargetNpc() {
+        return targetNpc;
     }
 }
