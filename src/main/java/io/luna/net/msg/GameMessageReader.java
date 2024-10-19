@@ -6,7 +6,7 @@ import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.controller.ControllableEvent;
+import io.luna.game.event.impl.ControllableEvent;
 import io.luna.net.client.Client;
 import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
@@ -91,7 +91,7 @@ public abstract class GameMessageReader<E extends Event> {
             // Validate the event with the decoder and the current controller if needed.
             if (event != NullEvent.INSTANCE && validate(player, event)) {
                 if (event instanceof ControllableEvent) {
-                    if (!player.getControllers().onEvent((ControllableEvent) event)) {
+                    if (!player.getControllers().checkEvent((ControllableEvent) event)) {
                         return;
                     }
                 }
