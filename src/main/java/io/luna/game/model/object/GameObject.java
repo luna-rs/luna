@@ -128,7 +128,8 @@ public class GameObject extends StationaryEntity {
      */
     public void animate() {
         if (!isHidden()) {
-            int animationId = definition.getAnimationId();
+            int animationId = definition.getAnimationId().orElseThrow(() ->
+                    new IllegalStateException("Object [" + id + "] does not have an animation!"));
             if (animationId > 0) {
                 applyUpdate(plr -> {
                     sendPlacementMessage(plr);
