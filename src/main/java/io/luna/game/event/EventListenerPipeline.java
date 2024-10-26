@@ -3,8 +3,10 @@ package io.luna.game.event;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
+import io.github.classgraph.ClassInfo;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
+import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,11 +113,12 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      * @param e The exception to handle.
      */
     private void handleException(ScriptExecutionException e, boolean lazy) {
-        var script = e.getScript();
+        Script script = e.getScript();
         if (script != null) {
             String s = lazy ? "lazy-run" : "run";
-            logger.warn(new ParameterizedMessage("Failed to {} a listener from script '{}'", s,
-                    script.getInfo().getName()), e);
+            ClassInfo info = script.getInfo();
+            logger.warn(new ParameterizedMessage("Failed to {} a listener from script '{}' in package '{}'", s,
+                    info.getSimpleName(), info.getPackageName()), e);
         } else {
             logger.catching(e);
         }
