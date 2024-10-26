@@ -311,7 +311,7 @@ public final class Bot extends Player {
             // Run fallback script when main script terminated.
             setScript(fallback);
         } else if (temporary) {
-            // Temporary bot with no fallback script, disconnect.
+            // Bot with no fallback script, disconnect.
             logout();
         } else {
             // Permanent bot with no fallback script, enter idle mode.
