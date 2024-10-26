@@ -6,10 +6,7 @@ import io.luna.LunaContext;
 import io.luna.game.cache.Archive;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
-import io.luna.game.cache.CacheUtils;
-import io.luna.game.model.def.GameObjectDefinition;
 import io.luna.game.model.def.VarBitDefinition;
-import io.luna.game.model.def.VarpDefinition;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -26,8 +23,12 @@ public final class VarBitDefinitionDecoder extends CacheDecoder<VarBitDefinition
 
         try {
             int count = dataBuf.readShort();
-            for (int i = 0; i < count; i++) {
-                decodedObjects.add(decodeEntry(dataBuf));
+            for (int id = 0; id < count; id++) {
+                VarBitDefinition def = decodeEntry(id, dataBuf);
+                if (def.getParentVarpId() == -1) {
+                    continue;
+                }
+                decodedObjects.add(def);
             }
         } finally {
             dataBuf.release();
@@ -45,16 +46,16 @@ public final class VarBitDefinitionDecoder extends CacheDecoder<VarBitDefinition
      * @param data The data.
      * @return The definition.
      */
-    private VarBitDefinition decodeEntry(ByteBuf data) {
-        int varBitId = -1;
+    private VarBitDefinition decodeEntry(int id, ByteBuf data) {
+        int parentVarpId = -1;
         int msb = -1;
         int lsb = -1;
         while (true) {
             int opcode = data.readUnsignedByte();
             if (opcode == 0) {
-                return new VarBitDefinition(varBitId, msb, lsb);
+                return new VarBitDefinition(id, parentVarpId, msb, lsb);
             } else if (opcode == 1) {
-                varBitId = data.readUnsignedShort();
+                parentVarpId = data.readUnsignedShort();
                 lsb = data.readUnsignedByte();
                 msb = data.readUnsignedByte();
             }

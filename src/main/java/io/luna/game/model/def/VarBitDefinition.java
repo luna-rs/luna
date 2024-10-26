@@ -18,6 +18,11 @@ public final class VarBitDefinition implements Definition {
     private final int id;
 
     /**
+     * The parent varp id.
+     */
+    private final int parentVarpId;
+
+    /**
      * The least significant bit.
      */
     private final int leastSignificantBit;
@@ -31,11 +36,13 @@ public final class VarBitDefinition implements Definition {
      * Creates a new {@link VarBitDefinition}.
      *
      * @param id The var bit id.
+     * @param parentVarpId The parent varp id.
      * @param leastSignificantBit The least significant bit.
      * @param mostSignificantBit The most significant bit.
      */
-    public VarBitDefinition(int id, int leastSignificantBit, int mostSignificantBit) {
+    public VarBitDefinition(int id, int parentVarpId, int leastSignificantBit, int mostSignificantBit) {
         this.id = id;
+        this.parentVarpId = parentVarpId;
         this.leastSignificantBit = leastSignificantBit;
         this.mostSignificantBit = mostSignificantBit;
     }
@@ -43,6 +50,13 @@ public final class VarBitDefinition implements Definition {
     @Override
     public int getId() {
         return id;
+    }
+
+    /**
+     * @return The parent varp id.
+     */
+    public int getParentVarpId() {
+        return parentVarpId;
     }
 
     /**

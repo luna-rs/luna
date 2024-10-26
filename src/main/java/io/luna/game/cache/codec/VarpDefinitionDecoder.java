@@ -2,14 +2,10 @@ package io.luna.game.cache.codec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.errorprone.annotations.Var;
 import io.luna.LunaContext;
 import io.luna.game.cache.Archive;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
-import io.luna.game.cache.CacheUtils;
-import io.luna.game.model.def.GameObjectDefinition;
-import io.luna.game.model.def.VarBitDefinition;
 import io.luna.game.model.def.VarpDefinition;
 import io.netty.buffer.ByteBuf;
 
