@@ -16,6 +16,7 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
+import io.luna.util.benchmark.BenchmarkManager;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.MusicDefinitionFileParser;
@@ -63,6 +64,11 @@ public final class LunaServer {
     private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
+     * The benchmark manager.
+     */
+    private final BenchmarkManager benchmarkManager = new BenchmarkManager();
+
+    /**
      * A package-private constructor.
      */
     LunaServer(LunaContext context) {
@@ -85,7 +91,7 @@ public final class LunaServer {
         initNetwork();
 
         long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().port()), box(elapsedTime));
+        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().game().port()), box(elapsedTime));
     }
 
     /**
@@ -106,20 +112,23 @@ public final class LunaServer {
      * Initializes the network server using Netty.
      */
     private void initNetwork() {
-        ResourceLeakDetector.setLevel(Luna.settings().resourceLeakDetection());
+        ResourceLeakDetector.setLevel(Luna.settings().game().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
-        bootstrap.bind(Luna.settings().port()).syncUninterruptibly();
+        bootstrap.bind(Luna.settings().game().port()).syncUninterruptibly();
     }
 
     /**
      * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
     private void initServices() throws InterruptedException {
+        // Benchmark service started separately since it may not have to run.
+        benchmarkManager.getService().startAsync();
+
         var gameService = context.getGame();
         var loginService = context.getWorld().getLoginService();
         var logoutService = context.getWorld().getLogoutService();
@@ -138,7 +147,10 @@ public final class LunaServer {
      */
     private void initPlugins() throws ReflectiveOperationException {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
-        logger.info("{} Kotlin plugins have been loaded.", bootstrap.start());
+        bootstrap.start();
+
+        int count = context.getPlugins().getCount();
+        logger.info("{} Kotlin plugins have been loaded.", box(count));
     }
 
     /**
@@ -152,7 +164,7 @@ public final class LunaServer {
         executor.execute(new NpcCombatDefinitionFileParser());
 
         try {
-            int count = executor.size();
+            int count = executor.getTaskCount();
             if (count > 0) {
                 logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
                 executor.await(true);
@@ -175,5 +187,12 @@ public final class LunaServer {
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
+    }
+
+    /**
+     * @return The benchmark manager.
+     */
+    public BenchmarkManager getBenchmarkManager() {
+        return benchmarkManager;
     }
 }

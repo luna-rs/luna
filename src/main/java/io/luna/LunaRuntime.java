@@ -1,5 +1,7 @@
 package io.luna;
 
+import io.luna.util.benchmark.BenchmarkService;
+
 /**
  * An enumerated type representing the different modes Luna can be ran in.
  *
@@ -13,8 +15,8 @@ public enum LunaRuntime {
     DEVELOPMENT,
 
     /**
-     * The server will run in benchmark mode. Exactly like the {@code DEVELOPMENT} mode, except cycle time debug
-     * statements are printed.
+     * The server will run in benchmark mode. Exactly like the {@code DEVELOPMENT} mode, except the
+     * {@link BenchmarkService} is active.
      */
     BENCHMARK,
 
