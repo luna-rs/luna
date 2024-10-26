@@ -1,11 +1,6 @@
 package io.luna;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.item.Item;
 import io.luna.util.GsonUtils;
-import io.luna.util.LoggingSettings;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.apache.logging.log4j.LogManager;
@@ -32,11 +27,6 @@ public final class Luna {
     private static final LunaSettings settings;
 
     /**
-     * The log4j2 settings.
-     */
-    private static final LoggingSettings loggingSettings;
-
-    /**
      * A private constructor.
      */
     private Luna() {
@@ -46,14 +36,16 @@ public final class Luna {
         try {
             Thread.currentThread().setName("InitializationThread");
 
+            settings = loadSettings();
+
             InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
-            loggingSettings = loadLoggingSettings();
-            System.setProperty("log4j2.configurationFactory", "io.luna.util.LoggingConfigurationFactory");
+            System.setProperty("log4j2.configurationFactory", "io.luna.util.logging.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
             System.setProperty("Log4jContextSelector",
                     "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+
             logger = LogManager.getLogger();
-            settings = loadSettings();
+
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -72,7 +64,6 @@ public final class Luna {
             logger.fatal("Luna could not be started.", e);
             System.exit(0);
         }
-
     }
 
     /**
@@ -85,25 +76,9 @@ public final class Luna {
     }
 
     /**
-     * Loads the contents of the file and parses it into a {@link LoggingSettings} object.
-     *
-     * @return The logging settings object.
-     */
-    private static LoggingSettings loadLoggingSettings() throws IOException {
-        return GsonUtils.readAsType(Paths.get("data", "logging.json"), LoggingSettings.class);
-    }
-
-    /**
      * @return The global settings.
      */
     public static LunaSettings settings() {
         return settings;
-    }
-
-    /**
-     * @return The logging settings.
-     */
-    public static LoggingSettings loggingSettings() {
-        return loggingSettings;
     }
 }
