@@ -30,6 +30,7 @@ import io.luna.game.model.mob.inter.GameTabSet;
 import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
+import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.service.LogoutService;
@@ -586,6 +587,15 @@ public class Player extends Mob {
         sendVarp(persistentVarp, value ? 1 : 0);
     }
 
+    /**
+     * Shortcut to queue a new {@link VarpMessageWriter} packet for a varbit.
+     *
+     * @param varbit The varbit.
+     */
+    public void sendVarbit(Varbit varbit) {
+        Varp varp = varbit.toVarp();
+        sendVarp(varp);
+    }
     /**
      * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. This function makes use of caching mechanisms that
      * can boost performance when invoked repetitively.
