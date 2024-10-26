@@ -30,16 +30,6 @@ public class Varp {
     }
 
     /**
-     * Creates a new {@link Varp}.
-     *
-     * @param id The id.
-     * @param value The value, as a flag.
-     */
-    public Varp(int id, boolean value) {
-        this(id, value ? 1 : 0);
-    }
-
-    /**
      * @return The id.
      */
     public int getId() {
