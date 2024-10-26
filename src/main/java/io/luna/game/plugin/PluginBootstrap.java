@@ -1,5 +1,8 @@
 package io.luna.game.plugin;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ScanResult;
@@ -11,12 +14,14 @@ import kotlin.script.templates.standard.ScriptTemplateWithArgs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * A bootstrapper that loads and runs all Kotlin plugins.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class PluginBootstrap {
 
@@ -55,52 +60,122 @@ public final class PluginBootstrap {
     }
 
     /**
-     * Initializes this bootstrapper, loading all of the plugins.
+     * Initializes this bootstrapper, loading all the plugins.
      *
-     * @return The amount of plugins that were loaded.
      * @throws ReflectiveOperationException If an error occurs while instancing plugins.
      */
-    public int start() throws ReflectiveOperationException {
+    public void start() throws ReflectiveOperationException {
         var pluginManager = context.getPlugins();
         var gameService = context.getGame();
-        int pluginCount = loadPlugins();
+
+        loadPlugins();
 
         EventListenerPipelineSet oldPipelines = pluginManager.getPipelines();
         EventListenerPipelineSet newPipelines = bindings.getPipelines();
         gameService.sync(() -> oldPipelines.replaceAll(newPipelines));
-        return pluginCount;
     }
 
     /**
-     * Searches the classpath for scripts and loads them.
+     * Searches the classpath for scripts and then validates, loads, and sorts them to be held within {@link PluginManager#getPluginMap()}.
      *
-     * @return The amount of plugins loaded.
      * @throws ReflectiveOperationException If an error occurs while instancing plugins.
      */
-    private int loadPlugins() throws ReflectiveOperationException {
-        var compiledScripts = new ArrayList<ClassInfo>();
-        var buildScripts = new ArrayList<ClassInfo>();
-
-        // Search classpath for compiled scripts.
+    private void loadPlugins() throws ReflectiveOperationException {
+        // Search classpath for all scripts.
         try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
-            for (ClassInfo script : result.getSubclasses("kotlin.script.templates.standard.ScriptTemplateWithArgs")) {
-                if (script.getSimpleName().equals("Build_plugin")) {
-                    buildScripts.add(script);
-                } else {
-                    compiledScripts.add(script);
+            Map<String, ClassInfo> infoScripts = new HashMap<>();
+            ArrayListMultimap<String, ClassInfo> pluginScripts = ArrayListMultimap.create();
+
+            // Load all runtime information about scripts.
+            loadScripts(result, infoScripts, pluginScripts);
+
+            // Ensure that all plugin scripts have an assigned info script.
+            validatePlugins(infoScripts, pluginScripts);
+
+            // Load all build scripts and generate the plugin map.
+            ImmutableMap<String, Plugin> pluginMap = buildPluginMap(infoScripts, pluginScripts);
+            context.getPlugins().setPluginMap(pluginMap);
+        }
+    }
+
+    /**
+     * Loads runtime information about all compiled scripts.
+     *
+     * @param result The scan result.
+     * @param infoScripts The info script map.
+     * @param pluginScripts The plugin script map.
+     */
+    private void loadScripts(ScanResult result, Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
+        for (ClassInfo scriptInfo : result.getSubclasses("kotlin.script.templates.standard.ScriptTemplateWithArgs")) {
+            String packageName = scriptInfo.getPackageName();
+            if (scriptInfo.getSimpleName().equals("Info_plugin")) {
+                // Resolve an info script.
+                infoScripts.put(packageName, scriptInfo);
+            } else {
+                // Resolve a regular plugin script.
+                pluginScripts.put(packageName, scriptInfo);
+            }
+        }
+    }
+
+    /**
+     * Ensures all plugins have a correct and valid {@code info.plugin.kts} file.
+     *
+     * @param infoScripts The info script map.
+     * @param pluginScripts The plugin script map.
+     */
+    private void validatePlugins(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
+        for (Entry<String, ClassInfo> entry : pluginScripts.entries()) {
+            boolean foundMatch = false;
+            String packageName = entry.getKey();
+            ClassInfo scriptInfo = entry.getValue();
+            // Ignore SandboxScript because it doesn't need to be a plugin.
+            if (scriptInfo.getSimpleName().equals("SandboxScript")) {
+                continue;
+            }
+            for (String loadedPackageName : infoScripts.keySet()) {
+                // Check if every script has a matching info script.
+                if (packageName.startsWith(loadedPackageName)) {
+
+                    // It does, now check if it's a nested plugin.
+                    if (!packageName.equals(loadedPackageName) && infoScripts.containsKey(packageName)) {
+                        throw new IllegalStateException("Nesting plugins is not allowed due to confusion and potentially unpredictable behaviour. Move plugin [" + packageName + "] into its own top-level directory.");
+                    }
+                    foundMatch = true;
                 }
             }
-            // TODO Link build scripts with compiled scripts
-            // TODO Only initialize script if its plugin script/metadata was loaded
-            // TODO Retrieve proper script data from metadata
+            if (!foundMatch) {
+                throw new IllegalStateException("Script [" + scriptInfo.getSimpleName() + "] in package [" + packageName + "] does not have a valid info.plugin.kts file.");
+            }
+        }
+    }
 
-            // Run all compiled scripts.
-            var scriptArgs = new String[0];
-            for (ClassInfo scriptInfo : compiledScripts) {
-                Class<ScriptTemplateWithArgs> scriptClass = scriptInfo.loadClass(ScriptTemplateWithArgs.class);
-                ScriptTemplateWithArgs scriptInstance = scriptClass.getConstructor(String[].class).newInstance((Object) scriptArgs);
+    /**
+     * Organizes all the validated scripts into a map of plugins.
+     *
+     * @param infoScripts The info script map.
+     * @param pluginScripts The plugin script map.
+     * @return The plugin map.
+     */
+    private ImmutableMap<String, Plugin> buildPluginMap(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) throws ReflectiveOperationException {
+        ImmutableMap.Builder<String, Plugin> pluginMap = ImmutableMap.builder();
+        for (ClassInfo infoScriptClass : infoScripts.values()) {
+            String packageName = infoScriptClass.getPackageName();
 
-                RuntimeScript script = new RuntimeScript(scriptInfo, scriptInstance);
+            // Run the info script and retrieve metadata.
+            Script infoScript = runScript(packageName, infoScriptClass);
+            InfoScriptData infoScriptData = bindings.getInfo().getAndSet(null);
+            if (infoScriptData == null) { // No metadata found.
+                throw new IllegalStateException("No InfoScriptData found for plugin located in [" + packageName + "]");
+            }
+            InfoScript newInfoScript = new InfoScript(context, infoScript.getPackageName(), infoScript.getInfo(), infoScript.getDefinition(), infoScriptData);
+
+            // Run the other scripts for this plugin, add listeners, build script list.
+            ImmutableList.Builder<Script> scriptListBuilder = ImmutableList.builder();
+            for (ClassInfo scriptInfo : pluginScripts.get(packageName)) {
+
+                // Add event listeners from Kotlin code to the Java event pipelines.
+                Script script = runScript(packageName, scriptInfo);
                 for (EventListener<?> listener : bindings.getListeners()) {
                     listener.setScript(script);
                     bindings.getPipelines().add(listener);
@@ -110,9 +185,30 @@ public final class PluginBootstrap {
                 }
                 bindings.getMatchers().clear();
                 bindings.getListeners().clear();
+
+                // Add to the script list.
+                scriptListBuilder.add(script);
             }
+
+            // Add to the plugin map.
+            Plugin plugin = new Plugin(packageName, newInfoScript, scriptListBuilder.build());
+            pluginMap.put(packageName, plugin);
         }
-        logger.debug("{} compiled Kotlin scripts have been initialized.", compiledScripts.size());
-        return buildScripts.size();
+        return pluginMap.build();
+    }
+
+    /**
+     * Runs the contents within a compiled script, and returns a {@link Script} instance.
+     *
+     * @param packageName The plugin package name.
+     * @param scriptInfo The runtime information about the script.
+     * @return The script instance.
+     * @throws ReflectiveOperationException If any errors occur.
+     */
+    private Script runScript(String packageName, ClassInfo scriptInfo) throws ReflectiveOperationException {
+        var scriptArgs = new String[0];
+        Class<ScriptTemplateWithArgs> scriptClass = scriptInfo.loadClass(ScriptTemplateWithArgs.class);
+        ScriptTemplateWithArgs scriptDef = scriptClass.getConstructor(String[].class).newInstance((Object) scriptArgs);
+        return new Script(context, packageName, scriptInfo, scriptDef);
     }
 }

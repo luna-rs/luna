@@ -9,11 +9,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A model representing values that will be reflectively injected into the Kotlin scripting API.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class KotlinBindings {
 
@@ -41,6 +42,11 @@ public final class KotlinBindings {
      * The pipeline set.
      */
     private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
+
+    /**
+     * The plugin info.
+     */
+    private final AtomicReference<InfoScriptData> info = new AtomicReference<>();
 
     /**
      * Creates a new {@link KotlinBindings}.
@@ -84,5 +90,12 @@ public final class KotlinBindings {
      */
     public EventListenerPipelineSet getPipelines() {
         return pipelines;
+    }
+
+    /**
+     * @return The plugin info reference.
+     */
+    public AtomicReference<InfoScriptData> getInfo() {
+        return info;
     }
 }

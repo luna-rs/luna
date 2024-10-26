@@ -3,14 +3,14 @@ package io.luna.game.plugin;
 /**
  * A {@link RuntimeException} implementation that is thrown when a script fails to execute one of its listeners.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class ScriptExecutionException extends RuntimeException {
 
     /**
      * The failed script.
      */
-    private final RuntimeScript script;
+    private final Script script;
 
     /**
      * Creates a new {@link ScriptExecutionException}.
@@ -18,7 +18,7 @@ public final class ScriptExecutionException extends RuntimeException {
      * @param script The failed script.
      * @param cause The cause of the failure.
      */
-    public ScriptExecutionException(RuntimeScript script, Exception cause) {
+    public ScriptExecutionException(Script script, Exception cause) {
         super(cause);
         this.script = script;
     }
@@ -26,7 +26,7 @@ public final class ScriptExecutionException extends RuntimeException {
     /**
      * @return The failed script.
      */
-    public RuntimeScript getScript() {
+    public Script getScript() {
         return script;
     }
 }
