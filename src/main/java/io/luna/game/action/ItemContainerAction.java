@@ -10,7 +10,7 @@ import java.util.List;
  * A {@link RepeatingAction} implementation that supports inventory modifications. Users should override the {@link #add()}
  * and {@link #remove()} functions to add and remove items.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class ItemContainerAction extends RepeatingAction<Player> {
 

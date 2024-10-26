@@ -15,7 +15,7 @@ import java.util.Optional;
  * to execute a subsequent action. If this action hasn't been interrupted, once the duration completes the queued
  * action is executed.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class QueuedAction<T extends Mob> extends Action<T> {
 

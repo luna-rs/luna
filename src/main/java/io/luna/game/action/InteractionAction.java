@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * A {@link DistancedAction} implementation that interacts with an entity when an appropriate distance has been reached.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public abstract class InteractionAction extends DistancedAction<Player> {
 

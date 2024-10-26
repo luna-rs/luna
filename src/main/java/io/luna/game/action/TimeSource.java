@@ -6,7 +6,7 @@ import io.luna.util.TickTimer;
 /**
  * A {@link TickTimer} implementation that acts as a source of time for {@link ThrottledAction}s and {@link QueuedAction}s.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 public final class TimeSource extends TickTimer {
 
