@@ -75,6 +75,17 @@ public final class PersistentVarpManager {
     }
 
     /**
+     * Sets the currently stored value for {@code varpType} and sends it.
+     *
+     * @param varpType The varp type.
+     * @param value The value.
+     */
+    public void setAndSendValue(PersistentVarp varpType, int value) {
+        varps.put(varpType, value);
+        player.sendVarp(new Varp(varpType.getClientId(), value));
+    }
+
+    /**
      * Loads persisted varp data from {@code savedVarps}.
      *
      * @param persistentVarps The map to load from.
