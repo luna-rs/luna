@@ -131,7 +131,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     }
 
     /**
-     * Forwards to {@link Task#onProcess()}. Called every tick while this action is active.
+     * Forwards to the underlying task's processing function. Called every tick while this action is active.
      */
     public void process() {
 
