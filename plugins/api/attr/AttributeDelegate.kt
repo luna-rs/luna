@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
  *
  * @author lare96
  */
-class AttributeDelegate<T : Any>(val attr: Attribute<T>) {
+class AttributeDelegate<T : Any?>(val attr: Attribute<T>) {
 
     /**
      * Retrieve the attribute value.

@@ -1,14 +1,15 @@
 package api.attr
 
+import api.attr.typeAdapters.ItemContainerTypeAdapter
 import api.predef.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
+import com.google.gson.stream.JsonReader
 import io.luna.game.action.TimeSource
 import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.item.ItemContainer.StackPolicy
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.util.TickTimer
-
+import kotlin.reflect.KClass
 
 /**
  * A factory class for instantiating attributes.
@@ -59,14 +60,21 @@ object Attr {
     fun boolean(initialValue: Boolean = false) = AttributeDelegate(Attribute(initialValue))
 
     /**
-     * Creates an [ItemContainer] attribute.
+     * Creates a general purpose [Object]/[Any] attribute. If [Attribute.persist] is chained, please consider writing
+     * a custom [TypeAdapter] to control serialization.
      */
-    fun itemContainer(capacity: Int, stackPolicy: StackPolicy, refreshWidgetId: Int):
-            AttributeDelegate<ItemContainer> {
-        val attr = Attribute(ItemContainer(capacity, stackPolicy, refreshWidgetId))
+    fun <E : Any> nullableObj(type: KClass<E>, initialValue: E? = null): AttributeDelegate<E?> {
+        val attr = Attribute(type.java, initialValue)
         return AttributeDelegate(attr)
     }
-
+    /**
+     * Creates a general purpose [Object]/[Any] attribute. If [Attribute.persist] is chained, please consider writing
+     * a custom [TypeAdapter] to control serialization.
+     */
+    fun <E : Any> obj(initialValue: E): AttributeDelegate<E> { // NON-NULL
+        val attr = Attribute(initialValue)
+        return AttributeDelegate(attr)
+    }
     /**
      * Creates a [TimeSource] attribute.
      */
@@ -106,5 +114,14 @@ object Attr {
         }
         val attr = Attribute(map)
         return AttributeDelegate(attr)
+    }
+
+    /**
+     * Validates and reads a json member. Intended to be used within [TypeAdapter]s.
+     */
+    internal fun <E> readJsonMember(reader: JsonReader, expected: String, valueProducer: (JsonReader) -> E): E {
+        val next = reader.nextName()
+        return if (next.equals(expected)) valueProducer(reader) else
+            throw IllegalArgumentException("Expected [$expected], got [$next]")
     }
 }

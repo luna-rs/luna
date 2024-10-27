@@ -1,6 +1,6 @@
-package api.attr
+package api.attr.typeAdapters
 
-import api.predef.*
+import api.attr.Attr.readJsonMember
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
