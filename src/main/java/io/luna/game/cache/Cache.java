@@ -1,8 +1,8 @@
 package io.luna.game.cache;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.LunaContext;
 import io.luna.game.cache.map.MapIndexTable;
+import io.luna.util.AsyncExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -14,8 +14,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -61,7 +60,7 @@ public final class Cache implements Closeable {
     /**
      * The executor that will run the decoders. Will be shutdown once the task completes.
      */
-    private final ExecutorService decoderService = Executors.newSingleThreadExecutor();
+    private final AsyncExecutor decoderService = new AsyncExecutor(1, "CacheDecoderThread");
 
     /**
      * The data random access file.
@@ -111,18 +110,18 @@ public final class Cache implements Closeable {
      * @param cacheDecoders The decoders to run.
      */
     public void runDecoders(LunaContext ctx, CacheDecoder<?>... cacheDecoders) {
+        checkState(decoderService.isRunning(), "Cache decoder thread is no longer running.");
         checkState(dataFile != null && indexFiles != null, EXCEPTION_MESSAGE);
         for (CacheDecoder<?> decoder : cacheDecoders) {
-            decoderService.submit(decoder.toTask(ctx, this));
+            decoderService.execute(decoder.toTask(ctx, this));
         }
-        decoderService.shutdown();
     }
 
     /**
      * Blocks the current thread until {@link #runDecoders(LunaContext, CacheDecoder[])} has finished.
      */
-    public void waitForDecoders() {
-        Uninterruptibles.awaitTerminationUninterruptibly(decoderService);
+    public void waitForDecoders() throws ExecutionException {
+        decoderService.await(true);
     }
 
     /**
