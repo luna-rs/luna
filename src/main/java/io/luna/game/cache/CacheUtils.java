@@ -1,7 +1,7 @@
 package io.luna.game.cache;
 
 import io.luna.game.model.Position;
-import io.luna.game.model.RegionPosition;
+import io.luna.game.model.Region;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -9,7 +9,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -23,7 +22,7 @@ public final class CacheUtils {
     /**
      * The map size.
      */
-    public static final int MAP_SIZE = RegionPosition.SIZE;
+    public static final int MAP_SIZE = Region.SIZE;
 
     /**
      * The maximum height level, exclusive.
