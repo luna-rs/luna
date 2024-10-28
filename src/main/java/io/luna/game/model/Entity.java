@@ -60,12 +60,12 @@ public abstract class Entity {
     /**
      * The current position.
      */
-    protected Position position;
+    protected volatile Position position;
 
     /**
      * The current chunk.
      */
-    protected ChunkRepository chunkRepository;
+    protected volatile ChunkRepository chunkRepository;
 
     /**
      * If this entity can be interacted with.
@@ -180,10 +180,10 @@ public abstract class Entity {
 
                 if (type == EntityType.PLAYER) {
                     Player player = (Player) this;
-                    if (!player.getControllers().onPositionChange(player, position)) {
-                        position = Luna.settings().startingPosition();
-                        player.sendMessage("You have been teleported ::home, because you logged out in an invalid area.");
-                        logger.warn("Player {} logged out in unexpected area! Teleporting them to ::home...", player.getUsername());
+                    if (!player.getControllers().checkMovement(position)) {
+                        position = Luna.settings().game().startingPosition();
+                        player.sendMessage("You have been teleported home because you logged out in an invalid area.");
+                        logger.warn("Player {} logged out in unexpected area! Teleporting them back home.", player.getUsername());
                     }
                 }
 
@@ -219,7 +219,7 @@ public abstract class Entity {
 
             if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
                 Player player = (Player) this;
-                if (!player.getControllers().onPositionChange(player, newPosition)) {
+                if (!player.getControllers().checkMovement(newPosition)) {
                     return;
                 }
             }
