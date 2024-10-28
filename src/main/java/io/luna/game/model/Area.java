@@ -6,7 +6,6 @@ import io.luna.util.RandomUtils;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -278,13 +277,6 @@ public abstract class Area implements Location {
      * The total number of {@link Position} coordinates within this area.
      */
     public abstract int size();
-
-    /**
-     * Determines if this area contains {@code entity}.
-     */
-    public boolean contains(Entity entity) {
-        return contains(entity.getPosition());
-    }
 
     /**
      * Retrieves a random {@link Position} contained within this area.
