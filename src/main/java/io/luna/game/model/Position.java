@@ -3,10 +3,8 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.game.model.chunk.Chunk;
-import org.checkerframework.checker.units.qual.A;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -43,16 +41,6 @@ public final class Position implements Location {
     private final int z;
 
     /**
-     * The lazy loaded chunk containing this position.
-     */
-    private transient final AtomicReference<Chunk> chunk = new AtomicReference<>();
-
-    /**
-     * The lazy loaded region containing this position.
-     */
-    private transient final AtomicReference<Region> region = new AtomicReference<>();
-
-    /**
      * Creates a new {@link Position}, where all {@code x, y, and z} are non-negative.
      *
      * @param x The x coordinate.
@@ -64,7 +52,6 @@ public final class Position implements Location {
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
         checkArgument(y >= 0, "y < 0");
-        //checkArgument(z >= 0 && z <= 3, "z < 0 || z > 3");
 
         this.x = x;
         this.y = y;
@@ -243,12 +230,7 @@ public final class Position implements Location {
      * @return The chunk.
      */
     public Chunk getChunk() {
-        return chunk.updateAndGet(oldChunk -> {
-            if (oldChunk == null) {
-                return new Chunk(this);
-            }
-            return oldChunk;
-        });
+        return new Chunk(this);
     }
 
     /**
@@ -257,12 +239,7 @@ public final class Position implements Location {
      * @return The region.
      */
     public Region getRegion() {
-        return region.updateAndGet(oldRegion -> {
-            if(oldRegion == null) {
-                return new Region(this);
-            }
-            return oldRegion;
-        });
+        return new Region(this);
     }
 
     /**
