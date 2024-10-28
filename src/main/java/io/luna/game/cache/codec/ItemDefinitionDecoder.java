@@ -142,12 +142,11 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
 
         List<ItemDefinition> newDecodedObjects = new ArrayList<>(decodedObjects);
         for (ItemDefinition def : noted) {
-            if (def.getUnnotedId().isEmpty() || def.getNotedTemplateId().isEmpty()) {
-                throw new IllegalStateException("Item is not noted, but in noted definition list!");
+            if (def.getUnnotedId().isEmpty()) {
+                throw new IllegalStateException("Item [" + def.getId() + ", " + def.getName() + "] is not noted, but in noted definition list!");
             }
             ItemDefinition unnotedId = lookup.get(def.getUnnotedId().getAsInt());
-            ItemDefinition noteTemplateId = lookup.get(def.getNotedTemplateId().getAsInt());
-            newDecodedObjects.add(def.toNote(unnotedId, noteTemplateId));
+            newDecodedObjects.add(def.toNote(unnotedId));
         }
         ItemDefinition.ALL.storeAndLock(newDecodedObjects);
     }
@@ -174,12 +173,12 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
         boolean members = false;
         String[] inventoryActions = new String[5];
         String[] groundActions = new String[5];
-        OptionalInt noteInfoId = OptionalInt.empty();
+        OptionalInt unnotedId = OptionalInt.empty();
         OptionalInt noteGraphicId = OptionalInt.empty();
         int modelScaleX = -1;
         int modelScaleY = -1;
         int modelScaleZ = -1;
-        int teamId = -1;
+        OptionalInt teamId = OptionalInt.empty();
 
         Arrays.fill(inventoryActions, "null");
         Arrays.fill(groundActions, "null");
@@ -190,9 +189,9 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
                 ItemDefinitionChild childDef = childRepository.lookup(id);
                 ItemDefinition def = new ItemDefinition(id, name, description, modelId, modelZoom, modelRotationX, modelRotationY,
                         modelRotationZ, modelOffset1, modelOffset2, stackable, value, members, inventoryActions,
-                        groundActions, noteInfoId, noteGraphicId, modelScaleX, modelScaleY, modelScaleZ, teamId,
+                        groundActions, unnotedId, modelScaleX, modelScaleY, modelScaleZ, teamId,
                         childDef.weight, childDef.tradeable);
-                if (noteInfoId.isPresent() && noteGraphicId.isPresent()) {
+                if (unnotedId.isPresent() && noteGraphicId.isPresent()) {
                     noted.add(def);
                     return null;
                 } else {
@@ -247,7 +246,7 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
             } else if (opcode == 95) {
                 modelRotationZ = data.readUnsignedShort();
             } else if (opcode == 97) {
-                noteInfoId = OptionalInt.of(data.readUnsignedShort());
+                unnotedId = OptionalInt.of(data.readUnsignedShort());
             } else if (opcode == 98) {
                 noteGraphicId = OptionalInt.of(data.readUnsignedShort());
             } else if (opcode >= 100 && opcode <= 109) {
@@ -262,7 +261,7 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
             } else if (opcode == 113 || opcode == 114) {
                 data.readByte(); // lightModifier, shadowModifier
             } else if (opcode == 115) {
-                teamId = data.readUnsignedByte();
+                teamId = OptionalInt.of(data.readUnsignedByte());
             }
         }
     }

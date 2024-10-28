@@ -17,7 +17,7 @@ import io.luna.game.cache.map.MapTile;
 import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.cache.map.MapTileGridSet;
 import io.luna.game.model.Position;
-import io.luna.game.model.RegionPosition;
+import io.luna.game.model.Region;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 import io.netty.buffer.ByteBuf;
@@ -208,7 +208,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         try {
             int indices = buf.readableBytes() / 7;
             for (int i = 0; i < indices; i++) {
-                RegionPosition region = new RegionPosition(buf.readUnsignedShort());
+                Region region = new Region(buf.readUnsignedShort());
                 int tileFileId = buf.readUnsignedShort();
                 int objectFileId = buf.readUnsignedShort();
                 boolean priority = buf.readBoolean();
@@ -221,9 +221,9 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
 
     @Override
     public void handle(LunaContext ctx, Cache cache, ImmutableList<MapIndex> decodedObjects) throws Exception {
-        ImmutableMap.Builder<RegionPosition, MapIndex> tableBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<Region, MapIndex> tableBuilder = ImmutableMap.builder();
         decodedObjects.forEach(it -> tableBuilder.put(it.getRegion(), it));
-        ImmutableMap<RegionPosition, MapIndex> table = tableBuilder.build();
+        ImmutableMap<Region, MapIndex> table = tableBuilder.build();
 
         ImmutableList<MapObject> mapObjects = decodeMapObjects(cache, table.values());
         ImmutableMap<MapIndex, MapTileGrid> mapTiles = decodeMapTiles(cache, table.values());

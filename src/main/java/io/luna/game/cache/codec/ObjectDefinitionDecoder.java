@@ -12,6 +12,7 @@ import io.luna.game.model.def.VarpChildDefinition;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
+import java.util.OptionalInt;
 
 /**
  * A {@link CacheDecoder} implementation that loads object definitions from the cache.
@@ -63,7 +64,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
         String description = "null";
         int width = 1;
         int length = 1;
-        int animationId = -1;
+        OptionalInt animationId = OptionalInt.empty();
         boolean solid = true;
         boolean impenetrable = true;
         boolean interactive = false;
@@ -104,7 +105,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             } else if (opcode == 19) {
                 interactive = data.readBoolean();
             } else if (opcode == 24) {
-                animationId = data.readUnsignedShort();
+                animationId = OptionalInt.of(data.readUnsignedShort());
             } else if (opcode == 28 || opcode == 29) {
                 data.readUnsignedByte();
             } else if (opcode >= 30 && opcode < 39) {
