@@ -1,6 +1,5 @@
 package io.luna.game.model;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
@@ -10,50 +9,12 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * A model representing a manager for a repository of {@link StationaryEntity}s. It handles the registration and
- * tracking of the world's entities.
+ * A model representing a manager for a repository of {@link StationaryEntity}s. It handles their registration and
+ * tracking within the world.
  *
  * @author lare96
  */
-public abstract class EntityList<E extends StationaryEntity> implements Iterable<E> {
-
-    /**
-     * An {@link Iterator} implementation for this entity list that will unregister entities on {@link #remove()}.
-     */
-    public final class EntityListIterator implements Iterator<E> {
-
-        /**
-         * The last result of calling {@link #next()}.
-         */
-        private E lastEntity;
-
-        /**
-         * The delegate iterator.
-         */
-        private final Iterator<E> delegate;
-
-        public EntityListIterator(Collection<E> entities) {
-            delegate = entities.iterator();
-        }
-
-        @Override
-        public boolean hasNext() {
-            return delegate.hasNext();
-        }
-
-        @Override
-        public E next() {
-            lastEntity = delegate.next();
-            return lastEntity;
-        }
-
-        @Override
-        public void remove() {
-            delegate.remove();
-            lastEntity.hide();
-            lastEntity.setState(EntityState.INACTIVE);
-        }
-    }
+public abstract class StationaryEntityList<E extends StationaryEntity> implements Iterable<E> {
 
     /**
      * The world.
@@ -66,12 +27,12 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
     protected final EntityType type;
 
     /**
-     * Creates a new {@link EntityList}.
+     * Creates a new {@link StationaryEntityList}.
      *
      * @param world The world.
      * @param type The type of the entities.
      */
-    public EntityList(World world, EntityType type) {
+    public StationaryEntityList(World world, EntityType type) {
         this.world = world;
         this.type = type;
     }
@@ -170,7 +131,7 @@ public abstract class EntityList<E extends StationaryEntity> implements Iterable
      */
     public final Stream<E> findAll(Position position) {
         var chunkManager = world.getChunks();
-        Stream<E> insideChunk = chunkManager.load(position.getChunkPosition()).stream(type);
+        Stream<E> insideChunk = chunkManager.load(position.getChunk()).stream(type);
         return insideChunk.filter(entity -> entity.position.equals(position));
     }
 

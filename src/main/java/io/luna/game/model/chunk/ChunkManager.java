@@ -4,18 +4,20 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
+import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -26,9 +28,9 @@ import java.util.stream.StreamSupport;
 /**
  * A model that loads new chunks and manages loaded chunks.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
-public final class ChunkManager implements Iterable<Chunk> {
+public final class ChunkManager implements Iterable<ChunkRepository> {
 
     /**
      * Determines the local player count at which prioritized updating will start.
@@ -36,22 +38,27 @@ public final class ChunkManager implements Iterable<Chunk> {
     public static final int LOCAL_MOB_THRESHOLD = 50;
 
     /**
-     * How many layers of chunks will be loaded around a player, when looking for viewable mobs.
+     * How many layers of chunks will be loaded around a player, when looking for viewable entities.
      */
     public static final int RADIUS = 3;
 
     /**
      * A map of loaded chunks.
      */
-    private final Map<ChunkPosition, Chunk> chunks = new HashMap<>(128); // TODO Proper initial size after cache loading.
+    private final Map<Chunk, ChunkRepository> chunks = new HashMap<>(29_278);
+
+    /**
+     * A queue of chunks that updates were sent to.
+     */
+    private final Queue<ChunkRepository> updatedChunks = new ArrayDeque<>();
 
     @Override
-    public Spliterator<Chunk> spliterator() {
+    public Spliterator<ChunkRepository> spliterator() {
         return Spliterators.spliterator(chunks.values(), Spliterator.NONNULL);
     }
 
     @Override
-    public Iterator<Chunk> iterator() {
+    public Iterator<ChunkRepository> iterator() {
         return chunks.values().iterator();
     }
 
@@ -61,8 +68,8 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param position The position to construct a new chunk with.
      * @return The existing or newly loaded chunk.
      */
-    public Chunk load(ChunkPosition position) {
-        return chunks.computeIfAbsent(position, Chunk::new);
+    public ChunkRepository load(Chunk position) {
+        return chunks.computeIfAbsent(position, ChunkRepository::new);
     }
 
     /**
@@ -71,8 +78,8 @@ public final class ChunkManager implements Iterable<Chunk> {
      * @param position The position to construct a new chunk with.
      * @return The existing or newly loaded chunk.
      */
-    public Chunk load(Position position) {
-        return load(position.getChunkPosition());
+    public ChunkRepository load(Position position) {
+        return load(position.getChunk());
     }
 
     /**
@@ -106,7 +113,7 @@ public final class ChunkManager implements Iterable<Chunk> {
             updateSet = new HashSet<>();
         }
 
-        var chunkPosition = player.getChunkPosition();
+        var chunkPosition = new Chunk(player.getPosition());
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
                 var currentChunk = load(chunkPosition.translate(x, y));
@@ -131,11 +138,11 @@ public final class ChunkManager implements Iterable<Chunk> {
      */
     public <T extends Entity> Set<T> getViewableEntities(Position position, EntityType type) {
         Set<T> viewable = new HashSet<>();
-        ChunkPosition chunkPos = position.getChunkPosition();
+        Chunk chunkPos = position.getChunk();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = load(chunkPos.translate(x, y));
-                Set<T> entities = chunk.getAll(type);
+                ChunkRepository chunkRepository = load(chunkPos.translate(x, y));
+                Set<T> entities = chunkRepository.getAll(type);
                 for (T inside : entities) {
                     if (inside.getPosition().isViewable(position)) {
                         viewable.add(inside);
@@ -146,19 +153,20 @@ public final class ChunkManager implements Iterable<Chunk> {
         return viewable;
     }
 
+
     /**
      * Returns a list of viewable chunks.
      *
      * @param position The relative position.
      * @return The list.
      */
-    public List<Chunk> getViewableChunks(Position position) {
-        List<Chunk> viewable = new ArrayList<>(16);
-        ChunkPosition chunkPos = position.getChunkPosition();
+    public Set<ChunkRepository> getViewableChunks(Position position) {
+        Set<ChunkRepository> viewable = new HashSet<>(16);
+        Chunk chunkPos = position.getChunk();
         for (int x = -RADIUS; x < RADIUS; x++) {
             for (int y = -RADIUS; y < RADIUS; y++) {
-                Chunk chunk = load(chunkPos.translate(x, y));
-                viewable.add(chunk);
+                ChunkRepository chunkRepository = load(chunkPos.translate(x, y));
+                viewable.add(chunkRepository);
             }
         }
         return viewable;
@@ -169,26 +177,57 @@ public final class ChunkManager implements Iterable<Chunk> {
      *
      * @param player The player.
      */
-    public void sendViewableEntities(Player player) {
-        World world = player.getWorld();
-        ChunkPosition position = player.getChunkPosition();
+    public void sendUpdates(Player player, Position oldPosition, boolean fullRefresh) {
+        Set<ChunkRepository> oldChunks = getViewableChunks(oldPosition);
+        Set<ChunkRepository> newChunks = getViewableChunks(player.getPosition());
+        Set<ChunkRepository> viewableOldChunks = new HashSet<>();
 
-        // Load chunks in viewable radius, double the viewing radius because this is only called when
-        // the region changed packet is sent.
-        for (int x = -RADIUS * 2; x < RADIUS * 2; x++) {
-            for (int y = -RADIUS * 2; y < RADIUS * 2; y++) {
-                // Clear, then repopulate the chunk with entities.
-                Chunk chunk = world.getChunks().load(position.translate(x, y));
-                player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
-                chunk.sendGroupedUpdate(player);
+        if (!fullRefresh) {
+            // Don't need a full refresh, partial update of old viewable chunks. Only do a full update
+            // of new chunks.
+            viewableOldChunks.addAll(newChunks);
+            viewableOldChunks.retainAll(oldChunks);
+
+            newChunks.removeAll(oldChunks);
+        }
+
+        // Send out grouped entity updates for old chunks that still remain in view.
+        for (ChunkRepository chunk : viewableOldChunks) {
+            List<GameMessageWriter> updates = chunk.getUpdates(player);
+            if (!updates.isEmpty()) {
+                updatedChunks.add(chunk);
+                player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
+        }
+
+        // Send out grouped entity updates for new chunks in view.
+        for (ChunkRepository chunk : newChunks) {
+            List<GameMessageWriter> updates = chunk.getUpdates(player);
+            if (!updates.isEmpty()) {
+                updatedChunks.add(chunk);
+                player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
+                player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
+            }
+        }
+    }
+
+    /**
+     * Resets the list of pending updates for all updated chunks.
+     */
+    public void resetUpdatedChunks() {
+        for (; ; ) {
+            ChunkRepository chunk = updatedChunks.poll();
+            if (chunk == null) {
+                break;
+            }
+            chunk.resetUpdates();
         }
     }
 
     /**
      * @return A stream over every single chunk.
      */
-    public Stream<Chunk> stream() {
+    public Stream<ChunkRepository> stream() {
         return StreamSupport.stream(spliterator(), false);
     }
 }

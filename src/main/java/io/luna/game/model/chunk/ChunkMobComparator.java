@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.util.Tuple;
 
 import java.util.Comparator;
 import java.util.function.BiFunction;
@@ -13,15 +12,46 @@ import java.util.function.BiFunction;
  * A {@link Comparator} implementation that ensures that important mobs are added to the local list of a
  * player before other mobs.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 public final class ChunkMobComparator implements Comparator<Mob> {
 
     /**
+     * Represents the data that will be used to compare the left and right mobs.
+     *
+     * @author lare96
+     */
+    private static final class ComparableFactorData {
+
+        /**
+         * The data for the left mob.
+         */
+        private final int left;
+
+        /**
+         * The data for the right mob.
+         */
+        private final int right;
+
+        /**
+         * Creates a new {@link ComparableFactorData}.
+         *
+         * @param left The data for the left mob.
+         * @param right The data for the right mob.
+         */
+        private ComparableFactorData(int left, int right) {
+            this.left = left;
+            this.right = right;
+        }
+    }
+
+    /**
      * A makeshift type alias for the {@link BiFunction} type declaration.
+     *
+     * @author lare96
      */
     @FunctionalInterface
-    private interface ComparableFactor extends BiFunction<Mob, Mob, Tuple<Integer, Integer>> {
+    private interface ComparableFactor extends BiFunction<Mob, Mob, ComparableFactorData> {
 
     }
 
@@ -29,11 +59,11 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * An immutable list of factors used to compare mobs.
      */
     private final ImmutableList<ComparableFactor> factors = ImmutableList.of(
-        this::comparePosition,
-        this::compareFriends,
-        this::compareSize,
-        this::compareCombatLevel,
-        this::compareCombat
+            this::comparePosition,
+            this::compareFriends,
+            this::compareSize,
+            this::compareCombatLevel,
+            this::compareCombat
     );
 
     /**
@@ -57,9 +87,9 @@ public final class ChunkMobComparator implements Comparator<Mob> {
 
         // Compare all factors and award weight.
         for (ComparableFactor factor : factors) {
-            Tuple<Integer, Integer> tuple = factor.apply(left, right);
-            leftWeight += tuple.first();
-            rightWeight += tuple.second();
+            ComparableFactorData data = factor.apply(left, right);
+            leftWeight += data.left;
+            rightWeight += data.right;
         }
 
         // The weight is equal, meaning equal importance. Just let left win.
@@ -78,7 +108,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> compareCombatLevel(Mob left, Mob right) {
+    private ComparableFactorData compareCombatLevel(Mob left, Mob right) {
         int leftCombatLevel = left.getCombatLevel();
         int rightCombatLevel = right.getCombatLevel();
         return computeWeightFactor(leftCombatLevel, rightCombatLevel, 2);
@@ -91,7 +121,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> compareSize(Mob left, Mob right) {
+    private ComparableFactorData compareSize(Mob left, Mob right) {
         int leftSize = left.size();
         int rightSize = right.size();
         return computeWeightFactor(leftSize, rightSize, 3);
@@ -104,7 +134,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> comparePosition(Mob left, Mob right) {
+    private ComparableFactorData comparePosition(Mob left, Mob right) {
         int leftDistance = player.computeLongestDistance(left);
         int rightDistance = player.computeLongestDistance(right);
         return computeWeightFactor(leftDistance, rightDistance, 3);
@@ -117,7 +147,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> compareFriends(Mob left, Mob right) {
+    private ComparableFactorData compareFriends(Mob left, Mob right) {
         int leftFactor = isFriend(left) ? 1 : 0;
         int rightFactor = isFriend(right) ? 1 : 0;
         return computeWeightFactor(leftFactor, rightFactor, 4);
@@ -144,7 +174,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
+    private ComparableFactorData compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
         int leftCombat = /* left.inCombat() ? 1 :*/ 0;
         int rightCombat = /* right.inCombat() ? 1 :*/ 0;
         return computeWeightFactor(leftCombat, rightCombat, 5);
@@ -158,13 +188,13 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param weight The amount of weight to award.
      * @return The factor values and weight for each mob.
      */
-    private Tuple<Integer, Integer> computeWeightFactor(int left, int right, int weight) {
+    private ComparableFactorData computeWeightFactor(int left, int right, int weight) {
         if (left > right) {
-            return new Tuple<>(weight, 1);
+            return new ComparableFactorData(weight, 1);
         } else if (right > left) {
-            return new Tuple<>(1, weight);
+            return new ComparableFactorData(1, weight);
         } else {
-            return new Tuple<>(1, 1);
+            return new ComparableFactorData(1, 1);
         }
     }
 }

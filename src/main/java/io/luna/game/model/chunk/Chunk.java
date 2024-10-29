@@ -1,46 +1,68 @@
 package io.luna.game.model.chunk;
 
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
+import com.google.common.base.MoreObjects;
+import io.luna.game.model.Location;
 import io.luna.game.model.Position;
-import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.StationaryEntity.UpdateType;
-import io.luna.game.model.mob.Player;
-import io.luna.game.model.object.GameObject;
-import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model containing entities and updates for those entities within a chunk.
+ * A {@link Location} made up of 8x8 tiles on the Runescape map.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class Chunk {
+public final class Chunk implements Location {
 
     /**
-     * This chunk's position.
+     * The chunk length and width.
      */
-    private final ChunkPosition position;
+    public static final int SIZE = 8;
 
     /**
-     * The repository of entities.
+     * The center x coordinate of this region.
      */
-    private final ChunkRepository repository = new ChunkRepository();
+    private final int x;
 
     /**
-     * Creates a new {@link ChunkPosition}.
+     * The center y coordinate of this region.
+     */
+    private final int y;
+
+    /**
+     * Creates a new {@link Chunk}.
      *
-     * @param position The chunk position.
+     * @param position The position to get the chunk coordinates of.
      */
-    Chunk(ChunkPosition position) {
-        this.position = position;
+    public Chunk(Position position) {
+        this(position.getTopLeftChunkX(), position.getTopLeftChunkY());
+    }
+
+    /**
+     * Creates a new {@link Chunk}.
+     *
+     * @param x The center x coordinate of this region.
+     * @param y The center y coordinate of this region.
+     */
+    public Chunk(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    @Override
+    public boolean contains(Position position) {
+        return position.getChunk().equals(this);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("x", x).add("y", y).toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 
     @Override
@@ -50,86 +72,71 @@ public final class Chunk {
         }
         if (obj instanceof Chunk) {
             Chunk other = (Chunk) obj;
-            return position.equals(other.position);
+            return x == other.x && y == other.y;
         }
         return false;
     }
 
-    @Override
-    public int hashCode() {
-        return position.hashCode();
-    }
-
     /**
-     * Forwards to {@link ChunkRepository#add(Entity)}.
-     */
-    public void add(Entity entity) {
-        repository.add(entity);
-    }
-
-    /**
-     * Forwards to {@link ChunkRepository#remove(Entity)}.
-     */
-    public void remove(Entity entity) {
-        repository.remove(entity);
-    }
-
-    /**
-     * Forwards to {@link ChunkRepository#setOf(EntityType)}.
-     */
-    public <E extends Entity> Set<E> getAll(EntityType type) {
-        return repository.setOf(type);
-    }
-
-    /**
-     * Returns a stream over {@code type} entities in this chunk.
+     * Returns the offset of {@code position} from this chunk.
      *
-     * @param type The entity type.
-     * @param <E> The type.
-     * @return The stream.
+     * @param position The position.
+     * @return The offset.
      */
-    public <E extends Entity> Stream<E> stream(EntityType type) {
-        return (Stream<E>) getAll(type).stream();
+    public int offset(Position position) {
+        int deltaX = position.getX() - getBaseX();
+        int deltaY = position.getY() - getBaseY();
+        checkState(deltaX >= 0 && deltaX < Chunk.SIZE, "Invalid X delta [" + deltaX + "].");
+        checkState(deltaY >= 0 && deltaY < Chunk.SIZE, "Invalid Y delta [" + deltaY + "].");
+        return deltaX << 4 | deltaY;
     }
 
     /**
-     * Returns an iterator over {@code type} entities in this chunk.
+     * Returns a new {@link Chunk} translated by {@code addX} and {@code addY}.
      *
-     * @param type The entity type.
-     * @param <E> The type.
-     * @return The iterator.
+     * @param addX The x translation.
+     * @param addY The y translation.
+     * @return The new chunk position.
      */
-    public <E extends Entity> Iterator<E> iterator(EntityType type) {
-        return (Iterator<E>) getAll(type).iterator();
-    }
-
-    /**
-     * Sends the necessary updates required to display every entity for {@code player}.
-     *
-     * @param player The player to display updates for.
-     */
-    public void sendGroupedUpdate(Player player) {
-        List<GameMessageWriter> messages = new ArrayList<>();
-        for (Entity e : repository) {
-            if (e.getType() == EntityType.OBJECT && !((GameObject) e).isDynamic()) {
-                return;
-            }
-            if (e instanceof StationaryEntity) {
-                var entity = (StationaryEntity) e;
-                Optional<Player> updatePlr = entity.getOwner();
-                boolean isUpdate = updatePlr.isEmpty() || updatePlr.get().equals(player);
-                if (isUpdate) {
-                    messages.add(entity.sendUpdateMessage(player, UpdateType.SHOW, false));
-                }
-            }
+    public Chunk translate(int addX, int addY) {
+        if (addX == 0 && addY == 0) {
+            return this;
         }
-        player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), this, messages));
+        return new Chunk(x + addX, y + addY);
     }
 
     /**
-     * @return The position.
+     * @return The absolute {@code x} coordinate.
      */
-    public ChunkPosition getPosition() {
-        return position;
+    public int getBaseX() {
+        return SIZE * (x + 6);
+    }
+
+    /**
+     * @return The absolute {@code y} coordinate.
+     */
+    public int getBaseY() {
+        return SIZE * (y + 6);
+    }
+
+    /**
+     * @return The top-left x coordinate.
+     */
+    public int getX() {
+        return x;
+    }
+
+    /**
+     * @return The top-left center y coordinate.
+     */
+    public int getY() {
+        return y;
+    }
+
+    /**
+     * @return The absolute position of this chunk.
+     */
+    public Position getBasePosition() {
+        return new Position(getBaseX(), getBaseY());
     }
 }

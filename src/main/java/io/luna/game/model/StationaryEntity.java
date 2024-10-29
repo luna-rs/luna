@@ -2,32 +2,21 @@ package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
-import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkPosition;
+import io.luna.game.model.chunk.ChunkRepository;
+import io.luna.game.model.chunk.ChunkUpdate;
 import io.luna.game.model.mob.Player;
-import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
-import io.luna.net.msg.out.ChunkPlacementMessageWriter;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * An abstraction model representing non-moving {@link Entity}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public abstract class StationaryEntity extends Entity {
-
-    /**
-     * An enumerated type whose elements represent either a show or hide update.
-     */
-    public enum UpdateType {
-        SHOW, HIDE
-    }
 
     /**
      * The player to update for. If empty, updates for all players.
@@ -58,11 +47,7 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
-     * Stationary entities rely solely on identity when compared because entities in chunks are held in a HashSet
-     * datatype.
-     * <br><br>
-     * Weird issues can occur with a equals/hashcode implementation that is too strict, and there isn't much use in
-     * having an implementation that is lenient.
+     * Stationary entities rely solely on identity when compared because they lack an index.
      */
     @Override
     public int hashCode() {
@@ -70,10 +55,7 @@ public abstract class StationaryEntity extends Entity {
     }
 
     /**
-     * Stationary entities rely solely on identity when compared because entities in chunks are held in a HashSet
-     * datatype.
-     * <br><br>
-     * Weird issues can occur with a equals/hashcode implementation that is too strict.
+     * Stationary entities rely solely on identity when compared because they lack an index.
      */
     @Override
     public boolean equals(Object obj) {
@@ -98,107 +80,47 @@ public abstract class StationaryEntity extends Entity {
 
     /**
      * Sends a packet to all applicable players to display this entity.
-     * <strong>This does NOT register the entity, so it cannot be interacted with by a Player.</strong>
+     * <strong>This does NOT register the entity, it just makes it visible to the owner. It won't be
+     * interactable.</strong>
      * Use functions in {@link World} to register entities.
      */
     public final void show() {
         if (hidden) {
-            applyUpdate(UpdateType.SHOW);
+            int offset = getChunk().offset(position);
+            queueUpdate(showMessage(offset));
+            hidden = false;
         }
     }
 
     /**
      * Sends a packet to all applicable players to hide this entity.
-     * <strong>This does NOT unregister the entity, it just makes it invisible to players.</strong>
+     * <strong>This does NOT unregister the entity, it just makes it invisible to the owner.</strong>
      * Use functions in {@link World} to unregister entities.
      */
     public final void hide() {
         if (!hidden) {
-            applyUpdate(UpdateType.HIDE);
-        }
-    }
-
-    /**
-     * Updates this entity, either locally or globally.
-     *
-     * @param updateType The update type to apply.
-     */
-    private void applyUpdate(UpdateType type) {
-        applyUpdate(plr -> sendUpdateMessage(plr, type, true));
-    }
-
-    /**
-     * Updates this entity, either locally or globally.
-     *
-     * @param action The update type to apply.
-     */
-    public void applyUpdate(Consumer<Player> action) {
-        if (owner.isPresent() && owner.get().isViewableFrom(this)) {
-            // We have a player to update for.
-            action.accept(owner.get());
-        } else {
-            // We don't, so update for all viewable surrounding players.
-            for (Set<Player> chunkPlayers : getSurroundingPlayers()) {
-                for (Player inside : chunkPlayers) {
-                    if (isViewableFrom(inside)) {
-                        action.accept(inside);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Marks a chunk for placement of an entity.
-     *
-     * @param player The player to mark for.
-     */
-    public void sendPlacementMessage(Player player) {
-        Chunk chunk = currentChunk;
-        if (chunk == null) {
-            chunk = world.getChunks().load(position);
-        }
-        player.queue(new ChunkPlacementMessageWriter(player.getLastRegion(), chunk));
-    }
-
-    /**
-     * Sends an update message to {@code player}.
-     *
-     * @param player The player.
-     * @param updateType The update type to apply.
-     * @param send If any data should be queued.
-     */
-    public GameMessageWriter sendUpdateMessage(Player player, UpdateType updateType, boolean send) {
-        if (send) {
-            sendPlacementMessage(player);
-        }
-        int offset = getChunkPosition().offset(position);
-        if (updateType == UpdateType.SHOW) {
-            GameMessageWriter msg = showMessage(offset);
-            hidden = false;
-            if (send) {
-                player.queue(msg);
-            }
-            return msg;
-        } else if (updateType == UpdateType.HIDE) {
-            GameMessageWriter msg = hideMessage(offset);
+            int offset = getChunk().offset(position);
+            queueUpdate(hideMessage(offset));
             hidden = true;
-            if (send) {
-                player.queue(msg);
-            }
-            return msg;
         }
-        throw new IllegalStateException("Invalid update type.");
     }
 
+    /**
+     * Queues update message {@code msg} to the owner of this entity.
+     *
+     * @param msg The message to queue.
+     */
+    protected final void queueUpdate(GameMessageWriter msg) {
+        chunkRepository.queueUpdate(new ChunkUpdate(this, owner, msg));
+    }
 
     /**
-     * Determines if this item is visible to {@code player}.
+     * Determines if this entity is visible to {@code player}.
      *
      * @param player The player.
      * @return {@code true} if this item is visible to the player.
      */
-    public boolean isVisibleTo(Player player) {
+    public final boolean isVisibleTo(Player player) {
         if (!player.isViewableFrom(this)) {
             return false;
         }
@@ -251,8 +173,8 @@ public abstract class StationaryEntity extends Entity {
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
             // Retrieve viewable chunks.
-            List<Chunk> viewableChunks = world.getChunks().getViewableChunks(position);
-            for (Chunk chunk : viewableChunks) {
+            Set<ChunkRepository> viewableChunks = world.getChunks().getViewableChunks(position);
+            for (ChunkRepository chunk : viewableChunks) {
                 // Wrap players in immutable view, add it.
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));
                 builder.add(players);

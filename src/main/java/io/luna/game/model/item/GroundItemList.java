@@ -315,12 +315,10 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
      * @return {@code true} if successful.
      */
     private boolean addToSet(GroundItem item) {
-        if (items.add(item)) {
-            item.setState(EntityState.ACTIVE);
-            item.show();
-            return true;
-        }
-        return false;
+        items.add(item);
+        item.setState(EntityState.ACTIVE);
+        item.show();
+        return true;
     }
 
     /**

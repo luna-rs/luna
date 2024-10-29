@@ -6,6 +6,7 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.chunk.ChunkUpdate;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
@@ -186,11 +187,11 @@ public class GroundItem extends StationaryEntity {
      */
     public final void updateAmount(int value) {
         checkArgument(value > 0, "amount cannot be < 0");
+        checkArgument(def().isStackable() || amount == 1,
+                "Non-stackable ground items have a maximum amount of 1.");
         int offset = getChunk().offset(position);
-        applyUpdate(plr -> {
-            sendPlacementMessage(plr);
-            plr.queue(new UpdateGroundItemMessageWriter(offset, id, amount, value));
-        });
+        UpdateGroundItemMessageWriter msg = new UpdateGroundItemMessageWriter(offset, id, amount, value);
+        chunkRepository.queueUpdate(new ChunkUpdate(this, getOwner(), msg));
         amount = value;
     }
 

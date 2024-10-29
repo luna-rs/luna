@@ -1,47 +1,86 @@
 package io.luna.game.model.chunk;
 
-import com.google.common.collect.Iterators;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.mob.Player;
+import io.luna.net.msg.GameMessageWriter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing a group of {@link Entity}s within a chunk.
+ * A model containing {@link Entity} types that exist within a {@link Chunk} on the Runescape map. Every chunk is
+ * assigned its own repository as needed by the {@link ChunkManager}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class ChunkRepository implements Iterable<Entity> {
 
     /**
-     * The map of entities.
+     * This chunk's position.
+     */
+    private final Chunk chunk;
+
+    /**
+     * The entities within this chunk.
      */
     private final Map<EntityType, Set<Entity>> entities;
 
     /**
-     * Protected constructor to restrict instantiation.
+     * A list of pending updates to {@link StationaryEntity} types within this chunk.
      */
-    protected ChunkRepository() {
-    }
+    private final List<ChunkUpdate> pendingUpdates = new ArrayList<>();
 
-    {
-        // Use enum map to split up entities by type.
+    /**
+     * Creates a new {@link ChunkRepository}.
+     *
+     * @param chunk The chunk this repository is holding entities for.
+     */
+    ChunkRepository(Chunk chunk) {
+        this.chunk = chunk;
         entities = new EnumMap<>(EntityType.class);
         for (EntityType type : EntityType.ALL) {
-            entities.put(type, new HashSet<>(4));
+            entities.put(type, new HashSet<>());
         }
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof ChunkRepository) {
+            ChunkRepository other = (ChunkRepository) obj;
+            return chunk.equals(other.chunk);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return chunk.hashCode();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Entity> iterator() {
+        return entities.values().stream().flatMap(Collection::stream).iterator();
+    }
+
     /**
-     * Adds an entity to this chunk.
+     * Adds an entity to this chunk repository.
      *
      * @param entity The entity to add.
      */
@@ -51,7 +90,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     }
 
     /**
-     * Removes an entity from this chunk.
+     * Removes an entity from this chunk repository.
      *
      * @param entity The entity to remove.
      */
@@ -61,21 +100,71 @@ public final class ChunkRepository implements Iterable<Entity> {
     }
 
     /**
+     * Queues an update for a {@link StationaryEntity} within this chunk.
+     *
+     * @param update The update to queue.
+     */
+    public void queueUpdate(ChunkUpdate update) {
+        pendingUpdates.add(update);
+    }
+
+    /**
+     * Retrieves all pending updates applicable to {@code player}.
+     *
+     * @param player The player to get updates for.
+     * @return The list of pending updates.
+     */
+    public List<GameMessageWriter> getUpdates(Player player) {
+        return pendingUpdates.stream().
+                filter(update -> update.getOwner().map(owner -> owner.equals(player)).orElse(true)).
+                map(ChunkUpdate::getMessage).collect(Collectors.toList());
+    }
+
+    /**
+     * Resets the list of pending updates.
+     */
+    public void resetUpdates() {
+        pendingUpdates.clear();
+    }
+
+    /**
      * Returns a {@link Set} containing all entities of the specified type in this chunk. The cast type must match
      * the argued type or a {@link ClassCastException} will be thrown.
      *
      * @param type The type of entities to get.
-     * @param <E> The type to cast to. Must be a subclass of Entity.
-     * @return A set of entities casted to {@code <E>}. As long as {@code <E>} matches {@code type}, no errors will
-     * be thrown.
+     * @param <E> The type to cast to.
+     * @return A set of entities cast to {@code <E>}. It must match the correct {@code type}.
      */
-    public <E extends Entity> Set<E> setOf(EntityType type) {
+    public <E extends Entity> Set<E> getAll(EntityType type) {
         return (Set<E>) entities.get(type);
     }
 
-    @NotNull
-    @Override
-    public Iterator<Entity> iterator() {
-        return entities.values().stream().flatMap(Collection::stream).iterator();
+    /**
+     * Returns a stream over {@code type} entities in this chunk.
+     *
+     * @param type The entity type.
+     * @param <E> The type.
+     * @return The stream.
+     */
+    public <E extends Entity> Stream<E> stream(EntityType type) {
+        return (Stream<E>) getAll(type).stream();
+    }
+
+    /**
+     * Returns an iterator over {@code type} entities in this chunk.
+     *
+     * @param type The entity type.
+     * @param <E> The type.
+     * @return The iterator.
+     */
+    public <E extends Entity> Iterator<E> iterator(EntityType type) {
+        return (Iterator<E>) getAll(type).iterator();
+    }
+
+    /**
+     * @return The position.
+     */
+    public Chunk getChunk() {
+        return chunk;
     }
 }
