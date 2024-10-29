@@ -3,11 +3,11 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 
 /**
- * A model representing the coordinates of a Region (64x64 tiles) on the Runescape map.
+ * A {@link Location} made up of 64x64 tiles on the Runescape map.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
-public final class RegionPosition {
+public final class Region implements Location {
 
     /**
      * The length and width.
@@ -18,18 +18,6 @@ public final class RegionPosition {
      * The multiplicative factor to get the region ID.
      */
     public static final int MULTIPLICATIVE_FACTOR = 256;
-
-    /**
-     * Returns the base {@link Position} from region {@code id}.
-     *
-     * @param id The region id.
-     * @return The position in the region.
-     */
-    public static Position getPositionInRegion(int id) {
-        int regionX = id / MULTIPLICATIVE_FACTOR;
-        int regionY = id - (regionX * MULTIPLICATIVE_FACTOR);
-        return new Position(regionX * SIZE, regionY * SIZE);
-    }
 
     /**
      * The center x coordinate.
@@ -47,24 +35,40 @@ public final class RegionPosition {
     private final int id;
 
     /**
-     * Creates a new {@link RegionPosition}.
+     * Creates a new {@link Region}.
      *
      * @param position The base position.
      */
-    public RegionPosition(Position position) {
+    public Region(Position position) {
         this(position.getX() / SIZE, position.getY() / SIZE);
     }
 
     /**
-     * Creates a new {@link RegionPosition}.
+     * Creates a new {@link Region}.
+     *
+     * @param id
+     */
+    public Region(int id) {
+        this.id = id;
+        x = id / MULTIPLICATIVE_FACTOR;
+        y = id - (x * MULTIPLICATIVE_FACTOR);
+    }
+
+    /**
+     * Creates a new {@link Region}.
      *
      * @param x The center x coordinate.
      * @param y The center y coordinate.
      */
-    private RegionPosition(int x, int y) {
+    public Region(int x, int y) {
         this.x = x;
         this.y = y;
-        id = (x * MULTIPLICATIVE_FACTOR) + y;
+        id = x * MULTIPLICATIVE_FACTOR + y;
+    }
+
+    @Override
+    public boolean contains(Position position) {
+        return id == position.getRegion().id;
     }
 
     @Override
@@ -82,31 +86,20 @@ public final class RegionPosition {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof RegionPosition) {
-            RegionPosition other = (RegionPosition) obj;
+        if (obj instanceof Region) {
+            Region other = (Region) obj;
             return id == other.id;
         }
         return false;
     }
 
     /**
-     * Returns the local x coordinate of {@code position} in this region.
+     * Returns the base {@link Position} in this region.
      *
-     * @param position The position.
-     * @return The local x coordinate.
+     * @return The base position.
      */
-    public int getLocalX(Position position) {
-        return position.getX() % SIZE;
-    }
-
-    /**
-     * Returns the local y coordinate of {@code position} in this region.
-     *
-     * @param position The position.
-     * @return The local y coordinate.
-     */
-    public int getLocalY(Position position) {
-        return position.getY() % SIZE;
+    public Position getBasePosition() {
+        return new Position(x * SIZE, y * SIZE);
     }
 
     /**
