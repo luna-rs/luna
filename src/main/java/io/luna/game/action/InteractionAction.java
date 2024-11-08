@@ -6,8 +6,6 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * A {@link DistancedAction} implementation that interacts with an entity when an appropriate distance has been reached.
  *
@@ -57,7 +55,6 @@ public abstract class InteractionAction extends DistancedAction<Player> {
      */
     public InteractionAction(Player player, Entity interactWith) {
         super(player, interactWith.getPosition(), interactWith.size());
-        checkArgument(interactWith.getType() != EntityType.PROJECTILE, "Projectiles cannot be interacted with.");
         this.interactWith = interactWith;
     }
 

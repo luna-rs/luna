@@ -2,6 +2,7 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.Position;
 import io.luna.game.model.chunk.ChunkRepository;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
@@ -16,6 +17,7 @@ import java.util.Collection;
  * @author lare96
  */
 public final class GroupedEntityMessageWriter extends GameMessageWriter {
+    // TODO Restrict to certain types of messages
 
     /**
      * The base position.
@@ -30,7 +32,7 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
     /**
      * The messages to write.
      */
-    private final Collection<GameMessageWriter> messages;
+    private final Collection<ChunkUpdatableMessage> messages;
 
     /**
      * Creates a new {@link GroupedEntityMessageWriter}.
@@ -39,7 +41,7 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
      * @param placementChunkRepository The placement position.
      * @param messages The messages to write.
      */
-    public GroupedEntityMessageWriter(Position basePosition, ChunkRepository placementChunkRepository, Collection<GameMessageWriter> messages) {
+    public GroupedEntityMessageWriter(Position basePosition, ChunkRepository placementChunkRepository, Collection<ChunkUpdatableMessage> messages) {
         this.basePosition = basePosition;
         this.placementPosition = placementChunkRepository.getChunk().getBasePosition();
         this.messages = messages;
@@ -50,7 +52,8 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
         ByteMessage mainMsg = ByteMessage.message(183, MessageType.VAR_SHORT);
         mainMsg.put(placementPosition.getLocalX(basePosition));
         mainMsg.put(placementPosition.getLocalY(basePosition), ValueType.ADD);
-        for (GameMessageWriter subMsg : messages) {
+        for (ChunkUpdatableMessage updatableMessage : messages) {
+            GameMessageWriter subMsg = (GameMessageWriter) updatableMessage;
             ByteMessage buf = subMsg.write(player);
             try {
                 mainMsg.put(buf.getOpcode());

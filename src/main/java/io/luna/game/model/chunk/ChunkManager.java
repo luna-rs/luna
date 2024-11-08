@@ -7,7 +7,6 @@ import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
@@ -193,7 +192,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
 
         // Send out grouped entity updates for old chunks that still remain in view.
         for (ChunkRepository chunk : viewableOldChunks) {
-            List<GameMessageWriter> updates = chunk.getUpdates(player);
+            List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
             if (!updates.isEmpty()) {
                 updatedChunks.add(chunk);
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
@@ -202,7 +201,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
 
         // Send out grouped entity updates for new chunks in view.
         for (ChunkRepository chunk : newChunks) {
-            List<GameMessageWriter> updates = chunk.getUpdates(player);
+            List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
             if (!updates.isEmpty()) {
                 updatedChunks.add(chunk);
                 player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
@@ -222,6 +221,10 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
             }
             chunk.resetUpdates();
         }
+    }
+
+    public void clearTemporaryEntities() {
+
     }
 
     /**

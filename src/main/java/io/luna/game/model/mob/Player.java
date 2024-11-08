@@ -9,10 +9,12 @@ import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.event.impl.RegionChangedEvent;
+import io.luna.game.model.Entity;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
@@ -399,6 +401,7 @@ public class Player extends Mob {
 
     @Override
     public void reset() {
+        regionChanged = false;
         teleporting = false;
         chat = Optional.empty();
         forcedMovement = Optional.empty();
@@ -520,7 +523,7 @@ public class Player extends Mob {
             bank.add(item);
         } else {
             world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
-                    position, Optional.of(this)));
+                    position, ChunkUpdatableView.localView(this)));
         }
     }
 
@@ -538,10 +541,7 @@ public class Player extends Mob {
         }
         return chunkRepository.stream(EntityType.ITEM).anyMatch(it -> {
             GroundItem groundItem = (GroundItem) it;
-            if (groundItem.getId() == id && groundItem.getOwner().filter(this::equals).isPresent()) {
-                return true;
-            }
-            return false;
+            return groundItem.getId() == id && groundItem.getView().isViewableFor(this);
         });
     }
 
@@ -596,6 +596,7 @@ public class Player extends Mob {
         Varp varp = varbit.toVarp();
         sendVarp(varp);
     }
+
     /**
      * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. This function makes use of caching mechanisms that
      * can boost performance when invoked repetitively.
@@ -688,14 +689,23 @@ public class Player extends Mob {
     }
 
     /**
-     * Sends a region update, if one is needed.
+     * Sends a region update if needed, and refreshes all {@link Entity} types that need to be displayed.
+     *
+     * @param oldPosition The player's old position before movement processing.
      */
-    public void sendRegionUpdate() {
+    public void sendRegionUpdate(Position oldPosition) {
+        boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
+            fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
             queue(new RegionChangeMessageWriter(position));
         }
+        if(isTeleporting()) {
+            fullRefresh = true;
+        }
+        world.getChunks().sendUpdates(this, oldPosition, fullRefresh);
+        world.getChunks().resetUpdatedChunks();
     }
 
     /**

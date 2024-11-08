@@ -6,6 +6,7 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.World;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.task.Task;
 
 import java.util.ArrayDeque;
@@ -92,7 +93,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                     if (isTradeable && expireTicks >= TRADEABLE_LOCAL_TICKS) {
                         // Item is tradeable and only visible to one player, make it global.
                         GroundItem globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
-                                item.getPosition(), Optional.empty());
+                                item.getPosition(), ChunkUpdatableView.globalView());
                         expiredQueue.add(item);
                         registerQueue.add(globalItem);
                     } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
@@ -214,7 +215,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
             if (removeFromSet(existing)) { // Remove some of the existing item, add with new amount.
                 return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
-                        position, item.getOwner()));
+                        position, item.getView()));
             }
         } else if (tileSpaceFor(position, 1)) {
             return addToSet(item);
@@ -241,7 +242,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
             if (removeFromSet(existing)) { // Remove item, add with new amount.
                 return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
-                        position, item.getOwner()));
+                        position, item.getView()));
             }
         }
         return true; // Item wasn't found.
@@ -264,7 +265,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
         boolean failed = true;
         for (int i = 0; i < addAmount; i++) { // Add items 1 by 1.
-            if (addToSet(new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getOwner()))) {
+            if (addToSet(new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getView()))) {
                 failed = false;
             }
         }
@@ -349,7 +350,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
                 stream(type);
         return localItems.filter(it -> it.getId() == item.getId() &&
                 it.getPosition().equals(position) &&
-                it.getOwner().equals(item.getOwner()));
+                it.getView().equals(item.getView()));
     }
 
     /**

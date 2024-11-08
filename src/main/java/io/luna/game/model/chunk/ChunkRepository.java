@@ -41,7 +41,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * A list of pending updates to {@link StationaryEntity} types within this chunk.
      */
-    private final List<ChunkUpdate> pendingUpdates = new ArrayList<>();
+    private final List<ChunkUpdatableRequest> pendingUpdates = new ArrayList<>();
 
     /**
      * Creates a new {@link ChunkRepository}.
@@ -104,7 +104,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      *
      * @param update The update to queue.
      */
-    public void queueUpdate(ChunkUpdate update) {
+    public void queueUpdate(ChunkUpdatableRequest update) {
         pendingUpdates.add(update);
     }
 
@@ -114,10 +114,10 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @param player The player to get updates for.
      * @return The list of pending updates.
      */
-    public List<GameMessageWriter> getUpdates(Player player) {
+    public List<ChunkUpdatableMessage> getUpdates(Player player) {
         return pendingUpdates.stream().
-                filter(update -> update.getOwner().map(owner -> owner.equals(player)).orElse(true)).
-                map(ChunkUpdate::getMessage).collect(Collectors.toList());
+                filter(update -> update.getUpdatable().computeCurrentView().isViewableFor(player)).
+                map(ChunkUpdatableRequest::getMessage).collect(Collectors.toList());
     }
 
     /**

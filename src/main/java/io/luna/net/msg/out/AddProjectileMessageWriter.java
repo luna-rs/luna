@@ -1,18 +1,18 @@
 package io.luna.net.msg.out;
 
-import io.luna.game.model.Position;
-import io.luna.game.model.Projectile;
+import io.luna.game.model.LocalProjectile;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays a {@link Projectile}.
+ * A {@link GameMessageWriter} implementation that displays a {@link LocalProjectile}.
  *
  * @author lare96
  */
-public final class AddProjectileMessageWriter extends GameMessageWriter {
+public final class AddProjectileMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
     /**
      * The identifier.
@@ -70,7 +70,7 @@ public final class AddProjectileMessageWriter extends GameMessageWriter {
     private final int distanceFromSource;
 
     /**
-     * Creates a new {@link Projectile}.
+     * Creates a new {@link LocalProjectile}.
      *
      * @param id The identifier.
      * @param offset The offset.

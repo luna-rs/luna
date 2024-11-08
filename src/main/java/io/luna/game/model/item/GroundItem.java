@@ -6,16 +6,16 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.chunk.ChunkUpdate;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
+import io.luna.game.model.chunk.ChunkUpdatableRequest;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
-import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
+import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,9 +50,10 @@ public class GroundItem extends StationaryEntity {
      * @param id The item identifier.
      * @param amount The item amount.
      * @param position The position of the item.
+     * @param view Who this item is viewable to.
      */
-    public GroundItem(LunaContext context, int id, int amount, Position position, Optional<Player> player) {
-        super(context, position, EntityType.ITEM, player);
+    public GroundItem(LunaContext context, int id, int amount, Position position, ChunkUpdatableView view) {
+        super(context, position, EntityType.ITEM, view);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
 
@@ -83,7 +84,7 @@ public class GroundItem extends StationaryEntity {
                 add("x", position.getX()).
                 add("y", position.getY()).
                 add("z", position.getZ()).
-                add("owner", getOwner().map(Player::getUsername).orElse("null")).
+                add("view", getView()).
                 toString();
     }
 
@@ -93,12 +94,12 @@ public class GroundItem extends StationaryEntity {
     }
 
     @Override
-    protected final GameMessageWriter showMessage(int offset) {
+    protected final ChunkUpdatableMessage showMessage(int offset) {
         return new AddGroundItemMessageWriter(id, amount, offset);
     }
 
     @Override
-    protected final GameMessageWriter hideMessage(int offset) {
+    protected final ChunkUpdatableMessage hideMessage(int offset) {
         return new RemoveGroundItemMessageWriter(id, offset);
     }
 
@@ -112,7 +113,7 @@ public class GroundItem extends StationaryEntity {
         return id == other.id &&
                 amount == other.amount &&
                 Objects.equals(position, other.position) &&
-                Objects.equals(getOwner(), other.getOwner());
+                Objects.equals(getView(), other.getView());
     }
 
     /**
@@ -191,7 +192,7 @@ public class GroundItem extends StationaryEntity {
                 "Non-stackable ground items have a maximum amount of 1.");
         int offset = getChunk().offset(position);
         UpdateGroundItemMessageWriter msg = new UpdateGroundItemMessageWriter(offset, id, amount, value);
-        chunkRepository.queueUpdate(new ChunkUpdate(this, getOwner(), msg));
+        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg));
         amount = value;
     }
 

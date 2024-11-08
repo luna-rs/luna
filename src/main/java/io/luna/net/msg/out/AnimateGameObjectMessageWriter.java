@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteMessage;
@@ -11,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96
  */
-public final class AnimateGameObjectMessageWriter extends GameMessageWriter {
+public final class AnimateGameObjectMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
     /**
      * The object offset.

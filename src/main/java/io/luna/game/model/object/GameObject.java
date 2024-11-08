@@ -5,14 +5,14 @@ import io.luna.LunaContext;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
+import io.luna.game.model.chunk.ChunkUpdatableRequest;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.GameObjectDefinition;
-import io.luna.game.model.mob.Player;
-import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddObjectMessageWriter;
 import io.luna.net.msg.out.AnimateGameObjectMessageWriter;
 import io.luna.net.msg.out.RemoveObjectMessageWriter;
 
-import java.util.Optional;
 
 /**
  * A {@link StationaryEntity} representing an object on the map.
@@ -29,12 +29,12 @@ public class GameObject extends StationaryEntity {
      * @param position The position.
      * @param objectType The type.
      * @param direction The direction.
-     * @param player The player to update for.
+     * @param view WHo this object is viewable to.
      * @return The dynamic {@link GameObject}.
      */
     public static GameObject createDynamic(LunaContext context, int id, Position position, ObjectType objectType,
-                                           ObjectDirection direction, Optional<Player> player) {
-        return new GameObject(context, id, position, objectType, direction, player, true);
+                                           ObjectDirection direction, ChunkUpdatableView view) {
+        return new GameObject(context, id, position, objectType, direction, view, true);
     }
 
     /**
@@ -49,7 +49,7 @@ public class GameObject extends StationaryEntity {
      */
     public static GameObject createStatic(LunaContext context, int id, Position position, ObjectType objectType,
                                           ObjectDirection direction) {
-        return new GameObject(context, id, position, objectType, direction, Optional.empty(), false);
+        return new GameObject(context, id, position, objectType, direction, ChunkUpdatableView.globalView(), false);
     }
 
     /**
@@ -85,11 +85,11 @@ public class GameObject extends StationaryEntity {
      * @param position The position.
      * @param objectType The type.
      * @param direction The direction.
-     * @param player The player to update for.
+     * @param view Who this object is viewable to.
      * @param dynamic If this object is dynamic.
      */
-    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, Optional<Player> player, boolean dynamic) {
-        super(context, position, EntityType.OBJECT, player);
+    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, ChunkUpdatableView view, boolean dynamic) {
+        super(context, position, EntityType.OBJECT, view);
         this.id = id;
         this.objectType = objectType;
         this.direction = direction;
@@ -105,7 +105,12 @@ public class GameObject extends StationaryEntity {
                 add("y", position.getY()).
                 add("z", position.getZ()).
                 add("type", objectType).
-                add("owner", getOwner().map(Player::getUsername).orElse("PUBLIC")).toString();
+                add("view", getView()).toString();
+    }
+
+    @Override
+    public ChunkUpdatableView computeCurrentView() {
+        return getView();
     }
 
     @Override
@@ -114,12 +119,12 @@ public class GameObject extends StationaryEntity {
     }
 
     @Override
-    protected final GameMessageWriter showMessage(int offset) {
+    protected final ChunkUpdatableMessage showMessage(int offset) {
         return new AddObjectMessageWriter(id, objectType.getId(), direction.getId(), offset);
     }
 
     @Override
-    protected final GameMessageWriter hideMessage(int offset) {
+    protected final ChunkUpdatableMessage hideMessage(int offset) {
         return new RemoveObjectMessageWriter(objectType.getId(), direction.getId(), offset);
     }
 
@@ -131,12 +136,10 @@ public class GameObject extends StationaryEntity {
             int animationId = definition.getAnimationId().orElseThrow(() ->
                     new IllegalStateException("Object [" + id + "] does not have an animation!"));
             if (animationId > 0) {
-                applyUpdate(plr -> {
-                    sendPlacementMessage(plr);
-                    int offset = getChunk().offset(position);
-                    plr.queue(new AnimateGameObjectMessageWriter(offset, objectType.getId(),
-                            direction.getId(), animationId));
-                });
+                int offset = getChunk().offset(position);
+                AnimateGameObjectMessageWriter msg = new AnimateGameObjectMessageWriter(offset, objectType.getId(),
+                        direction.getId(), animationId);
+                chunkRepository.queueUpdate(new ChunkUpdatableRequest(this,msg));
             }
         }
     }
@@ -149,7 +152,7 @@ public class GameObject extends StationaryEntity {
     public boolean replaces(GameObject object) {
         return position.equals(object.position) &&
                 type == object.type &&
-                getOwner().equals(object.getOwner());
+                getView().equals(object.getView());
     }
 
     /**
@@ -187,4 +190,5 @@ public class GameObject extends StationaryEntity {
     public final boolean isDynamic() {
         return dynamic;
     }
+
 }

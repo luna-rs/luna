@@ -1,17 +1,17 @@
 package io.luna.net.msg.out;
 
-import io.luna.game.model.StationaryGraphic;
+import io.luna.game.model.LocalGraphic;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays a {@link StationaryGraphic}.
+ * A {@link GameMessageWriter} implementation that displays a {@link LocalGraphic}.
  *
  * @author lare96
  */
-public final class AddGraphicMessageWriter extends GameMessageWriter {
+public final class AddGraphicMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
     /**
      * The identifier.
@@ -50,7 +50,7 @@ public final class AddGraphicMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(4);
+        ByteMessage msg = ByteMessage.message(59);
         msg.put(offset);
         msg.putShort(id);
         msg.put(height);

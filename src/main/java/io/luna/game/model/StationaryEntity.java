@@ -3,25 +3,27 @@ package io.luna.game.model;
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkRepository;
-import io.luna.game.model.chunk.ChunkUpdate;
+import io.luna.game.model.chunk.ChunkUpdatable;
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
+import io.luna.game.model.chunk.ChunkUpdatableRequest;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 
 /**
- * An abstraction model representing non-moving {@link Entity}.
+ * Represents a non-moving {@link Entity} type that is also a {@link ChunkUpdatable}.
  *
  * @author lare96
  */
-public abstract class StationaryEntity extends Entity {
+public abstract class StationaryEntity extends Entity implements ChunkUpdatable {
 
     /**
-     * The player to update for. If empty, updates for all players.
+     * Who this entity can be viewed by.
      */
-    private final Optional<Player> owner;
+    private final ChunkUpdatableView view;
 
     /**
      * The surrounding players. Initialized lazily, use {@link #getSurroundingPlayers()}.
@@ -41,9 +43,14 @@ public abstract class StationaryEntity extends Entity {
      * @param type The entity type.
      * @param owner The player to update for. If empty, updates for all players.
      */
-    public StationaryEntity(LunaContext context, Position position, EntityType type, Optional<Player> owner) {
+    public StationaryEntity(LunaContext context, Position position, EntityType type, ChunkUpdatableView view) {
         super(context, position, type);
-        this.owner = owner;
+        this.view = view;
+    }
+
+    @Override
+    public ChunkUpdatableView computeCurrentView() {
+        return view;
     }
 
     /**
@@ -68,7 +75,7 @@ public abstract class StationaryEntity extends Entity {
      * @param offset The chunk offset.
      * @return The message.
      */
-    protected abstract GameMessageWriter showMessage(int offset);
+    protected abstract ChunkUpdatableMessage showMessage(int offset);
 
     /**
      * Creates a {@link GameMessageWriter} that hides this entity.
@@ -76,7 +83,7 @@ public abstract class StationaryEntity extends Entity {
      * @param offset The chunk offset.
      * @return The message.
      */
-    protected abstract GameMessageWriter hideMessage(int offset);
+    protected abstract ChunkUpdatableMessage hideMessage(int offset);
 
     /**
      * Sends a packet to all applicable players to display this entity.
@@ -110,8 +117,8 @@ public abstract class StationaryEntity extends Entity {
      *
      * @param msg The message to queue.
      */
-    protected final void queueUpdate(GameMessageWriter msg) {
-        chunkRepository.queueUpdate(new ChunkUpdate(this, owner, msg));
+    protected final void queueUpdate(ChunkUpdatableMessage msg) {
+        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this,  msg));
     }
 
     /**
@@ -124,35 +131,35 @@ public abstract class StationaryEntity extends Entity {
         if (!player.isViewableFrom(this)) {
             return false;
         }
-        return isGlobal() || owner.filter(plrOwner -> plrOwner.equals(player)).isPresent();
+        return isGlobal() || view.isViewableFor(player);
     }
 
     /**
      * @return The player to update for.
      */
-    public final Optional<Player> getOwner() {
-        return owner;
+    public final ChunkUpdatableView getView() {
+        return view;
     }
 
     /**
-     * @return The player to update for, or {@code null}.
+     * @return The players that can view this entity.
      */
-    public final Player getOwnerInstance() {
-        return owner.orElse(null);
+    public final Set<Player> getViewers() {
+        return view.getAllowedViewers();
     }
 
     /**
      * @return {@code true} if this entity is visible for everyone.
      */
     public final boolean isGlobal() {
-        return owner.isEmpty();
+        return view.isGlobal();
     }
 
     /**
-     * @return {@code true} if this entity is visible for just one player.
+     * @return {@code true} if this entity is visible for specific players.
      */
     public final boolean isLocal() {
-        return owner.isPresent();
+        return !isGlobal();
     }
 
     /**

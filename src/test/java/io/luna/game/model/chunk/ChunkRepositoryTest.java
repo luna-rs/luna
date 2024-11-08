@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 /**
  * A test that ensures that functions within the {@link ChunkRepository} class are working correctly.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96
  */
 public final class ChunkRepositoryTest {
 
@@ -22,7 +22,7 @@ public final class ChunkRepositoryTest {
     @Test
     public void testAdd() {
         assertThrows(IllegalStateException.class, () -> {
-            ChunkRepository repository = new ChunkRepository();
+            ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
             Entity entity = mock(Entity.class);
             when(entity.getType()).thenReturn(EntityType.PLAYER);
 
@@ -37,7 +37,7 @@ public final class ChunkRepositoryTest {
     @Test
     public void testRemove() {
         assertThrows(IllegalStateException.class, () -> {
-            ChunkRepository repository = new ChunkRepository();
+            ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
             Entity entity = mock(Entity.class);
             when(entity.getType()).thenReturn(EntityType.PLAYER);
 
@@ -50,9 +50,9 @@ public final class ChunkRepositoryTest {
      */
     @Test
     public void testInitialization() {
-        ChunkRepository repository = new ChunkRepository();
+        ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
         for (EntityType type : EntityType.ALL) {
-            assertNotNull(repository.setOf(type));
+            assertNotNull(repository.getAll(type));
         }
     }
 }

@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing anything that can be interacted with in the game world.
+ * A model representing anything that can be interacted with (or be displayed) in the game world.
  *
  * @author lare96
  */

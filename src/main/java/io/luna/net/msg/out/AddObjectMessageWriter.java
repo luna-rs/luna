@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
@@ -11,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96
  */
-public final class AddObjectMessageWriter extends GameMessageWriter {
+public final class AddObjectMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
     /**
      * The identifier.

@@ -1,7 +1,6 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.RegionLoadedEvent;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -15,13 +14,6 @@ public final class RegionLoadedMessageReader extends GameMessageReader<RegionLoa
 
     @Override
     public RegionLoadedEvent decode(Player player, GameMessage msg) {
-        if (player.isRegionChanged()) {
-            World world = player.getWorld();
-            player.setRegionChanged(false);
-            world.getChunks().sendViewableEntities(player);
-        }
         return new RegionLoadedEvent(player);
     }
-
-
 }

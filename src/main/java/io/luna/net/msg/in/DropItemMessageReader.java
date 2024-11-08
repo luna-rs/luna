@@ -2,6 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.LunaContext;
 import io.luna.game.event.impl.DropItemEvent;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Item;
@@ -14,8 +15,6 @@ import io.luna.net.msg.GameMessageReader;
 import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Optional;
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -81,7 +80,7 @@ public final class DropItemMessageReader extends GameMessageReader<DropItemEvent
         player.interruptAction();
         if (itemDef.isTradeable() && !itemDef.getInventoryActions().contains("Destroy")) {
             GroundItem groundItem = new GroundItem(ctx, inventoryItem.getId(), inventoryItem.getAmount(),
-                    player.getPosition(), Optional.of(player));
+                    player.getPosition(), ChunkUpdatableView.localView(player));
             if (ctx.getWorld().getItems().register(groundItem)) {
                 player.getInventory().set(event.getIndex(), null);
             } else {
