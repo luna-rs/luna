@@ -149,8 +149,9 @@ public final class LunaServer {
         PluginBootstrap bootstrap = new PluginBootstrap(context);
         bootstrap.start();
 
-        int count = context.getPlugins().getCount();
-        logger.info("{} Kotlin plugins have been loaded.", box(count));
+        int pluginCount = context.getPlugins().getPluginCount();
+        int scriptCount = context.getPlugins().getScriptCount();
+        logger.info("{} Kotlin plugins containing {} scripts have been loaded.", box(pluginCount), box(scriptCount));
     }
 
     /**

@@ -70,8 +70,15 @@ public final class PluginManager {
     /**
      * @return A total count of all loaded plugins (the size of {@link #pluginMap}).
      */
-    public int getCount() {
+    public int getPluginCount() {
         return pluginMap.size();
+    }
+
+    /**
+     * @return A total count of all loaded scripts.
+     */
+    public int getScriptCount() {
+        return pluginMap.values().stream().mapToInt(scripts -> scripts.getScripts().size()).sum();
     }
 
     /**

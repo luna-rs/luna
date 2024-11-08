@@ -14,7 +14,9 @@ import kotlin.script.templates.standard.ScriptTemplateWithArgs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -125,7 +127,8 @@ public final class PluginBootstrap {
      * @param pluginScripts The plugin script map.
      */
     private void validatePlugins(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
-        for (Entry<String, ClassInfo> entry : pluginScripts.entries()) {
+        List<Entry<String, ClassInfo>> validate = new ArrayList<>(pluginScripts.entries());
+        for (Entry<String, ClassInfo> entry : validate) {
             boolean foundMatch = false;
             String packageName = entry.getKey();
             ClassInfo scriptInfo = entry.getValue();
@@ -133,13 +136,19 @@ public final class PluginBootstrap {
             if (scriptInfo.getSimpleName().equals("SandboxScript")) {
                 continue;
             }
+
             for (String loadedPackageName : infoScripts.keySet()) {
                 // Check if every script has a matching info script.
                 if (packageName.startsWith(loadedPackageName)) {
+                    if (!packageName.equals(loadedPackageName)) {
+                        // It does, now check if it's a nested plugin.
+                        if (infoScripts.containsKey(packageName)) {
+                            throw new IllegalStateException("Nesting plugins is not allowed due to confusion and potentially unpredictable behaviour. Move plugin [" + packageName + "] into its own top-level directory.");
+                        }
 
-                    // It does, now check if it's a nested plugin.
-                    if (!packageName.equals(loadedPackageName) && infoScripts.containsKey(packageName)) {
-                        throw new IllegalStateException("Nesting plugins is not allowed due to confusion and potentially unpredictable behaviour. Move plugin [" + packageName + "] into its own top-level directory.");
+                        // It's not a nested plugin, group it with its top level plugin.
+                        pluginScripts.put(loadedPackageName, scriptInfo);
+                        pluginScripts.remove(packageName, scriptInfo);
                     }
                     foundMatch = true;
                 }
@@ -157,7 +166,9 @@ public final class PluginBootstrap {
      * @param pluginScripts The plugin script map.
      * @return The plugin map.
      */
-    private ImmutableMap<String, Plugin> buildPluginMap(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) throws ReflectiveOperationException {
+    private ImmutableMap<String, Plugin> buildPluginMap
+    (Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) throws
+            ReflectiveOperationException {
         ImmutableMap.Builder<String, Plugin> pluginMap = ImmutableMap.builder();
         for (ClassInfo infoScriptClass : infoScripts.values()) {
             String packageName = infoScriptClass.getPackageName();
