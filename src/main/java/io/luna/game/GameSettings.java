@@ -3,6 +3,7 @@ package io.luna.game;
 import io.luna.LunaRuntime;
 import io.luna.game.model.Position;
 import io.netty.util.ResourceLeakDetector.Level;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  * Holds settings parsed from the "game" section in {@code ./data/luna.json} file.
@@ -11,13 +12,61 @@ import io.netty.util.ResourceLeakDetector.Level;
  */
 public final class GameSettings {
 
+    /**
+     * The password strength levels.
+     */
+    public enum PasswordStrength {
+
+        /**
+         * No password protection, passwords will not be verified. Passwords entered at login will be saved as
+         * "password." Anyone will be able to log in to any account with just the username.
+         */
+        NONE(-1),
+
+        /**
+         * The lowest acceptable rounds for {@link BCrypt} encryption to work. Use when you want to maximize performance.
+         */
+        LOW(4),
+
+        /**
+         * A good tradeoff between security and performance.
+         */
+        DEFAULT(8),
+
+        /**
+         * Provides a higher level of security at a higher performance cost.
+         */
+        HIGH(16);
+
+        /**
+         * The encryption rounds.
+         */
+        private final int rounds;
+
+        /**
+         * Creates a new {@link PasswordStrength}.
+         *
+         * @param rounds The encryption rounds.
+         */
+        PasswordStrength(int rounds) {
+            this.rounds = rounds;
+        }
+
+        /**
+         * @return The encryption rounds.
+         */
+        public int getRounds() {
+            return rounds;
+        }
+    }
+
     private final LunaRuntime runtimeMode;
     private final int port;
     private final int connectionLimit;
     private final Position startingPosition;
     private final double experienceMultiplier;
     private final String serializer;
-    private final int passwordStrength;
+    private final PasswordStrength passwordStrength;
 
     /**
      * The port that the server will be bound on.
@@ -57,11 +106,12 @@ public final class GameSettings {
     }
 
     /**
-     * How strong BCrypt password encryption will be. CPU usage increases by a factor of 2 for every +1 added to this
-     * value. Values valid are 4-30. Ideally, this value should be set to where each password verification/hashing takes
-     * around 150-250ms.
+     * The {@link BCrypt} password encryption strength level. It is safe to change strength levels while in a
+     * production environment (character data will not be broken).
+     *
+     * @see PasswordStrength
      */
-    public int passwordStrength() {
+    public PasswordStrength passwordStrength() {
         return passwordStrength;
     }
 
@@ -107,7 +157,7 @@ public final class GameSettings {
      * To prevent public instantiation.
      */
     private GameSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
-                         double experienceMultiplier, String serializer, int passwordStrength) {
+                         double experienceMultiplier, String serializer, PasswordStrength passwordStrength) {
         // Will never be called.
         this.runtimeMode = runtimeMode;
         this.port = port;
