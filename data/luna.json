@@ -1,12 +1,31 @@
 {
-  "runtime_mode": "DEVELOPMENT",
-  "starting_position": {
-    "x": 3093,
-    "y": 3244
+  "game": {
+    "runtime_mode": "DEVELOPMENT",
+    "starting_position": {
+      "x": 3093,
+      "y": 3244
+    },
+    "experience_multiplier": 1.0,
+    "serializer": "SqlPlayerSerializer",
+    "port": 43594,
+    "connection_limit": 2,
+    "password_strength": "DEFAULT"
   },
-  "experience_multiplier": 1.0,
-  "serializer": "SqlPlayerSerializer",
-  "port": 43594,
-  "connection_limit": 2,
-  "password_strength": 10
+  "logging": {
+    "root_level": "DEBUG",
+    "format_type": "VERBOSE",
+    "output_type": "MIXED",
+    "active_file_logs": [
+      "CONSOLE_ERR",
+      "CHAT",
+      "COMMANDS",
+      "PRIVATE_MESSAGE"
+    ]
+  },
+  "benchmark": {
+    "frequency_minutes": 10,
+    "types": [
+      "ALL"
+    ]
+  }
 }

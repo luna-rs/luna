@@ -45,12 +45,7 @@ public final class PlayerData {
     public double runEnergy;
     public double weight;
     public Map<String, Integer> varps;
-
     public List<Object> attributes;
-
-    // Used by the LogoutService for password hashing.
-    transient volatile boolean needsHash;
-    transient volatile String plainTextPassword;
 
     // Used by persistence classes to ignore temporary bots.
     transient volatile boolean temporaryBot;
