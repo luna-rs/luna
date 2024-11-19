@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.persistence;
 
+import io.luna.Luna;
+import io.luna.game.GameSettings.PasswordStrength;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.Player;
@@ -8,6 +10,7 @@ import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.service.GameService;
 import io.luna.game.service.LogoutService;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -100,8 +103,13 @@ public final class PlayerData {
         String plainTextPw = player.getPassword();
         if (hashedPw == null) {
             // No hashed password, we need to generate one.
-            plainTextPassword = plainTextPw;
-            needsHash = true;
+            PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
+            if(passwordStrength != PasswordStrength.NONE) {
+                String salt = BCrypt.gensalt(passwordStrength.getRounds());
+                password = BCrypt.hashpw(plainTextPw, salt);
+            } else {
+                password = "password";
+            }
         } else {
             // We have a hashed password, use it.
             password = hashedPw;

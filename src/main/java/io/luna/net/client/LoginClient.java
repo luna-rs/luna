@@ -1,6 +1,8 @@
 package io.luna.net.client;
 
+import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.GameSettings.PasswordStrength;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
@@ -91,7 +93,8 @@ public class LoginClient extends Client<LoginRequestMessage> {
      * @param enteredPassword The entered password.
      */
     public LoginResponse getLoginResponse(PlayerData data, String enteredPassword) {
-        if (data == null) {
+        PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
+        if (data == null || passwordStrength == PasswordStrength.NONE) {
             return LoginResponse.NORMAL;
         } else if (!BCrypt.checkpw(enteredPassword, data.password)) {
             return LoginResponse.INVALID_CREDENTIALS;
