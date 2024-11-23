@@ -2,7 +2,7 @@ package world.player.skill.woodcutting.cutTree
 
 import api.predef.*
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
 /**
@@ -33,7 +33,7 @@ enum class Axe(val id: Int, val level: Int, val animation: Animation, val streng
             level = 31,
             animation = Animation(869),
             strength = 7),
-    RUNITE(id = 1359,
+    RUNE(id = 1359,
            level = 41,
            animation = Animation(867),
            strength = 8),
@@ -76,6 +76,9 @@ enum class Axe(val id: Int, val level: Int, val animation: Animation, val streng
             return axe
         }
 
+        /**
+         * Determines if the player has an axe.
+         */
         fun hasAxe(plr: Player, axe: Axe) =
             plr.equipment.nonNullGet(Equipment.WEAPON).map { it.id == axe.id }.orElse(false) ||
                     plr.inventory.contains(axe.id)

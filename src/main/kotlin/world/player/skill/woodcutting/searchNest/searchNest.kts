@@ -4,6 +4,9 @@ import api.predef.*
 import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Player
 
+/**
+ * Search a bird's nest.
+ */
 fun searchNest(plr: Player, nest: Nest) {
     if (plr.inventory.computeRemainingSize() >= 1) {
         plr.inventory.replace(nest.id, 5075)
@@ -13,9 +16,7 @@ fun searchNest(plr: Player, nest: Nest) {
     }
 }
 
-on(ItemFirstClickEvent::class) {
-    val nest = Nest.NEST_MAP[id]
-    if (nest != null) {
-        searchNest(plr, nest)
-    }
+// Item click interaction for all birds nests.
+Nest.NEST_MAP.forEach { (id, nest) ->
+    item1(id) { searchNest(plr, nest) }
 }

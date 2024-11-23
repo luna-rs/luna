@@ -1,20 +1,22 @@
 package world.player.skill.woodcutting.cutTree
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.ItemContainerAction.UnsynchronizedInventoryAction
 import io.luna.game.model.EntityState
-import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 import world.player.skill.woodcutting.searchNest.Nest
 
 /**
  * An [InventoryAction] that will enable the cutting of trees.
  */
-class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-        InventoryAction(plr, false, 1, rand(RANDOM_FAIL_RATE)) {
+class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
+    UnsynchronizedInventoryAction(plr, false, 1, 5, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
@@ -38,7 +40,6 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         // Check if tree isn't already cut and if we still have an axe.
         treeObj.state == EntityState.INACTIVE || !Axe.hasAxe(mob, axe) -> false
         else -> {
-            mob.animation(axe.animation)
             if (start) {
                 mob.sendMessage("You swing your axe at the tree...")
                 delay = getWoodcuttingDelay()
@@ -53,16 +54,20 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             mob.sendMessage("A bird's nest drops to the floor!")
             world.addItem(nest.id, 1, mob.position, mob)
         } else {
-            val name = itemDef(tree.logsId).name
+            val name = itemName(tree.logsId)
             mob.sendMessage("You get some ${name.toLowerCase()}.")
             mob.woodcutting.addExperience(tree.exp)
         }
 
         if (tree.depletionChance == 1 || rand().nextInt(tree.depletionChance) == 0) {
             deleteAndRespawnTree()
+            interrupt()
+        } else {
+            delay = getWoodcuttingDelay()
         }
-        delay = getWoodcuttingDelay()
     }
+
+    override fun animation(): Animation = axe.animation
 
     override fun add(): List<Item?> = listOf(Item(tree.logsId))
 
@@ -70,18 +75,29 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun ignoreIf(other: Action<*>?) =
         when (other) {
-            is CutTreeAction -> treeObj == other.treeObj
+            is CutTreeActionItem -> treeObj == other.treeObj
             else -> false
         }
 
+    /**
+     * Replaces [treeObj] with a stump and respawns it at a later time.
+     */
     private fun deleteAndRespawnTree() {
         if (world.removeObject(treeObj)) {
             val stumpId = TreeStump.TREE_ID_MAP[treeObj.id]?.stumpId
             if (stumpId != null) {
-                world.addObject(stumpId, treeObj.position, treeObj.objectType, treeObj.direction, treeObj.ownerInstance)
+                world.addObject(
+                        stumpId,
+                        treeObj.position,
+                        treeObj.objectType,
+                        treeObj.direction)
             }
             world.scheduleOnce(tree.respawnTicks) {
-                world.addObject(treeObj.id, treeObj.position, treeObj.objectType, treeObj.direction, treeObj.ownerInstance)
+                    world.addObject(
+                        treeObj.id,
+                        treeObj.position,
+                        treeObj.objectType,
+                        treeObj.direction)
             }
         }
     }
@@ -94,7 +110,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             val wcLvlFactor = mob.woodcutting.level / 8
             baseTime -= (wcLvlFactor - treeLvlFactor)
         }
-        if(baseTime < 1) {
+        if (baseTime < 1) {
             baseTime = 1
         }
         if (baseTime > BASE_CUT_RATE) {
