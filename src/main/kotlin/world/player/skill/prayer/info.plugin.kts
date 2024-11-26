@@ -1,6 +1,6 @@
 package world.player.skill.prayer
 
-import api.bootstrap.plugin
+import api.plugin.plugin
 
 plugin {
     name = "Prayer"
