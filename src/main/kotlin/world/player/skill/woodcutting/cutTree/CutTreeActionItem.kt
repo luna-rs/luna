@@ -10,6 +10,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
+import world.player.Sound
 import world.player.skill.woodcutting.searchNest.Nest
 
 /**
@@ -31,6 +32,11 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
         val BASE_CUT_RATE = 25
     }
 
+    /**
+     * Sound delay for woodcutting.
+     */
+    private var soundDelay = true
+
     override fun executeIf(start: Boolean) = when {
         mob.woodcutting.level < tree.level -> {
             // Check if we have required level.
@@ -41,6 +47,7 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
         treeObj.state == EntityState.INACTIVE || !Axe.hasAxe(mob, axe) -> false
         else -> {
             if (start) {
+                mob.playSound(Sound.CUT_TREE_1, 40)
                 mob.sendMessage("You swing your axe at the tree...")
                 delay = getWoodcuttingDelay()
             }
@@ -67,7 +74,11 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
         }
     }
 
-    override fun animation(): Animation = axe.animation
+    override fun animation(): Animation {
+        mob.playSound(Sound.CUT_TREE_2)
+        soundDelay = true
+        return axe.animation
+    }
 
     override fun add(): List<Item?> = listOf(Item(tree.logsId))
 
@@ -79,25 +90,36 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
             else -> false
         }
 
+    override fun onProcess() {
+        if (soundDelay) {
+            soundDelay = false
+        } else {
+            mob.playSound(Sound.CUT_TREE_2)
+        }
+    }
+
     /**
      * Replaces [treeObj] with a stump and respawns it at a later time.
      */
     private fun deleteAndRespawnTree() {
         if (world.removeObject(treeObj)) {
+            mob.playSound(Sound.TREE_FALLEN)
             val stumpId = TreeStump.TREE_ID_MAP[treeObj.id]?.stumpId
             if (stumpId != null) {
                 world.addObject(
-                        stumpId,
-                        treeObj.position,
-                        treeObj.objectType,
-                        treeObj.direction)
+                    stumpId,
+                    treeObj.position,
+                    treeObj.objectType,
+                    treeObj.direction
+                )
             }
             world.scheduleOnce(tree.respawnTicks) {
-                    world.addObject(
-                        treeObj.id,
-                        treeObj.position,
-                        treeObj.objectType,
-                        treeObj.direction)
+                world.addObject(
+                    treeObj.id,
+                    treeObj.position,
+                    treeObj.objectType,
+                    treeObj.direction
+                )
             }
         }
     }
