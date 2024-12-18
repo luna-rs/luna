@@ -7,6 +7,7 @@ import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.varp.Varp
 
 /**
  * Sends tiara altar config on login.
@@ -14,7 +15,7 @@ import io.luna.game.model.mob.Player
 fun loginUpdate(plr: Player) {
     val headId = plr.equipment.get(Equipment.HEAD)?.id
     val value = Tiara.ID_TO_TIARA[headId]?.config
-    plr.sendConfig(491, value ?: 0)
+    plr.sendVarp(Varp(491, value ?: 0))
 }
 
 /**
@@ -22,7 +23,7 @@ fun loginUpdate(plr: Player) {
  */
 fun equipmentUpdate(plr: Player, newItem: Item?) {
     val new = Tiara.ID_TO_TIARA[newItem?.id]
-    plr.sendConfig(491, new?.config ?: 0)
+    plr.sendVarp(Varp(491, new?.config ?: 0))
 }
 
 /**

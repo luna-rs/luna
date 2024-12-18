@@ -3,9 +3,10 @@ package world.player.skill.runecrafting.craftRune
 import api.predef.*
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
-import io.luna.game.model.mob.Graphic
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.Player
+import world.player.Sounds
 
 /**
  * The rune essence identifier.
@@ -55,26 +56,25 @@ fun craft(plr: Player, rune: Rune) {
 
     // Now we can craft runes!
     val craftAmt = essenceAmt * (plr.runecrafting.level / rune.multiplier)
+    val removeItem = Item(essenceId, essenceAmt)
+    if (inv.remove(removeItem)) {
+        inv.add(Item(rune.id, craftAmt))
 
-    inv.remove(Item(essenceId, essenceAmt))
-    inv.add(Item(rune.id, craftAmt))
+        plr.sendMessage("You bind the temple's power into ${itemName(rune.id)}s.")
 
-    plr.sendMessage("You bind the temple's power into ${itemDef(rune.id).name}s.")
+        plr.animation(craftAnimation)
+        plr.graphic(craftGraphic)
+        plr.playSound(Sounds.CRAFT_RUNES)
 
-    plr.animation(craftAnimation)
-    plr.graphic(craftGraphic)
-
-    plr.runecrafting.addExperience(rune.exp * essenceAmt)
+        plr.runecrafting.addExperience(rune.exp * essenceAmt)
+    }
 }
 
 /**
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
-on(ObjectFirstClickEvent::class)
-    .filter { objectDef(id).hasAction(0, "Craft-rune") }
-    .then {
-        val altar = Rune.ALTAR_TO_RUNE[id]
-        if (altar != null) {
-            craft(plr, altar)
-        }
+for(entry in Rune.ALTAR_TO_RUNE) {
+    object1(entry.key) {
+        craft(plr, entry.value)
     }
+}

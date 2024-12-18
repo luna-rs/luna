@@ -81,6 +81,8 @@ enum class Altar(val id: Int,
 
     companion object {
 
+        val ALL = values().toSet()
+
         /**
          * Mappings of [Altar.talisman] to [Altar] instances.
          */
