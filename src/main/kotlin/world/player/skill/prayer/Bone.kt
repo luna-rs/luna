@@ -1,5 +1,6 @@
 package world.player.skill.prayer
 
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 
 /**
@@ -27,6 +28,11 @@ enum class Bone(val id: Int, val exp: Double) {
          * A mapping of bones identifiers to instances.
          */
         val ID_TO_BONE = values().associateBy { it.id }
+
+        /**
+         * An immutable list of [Bone.values].
+         */
+        val ALL = ImmutableList.copyOf(values())
     }
 
     /**

@@ -2,11 +2,10 @@ package world.player.skill.prayer
 
 import api.attr.Attr
 import api.predef.*
-import api.predef.ext.*
 import io.luna.game.action.ThrottledAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
-import world.player.Sound
+import world.player.Sounds
 
 /**
  * Throttles bone burying.
@@ -28,7 +27,7 @@ fun bury(plr: Player, bone: Bone) {
 
             mob.prayer.addExperience(bone.exp)
             mob.inventory.remove(bone.boneItem)
-            mob.playSound(Sound.BURY_BONE)
+            mob.playSound(Sounds.BURY_BONE)
 
             mob.sendMessage("You dig a hole in the ground.")
             mob.sendMessage("You bury the bones.")
