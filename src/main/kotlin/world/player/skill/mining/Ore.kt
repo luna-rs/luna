@@ -86,7 +86,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
             resistance = 8,
             exp = 95.0,
             depletionChance = 10),
-    RUNITE(rocks = listOf(2106 to 450,
+    RUNE(rocks = listOf(2106 to 450,
             2107 to 451),
             level = 85,
             item = 451,
@@ -95,7 +95,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
             exp = 125.0,
             depletionChance = 12);
 
-    val typeName = itemDef(item).name.replace("ore", "").trim()
+    val typeName = itemName(item).replace("ore", "").trim()
 
     companion object {
 

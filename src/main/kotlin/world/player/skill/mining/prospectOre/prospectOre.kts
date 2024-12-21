@@ -2,12 +2,10 @@ package world.player.skill.mining.prospectOre
 
 import api.attr.Attr
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.ThrottledAction
-import io.luna.game.action.TimeSource
 import io.luna.game.model.mob.Player
-import io.luna.game.model.`object`.GameObject
 import world.player.skill.mining.Ore
-
 
 /**
  * The mining ore prospectinmg timesource.
@@ -31,8 +29,7 @@ fun prospect(plr: Player,  ore: Ore?) {
                 plr.walking.isLocked = false
             }
         }
-    });
-
+    })
 }
 
 // Add listeners for all ores.

@@ -1,13 +1,14 @@
 package world.player.skill.mining.mineOre
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
-import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 import world.player.skill.crafting.gemCutting.Gem
 import world.player.skill.mining.Ore
 import world.player.skill.mining.Pickaxe
@@ -15,7 +16,7 @@ import world.player.skill.mining.Pickaxe
 /**
  * An [InventoryAction] that will enable the mining of rocks.
  */
-class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
+class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
         InventoryAction(plr, false, 1, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
@@ -43,7 +44,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         /**
          * All gems that can be received, in order of lowest level -> highest.
          */
-        val GEMS = Gem.ALL.sortedBy { it.level }
+        val GEMS = Gem.values().sortedBy { it.level }
     }
 
     /**
@@ -104,13 +105,15 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
     override fun ignoreIf(other: Action<*>?) =
             when (other) {
-                is MineOreAction -> rockObj == other.rockObj
+                is MineOreActionItem -> rockObj == other.rockObj
                 else -> false
             }
 
+    /**
+     * Deletes and respawns an [Ore] rock object.
+     */
     private fun deleteAndRespawnRock() {
         if (world.removeObject(rockObj)) {
-            logger.info("here2")
             val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
             if (emptyId != null) {
                 world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
@@ -124,6 +127,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
     }
 
+    /**
+     * Computes the mining delay.
+     */
     private fun getMiningDelay(): Int {
         var baseTime = rand(BASE_MINE_RATE / 2, BASE_MINE_RATE)
         baseTime -= (pick.strength - ore.resistance)
@@ -141,6 +147,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         return baseTime
     }
 
+    /**
+     * Drops a random gem from the [Ore] rock.
+     */
     private fun dropGem() {
         var foundGem: Gem? = null
         var chance = 2

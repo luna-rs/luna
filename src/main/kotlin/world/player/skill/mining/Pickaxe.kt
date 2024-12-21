@@ -2,7 +2,7 @@ package world.player.skill.mining
 
 import api.predef.*
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
 /**

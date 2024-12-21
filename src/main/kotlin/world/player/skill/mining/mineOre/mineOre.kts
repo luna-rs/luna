@@ -1,8 +1,8 @@
 package world.player.skill.mining.mineOre
 
 import api.predef.*
-import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.GameObject
 import world.player.skill.mining.Ore
 import world.player.skill.mining.Pickaxe
 
@@ -12,7 +12,7 @@ import world.player.skill.mining.Pickaxe
 fun mineRock(plr: Player, ore: Ore, obj: GameObject) {
     val pick = Pickaxe.computePickType(plr)
     if (pick != null) {
-        plr.submitAction(MineOreAction(plr, pick, ore, obj))
+        plr.submitAction(MineOreActionItem(plr, pick, ore, obj))
     } else {
         plr.sendMessage("You need a pickaxe which you have the required level to use.")
     }
