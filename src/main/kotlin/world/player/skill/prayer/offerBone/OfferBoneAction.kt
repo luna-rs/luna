@@ -1,4 +1,4 @@
-package world.player.skill.prayer
+package world.player.skill.prayer.offerBone
 
 import api.predef.*
 import api.predef.ext.*
@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.`object`.GameObject
 import world.player.Animations
+import world.player.skill.prayer.Bone
 
 /**
  * An [InventoryAction] that allows players to use [Bone] types on an altar for increased experience.

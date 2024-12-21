@@ -1,4 +1,4 @@
-package world.player.skill.prayer
+package world.player.skill.prayer.offerBone
 
 import api.predef.*
 import api.predef.ext.*
@@ -8,6 +8,7 @@ import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import world.player.skill.firemaking.Firemaking.TINDERBOX_ID
 import world.player.skill.firemaking.LightAction
+import world.player.skill.prayer.Bone
 import java.time.Duration
 
 /**
