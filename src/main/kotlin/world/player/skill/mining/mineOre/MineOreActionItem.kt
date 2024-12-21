@@ -32,9 +32,14 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         val BASE_MINE_RATE = 25
 
         /**
-         * The base chance of mining a gem, the lower this number the more likely a gem will be mined.
+         * The base chance of mining a gem.
          */
         val BASE_GEM_CHANCE = 256
+
+        /**
+         * The base chance of mining a gem when wearing an amulet of glory.
+         */
+        val BOOSTED_GEM_CHANCE = 86
 
         /**
          * The mining animation delay.
@@ -74,7 +79,9 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
     }
 
     override fun execute() {
-        if (!mob.inventory.isFull && rand().nextInt(BASE_GEM_CHANCE) == 0) {
+        val hasGlory = mob.equipment.amulet?.itemDef?.name?.contains("Amulet of glory")
+        val gemChance = if(hasGlory != null && hasGlory) BOOSTED_GEM_CHANCE else BASE_GEM_CHANCE
+        if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
             dropGem()
         } else {
             mob.sendMessage("You manage to mine some ${ore.typeName.toLowerCase()}.")
