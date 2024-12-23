@@ -2,16 +2,16 @@ package world.player.skill.herblore.grindIngredient
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
-import io.luna.game.model.mob.Animation
+import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will grind all ingredients in an inventory.
  */
-class GrindAction(plr: Player,
-                  val ingredient: Ingredient,
-                  makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
+class GrindActionItem(plr: Player,
+                      val ingredient: Ingredient,
+                      makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -29,8 +29,8 @@ class GrindAction(plr: Player,
 
 
     override fun execute() {
-        val oldName = itemDef(ingredient.id).name
-        val newName = itemDef(ingredient.newId).name
+        val oldName = itemName(ingredient.id)
+        val newName = itemName(ingredient.newId)
         val nextWord = if (ingredient == Ingredient.CRUSHED_NEST) "a" else "some"
         mob.sendMessage("You grind the $oldName into $nextWord $newName.")
 
@@ -43,7 +43,7 @@ class GrindAction(plr: Player,
 
     override fun ignoreIf(other: Action<*>) =
         when (other) {
-            is GrindAction -> ingredient == other.ingredient
+            is GrindActionItem -> ingredient == other.ingredient
             else -> false
         }
 }

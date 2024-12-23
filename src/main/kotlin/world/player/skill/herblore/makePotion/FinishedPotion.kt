@@ -1,16 +1,17 @@
 package world.player.skill.herblore.makePotion
 
 import api.predef.*
+import com.google.common.collect.ImmutableSet
 import io.luna.game.model.item.Item
 
 /**
  * An enum representing a drinkable potion.
  */
-enum class Potion(val id: Int,
-                  val unf: Int,
-                  val secondary: Int,
-                  val level: Int,
-                  val exp: Double) {
+enum class FinishedPotion(val id: Int,
+                          val unf: Int,
+                          val secondary: Int,
+                          val level: Int,
+                          val exp: Double) {
 
     ATTACK_POTION(id = 221,
                   unf = 91,
@@ -126,22 +127,9 @@ enum class Potion(val id: Int,
     companion object {
 
         /**
-         * Retrieves a potion from the backing map.
+         * Immutable copy of [values].
          */
-        fun getPotion(row: Int, column: Int): Potion? {
-            var potion = INGREDIENTS_TO_POTION[row, column]
-            if (potion == null) {
-                potion = INGREDIENTS_TO_POTION[column, row]
-            }
-            return potion
-        }
-
-        /**
-         * Mappings of ([Potion.unf], [Potion.secondary]) to [Potion] instances.
-         */
-        private val INGREDIENTS_TO_POTION = emptyTable<Int, Int, Potion>().apply {
-            values().forEach { put(it.unf, it.secondary, it) }
-        }
+        val ALL  = ImmutableSet.copyOf(values())
     }
 
     /**

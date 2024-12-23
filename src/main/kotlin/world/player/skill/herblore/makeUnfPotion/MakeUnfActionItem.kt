@@ -2,17 +2,17 @@ package world.player.skill.herblore.makeUnfPotion
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will make unfinished potions.
  */
-class MakeUnfAction(plr: Player,
-                    val unfPotion: UnfPotion,
-                    makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
+class MakeUnfActionItem(plr: Player,
+                        val unfPotion: UnfPotion,
+                        makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -42,7 +42,7 @@ class MakeUnfAction(plr: Player,
 
     override fun ignoreIf(other: Action<*>) =
         when (other) {
-            is MakeUnfAction -> unfPotion == other.unfPotion
+            is MakeUnfActionItem -> unfPotion == other.unfPotion
             else -> false
         }
 }

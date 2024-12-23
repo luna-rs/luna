@@ -2,16 +2,16 @@ package world.player.skill.herblore.makePotion
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
-import io.luna.game.model.mob.Animation
+import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will make potions.
  */
-class MakePotionAction(plr: Player,
-                       val potion: Potion,
-                       makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
+class MakePotionActionItem(plr: Player,
+                           val potion: FinishedPotion,
+                           makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -32,7 +32,7 @@ class MakePotionAction(plr: Player,
         }
 
     override fun execute() {
-        mob.sendMessage("You mix the ${itemDef(potion.secondary).name} into your potion.")
+        mob.sendMessage("You mix the ${itemName(potion.secondary)} into your potion.")
         mob.animation(ANIMATION)
         mob.herblore.addExperience(potion.exp)
     }
@@ -43,7 +43,7 @@ class MakePotionAction(plr: Player,
 
     override fun ignoreIf(other: Action<*>) =
         when (other) {
-            is MakePotionAction -> potion == other.potion
+            is MakePotionActionItem -> potion == other.potion
             else -> false
         }
 }

@@ -1,7 +1,6 @@
 package world.player.skill.herblore.identifyHerb
 
 import api.predef.*
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent
 import io.luna.game.model.mob.Player
 
 /**
@@ -24,19 +23,7 @@ fun identify(plr: Player, herb: Herb) {
     }
 }
 
-/**
- * Forwards to [identify] if [msg] contains a valid unidentified herb.
- */
-fun tryIdentify(msg: ItemFirstClickEvent) {
-    val herb = Herb.UNID_TO_HERB[msg.id]
-    if (herb != null) {
-        identify(msg.plr, herb)
-    }
+// Listen for an unidentified herb clicks.
+Herb.UNID_TO_HERB.values.forEach {
+    item1(it.id) { identify(plr, it) }
 }
-
-/**
- * Listen for an unidentified herb clicks.
- */
-on(ItemFirstClickEvent::class)
-    .filter { itemDef(id).hasInventoryAction(0, "Identify") }
-    .then { tryIdentify(this) }
