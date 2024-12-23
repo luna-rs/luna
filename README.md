@@ -12,7 +12,7 @@ Luna is currently unstable and therefore not ready to be used in a production en
 
 An official client can be found [here](https://gitlab.com/lare96/luna-client), along with the cache. To learn more about how to get started with Luna please visit the [wiki](https://github.com/luna-rs/luna/wiki).
 
-For more help, inquiries, or just to discuss the state of the project please join our [Discord server](https://discord.gg/udCqykV).
+For more help, inquiries, or just to discuss the state of the project please join our [Discord server](https://discord.gg/bqkGY7cmVX).
 
 # Thanks
 - blakeman8192 
