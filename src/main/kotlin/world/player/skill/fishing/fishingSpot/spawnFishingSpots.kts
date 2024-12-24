@@ -1,8 +1,11 @@
 package world.player.skill.fishing.fishingSpot
 
 import api.predef.*
-import io.luna.game.event.impl.ServerLaunchEvent
+import api.predef.ext.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
+// TODO fishingspot npc class that handles moving away automatically. then can use in instances, etc. much better
+// do this when fishing spots are first spawned
 /**
  * A list of fishing spots, where all moving fishing spots should be spawned.
  */

@@ -1,17 +1,20 @@
-package world.player.skill.fishing
+package world.player.skill.fishing.catchFish
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
+import world.player.Sounds
+import world.player.skill.fishing.Tool
 
 /**
  * An [InventoryAction] implementation that will catch fish.
  */
-class FishAction(private val msg: NpcClickEvent,
-                 private val tool: Tool) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
+class FishActionItem(private val msg: NpcClickEvent,
+                     private val tool: Tool
+) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
 
 
     companion object {
@@ -57,6 +60,7 @@ class FishAction(private val msg: NpcClickEvent,
             else -> {
                 // Start fishing!
                 mob.animation(Animation(tool.animation))
+                mob.playSound(Sounds.FISH)
                 if (start) {
                     // TODO Send proper tool messages
                     mob.sendMessage("You begin to fish...")
@@ -67,15 +71,10 @@ class FishAction(private val msg: NpcClickEvent,
         }
 
     override fun execute() {
-        // Send messages.
         messages.forEach(mob::sendMessage)
         messages.clear()
-
-        // Add experience.
         mob.fishing.addExperience(exp)
         exp = 0.0
-
-        // Reset fishing delay.
         delay = getFishingDelay()
     }
 
@@ -105,7 +104,7 @@ class FishAction(private val msg: NpcClickEvent,
 
     override fun ignoreIf(other: Action<*>?) =
         when (other) {
-            is FishAction -> msg.npc == other.msg.npc
+            is FishActionItem -> msg.targetNpc == other.msg.targetNpc
             else -> false
         }
 
