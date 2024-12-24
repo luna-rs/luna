@@ -2,6 +2,7 @@ package world.player.skill.fishing
 
 import api.predef.*
 import io.luna.game.model.item.Item
+import world.player.skill.fishing.catchFish.FishActionItem
 
 /**
  * An enum representing a fish that can be caught using a [Tool].
@@ -13,7 +14,7 @@ enum class Fish(val id: Int,
     KARAMBWANJI(id = 3150,
                 level = 5,
                 exp = 5.0) {
-        override fun toItem(action: FishAction): Item? {
+        override fun toItem(action: FishActionItem): Item? {
             val level = action.mob.fishing.level / 5
             val extraCount = Math.floor(level.toDouble())
             return Item(id, (1 + extraCount).toInt())
@@ -79,7 +80,7 @@ enum class Fish(val id: Int,
     KARAMBWAN(id = 3142,
               level = 65,
               exp = 50.0) {
-        override fun toItem(action: FishAction): Item? {
+        override fun toItem(action: FishActionItem): Item? {
             return if (rand(3) == 0) {
                 // 3 in 1 chance to lose bait.
                 action.messages += "A Karambwan deftly snatches the Karambwanji from your vessel!"
@@ -106,5 +107,5 @@ enum class Fish(val id: Int,
     /**
      * Retrieves the item instance from this fish.
      */
-    open fun toItem(action: FishAction): Item? = Item(id)
+    open fun toItem(action: FishActionItem): Item? = Item(id)
 }

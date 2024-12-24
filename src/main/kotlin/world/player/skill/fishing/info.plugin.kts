@@ -1,7 +1,7 @@
 
 package world.player.skill.fishing
 
-import api.bootstrap.plugin
+import api.plugin.plugin
 
 plugin {
     name = "Fishing"

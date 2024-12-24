@@ -1,5 +1,6 @@
 package world.player.skill.fishing
 
+import com.google.common.collect.ImmutableList
 import world.player.skill.fishing.Fish.*
 
 /**
@@ -66,5 +67,8 @@ enum class Tool(val id: Int,
                   level = 76,
                   catchRate = 20,
                   animation = 618,
-                  fish = listOf(SHARK))
+                  fish = listOf(SHARK));
+    companion object {
+        val ALL: ImmutableList<Tool> = ImmutableList.copyOf(values())
+    }
 }
