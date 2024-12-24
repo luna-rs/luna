@@ -1,5 +1,6 @@
 package world.player.skill.fletching.stringBow
 
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 
 /**
@@ -65,9 +66,9 @@ enum class Bow(val level: Int,
     companion object {
 
         /**
-         * Mappings of [Bow.unstrung] to [Bow].
+         * Immutable copy of [values].
          */
-        val UNSTRUNG_TO_BOW = values().associateBy { it.unstrung }
+        val VALUES = ImmutableList.copyOf(values())
 
         /**
          * The bow string identifier.

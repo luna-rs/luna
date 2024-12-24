@@ -1,5 +1,6 @@
 package world.player.skill.fletching.cutLog
 
+import com.google.common.collect.ImmutableList
 import world.player.skill.fletching.stringBow.Bow
 import world.player.skill.fletching.stringBow.Bow.*
 
@@ -28,9 +29,9 @@ enum class Log(val id: Int, val bows: List<Bow>) {
         const val KNIFE = 946
 
         /**
-         * Mappings of [Log.id] to [Log] instances.
+         * An immutable copy of [values].
          */
-        val ID_TO_LOG = values().associateBy { it.id }
+        val VALUES = ImmutableList.copyOf(values())
     }
 
     /**

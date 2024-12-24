@@ -1,5 +1,7 @@
 package world.player.skill.fletching.attachArrow
 
+import com.google.common.collect.ImmutableList
+
 /**
  * An enum representing an arrow made from two materials.
  */
@@ -13,7 +15,7 @@ enum class Arrow(val level: Int,
                    exp = 1.0,
                    tip = 52,
                    with = 314,
-                   id = Arrow.HEADLESS),
+                   id = 53),
     BRONZE_ARROW(level = 1,
                  exp = 1.3,
                  tip = 39,
@@ -52,8 +54,8 @@ enum class Arrow(val level: Int,
         const val SET_AMOUNT = 15
 
         /**
-         * Mappings of [Arrow.tip] to [Arrow] instances.
+         * An immutable copy of [values].
          */
-        val TIP_TO_ARROW = values().associateBy { it.tip }
+        val VALUES = ImmutableList.copyOf(values())
     }
 }

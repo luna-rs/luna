@@ -1,21 +1,24 @@
 package world.player.skill.fletching.cutLog
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import world.player.Animations
+import world.player.Sounds
 import world.player.skill.fletching.attachArrow.Arrow
 import world.player.skill.fletching.stringBow.Bow
 
 /**
  * An [InventoryAction] implementation that cuts logs.
  */
-class CutLogAction(plr: Player,
-                   val log: Int,
-                   val bow: Bow,
-                   makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
+class CutLogActionItem(plr: Player,
+                       val log: Int,
+                       val bow: Bow,
+                       makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
 
     companion object {
 
@@ -47,16 +50,17 @@ class CutLogAction(plr: Player,
 
 
     override fun execute() {
-        val unstrungName = itemDef(bow.unstrung).name
+        val unstrungName = itemName(bow.unstrung)
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
-        mob.animation(ANIMATION)
+        mob.playSound(Sounds.CUT_LOG)
+        mob.animation(Animations.CUT_LOG)
         mob.fletching.addExperience(bow.exp)
     }
 
     override fun ignoreIf(other: Action<*>) =
         when (other) {
-            is CutLogAction -> log == other.log && bow == other.bow
+            is CutLogActionItem -> log == other.log && bow == other.bow
             else -> false
         }
 }

@@ -2,16 +2,16 @@ package world.player.skill.fletching.attachArrow
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will attach arrowtips to headless arrows.
  */
-class MakeArrowAction(plr: Player,
-                      val arrow: Arrow,
-                      makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
+class MakeArrowActionItem(plr: Player,
+                          val arrow: Arrow,
+                          makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
 
     /**
      * The amount of arrows to make in this set.
@@ -47,8 +47,8 @@ class MakeArrowAction(plr: Player,
     }
 
     override fun execute() {
-        val withName = itemDef(arrow.with).name
-        val tipName = itemDef(arrow.tip).name
+        val withName = itemName(arrow.with)
+        val tipName = itemName(arrow.tip)
         mob.sendMessage("You attach the $tipName to the $withName.")
 
         mob.fletching.addExperience(arrow.exp * setAmount)
@@ -56,7 +56,7 @@ class MakeArrowAction(plr: Player,
 
     override fun ignoreIf(other: Action<*>) =
         when (other) {
-            is MakeArrowAction -> arrow == other.arrow
+            is MakeArrowActionItem -> arrow == other.arrow
             else -> false
         }
 }
