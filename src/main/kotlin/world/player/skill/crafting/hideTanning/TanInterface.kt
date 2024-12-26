@@ -3,6 +3,7 @@ package world.player.skill.crafting.hideTanning
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
+import io.luna.net.msg.out.WidgetTextMessageWriter
 import world.player.skill.crafting.hideTanning.Hide.*
 
 /**
@@ -32,8 +33,8 @@ class TanInterface : StandardInterface(14670) {
         var costWidget = 14785
         var modelWidget = 14769
         for (it in HIDES) {
-            plr.sendText(it.displayName, nameWidget++)
-            plr.sendText("${it.cost} coins", costWidget++)
+            plr.queue(WidgetTextMessageWriter(it.displayName, nameWidget++))
+            plr.queue(WidgetTextMessageWriter("${it.cost} coins", costWidget++))
             plr.queue(WidgetItemModelMessageWriter(modelWidget++, 250, it.hide))
         }
     }

@@ -1,8 +1,9 @@
 package world.player.skill.crafting.hideTanning
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.event.impl.ServerLaunchEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
@@ -19,6 +20,7 @@ data class TanButton(val hide: Hide, val amount: TanAmount) {
             TanAmount.TAN_X -> plr.interfaces.open(object : AmountInputInterface() {
                 override fun onAmountInput(player: Player?, value: Int) = action(value)
             })
+
             TanAmount.TAN_ALL -> action(plr.inventory.computeAmountForId(hide.hide))
         }
     }
@@ -39,28 +41,29 @@ val buttonToTan = mutableMapOf<Int, TanButton>()
 /**
  * Tans the specified amount of hides.
  */
-fun tan(plr: Player, hide: Hide, amount: Int) {
+fun tan(plr: Player, hide: Hide, selectedAmount: Int) {
     val inv = plr.inventory
-    if (!inv.contains(hide.hide)) {
+    var makeAmount = inv.computeAmountForId(hide.hide)
+    if (makeAmount == 0) {
         plr.sendMessage("You do not have any of these hides to tan.")
         return
     }
 
-    val totalCost = hide.cost * amount
-    val totalMoney = inv.computeAmountForId(995)
-    var newAmount = amount
-    if (totalCost > totalMoney) {
-        newAmount = hide.cost / totalMoney
-        if (newAmount <= 0) {
-            plr.sendMessage("You do not have enough coins to tan this.")
-            return
-        }
+    if (makeAmount > selectedAmount) {
+        makeAmount = selectedAmount
     }
 
-    val moneyItem = Item(995, hide.cost * newAmount)
+    val totalCost = hide.cost * makeAmount
+    val totalMoney = inv.computeAmountForId(995)
+    if (totalCost > totalMoney) {
+        plr.sendMessage("You need ${numF(totalCost - totalMoney)} more coins to tan these.")
+        return
+    }
+
+    val moneyItem = Item(995, totalCost)
     if (inv.remove(moneyItem)) {
-        inv.replace(hide.hide, hide.tan, newAmount)
-        plr.sendMessage("The tanner tans $newAmount hides for you.")
+        inv.replace(hide.hide, hide.tan, makeAmount)
+        plr.sendMessage("The tanner tans $makeAmount hides for you.")
     }
 }
 
@@ -98,7 +101,7 @@ on(ButtonClickEvent::class)
 // "Talk" option for tanner NPC.
 npc1(804) {
     plr.newDialogue()
-        .npc(npc.id, "Would you like me to tan some hides?")
+        .npc(targetNpc.id, "Would you like me to tan some hides?")
         .options("Yes", { open(it) },
                  "No", { it.interfaces.close() })
         .open()
