@@ -1,7 +1,7 @@
 
 package world.player.skill.firemaking
 
-import api.bootstrap.plugin
+import api.plugin.plugin
 
 plugin {
     name = "Firemaking"
@@ -9,10 +9,7 @@ plugin {
         """
         A plugin that enables the Firemaking skill. This includes
         -> Lighting logs on fire, which later become ashes
-        -> Checking for dynamic objects that may be in the way
-        
-        TODO
-        -> Proper collision detection
+        -> Checking for objects that may be in the way
         """
     version = "1.0"
     authors += "lare96"

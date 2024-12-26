@@ -1,5 +1,7 @@
 package world.player.skill.firemaking
 
+import com.google.common.collect.ImmutableList
+
 /**
  * An enum representing logs that can be burned.
  */
@@ -32,8 +34,8 @@ enum class Log(val id: Int, val level: Int, val exp: Double) {
     companion object {
 
         /**
-         * Log item ID -> Log instance
+         * An immutable copy of [values].
          */
-        val ID_TO_LOG = values().associateBy { it.id }
+        val VALUES = ImmutableList.copyOf(values())
     }
 }
