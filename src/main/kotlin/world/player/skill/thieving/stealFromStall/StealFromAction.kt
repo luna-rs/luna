@@ -66,7 +66,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
     }
 
     override fun ignoreIf(other: Action<*>?): Boolean = when (other) {
-        is StealFromAction -> other.thievable == thievable
+        is StealFromAction -> other.thievable == thievable && obj == other.obj
         else -> false
     }
 
