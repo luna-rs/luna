@@ -3,11 +3,11 @@ package world.player.skill.runecrafting.craftRune
 /**
  * An enum representing a rune that can be crafted at an [Altar].
  */
-enum class Rune(val id: Int,
-                val altar: Int,
-                val multiplier: Int,
-                val level: Int,
-                val exp: Double) {
+enum class CraftableRune(val id: Int,
+                         val altar: Int,
+                         val multiplier: Int,
+                         val level: Int,
+                         val exp: Double) {
 
     AIR(id = 556,
         altar = 2478,
@@ -78,7 +78,7 @@ enum class Rune(val id: Int,
     companion object {
 
         /**
-         * Mappings of [Rune.altar] to [Rune] instances.
+         * Mappings of [CraftableRune.altar] to [CraftableRune] instances.
          */
         val ALTAR_TO_RUNE = values().associateBy { it.altar }
     }

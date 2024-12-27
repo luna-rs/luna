@@ -1,7 +1,6 @@
 package world.player.skill.runecrafting.craftRune
 
 import api.predef.*
-import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
@@ -31,7 +30,7 @@ val craftGraphic = Graphic(186, 100)
 /**
  * Attempts to craft [rune] for [plr].
  */
-fun craft(plr: Player, rune: Rune) {
+fun craft(plr: Player, rune: CraftableRune) {
     if (plr.runecrafting.level < rune.level) {
         plr.sendMessage("You need a Runecrafting level of ${rune.level} to craft these runes.")
         return
@@ -73,7 +72,7 @@ fun craft(plr: Player, rune: Rune) {
 /**
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
-for(entry in Rune.ALTAR_TO_RUNE) {
+for(entry in CraftableRune.ALTAR_TO_RUNE) {
     object1(entry.key) {
         craft(plr, entry.value)
     }
