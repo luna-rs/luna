@@ -6,7 +6,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
-import world.player.skill.firemaking.Firemaking.TINDERBOX_ID
+import world.player.skill.firemaking.Firemaking.TINDERBOX
 import world.player.skill.firemaking.LightAction
 import world.player.skill.prayer.Bone
 import java.time.Duration
@@ -23,13 +23,17 @@ fun lightAltar(plr: Player, altarObject: GameObject) {
     plr.submitAction(object : LightAction(plr, rand(6, 12)) {
         override fun onLight() {
             if (world.removeObject(altarObject)) {
-                world.addObject(GameObject.createDynamic(ctx, 4090, altarObject.position, altarObject
-                    .objectType, altarObject.direction, altarObject.view))
-                plr.sendMessage("You light the altar.")
+                val litAltar = GameObject.createDynamic(ctx, 4090, altarObject.position, altarObject
+                    .objectType, altarObject.direction, altarObject.view)
+                if (world.addObject(litAltar)) {
+                    plr.firemaking.addExperience(750.0)
+                    plr.sendMessage("You light the altar.")
 
-                world.scheduleOnce(Duration.ofMinutes(30)) {
-                    world.addObject(GameObject.createDynamic(ctx, 4091, altarObject.position, altarObject.objectType,
-                                                             altarObject.direction, altarObject.view))
+                    world.scheduleOnce(Duration.ofMinutes(30)) {
+                        world.addObject(GameObject.createDynamic(ctx, 4091, altarObject.position,
+                                                                 altarObject.objectType, altarObject.direction,
+                                                                 altarObject.view))
+                    }
                 }
             }
         }
@@ -46,7 +50,7 @@ for (bone in Bone.ALL) {
 }
 
 // Use the tinderbox with the altar, or first click the altar to light it.
-useItem(TINDERBOX_ID).onObject(4091) {
+useItem(TINDERBOX).onObject(4091) {
     lightAltar(plr, gameObject)
 }
 object1(4091) {
