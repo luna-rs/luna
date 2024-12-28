@@ -60,7 +60,7 @@ class FishActionItem(private val msg: NpcClickEvent,
             else -> {
                 // Start fishing!
                 mob.animation(Animation(tool.animation))
-                mob.playSound(Sounds.FISH)
+                mob.playSound(Sounds.FISH) // TODO fix sound https://i.imgur.com/cCWHeY2.png
                 if (start) {
                     // TODO Send proper tool messages
                     mob.sendMessage("You begin to fish...")
@@ -104,7 +104,7 @@ class FishActionItem(private val msg: NpcClickEvent,
 
     override fun ignoreIf(other: Action<*>?) =
         when (other) {
-            is FishActionItem -> msg.targetNpc == other.msg.targetNpc
+            is FishActionItem -> msg.targetNpc == other.msg.targetNpc && tool == other.tool
             else -> false
         }
 
