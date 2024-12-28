@@ -5,6 +5,7 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.ThrottledAction
 import io.luna.game.model.mob.Player
+import world.player.Sounds
 import world.player.skill.mining.Ore
 
 /**
@@ -19,10 +20,11 @@ fun prospect(plr: Player,  ore: Ore?) {
     val delay = rand(2, 4);
     plr.submitAction(object : ThrottledAction<Player>(plr, plr.lastProspect, delay + 1) {
         override fun execute() {
+            plr.playSound(Sounds.PROSPECT_ORE)
             plr.sendMessage("You examine the rock for ores...");
             plr.walking.isLocked = true
             world.scheduleOnce(rand(2, 4)) {
-                when (ore) {
+                when (ore) { // sound 431
                     null -> plr.sendMessage("There is no ore left in the rock.")
                     else -> plr.sendMessage("This rock contains ${ore.typeName.toLowerCase()}.")
                 }
