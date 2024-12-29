@@ -9,7 +9,7 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.ItemContainer.StackPolicy
 
 /**
- * A type adapter that will enable [ItemContainer]s to be persisted.
+ * A type adapter that will enable [ItemContainer]s to be persisted as attributes.
  *
  * @author lare96
  */
