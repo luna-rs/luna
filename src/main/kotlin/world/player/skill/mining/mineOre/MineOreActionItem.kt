@@ -104,7 +104,7 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         if (animationDelay > 0) {
             animationDelay--
             if (animationDelay != 0) {
-                mob.playSound(Sounds.MINING)
+                mob.playSound(Sounds.MINE_ROCK)
             }
         } else {
             mob.animation(pick.animation)
