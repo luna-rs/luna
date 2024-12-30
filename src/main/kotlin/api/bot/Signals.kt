@@ -1,6 +1,7 @@
 package api.bot
 
 import io.luna.game.model.Entity
+import io.luna.game.model.Position
 import io.luna.game.model.mob.bot.Bot
 
 /**
@@ -18,5 +19,11 @@ object Signals {
      * A signal to determine if [bot] is within [distance] of [target].
      */
     fun within(bot: Bot, target: Entity, distance: Int): () -> Boolean =
-        { bot.position.isWithinDistance(target.position, distance) }
+        within(bot, target.position, distance)
+
+    /**
+     * A signal to determine if [bot] is within [distance] of [position].
+     */
+    fun within(bot: Bot, position: Position, distance: Int): () -> Boolean =
+        { bot.position.isWithinDistance(position, distance) }
 }
