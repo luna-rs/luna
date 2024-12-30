@@ -9,6 +9,8 @@ import io.luna.game.model.mob.bot.Bot
  */
 object Signals {
 
+    // TODO Make this an instanced class in BotScript with Bot as an arg. reduces redundancy
+
     /**
      * A signal to determine if [bot] is interacting with [target].
      */
