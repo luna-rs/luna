@@ -1,4 +1,4 @@
-package api.event
+package api.event.dsl
 
 import api.predef.*
 import io.luna.game.event.Event

@@ -1,5 +1,6 @@
-package api.event
+package api.event.dsl
 
+import api.event.Matcher
 import io.luna.game.event.Event
 import kotlin.reflect.KClass
 

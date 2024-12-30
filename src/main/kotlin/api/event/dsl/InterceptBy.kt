@@ -1,5 +1,6 @@
-package api.event
+package api.event.dsl
 
+import api.event.Matcher
 import api.predef.*
 import io.luna.game.event.Event
 import javax.script.ScriptException
