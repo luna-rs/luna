@@ -7,15 +7,15 @@ import io.luna.game.event.EventMatcher
 import io.luna.game.event.EventMatcherListener
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
+import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent
 import io.luna.game.event.impl.ItemClickEvent
 import io.luna.game.event.impl.ItemClickEvent.*
-import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
-import io.luna.game.event.impl.ServerLaunchEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import io.luna.game.event.impl.UseItemEvent.*
 import kotlin.reflect.KClass
 
 /**
@@ -67,6 +67,10 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
                          ButtonMatcher,
                          ItemOnItemMatcher,
                          ItemOnObjectMatcher,
+                         ItemOnNpcMatcher,
+                         ItemOnPlayerMatcher,
+                         ItemOnGroundItemMatcher,
+                         GroundItemSecondClickMatcher,
                          NpcMatcher(NpcFirstClickEvent::class),
                          NpcMatcher(NpcSecondClickEvent::class),
                          NpcMatcher(NpcThirdClickEvent::class),
@@ -82,7 +86,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
                          ObjectMatcher(ObjectThirdClickEvent::class))
                 .associateBy { it.eventType }
 
-            // Add all of the matcher's listeners.
+            // Add all the matcher's listeners.
             ALL.values.forEach { it.addListener() }
 
             // Small optimization, put all keys with only one listener into a different map.
@@ -94,8 +98,6 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
                     singularCount += result.first
                     multiCount += result.second
                 }
-                logger.debug("Action map optimization | singular: {} mappings, multi: {} mappings.",
-                             singularCount, multiCount)
             }
         }
     }
@@ -142,7 +144,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
     private fun addListener() {
         val type = eventType.java
         val pipeline = pipelines.get(type)
-        pipeline.setMatcher(EventMatcher<E>(this::match))
+        pipeline.setMatcher(EventMatcher(this::match))
     }
 
     /**
@@ -187,7 +189,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * A base [Matcher] for [NpcClickEvent]s.
      */
     class NpcMatcher<E : NpcClickEvent>(matchClass: KClass<E>) : Matcher<E, Int>(matchClass) {
-        override fun key(msg: E) = msg.npc.id
+        override fun key(msg: E) = msg.targetNpc.id
     }
 
     /**
@@ -202,6 +204,13 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      */
     class ObjectMatcher<E : ObjectClickEvent>(matchClass: KClass<E>) : Matcher<E, Int>(matchClass) {
         override fun key(msg: E) = msg.id
+    }
+
+    /**
+     * A singleton [Matcher] instance for [GroundItemSecondClickEvent]s.
+     */
+    object GroundItemSecondClickMatcher : Matcher<GroundItemSecondClickEvent, Int>(GroundItemSecondClickEvent::class) {
+        override fun key(msg: GroundItemSecondClickEvent): Int = msg.groundItem.id
     }
 
     /**
@@ -223,13 +232,34 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * A singleton [Matcher] instance for [ItemOnItemEvent]s.
      */
     object ItemOnItemMatcher : Matcher<ItemOnItemEvent, Pair<Int, Int>>(ItemOnItemEvent::class) {
-        override fun key(msg: ItemOnItemEvent) = Pair(msg.usedId, msg.targetId)
+        override fun key(msg: ItemOnItemEvent) = Pair(msg.usedItemId, msg.targetItemId)
     }
 
     /**
      * A singleton [Matcher] instance for [ItemOnObjectEvent]s.
      */
     object ItemOnObjectMatcher : Matcher<ItemOnObjectEvent, Pair<Int, Int>>(ItemOnObjectEvent::class) {
-        override fun key(msg: ItemOnObjectEvent) = Pair(msg.itemId, msg.objectId)
+        override fun key(msg: ItemOnObjectEvent) = Pair(msg.usedItemId, msg.objectId)
+    }
+
+    /**
+     * A singleton [Matcher] instance for [ItemOnNpcEvent]s.
+     */
+    object ItemOnNpcMatcher : Matcher<ItemOnNpcEvent, Pair<Int, Int>>(ItemOnNpcEvent::class) {
+        override fun key(msg: ItemOnNpcEvent) = Pair(msg.usedItemId, msg.targetNpc.id)
+    }
+
+    /**
+     * A singleton [Matcher] instance for [ItemOnPlayerEvent]s.
+     */
+    object ItemOnPlayerMatcher : Matcher<ItemOnPlayerEvent, Int>(ItemOnPlayerEvent::class) {
+        override fun key(msg: ItemOnPlayerEvent) = msg.usedItemId
+    }
+
+    /**
+     * A singleton [Matcher] instance for [ItemOnGroundItemEvent]s.
+     */
+    object ItemOnGroundItemMatcher : Matcher<ItemOnGroundItemEvent, Pair<Int, Int>>(ItemOnGroundItemEvent::class) {
+        override fun key(msg: ItemOnGroundItemEvent) = Pair(msg.usedItemId, msg.groundItem.id)
     }
 }
