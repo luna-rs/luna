@@ -36,7 +36,7 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.26.1")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.4")
 }
 
 group = "luna"
