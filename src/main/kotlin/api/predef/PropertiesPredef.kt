@@ -1,18 +1,22 @@
 package api.predef
 
+import io.luna.LunaServer
 import io.luna.game.event.EventListener
 import io.luna.game.event.EventMatcherListener
 import io.luna.game.model.EntityType
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.PlayerInteraction
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.plugin.KotlinBindings
 import io.luna.game.plugin.PluginBootstrap
+import io.luna.game.plugin.InfoScriptData
 import io.luna.util.Rational
 import io.luna.util.ReflectionUtils
+import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The Kotlin bindings. Not accessible to scripts.
@@ -43,9 +47,19 @@ val scriptListeners: MutableList<EventListener<*>> = bindings.listeners!!
 val scriptMatchers: MutableList<EventMatcherListener<*>> = bindings.matchers!!
 
 /**
+ * The info for the current build script being evaluated.
+ */
+val buildScriptInfo: AtomicReference<InfoScriptData> = bindings.info
+
+/**
  * The [EventListenerPipelineSet] instance.
  */
 val pipelines = bindings.pipelines!!
+
+/**
+ * The [LunaServer] instance.
+ */
+val server = ctx.server!!
 
 /**
  * The [PluginManger] instance.
@@ -63,58 +77,28 @@ val world = ctx.world!!
 val game = ctx.game!!
 
 
-/*******************
- *                 *
- *  Type aliases.  *
- *                 *
- ******************/
-
-typealias TableEntry<R, C, V> = Pair<Pair<R, C>, V>
-
-
-/**************************************
- *                                    *
- *  [PlayerRights] property aliases.  *
- *                                    *
- *************************************/
-
+/* Player rights properties. */
 val RIGHTS_PLAYER = PlayerRights.PLAYER
 val RIGHTS_MOD = PlayerRights.MODERATOR
 val RIGHTS_ADMIN = PlayerRights.ADMINISTRATOR
 val RIGHTS_DEV = PlayerRights.DEVELOPER
 
 
-/*******************************************
- *                                         *
- *  [PlayerInteraction] property aliases.  *
- *                                         *
- ******************************************/
-
+/* Player interaction properties. */
 val INTERACTION_TRADE = PlayerInteraction.TRADE!!
 val INTERACTION_CHALLENGE = PlayerInteraction.CHALLENGE!!
 val INTERACTION_ATTACK = PlayerInteraction.ATTACK!!
 val INTERACTION_FOLLOW = PlayerInteraction.FOLLOW!!
 
 
-/************************************
- *                                  *
- *  [EntityType] property aliases.  *
- *                                  *
- ***********************************/
-
-/* Aliases for 'EntityType'. */
+/* Entity type properties. */
 val TYPE_PLAYER = EntityType.PLAYER
 val TYPE_NPC = EntityType.NPC
 val TYPE_OBJECT = EntityType.OBJECT
 val TYPE_ITEM = EntityType.ITEM
 
 
-/******************************************
- *                                        *
- *  [Skill] identifier property aliases.  *
- *                                        *
- *****************************************/
-
+/* Skill id properties. */
 const val SKILL_ATTACK = Skill.ATTACK
 const val SKILL_DEFENCE = Skill.DEFENCE
 const val SKILL_STRENGTH = Skill.STRENGTH
@@ -138,81 +122,71 @@ const val SKILL_FARMING = Skill.FARMING
 const val SKILL_RUNECRAFTING = Skill.RUNECRAFTING
 
 
-/***********************************
- *                                 *
- *  [Skill] extension properties.  *
- *                                 *
- **********************************/
-
-val Player.attack: Skill
+/* Skill extension properties. */
+val Mob.attack: Skill
     get() = skill(SKILL_ATTACK)
 
-val Player.strength: Skill
+val Mob.strength: Skill
     get() = skill(SKILL_STRENGTH)
 
-val Player.defence: Skill
+val Mob.defence: Skill
     get() = skill(SKILL_DEFENCE)
 
-val Player.hitpoints: Skill
+val Mob.hitpoints: Skill
     get() = skill(SKILL_HITPOINTS)
 
-val Player.ranged: Skill
+val Mob.ranged: Skill
     get() = skill(SKILL_RANGED)
 
-val Player.prayer: Skill
+val Mob.prayer: Skill
     get() = skill(SKILL_PRAYER)
 
-val Player.magic: Skill
+val Mob.magic: Skill
     get() = skill(SKILL_MAGIC)
 
-val Player.cooking: Skill
+val Mob.cooking: Skill
     get() = skill(SKILL_COOKING)
 
-val Player.woodcutting: Skill
+val Mob.woodcutting: Skill
     get() = skill(SKILL_WOODCUTTING)
 
-val Player.fletching: Skill
+val Mob.fletching: Skill
     get() = skill(SKILL_FLETCHING)
 
-val Player.fishing: Skill
+val Mob.fishing: Skill
     get() = skill(SKILL_FISHING)
 
-val Player.firemaking: Skill
+val Mob.firemaking: Skill
     get() = skill(SKILL_FIREMAKING)
 
-val Player.crafting: Skill
+val Mob.crafting: Skill
     get() = skill(SKILL_CRAFTING)
 
-val Player.smithing: Skill
+val Mob.smithing: Skill
     get() = skill(SKILL_SMITHING)
 
-val Player.mining: Skill
+val Mob.mining: Skill
     get() = skill(SKILL_MINING)
 
-val Player.herblore: Skill
+val Mob.herblore: Skill
     get() = skill(SKILL_HERBLORE)
 
-val Player.agility: Skill
+val Mob.agility: Skill
     get() = skill(SKILL_AGILITY)
 
-val Player.thieving: Skill
+val Mob.thieving: Skill
     get() = skill(SKILL_THIEVING)
 
-val Player.slayer: Skill
+val Mob.slayer: Skill
     get() = skill(SKILL_SLAYER)
 
-val Player.farming: Skill
+val Mob.farming: Skill
     get() = skill(SKILL_FARMING)
 
-val Player.runecrafting: Skill
+val Mob.runecrafting: Skill
     get() = skill(SKILL_RUNECRAFTING)
 
-/***************************************
- *                                     *
- *  [Equipment] extension properties.  *
- *                                     *
- ***************************************/
-
+/* Equipment extension properties. */
 val Equipment.head: Item?
     get() = this[Equipment.HEAD]
 
@@ -247,11 +221,7 @@ val Equipment.ammo: Item?
     get() = this[Equipment.AMMUNITION]
 
 
-/**********************************
- *                                *
- *  [Rational] property aliases.  *
- *                                *
- *********************************/
+/* Rational properties. */
 val ALWAYS = Rational.ALWAYS
 val VERY_COMMON = Rational.VERY_COMMON
 val COMMON = Rational.COMMON

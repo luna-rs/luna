@@ -1,44 +1,27 @@
 package api.predef
 
-import com.google.common.base.Stopwatch
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Table
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.def.ObjectDefinition
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.util.StringUtils
 import java.text.NumberFormat
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
-import java.util.concurrent.TimeUnit
-
-/**
- * Returns the current time in [TimeUnit.MILLISECONDS], using [System.nanoTime] for better precision.
- */
-fun currentTimeMs() = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS)
-
-/**
- * Times how long it takes for the code within [block] to complete.
- */
-fun time(block: () -> Unit): Duration {
-    val stopwatch = Stopwatch.createStarted()
-    block()
-    return stopwatch.elapsed()
-}
 
 /**
  * The number formatter. Uses the UK locale.
  */
-private val FORMAT = NumberFormat.getInstance(Locale.UK)
+private val NUMBER_FORMATTER = NumberFormat.getInstance(Locale.UK)
 
 /**
  * Format a number.
  */
 fun numF(input: Any): String {
-    return FORMAT.format(input)
+    return NUMBER_FORMATTER.format(input)
 }
 
 /**
@@ -51,6 +34,11 @@ fun <T> lazyVal(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE,
  */
 fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
     .orElseThrow { NoSuchElementException("Name not found for item <$id>") }
+
+/**
+ * Computes and returns the name for [id] with one of the 'a' or 'an' articles prepended.
+ */
+fun articleItemName(id: Int): String = StringUtils.addArticle(itemName(id))
 
 /**
  * Computes and returns the [ItemDefinition] for [id].
@@ -71,9 +59,9 @@ fun npcDef(id: Int): NpcDefinition = NpcDefinition.ALL.get(id)
     .orElseThrow { NoSuchElementException("Definition not found for npc <$id>") }
 
 /**
- * Computes and returns the [ObjectDefinition] for [id].
+ * Computes and returns the [GameObjectDefinition] for [id].
  */
-fun objectDef(id: Int): ObjectDefinition = ObjectDefinition.ALL.get(id)
+fun objectDef(id: Int): GameObjectDefinition = GameObjectDefinition.ALL.get(id)
     .orElseThrow { NoSuchElementException("Definition not found for object <$id>") }
 
 /**
@@ -103,12 +91,17 @@ fun rand(upperInclusive: Int): Int = rand().nextInt(upperInclusive + 1)
 /**
  * Generates a random integer within [range].
  */
-fun rand(range: IntRange) = rand(range.first, range.last)
+fun rand(range: IntRange) = range.random()
 
 /**
  * Creates an empty mutable table of [entries].
  */
 fun <R, C, V> emptyTable(size: Int = 16): Table<R, C, V> = HashBasedTable.create(size, size)
+
+/**
+ * Type alias for table entries.
+ */
+private typealias TableEntry<R, C, V> = Pair<Pair<R, C>, V>
 
 /**
  * Creates an immutable table of [entries]. The syntax for creating entries is (row [to] column [to] value).

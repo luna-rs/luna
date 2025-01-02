@@ -1,17 +1,18 @@
 package api.predef
 
-import api.event.InterceptBy
-import api.event.InterceptUseItem
 import api.event.Matcher
+import api.event.dsl.InterceptBy
+import api.event.dsl.InterceptUseItem
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
+import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent
 import io.luna.game.event.impl.ItemClickEvent.*
-import io.luna.game.event.impl.ItemOnItemEvent
-import io.luna.game.event.impl.ItemOnObjectEvent
 import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
+import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
+import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.mob.PlayerRights
 import java.util.*
 import kotlin.reflect.KClass
@@ -77,6 +78,11 @@ fun npc4(id: Int, action: EventAction<NpcFourthClickEvent>) =
 fun npc5(id: Int, action: EventAction<NpcFifthClickEvent>) =
     Matcher.get<NpcFifthClickEvent, Int>().set(id, action)
 
+/**
+ * The [GroundItemSecondClickEvent] matcher function.
+ */
+fun groundItem2(id: Int, action: EventAction<GroundItemSecondClickEvent>) =
+    Matcher.get<GroundItemSecondClickEvent, Int>().set(id, action)
 
 /** The [ItemFirstClickEvent] matcher function.*/
 fun item1(id: Int, action: EventAction<ItemFirstClickEvent>) =
