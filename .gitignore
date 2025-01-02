@@ -1,5 +1,5 @@
 /wip
-/data/saved_players
+/data/game/saved_players
 /.idea/
 /target/
 /.settings/
@@ -7,7 +7,7 @@
 /plugins/sandbox/
 /bin/
 /out/
-/data/minigames/party_room/items.json
+/data/game/minigames/party_room/items.json
 
 ### Gradle ###
 .gradle
@@ -83,3 +83,5 @@ gradle-app.setting
 *.zip
 *.tar.gz
 *.rar
+/data/notes/
+/data/game/cache/
