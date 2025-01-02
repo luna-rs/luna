@@ -1,4 +1,4 @@
-package api.bootstrap
+package api.plugin.dsl
 
 /**
  * The receiver for the [plugin] closure.
