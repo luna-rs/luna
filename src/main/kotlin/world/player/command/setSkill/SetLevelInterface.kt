@@ -12,7 +12,7 @@ class SetLevelInterface : StandardInterface(2808) {
     }
 
     override fun onClose(player: Player) {
-        // Return interface to original state!
+        // Return interface to original state.
         player.sendText("Choose the stat you wish to be advanced!", 2810)
     }
 }

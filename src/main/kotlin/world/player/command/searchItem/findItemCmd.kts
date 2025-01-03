@@ -1,8 +1,12 @@
 package world.player.command.searchItem
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
+import io.luna.game.model.def.ItemDefinition
+import io.luna.game.model.def.NpcDefinition
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
@@ -14,10 +18,13 @@ import world.player.command.cmd
 fun spawn(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
     val id = msg.itemId
-    val inv = plr.inventory
-    when (amount) {
-        null -> inv.add(Item(id, Int.MAX_VALUE))
-        else -> inv.add(Item(id, amount))
+    val item = Item(id, amount ?: Int.MAX_VALUE)
+    if (!plr.inventory.hasSpaceFor(item)) {
+        plr.sendMessage("${item.itemDef.name}(x${numF(item.amount)}) Sent to your bank.")
+        plr.bank.add(item)
+    } else {
+        plr.sendMessage("${item.itemDef.name}(x${numF(item.amount)}) Sent to your inventory.")
+        plr.inventory.add(item)
     }
 }
 
@@ -35,6 +42,31 @@ cmd("finditem", RIGHTS_DEV) {
         plr.interfaces.open(SearchResultInterface(search))
     } else {
         plr.sendMessage("Search term must be more than 1 character.")
+    }
+}
+
+// TODO move this  cmd
+/**
+ * A command that searches for definition ids and displays them on the quest journal.
+ */
+cmd("finddef", RIGHTS_DEV) {
+    val type = args[0].toLowerCase().trim()
+    val search = getInputFrom(1).toLowerCase().trim()
+    val matches = arrayListOf<Pair<Int, String>>()
+    when (type) {
+        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
+            .forEach { matches.add(it.id to it.name) }
+
+        "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
+            .forEach { matches.add(it.id to it.name) }
+
+        "npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
+            .forEach { matches.add(it.id to it.name) }
+    }
+    if (matches.isNotEmpty()) {
+        for (next in matches) {
+            plr.sendMessage("${next.first} - ${next.second}")
+        }
     }
 }
 

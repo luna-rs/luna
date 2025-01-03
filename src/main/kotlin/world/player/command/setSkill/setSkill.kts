@@ -1,6 +1,7 @@
 package world.player.command.setSkill
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
 import world.player.command.cmd

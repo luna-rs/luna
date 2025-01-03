@@ -1,8 +1,6 @@
 package world.player.command.generic
 
 import api.predef.*
-import world.player.command.cmd
-import world.player.command.getPlayer
 
 /**
  * Perform a forced disconnect on a player.
