@@ -1,11 +1,12 @@
-package world.player.item.consume.potion
+package world.player.item.consumable.potion
 
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.action.ThrottledAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import world.player.item.consume.potion.Potion
 
 /**
  * Throttles how often a player can drink potions.

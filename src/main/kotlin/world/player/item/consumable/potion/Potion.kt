@@ -1,7 +1,7 @@
 package world.player.item.consume.potion
 
 import api.predef.*
-import io.luna.game.model.mob.Hit
+import io.luna.game.model.mob.block.Hit
 import io.luna.game.model.mob.Player
 
 /**
@@ -136,7 +136,7 @@ enum class Potion(val fourDose: Int,
     /**
      * The formatted name.
      */
-    val formattedName = itemDef(fourDose).name.dropLast(3)
+    val formattedName = itemName(fourDose).dropLast(3)
 
     /**
      * Computes and returns the next potion dose identifier.

@@ -116,7 +116,7 @@ enum class Food(val heal: Int,
          * Mappings of [Food.ids] to [Food].
          */
         val ID_TO_FOOD = HashMap<Int, Food>().apply {
-            for (food in values()) {
+            for (food in Food.values()) {
                 for (id in food.ids) {
                     this[id] = food
                 }
@@ -137,7 +137,7 @@ enum class Food(val heal: Int,
     /**
      * The mappings of formatted names.
      */
-    val formattedName = itemDef(id).name.toLowerCase()
+    val formattedName = itemName(id).toLowerCase()
 
     /**
      * Invoked when the food is eaten.
