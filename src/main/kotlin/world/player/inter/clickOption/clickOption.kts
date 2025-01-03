@@ -1,6 +1,7 @@
 package world.player.inter.clickOption
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.dialogue.OptionDialogueInterface
 
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.dialogue.OptionDialogueInterface
 fun clickOption(msg: ButtonClickEvent, option: Int) {
     val plr = msg.plr
     val inter = plr.interfaces.get(OptionDialogueInterface::class)
+
     if (inter != null) {
         when (option) {
             1 -> inter.firstOption(plr)
@@ -20,7 +22,8 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
             else -> throw IllegalArgumentException("'option' must be between 1-5 inclusive.")
         }
 
-        if (plr.dialogues.isEmpty  && inter.isOpen) {
+        // Only close if we still have the same interface open.
+        if (plr.dialogues.isEmpty && inter.isOpen) {
             plr.interfaces.close()
         }
     }
