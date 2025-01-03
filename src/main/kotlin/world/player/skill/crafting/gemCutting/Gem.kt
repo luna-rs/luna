@@ -1,7 +1,7 @@
 package world.player.skill.crafting.gemCutting
 
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An enum representing uncut precious gems.
@@ -66,11 +66,6 @@ enum class Gem(val uncut: Int,
         const val CHISEL = 1755
 
         /**
-         * The list of values.
-         */
-        val ALL = listOf(*values())
-
-        /**
          * Mappings of [Gem.uncut] to [Gem].
          */
         val UNCUT_TO_GEM = values().associateBy { it.uncut }
@@ -85,4 +80,18 @@ enum class Gem(val uncut: Int,
      * The cut item.
      */
     val cutItem = Item(cut)
+
+    /**
+     * Determines if this is a semi-precious gem.
+     */
+    fun isSemiPrecious(): Boolean = this == JADE || this == OPAL || this == RED_TOPAZ
+
+    /**
+     * Gets the crushed value of this gem, throws an exception if this gem isn't semi-precious.
+     */
+    fun getCrushedItem(): Item {
+        return if (this == JADE || this == OPAL || this == RED_TOPAZ) Item(1633) else
+            throw IllegalStateException("Gem [$this] is not a semi-precious gem.")
+
+    }
 }
