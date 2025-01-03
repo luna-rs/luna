@@ -5,13 +5,14 @@ import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.varp.PersistentVarp
 
 /**
  * Sets the withdraw mode if the banking interface is open.
  */
 fun setWithdrawMode(plr: Player, value: Boolean) {
     if (plr.bank.isOpen) {
-        plr.bank.isWithdrawAsNote = value
+        plr.varpManager.setAndSendValue(PersistentVarp.WITHDRAW_AS_NOTE, if (value) 1 else 0)
     }
 }
 
