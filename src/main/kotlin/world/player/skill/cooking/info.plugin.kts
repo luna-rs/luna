@@ -1,6 +1,6 @@
 package world.player.skill.cooking
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Cooking"
@@ -12,7 +12,7 @@ plugin {
         -> Fires burn more frequently than ranges
         
         TODO
-        -> Making complex foods (pizza, wine, pies, etc.)
+        -> bread, pies, stews, pizzas, cakes, wines, hto drinks, veggies, dairy? kebabs?
         """
     version = "1.0"
     authors += "lare96"
