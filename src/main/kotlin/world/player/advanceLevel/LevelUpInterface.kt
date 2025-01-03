@@ -4,6 +4,8 @@ import api.predef.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.inter.DialogueInterface
+import io.luna.net.msg.out.WidgetAnimationMessageWriter
+import io.luna.net.msg.out.WidgetTextMessageWriter
 
 /**
  * A [DialogueInterface] that opens when a level is advanced.
@@ -17,7 +19,11 @@ class LevelUpInterface(val skill: Int,
         val lvlUpMessage = "Congratulations, you just advanced ${addArticle(skillName)} level!"
 
         player.sendMessage(lvlUpMessage)
-        player.sendText(lvlUpMessage, data.firstLine)
-        player.sendText("Your $skillName level is now $newLevel.", data.secondLine)
+        player.queue(WidgetTextMessageWriter(lvlUpMessage, data.firstLine))
+        player.queue(WidgetTextMessageWriter("Your $skillName level is now $newLevel.", data.secondLine))
+        if(skill == SKILL_FIREMAKING) {
+            // Animates the flame in the chatbox.
+            player.queue(WidgetAnimationMessageWriter(4286, 475))
+        }
     }
 }

@@ -1,6 +1,6 @@
 package world.player.advanceLevel
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Advance levels"

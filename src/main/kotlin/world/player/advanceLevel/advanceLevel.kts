@@ -2,7 +2,7 @@ package world.player.advanceLevel
 
 import api.predef.*
 import io.luna.game.event.impl.SkillChangeEvent
-import io.luna.game.model.mob.Graphic
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
@@ -21,7 +21,7 @@ val levelUpTable = listOf(
         LevelUpData(6254, 6255, 6253),
         LevelUpData(6207, 6208, 6206),
         LevelUpData(6217, 6218, 6216),
-        LevelUpData(5453, 6114, 4443),
+        LevelUpData(5453, 5454, 4443),
         LevelUpData(6243, 6244, 6242),
         LevelUpData(6212, 6213, 6211),
         LevelUpData(6227, 6228, 6226),
