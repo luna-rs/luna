@@ -43,7 +43,7 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
      */
     public GroupedEntityMessageWriter(Position basePosition, ChunkRepository placementChunkRepository, Collection<ChunkUpdatableMessage> messages) {
         this.basePosition = basePosition;
-        this.placementPosition = placementChunkRepository.getChunk().getBasePosition();
+        this.placementPosition = placementChunkRepository.getChunk().getAbsPosition();
         this.messages = messages;
     }
 
