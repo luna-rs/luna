@@ -15,6 +15,7 @@ import io.luna.net.msg.GameMessageReader;
 import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import world.player.Sounds;
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -83,6 +84,7 @@ public final class DropItemMessageReader extends GameMessageReader<DropItemEvent
                     player.getPosition(), ChunkUpdatableView.localView(player));
             if (ctx.getWorld().getItems().register(groundItem)) {
                 player.getInventory().set(event.getIndex(), null);
+                player.playSound(Sounds.DROP_ITEM);
             } else {
                 player.sendMessage("You cannot drop this here.");
             }
