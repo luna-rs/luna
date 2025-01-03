@@ -20,6 +20,7 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
+import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.block.ForcedMovement;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -45,13 +46,18 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
-import io.luna.net.msg.out.RegionChangeMessageWriter;
+import io.luna.net.msg.out.RegionMessageWriter;
+import io.luna.net.msg.out.SoundMessageWriter;
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter;
 import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.VarpMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
+import io.luna.util.RandomUtils;
+import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import world.player.Messages;
+import world.player.Sounds;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -336,6 +342,11 @@ public class Player extends Mob {
     private final Stopwatch timeout = Stopwatch.createUnstarted();
 
     /**
+     * The current dynamic map the player is in.
+     */
+    private DynamicMap dynamicMap;
+
+    /**
      * Creates a new {@link Player}.
      *
      * @param context The context instance.
@@ -347,7 +358,7 @@ public class Player extends Mob {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -359,12 +370,22 @@ public class Player extends Mob {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(getUsernameHash());
     }
 
     @Override
-    public int size() {
+    public final int size() {
+        return 1;
+    }
+
+    @Override
+    public final int sizeX() {
+        return 1;
+    }
+
+    @Override
+    public final int sizeY() {
         return 1;
     }
 
@@ -521,9 +542,11 @@ public class Player extends Mob {
             inventory.add(item);
         } else if (bank.hasSpaceFor(item)) {
             bank.add(item);
+            sendMessage(StringUtils.addArticle(item.getItemDef().getName()) + " has been deposited into your bank.");
         } else {
             world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
                     position, ChunkUpdatableView.localView(this)));
+            sendMessage(StringUtils.addArticle(item.getItemDef().getName()) + " has been dropped on the floor under you.");
         }
     }
 
@@ -539,7 +562,7 @@ public class Player extends Mob {
                 equipment.contains(id)) {
             return true;
         }
-        return chunkRepository.stream(EntityType.ITEM).anyMatch(it -> {
+        return world.getChunks().getViewableEntities(position, EntityType.ITEM).stream().anyMatch(it -> {
             GroundItem groundItem = (GroundItem) it;
             return groundItem.getId() == id && groundItem.getView().isViewableFor(this);
         });
@@ -551,6 +574,9 @@ public class Player extends Mob {
      * @param msg The message to send.
      */
     public void sendMessage(Object msg) {
+        if (msg instanceof Messages) {
+            msg = ((Messages) msg).getText();
+        }
         queue(new GameChatboxMessageWriter(msg));
     }
 
@@ -696,16 +722,23 @@ public class Player extends Mob {
     public void sendRegionUpdate(Position oldPosition) {
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
+            if (isInDynamicMap()) {
+                regionChanged = true;
+                lastRegion = position;
+                // todo cache palette? or current dynamic map?>
+                // todo still need to update objects
+                dynamicMap.sendUpdate(this);
+                return;
+            }
             fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionChangeMessageWriter(position));
+            queue(new RegionMessageWriter(position));
         }
-        if(isTeleporting()) {
+        if (isTeleporting()) {
             fullRefresh = true;
         }
         world.getChunks().sendUpdates(this, oldPosition, fullRefresh);
-        world.getChunks().resetUpdatedChunks();
     }
 
     /**
@@ -717,6 +750,28 @@ public class Player extends Mob {
         int deltaX = position.getLocalX(lastRegion);
         int deltaY = position.getLocalY(lastRegion);
         return deltaX <= 15 || deltaX >= 88 || deltaY <= 15 || deltaY >= 88;
+    }
+
+    /**
+     * Plays a random sound from {@code sounds}.
+     */
+    public void playRandomSound(Sounds... sound) {
+        playSound(RandomUtils.random(sound), 0);
+    }
+
+    /**
+     * Plays {@code sound} with no delay.
+     */
+    public void playSound(Sounds sound) {
+        playSound(sound, 0);
+    }
+
+    /**
+     * Plays {@code sound} with {@code delay}.
+     */
+    public void playSound(Sounds sound, int delay) {
+        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
+        queue(new SoundMessageWriter(sound.getId(), volume, delay));
     }
 
     /**
@@ -1259,4 +1314,26 @@ public class Player extends Mob {
     public Stopwatch getTimeout() {
         return timeout;
     }
+
+    /**
+     * Sets the current dynamic map the player is in.
+     */
+    public void setDynamicMap(DynamicMap dynamicMap) {
+        this.dynamicMap = dynamicMap;
+    }
+
+    /**
+     * @return The current dynamic map the player is in.
+     */
+    public DynamicMap getDynamicMap() {
+        return dynamicMap;
+    }
+
+    /**
+     * @return {@code true} If the player is in a dynamic map.
+     */
+    public boolean isInDynamicMap() {
+        return dynamicMap != null;
+    }
+
 }

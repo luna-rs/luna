@@ -5,7 +5,8 @@ import io.luna.game.model.Location;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 
-public class DynamicMapSpace implements Location {
+public final class DynamicMapSpace implements Location {
+    // TODO documentation
 
     private final Region main;
     private final Region padding;

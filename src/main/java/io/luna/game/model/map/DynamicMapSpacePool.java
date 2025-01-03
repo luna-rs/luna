@@ -27,6 +27,8 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * - empty space is reclaimed when an instance is done
  */
 public class DynamicMapSpacePool {
+    // TODO  documentation, testing
+
     private static final Logger logger = LogManager.getLogger();
     private final Set<DynamicMapSpace> emptySpacePool = new HashSet<>();
     private final List<DynamicMap> instances = new ArrayList<>();
@@ -68,7 +70,7 @@ public class DynamicMapSpacePool {
         }
     }
 
-    DynamicMapSpace request() {
+   DynamicMapSpace request() {
         DynamicMapSpace foundSpace = null;
         Iterator<DynamicMapSpace> it = emptySpacePool.iterator();
         while (it.hasNext()) {
@@ -87,6 +89,7 @@ public class DynamicMapSpacePool {
             }
             foundSpace = nextSpace;
             it.remove();
+            break;
         }
         checkState(foundSpace != null,
                 "No empty space left in the pool! Ensure all instances are deleted when no longer in use.");

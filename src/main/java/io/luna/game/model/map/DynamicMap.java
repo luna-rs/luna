@@ -15,7 +15,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.controller.ControllerKey;
 import io.luna.game.model.object.GameObject;
-import io.luna.net.msg.out.DynamicRegionMessageWriter;
+import io.luna.net.msg.out.DynamicMapMessageWriter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,6 +36,8 @@ import java.util.Set;
  * @author lare96
  */
 public final class DynamicMap {
+
+    // Todo test test test
 
     /**
      * The world instance.
@@ -58,11 +60,6 @@ public final class DynamicMap {
     private final ControllerKey<?> controllerKey;
 
     /**
-     * The region update message that will be sent.
-     */
-    private final DynamicRegionMessageWriter regionUpdateMsg;
-
-    /**
      * The players within this instance.
      */
     private final Set<Player> players = new LinkedHashSet<>();
@@ -76,12 +73,10 @@ public final class DynamicMap {
      * Creates a new {@link DynamicMap}.
      */
     public DynamicMap(LunaContext context, Chunk baseChunk,
-                      DynamicMapPalette palette, ControllerKey<? extends DynamicMapController> controllerKey,
-                      DynamicRegionMessageWriter regionUpdateMsg) {
+                      DynamicMapPalette palette, ControllerKey<? extends DynamicMapController> controllerKey) {
         this.baseChunk = baseChunk;
         this.palette = palette;
         this.controllerKey = controllerKey;
-        this.regionUpdateMsg = regionUpdateMsg;
         world = context.getWorld();
     }
 
@@ -94,9 +89,9 @@ public final class DynamicMap {
 
         // Get the base chunks from the palette.
         Set<Chunk> realChunks = new HashSet<>();
-        palette.forEach((palette, x, y, z) -> {
+        palette.forEach((x, y, z) -> {
             DynamicMapChunk mapChunk = palette.getChunk(x, y, z);
-            if(mapChunk != null) {
+            if (mapChunk != null) {
                 realChunks.add(mapChunk.getChunk());
             }
         });
@@ -122,7 +117,7 @@ public final class DynamicMap {
         if (players.add(plr)) {
             plr.setDynamicMap(this);
             plr.getControllers().register(controllerKey);
-            plr.queue(regionUpdateMsg);
+            sendUpdate(plr);
             return true;
         }
         return false;
@@ -193,6 +188,15 @@ public final class DynamicMap {
 
         // Return empty space back to pool.
         world.getDynamicMapSpacePool().release(this);
+    }
+
+    /**
+     * Sends the {@link DynamicMapMessageWriter} that will display this instance for {@code player}.
+     *
+     * @param player The player.
+     */
+    public void sendUpdate(Player player) {
+        player.queue(new DynamicMapMessageWriter(palette));
     }
 
     /**
