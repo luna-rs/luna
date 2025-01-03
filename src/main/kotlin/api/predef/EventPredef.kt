@@ -13,6 +13,7 @@ import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import java.util.*
 import kotlin.reflect.KClass
@@ -116,3 +117,21 @@ fun object2(id: Int, action: EventAction<ObjectSecondClickEvent>) =
 /** The [ObjectThirdClickEvent] matcher function.*/
 fun object3(id: Int, action: EventAction<ObjectThirdClickEvent>) =
     Matcher.get<ObjectThirdClickEvent, Int>().set(id, action)
+
+/**
+ * The [CommandEvent] matcher function.
+ */
+fun cmd(name: String, rights: PlayerRights = RIGHTS_PLAYER, action: CommandEvent.() -> Unit) {
+    val matcher = Matcher.get<CommandEvent, CommandKey>()
+    matcher[CommandKey(name, rights)] = {
+        if (plr.rights >= rights) {
+            action(this)
+        }
+    }
+}
+
+/**
+ * Performs a lookup for a player based on the arguments from [index] onwards. By default, it starts from index 0.
+ */
+fun getPlayer(msg: CommandEvent, index: Int = 0, action: (Player) -> Unit) =
+    world.getPlayer(msg.getInputFrom(index)).ifPresent(action)
