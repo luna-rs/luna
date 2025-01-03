@@ -214,7 +214,7 @@ public final class DynamicMap {
 
         // The base position in our instance will always be the same spot as base display chunk. Therefore we can do a
         // 1:1 translation using the previous deltas.
-        return assignedSpace.getMain().getBasePosition().translate(deltaX, deltaY);
+        return assignedSpace.getMain().getAbsPosition().translate(deltaX, deltaY);
     }
 
     /**

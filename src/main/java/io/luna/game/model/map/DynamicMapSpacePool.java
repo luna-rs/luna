@@ -27,8 +27,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * - empty space is reclaimed when an instance is done
  */
 public class DynamicMapSpacePool {
-    // TODO  documentation, testing
-
+    // TODO finish documentation, more testing
     private static final Logger logger = LogManager.getLogger();
     private final Set<DynamicMapSpace> emptySpacePool = new HashSet<>();
     private final List<DynamicMap> instances = new ArrayList<>();
@@ -45,7 +44,7 @@ public class DynamicMapSpacePool {
             Set<Integer> emptyRegionIds = new LinkedHashSet<>(10_000);
             for (int regionId = 25_000; regionId < 34_097; regionId++) {
                 Region region = new Region(regionId);
-                Position base = region.getBasePosition();
+                Position base = region.getAbsPosition();
                 if (base.getX() >= 6400 && base.getY() <= 5248) {
                     emptyRegionIds.add(regionId);
                 }

@@ -31,8 +31,8 @@ public final class RegionMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(222);
-        msg.putShort(position.getCentralChunkY());
-        msg.putShort(position.getCentralChunkX(), ByteOrder.LITTLE, ValueType.ADD);
+        msg.putShort(position.getChunkY());
+        msg.putShort(position.getChunkX(), ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }
 }

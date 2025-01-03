@@ -36,7 +36,7 @@ public final class Chunk implements Location {
      * @param position The position to get the chunk coordinates of.
      */
     public Chunk(Position position) {
-        this(position.getTopLeftChunkX(), position.getTopLeftChunkY());
+        this(position.getBottomLeftChunkX(), position.getBottomLeftChunkY());
     }
 
     /**

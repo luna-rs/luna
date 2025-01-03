@@ -29,7 +29,7 @@ public final class DynamicMapPalette {
     public static Set<Chunk> getAllChunksInRegion(int regionId) {
         Set<Chunk> chunks = new LinkedHashSet<>(64);
         Region region = new Region(regionId);
-        Chunk baseChunk = region.getBasePosition().getChunk();
+        Chunk baseChunk = region.getAbsPosition().getChunk();
         for (int x = baseChunk.getX() - 8; x < baseChunk.getX() + 8; x++) {
             for (int y = baseChunk.getY() - 8; y < baseChunk.getY() + 8; y++) {
                 Chunk chunk = new Chunk(x, y);

@@ -3,6 +3,7 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.mob.WalkingQueue.Step;
 
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class Position implements Location {
-
+// todo new documentation, clean up, explain more stuff
     /**
      * The maximum amount of tiles a player can view.
      */
@@ -23,7 +24,7 @@ public final class Position implements Location {
     /**
      * A {@link Range} of all height levels.
      */
-    public static final Range<Integer> HEIGHT_LEVELS = Range.closed(0, 3);
+    public static final Range<Integer> HEIGHT_LEVELS = Range.closedOpen(0, 4);
 
     /**
      * The x coordinate.
@@ -52,7 +53,7 @@ public final class Position implements Location {
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
         checkArgument(y >= 0, "y < 0");
-
+        checkArgument(HEIGHT_LEVELS.contains(z), z+" (z >= 0 && z < 4)");
         this.x = x;
         this.y = y;
         this.z = z;
@@ -93,6 +94,25 @@ public final class Position implements Location {
             return x == other.x && y == other.y && z == other.z;
         }
         return false;
+    }
+
+    /**
+     * Converts this position to a {@link Step}.
+     */
+    public Step toStep() {
+        return new Step(x, y);
+    }
+
+    /**
+     * Gets the distance between this position and another position. Only x and y are considered (i.e. 2 dimensions).
+     *
+     * @param other The other position.
+     * @return The distance.
+     */
+    public int getDistance(Position other) {
+        int deltaX = getX() - other.getX();
+        int deltaY = getY() - other.getY();
+        return (int) Math.ceil(Math.sqrt(deltaX * deltaX + deltaY * deltaY));
     }
 
     /**
@@ -162,14 +182,32 @@ public final class Position implements Location {
      * Returns a new position translated by the specified amounts. The z coordinate will remain
      * unchanged.
      *
+     * @param amount The amount.
+     * @param direction The direction.
+     * @return The translated position.
+     */
+    public Position translate(int amount, Direction direction) {
+        Step translation = direction.getTranslation();
+        return translate(amount * translation.getX(), amount * translation.getY(), 0);
+    }
+
+    /**
+     * Returns a new position translated by the specified amounts. The z coordinate will remain
+     * unchanged.
+     *
      * @param amountX The x amount.
      * @param amountY The y amount
      * @return The translated position.
      */
     public Position translate(int amountX, int amountY) {
-        return translate(amountX, amountY, z);
+        return translate(amountX, amountY, 0);
     }
 
+    /**
+     * Returns a new {@link Position} identical to this one in values, except with {@code newZ}.
+     * @param newZ The new {@code z}.
+     * @return
+     */
     public Position setZ(int newZ) {
         return new Position(x, y, newZ);
     }
@@ -177,14 +215,14 @@ public final class Position implements Location {
     /**
      * Gets the central x coordinate of this position's chunk.
      */
-    public int getCentralChunkX() {
+    public int getChunkX() {
         return x / 8;
     }
 
     /**
      * Gets the central y coordinate of this position's chunk.
      */
-    public int getCentralChunkY() {
+    public int getChunkY() {
         return y / 8;
     }
 
@@ -193,7 +231,7 @@ public final class Position implements Location {
      *
      * @return The bottom-left chunk x.
      */
-    public int getTopLeftChunkX() {
+    public int getBottomLeftChunkX() {
         return x / 8 - 6;
     }
 
@@ -202,7 +240,7 @@ public final class Position implements Location {
      *
      * @return The bottom-left chunk y.
      */
-    public int getTopLeftChunkY() {
+    public int getBottomLeftChunkY() {
         return y / 8 - 6;
     }
 
@@ -212,7 +250,7 @@ public final class Position implements Location {
      * @param base The base chunk.
      */
     public int getLocalX(Position base) {
-        return x - base.getTopLeftChunkX() * 8;
+        return x - base.getBottomLeftChunkX() * 8;
     }
 
     /**
@@ -221,7 +259,7 @@ public final class Position implements Location {
      * @param base The base chunk.
      */
     public int getLocalY(Position base) {
-        return y - base.getTopLeftChunkY() * 8;
+        return y - base.getBottomLeftChunkY() * 8;
     }
 
     /**

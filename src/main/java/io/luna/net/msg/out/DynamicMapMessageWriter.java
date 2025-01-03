@@ -32,7 +32,7 @@ public final class DynamicMapMessageWriter extends GameMessageWriter {
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(53, MessageType.VAR_SHORT);
-        msg.putShort(player.getPosition().getCentralChunkX(), ValueType.ADD);
+        msg.putShort(player.getPosition().getChunkX(), ValueType.ADD);
         msg.startBitAccess();
         palette.forEach((x, y, z) -> {
             DynamicMapChunk tile = palette.getChunk(x, y, z);
@@ -47,7 +47,7 @@ public final class DynamicMapMessageWriter extends GameMessageWriter {
             }
         });
         msg.endBitAccess();
-        msg.putShort(player.getPosition().getCentralChunkY(), ValueType.ADD);
+        msg.putShort(player.getPosition().getChunkY(), ValueType.ADD);
         return msg;
     }
 }
