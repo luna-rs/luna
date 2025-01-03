@@ -1,16 +1,18 @@
+package world.minigame.partyRoom
+
 import api.predef.*
-import io.luna.game.event.impl.ServerLaunchEvent
-import io.luna.game.event.impl.ServerShutdownEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
-import world.minigame.party_room.drop_party.DropPartyOption
+import world.minigame.partyRoom.dropParty.DropPartyOption
 import java.nio.file.Files
 import java.nio.file.Paths
 
 /**
  * The file items will be saved to.
  */
-val ITEMS_FILE = Paths.get("data", "minigames", "party_room", "items.json")
+val ITEMS_FILE = Paths.get("data", "game", "minigames", "party_room", "items.json")
 
 /**
  * Loads items from the file if available.

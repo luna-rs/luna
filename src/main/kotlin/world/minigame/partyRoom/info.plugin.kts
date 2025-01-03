@@ -1,6 +1,6 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Party Room"

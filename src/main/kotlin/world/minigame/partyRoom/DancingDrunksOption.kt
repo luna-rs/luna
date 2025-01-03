@@ -1,10 +1,12 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
+import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import java.util.*
@@ -60,7 +62,7 @@ object DancingDrunksOption : PartyRoomOption(100_000, "Dancing Drunks") {
                 14 -> npcs.forEach { it.animation(BOW_ANIMATION) }
                 16 -> {
                     npcs.forEach {
-                        world.addItem(GroundItem(ctx, DROP_ITEM, 1, it.position.translate(0, 1), Optional.empty()))
+                        world.addItem(GroundItem(ctx, DROP_ITEM, 1, it.position.translate(0, 1), ChunkUpdatableView.globalView()))
                         world.removeNpc(it)
                     }
                     PartyRoom.resetLeverOption()

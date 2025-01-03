@@ -1,4 +1,4 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import io.luna.game.model.mob.Player
 

@@ -1,10 +1,11 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
-import io.luna.game.model.mob.Animation
-import io.luna.game.model.mob.Hit
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Hit
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.task.Task
@@ -102,7 +103,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_1)),
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_2))
         )
-        women.forEach { it.isInteractable = false }
+        women.forEach { it.setInteractable(false) }
         val woman1 = women[0]
         val woman2 = women[1]
         woman1.interact(woman2)

@@ -1,16 +1,17 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.Action
 import io.luna.game.action.RepeatingAction
-import io.luna.game.event.impl.ServerLaunchEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.Expression
-import world.minigame.party_room.drop_party.DropPartyOption
+import world.minigame.partyRoom.dropParty.DropPartyOption
 
 /**
  * Represents the action that party pete will continuously do.
@@ -45,6 +46,7 @@ class PartyPeteAction(private val npc: Npc) : RepeatingAction<Npc>(npc, true, 3)
                                   else -> "The drop party is starting soon!"
                               })
             }
+
             else -> {
                 if (rand(4) == 0) {
                     npc.forceChat(MESSAGES.random()(PartyRoom.option!!.description))
@@ -62,14 +64,6 @@ class PartyPeteAction(private val npc: Npc) : RepeatingAction<Npc>(npc, true, 3)
 val TELEPORT_FEE = 10_000
 
 /**
- * The party room teleport positions.
- */
-val TELEPORT_POS = listOf(
-        Position(2736, 3475, 0),
-        Position(2737, 3475, 0)
-)
-
-/**
  *  The party room teleport position.
  */
 val PARTY_ROOM_SPAWN = Position(2734, 3476, 0)
@@ -79,7 +73,7 @@ val PARTY_ROOM_SPAWN = Position(2734, 3476, 0)
  */
 fun teleport(plr: Player) {
     plr.interfaces.close()
-    plr.teleport(TELEPORT_POS.random())
+    plr.teleport(PartyRoom.TELEPORT_POSITIONS.random())
     plr.sendMessage("You are teleported to the party room.")
 }
 
@@ -128,7 +122,7 @@ fun talkAboutTeleporting(plr: Player) {
 object1(2416) { PartyRoom.pullLever(plr, gameObject) }
 
 // Talk to party pete.
-npc1(659) { talk(plr, npc) }
+npc1(659) { talk(plr, targetNpc) }
 
 // Spawn party petes.
 on(ServerLaunchEvent::class) {

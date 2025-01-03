@@ -1,8 +1,8 @@
-package world.minigame.party_room.drop_party
+package world.minigame.partyRoom.dropParty
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
-import world.minigame.party_room.drop_party.DropPartyOption.depositItems
+import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 
 /**
  * An interface representing the party room chest interface.

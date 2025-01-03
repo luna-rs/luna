@@ -1,13 +1,14 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import api.predef.*
 import com.google.common.collect.ImmutableList
+import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.game.model.`object`.GameObject
-import world.minigame.party_room.drop_party.DropPartyOption
+import world.minigame.partyRoom.dropParty.DropPartyOption
 
 /**
  * Manages functions and data for the party room minigame.
@@ -21,6 +22,14 @@ object PartyRoom {
             DancingDrunksOption,
             FightingWomenOption,
             DropPartyOption
+    )
+
+    /**
+     * The party room teleport positions.
+     */
+    val TELEPORT_POSITIONS = listOf(
+            Position(2736, 3475, 0),
+            Position(2737, 3475, 0)
     )
 
     /**

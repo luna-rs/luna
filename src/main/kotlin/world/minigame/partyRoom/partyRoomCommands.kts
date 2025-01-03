@@ -1,9 +1,9 @@
-package world.minigame.party_room
+package world.minigame.partyRoom
 
 import api.predef.*
 import io.luna.game.model.mob.Player
-import world.minigame.party_room.drop_party.DropPartyInterface
-import world.minigame.party_room.drop_party.DropPartyOption
+import world.minigame.partyRoom.dropParty.DropPartyInterface
+import world.minigame.partyRoom.dropParty.DropPartyOption
 import world.player.command.cmd
 
 /**

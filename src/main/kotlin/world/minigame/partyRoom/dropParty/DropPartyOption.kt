@@ -1,25 +1,30 @@
-package world.minigame.party_room.drop_party
+package world.minigame.partyRoom.dropParty
 
 import api.attr.Attr
+import api.attr.getValue
 import api.predef.*
+import api.predef.ext.*
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
 import com.google.common.math.IntMath
 import com.google.common.primitives.Ints
 import io.luna.Luna
+import io.luna.game.model.Area
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.mob.Animation
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
-import world.minigame.party_room.PartyRoom
-import world.minigame.party_room.PartyRoomOption
+import world.minigame.partyRoom.PartyRoom
+import world.minigame.partyRoom.PartyRoomOption
 import java.time.Duration
 import java.util.*
 import kotlin.math.floor
@@ -39,6 +44,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         override fun execute() {
             secondsLeft = secondsNeeded - executionCounter;
             if (executionCounter >= secondsNeeded) {
+                secondsLeft = 0
                 world.schedule(DropPartyTask())
                 cancel()
             }
@@ -48,7 +54,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Handles the dropping of balloons.
      */
-    class DropPartyTask : Task(true, BALLOON_DROP_FREQUENCY) {
+    class DropPartyTask : Task(true, BALLOON_DROP_FREQUENCY.toTicks()) {
 
         /**
          * Computes all the items that need to be dropped before the party can end, unless we're in impatient mode.
@@ -70,7 +76,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         /**
          * Computes all the items that need to be dropped before the party can end. Unless we're in impatient mode.
          */
-        private val spawnPositions = LinkedList<Position>().apply {
+        private val spawnPositions = arrayListOf<Position>().apply {
             buildSpawnPositions(this)
         }
 
@@ -86,7 +92,6 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 
         override fun execute() {
             balloonItems.shuffle()
-            spawnPositions.shuffle()
             val impatient = patienceTimer.elapsed() >= PATIENCE_THRESHOLD
             val items = balloonItems.iterator()
             var spawned = 0
@@ -95,17 +100,23 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 if (spawned >= MAX_BALLOON_SPAWNS) { // Don't spawn too many balloons at once.
                     break
                 }
-                val randomPos = spawnPositions.peekFirst() // Get a random position and verify nothing is already on it.
-                val nextPos = if (randomPos == null || world.objects.isOccupied(randomPos)) null else randomPos
+                val totalSpawns = spawnPositions.size
+                if (totalSpawns == 0) {
+                    break
+                }
+                val randomIndex = if (totalSpawns == 1) 0 else rand().nextInt(0, totalSpawns)
+                val randomPos: Position =
+                    spawnPositions[randomIndex] // Get a random position and verify nothing is already on it.
+                val nextPos = if (world.objects.isOccupied(randomPos)) null else randomPos
                 if (nextPos == null) {
                     if (impatient) {
-                        // We've been waiting too long to drop more balloons, start discarding balloons.
+                        // We've been waiting too long to drop more balloons, start discarding items.
                         items.remove()
                     }
                     continue
                 }
                 world.addObject(BalloonObject(nextPos, nextItem))
-                spawnPositions.removeFirst()
+                spawnPositions.removeAt(randomIndex)
                 items.remove()
                 spawned++
             }
@@ -122,8 +133,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         /**
          * Builds a list of all the possible positions to spawn balloons on.
          */
-        private fun buildSpawnPositions(list: LinkedList<Position>) {
-            BALLOON_LOCS.forEach { list.addAll(it.computeAllPositions()) }
+        private fun buildSpawnPositions(list: ArrayList<Position>) {
+            BALLOON_LOCS.forEach { list.addAll(it.positionSet) }
             list.shuffle()
         }
     }
@@ -149,7 +160,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * A data class representing a balloon object.
      */
     data class BalloonObject(private val pos: Position, val item: Item) :
-            GameObject(ctx, BALLOON_IDS.random(), pos, ObjectType.DEFAULT, ObjectDirection.SOUTH, Optional.empty()) {
+        GameObject(ctx, BALLOON_IDS.random(), pos, ObjectType.DEFAULT, ObjectDirection.SOUTH, ChunkUpdatableView.globalView(), true) {
         var stompedBy: Player? = null
 
         override fun onActive() {
@@ -161,10 +172,10 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 stompedBy = plr
                 plr.sendMessage("You stomp on the balloon.")
                 plr.animation(Animation(794))
-                animate(499)
+                animate()
                 world.scheduleOnce(1) {
                     if (world.removeObject(this)) {
-                        animate(-1)
+                        // animate(-1)
                         world.addItem(item.id, item.amount, position, plr)
                     }
                 }
@@ -177,8 +188,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
          * Despawns this balloon after 10 minutes.
          */
         private fun startDespawnTask() {
-            world.schedule(Duration.ofMinutes(10)) {
-                if(state == EntityState.ACTIVE) {
+            world.scheduleOnce(Duration.ofMinutes(10)) {
+                if (state == EntityState.ACTIVE) {
                     world.removeObject(this)
                 }
             }
@@ -189,8 +200,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * Locations where balloons can potentially drop.
      */
     val BALLOON_LOCS = ImmutableList.of(
-            area { swX = 2730; swY = 3463; neX = 2744; neY = 3467; },
-            area { swX = 2731; swY = 3469; neX = 2744; neY = 3476; }
+        Area.of(2730, 3463, 2744, 3467),
+        Area.of(2731, 3469, 2744, 3476)
     )
 
     /**
@@ -217,7 +228,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * How often balloons are dropped.
      */
-    val BALLOON_DROP_FREQUENCY = Duration.ofSeconds(5).toTicks()
+    val BALLOON_DROP_FREQUENCY = Duration.ofSeconds(5)
 
     /**
      * If the drop party hasn't ended after this time, balloons are skipped.
@@ -228,7 +239,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Items that a player has selected, but not yet confirmed to be deposited.
      */
-    val Player.depositItems by Attr.itemContainer(8, ItemContainer.StackPolicy.STANDARD, 2274)
+    val Player.depositItems by Attr.obj(ItemContainer(8, ItemContainer.StackPolicy.STANDARD, 2274))
         .persist("drop_party_items")
 
     /**
@@ -242,24 +253,40 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     var secondsLeft: Int? = null
 
     override fun canExecute(plr: Player): Boolean {
+        val isBetaMode = Luna.settings().game().betaMode()
         if (chest.items.size() < 8) {
-            if (Luna.settings().betaMode()) {
-                ItemDefinition.ALL.filterNotNull().filter { it.value > 25_000 && !it.isStackable && it.isTradeable }
+            if (isBetaMode) {
+                ItemDefinition.ALL.filterNotNull().filter { it.value > 20_000 && !it.isStackable && it.isTradeable }
                     .map { Item(it.id) }
                     .shuffled().forEach { chest.items.add(it) }
-                plr.sendMessage("[BETA] Filling chest with random items above 25,000 gold value.")
+                plr.sendMessage("[BETA] Filling chest with random items above 20,000 gold value.")
                 return true
             }
             plr.sendMessage("There must be at least 8 items in the chest to start a drop party.")
             return false
         }
-        if (Luna.settings().betaMode()) {
+        if (isBetaMode) {
             plr.sendMessage("[BETA] Drop party will fast-forward to start in 10 seconds.")
         }
         return true
     }
 
     override fun execute(plr: Player) {
+        val itemCount = chest.items.size()
+        val botCount = when {
+            itemCount < 15 -> rand(2, 4)
+            itemCount < 25 -> rand(4, 8)
+            itemCount < 50 -> rand(6, 12)
+            itemCount < 100 -> rand(8, 16)
+            itemCount < 150 -> rand(10, 20)
+            itemCount < 175 -> rand(12, 24)
+            else -> rand(14, 28)
+        }
+        if (botCount > 0) {
+            // TODO log in random bots with drop party script?
+            //val bot = Bot.Builder(ctx).setScript { DropPartyBotScript(it) }.build()
+            //bot.login()
+        }
         world.schedule(DropPartyCountdown())
     }
 
@@ -281,7 +308,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * Computes the total countdown time based on the cost.
      */
     private fun computeCountdownTime(): Duration {
-        if (Luna.settings().betaMode()) {
+        val isBetaMode = Luna.settings().game().betaMode()
+        if (isBetaMode) {
             return Duration.ofSeconds(10)
         }
         var totalCost = computeTotalCost()
