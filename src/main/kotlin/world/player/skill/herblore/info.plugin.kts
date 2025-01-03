@@ -1,6 +1,6 @@
 package world.player.skill.herblore
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Herblore"

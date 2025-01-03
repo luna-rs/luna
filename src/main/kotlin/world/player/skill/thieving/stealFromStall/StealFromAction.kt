@@ -119,6 +119,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
                 // TODO Make them attack when combat completed
                 // TODO Only when facing the player's direction?
                 // TODO More testing
+                // TODO weaker mobs will notify but not attack
                 guard.forceChat("Hey! Get your hands off there!")
                 guard.walking.walk(mob)
                 guard.interact(mob)

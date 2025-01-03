@@ -1,6 +1,6 @@
 package world.player.skill.thieving
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Thieving"

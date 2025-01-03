@@ -1,6 +1,6 @@
 package world.player.skill.smithing
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Smithing"

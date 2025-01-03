@@ -2,8 +2,6 @@ package world.player.punishment
 
 import api.predef.*
 import io.luna.game.event.impl.CommandEvent
-import world.player.command.cmd
-import world.player.command.getPlayer
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 

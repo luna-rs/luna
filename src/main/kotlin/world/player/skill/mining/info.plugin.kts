@@ -1,6 +1,6 @@
 package world.player.skill.mining
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Mining"

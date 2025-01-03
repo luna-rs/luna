@@ -1,7 +1,7 @@
 
 package world.player.skill.firemaking
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Firemaking"

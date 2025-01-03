@@ -1,6 +1,6 @@
 package world.player.skill.woodcutting
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Woodcutting"
