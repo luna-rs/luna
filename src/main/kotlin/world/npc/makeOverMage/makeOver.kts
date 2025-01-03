@@ -1,7 +1,8 @@
-package world.npc.makeOver
+package world.npc.makeOverMage
 
 import api.predef.*
-import io.luna.game.event.impl.ServerLaunchEvent
+import api.predef.ext.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.PlayerAppearance
 
 /**
@@ -9,10 +10,10 @@ import io.luna.game.model.mob.PlayerAppearance
  */
 npc1(599) {
     plr.newDialogue()
-            .npc(npc.id, "Would you like to change your appearance?")
+            .npc(targetNpc.id, "Would you like to change your appearance?")
             .options(
                     "Yes", {plr.interfaces.open(PlayerAppearance.DesignPlayerInterface()) },
-                    "No", {}).open()
+                    "No", { plr.interfaces.close() }).open()
 }
 
 /**

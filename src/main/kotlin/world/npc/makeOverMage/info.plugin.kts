@@ -1,6 +1,6 @@
-package world.npc.makeOver
+package world.npc.makeOverMage
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Make-over mage"
@@ -9,5 +9,5 @@ plugin {
         A plugin that enables a make-over mage at the player spawn location.
         """
     version = "1.0"
-    authors += "searledan"
+    authors += "lare96"
 }

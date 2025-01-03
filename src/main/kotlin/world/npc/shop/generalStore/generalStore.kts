@@ -1,12 +1,17 @@
 package world.npc.shop.generalStore
 
 import api.predef.*
-import io.luna.game.event.impl.ServerLaunchEvent
+import api.predef.ext.*
+import api.shop.dsl.ShopHandler
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
 
-shop("General Store") {
+/**
+ * General store shop.
+ */
+ShopHandler.create("General Store") {
     buy = BuyPolicy.ALL
     restock = RestockPolicy.FAST
     currency = Currency.COINS
@@ -33,8 +38,8 @@ shop("General Store") {
  */
 npc1(520) {
     plr.newDialogue()
-        .npc(npc.id, "Hi, here's what I have in stock for today!")
-        .then { it.interfaces.openShop("General Store") }
+        .npc(targetNpc.id, "Hi, here's what I have in stock for today!")
+        .then { it.interfaces.openShop("General Store") }.open()
 }
 
 /**

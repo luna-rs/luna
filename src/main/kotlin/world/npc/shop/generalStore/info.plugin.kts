@@ -1,6 +1,6 @@
 package world.npc.shop.generalStore
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "General store"
