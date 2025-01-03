@@ -1,4 +1,4 @@
-package api.punishment
+package world.player.punishment
 
 import api.predef.*
 import com.google.common.collect.Sets
@@ -13,25 +13,26 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
  * A global model that handles player punishments.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 object PunishmentHandler {
 
     /**
      * The date-time formatter.
      */
-    val FORMATTER = DateTimeFormatter.ofPattern("MMMM dd, uuuu")!!
+    val FORMATTER = SimpleDateFormat("MMM d, yyyy @ hh:mm aaa")
 
     /**
      * The path to the IP ban database.
      */
-    private val IP_BANS = Path.of("data", "blacklist.txt")
+    val IP_BANS: Path = Path.of("data", "net", "blacklisted_addresses.txt")
 
     /**
      * The punishment logging level.
@@ -66,10 +67,10 @@ object PunishmentHandler {
             return game.submit {
                 try {
                     Files.writeString(IP_BANS,
-                                (target.currentIp + '\n'),
-                                StandardOpenOption.CREATE,
-                                StandardOpenOption.WRITE,
-                                StandardOpenOption.APPEND)
+                                      (target.currentIp + '\n'),
+                                      StandardOpenOption.CREATE,
+                                      StandardOpenOption.WRITE,
+                                      StandardOpenOption.APPEND)
                 } catch (e: IOException) {
                     fileLogger.error("Could not write IP ban entry to file.")
                     throw e
@@ -82,9 +83,9 @@ object PunishmentHandler {
     /**
      * Bans [target], will be lifted after [until] has passed.
      */
-    fun ban(target: Player, until: LocalDateTime) {
+    fun ban(target: Player, until: Instant) {
         val username = target.username
-        target.unbanDate = until
+        target.unbanInstant = until
         target.logout()
         when {
             isPermanent(until) -> fileLogger.log(PUNISHMENT, "{} has been permanently banned.", username)
@@ -96,7 +97,9 @@ object PunishmentHandler {
      * Bans [target], will be lifted after [days], [hours], and [minutes] have passed.
      */
     fun ban(target: Player, days: Long = 0, hours: Long = 0, minutes: Long = 30) {
-        ban(target, now().plusMinutes(minutes).plusHours(hours).plusDays(days))
+        ban(target, now().plus(minutes, ChronoUnit.MINUTES)
+            .plus(hours, ChronoUnit.HOURS)
+            .plus(days, ChronoUnit.DAYS))
     }
 
     /**
@@ -111,7 +114,7 @@ object PunishmentHandler {
      */
     fun unban(username: String) {
         val loadFuture = world.persistenceService.transform(username) {
-            it.unbanDate = LocalDateTime.now().minusDays(1)
+            it.unbanInstant = Instant.now().minus(1, ChronoUnit.DAYS)
         }
         loadFuture.addListener(Runnable {
             try {
@@ -126,8 +129,8 @@ object PunishmentHandler {
     /**
      * Mutes [target], will be lifted after [until] has passed.
      */
-    fun mute(target: Player, until: LocalDateTime) {
-        target.unmuteDate = until
+    fun mute(target: Player, until: Instant) {
+        target.unmuteInstant = until
         when {
             isPermanent(until) -> target.sendMessage("You have been permanently muted.")
             else -> target.sendMessage("You have been muted until ${FORMATTER.format(until)}.")
@@ -138,7 +141,7 @@ object PunishmentHandler {
      * Mutes [target], will be lifted after [days], [hours], and [minutes] have passed.
      */
     fun mute(target: Player, days: Long = 0, hours: Long = 0, minutes: Long = 30) {
-        mute(target, now().plusDays(days).plusHours(hours).plusMinutes(minutes))
+        mute(target, now().plus(days, ChronoUnit.DAYS).plus(hours, ChronoUnit.HOURS).plus(minutes, ChronoUnit.MINUTES))
     }
 
     /**
@@ -152,13 +155,13 @@ object PunishmentHandler {
      * Unmutes [target].
      */
     fun unmute(target: Player) {
-        target.unmuteDate = pastDate()
+        target.unmuteInstant = pastDate()
     }
 
     /**
-     * Returns the current date and time.
+     * Returns the current [Instant].
      */
-    private fun now() = LocalDateTime.now()
+    private fun now() = Instant.now()
 
     /**
      * Always returns a date in the near past.
@@ -168,7 +171,10 @@ object PunishmentHandler {
     /**
      * Always returns a date in the far future.
      */
-    private fun futureDate() = now().plusYears(100)
+    private fun futureDate() = now().plus(100, ChronoUnit.YEARS)
 
-    fun isPermanent(date: LocalDateTime) = now().plusYears(1).isBefore(date)
+    /**
+     * Determines if [instant] is far in the future enough to be a permanent ban.
+     */
+    fun isPermanent(instant: Instant) = now().plus(1, ChronoUnit.YEARS).isBefore(instant)
 }

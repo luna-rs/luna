@@ -1,25 +1,24 @@
-package world.player.command.punishment
+package world.player.punishment
 
 import api.predef.*
-import api.punishment.PunishmentHandler
 import io.luna.game.event.impl.CommandEvent
 import world.player.command.cmd
 import world.player.command.getPlayer
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 /**
- * Construct a string with punishment lift date ~ [yyyy-mm-dd].
+ * Determines the punish duration instant.
  */
-fun punishDuration(msg: CommandEvent): LocalDateTime {
+fun punishDuration(msg: CommandEvent): Instant {
     val args = msg.args
     val days = if (args.size == 4) args[3].toLong() else 0
     val hours = if (args.size == 3) args[2].toLong() else 0
     val minutes = args[1].toLong()
 
-    return LocalDateTime.now()
-        .plusMinutes(minutes)
-        .plusHours(hours)
-        .plusDays(days)
+    return Instant.now().plus(minutes, ChronoUnit.MINUTES)
+        .plus(hours, ChronoUnit.HOURS)
+        .plus(days, ChronoUnit.DAYS)
 }
 
 /**
