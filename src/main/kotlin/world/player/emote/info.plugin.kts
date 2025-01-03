@@ -1,6 +1,6 @@
 package world.player.emote
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Emotes"
@@ -9,5 +9,6 @@ plugin {
         A plugin that enables clicking player emotes from the settings tab.
         """
     version = "1.0"
+    corePlugin = true
     authors += "keotl"
 }
