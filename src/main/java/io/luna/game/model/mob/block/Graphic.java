@@ -8,6 +8,11 @@ package io.luna.game.model.mob.block;
 public final class Graphic {
 
     /**
+     * A constant representing a {@code null} graphic.
+     */
+    public static final Graphic NULL = new Graphic(-1);
+
+    /**
      * The identifier.
      */
     private final int id;

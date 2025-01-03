@@ -15,6 +15,7 @@ import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.attr.Attribute;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.net.msg.out.LogoutMessageWriter;
@@ -45,6 +46,9 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Bot extends Player {
 
+    // TODO login all persisted bots at start of server (or maybe certain random percentage??)
+    // TODO class to manage bot logins/logouts. randomly log them out and back in.
+
     /**
      * The default script generator function, uses {@link AioBotScript}.
      */
@@ -54,6 +58,11 @@ public final class Bot extends Player {
      * The logger.
      */
     private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * The bot status attribute. Used to determine what the bot was doing in between server restarts.
+     */
+    public static final Attribute<String> STATUS = new Attribute<>("null").persist("status");
 
     /**
      * A builder class that creates {@link Bot} instances.
@@ -104,14 +113,6 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets if this bot will be remembered by the server.
-         */
-        public Builder setPermanent() {
-            temporary = false;
-            return this;
-        }
-
-        /**
          * Sets the script generator.
          */
         public Builder setScript(Function<Bot, BotScript> scriptFunc) {
@@ -144,7 +145,8 @@ public final class Bot extends Player {
     private final boolean temporary;
 
     /**
-     * The total number of times {@link #process()} has been called. Acts as an internal time clock for a bot.
+     * The total number of times {@link #process()} has been called. Acts as an internal time clock for a bot while
+     * the server is online. For persistence based timing operations, use attributes like a regular player.
      */
     private long cycles;
 
@@ -241,7 +243,7 @@ public final class Bot extends Player {
      */
     public void process() throws Exception {
         try {
-            if (processBasicActions() && script != null && cycles > 0) {
+            if (processBasicActions() && script != null && cycles > 1) {
                 if (nextExecution == -1 || cycles >= nextExecution) {
                     int delay = script.process();
                     script.addExecution();
@@ -365,5 +367,12 @@ public final class Bot extends Player {
      */
     public BotClient getBotClient() {
         return botClient;
+    }
+
+    /**
+     * @return The {@link #process()} execution counter.
+     */
+    public long getCycles() {
+        return cycles;
     }
 }

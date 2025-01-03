@@ -77,6 +77,7 @@ public class GameObject extends StationaryEntity {
      */
     private final boolean dynamic;
 
+    // TODO private constructor
     /**
      * Creates a new {@link GameObject} that can be either static or dynamic.
      *
@@ -95,6 +96,9 @@ public class GameObject extends StationaryEntity {
         this.direction = direction;
         this.dynamic = dynamic;
         definition = GameObjectDefinition.ALL.get(id).orElse(null);
+        if(!dynamic) {
+            setHidden(false);
+        }
     }
 
     @Override
@@ -116,6 +120,16 @@ public class GameObject extends StationaryEntity {
     @Override
     public final int size() {
         return definition.getSize();
+    }
+
+    @Override
+    public final int sizeX() {
+        return definition.getSizeX();
+    }
+
+    @Override
+    public final int sizeY() {
+        return definition.getSizeY();
     }
 
     @Override

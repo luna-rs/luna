@@ -2,11 +2,11 @@ package io.luna.net.msg;
 
 import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
-import io.luna.game.event.impl.ControllableEvent;
 import io.luna.net.client.Client;
 import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
@@ -85,22 +85,28 @@ public abstract class GameMessageReader<E extends Event> {
      */
     public final void submitMessage(Player player, GameMessage msg) {
         try {
+            player.getTimeout().reset();
+
             // Decode event object from raw client data.
             E event = decode(player, msg);
 
             // Validate the event with the decoder and the current controller if needed.
             if (event != NullEvent.INSTANCE && validate(player, event)) {
+
                 if (event instanceof ControllableEvent) {
-                    if (!player.getControllers().checkEvent((ControllableEvent) event)) {
+                    if (player.isLocked() || !player.getControllers().checkEvent((ControllableEvent) event)) {
                         return;
                     }
                 }
 
                 // Handle it and post to plugins.
-                player.getTimeout().reset();
                 if (event instanceof InteractableEvent) {
-                    Entity interactingWith = ((InteractableEvent) event).target();
-                    player.submitAction(new InteractionAction(player, interactingWith) {
+                    if (player.isLocked()) {
+                        return;
+                    }
+                    InteractableEvent interactableEvent = (InteractableEvent) event;
+                    Entity interactingWith = interactableEvent.target();
+                    player.submitAction(new InteractionAction(player, interactingWith, interactableEvent.distance()) {
                         @Override
                         public void execute() {
                             postEvent(player, event);

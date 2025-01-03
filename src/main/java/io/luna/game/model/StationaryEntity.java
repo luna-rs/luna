@@ -165,7 +165,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     /**
      * Sets the hidden flag.
      */
-    void setHidden(boolean hidden) {
+   protected void setHidden(boolean hidden) {
         this.hidden = hidden;
     }
 

@@ -30,11 +30,26 @@ public enum EntityType {
     /**
      * A non-player mob.
      */
-    NPC;
+    NPC,
+
+    /**
+     * A local non-registered projectile.
+     */
+    PROJECTILE,
+
+    /**
+     * A local non-registered graphic.
+     */
+    GRAPHIC,
+
+    /**
+     * A local non-registered sound.
+     */
+    SOUND;
 
     /**
      * An immutable enum set of these values.
      */
     public static final Set<EntityType> ALL = Sets.immutableEnumSet(EnumSet.allOf(EntityType.class));
-    
+
 }

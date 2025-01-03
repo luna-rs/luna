@@ -35,7 +35,7 @@ public final class SimplePathfindingAlgorithm extends PathfindingAlgorithm {
 
 	@Override
 	public Deque<Position> find(Position origin, Position target) {
-		int approximation = (int) (origin.getLongestDelta(target) * 1.5);
+		int approximation = (int) (origin.computeLongestDistance(target) * 1.5);
 		Deque<Position> positions = new ArrayDeque<>(approximation);
 
 		return addHorizontal(origin, target, positions);

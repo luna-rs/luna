@@ -127,7 +127,23 @@ public abstract class Entity {
      *
      * @return The size.
      */
-    public abstract int size();
+    public int size() {
+        return sizeX() * sizeY();
+    }
+
+    /**
+     * Returns this entity's size.
+     *
+     * @return The size.
+     */
+    public abstract int sizeX();
+
+    /**
+     * Returns this entity's size.
+     *
+     * @return The size.
+     */
+    public abstract int sizeY();
 
     /**
      * Determines if {@code other} is viewable from this entity.
@@ -189,11 +205,13 @@ public abstract class Entity {
 
                 setCurrentChunk();
                 onActive();
+                chunkRepository.updateCollisionMap(this, false);
                 break;
             case INACTIVE:
                 try {
                     onInactive();
                 } finally {
+                    chunkRepository.updateCollisionMap(this, true);
                     removeCurrentChunk();
                 }
                 break;
@@ -216,7 +234,6 @@ public abstract class Entity {
      */
     public final void setPosition(Position newPosition) {
         if (!newPosition.equals(position)) {
-
             if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
                 Player player = (Player) this;
                 if (!player.getControllers().checkMovement(newPosition)) {

@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.dialogue;
 
+import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.DialogueInterface;
@@ -53,7 +54,7 @@ public final class GiveItemDialogueInterface extends DialogueInterface {
             player.queue(new WidgetItemModelMessageWriter(307, 200, item.getId()));
             return true;
         }
-        player.sendMessage("You do not have enough space in your inventory.");
+        player.sendMessage(Inventory.INVENTORY_FULL_MESSAGE);
         return false;
     }
 

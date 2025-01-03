@@ -10,7 +10,6 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
@@ -90,6 +89,16 @@ public class GroundItem extends StationaryEntity {
 
     @Override
     public final int size() {
+        return 0;
+    }
+
+    @Override
+    public final int sizeX() {
+        return 0;
+    }
+
+    @Override
+    public final int sizeY() {
         return 0;
     }
 

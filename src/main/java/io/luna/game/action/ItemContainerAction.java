@@ -1,8 +1,10 @@
 package io.luna.game.action;
 
+import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.block.Animation;
 
 import java.util.List;
 
@@ -25,21 +27,33 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
          * @param player The player.
          * @param instant If this action executes instantly.
          * @param delay The delay of this action.
-         * @param times The amount of times to repeat.
+         * @param repeatTimes The amount of times to repeat.
          */
-        public InventoryAction(Player player, boolean instant, int delay, int times) {
-            super(player, player.getInventory(), instant, delay, times);
+        public InventoryAction(Player player, boolean instant, int delay, int repeatTimes) {
+            super(player, player.getInventory(), instant, delay, repeatTimes);
+        }
+    }
+
+    // todo rename to animatedinventoryaction, see if this is really needed. apply to other plugins
+    public static abstract class UnsynchronizedInventoryAction extends InventoryAction{
+        private final int animationDelay;
+        private int animationTimer;
+        public UnsynchronizedInventoryAction(Player player, boolean instant, int actionDelay, int animationDelay, int repeatTimes) {
+            super(player, instant, actionDelay, repeatTimes);
+            this.animationDelay = animationDelay;
         }
 
-        /**
-         * Creates a new {@link InventoryAction}.
-         *
-         * @param player The player.
-         * @param instant If this action executes instantly.
-         * @param times The amount of times to repeat.
-         */
-        public InventoryAction(Player player, boolean instant, int times) {
-            super(player, player.getInventory(), instant, 1, times);
+        public abstract Animation animation();
+        public void onProcess() {
+
+        }
+        @Override
+        public final void process() {
+            onProcess();
+            if (--animationTimer < 1) {
+                mob.animation(animation());
+                animationTimer = animationDelay;
+            }
         }
     }
 
@@ -65,12 +79,12 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
      * @param container The container.
      * @param instant If this action executes instantly.
      * @param delay The delay of this action.
-     * @param times The amount of times to repeat.
+     * @param repeatTimes The amount of times to repeat.
      */
-    public ItemContainerAction(Player player, ItemContainer container, boolean instant, int delay, int times) {
+    public ItemContainerAction(Player player, ItemContainer container, boolean instant, int delay, int repeatTimes) {
         super(player, instant, delay);
         this.container = container;
-        setRepeat(times);
+        setRepeat(repeatTimes);
     }
 
     /**
@@ -115,7 +129,7 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
             return;
         }
         if (requiredSpaces > container.computeRemainingSize()) {
-            mob.sendMessage("You do not have enough space in your inventory.");
+            mob.sendMessage(Inventory.INVENTORY_FULL_MESSAGE);
             interrupt();
             return;
         }
