@@ -2,14 +2,14 @@ package world.player.skill.crafting.armorCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] implementation that will make studded armor.
  */
-class CraftStuddedAction(val plr: Player, val armor: HideArmor, val removeId: Int) :
+class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId: Int) :
         InventoryAction(plr, true, 2, Int.MAX_VALUE) {
 
     companion object {
@@ -39,7 +39,7 @@ class CraftStuddedAction(val plr: Player, val armor: HideArmor, val removeId: In
 
     override fun ignoreIf(other: Action<*>?): Boolean =
         when (other) {
-            is CraftStuddedAction -> armor == other.armor
+            is CraftStuddedActionItem -> armor == other.armor
             else -> false
         }
 }

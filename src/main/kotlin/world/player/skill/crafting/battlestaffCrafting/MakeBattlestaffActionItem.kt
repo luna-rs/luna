@@ -2,14 +2,14 @@ package world.player.skill.crafting.battlestaffCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.InventoryAction
+import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
 
 /**
  * An [InventoryAction] implementation that makes battlestaves.
  */
-class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, amount: Int) :
+class MakeBattlestaffActionItem(val plr: Player, val battlestaff: Battlestaff, amount: Int) :
         InventoryAction(plr, true, 2, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
@@ -30,7 +30,7 @@ class MakeBattlestaffAction(val plr: Player, val battlestaff: Battlestaff, amoun
 
     override fun ignoreIf(other: Action<*>?): Boolean =
         when (other) {
-            is MakeBattlestaffAction -> battlestaff == other.battlestaff
+            is MakeBattlestaffActionItem -> battlestaff == other.battlestaff
             else -> false
         }
 }

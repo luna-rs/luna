@@ -1,6 +1,7 @@
 package world.player.skill.crafting.armorCrafting
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.mob.Player
 
 /**
@@ -19,7 +20,7 @@ val armorList = listOf(HideArmor.LEATHER_BODY,
  */
 fun craftArmor(plr: Player, armor: HideArmor, amount: Int) {
     if (plr.interfaces.isOpen(SoftLeatherInterface::class)) {
-        plr.submitAction(CraftArmorAction(plr, armor, amount))
+        plr.submitAction(CraftArmorActionItem(plr, armor, amount))
     }
 }
 

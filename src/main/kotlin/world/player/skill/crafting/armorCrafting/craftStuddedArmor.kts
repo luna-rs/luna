@@ -6,7 +6,7 @@ import io.luna.game.model.mob.Player
 /**
  * The steel studs identifier.
  */
-val steelStuds = CraftStuddedAction.STUDS
+val steelStuds = CraftStuddedActionItem.STUDS
 
 /**
  * The leather body identifier.
@@ -24,9 +24,9 @@ val leatherChaps = HideArmor.LEATHER_CHAPS.id
 fun makeStudded(plr: Player, armor: HideArmor) {
     when (armor) {
         HideArmor.STUDDED_BODY ->
-            plr.submitAction(CraftStuddedAction(plr, armor, leatherBody))
+            plr.submitAction(CraftStuddedActionItem(plr, armor, leatherBody))
         HideArmor.STUDDED_CHAPS ->
-            plr.submitAction(CraftStuddedAction(plr, armor, leatherChaps))
+            plr.submitAction(CraftStuddedActionItem(plr, armor, leatherChaps))
         else -> {
         }
     }
