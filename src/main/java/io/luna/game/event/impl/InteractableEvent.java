@@ -16,4 +16,13 @@ public interface InteractableEvent {
      * @return The target of this interactable event.
      */
     Entity target();
+
+    /**
+     * The interaction distance.
+     */
+    default int distance() {
+        // TODO plugins should be able to define interaction distance.. counter-intuitive design to let
+        // events define them
+        return 1;
+    }
 }

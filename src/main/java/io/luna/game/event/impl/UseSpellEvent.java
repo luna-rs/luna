@@ -46,6 +46,11 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
             return targetNpc;
         }
 
+        @Override
+        public int distance() {
+            return 10;
+        }
+
         /**
          * @return The spell target.
          */
@@ -82,6 +87,11 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         @Override
         public Entity target() {
             return targetPlr;
+        }
+
+        @Override
+        public int distance() {
+            return 10;
         }
 
         /**
@@ -181,6 +191,11 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
             return targetItem;
         }
 
+        @Override
+        public int distance() {
+            return 10;
+        }
+
         /**
          * @return The target ground item.
          */
@@ -216,6 +231,11 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         @Override
         public Entity target() {
             return targetObject;
+        }
+
+        @Override
+        public int distance() {
+            return 10;
         }
 
         /**

@@ -7,17 +7,17 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
 
 /**
- * A {@link DistancedAction} implementation that interacts with an entity when an appropriate distance has been reached.
+ * A {@link RepeatingAction} implementation that interacts with an entity when an appropriate interactable distance has
+ * been reached.
  *
- * @author lare96 
+ * @author lare96
  */
-public abstract class InteractionAction extends DistancedAction<Player> {
+public abstract class InteractionAction extends RepeatingAction<Player> {
 
     /**
      * A task that keeps track of the interaction and cancels the focus of the entity being interacted with.
      */
     private final class InteractionTask extends Task {
-
 
         /**
          * Creates a new {@link InteractionTask}.
@@ -48,32 +48,47 @@ public abstract class InteractionAction extends DistancedAction<Player> {
     private final Entity interactWith;
 
     /**
+     * The distance to interact from.
+     */
+    private final int distance;
+
+    /**
      * Creates a new {@link InteractionAction}.
      *
      * @param player The interacting player.
      * @param interactWith The entity to interact with.
+     * @param distance The distance to interact from.
      */
-    public InteractionAction(Player player, Entity interactWith) {
-        super(player, interactWith.getPosition(), interactWith.size());
+    public InteractionAction(Player player, Entity interactWith, int distance) {
+        super(player, true);
         this.interactWith = interactWith;
+        this.distance = distance;
     }
 
     @Override
-    public void withinDistance() {
-        if (!interactWith.isInteractable()) {
-            return;
+    public boolean start() {
+        if (mob.isBot()) {
+            //todo remove, bot may not always need to walk
+            // handle in scripts or botActions
+            mob.getWalking().walk(interactWith);
         }
+        return true;
+    }
 
-        if (interactWith.getType() != EntityType.ITEM) {
-            mob.interact(interactWith);
-            if (interactWith.getType() == EntityType.NPC) {
-                Npc interactNpc = (Npc) interactWith;
-                interactNpc.interact(mob);
-                world.schedule(new InteractionTask());
+    @Override
+    public void repeat() {
+        if(mob.canInteractWith(interactWith, distance)) {
+            if (interactWith.getType() != EntityType.ITEM) {
+                mob.interact(interactWith);
+                if (interactWith.getType() == EntityType.NPC) {
+                    Npc interactNpc = (Npc) interactWith;
+                    interactNpc.interact(mob);
+                    world.schedule(new InteractionTask());
+                }
             }
+            execute();
+            interrupt();
         }
-        mob.getWalking().clear();
-        execute();
     }
 
     @Override

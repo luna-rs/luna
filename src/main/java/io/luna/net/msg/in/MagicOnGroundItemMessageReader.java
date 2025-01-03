@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.Luna;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnGroundItemEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
@@ -31,6 +32,13 @@ public final class MagicOnGroundItemMessageReader extends GameMessageReader<Magi
     @Override
     public boolean validate(Player player, MagicOnGroundItemEvent event) {
         return event.getTargetItem() != null;
+    }
+
+    @Override
+    public void handle(Player player, MagicOnGroundItemEvent event) {
+        if (Luna.settings().game().betaMode()) {
+            player.sendMessage("[MagicOnGroundItemMessageReader]: spellId: " + event.getSpellId() + ", item: " + event.getTargetItem());
+        }
     }
 }
 
