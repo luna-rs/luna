@@ -35,6 +35,6 @@ public final class Varbit {
      */
     public Varp toVarp() {
         VarBitDefinition def = VarBitDefinition.ALL.retrieve(id);
-        return new Varp(def.getParentVarpId(), value << def.getMostSignificantBit());
+        return new Varp(def.getParentVarpId(), value << def.getLeastSignificantBit());
     }
 }

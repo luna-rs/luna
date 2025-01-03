@@ -1,6 +1,6 @@
 package io.luna.game.event;
 
-import io.luna.game.plugin.RuntimeScript;
+import io.luna.game.plugin.Script;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,17 +10,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Unit tests for {@link EventListener}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 final class EventListenerTest {
 
-    private static RuntimeScript script;
+    private static Script script;
 
     private EventListener<?> eventListener;
 
     @BeforeAll
     static void initScript() {
-        script = new RuntimeScript(null, null);
+        script = new Script(null, null, null, null);
     }
 
     @BeforeEach

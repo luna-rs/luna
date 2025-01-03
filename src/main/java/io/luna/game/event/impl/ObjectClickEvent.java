@@ -1,5 +1,6 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 
@@ -8,7 +9,7 @@ import io.luna.game.model.object.GameObject;
  *
  * @author lare96
  */
-public class ObjectClickEvent extends PlayerEvent implements ControllableEvent {
+public class ObjectClickEvent extends PlayerEvent implements ControllableEvent, InteractableEvent {
 
     /**
      * An event sent when a player clicks an object's first index.
@@ -69,6 +70,11 @@ public class ObjectClickEvent extends PlayerEvent implements ControllableEvent {
     private ObjectClickEvent(Player player, GameObject gameObject) {
         super(player);
         this.gameObject = gameObject;
+    }
+
+    @Override
+    public Entity target() {
+        return gameObject;
     }
 
     /**

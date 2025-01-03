@@ -2,6 +2,7 @@ package io.luna.game.model.chunk;
 
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.World;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,7 +23,7 @@ public final class ChunkRepositoryTest {
     @Test
     public void testAdd() {
         assertThrows(IllegalStateException.class, () -> {
-            ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
+            ChunkRepository repository = new ChunkRepository(null, new Chunk(1, 1));
             Entity entity = mock(Entity.class);
             when(entity.getType()).thenReturn(EntityType.PLAYER);
 
@@ -37,7 +38,8 @@ public final class ChunkRepositoryTest {
     @Test
     public void testRemove() {
         assertThrows(IllegalStateException.class, () -> {
-            ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
+            World world = mock(World.class);
+            ChunkRepository repository = new ChunkRepository(world, new Chunk(1, 1));
             Entity entity = mock(Entity.class);
             when(entity.getType()).thenReturn(EntityType.PLAYER);
 
@@ -50,7 +52,8 @@ public final class ChunkRepositoryTest {
      */
     @Test
     public void testInitialization() {
-        ChunkRepository repository = new ChunkRepository(new Chunk(1, 1));
+        World world = mock(World.class);
+        ChunkRepository repository = new ChunkRepository(world, new Chunk(1, 1));
         for (EntityType type : EntityType.ALL) {
             assertNotNull(repository.getAll(type));
         }

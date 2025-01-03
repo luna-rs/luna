@@ -41,7 +41,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      * @param context The context instance.
      * @param position The position.
      * @param type The entity type.
-     * @param owner The player to update for. If empty, updates for all players.
+     * @param view Who this entity can be viewed by.
      */
     public StationaryEntity(LunaContext context, Position position, EntityType type, ChunkUpdatableView view) {
         super(context, position, type);
@@ -135,17 +135,10 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     }
 
     /**
-     * @return The player to update for.
+     * @return Who this entity can be viewed by.
      */
     public final ChunkUpdatableView getView() {
         return view;
-    }
-
-    /**
-     * @return The players that can view this entity.
-     */
-    public final Set<Player> getViewers() {
-        return view.getAllowedViewers();
     }
 
     /**
@@ -167,6 +160,13 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      */
     public boolean isHidden() {
         return hidden;
+    }
+
+    /**
+     * Sets the hidden flag.
+     */
+    void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
     /**

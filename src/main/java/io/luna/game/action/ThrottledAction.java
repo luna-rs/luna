@@ -20,7 +20,7 @@ public abstract class ThrottledAction<T extends Mob> extends Action<T> {
     /**
      * The throttle delay.
      */
-    private int delay;
+    private final int delay;
 
     /**
      * Creates a new {@link ThrottledAction}.

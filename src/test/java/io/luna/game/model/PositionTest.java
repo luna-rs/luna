@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for {@link Position}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 final class PositionTest {
 
@@ -63,7 +63,7 @@ final class PositionTest {
         Position startPosition = new Position(0, 0, 0);
 
         // when position is at max view distance, return true
-        Position endPosition = new Position(EntityConstants.VIEWING_DISTANCE, EntityConstants.VIEWING_DISTANCE, 0);
+        Position endPosition = new Position(Position.VIEWING_DISTANCE, Position.VIEWING_DISTANCE, 0);
         assertTrue(startPosition.isViewable(endPosition));
 
         // when position is 1-unit out of view distance, return false

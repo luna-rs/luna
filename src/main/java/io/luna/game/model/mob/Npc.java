@@ -94,7 +94,17 @@ public class Npc extends Mob {
 
 
     @Override
-    public int size() {
+    public final int size() {
+        return definition.getSize();
+    }
+
+    @Override
+    public final int sizeX() {
+        return definition.getSize();
+    }
+
+    @Override
+    public final int sizeY() {
         return definition.getSize();
     }
 

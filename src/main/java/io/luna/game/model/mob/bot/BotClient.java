@@ -24,7 +24,7 @@ public final class BotClient extends GameClient {
     /**
      * The IO message handler.
      */
-    private final BotMessageHandler messageHandler = new BotMessageHandler(this);
+    private final BotMessageHandler messageHandler;
 
     /**
      * All pending write messages, completed when {@link #flush()} is called.
@@ -44,6 +44,7 @@ public final class BotClient extends GameClient {
     public BotClient(Bot bot, GameMessageRepository repository) {
         super(BotChannel.CHANNEL, repository);
         this.bot = bot;
+        messageHandler = new BotMessageHandler(this, bot);
     }
 
     @Override

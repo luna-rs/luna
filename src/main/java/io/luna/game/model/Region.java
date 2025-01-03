@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
  * @author lare96
  */
 public final class Region implements Location {
-
+ // todo explain more about the importance of region types in the runescape protocol
     /**
      * The length and width.
      */
@@ -16,16 +16,16 @@ public final class Region implements Location {
 
     /**
      * The multiplicative factor to get the region ID.
-     */
+     */ // todo remove
     public static final int MULTIPLICATIVE_FACTOR = 256;
 
     /**
-     * The center x coordinate.
+     * The {@code x}  coordinate.
      */
     private final int x;
 
     /**
-     * The center y coordinate.
+     * The {@code y}  coordinate.
      */
     private final int y;
 
@@ -46,7 +46,7 @@ public final class Region implements Location {
     /**
      * Creates a new {@link Region}.
      *
-     * @param id
+     * @param id The identifier.
      */
     public Region(int id) {
         this.id = id;
@@ -57,8 +57,8 @@ public final class Region implements Location {
     /**
      * Creates a new {@link Region}.
      *
-     * @param x The center x coordinate.
-     * @param y The center y coordinate.
+     * @param x The {@code x}  coordinate.
+     * @param y The {@code y}  coordinate.
      */
     public Region(int x, int y) {
         this.x = x;
@@ -92,25 +92,34 @@ public final class Region implements Location {
         }
         return false;
     }
-
+    
+    /**
+     * Checks if {@code region} is within distance of {@code distance} (in regions).
+     */
+    public boolean isWithinDistance(Region region, int distance) {
+        int deltaX = Math.abs(region.getX() - x);
+        int deltaY = Math.abs(region.getY() - y);
+        return deltaX <= distance && deltaY <= distance;
+    }
+    
     /**
      * Returns the base {@link Position} in this region.
      *
      * @return The base position.
      */
-    public Position getBasePosition() {
+    public Position getAbsPosition() {
         return new Position(x * SIZE, y * SIZE);
     }
 
     /**
-     * @return The center x coordinate.
+     * @return The {@code x}  coordinate.
      */
     public int getX() {
         return x;
     }
 
     /**
-     * @return The center y coordinate.
+     * @return The {@code y}  coordinate.
      */
     public int getY() {
         return y;

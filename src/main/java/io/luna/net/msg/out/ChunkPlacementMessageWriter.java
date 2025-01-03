@@ -32,7 +32,7 @@ public final class ChunkPlacementMessageWriter extends GameMessageWriter {
      */
     public ChunkPlacementMessageWriter(Position basePosition, ChunkRepository placementChunkRepository) {
         this.basePosition = basePosition;
-        placementPosition = placementChunkRepository.getChunk().getBasePosition();
+        placementPosition = placementChunkRepository.getChunk().getAbsPosition();
     }
 
     @Override

@@ -4,9 +4,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkManager;
-import io.luna.game.model.collision.CollisionMap;
+import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
+import io.luna.game.model.map.DynamicMapSpacePool;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -131,7 +132,7 @@ public final class World {
     /**
      * The chunk manager.
      */
-    private final ChunkManager chunks = new ChunkManager();
+    private final ChunkManager chunks = new ChunkManager(this);
 
     /**
      * The task manager.
@@ -176,7 +177,12 @@ public final class World {
     /**
      * The collision map.
      */
-    private final CollisionMap collisionMap = new CollisionMap(this);
+    private final CollisionManager collisionManager;
+
+    /**
+     * A repository for instances created using the construct map region packet.
+     */
+    private final DynamicMapSpacePool dynamicMapSpacePool;
 
     /**
      * Creates a new {@link World}.
@@ -187,6 +193,8 @@ public final class World {
         this.context = context;
 
         playerMap = new ConcurrentHashMap<>();
+        collisionManager = new CollisionManager(this);
+        dynamicMapSpacePool = new DynamicMapSpacePool(context);
 
         // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
@@ -199,8 +207,9 @@ public final class World {
     public void start() {
         items.startExpirationTask();
         botRepository.load();
-        collisionMap.load();
+        collisionManager.build(false);
         schedule(new ControllerProcessTask(this));
+        dynamicMapSpacePool.buildEmptySpacePool();
     }
 
     /**
@@ -455,8 +464,8 @@ public final class World {
     /**
      * @return The collision map.
      */
-    public CollisionMap getCollisionMap() {
-        return collisionMap;
+    public CollisionManager getCollisionManager() {
+        return collisionManager;
     }
 
     /**
@@ -464,5 +473,12 @@ public final class World {
      */
     public PlayerSerializerManager getSerializerManager() {
         return serializerManager;
+    }
+
+    /**
+     * @return A repository for instances created using the construct map region packet.
+     */
+    public DynamicMapSpacePool getDynamicMapSpacePool() {
+        return dynamicMapSpacePool;
     }
 }

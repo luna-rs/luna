@@ -102,7 +102,7 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
             } else if (opcode >= 30 && opcode < 40) {
                 String action = CacheUtils.readString(data);
                 if (action.equals("hidden")) {
-                    action = "nulll";
+                    action = "null";
                 }
                 actions[opcode - 30] = action;
             } else if (opcode == 40) {
@@ -120,7 +120,9 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
                 data.readShort(); // Dummy
             } else if (opcode == 95) {
                 combatLevel = data.readUnsignedShort();
-            } else if (opcode == 97 || opcode == 98) {
+            } else if (opcode == 97) {
+                data.readShort(); // scaleXY / scaleZ
+            } else if (opcode == 98) {
                 data.readShort(); // scaleXY / scaleZ
             } else if (opcode == 100 || opcode == 101) {
                 data.readByte(); // brightness and contrast

@@ -4,6 +4,7 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -11,6 +12,8 @@ import io.luna.net.msg.out.ClearChunkMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,7 +33,7 @@ import java.util.stream.StreamSupport;
  * @author lare96
  */
 public final class ChunkManager implements Iterable<ChunkRepository> {
-
+// todo clean up, redesign, remove unused functions
     /**
      * Determines the local player count at which prioritized updating will start.
      */
@@ -51,6 +54,19 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      */
     private final Queue<ChunkRepository> updatedChunks = new ArrayDeque<>();
 
+    /**
+     * The world instance.
+     */
+    private final World world;
+
+    /**
+     * Creates a new {@link ChunkManager}.
+     * @param world The world instance.
+     */
+    public ChunkManager(World world) {
+        this.world = world;
+    }
+
     @Override
     public Spliterator<ChunkRepository> spliterator() {
         return Spliterators.spliterator(chunks.values(), Spliterator.NONNULL);
@@ -68,7 +84,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * @return The existing or newly loaded chunk.
      */
     public ChunkRepository load(Chunk position) {
-        return chunks.computeIfAbsent(position, ChunkRepository::new);
+        return chunks.computeIfAbsent(position, key -> new ChunkRepository(world, key));
     }
 
     /**
@@ -225,6 +241,13 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
 
     public void clearTemporaryEntities() {
 
+    }
+
+    /**
+     * @return All chunks being managed by this repository.
+     */
+    public Collection<ChunkRepository> getAll() {
+        return Collections.unmodifiableCollection(chunks.values());
     }
 
     /**

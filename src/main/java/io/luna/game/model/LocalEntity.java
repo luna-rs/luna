@@ -26,6 +26,11 @@ public abstract class LocalEntity implements ChunkUpdatable {
     protected final int id;
 
     /**
+     * The type.
+     */
+    protected final EntityType type;
+
+    /**
      * The position.
      */
     protected final Position position;
@@ -40,12 +45,14 @@ public abstract class LocalEntity implements ChunkUpdatable {
      *
      * @param context The context.
      * @param id The id.
+     * @param type The type.
      * @param position The position.
      * @param view Who this entity is viewable for.
      */
-    public LocalEntity(LunaContext context, int id, Position position, ChunkUpdatableView view) {
+    public LocalEntity(LunaContext context, int id, EntityType type, Position position, ChunkUpdatableView view) {
         this.context = context;
         this.id = id;
+        this.type = type;
         this.position = position;
         this.view = view;
     }
@@ -86,6 +93,13 @@ public abstract class LocalEntity implements ChunkUpdatable {
      */
     public int getId() {
         return id;
+    }
+
+    /**
+     * @return The type.
+     */
+    public EntityType getType() {
+        return type;
     }
 
     /**

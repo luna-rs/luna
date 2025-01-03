@@ -75,7 +75,7 @@ public abstract class PlayerController {
      *
      * @param player The player.
      * @param event The event that can be transformed or terminated.
-     * @return {@code true} if the event should be terminated.
+     * @return {@code false} if the event should be terminated.
      */
     public boolean onPlayerEvent(Player player, ControllableEvent event) {
         return true;

@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit tests for {@link GameMessageEncoder}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 final class GameMessageEncoderTest {
 

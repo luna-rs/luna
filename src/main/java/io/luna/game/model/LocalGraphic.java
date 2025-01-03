@@ -39,7 +39,7 @@ public final class LocalGraphic extends LocalEntity {
      * @param view Who this graphic is viewable for.
      */
     public LocalGraphic(LunaContext context, int id, int height, int delay, Position position, ChunkUpdatableView view) {
-        super(context, id, position, view);
+        super(context, id, EntityType.GRAPHIC, position, view);
         this.height = height;
         this.delay = delay;
     }

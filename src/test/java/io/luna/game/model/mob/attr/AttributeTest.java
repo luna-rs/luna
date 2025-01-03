@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Unit tests for {@link Attribute}.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 final class AttributeTest {
 

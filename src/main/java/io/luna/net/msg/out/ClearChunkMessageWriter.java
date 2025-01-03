@@ -32,7 +32,7 @@ public final class ClearChunkMessageWriter extends GameMessageWriter {
      */
     public ClearChunkMessageWriter(Position basePosition, ChunkRepository placementChunkRepository) {
         this.basePosition = basePosition;
-        placementPosition = placementChunkRepository.getChunk().getBasePosition();
+        placementPosition = placementChunkRepository.getChunk().getAbsPosition();
     }
 
     @Override

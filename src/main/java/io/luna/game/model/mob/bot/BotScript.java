@@ -26,7 +26,7 @@ public abstract class BotScript {
     /**
      * The bot message handler instance.
      */
-    protected final BotMessageHandler messageHandler;
+    protected final BotMessageHandler botActions;
 
     /**
      * How many times {@link #process()} has been called on this script.
@@ -41,7 +41,7 @@ public abstract class BotScript {
     public BotScript(Bot bot) {
         this.bot = bot;
         client = bot.getBotClient();
-        messageHandler = bot.getMessageHandler();
+        botActions = bot.getMessageHandler();
     }
 
     /**

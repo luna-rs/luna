@@ -5,31 +5,48 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.net.msg.out.AddLocalSoundMessageWriter;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * A {@link LocalEntity} type representing an area-based sound within the game world.
  *
  * @author lare96
  */
 public final class LocalSound extends LocalEntity {
-// TODO test?? sound radius? sound type?
+
     /**
      * The radius of the sound.
      */
     private final int radius;
 
     /**
-     * The sound type.
+     * The sound volume, between 0-100.
      */
-    private final int type;
+    private final int volume;
 
-    public LocalSound(LunaContext context, int id, Position position, ChunkUpdatableView view, int radius, int type) {
-        super(context, id, position, view);
+    public LocalSound(LunaContext context, int id, Position position, ChunkUpdatableView view, int radius, int volume) {
+        super(context, id, EntityType.SOUND, position, view);
+        checkState(volume >= 0 && volume <= 100, "Volume must be between 0-100.");
         this.radius = radius;
-        this.type = type;
+        this.volume = volume;
     }
 
     @Override
     public ChunkUpdatableMessage displayMessage(int offset) {
-        return new AddLocalSoundMessageWriter(id, radius, type, offset);
+        return new AddLocalSoundMessageWriter(id, radius, volume, offset);
+    }
+
+    /**
+     * @return The radius of the sound.
+     */
+    public int getRadius() {
+        return radius;
+    }
+
+    /**
+     * @return The sound volume, between 0-100.
+     */
+    public int getVolume() {
+        return volume;
     }
 }

@@ -66,7 +66,8 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
      * @return The game object, {@code null} if none matching the criteria were found.
      */
     private GameObject findObject(Player player, int objectX, int objectY, int objectId) {
-        return player.getWorld().getObjects().findAll(new Position(objectX, objectY, player.getZ())).
+        Position objectPosition = new Position(objectX, objectY, player.getZ());
+        return player.getWorld().getObjects().findAll(objectPosition).
                 filter(object -> object.getId() == objectId && object.isVisibleTo(player)).
                 findFirst().orElse(null);
     }

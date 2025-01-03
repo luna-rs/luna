@@ -235,7 +235,7 @@ public class LocalProjectile extends LocalEntity {
     private LocalProjectile(LunaContext context, int id, Position sourcePosition, Position destinationPosition,
                             OptionalInt targetIndex, int startHeight, int endHeight, int ticksToStart, int delay,
                             int initialSlope, int distanceFromSource, ChunkUpdatableView view) {
-        super(context, id, sourcePosition, view);
+        super(context, id, EntityType.PROJECTILE, sourcePosition, view);
         this.destinationPosition = destinationPosition;
         this.targetIndex = targetIndex;
         this.startHeight = startHeight;

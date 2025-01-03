@@ -132,10 +132,6 @@ public final class PluginBootstrap {
             boolean foundMatch = false;
             String packageName = entry.getKey();
             ClassInfo scriptInfo = entry.getValue();
-            // Ignore SandboxScript because it doesn't need to be a plugin.
-            if (scriptInfo.getSimpleName().equals("SandboxScript")) {
-                continue;
-            }
 
             for (String loadedPackageName : infoScripts.keySet()) {
                 // Check if every script has a matching info script.

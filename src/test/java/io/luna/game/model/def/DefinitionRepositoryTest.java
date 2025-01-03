@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for {@link DefinitionRepository}.
  *
- * @author lare96 <http://github.org/lare96>
+ * @author lare96
  */
 final class DefinitionRepositoryTest {
 
