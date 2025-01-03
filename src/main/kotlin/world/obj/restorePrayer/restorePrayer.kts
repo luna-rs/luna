@@ -1,9 +1,8 @@
-package world.player.obj.restorePrayer
+package world.obj.restorePrayer
 
 import api.predef.*
-import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
-import io.luna.game.model.mob.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * The restore prayer animation.
@@ -29,10 +28,7 @@ fun restore(plr: Player) {
     }
 }
 
-/**
- * Match all altars with [restore].
- */
-on(ObjectFirstClickEvent::class)
-    .match(altars)
-    .then { restore(plr) }
-
+/* Match all altar objects.  */
+for (id in altars) {
+    object1(id) { restore(plr) }
+}

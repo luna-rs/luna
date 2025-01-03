@@ -1,9 +1,9 @@
-package world.player.obj.restorePrayer
+package world.obj.restorePrayer
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
-    name = "Pray at altar"
+    name = "Restore prayer"
     description =
         """
         A plugin that enables restoring Prayer points by praying at an altar.
