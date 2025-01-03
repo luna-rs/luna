@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -15,7 +16,29 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class Item {
 
-    // TODO item attributes?
+    /**
+     * Retrieves an item instance by name and amount.
+     *
+     * @param name The name.
+     * @param amount The amount.
+     * @return The item.
+     */
+    public static Item byName(String name, int amount) {
+        boolean noted = name.endsWith("(noted)");
+        return ItemDefinition.ALL.lookup(it -> it.isTradeable() && it.getName().equals(name) && it.isNoted() == noted).
+                map(it -> new Item(it.getId(), amount)).
+                orElseThrow(() -> new NoSuchElementException("Item (" + name + ") was not valid or found."));
+    }
+
+    /**
+     * Retrieves an item instance by name and with wn amount of 1.
+     *
+     * @param name The name.
+     * @return The item.
+     */
+    public static Item byName(String name) {
+        return byName(name, 1);
+    }
 
     /**
      * The identifier.

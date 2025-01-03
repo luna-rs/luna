@@ -6,7 +6,8 @@ package io.luna.game.model.mob.block;
  * @author lare96
  */
 public final class Hit {
-
+    // TODO when doing combat, add source of damage
+    // TODO change to builder style
     /**
      * An enum representing hitsplat types.
      */

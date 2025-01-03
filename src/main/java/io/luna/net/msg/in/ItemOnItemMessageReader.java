@@ -34,7 +34,7 @@ public final class ItemOnItemMessageReader extends GameMessageReader<ItemOnItemE
         if (event.getTargetItemIndex() < 0 ||
                 event.getUsedItemIndex() < 0 ||
                 !ItemDefinition.isIdValid(event.getTargetItemId()) ||
-                !ItemDefinition.isIdValid(event.getUsedItemIndex()) ||
+                    !ItemDefinition.isIdValid(event.getUsedItemId()) ||
                 event.getTargetItemInterface() < 1 ||
                 event.getUsedItemInterface() < 1) {
             return false;
