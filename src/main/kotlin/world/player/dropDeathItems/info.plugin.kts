@@ -1,6 +1,6 @@
-package world.player.death.dropItems
+package world.player.dropDeathItems
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Player death items"
@@ -9,5 +9,6 @@ plugin {
         A plugin that enables players dropping items when they die.
         """
     version = "1.0"
+    corePlugin = true
     authors += "lare96"
 }
