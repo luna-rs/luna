@@ -16,26 +16,6 @@ import world.obj.resource.harvestable.WheatResource
  */
 abstract class GameResource {
 
-    companion object {
-
-        /**
-         * All resources that will be handled by the server.
-         */
-        val RESOURCES = listOf(
-            // Fillable resources.
-            WaterResource,
-            SandResource,
-            MilkResource,
-
-            // Harvestable resources.
-            CabbageResource,
-            OnionResource,
-            PotatoResource,
-            FlaxResource,
-            WheatResource
-        )
-    }
-
     /**
      * Determines if [obj] matches this resource, if `true` is returned the argued object will be registered as
      * this resource.
