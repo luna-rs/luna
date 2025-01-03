@@ -46,10 +46,6 @@ abstract class CoroutineBotScript(protected val bot: Bot) {
      * Determines if [Job.isActive].
      */
     fun isActive(): Boolean {
-        val job = progress.get()
-        if(job != null) {
-            return job.isActive
-        }
-        return false
+        return progress.get() != null && progress.get().isActive
     }
 }
