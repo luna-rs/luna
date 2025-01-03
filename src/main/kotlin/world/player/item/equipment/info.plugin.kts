@@ -1,6 +1,6 @@
 package world.player.item.equipment
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Equip/Remove equipment"

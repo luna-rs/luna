@@ -1,6 +1,7 @@
 package world.player.item.shops
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
 import io.luna.game.model.item.shop.Shop
 import io.luna.game.model.item.shop.ShopInterface

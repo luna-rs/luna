@@ -1,6 +1,6 @@
 package world.player.item.shops
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Buy/sell/price shop items"

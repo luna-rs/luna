@@ -1,18 +1,20 @@
 package world.player.item.trading.tradeScreen
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
+import world.player.item.trading.tradingWith
 import java.text.NumberFormat
 import java.util.*
 
 /**
  * An [InventoryOverlayInterface] implementation representing the confirmation trading screen.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
 class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayInterface(3443, 3213) {
-
+ // TODO declining here dupes items???
     companion object {
 
         /**
@@ -61,6 +63,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
     override fun onClose(plr: Player) {
         if (!completed) {
             // Interface closed when trade wasn't finished yet, decline.
+            offer.completed = false
+            offer.otherOffer.completed = false
             offer.onClose(plr)
         } else {
             // Trade completed successfully!

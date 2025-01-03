@@ -1,6 +1,7 @@
 package world.player.item.trading.tradeScreen
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
@@ -10,6 +11,7 @@ import io.luna.game.model.mob.inter.AbstractInterface
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
 import io.luna.net.msg.out.WidgetItemsMessageWriter
+import world.player.item.trading.tradingWith
 
 /**
  * An [InventoryOverlayInterface] implementation representing the offer trading screen.
@@ -46,11 +48,15 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      */
     var accepted = false
 
+    /**
+     * If ready to advance to the [ConfirmTradeInterface].
+     */
+    var completed = false
+
     override fun onOpen(plr: Player) {
         sendTradingWith(plr)
         plr.sendText("", 3431)
         plr.sendText("Are you sure you want to make this trade?", 3535)
-
         // Refresh inventory to trade inventory.
         plr.inventory.setSecondaryRefresh(3322)
         plr.inventory.refreshSecondary(plr)
@@ -65,19 +71,20 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     override fun onClose(plr: Player) {
-        // Trade was declined.
-        plr.tradingWith = -1
+        if(!completed) {
+            plr.tradingWith = -1
 
-        plr.inventory.resetSecondaryRefresh()
-        plr.inventory.addAll(items)
+            plr.inventory.resetSecondaryRefresh()
+            plr.inventory.addAll(items)
 
-        other.interfaces.close()
+            other.interfaces.close()
+        }
     }
 
     override fun onReplace(plr: Player, replace: AbstractInterface) {
         // If replacing interface isn't the confirm screen, decline.
         if (replace::class != ConfirmTradeInterface::class) {
-            onClose(plr)
+            completed = false
         }
     }
 
@@ -129,6 +136,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         }
 
         if (otherOffer.accepted) {
+            completed = true
+            otherOffer.completed = true
             val confirm = ConfirmTradeInterface(this)
             val otherConfirm = ConfirmTradeInterface(otherOffer)
             plr.interfaces.open(confirm)

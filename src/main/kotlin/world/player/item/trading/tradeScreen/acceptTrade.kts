@@ -1,6 +1,7 @@
 package world.player.item.trading.tradeScreen
 
 import api.predef.*
+import api.predef.ext.*
 import world.player.item.trading.tradeScreen.ConfirmTradeInterface
 
 /**
