@@ -1,6 +1,6 @@
 package world.player.login.init
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Initialize player"

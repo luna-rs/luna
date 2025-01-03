@@ -1,6 +1,6 @@
 package world.player.logout.logoutButton
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Logout button"

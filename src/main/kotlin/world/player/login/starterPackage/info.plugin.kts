@@ -1,6 +1,6 @@
 package world.player.login.starterPackage
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Starter package"

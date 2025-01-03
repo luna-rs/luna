@@ -1,12 +1,11 @@
 package world.player.privateChat
 
 
-import api.predef.on
-import api.predef.world
-import io.luna.game.event.impl.CreateFriendedPlayerEvent
-import io.luna.game.event.impl.CreateIgnoredPlayerEvent
-import io.luna.game.event.impl.DeleteFriendedPlayerEvent
-import io.luna.game.event.impl.DeleteIgnoredPlayerEvent
+import api.predef.*
+import io.luna.game.event.impl.PrivacyListChangeEvent.AddFriendEvent
+import io.luna.game.event.impl.PrivacyListChangeEvent.AddIgnoreEvent
+import io.luna.game.event.impl.PrivacyListChangeEvent.RemoveIgnoreEvent
+import io.luna.game.event.impl.PrivacyListChangeEvent.RemoveFriendEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.model.mob.Player
@@ -74,20 +73,20 @@ fun removeIgnore(plr: Player, name: Long) {
     }
 }
 
-on(CreateFriendedPlayerEvent::class) {
-    addFriend(plr, friendedName)
+on(AddFriendEvent::class) {
+    addFriend(plr, name)
 }
 
-on(DeleteFriendedPlayerEvent::class) {
-    removeFriend(plr, friendedName)
+on(RemoveFriendEvent::class) {
+    removeFriend(plr, name)
 }
 
-on(CreateIgnoredPlayerEvent::class) {
-    addIgnore(plr, ignoredName)
+on(AddIgnoreEvent::class) {
+    addIgnore(plr, name)
 }
 
-on(DeleteIgnoredPlayerEvent::class) {
-    removeIgnore(plr, ignoredName)
+on(RemoveIgnoreEvent::class) {
+    removeIgnore(plr, name)
 }
 
 /**

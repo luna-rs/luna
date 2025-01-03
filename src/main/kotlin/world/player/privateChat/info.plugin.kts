@@ -1,6 +1,6 @@
 package world.player.privateChat
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Private chat"
