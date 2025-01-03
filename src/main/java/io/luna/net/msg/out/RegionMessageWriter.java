@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96
  */
-public final class RegionChangeMessageWriter extends GameMessageWriter {
+public final class RegionMessageWriter extends GameMessageWriter {
 
     /**
      * The new region.
@@ -20,11 +20,11 @@ public final class RegionChangeMessageWriter extends GameMessageWriter {
     private final Position position;
 
     /**
-     * Creates a new {@link RegionChangeMessageWriter}.
+     * Creates a new {@link RegionMessageWriter}.
      *
      * @param position The new region.
      */
-    public RegionChangeMessageWriter(Position position) {
+    public RegionMessageWriter(Position position) {
         this.position = position;
     }
 

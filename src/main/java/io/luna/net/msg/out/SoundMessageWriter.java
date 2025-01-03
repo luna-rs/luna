@@ -10,19 +10,19 @@ import io.luna.net.msg.GameMessageWriter;
  * @author lare96
  */
 public final class SoundMessageWriter extends GameMessageWriter {
-//todo test
+
     /**
      * The sound identifier.
      */
     private final int id;
 
     /**
-     * How many times the sound should loop (?).
+     * The sound volume.
      */
-    private final int loops;
+    private final int volume;
 
     /**
-     * The amount of client ticks before the sound should play.
+     * The sound delay.
      */
     private final int delay;
 
@@ -30,29 +30,20 @@ public final class SoundMessageWriter extends GameMessageWriter {
      * Creates a new {@link SoundMessageWriter}.
      *
      * @param id The sound identifier.
-     * @param loops How many times the sound should loop (?).
-     * @param delay The amount of client ticks before the sound should play.
+     * @param volume The sound volume.
+     * @param delay The sound delay.
      */
-    public SoundMessageWriter(int id, int loops, int delay) {
+    public SoundMessageWriter(int id, int volume, int delay) {
         this.id = id;
-        this.loops = loops;
+        this.volume = volume;
         this.delay = delay;
-    }
-
-    /**
-     * Creates a new {@link SoundMessageWriter} with no loops or delay.
-     *
-     * @param id The sound identifier.
-     */
-    public SoundMessageWriter(int id) {
-        this(id, 0, 0);
     }
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(174);
+        ByteMessage msg = ByteMessage.message(26);
         msg.putShort(id);
-        msg.put(loops);
+        msg.put(volume);
         msg.putShort(delay);
         return msg;
     }
