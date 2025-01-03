@@ -29,7 +29,7 @@
   {
     "opcode": 6,
     "size": 0,
-    "payload": "RegionChangedMessageReader"
+    "payload": "RegionLoadedMessageReader"
   },
   {
     "opcode": 7,
@@ -235,7 +235,7 @@
   {
     "opcode": 54,
     "size": 6,
-    "payload": "DebugMessageReader"
+    "payload": "GroundItemClickMessageReader"
   },
   {
     "opcode": 55,
@@ -308,7 +308,7 @@
   {
     "opcode": 71,
     "size": 6,
-    "payload": "PickupItemMessageReader"
+    "payload": "GroundItemClickMessageReader"
   },
   {
     "opcode": 72,
@@ -362,7 +362,7 @@
   {
     "opcode": 83,
     "size": 8,
-    "payload": "DebugMessageReader"
+    "payload": "MagicOnGroundItemMessageReader"
   },
   {
     "opcode": 84,
@@ -475,7 +475,7 @@
   {
     "opcode": 110,
     "size": 0,
-    "payload": "CloseWindowMessageReader"
+    "payload": "CloseInterfaceMessageReader"
   },
   {
     "opcode": 111,
@@ -905,12 +905,12 @@
   {
     "opcode": 210,
     "size": 8,
-    "payload": "DebugMessageReader"
+    "payload": "MagicOnObjectMessageReader"
   },
   {
     "opcode": 211,
     "size": 12,
-    "payload": "DebugMessageReader"
+    "payload": "ItemOnGroundItemMessageReader"
   },
   {
     "opcode": 212,
