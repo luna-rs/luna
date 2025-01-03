@@ -1,18 +1,20 @@
 package world.player.announcements
 
 import api.predef.*
-import io.luna.game.event.impl.ServerLaunchEvent
+import api.predef.ext.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import java.time.Duration
 
 /**
  * Announcement broadcast interval.
  */
-val intervalTicks = 1500 // 15 mins
+val interval = Duration.ofMinutes(15)
 
 /**
  * Messages that will be randomly announced.
  */
 val messages = listOf(
-        "Luna is a Runescape  server designed for the #317 protocol.",
+        "Luna is a Runescape  server designed for the #377 protocol.",
         "Luna can be found on GitHub under luna-rs/luna",
         "Change these messages in the 'Announcements' plugin.",
         "Any bugs found using Luna should be reported to the GitHub page.",
@@ -31,5 +33,5 @@ fun sendMessages() {
  * Schedules a task that will send global messages.
  */
 on(ServerLaunchEvent::class) {
-    world.schedule(intervalTicks) { sendMessages() }
+    world.schedule(interval) { sendMessages() }
 }
