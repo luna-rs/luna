@@ -1,7 +1,6 @@
 package io.luna.game.cache.map;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import io.luna.LunaContext;
 import io.luna.game.model.Position;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectDirection;
@@ -75,5 +74,12 @@ public final class MapObject {
      */
     public ObjectDirection getRotation() {
         return rotation;
+    }
+
+    /**
+     * Converts this map object into a static {@link GameObject}.
+     */
+    public GameObject toGameObject(LunaContext context) {
+        return GameObject.createStatic(context, objectId, position, type, rotation);
     }
 }

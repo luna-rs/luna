@@ -18,6 +18,7 @@ import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.cache.map.MapTileGridSet;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
+import io.luna.game.model.World;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 import io.netty.buffer.ByteBuf;
@@ -232,6 +233,13 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                 new MapObjectSet(mapObjects),
                 new MapTileGridSet(mapTiles));
         cache.setMapIndexTable(indexTable);
+
+        ctx.getGame().sync(() -> {
+            World world = ctx.getWorld();
+            for (MapObject object : indexTable.getObjectSet().getObjects()) {
+                world.getObjects().register(object.toGameObject(ctx));
+            }
+        });
     }
 
     /**
@@ -246,7 +254,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         ImmutableList.Builder<MapObject> mapObjects = ImmutableList.builder();
         for (MapIndex index : indices) {
             int objectFileId = index.getObjectFileId();
-            Position basePosition = index.getRegion().getBasePosition();
+            Position basePosition = index.getRegion().getAbsPosition();
             ByteBuf data = CacheUtils.unzip(cache.getFile(4, objectFileId));
             try {
                 int id = -1;
@@ -303,6 +311,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                     for (int x = 0; x < MAP_SIZE; x++) {
                         for (int y = 0; y < MAP_SIZE; y++) {
                             MapTileDecoder decoder = new MapTileDecoder(x, y, z, data, tiles);
+
                             int opcode = data.readUnsignedByte();
                             decoder.accept(opcode);
                             while (opcode >= 2) {

@@ -1,17 +1,19 @@
 package io.luna.game.cache.map;
 
-import io.luna.game.model.RegionPosition;
+import io.luna.game.model.Region;
 
 /**
- * A grid of {@link MapTile} types that make up a {@link RegionPosition}. The grid is 64x64x4 in total size and helps
+ * A grid of {@link MapTile} types that make up a {@link Region}. The grid is 64x64x4 in total size and helps
  * organize the data for individual tiles into a set grouped by region.
+ *
+ * @author lare96
  */
 public final class MapTileGrid {
 
     /**
      * The region this grid of {@link MapTile} types is describing.
      */
-    private final RegionPosition region;
+    private final Region region;
 
     /**
      * The grid array.
@@ -24,7 +26,7 @@ public final class MapTileGrid {
      * @param region The region this grid of {@link MapTile} types is describing.
      * @param newGrid The grid array.
      */
-    public MapTileGrid(RegionPosition region, MapTile[][][] newGrid) {
+    public MapTileGrid(Region region, MapTile[][][] newGrid) {
         this.region = region;
         grid = newGrid.clone();
     }
@@ -32,7 +34,7 @@ public final class MapTileGrid {
     /**
      * @return The region this grid of {@link MapTile} types is describing.
      */
-    public RegionPosition getRegion() {
+    public Region getRegion() {
         return region;
     }
 

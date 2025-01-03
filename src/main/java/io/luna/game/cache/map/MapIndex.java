@@ -1,10 +1,10 @@
 package io.luna.game.cache.map;
 
 import com.google.common.base.Objects;
-import io.luna.game.model.RegionPosition;
+import io.luna.game.model.Region;
 
 /**
- * A class representing a single map index. Their purpose is to map a single {@link RegionPosition} to a tile and
+ * A class representing a single map index. Their purpose is to map a single {@link Region} to a tile and
  * object file in the cache.
  *
  * @author lare96
@@ -14,7 +14,7 @@ public final class MapIndex {
     /**
      * The map region this index identifies.
      */
-    private final RegionPosition region;
+    private final Region region;
 
     /**
      * The map tile file id.
@@ -29,7 +29,7 @@ public final class MapIndex {
     /**
      * If the region detailed by this index is a priority region.
      */
-    private boolean priority;
+    private final boolean priority;
 
     /**
      * Creates a new {@link MapIndex}.
@@ -39,7 +39,7 @@ public final class MapIndex {
      * @param objectFileId The map object file id.
      * @param priority If the region detailed by this index is a priority region.
      */
-    public MapIndex(RegionPosition region, int tileFileId, int objectFileId, boolean priority) {
+    public MapIndex(Region region, int tileFileId, int objectFileId, boolean priority) {
         this.region = region;
         this.tileFileId = tileFileId;
         this.objectFileId = objectFileId;
@@ -62,7 +62,7 @@ public final class MapIndex {
     /**
      * @return The map region this index identifies.
      */
-    public RegionPosition getRegion() {
+    public Region getRegion() {
         return region;
     }
 

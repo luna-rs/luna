@@ -1,6 +1,7 @@
 package io.luna.game.cache.map;
 
-import io.luna.game.model.RegionPosition;
+import com.google.common.base.MoreObjects;
+import io.luna.game.model.Region;
 
 /**
  * Represents tiles on the map and their attributes, that were decoded from the cache.
@@ -20,12 +21,12 @@ public final class MapTile {
     public static final int BRIDGE = 0x2;
 
     /**
-     * The {@code x} offset of this tile from its {@link RegionPosition}.
+     * The {@code x} offset of this tile from its {@link Region}.
      */
     private final int offsetX;
 
     /**
-     * The {@code y} offset of this tile from its {@link RegionPosition}.
+     * The {@code y} offset of this tile from its {@link Region}.
      */
     private final int offsetY;
 
@@ -67,8 +68,8 @@ public final class MapTile {
     /**
      * Creates a new {@link MapTile}.
      *
-     * @param offsetX The {@code x} offset of this tile from its {@link RegionPosition}.
-     * @param offsetY The {@code y} offset of this tile from its {@link RegionPosition}.
+     * @param offsetX The {@code x} offset of this tile from its {@link Region}.
+     * @param offsetY The {@code y} offset of this tile from its {@link Region}.
      * @param plane The plane of this tile.
      * @param height The tile height.
      * @param overlay The tile overlay.
@@ -89,6 +90,21 @@ public final class MapTile {
         this.underlay = underlay;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("offsetX", offsetX)
+                .add("offsetY", offsetY)
+                .add("plane", plane)
+                .add("height", height)
+                .add("overlay", overlay)
+                .add("overlayType", overlayType)
+                .add("overlayOrientation", overlayOrientation)
+                .add("attributes", attributes)
+                .add("underlay", underlay)
+                .toString();
+    }
+
     /**
      * @return If {@link #attributes} contains the {@link #BLOCKED} bit flag.
      */
@@ -104,14 +120,14 @@ public final class MapTile {
     }
 
     /**
-     * @return The {@code x} offset of this tile from its {@link RegionPosition}.
+     * @return The {@code x} offset of this tile from its {@link Region}.
      */
     public int getOffsetX() {
         return offsetX;
     }
 
     /**
-     * @return The {@code y} offset of this tile from its {@link RegionPosition}.
+     * @return The {@code y} offset of this tile from its {@link Region}.
      */
     public int getOffsetY() {
         return offsetY;

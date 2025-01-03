@@ -3,7 +3,7 @@ package io.luna.game.cache.map;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import io.luna.game.model.RegionPosition;
+import io.luna.game.model.Region;
 
 /**
  * Represents the set of all {@link MapIndex} types along with the decoded object and tile data.
@@ -15,7 +15,7 @@ public final class MapIndexTable {
     /**
      * The index table, mapped by region.
      */
-    private final ImmutableMap<RegionPosition, MapIndex> indexTable;
+    private final ImmutableMap<Region, MapIndex> indexTable;
 
     /**
      * The object set.
@@ -34,7 +34,7 @@ public final class MapIndexTable {
      * @param objectSet The object set.
      * @param tileSet The tile set.
      */
-    public MapIndexTable(ImmutableMap<RegionPosition, MapIndex> indexTable, MapObjectSet objectSet, MapTileGridSet tileSet) {
+    public MapIndexTable(ImmutableMap<Region, MapIndex> indexTable, MapObjectSet objectSet, MapTileGridSet tileSet) {
         this.indexTable = indexTable;
         this.objectSet = objectSet;
         this.tileSet = tileSet;
@@ -48,16 +48,16 @@ public final class MapIndexTable {
     }
 
     /**
-     * @return The keys ({@link RegionPosition}) of all {@link MapIndex} types.
+     * @return The keys ({@link Region}) of all {@link MapIndex} types.
      */
-    public ImmutableSet<RegionPosition> getAllRegions() {
+    public ImmutableSet<Region> getAllRegions() {
         return indexTable.keySet();
     }
 
     /**
      * @return The index table, mapped by region.
      */
-    public ImmutableMap<RegionPosition, MapIndex> getIndexTable() {
+    public ImmutableMap<Region, MapIndex> getIndexTable() {
         return indexTable;
     }
 
