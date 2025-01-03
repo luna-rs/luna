@@ -27,7 +27,7 @@ public final class CacheUtils {
     /**
      * The maximum height level, exclusive.
      */
-    public static final int MAP_PLANES = Position.HEIGHT_LEVELS.upperEndpoint() + 1;
+    public static final int MAP_PLANES = Position.HEIGHT_LEVELS.upperEndpoint();
 
     /**
      * Gets a smart.

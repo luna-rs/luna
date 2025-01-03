@@ -1,8 +1,11 @@
 package io.luna.game.model.mob.bot;
 
+import api.bot.SuspendableFuture;
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
+import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
@@ -27,9 +30,7 @@ import io.luna.net.msg.in.ItemOnObjectMessageReader;
 import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
 import io.luna.net.msg.in.ObjectClickMessageReader;
-import io.luna.net.msg.in.PickupItemMessageReader;
 import io.luna.net.msg.in.PlayerClickMessageReader;
-import io.luna.net.msg.in.WalkingMessageReader;
 import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +53,9 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class BotMessageHandler {
 
+// TODO split up into one class for handling read messages, and one 'actionhandler' type class for writes
+    // TODO everything in this class should return suspendablefuture for coroutines
+    // todo documentaition
     /**
      * An enum representing chat color.
      */
@@ -272,9 +276,9 @@ public final class BotMessageHandler {
      *
      * @param client The bot client instance.
      */
-    public BotMessageHandler(BotClient client) {
+    public BotMessageHandler(BotClient client, Bot bot) {
         this.client = client;
-        bot = client.getBot();
+        this.bot = bot;
     }
 
     /**
@@ -346,6 +350,40 @@ public final class BotMessageHandler {
         return Collections.unmodifiableList(receivedMessages);
     }
 
+// todo convert to java
+   /* public SuspendableFuture depositItem(Item item) {
+        SuspendableFuture future = new SuspendableFuture();
+        if (bot.getBank().isOpen()) {
+
+    .filter {
+                widgetId == 5064 && plr.bank.isOpen
+            }
+    .then {
+                deposit(this, 1)
+            }
+            return future;
+        } else {
+            return future.signal(false);
+        }
+    }*/
+    /**
+     * Sends the packets required to deposit all items on {@code inventoryIndex}.
+     *
+     * @param inventoryIndex The index to deposit all items on.
+     * @return The future result.
+     */
+    public SuspendableFuture depositAll(int inventoryIndex) {
+        if (bot.getBank().isOpen()) {
+            int itemId = bot.getInventory().computeIdForIndex(inventoryIndex).orElse(-1);
+            if (itemId == -1) {
+                return new SuspendableFuture().signal(false);
+            }
+            return sendItemWidgetClick(4, inventoryIndex, 5064, itemId);
+        } else {
+            return new SuspendableFuture().signal(false);
+        }
+    }
+
     /**
      * Sends the {@link DesignPlayerMessageReader} packet. Will send a random appearance.
      */
@@ -379,28 +417,6 @@ public final class BotMessageHandler {
      */
     public UseItemInteraction sendUseItemInteraction(int inventoryIndex) {
         return new UseItemInteraction(inventoryIndex);
-    }
-
-    /**
-     * Sends the {@link WalkingMessageReader} packet.
-     *
-     * @param x The local {@code x} coordinate.
-     * @param y The local {@code y} coordinate.
-     */
-    public void sendWalk(int x, int y) {
-        Position walkPosition = new Position(x, y, bot.getPosition().getZ());
-        sendWalk(walkPosition);
-    }
-
-    /**
-     * Sends the {@link WalkingMessageReader} packet.
-     *
-     * @param first The first position.
-     * @param other The other positions.
-     */
-    public void sendWalk(Position first, Position... other) {
-        // TODO send actual packet
-        bot.getWalking().walk(first, other);
     }
 
     /**
@@ -466,6 +482,7 @@ public final class BotMessageHandler {
      * @param text The text to chat.
      */
     public void chat(String text) {
+        // TODO not working
         chat(ChatColor.YELLOW, ChatEffect.NONE, text);
     }
 
@@ -477,6 +494,7 @@ public final class BotMessageHandler {
      * @param text The text to chat.
      */
     public void chat(ChatColor color, ChatEffect effect, String text) {
+        // TODO not working
         ByteMessage msg = ByteMessage.raw();
         msg.put(color.id, ValueType.NEGATE);
         msg.put(effect.id, ValueType.ADD);
@@ -501,10 +519,11 @@ public final class BotMessageHandler {
      * @param option The option to select, between 1 and 5.
      * @return {@code true} if successfully sent.
      */
-    public boolean sendDialogueOption(int option) {
+    public SuspendableFuture sendDialogueOption(int option) {
+        SuspendableFuture future = new SuspendableFuture();
         StandardInterface inter = bot.getInterfaces().standardTo(OptionDialogueInterface.class).orElse(null);
         if (inter == null) {
-            return false;
+            return future.signal(false);
         }
         switch (inter.unsafeGetId()) {
             case 14443:
@@ -548,7 +567,7 @@ public final class BotMessageHandler {
                 }
                 break;
         }
-        return true;
+        return future;
     }
 
     /**
@@ -567,11 +586,12 @@ public final class BotMessageHandler {
      *
      * @param option The interaction option, between 1-5.
      * @param localNpc The target npc.
-     * @return {@code true} if successfully sent.
+     * \     * @return {@code true} if successfully sent.
      */
-    public boolean sendNpcInteraction(int option, Npc localNpc) {
+    public SuspendableFuture sendNpcInteraction(int option, Npc localNpc) {
+        SuspendableFuture future = new SuspendableFuture();
         if (!bot.getPosition().isViewable(localNpc)) {
-            return false;
+            return future.signal(false);
         }
         checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
         int index = localNpc.getIndex();
@@ -601,7 +621,68 @@ public final class BotMessageHandler {
                 break;
         }
         client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
-        return true;
+        return future;
+    }
+
+    public SuspendableFuture sendItemWidgetClick(int option, int index, int widgetId, int itemId) {
+        SuspendableFuture future = new SuspendableFuture();
+        checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
+
+        ByteMessage msg = ByteMessage.raw();
+        int opcode = -1;
+        switch (option) {
+            case 1:
+                msg.putShort(itemId, ValueType.ADD);
+                msg.putShort(widgetId);
+                msg.putShort(index);
+                opcode = 3;
+                break;
+            case 2:
+                msg.putShort(index, ValueType.ADD);
+                msg.putShort(itemId, ByteOrder.LITTLE);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
+                opcode = 177;
+                break;
+            case 3:
+                msg.putShort(itemId, ByteOrder.LITTLE);
+                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(widgetId);
+                opcode = 91;
+                break;
+            case 4:
+                msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(index, ByteOrder.LITTLE);
+                msg.putShort(itemId);
+                opcode = 231;
+                break;
+            case 5:
+                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(widgetId, ByteOrder.LITTLE);
+                opcode = 158;
+                break;
+        }
+        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
+        return future;
+    }
+
+    public SuspendableFuture walk(Position target) {
+        //TODO how far is too far?
+        SuspendableFuture future = new SuspendableFuture();
+        bot.getWalking().walk(target);
+        return future;
+    }
+
+    public SuspendableFuture walk(Entity target) {        //TODO how far is too far?
+        SuspendableFuture future = new SuspendableFuture();
+        bot.getWalking().walk(target);
+        return future;
+    }
+
+    public SuspendableFuture walkBehind(Mob target) {        //TODO how far is too far?
+        SuspendableFuture future = new SuspendableFuture();
+        bot.getWalking().walkBehind(target);
+        return future;
     }
 
     /**
@@ -632,15 +713,27 @@ public final class BotMessageHandler {
     }
 
     /**
+     * Sends the {@link ContinueDialogueMessageReader} packet.
+     */
+    public SuspendableFuture sendContinueAllDialogue() {
+        SuspendableFuture future = new SuspendableFuture();
+        ByteMessage msg = ByteMessage.raw();
+        msg.putShort(0);
+        client.queueSimulated(new GameMessage(226, MessageType.FIXED, msg));
+        return future;
+    }
+
+    /**
      * Sends one of the {@link ObjectClickMessageReader} packets.
      *
      * @param option The interaction option, between 1-3
      * @param localObject The target object.
      * @return {@code true} if successfully sent.
      */
-    public boolean sendObjectInteraction(int option, GameObject localObject) {
+    public SuspendableFuture sendObjectInteraction(int option, GameObject localObject) {
+        SuspendableFuture future = new SuspendableFuture();
         if (!bot.getPosition().isViewable(localObject)) {
-            return false;
+            return future.signal(false);
         }
         checkArgument(option >= 1 && option <= 3, "[option] must be between 1 and 3.");
         int x = localObject.getPosition().getX();
@@ -670,7 +763,7 @@ public final class BotMessageHandler {
                 break;
         }
         client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
-        return true;
+        return future;
     }
 
     /**

@@ -1,10 +1,16 @@
 package io.luna.game.model.chunk;
 
+import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
+import io.luna.game.model.World;
+import io.luna.game.model.collision.CollisionMatrix;
+import io.luna.game.model.collision.CollisionUpdate;
+import io.luna.game.model.collision.CollisionUpdateType;
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.GameMessageWriter;
+import io.luna.game.model.object.GameObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -19,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
+import static io.luna.game.model.chunk.Chunk.SIZE;
 
 /**
  * A model containing {@link Entity} types that exist within a {@link Chunk} on the Runescape map. Every chunk is
@@ -27,7 +34,9 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public final class ChunkRepository implements Iterable<Entity> {
+// TODO documentation, clean up
 
+    private final World world;
     /**
      * This chunk's position.
      */
@@ -44,11 +53,18 @@ public final class ChunkRepository implements Iterable<Entity> {
     private final List<ChunkUpdatableRequest> pendingUpdates = new ArrayList<>();
 
     /**
+     * The {@link CollisionMatrix} for this chunk.
+     */
+    private final CollisionMatrix[] matrices = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS.upperEndpoint(),
+            SIZE, SIZE);
+
+    /**
      * Creates a new {@link ChunkRepository}.
      *
      * @param chunk The chunk this repository is holding entities for.
      */
-    ChunkRepository(Chunk chunk) {
+    ChunkRepository(World world, Chunk chunk) {
+        this.world = world;
         this.chunk = chunk;
         entities = new EnumMap<>(EntityType.class);
         for (EntityType type : EntityType.ALL) {
@@ -77,6 +93,23 @@ public final class ChunkRepository implements Iterable<Entity> {
     @Override
     public Iterator<Entity> iterator() {
         return entities.values().stream().flatMap(Collection::stream).iterator();
+    }
+
+
+    public void updateCollisionMap(Entity entity, boolean removal) {
+        if (entity.getType() != EntityType.OBJECT) {
+            return;
+        }
+
+        CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
+        if (!removal) {
+            builder.type(CollisionUpdateType.ADDING);
+        } else {
+            builder.type(CollisionUpdateType.REMOVING);
+        }
+
+        builder.object((GameObject) entity);
+        world.getCollisionManager().apply(builder.build());
     }
 
     /**
@@ -166,5 +199,24 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public Chunk getChunk() {
         return chunk;
+    }
+
+    public void clear() {
+        entities.clear();
+    }
+
+    public Map<EntityType, Set<Entity>> getAll() {
+        return entities;
+    }
+
+    public CollisionMatrix[] getMatrices() {
+        return matrices;
+    }
+
+    public boolean traversable(Position next, EntityType type, Direction direction) {
+        CollisionMatrix matrix = matrices[next.getZ()];
+        int x = next.getX(), y = next.getY();
+
+        return !matrix.untraversable(x % SIZE, y % SIZE, type, direction);
     }
 }
