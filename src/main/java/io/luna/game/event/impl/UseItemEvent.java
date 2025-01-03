@@ -1,6 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.Entity;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
@@ -202,6 +203,44 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
          */
         public Player getTargetPlayer() {
             return targetPlayer;
+        }
+    }
+
+    /**
+     * An event sent when a player uses an item on a ground item.
+     *
+     * @author lare96
+     */
+    public static final class ItemOnGroundItemEvent extends UseItemEvent implements InteractableEvent {
+
+        /**
+         * The ground item that was used on.
+         */
+        private final GroundItem groundItem;
+
+        /**
+         * Creates a new {@link ItemOnGroundItemEvent}.
+         *
+         * @param player the player
+         * @param usedItemId The used item identifier.
+         * @param usedItemIndex The used item index.
+         * @param usedItemInterface The used item interface identifier.
+         */
+        public ItemOnGroundItemEvent(Player player, int usedItemId, int usedItemIndex, int usedItemInterface, GroundItem groundItem) {
+            super(player, usedItemId, usedItemIndex, usedItemInterface);
+            this.groundItem = groundItem;
+        }
+
+        @Override
+        public Entity target() {
+            return groundItem;
+        }
+
+        /**
+         * @return The ground item that was used on.
+         */
+        public GroundItem getGroundItem() {
+            return groundItem;
         }
     }
 
