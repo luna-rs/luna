@@ -1,4 +1,4 @@
-package world.player.emote
+package world.player.settings.emote
 
 import api.plugin.dsl.plugin
 

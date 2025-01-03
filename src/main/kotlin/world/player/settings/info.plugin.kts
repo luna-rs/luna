@@ -1,6 +1,6 @@
 package world.player.settings
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Settings"
