@@ -20,7 +20,7 @@ class AioBotScript(bot: Bot) : BotScript(bot) {
 
     override fun start(): Boolean {
         // Teleport bot to a random region, for the sake of the example.
-        bot.teleport(ctx.cache.mapIndexTable.allRegions.random().basePosition)
+        bot.teleport(ctx.cache.mapIndexTable.allRegions.random().absPosition)
         return true
     }
 

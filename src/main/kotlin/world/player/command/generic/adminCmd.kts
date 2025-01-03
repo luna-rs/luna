@@ -35,7 +35,7 @@ cmd("addxp", RIGHTS_ADMIN) {
  */
 cmd("region", RIGHTS_ADMIN) {
     val id = asInt(0)
-    val pos = Region(id).basePosition
+    val pos = Region(id).absPosition
     plr.teleport(pos)
 }
 
