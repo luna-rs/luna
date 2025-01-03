@@ -19,17 +19,17 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
     private final int soundId;
 
     /**
-     * ???
+     * The sound radius.
      */
-    private final int radius; // loops? delay?
+    private final int radius;
 
     /**
-     * ???
+     * The sound volume.
      */
-    private final int type; // loops? delay?
+    private final int volume;
 
     /**
-     * The offset.
+     * The position offset.
      */
     private final int offset;
 
@@ -37,14 +37,14 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
      * Creates a new {@link AddLocalSoundMessageWriter}.
      *
      * @param soundId The sound ID.
-     * @param radius ???
-     * @param type ???
+     * @param radius The sound radius.
+     * @param volume The sound volume.
      * @param offset The offset.
      */
-    public AddLocalSoundMessageWriter(int soundId, int radius, int type, int offset) {
+    public AddLocalSoundMessageWriter(int soundId, int radius, int volume, int offset) {
         this.soundId = soundId;
         this.radius = radius;
-        this.type = type;
+        this.volume = volume;
         this.offset = offset;
     }
 
@@ -53,7 +53,7 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
         ByteMessage msg = ByteMessage.message(41);
         msg.put(offset);
         msg.putShort(soundId, ByteOrder.BIG);
-        msg.put((radius << 4) + (type & 7));
+        msg.put((radius << 4) + (volume & 7));
         return msg;
     }
 }
