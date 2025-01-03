@@ -10,7 +10,6 @@ import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
-import world.player.command.cmd
 
 /**
  * Spawn an item.
