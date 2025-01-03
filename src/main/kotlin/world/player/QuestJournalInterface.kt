@@ -1,4 +1,4 @@
-package api.inter
+package world.player
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.StandardInterface
@@ -7,21 +7,21 @@ import java.util.*
 /**
  * A [StandardInterface] implementation representing the quest journal interface.
  *
- * @author lare96 <http://github.com/lare96>
+ * @author lare96 
  */
-class QuestJournalInterface(val title: String) : StandardInterface(8134) {
+class QuestJournalInterface(private val title: String) : StandardInterface(8134) {
 
     companion object {
 
         /**
          * The title line id.
          */
-        val TITLE_LINE = 8144
+        const val TITLE_LINE = 8144
 
         /**
          * The first line id.
          */
-        val FIRST_LINE = 8145
+        const val FIRST_LINE = 8145
 
         /**
          * Subsequent line ids.
@@ -65,6 +65,9 @@ class QuestJournalInterface(val title: String) : StandardInterface(8134) {
      * Adds a line to be displayed.
      */
     fun addLine(obj: Any) {
+        if(size == 100) { // TODO throw exception?
+            return
+        }
         lines.add(obj)
         size++
     }

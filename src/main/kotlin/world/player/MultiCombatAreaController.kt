@@ -1,4 +1,4 @@
-package world.controller
+package world.player
 
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.Area
