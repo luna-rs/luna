@@ -1,6 +1,7 @@
 package world.player.inter.makeItem
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 
@@ -36,9 +37,9 @@ fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogueInterface, action: Ma
 
     // Because 1 and 3 use the same interface, but different indexes.
     fun checkLength() {
-        when {
-            inter.length == 1 -> action.index = 0
-            inter.length == 3 -> action.index = 1
+        when (inter.length) {
+            1 -> action.index = 0
+            3 -> action.index = 1
         }
     }
 

@@ -1,6 +1,6 @@
 package world.player.inter.makeItem
 
-import api.bootstrap.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "'Make item' interface"
@@ -10,5 +10,6 @@ plugin {
         amongst other things.
         """
     version = "1.0"
+    corePlugin = true
     authors += "lare96"
 }
