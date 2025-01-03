@@ -68,12 +68,11 @@ public final class DynamicMapPalette {
         /**
          * The application function of this consumer.
          *
-         * @param palette The underlying palette.
          * @param x The {@code x} slot in the palette.
          * @param y The {@code y} slot in the palette.
          * @param z The {@code z} slot in the palette.
          */
-        void apply(DynamicMapPalette palette, int x, int y, int z);
+        void apply(int x, int y, int z);
     }
 
     /**
@@ -90,7 +89,7 @@ public final class DynamicMapPalette {
         for (int z = 0; z < 4; z++) {
             for (int x = 0; x < 13; x++) {
                 for (int y = 0; y < 13; y++) {
-                    processor.apply(this, x, y, z);
+                    processor.apply(x, y, z);
                 }
             }
         }

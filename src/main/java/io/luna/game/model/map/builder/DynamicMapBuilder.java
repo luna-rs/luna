@@ -7,7 +7,6 @@ import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.map.DynamicMapController;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.controller.ControllerKey;
-import io.luna.net.msg.out.DynamicRegionMessageWriter;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -60,8 +59,7 @@ public final class DynamicMapBuilder {
          * Constructs the {@link DynamicMap} instance based on the supplied settings.
          */
         public DynamicMap build() {
-            DynamicRegionMessageWriter msg = new DynamicRegionMessageWriter(palette);
-            return new DynamicMap(context, baseChunk, palette, controllerKey, msg);
+            return new DynamicMap(context, baseChunk, palette, controllerKey);
         }
     }
 
