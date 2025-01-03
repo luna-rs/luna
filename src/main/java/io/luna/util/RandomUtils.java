@@ -3,8 +3,6 @@ package io.luna.util;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -36,11 +34,7 @@ public final class RandomUtils {
             return false;
         } else if (rational.getNumerator() >= rational.getDenominator()) {
             return true;
-        } else if (ThreadLocalRandom.current().nextInt(0, rational.getDenominator()) < rational.getNumerator()) {
-            return true;
-        } else {
-            return false;
-        }
+        } else return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
     }
 
     /**

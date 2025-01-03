@@ -1,5 +1,6 @@
 package io.luna.util;
 
+import com.google.common.primitives.Ints;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigInteger;
@@ -12,7 +13,21 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * @author lare96
  */
-public final class Rational extends Number implements Comparable<Rational>{
+public final class Rational extends Number implements Comparable<Rational> {
+
+    /**
+     * Creates a new {@link Rational} instance from a double value.
+     *
+     * @param value The double value.
+     * @return The newly created rational value.
+     */
+    public static Rational fromDouble(double value) {
+        String decimalStr = String.valueOf(value);
+        int decimalPlaces = decimalStr.length() - decimalStr.indexOf('.') - 1;
+        long denominator = (long) Math.pow(10, decimalPlaces);
+        long numerator = (long) (value * denominator);
+        return new Rational(value < 0 ? -numerator : numerator, value < 0 ? -denominator : denominator);
+    }
 
     /**
      * A rational number describing an {@code ALWAYS} chance (100%, 1 in 1 chance).
@@ -52,12 +67,12 @@ public final class Rational extends Number implements Comparable<Rational>{
     /**
      * The numerator.
      */
-    private final int numerator;
+    private final long numerator;
 
     /**
      * The denominator.
      */
-    private final int denominator;
+    private final long denominator;
 
     /**
      * Create a {@link Rational}.
@@ -65,7 +80,7 @@ public final class Rational extends Number implements Comparable<Rational>{
      * @param numerator The numerator.
      * @param denominator The denominator.
      */
-    public Rational(int numerator, int denominator) {
+    public Rational(long numerator, long denominator) {
         checkArgument(denominator != 0, "denominator cannot be 0");
 
         if (denominator < 0) {
@@ -91,7 +106,7 @@ public final class Rational extends Number implements Comparable<Rational>{
         }
 
         if (denominator == 1) {
-            return Integer.toString(numerator);
+            return Long.toString(numerator);
         }
 
         return numerator + "/" + denominator;
@@ -138,12 +153,12 @@ public final class Rational extends Number implements Comparable<Rational>{
 
     @Override
     public int intValue() {
-        return numerator / denominator;
+        return Ints.saturatedCast(longValue());
     }
 
     @Override
     public long longValue() {
-        return intValue();
+        return numerator / denominator;
     }
 
     @Override
@@ -172,10 +187,10 @@ public final class Rational extends Number implements Comparable<Rational>{
      * @return The new rational.
      */
     public Rational add(Rational other) {
-        int commonDenominator = denominator * other.denominator;
-        int numeratorOne = numerator * other.denominator;
-        int numeratorTwo = other.numerator * denominator;
-        int numeratorSum = numeratorOne + numeratorTwo;
+        long commonDenominator = denominator * other.denominator;
+        long numeratorOne = numerator * other.denominator;
+        long numeratorTwo = other.numerator * denominator;
+        long numeratorSum = numeratorOne + numeratorTwo;
 
         return new Rational(numeratorSum, commonDenominator);
     }
@@ -187,10 +202,10 @@ public final class Rational extends Number implements Comparable<Rational>{
      * @return The new rational.
      */
     public Rational subtract(Rational other) {
-        int commonDenominator = denominator * other.denominator;
-        int numeratorOne = numerator * other.denominator;
-        int numeratorTwo = other.numerator * denominator;
-        int numeratorDifference = numeratorOne - numeratorTwo;
+        long commonDenominator = denominator * other.denominator;
+        long numeratorOne = numerator * other.denominator;
+        long numeratorTwo = other.numerator * denominator;
+        long numeratorDifference = numeratorOne - numeratorTwo;
 
         return new Rational(numeratorDifference, commonDenominator);
     }
@@ -202,8 +217,8 @@ public final class Rational extends Number implements Comparable<Rational>{
      * @return The new rational.
      */
     public Rational multiply(Rational other) {
-        int n = numerator * other.numerator;
-        int d = denominator * other.denominator;
+        long n = numerator * other.numerator;
+        long d = denominator * other.denominator;
 
         return new Rational(n, d);
     }
@@ -224,7 +239,7 @@ public final class Rational extends Number implements Comparable<Rational>{
      * @param numeratorOne The first numerator.
      * @param numeratorTwo The second numerator.
      */
-    private int gcd(int numeratorOne, int numeratorTwo) {
+    private int gcd(long numeratorOne, long numeratorTwo) {
         BigInteger numOne = BigInteger.valueOf(numeratorOne);
         BigInteger numTwo = BigInteger.valueOf(numeratorTwo);
         return numOne.gcd(numTwo).intValue();
@@ -233,14 +248,14 @@ public final class Rational extends Number implements Comparable<Rational>{
     /**
      * @return The numerator.
      */
-    public int getNumerator() {
+    public long getNumerator() {
         return numerator;
     }
 
     /**
      * @return The denominator.
      */
-    public int getDenominator() {
+    public long getDenominator() {
         return denominator;
     }
 
