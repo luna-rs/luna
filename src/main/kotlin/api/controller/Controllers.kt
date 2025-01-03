@@ -2,8 +2,8 @@ package api.controller
 
 import io.luna.game.model.mob.controller.ControllerKey
 import io.luna.game.model.mob.controller.PlayerController
-import world.controller.MultiCombatAreaController
-import world.controller.wilderness.WildernessAreaController
+import world.player.MultiCombatAreaController
+import world.player.wilderness.WildernessAreaController
 import kotlin.reflect.KClass
 
 /* All controller properties go here. */

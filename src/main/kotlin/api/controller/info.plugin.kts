@@ -1,6 +1,6 @@
 package api.controller
 
-import api.plugin.plugin
+import api.plugin.dsl.plugin
 
 plugin {
     name = "Controllers"
