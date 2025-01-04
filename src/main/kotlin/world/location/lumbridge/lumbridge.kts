@@ -73,7 +73,7 @@ npc1(3) {
 }
 
 fun manDialogue(plr: Player, targetNpc: Npc) {
-    val random = rand(2)
+    val random = rand(4)
     when (random) {
         0 -> {plr.newDialogue()
                 .player("Hello. How's it going?")
@@ -106,6 +106,100 @@ fun manDialogue(plr: Player, targetNpc: Npc) {
                 .npc(targetNpc.id, "I'm fine, how are you?")
                 .player("Very well thank you.")
                 .open()}
+        3 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "Who are you?")
+            .player("I'm a bold adventurer.")
+            .npc(targetNpc.id, "Ah, a very noble profession.")
+            .open()}
+        4 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "I'm busy right now.")
+            .open()}
+    }
+}
+
+// Women dialogue
+npc1(4) {
+    womenDialogue(plr, targetNpc)
+}
+npc1(5) {
+    womenDialogue(plr, targetNpc)
+}
+
+fun womenDialogue(plr: Player, targetNpc: Npc) {
+    val random = rand(11)
+    when (random) {
+        0 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, Expression.ANGRY, "Get out of my way, I'm in a hurry!")
+                .open()}
+        1 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "Who are you?")
+                .player("I'm a bold adventurer.")
+                .npc(targetNpc.id, "Ah, a very noble profession.")
+                .open()}
+        2 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "I'm fine, how are you?")
+                .player("Very well thank you.")
+                .open()}
+        3 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "How can I help you?")
+                .options("Do you wish to trade?", {
+                    plr.newDialogue()
+                        .player("Do you wish to trade?")
+                        .npc(targetNpc.id, "No, I have nothing I wish to get rid of. If you want to", "do some trading, there are plenty of shops and market", "stalls around though.")
+                        .open()
+                },
+                    "I'm in search of a quest.", {
+                        plr.newDialogue()
+                            .player("I'm in search of a quest.")
+                            .npc(targetNpc.id, "I'm sorry, I can't help you there.")
+                            .open()
+                    },
+                    "I'm in search of enemies to kill.", {
+                        plr.newDialogue()
+                            .player("I'm in search of enemies to kill.")
+                            .npc(targetNpc.id, "I've heard there are many fearsome creatures that", "dwell under the ground...")
+                            .open()
+                    })
+                .open()}
+        4 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "Not too bad, but I'm a little bit worried about the increase", "of goblins these days.")
+                .player("Don't worry, I'll kill them.")
+                .open()}
+        5 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "A little worried - I've heard there's lots of people", "going about, killing citizens at random.")
+            .open()}
+        6 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "I think we need a new king. The one we've got isn't", "very good.")
+            .open()}
+        7 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, Expression.ANGRY, "No, I don't want to buy anything!")
+            .open()}
+        8 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "Not too bad thanks.")
+            .open()}
+        9 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "Hello there! Nice weather we've been heaving.")
+            .open()}
+        10 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "Yo, wassup!")
+            .open()}
+        11 -> {plr.newDialogue()
+            .player("Hello. How's it going?")
+            .npc(targetNpc.id, "I'm very well thank you.")
+            .open()}
     }
 }
 
@@ -135,4 +229,14 @@ on(ServerLaunchEvent::class) {
         id = 2,
         x = 3235,
         y = 3219)
+
+    // Women
+    world.addNpc(
+        id = 4,
+        x = 3236,
+        y = 3207)
+    world.addNpc(
+        id = 5,
+        x = 3240,
+        y = 3218)
 }
