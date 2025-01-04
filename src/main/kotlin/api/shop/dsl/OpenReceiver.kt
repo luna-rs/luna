@@ -15,7 +15,7 @@ class OpenReceiver {
     // These properties are mapped to functions in EventPredef.kt with the same name.
     var button: Int? = null
     var npc1: Int? = null
-    var npc2: Int? = null
+    var npc2: IntArray? = null
     var npc3: Int? = null
     var npc4: Int? = null
     var npc5: Int? = null
@@ -31,7 +31,7 @@ class OpenReceiver {
         when {
             button != null -> button(button!!, open)
             npc1 != null -> npc1(npc1!!, open)
-            npc2 != null -> npc2(npc2!!, open)
+            npc2 != null -> npc2!!.forEach { npc2(it, open) }
             npc3 != null -> npc3(npc3!!, open)
             npc4 != null -> npc4(npc4!!, open)
             npc5 != null -> npc5(npc5!!, open)

@@ -29,7 +29,7 @@ ShopHandler.create("General Store") {
     }
 
     open {
-        npc2 = 520
+        npc2 = intArrayOf(520, 521)
     }
 }
 
@@ -43,10 +43,23 @@ npc1(520) {
 }
 
 /**
+ * Dialogue for "Talk" option.
+ */
+npc1(521) {
+    plr.newDialogue()
+        .npc(targetNpc.id, "I'm the assistant!")
+        .then { it.interfaces.openShop("General Store") }.open()
+}
+
+/**
  * Spawn general store NPC.
  */
 on(ServerLaunchEvent::class) {
     world.addNpc(id = 520,
                  x = 3091,
                  y = 3250)
+    world.addNpc(
+        id = 521,
+        x = 3090,
+        y = 3250)
 }
