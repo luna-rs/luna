@@ -14,6 +14,49 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mob.dialogue.Expression
 import world.player.advanceLevel.LevelUpInterface
 
+ShopHandler.create("Bob's Brilliant Axes.") {
+    buy = BuyPolicy.EXISTING
+    restock = RestockPolicy.FAST
+    currency = Currency.COINS
+
+    sell {
+        "Bronze pickaxe" x 5
+        "Bronze axe" x 10
+        "Iron axe" x 5
+        "Steel axe" x 3
+        "Iron battleaxe" x 5
+        "Steel battleaxe" x 2
+        "Mithril battleaxe" x 1
+    }
+
+    open {
+        npc2 += 519
+    }
+}
+
+npc1(519) {
+    plr.newDialogue()
+        .options("Give me a quest!", {
+            plr.newDialogue()
+                .npc(targetNpc.id, Expression.ANGRY, "Get yer own!")
+                .open();
+        },
+            "Have you anything to sell?", {
+                plr.newDialogue()
+                    .player("Have you anything to sell?")
+                    .npc(targetNpc.id, "Yes! I buy and sell axes! Take your pick (or axe)!")
+                    .then { it.interfaces.openShop("Bob's Brilliant Axes.") }
+                    .open()
+            },
+            "Can you repair my items for me?", {
+                plr.newDialogue()
+                    .player("Can you reapri my items for me?")
+                    .npc(targetNpc.id, "Of course I'll repair it, though the materials may cost", "you. Just hand me the item and I'll have a look.")
+                    .open()
+            })
+        .open()
+}
+
 npc1(520) {
     plr.newDialogue()
         .npc(targetNpc.id, "Hi, here's what I have in stock for today!")
@@ -219,6 +262,12 @@ on(ServerLaunchEvent::class) {
         id = 0,
         x = 3221,
         y = 3224)
+
+    // Bob
+    world.addNpc(
+        id = 519,
+        x = 3231,
+        y = 3203)
 
     // Men
     world.addNpc(
