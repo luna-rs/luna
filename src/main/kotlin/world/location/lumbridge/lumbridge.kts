@@ -7,7 +7,12 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.shop.BuyPolicy
 import io.luna.game.model.item.shop.Currency
 import io.luna.game.model.item.shop.RestockPolicy
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mob.dialogue.Expression
+import world.player.advanceLevel.LevelUpInterface
 
 npc1(520) {
     plr.newDialogue()
@@ -54,6 +59,54 @@ npc1(0) {
                     .open()
             })
         .open()
+}
+
+// Man dialogue
+npc1(1) {
+    manDialogue(plr, targetNpc)
+}
+npc1(2) {
+    manDialogue(plr, targetNpc)
+}
+npc1(3) {
+    manDialogue(plr, targetNpc)
+}
+
+fun manDialogue(plr: Player, targetNpc: Npc) {
+    val random = rand(2)
+    when (random) {
+        0 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, Expression.ANGRY, "Get out of my way, I'm in a hurry!")
+                .open()}
+        1 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "How can I help you?")
+                .options("Do you wish to trade?", {
+                    plr.newDialogue()
+                        .player("Do you wish to trade?")
+                        .npc(targetNpc.id, "No, I have nothing I wish to get rid of. If you want to", "do some trading, there are plenty of shops and market", "stalls around though.")
+                        .open()
+                },
+                    "I'm in search of a quest.", {
+                        plr.newDialogue()
+                            .player("I'm in search of a quest.")
+                            .npc(targetNpc.id, "I'm sorry, I can't help you there.")
+                            .open()
+                    },
+                    "I'm in search of enemies to kill.", {
+                        plr.newDialogue()
+                            .player("I'm in search of enemies to kill.")
+                            .npc(targetNpc.id, "I've heard there are many fearsome creatures that", "dwell under the ground...")
+                            .open()
+                    })
+                .open()}
+        2 -> {plr.newDialogue()
+                .player("Hello. How's it going?")
+                .npc(targetNpc.id, "I'm fine, how are you?")
+                .player("Very well thank you.")
+                .open()}
+    }
 }
 
 on(ServerLaunchEvent::class) {
