@@ -278,6 +278,10 @@ on(ServerLaunchEvent::class) {
         id = 2,
         x = 3235,
         y = 3219)
+    world.addNpc(
+        id = 1,
+        x = 3236,
+        y = 3199)
 
     // Women
     world.addNpc(
@@ -288,4 +292,8 @@ on(ServerLaunchEvent::class) {
         id = 5,
         x = 3240,
         y = 3218)
+    world.addNpc(
+        id = 5,
+        x = 3236,
+        y = 3203)
 }
