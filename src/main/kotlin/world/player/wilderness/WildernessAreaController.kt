@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.event.impl.ControllableEvent
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
+import world.player.wilderness.WildernessAreaController.wildernessLevel
 
 /**
  * A [PlayerLocationController] implementation for wilderness areas.
@@ -50,16 +51,15 @@ object WildernessAreaController : PlayerLocationController() {
     }
 
     override fun computeLocations(): ImmutableSet<Location> = ImmutableSet.of(
-            Area.of(2041, 3519, 3392, 3966)
+        Area.of(2041, 3519, 3392, 3966)
     )
 
     override fun onPlayerEvent(player: Player, event: ControllableEvent): Boolean {
-        if (event is CommandEvent) {
-            if (player.wildernessLevel >= 20 && TELEPORT_COMMANDS.contains(event.name)) {
-                player.sendMessage("You cannot use this when above wilderness level 20!") // TODO actual message
-                // TODO test and disable for admin+
-                return false
-            }
+        if(player.rights >= RIGHTS_ADMIN)
+            return true
+        if(event is CommandEvent && TELEPORT_COMMANDS.contains(event.name) && !canTeleport(player)) {
+            // Block teleport commands after level 20 wilderness.
+            return false
         }
         return true
     }
@@ -73,5 +73,17 @@ object WildernessAreaController : PlayerLocationController() {
         plr.wildernessLevel = newLevel
         plr.sendText("@yel@Level: $newLevel", 199)
         return newLevel
+    }
+
+    /**
+     * Determines if the player can teleport.
+     */
+    private fun canTeleport(plr: Player): Boolean {
+        if (plr.wildernessLevel >= 20) {
+            plr.sendMessage("A mysterious force blocks your teleport spell!")
+            plr.sendMessage("You can't use this teleport after level 20 wilderness.")
+            return false
+        }
+        return true
     }
 }
