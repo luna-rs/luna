@@ -13,31 +13,29 @@ import io.luna.game.model.item.shop.ShopInterface
 class OpenReceiver {
 
     // These properties are mapped to functions in EventPredef.kt with the same name.
-    var button: Int? = null
-    var npc1: Int? = null
-    var npc2: IntArray? = null
-    var npc3: Int? = null
-    var npc4: Int? = null
-    var npc5: Int? = null
-    var object1: Int? = null
-    var object2: Int? = null
-    var object3: Int? = null
+    val button: ArrayList<Int> = ArrayList(4)
+    val npc1: ArrayList<Int> = ArrayList(4)
+    val npc2: ArrayList<Int> = ArrayList(4)
+    val npc3: ArrayList<Int> = ArrayList(4)
+    val npc4: ArrayList<Int> = ArrayList(4)
+    val npc5: ArrayList<Int> = ArrayList(4)
+    val object1: ArrayList<Int> = ArrayList(4)
+    val object2: ArrayList<Int> = ArrayList(4)
+    val object3: ArrayList<Int> = ArrayList(4)
 
     /**
      * Maps all properties to their respective event listeners.
      */
     fun addListeners(shop: Shop) {
         val open: PlayerEvent.() -> Unit = { plr.interfaces.open(ShopInterface(shop)) }
-        when {
-            button != null -> button(button!!, open)
-            npc1 != null -> npc1(npc1!!, open)
-            npc2 != null -> npc2!!.forEach { npc2(it, open) }
-            npc3 != null -> npc3(npc3!!, open)
-            npc4 != null -> npc4(npc4!!, open)
-            npc5 != null -> npc5(npc5!!, open)
-            object1 != null -> object1(object1!!, open)
-            object2 != null -> object2(object2!!, open)
-            object3 != null -> object3(object3!!, open)
-        }
+        button.forEach { button(it, open) }
+        npc1.forEach { npc1(it, open) }
+        npc2.forEach { npc2(it, open) }
+        npc3.forEach { npc3(it, open) }
+        npc4.forEach { npc4(it, open) }
+        npc5.forEach { npc5(it, open) }
+        object1.forEach { object1(it, open) }
+        object2.forEach { object2(it, open) }
+        object3.forEach { object3(it, open) }
     }
 }
