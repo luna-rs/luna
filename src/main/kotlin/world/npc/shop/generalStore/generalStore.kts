@@ -29,7 +29,7 @@ ShopHandler.create("General Store") {
     }
 
     open {
-        npc2 = 520
+        npc2 += 520
     }
 }
 
