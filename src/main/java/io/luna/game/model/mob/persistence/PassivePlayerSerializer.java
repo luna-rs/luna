@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.LunaContext;
+import io.luna.game.model.World;
 
 import java.util.Set;
 
@@ -11,32 +11,23 @@ import java.util.Set;
  */
 public final class PassivePlayerSerializer extends PlayerSerializer {
 
-    /**
-     * Creates a new {@link PassivePlayerSerializer}.
-     *
-     * @param context The context.
-     */
-    public PassivePlayerSerializer(LunaContext context) {
-        super(context);
-    }
-
     @Override
-    public PlayerData load(String username) throws Exception {
+    public PlayerData load(World world, String username) throws Exception {
         return null;
     }
 
     @Override
-    public void save(String username, PlayerData data) throws Exception {
+    public void save(World world, String username, PlayerData data) throws Exception {
 
     }
 
     @Override
-    public Set<String> loadBotUsernames() throws Exception {
+    public Set<String> loadBotUsernames(World world) throws Exception {
         return Set.of();
     }
 
     @Override
-    public boolean delete(String username) throws Exception {
+    public boolean delete(World world, String username) throws Exception {
         return false;
     }
 }

@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.LunaContext;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.Attribute;
 import io.luna.util.SqlConnectionPool;
@@ -38,12 +38,11 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     /**
      * Creates a new {@link SqlPlayerSerializer}.
      */
-    public SqlPlayerSerializer(LunaContext context) throws SQLException {
-        super(context);
+    public SqlPlayerSerializer() throws SQLException {
     }
 
     @Override
-    public PlayerData load(String username) throws Exception {
+    public PlayerData load(World world, String username) throws Exception {
         PlayerData data = null;
         try (var connection = connectionPool.take();
              var loadData = connection.prepareStatement("SELECT json_data FROM main_data WHERE username = ?;")) {
@@ -62,7 +61,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     }
 
     @Override
-    public void save(String username, PlayerData data) throws Exception {
+    public void save(World world, String username, PlayerData data) throws Exception {
         try (var connection = connectionPool.take()) {
             connection.setAutoCommit(false);
             try {
@@ -80,7 +79,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     }
 
     @Override
-    public Set<String> loadBotUsernames() throws Exception {
+    public Set<String> loadBotUsernames(World world) throws Exception {
         Set<String> names = new HashSet<>();
         try (Connection connection = connectionPool.take();
              PreparedStatement loadData = connection.prepareStatement("SELECT username FROM main_data WHERE bot = 1;")) {
@@ -96,7 +95,7 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
     }
 
     @Override
-    public boolean delete(String username) throws Exception {
+    public boolean delete(World world, String username) throws Exception {
         // TODO Delete skills data
         try (Connection connection = connectionPool.take();
              PreparedStatement loadData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;")) {

@@ -120,7 +120,7 @@ public final class BotRepository implements Iterable<String> {
         if (persistentNames.isEmpty()) {
             try {
                 PlayerSerializerManager serializerManager = world.getSerializerManager();
-                Set<String> loadedNames = serializerManager.getSerializer().loadBotUsernames();
+                Set<String> loadedNames = serializerManager.getSerializer().loadBotUsernames(world);
                 if (!loadedNames.isEmpty()) {
                     persistentNames.addAll(loadedNames);
 

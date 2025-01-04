@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
 import io.luna.Luna;
-import io.luna.LunaContext;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
@@ -10,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A model that creates and manages a {@link PlayerSerializer}, used to load and save important data related to
@@ -28,7 +27,7 @@ public class PlayerSerializerManager {
     /**
      * The default player serializer that will be used if one cannot be computed.
      */
-    private static final Function<LunaContext, PlayerSerializer> DEFAULT = PassivePlayerSerializer::new;
+    private static final Supplier<PlayerSerializer> DEFAULT = PassivePlayerSerializer::new;
 
     /**
      * The world instance.
@@ -62,14 +61,14 @@ public class PlayerSerializerManager {
             String fullName = "io.luna.game.model.mob.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName, type -> {
                 try {
-                    return type.getDeclaredConstructor(LunaContext.class);
+                    return type.getDeclaredConstructor();
                 } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 }
-            }, world.getContext());
+            });
         } catch (ClassCastException e) {
             logger.fatal(new ParameterizedMessage("{} not an instance of PlayerSerializer, using PassivePlayerSerializer instead.", name), e);
-            return DEFAULT.apply(world.getContext());
+            return DEFAULT.get();
         }
     }
 

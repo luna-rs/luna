@@ -136,7 +136,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         return workers.submit(() -> {
             try {
                 Stopwatch timer = Stopwatch.createStarted();
-                world.getSerializerManager().getSerializer().save(request.getUsername(), saveData);
+                world.getSerializerManager().getSerializer().save(world, request.getUsername(), saveData);
                 logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {
                 logger.error(new ParameterizedMessage("Issue servicing {}'s logout request!", username), e);

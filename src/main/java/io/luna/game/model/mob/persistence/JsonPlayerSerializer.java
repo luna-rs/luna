@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.persistence;
 
-import io.luna.LunaContext;
+import io.luna.game.model.World;
 import io.luna.game.model.mob.attr.Attribute;
 
 import java.nio.file.Files;
@@ -32,18 +32,9 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
         }
     }
 
-    /**
-     * Creates a new {@link JsonPlayerSerializer}.
-     *
-     * @param context The context.
-     */
-    public JsonPlayerSerializer(LunaContext context) {
-        super(context);
-    }
-
     @Override
-    public PlayerData load(String username) throws Exception {
-        Path dir = getDir(username);
+    public PlayerData load(World world, String username) throws Exception {
+        Path dir = getDir(world, username);
         Path filePath;
         if (Files.exists(dir)) {
             filePath = dir;
@@ -55,15 +46,19 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
     }
 
     @Override
-    public void save(String username, PlayerData data) throws Exception {
-        Files.writeString(getDir(username), Attribute.getGsonInstance().toJson(data, PlayerData.class));
+    public void save(World world, String username, PlayerData data) throws Exception {
+        Files.writeString(getDir(world, username), Attribute.getGsonInstance().toJson(data, PlayerData.class));
     }
 
     @Override
-    public Set<String> loadBotUsernames() throws Exception {
+    public Set<String> loadBotUsernames(World world) throws Exception {
         Path parentDir = DIR.resolve("saved_bots");
+        if(!Files.exists(parentDir)) {
+            Files.createDirectory(parentDir);
+            return Set.of();
+        }
         try (Stream<Path> pathStream = Files.walk(parentDir)) {
-            return pathStream.
+            return pathStream.filter(it -> !Files.isDirectory(it)).
                     map(Path::getFileName).
                     map(Path::toString).
                     map(it -> it.replace(".json", "")).
@@ -72,8 +67,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
     }
 
     @Override
-    public boolean delete(String username) throws Exception {
-        return Files.deleteIfExists(getDir(username));
+    public boolean delete(World world, String username) throws Exception {
+        return Files.deleteIfExists(getDir(world, username));
     }
 
     /**
@@ -82,8 +77,8 @@ public final class JsonPlayerSerializer extends PlayerSerializer {
      * @param username The username of the player.
      * @return The direct path.
      */
-    private Path getDir(String username) {
-        Path parentDir = context.getWorld().getBots().containsPersistent(username) ?
+    private Path getDir(World world, String username) {
+        Path parentDir = world.getBots().containsPersistent(username) ?
                 DIR.resolve("saved_bots") : DIR.resolve("saved_players");
         String resolveWith = username + ".json";
         return parentDir.resolve(resolveWith);

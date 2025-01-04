@@ -143,7 +143,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             try {
                 var player = request.player;
                 var timer = Stopwatch.createStarted();
-                var loadedData = world.getSerializerManager().getSerializer().load(username);
+                var loadedData = world.getSerializerManager().getSerializer().load(world, username);
                 var response = client.getLoginResponse(loadedData, player.getPassword());
                 if (response == LoginResponse.NORMAL) {
                     request.loadedData = loadedData;
