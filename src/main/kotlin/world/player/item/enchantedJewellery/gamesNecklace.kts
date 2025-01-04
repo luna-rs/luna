@@ -61,5 +61,7 @@ fun degrade(plr: Player, necklaceId: Int, index: Int) {
     val nextNecklace: Int = degration.get(necklaceId) ?: -1
     if (nextNecklace != -1) {
         plr.inventory.add(index ?: 0, Item(nextNecklace, 1))
+    } else {
+        plr.sendMessage("The necklace crumbles to dust.")
     }
 }
