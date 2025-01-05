@@ -2,6 +2,8 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
+import io.luna.game.model.Direction;
+import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcCombatDefinition;
@@ -18,6 +20,7 @@ import java.util.OptionalInt;
  * @author lare96
  */
 public class Npc extends Mob {
+
 
     /**
      * The base identifier. The one the class was created with.
@@ -135,6 +138,58 @@ public class Npc extends Mob {
     @Override
     public void resetTransform() {
         transform(id);
+    }
+
+    /**
+     * Determines if {@code entity} is within the viewing cone of this NPC. This is based on the direction that this
+     * NPC is currently facing. An example of this; if this NPC's back is turned to {@code entity}, this function will return
+     * {@code false}.
+     * <p>
+     * If this NPC is interacting with someone currently, returns {@code false} unless the interacting entity
+     * matches {@code entity}.
+     *
+     * @param entity The entity.
+     * @return {@code true} if the entity can be seen.
+     */
+    public boolean isInViewCone(Entity entity) {
+        // TODO doesnt work, needs more testing
+
+        // Whoever we're interacting with takes priority.
+        if (getInteractingWith().isPresent()) {
+            return getInteractingWith().get().equals(entity);
+        }
+
+        // Get deltas representing where the entity is relative to this NPC.
+        int deltaX = entity.getPosition().getX() - position.getX();
+        int deltaY = entity.getPosition().getY() - position.getY();
+        if (deltaX > 0) {
+            deltaX = 1;
+        } else if (deltaY > 0) {
+            deltaY = 1;
+        } else if (deltaX < 0) {
+            deltaX = -1;
+        } else if (deltaY < 0) {
+            deltaY = -1;
+        }
+
+        // Get the direction that matches the relative direction.
+        // Ie. Entity is to the WEST of this NPC.
+        Direction relativeDir = Direction.NONE;
+        for (Direction dir : Direction.ALL) {
+            if (dir.getTranslation().getX() == deltaX &&
+                    dir.getTranslation().getY() == deltaY) {
+                relativeDir = dir;
+                break;
+            }
+        }
+        if (relativeDir == Direction.NONE) {
+            // On top of the entity, always seen.
+            return true;
+        }
+
+        // If the relative direction is within the NPCs view, return true.
+        Direction lastDir = getLastDirection();
+        return Direction.getAllVisible(lastDir).contains(relativeDir);
     }
 
     /**
