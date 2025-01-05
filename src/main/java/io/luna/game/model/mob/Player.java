@@ -722,14 +722,16 @@ public class Player extends Mob {
     public void sendRegionUpdate(Position oldPosition) {
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
-            if (isInDynamicMap()) {
+           if (isInDynamicMap()) {
                 regionChanged = true;
                 lastRegion = position;
+                // comment ^ above out makes the player appear in a diff place????
                 // todo cache palette? or current dynamic map?>
                 // todo still need to update objects
-                dynamicMap.sendUpdate(this);
+             // dynamicMap.sendUpdate(this);
                 return;
             }
+
             fullRefresh = true;
             regionChanged = true;
             lastRegion = position;

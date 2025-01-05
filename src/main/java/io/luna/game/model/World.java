@@ -332,6 +332,8 @@ public final class World {
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
             }
         }
+
+        chunks.resetUpdatedChunks();
     }
 
     /**
