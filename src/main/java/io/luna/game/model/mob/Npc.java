@@ -152,7 +152,9 @@ public class Npc extends Mob {
      * @return {@code true} if the entity can be seen.
      */
     public boolean isInViewCone(Entity entity) {
-        // TODO doesnt work, needs more testing
+        if (!position.isWithinDistance(entity.getPosition(), Position.VIEWING_DISTANCE / 2)) {
+            return false;
+        }
 
         // Whoever we're interacting with takes priority.
         if (getInteractingWith().isPresent()) {
@@ -164,11 +166,14 @@ public class Npc extends Mob {
         int deltaY = entity.getPosition().getY() - position.getY();
         if (deltaX > 0) {
             deltaX = 1;
-        } else if (deltaY > 0) {
+        }
+        if (deltaY > 0) {
             deltaY = 1;
-        } else if (deltaX < 0) {
+        }
+        if (deltaX < 0) {
             deltaX = -1;
-        } else if (deltaY < 0) {
+        }
+        if (deltaY < 0) {
             deltaY = -1;
         }
 
@@ -182,6 +187,7 @@ public class Npc extends Mob {
                 break;
             }
         }
+
         if (relativeDir == Direction.NONE) {
             // On top of the entity, always seen.
             return true;

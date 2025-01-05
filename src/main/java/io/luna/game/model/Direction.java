@@ -20,7 +20,7 @@ public enum Direction {
     NORTH_EAST(2, new Step(1, 1)),
     WEST(3, new Step(-1, 0)),
     EAST(4, new Step(1, 0)),
-    SOUTH_WEST(5, new Step(-1, 1)),
+    SOUTH_WEST(5, new Step(-1, -1)),
     SOUTH(6, new Step(0, -1)),
     SOUTH_EAST(7, new Step(1, -1));
 // todo cleanup, documentation
