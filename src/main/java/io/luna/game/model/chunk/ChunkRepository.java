@@ -148,6 +148,8 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @return The list of pending updates.
      */
     public List<ChunkUpdatableMessage> getUpdates(Player player) {
+        // todo HUGE issue. this is global but requires to be per player to make sense. maybe two types of updates?
+        // instant and continous
         return pendingUpdates.stream().
                 filter(update -> update.getUpdatable().computeCurrentView().isViewableFor(player)).
                 map(ChunkUpdatableRequest::getMessage).collect(Collectors.toList());
