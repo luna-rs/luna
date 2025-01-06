@@ -1,23 +1,53 @@
 package world.player.skill.magic.lowHighAlch
 
 import api.attr.Attr
+import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Graphic
+import world.player.Animations
+import world.player.Sounds
+import world.player.skill.magic.Magic
+import kotlin.time.times
 
-class AlchemyAction(plr: Player, val type: AlchemyType) : QueuedAction<Player>(plr, plr.alchemyDelay, 5) {
- // todo everything
+/**
+ * A [QueuedAction] that handles the process of players doing low and high alchemy.
+ */
+class AlchemyAction(plr: Player, private val type: AlchemyType, private val inventoryIndex: Int) :
+    QueuedAction<Player>(plr, plr.alchemyDelay, 5) {
+
     companion object {
+
+        /**
+         * The time source attribute for alchemy.
+         */
         val Player.alchemyDelay by Attr.timeSource()
     }
 
     override fun execute() {
-        TODO("Not yet implemented")
-    }
+        if (Magic.checkRequirements(mob, type.level, type.requirements)) {
+            var item = mob.inventory[inventoryIndex] ?: return
+            item = item.withAmount(1)
+            if(item.id == 995) {
+                mob.sendMessage("Coins are already made of gold.")
+                return
+            }
+            val lowAlch = type == AlchemyType.LOW
+            val itemValue = item.itemDef.value
+            val goldAmount = (if (lowAlch) itemValue * 0.4 else itemValue * 0.6).toInt()
+            if (!item.itemDef.isTradeable || itemValue == 0) {
+                mob.sendMessage("You cannot use alchemy on that item.")
+                return
+            }
+            if (mob.inventory.remove(item)) {
+                mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)
+                mob.graphic(if (lowAlch) Graphic(112, 75) else Graphic(113, 75))
+                mob.playSound(if (lowAlch) Sounds.LOW_ALCHEMY else Sounds.HIGH_ALCHEMY)
 
-
-    fun getValue(item: Item, type: AlchemyType): Int = when (type) {
-        AlchemyType.LOW -> item.itemDef.value
-        AlchemyType.HIGH -> item.itemDef.value
+                mob.inventory.add(Item(995, if(goldAmount == 0) 1 else goldAmount))
+            }
+        }
     }
 }
