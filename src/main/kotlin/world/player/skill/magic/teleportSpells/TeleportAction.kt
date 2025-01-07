@@ -35,7 +35,7 @@ abstract class TeleportAction(plr: Player,
         }
 
     /**
-     * Invoked one tick before the teleportation starts. Add experience, send teleport messages, etc. here.
+     * Invoked one tick before the teleportation starts. Send teleport messages, etc. here.
      */
     abstract fun onTeleport()
 }
