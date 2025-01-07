@@ -3,6 +3,10 @@ package io.luna.game.model;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.WalkingQueue.Step;
 
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * An enum representing movement directions.
  *
@@ -16,10 +20,23 @@ public enum Direction {
     NORTH_EAST(2, new Step(1, 1)),
     WEST(3, new Step(-1, 0)),
     EAST(4, new Step(1, 0)),
-    SOUTH_WEST(5, new Step(-1, 1)),
+    SOUTH_WEST(5, new Step(-1, -1)),
     SOUTH(6, new Step(0, -1)),
     SOUTH_EAST(7, new Step(1, -1));
 // todo cleanup, documentation
+    /**
+     * A list of directions representing all possible directions of the NPC view cone, in order.
+     */
+    public static final ImmutableList<Direction> VIEW_CONE = ImmutableList.of(
+            Direction.NORTH,
+            Direction.NORTH_WEST,
+            Direction.WEST,
+            Direction.SOUTH_WEST,
+            Direction.SOUTH,
+            Direction.SOUTH_EAST,
+            Direction.EAST,
+            Direction.NORTH_EAST
+    );
     /**
      * An array of directions without any diagonal directions.
      */
@@ -57,6 +74,24 @@ public enum Direction {
         return translate;
     }
 
+    public static Set<Direction> getAllVisible(Direction from) {
+        int baseIndex = -1;
+        for (int index = 0; index < VIEW_CONE.size(); index++) {
+            Direction nextDirection = VIEW_CONE.get(index);
+            if (nextDirection == from) {
+                baseIndex = index;
+            }
+        }
+        checkState(baseIndex >= 0, "Unexpected, base index could not be found.");
+        if (baseIndex == VIEW_CONE.size() - 1) {
+            return Set.of(VIEW_CONE.get(0), VIEW_CONE.get(baseIndex), VIEW_CONE.get(baseIndex - 1));
+        } else if (baseIndex == 0) {
+            return Set.of(VIEW_CONE.get(0), VIEW_CONE.get(1), VIEW_CONE.get(VIEW_CONE.size() - 1));
+        } else {
+            return Set.of(VIEW_CONE.get(baseIndex), VIEW_CONE.get(baseIndex + 1), VIEW_CONE.get(baseIndex - 1));
+        }
+    }
+
     /**
      * Get the 2 directions which make up a diagonal direction (i.e., NORTH and EAST for NORTH_EAST).
      *
@@ -79,7 +114,7 @@ public enum Direction {
     }
 
     public Direction opposite() {
-       switch (this) {
+        switch (this) {
             case NORTH_WEST:
                 return Direction.SOUTH_EAST;
             case NORTH:
@@ -96,8 +131,8 @@ public enum Direction {
                 return Direction.NORTH;
             case SOUTH_EAST:
                 return Direction.NORTH_WEST;
-           default:
-               return Direction.NONE;
+            default:
+                return Direction.NONE;
         }
     }
 
@@ -140,7 +175,7 @@ public enum Direction {
                 return WEST;
             }
         }
-        throw new IllegalArgumentException("difference between coordinates must be [-1, 1] not ["+deltaX+", "+deltaY+"].");
+        throw new IllegalArgumentException("difference between coordinates must be [-1, 1] not [" + deltaX + ", " + deltaY + "].");
     }
 
     /**
@@ -153,6 +188,7 @@ public enum Direction {
     public static Direction between(Step current, Step next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
     }
+
     /**
      * Returns the direction between two steps.
      *
@@ -163,6 +199,7 @@ public enum Direction {
     public static Direction between(Position current, Position next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
     }
+
     /**
      * @return The direction identifier.
      */

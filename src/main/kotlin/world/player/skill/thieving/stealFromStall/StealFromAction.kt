@@ -9,11 +9,11 @@ import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 import world.player.Animations
 import world.player.Messages
 import world.player.Sounds
+import world.player.following.FollowingAction
 import world.player.skill.thieving.Thieving
 
 /**
@@ -114,15 +114,11 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
         val nearbyGuards = world.chunks.getViewableEntities<Npc>(mob.position, TYPE_NPC)
             .filter { GUARD_NAMES.contains(it.definition.name) && it.definition.actions.contains("Attack") }
         for (guard in nearbyGuards) {
-            if (world.collisionManager.raycast(guard.position, mob.position)) {
+            if (!world.collisionManager.raycast(guard.position, mob.position) && guard.isInViewCone(mob)) {
                 // The guard can see the player.
                 // TODO Make them attack when combat completed
-                // TODO Only when facing the player's direction?
-                // TODO More testing
-                // TODO weaker mobs will notify but not attack
                 guard.forceChat("Hey! Get your hands off there!")
-                guard.walking.walk(mob)
-                guard.interact(mob)
+                guard.actions.submit(FollowingAction(guard, mob))
                 break
             }
         }
