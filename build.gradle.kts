@@ -34,7 +34,7 @@ dependencies {
     implementation("org.mockito:mockito-core:5.14.2")
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.apache.commons:commons-compress:1.27.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.11.4")
 }
