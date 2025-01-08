@@ -22,7 +22,7 @@ dependencies {
    implementation("org.slf4j:slf4j-nop:2.0.16")
     implementation("com.lmax:disruptor:3.4.2")
     implementation("io.netty:netty-all:4.1.107.Final")
-    implementation("com.google.guava:guava:33.0.0-jre")
+    implementation("com.google.guava:guava:33.4.0-jre")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("io.github.classgraph:classgraph:4.8.179")
     implementation(kotlin("stdlib-jdk8"))
