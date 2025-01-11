@@ -5,6 +5,7 @@ import io.luna.game.action.RepeatingAction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import world.player.skill.magic.Magic
+import world.player.skill.magic.Magic.teleportDelay
 import world.player.skill.magic.SpellRequirement
 
 /**
@@ -21,11 +22,17 @@ abstract class TeleportAction(plr: Player,
 
     override fun repeat() {
         if (executions == 0) {
+            mob.lock()
             onTeleport()
         }
         if (!style.action(this)) {
             interrupt()
         }
+    }
+
+    override fun stop() {
+        mob.unlock()
+        mob.teleportDelay.reset()
     }
 
     override fun ignoreIf(other: Action<*>?) =
