@@ -7,6 +7,7 @@ import io.luna.game.action.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
+import io.luna.game.model.mob.inter.GameTabSet.TabIndex
 import world.player.Animations
 import world.player.Sounds
 import world.player.skill.magic.Magic
@@ -47,6 +48,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
                 mob.playSound(if (lowAlch) Sounds.LOW_ALCHEMY else Sounds.HIGH_ALCHEMY)
 
                 mob.inventory.add(Item(995, if(goldAmount == 0) 1 else goldAmount))
+                mob.tabs.show(TabIndex.MAGIC)
             }
         }
     }

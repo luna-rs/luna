@@ -2,6 +2,7 @@ package io.luna.game.model.mob.inter;
 
 import com.google.common.collect.ImmutableMap;
 import io.luna.game.model.mob.Player;
+import io.luna.net.msg.out.ForceTabMessageWriter;
 import io.luna.net.msg.out.TabInterfaceMessageWriter;
 
 import java.util.EnumMap;
@@ -11,7 +12,7 @@ import java.util.OptionalInt;
 /**
  * A model representing a collection of sidebar tabs on a player's game screen.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class GameTabSet {
 
@@ -35,9 +36,10 @@ public final class GameTabSet {
         MUSIC(13, 962);
 
         public static final ImmutableMap<Integer, TabIndex> ID_MAP;
+
         static {
             ImmutableMap.Builder<Integer, TabIndex> builder = ImmutableMap.builder();
-            for(TabIndex tab : values()) {
+            for (TabIndex tab : values()) {
                 builder.put(tab.index, tab);
             }
             ID_MAP = builder.build();
@@ -51,7 +53,7 @@ public final class GameTabSet {
          * The index.
          */
         private final int index;
-    
+
         /**
          * The default tab.
          */
@@ -74,7 +76,7 @@ public final class GameTabSet {
         public final int getIndex() {
             return index;
         }
-    
+
         /**
          * @return The default tab.
          */
@@ -141,6 +143,15 @@ public final class GameTabSet {
     public void clear(TabIndex index) {
         player.queue(new TabInterfaceMessageWriter(index, -1));
         tabs.remove(index);
+    }
+
+    /**
+     * Forces the client to show tab {@code index}.
+     *
+     * @param index The tab to force.
+     */
+    public void show(TabIndex index) {
+        player.queue(new ForceTabMessageWriter(index));
     }
 
     /**
