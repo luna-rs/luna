@@ -15,6 +15,10 @@ class EnchantJewelleryAction(plr: Player, private val itemId: Int, private val t
     QueuedAction<Player>(plr, plr.enchantJewelleryDelay, 3) {
 
     companion object {
+
+        /**
+         * The time source attribute for this action.
+         */
         val Player.enchantJewelleryDelay by Attr.timeSource()
     }
 
