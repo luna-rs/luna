@@ -284,6 +284,7 @@ public final class World {
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
+        chunks.resetUpdatedChunks();
 
         for (Npc npc : npcList) {
             try {
@@ -332,8 +333,6 @@ public final class World {
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
             }
         }
-
-        chunks.resetUpdatedChunks();
     }
 
     /**

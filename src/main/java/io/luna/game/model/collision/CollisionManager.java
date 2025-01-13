@@ -211,8 +211,8 @@ public final class CollisionManager {
 
         for (int x = x0; x <= x1; x++) {
             if (steep) {
-                currX = y; // y
-                currY = x; // x
+                currX = y;
+                currY = x;
             } else {
                 currX = x;
                 currY = y;

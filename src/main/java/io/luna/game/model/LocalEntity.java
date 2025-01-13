@@ -78,7 +78,7 @@ public abstract class LocalEntity implements ChunkUpdatable {
         ChunkUpdatableMessage msg = displayMessage(chunk.offset(position));
 
         ChunkRepository chunkRepository = context.getWorld().getChunks().load(chunk);
-        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg));
+        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
     }
 
     /**

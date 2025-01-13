@@ -11,17 +11,17 @@ import io.luna.game.model.collision.CollisionUpdate;
 import io.luna.game.model.collision.CollisionUpdateType;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -34,9 +34,12 @@ import static io.luna.game.model.chunk.Chunk.SIZE;
  * @author lare96
  */
 public final class ChunkRepository implements Iterable<Entity> {
-// TODO documentation, clean up
 
+    /**
+     * The world instance.
+     */
     private final World world;
+
     /**
      * This chunk's position.
      */
@@ -48,9 +51,16 @@ public final class ChunkRepository implements Iterable<Entity> {
     private final Map<EntityType, Set<Entity>> entities;
 
     /**
-     * A list of pending updates to {@link StationaryEntity} types within this chunk.
+     * A map of persistent updates to {@link StationaryEntity} types within this chunk. The only update type stored
+     * here is the one that displays the entity.
      */
-    private final List<ChunkUpdatableRequest> pendingUpdates = new ArrayList<>();
+    private final Map<StationaryEntity, ChunkUpdatableRequest> persistentUpdates = new HashMap<>();
+
+    /**
+     * A list of temporary updates to {@link StationaryEntity} types within this chunk. Ie. local sounds, graphics,
+     * visually changing the amount of an item, object animations.
+     */
+    private final List<ChunkUpdatableRequest> temporaryUpdates = new ArrayList<>();
 
     /**
      * The {@link CollisionMatrix} for this chunk.
@@ -89,16 +99,36 @@ public final class ChunkRepository implements Iterable<Entity> {
         return chunk.hashCode();
     }
 
-    @NotNull
     @Override
     public Iterator<Entity> iterator() {
         return entities.values().stream().flatMap(Collection::stream).iterator();
     }
 
+    /**
+     * Determines if a tile beside position {@code next}, is traversable for entity with {@code type}, when coming from
+     * {@code direction}.
+     *
+     * @param next The position.
+     * @param type The entity type.
+     * @param direction The direction.
+     * @return {@code true} if traversable.
+     */
+    public boolean traversable(Position next, EntityType type, Direction direction) {
+        CollisionMatrix matrix = matrices[next.getZ()];
+        int x = next.getX(), y = next.getY();
 
+        return !matrix.untraversable(x % SIZE, y % SIZE, type, direction);
+    }
+
+    /**
+     * Updates the collision map with {@code entity}.
+     *
+     * @param entity The entity to update with.
+     * @param removal If the entity is being removed.
+     */
     public void updateCollisionMap(Entity entity, boolean removal) {
         if (entity.getType() != EntityType.OBJECT) {
-            return;
+            return; // todo npcs when spawned, then also when they walk
         }
 
         CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
@@ -107,7 +137,6 @@ public final class ChunkRepository implements Iterable<Entity> {
         } else {
             builder.type(CollisionUpdateType.REMOVING);
         }
-
         builder.object((GameObject) entity);
         world.getCollisionManager().apply(builder.build());
     }
@@ -133,12 +162,42 @@ public final class ChunkRepository implements Iterable<Entity> {
     }
 
     /**
+     * Clears this repository of all entities.
+     */
+    public void clear() {
+        entities.clear();
+    }
+
+    /**
      * Queues an update for a {@link StationaryEntity} within this chunk.
      *
      * @param update The update to queue.
      */
     public void queueUpdate(ChunkUpdatableRequest update) {
-        pendingUpdates.add(update);
+        temporaryUpdates.add(update);
+    }
+
+    /**
+     * Removes the persistent update for a {@link StationaryEntity} within this chunk.
+     *
+     * @param entity The entity to remove the update for.
+     */
+    public void removeUpdate(StationaryEntity entity) {
+        persistentUpdates.remove(entity);
+    }
+
+    /**
+     * Clears all temporary updates in this repository, and caches persistent updates.
+     */
+    public void resetUpdates() {
+        var it = temporaryUpdates.iterator();
+        while (it.hasNext()) {
+            var request = it.next();
+            if (request.isPersistent()) {
+                persistentUpdates.put((StationaryEntity) request.getUpdatable(), request);
+            }
+            it.remove();
+        }
     }
 
     /**
@@ -148,18 +207,14 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @return The list of pending updates.
      */
     public List<ChunkUpdatableMessage> getUpdates(Player player) {
-        // todo HUGE issue. this is global but requires to be per player to make sense. maybe two types of updates?
-        // instant and continous
-        return pendingUpdates.stream().
-                filter(update -> update.getUpdatable().computeCurrentView().isViewableFor(player)).
-                map(ChunkUpdatableRequest::getMessage).collect(Collectors.toList());
-    }
-
-    /**
-     * Resets the list of pending updates.
-     */
-    public void resetUpdates() {
-        pendingUpdates.clear();
+        List<ChunkUpdatableMessage> messages = new ArrayList<>();
+        for (ChunkUpdatableRequest request : temporaryUpdates) {
+            ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
+            if (view.isViewableFor(player)) {
+                messages.add(request.getMessage());
+            }
+        }
+        return messages;
     }
 
     /**
@@ -186,14 +241,10 @@ public final class ChunkRepository implements Iterable<Entity> {
     }
 
     /**
-     * Returns an iterator over {@code type} entities in this chunk.
-     *
-     * @param type The entity type.
-     * @param <E> The type.
-     * @return The iterator.
+     * @return The world instance.
      */
-    public <E extends Entity> Iterator<E> iterator(EntityType type) {
-        return (Iterator<E>) getAll(type).iterator();
+    public World getWorld() {
+        return world;
     }
 
     /**
@@ -203,22 +254,24 @@ public final class ChunkRepository implements Iterable<Entity> {
         return chunk;
     }
 
-    public void clear() {
-        entities.clear();
-    }
-
+    /**
+     * @return The entities within this chunk.
+     */
     public Map<EntityType, Set<Entity>> getAll() {
         return entities;
     }
 
+    /**
+     * @return The {@link CollisionMatrix} for this chunk.
+     */
     public CollisionMatrix[] getMatrices() {
         return matrices;
     }
 
-    public boolean traversable(Position next, EntityType type, Direction direction) {
-        CollisionMatrix matrix = matrices[next.getZ()];
-        int x = next.getX(), y = next.getY();
-
-        return !matrix.untraversable(x % SIZE, y % SIZE, type, direction);
+    /**
+     * @return An unmodifiable collection of all persistent updates.
+     */
+    public Collection<ChunkUpdatableRequest> getPersistentUpdates() {
+        return Collections.unmodifiableCollection(persistentUpdates.values());
     }
 }

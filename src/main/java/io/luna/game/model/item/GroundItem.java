@@ -201,7 +201,7 @@ public class GroundItem extends StationaryEntity {
                 "Non-stackable ground items have a maximum amount of 1.");
         int offset = getChunk().offset(position);
         UpdateGroundItemMessageWriter msg = new UpdateGroundItemMessageWriter(offset, id, amount, value);
-        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg));
+        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
         amount = value;
     }
 
