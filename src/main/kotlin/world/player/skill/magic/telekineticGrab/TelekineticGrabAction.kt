@@ -15,8 +15,6 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectGroup
-import io.luna.net.msg.out.AddProjectileMessageWriter
-import io.luna.net.msg.out.ChunkPlacementMessageWriter
 import world.player.Messages
 import world.player.Sounds
 import world.player.skill.magic.Magic
@@ -29,7 +27,7 @@ import world.player.skill.magic.RuneRequirement
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : RepeatingAction<Player>(plr, false, 1) {
 
     override fun start(): Boolean {
-        mob.face(groundItem.position)
+        mob.face(groundItem.position) // TODO do in packet?
 
         val pathBlockedFunc = { last: Position, _: Direction ->
             val list = world.chunks.getViewableEntities<GameObject>(last, TYPE_OBJECT).filter {
@@ -46,10 +44,16 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : R
             mob.sendMessage(Messages.INVENTORY_FULL)
             return false
         }
-        return Magic.checkRequirements(mob, 33, listOf(
+        val removeItems = Magic.checkRequirements(mob, 33, listOf(
             RuneRequirement(Rune.AIR, 1),
             RuneRequirement(Rune.LAW, 1)
         ))
+        if (removeItems != null) {
+            mob.inventory.removeAll(removeItems)
+            mob.magic.addExperience(43.0)
+            return true
+        }
+        return false
     }
 
     override fun repeat() {

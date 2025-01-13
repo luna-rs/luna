@@ -11,7 +11,6 @@ import io.luna.game.model.mob.inter.GameTabSet.TabIndex
 import world.player.Animations
 import world.player.Sounds
 import world.player.skill.magic.Magic
-import kotlin.time.times
 
 /**
  * A [QueuedAction] that handles the process of players doing low and high alchemy.
@@ -28,10 +27,11 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
     }
 
     override fun execute() {
-        if (Magic.checkRequirements(mob, type.level, type.requirements)) {
+        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
+        if (removeItems != null) {
             var item = mob.inventory[inventoryIndex] ?: return
             item = item.withAmount(1)
-            if(item.id == 995) {
+            if (item.id == 995) {
                 mob.sendMessage("Coins are already made of gold.")
                 return
             }
@@ -42,14 +42,15 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
                 mob.sendMessage("You cannot use alchemy on that item.")
                 return
             }
-            if (mob.inventory.remove(item)) {
-                mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)
-                mob.graphic(if (lowAlch) Graphic(112, 75) else Graphic(113, 75))
-                mob.playSound(if (lowAlch) Sounds.LOW_ALCHEMY else Sounds.HIGH_ALCHEMY)
+            mob.inventory.remove(inventoryIndex, Item(item.id))
+            mob.inventory.removeAll(removeItems)
+            mob.magic.addExperience(type.xp)
+            mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)
+            mob.graphic(if (lowAlch) Graphic(112, 75) else Graphic(113, 75))
+            mob.playSound(if (lowAlch) Sounds.LOW_ALCHEMY else Sounds.HIGH_ALCHEMY)
 
-                mob.inventory.add(Item(995, if(goldAmount == 0) 1 else goldAmount))
-                mob.tabs.show(TabIndex.MAGIC)
-            }
+            mob.inventory.add(Item(995, if (goldAmount == 0) 1 else goldAmount))
+            mob.tabs.show(TabIndex.MAGIC)
         }
     }
 }
