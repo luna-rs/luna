@@ -97,7 +97,6 @@ object Magic {
 
         // Runes were leftover, meaning we didn't satisfy the requirements.
         for (rune in runesNeeded.elementSet()) {
-            println(runesNeeded)
             plr.sendMessage("You do not have enough ${itemName(rune.id)}s to cast this spell.")
             return null
         }
