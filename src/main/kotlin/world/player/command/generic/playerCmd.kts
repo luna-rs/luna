@@ -9,6 +9,9 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.inter.NameInputInterface
 import world.player.QuestJournalInterface
+import world.player.skill.magic.Magic.teleport
+import world.player.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
+import world.player.skill.magic.teleportSpells.TeleportStyle
 
 /**
  * A command that clears the inventory, bank, or equipment of a player.
@@ -134,4 +137,8 @@ cmd("players") {
 /**
  * A command that teleports the player home.
  */
-cmd("home") { plr.teleport(Luna.settings().game().startingPosition()) }
+cmd("home") {
+    if (plr.teleportDelay.ready(2)) {
+        plr.teleport(Luna.settings().game().startingPosition(), TeleportStyle.REGULAR)
+    }
+}

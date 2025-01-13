@@ -264,6 +264,20 @@ public abstract class Mob extends Entity {
     }
 
     /**
+     * Action-locks this mob completely. Please use with caution as
+     */
+    public void lock() {
+        locked = true;
+    }
+
+    /**
+     * Undoes the action-lock on this mob.
+     */
+    public void unlock() {
+        locked = false;
+    }
+
+    /**
      * Damages the mob once.
      */
     public final void damage(Hit hit) {
@@ -275,12 +289,12 @@ public abstract class Mob extends Entity {
         addHealth(-hit.getDamage());
         if (this instanceof Player) {
             if (hit.getDamage() > 0) {
-                int healthPercent = getHealth () <= 0 ? 100 : (int) Math.floor(hit.getDamage() / getHealth());
-                if(healthPercent > 20) {
+                int healthPercent = getHealth() <= 0 ? 100 : (int) Math.floor(hit.getDamage() / getHealth());
+                if (healthPercent > 20) {
                     asPlr().playSound(Sounds.TAKE_DAMAGE_4);
-                } else if(healthPercent > 10) {
+                } else if (healthPercent > 10) {
                     asPlr().playRandomSound(Sounds.TAKE_DAMAGE_3, Sounds.TAKE_DAMAGE_4);
-                } else if(healthPercent > 5) {
+                } else if (healthPercent > 5) {
                     asPlr().playRandomSound(Sounds.TAKE_DAMAGE, Sounds.TAKE_DAMAGE_2);
                 } else {
                     asPlr().playSound(Sounds.TAKE_DAMAGE);

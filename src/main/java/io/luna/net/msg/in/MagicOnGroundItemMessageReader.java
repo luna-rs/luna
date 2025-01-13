@@ -37,7 +37,7 @@ public final class MagicOnGroundItemMessageReader extends GameMessageReader<Magi
     @Override
     public void handle(Player player, MagicOnGroundItemEvent event) {
         if (Luna.settings().game().betaMode()) {
-            player.sendMessage("[MagicOnGroundItemMessageReader]: spellId: " + event.getSpellId() + ", item: " + event.getTargetItem());
+            player.sendMessage("[MagicOnGroundItemMessageReader]: spellId: " + event.getSpellId() + ", itemId: " + event.getTargetItem().getId());
         }
     }
 }

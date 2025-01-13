@@ -78,6 +78,7 @@ public abstract class InteractionAction extends RepeatingAction<Player> {
     @Override
     public void repeat() {
         if(mob.canInteractWith(interactWith, distance)) {
+            mob.getWalking().clear();
             if (interactWith.getType() != EntityType.ITEM) {
                 mob.interact(interactWith);
                 if (interactWith.getType() == EntityType.NPC) {

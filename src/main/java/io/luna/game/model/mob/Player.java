@@ -762,6 +762,21 @@ public class Player extends Mob {
     }
 
     /**
+     * Plays the sound with {@code id} with {@code delay}.
+     */
+    public void playSound(int soundId, int delay) {
+        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
+        queue(new SoundMessageWriter(soundId, volume, delay));
+    }
+
+    /**
+     * Plays sound with {@code id} with no delay.
+     */
+    public void playSound(int soundId) {
+        playSound(soundId, 0);
+    }
+
+    /**
      * Plays {@code sound} with no delay.
      */
     public void playSound(Sounds sound) {

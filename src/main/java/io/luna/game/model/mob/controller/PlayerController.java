@@ -3,6 +3,7 @@ package io.luna.game.model.mob.controller;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.service.LogoutService;
+import world.player.skill.magic.teleportSpells.TeleportAction;
 
 /**
  * A model containing a set of listeners that can intercept and terminate basic {@link Player} actions before they
@@ -39,7 +40,18 @@ public abstract class PlayerController {
      * @param player The player.
      * @return {@code false} to prevent the player from logging out.
      */
-    public boolean onLogout(Player player) {
+    public boolean canLogout(Player player) {
+        return true;
+    }
+
+    /**
+     * Called when a {@link TeleportAction} attempts to move a player.
+     *
+     * @param player The player.
+     * @param action The teleport action.
+     * @return {@code true} if the action can proceed, {@code false} otherwise.
+     */
+    public boolean canTeleport(Player player, TeleportAction action) {
         return true;
     }
 

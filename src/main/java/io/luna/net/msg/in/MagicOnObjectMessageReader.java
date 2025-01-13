@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.Luna;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnObjectEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
@@ -31,5 +32,12 @@ public final class MagicOnObjectMessageReader extends GameMessageReader<MagicOnO
     @Override
     public boolean validate(Player player, MagicOnObjectEvent event) {
         return event.getTargetObject() != null;
+    }
+
+    @Override
+    public void handle(Player player, MagicOnObjectEvent event) {
+        if (Luna.settings().game().betaMode()) {
+            player.sendMessage("[MagicOnObjectMessageReader]: spellId: " + event.getSpellId());
+        }
     }
 }

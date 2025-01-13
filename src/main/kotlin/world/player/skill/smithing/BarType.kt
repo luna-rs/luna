@@ -1,6 +1,9 @@
 package world.player.skill.smithing
 
+import com.google.common.collect.HashMultimap
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.ImmutableSetMultimap
 import io.luna.game.model.item.Item
 import world.player.skill.smithing.smeltOre.SmeltAction
 
@@ -81,5 +84,18 @@ enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int,
          * An immutable map of all [BarType.id] to [BarType].
          */
         val ID_TO_BAR = values().associateBy { it.id }
+
+        /**
+         * An immutable multimap of all ore ids to [BarType] types.
+         */
+        val ORE_TO_BAR = values().run {
+            val map = ImmutableSetMultimap.builder<Int, BarType>()
+            for (bar in this) {
+                for(item in bar.oreRequired) {
+                    map.put(item.id, bar)
+                }
+            }
+            return@run map.build()
+        }
     }
 }

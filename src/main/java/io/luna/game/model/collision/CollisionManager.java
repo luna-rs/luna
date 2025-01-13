@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -148,11 +149,23 @@ public final class CollisionManager {
      *
      * @param start The start position of the ray.
      * @param end The end position of the ray.
-     * @return {@code true} if an impenetrable object was hit, {@code false} otherwise.
+     * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
      */
     public boolean raycast(Position start, Position end) {
-        checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
+        return raycast(start, end, (last, dir) -> !traversable(last, EntityType.NPC, dir));
+    }
 
+    /**
+     * Casts a ray into the world to check for impenetrable objects  from the given {@code start} position to the
+     * {@code end} position using Bresenham's line algorithm.
+     *
+     * @param start The start position of the ray.
+     * @param end The end position of the ray.
+     * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
+     */
+    public boolean raycast(Position start, Position end, BiFunction<Position, Direction, Boolean> conditionFunction) {
+        //todo doesnt work
+        checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
         if (start.equals(end)) {
             return true;
         }
@@ -193,13 +206,13 @@ public final class CollisionManager {
         int y = y0;
         int currX, currY;
 
-        int lastX = 0, lastY = 0;
+        int lastX = start.getX(), lastY = start.getY();
         boolean first = true;
 
         for (int x = x0; x <= x1; x++) {
             if (steep) {
-                currX = y;
-                currY = x;
+                currX = y; // y
+                currY = x; // x
             } else {
                 currX = x;
                 currY = y;
@@ -208,7 +221,7 @@ public final class CollisionManager {
             error += derror;
             if (error > 0.5) {
                 y += (y1 > y0 ? 1 : -1);
-                error -= 1.0;
+                error -= 1.0F;
             }
 
             if (first) {
@@ -219,7 +232,7 @@ public final class CollisionManager {
             Direction direction = Direction.between(lastX, lastY, currX, currY);
             Position last = new Position(lastX, lastY, start.getZ());
 
-            if (!traversable(last, EntityType.PROJECTILE, direction)) {
+            if (conditionFunction.apply(last, direction)) {
                 return false;
             }
 
