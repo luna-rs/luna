@@ -165,7 +165,7 @@ public class GameObject extends StationaryEntity {
      */
     public boolean replaces(GameObject object) {
         return position.equals(object.position) &&
-                type == object.type &&
+                objectType == object.objectType &&
                 getView().equals(object.getView());
     }
 
