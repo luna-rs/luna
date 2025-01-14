@@ -253,6 +253,7 @@ public final class World {
         preSynchronize();
         synchronize();
         postSynchronize();
+        chunks.resetUpdatedChunks();
 
         // Increment tick counter.
         currentTick.incrementAndGet();
@@ -262,29 +263,35 @@ public final class World {
      * Pre-synchronization part of the game loop, process all tick-dependant player logic.
      */
     private void preSynchronize() {
-
         for (Player player : playerList) {
             try {
                 if (player.getClient().isPendingLogout()) {
                     player.cleanUp();
                     continue;
                 }
+                player.getClient().handleDecodedMessages(player);
+                player.getWalking().process();
                 if (player.isBot()) {
                     Bot bot = (Bot) player;
                     bot.process();
                 }
-                Position oldPosition = player.getPosition();
-
-                player.getClient().handleDecodedMessages(player);
-                player.getWalking().process();
-                player.sendRegionUpdate(oldPosition);
-                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
-        chunks.resetUpdatedChunks();
+
+        // Separate region update from other logic to ensure all chunk updates are sent.
+        for (Player player : playerList) {
+            try {
+                Position oldPosition = player.getPosition();
+                player.sendRegionUpdate(oldPosition);
+                player.getClient().flush();
+            } catch (Exception e) {
+                player.logout();
+                logger.warn(new ParameterizedMessage("Could not send region updates for {}.", player, e));
+            }
+        }
 
         for (Npc npc : npcList) {
             try {
