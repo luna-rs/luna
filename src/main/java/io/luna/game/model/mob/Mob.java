@@ -289,7 +289,7 @@ public abstract class Mob extends Entity {
         addHealth(-hit.getDamage());
         if (this instanceof Player) {
             if (hit.getDamage() > 0) {
-                int healthPercent = getHealth() <= 0 ? 100 : (int) Math.floor(hit.getDamage() / getHealth());
+                int healthPercent = getHealth() <= 0 ? 100 : (int) Math.floor((double) hit.getDamage() / getHealth());
                 if (healthPercent > 20) {
                     asPlr().playSound(Sounds.TAKE_DAMAGE_4);
                 } else if (healthPercent > 10) {
