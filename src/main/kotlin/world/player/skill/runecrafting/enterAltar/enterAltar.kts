@@ -21,7 +21,7 @@ fun talismanEnter(plr: Player, altar: Altar) {
 
     world.scheduleOnce(3) {
         plr.sendMessage("You feel a powerful force take hold of you...")
-        plr.teleport(altar.enter)
+        plr.move(altar.enter)
         plr.walking.isLocked = false
     }
 }
@@ -31,7 +31,7 @@ fun talismanEnter(plr: Player, altar: Altar) {
  */
 fun tiaraEnter(plr: Player, altar: Altar) {
     plr.sendMessage("You feel a powerful force take hold of you...")
-    plr.teleport(altar.enter)
+    plr.move(altar.enter)
 }
 
 /**
@@ -39,7 +39,7 @@ fun tiaraEnter(plr: Player, altar: Altar) {
  */
 fun portalExit(plr: Player, altar: Altar) {
     plr.sendMessage("You step through the portal...")
-    plr.teleport(altar.exit)
+    plr.move(altar.exit)
 }
 
 /**

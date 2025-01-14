@@ -36,7 +36,7 @@ fun teleportPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
     for (nearby in teleporting) {
         if (obelisk.teleportFrom.contains(nearby)) {
             nearby.walking.isLocked = true
-            nearby.teleport(nextObelisk.teleportTo)
+            nearby.move(nextObelisk.teleportTo)
             nearby.sendMessage("You have been teleported by ancient magic.")
         }
     }

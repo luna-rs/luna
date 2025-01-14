@@ -350,8 +350,7 @@ public abstract class Mob extends Entity {
      *
      * @param position The position to teleport to.
      */
-    public final void teleport(Position position) {
-        // TODO rename to "move"
+    public final void move(Position position) {
         setPosition(position);
         walking.clear();
         actions.interrupt();

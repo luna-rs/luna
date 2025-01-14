@@ -55,7 +55,7 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
             }
 
             6 -> {
-                target.teleport(type.destination)
+                target.move(type.destination)
                 source.sendMessage("You teleport ${target.username} to ${type.location}.")
                 target.sendMessage("You are teleported to ${type.location}.")
                 target.animation(Animation.CANCEL)

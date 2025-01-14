@@ -132,7 +132,7 @@ object Magic {
 
             3 -> true
             4 -> {
-                plr.teleport(action.destination)
+                plr.move(action.destination)
                 plr.animation(Animation(715))
                 false
             }
@@ -160,7 +160,7 @@ object Magic {
             2 -> true
             3 -> true
             4 -> {
-                plr.teleport(action.destination)
+                plr.move(action.destination)
                 false
             }
 

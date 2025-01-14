@@ -36,7 +36,7 @@ cmd("addxp", RIGHTS_ADMIN) {
 cmd("region", RIGHTS_ADMIN) {
     val id = asInt(0)
     val pos = Region(id).absPosition
-    plr.teleport(pos)
+    plr.move(pos)
 }
 
 /**
@@ -46,7 +46,7 @@ cmd("chunk", RIGHTS_ADMIN) {
     val x = asInt(0)
     val y = asInt(1)
     val pos = Chunk(x, y).absPosition
-    plr.teleport(pos)
+    plr.move(pos)
 }
 
 /**
@@ -59,7 +59,7 @@ cmd("move", RIGHTS_ADMIN) {
         args.size == 3 -> asInt(2)
         else -> plr.position.z
     }
-    plr.teleport(Position(x, y, z))
+    plr.move(Position(x, y, z))
 }
 
 fun showShutdownTimes(plr: Player) {
