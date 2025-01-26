@@ -15,7 +15,8 @@ import io.luna.game.model.mob.bot.Bot
  */
 class GoHomeScript(bot: Bot) : CoroutineBotScript(bot) {
     override suspend fun run() {
-        // TODO Check if in wilderness, minigame, etc.
+        // Normally you'd check if the bot is in a minigame, the wilderness, etc. and modify this accordingly.
+        // But it's just an example.
         val home = Luna.settings().game().startingPosition()
         if (bot.position.isWithinDistance(home, Region.SIZE)) {
             botActions.walk(home).signalWhen(600, bot.within(home, 5)).await()

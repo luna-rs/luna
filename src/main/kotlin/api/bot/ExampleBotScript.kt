@@ -6,12 +6,9 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.BotScript
 
 /**
- * The default script for all bots. Combines a variety of [CoroutineBotScript] types to create a fully functional,
- * multipurpose fake player.
+ * An example bot script that makes use of a [CoroutineBotScript] subscript.
  */
-class AioBotScript(bot: Bot) : BotScript(bot) {
-
-    // TODO Not starting on this until Luna is complete. For now it serves as an example.
+class ExampleBotScript(bot: Bot) : BotScript(bot) {
 
     /**
      * Our coroutine script here. Will wait for our bot to return ::home.
@@ -35,5 +32,4 @@ class AioBotScript(bot: Bot) : BotScript(bot) {
         }
         return 2
     }
-
 }
