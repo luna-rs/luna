@@ -45,11 +45,11 @@ GAMES_NECKLACES.forEach {
         plr.newDialogue()
             .options(
                 "Burthorpe.", {
-                    plr.teleport(Position(2898, 3546))
+                    plr.move(Position(2898, 3546))
                     degrade(plr, necklaceId, index)
                  },
                 "Barbarian Outpost.", {
-                    plr.teleport(Position(2536, 3565))
+                    plr.move(Position(2536, 3565))
                     degrade(plr, necklaceId, index)
                 })
             .open()
