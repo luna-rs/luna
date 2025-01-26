@@ -97,8 +97,6 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
 
 
     override fun execute(plr: Player) {
-        // TODO Replace with real fight to the death once combat done
-        // TODO Let them cast spells and have randomized weapons
         val women = listOf(
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_1)),
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_2))

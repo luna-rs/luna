@@ -29,10 +29,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : R
 
     override fun start(): Boolean {
         mob.face(groundItem.position)
-        val pathBlockedFunc = { last: Position, direction: Direction ->
-            !world.collisionManager.traversable(last, EntityType.PROJECTILE, direction)
-        }
-        if (!world.collisionManager.raycast(mob.position, groundItem.position, pathBlockedFunc)) {
+        if (!world.collisionManager.raycast(mob.position, groundItem.position)) {
             mob.sendMessage("I can't reach that!")
             return false
         }

@@ -9,5 +9,5 @@ plugin {
         A plugin that enables the Slayer skill. Combat is needed first.
         """
     version = "1.0"
-    authors += "lare96" // TODO complete once combat is done
+    authors += "lare96"
 }
