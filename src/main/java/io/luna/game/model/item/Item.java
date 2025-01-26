@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
 
@@ -17,15 +18,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Item {
 
     /**
+     * A set of search restricted items that don't show up in {@link #byName(String)} queries.
+     */
+    private static final ImmutableSet<Integer> SEARCH_RESTRICTED = ImmutableSet.of(6564, 6565, 6566);
+
+    /**
      * Retrieves an item instance by name and amount.
      *
      * @param name The name.
      * @param amount The amount.
      * @return The item.
-     */
+     */ // todo if tradable and no noted version, ignore item?
     public static Item byName(String name, int amount) {
         boolean noted = name.endsWith("(noted)");
-        return ItemDefinition.ALL.lookup(it -> it.isTradeable() && it.getName().equals(name) && it.isNoted() == noted).
+        return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&
+                        it.getName().equals(name) && it.isNoted() == noted).
                 map(it -> new Item(it.getId(), amount)).
                 orElseThrow(() -> new NoSuchElementException("Item (" + name + ") was not valid or found."));
     }

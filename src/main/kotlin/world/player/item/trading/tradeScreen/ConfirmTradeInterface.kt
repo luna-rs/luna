@@ -14,7 +14,9 @@ import java.util.*
  * @author lare96 
  */
 class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayInterface(3443, 3213) {
- // TODO declining here dupes items???
+
+    // TODO https://github.com/luna-rs/luna/issues/372
+
     companion object {
 
         /**

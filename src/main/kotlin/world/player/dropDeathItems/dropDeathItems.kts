@@ -29,7 +29,7 @@ fun dropItems(plr: Player, source: Mob?) {
     if (plr.skullIcon == SkullIcon.WHITE) {
         keepAmount = 0
     }
-    // TODO Keep extra item on death prayer.
+    // TODO keep extra item on death prayer https://github.com/luna-rs/luna/issues/369
 
     // Remove all tradeable inventory and equipment items.
     removeItems(plr.inventory, deathItems)

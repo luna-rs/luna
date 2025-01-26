@@ -191,7 +191,7 @@ private fun Player.onSaradominBrew() {
  * Invoked when a potion with anti-poisoning properties is sipped.
  */
 private fun Player.onAntipoison(immunityDuration: Int = -1) {
-    // TODO Antipoison effects.
+    // TODO https://github.com/luna-rs/luna/issues/370
 }
 
 /**
@@ -242,7 +242,7 @@ private fun Player.onRestorePotion(superPotion: Boolean) {
  * Invoked when an anti-fire potion is sipped.
  */
 private fun Player.onAntifirePotion() {
-    // TODO Antifire effects.
+    // TODO https://github.com/luna-rs/luna/issues/370
 }
 
 /**

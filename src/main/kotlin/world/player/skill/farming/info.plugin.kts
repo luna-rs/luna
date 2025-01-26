@@ -6,7 +6,7 @@ plugin {
     name = "Farming"
     description =
         """
-        TODO everything
+        
         """
     version = "1.0"
     authors += "lare96"
