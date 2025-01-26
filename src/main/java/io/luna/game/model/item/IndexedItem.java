@@ -25,6 +25,16 @@ public final class IndexedItem {
     private final int amount;
 
     /**
+     * Creates a new {@link IndexedItem} with an amount of 1.
+     *
+     * @param index The index.
+     * @param id The item identifier.
+     */
+    public IndexedItem(int index, int id) {
+        this(index, id, 1);
+    }
+
+    /**
      * Creates a new {@link IndexedItem}.
      *
      * @param index The index.
