@@ -2,6 +2,7 @@ package api.bot.scripts
 
 import api.bot.CoroutineBotScript
 import api.bot.Signals
+import api.bot.Signals.within
 import api.bot.SuspendableFuture
 import io.luna.Luna
 import io.luna.game.model.Position
@@ -17,11 +18,11 @@ class GoHomeScript(bot: Bot) : CoroutineBotScript(bot) {
         // TODO Check if in wilderness, minigame, etc.
         val home = Luna.settings().game().startingPosition()
         if (bot.position.isWithinDistance(home, Region.SIZE)) {
-            botActions.walk(home).signalWhen(600, Signals.within(bot, home, 5)).await()
+            botActions.walk(home).signalWhen(600, bot.within(home, 5)).await()
         } else {
             val future = SuspendableFuture()
             botActions.sendCommand("home")
-            future.signalWhen(600, Signals.within(bot, home, 5)).await()
+            future.signalWhen(600, bot.within(home, 5)).await()
         }
     }
 }
