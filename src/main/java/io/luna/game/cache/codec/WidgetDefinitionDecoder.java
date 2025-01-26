@@ -8,6 +8,7 @@ import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
 import io.luna.game.cache.CacheUtils;
 import io.luna.game.model.def.WidgetDefinition;
+import io.luna.game.model.def.WidgetDefinition.WidgetType;
 import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
         int actionType;
         int[][] cs1opcodes = new int[0][];
         int[][] cs2opcodes = new int[0][];
-        int[] children = new int[0];
+        Integer[] children = new Integer[0];
         boolean inventory = false;
         String[] options = new String[0];
         String disabledText = "";
@@ -109,7 +110,7 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
             /*  hiddenUntilHovered =*/
             data.readUnsignedByte();// == 1;
             int childrenCount = data.readUnsignedShort();
-            children = new int[childrenCount];
+            children = new Integer[childrenCount];
             // childrenX = new int[childrenCount];
             //childrenY = new int[childrenCount];
             for (int child = 0; child < childrenCount; child++) {
@@ -286,17 +287,7 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
                     tooltip = "Continue";
             }
         }
-        return new WidgetDefinition(index, parentId, type,
-                actionType,
-                cs1opcodes,
-                cs2opcodes,
-                children,
-                inventory,
-                options,
-                disabledText,
-                enabledText,
-                disabledAnimation,
-                enabledAnimation,
-                tooltip);
+        return new WidgetDefinition(index, parentId, WidgetType.ALL.get(type), cs1opcodes, children, inventory,
+                options, disabledText, enabledText, disabledAnimation, enabledAnimation);
     }
 }
