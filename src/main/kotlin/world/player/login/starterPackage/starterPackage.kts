@@ -6,6 +6,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface
 import world.player.login.firstLogin
+import java.time.LocalDate
 
 /**
  * Inventory starter items.
@@ -42,6 +43,7 @@ fun firstLogin(plr: Player) {
     plr.inventory.addAll(inventoryStarter)
     plr.equipment.addAll(equipmentStarter)
     plr.interfaces.open(DesignPlayerInterface())
+    plr.creationDate = LocalDate.now()
     plr.firstLogin = false
 }
 

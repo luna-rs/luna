@@ -59,6 +59,7 @@ import world.player.Messages;
 import world.player.Sounds;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -345,6 +346,8 @@ public class Player extends Mob {
      */
     private DynamicMap dynamicMap;
 
+    private LocalDate creationDate;
+
     /**
      * Creates a new {@link Player}.
      *
@@ -354,6 +357,14 @@ public class Player extends Mob {
     public Player(LunaContext context, PlayerCredentials credentials) {
         super(context, EntityType.PLAYER);
         this.credentials = credentials;
+    }
+
+    public LocalDate getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDate date) {
+        this.creationDate = date;
     }
 
     @Override
@@ -498,6 +509,7 @@ public class Player extends Mob {
             setPosition(Luna.settings().game().startingPosition());
             rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
+            creationDate = LocalDate.now();
         }
     }
 

@@ -13,6 +13,7 @@ import io.luna.game.service.LogoutService;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ public final class PlayerData {
     public double weight;
     public Map<String, Integer> varps;
     public List<Object> attributes;
+    public LocalDate creation;
 
     // Used by persistence classes to ignore temporary bots.
     transient volatile boolean temporaryBot;
@@ -88,6 +90,7 @@ public final class PlayerData {
         player.setWeight(weight, false);
         player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
+        player.setCreationDate(creation);
     }
 
     /**
@@ -130,6 +133,7 @@ public final class PlayerData {
         weight = player.getWeight();
         attributes = player.getAttributes().save();
         varps = player.getVarpManager().toMap();
+        creation = player.getCreationDate();
         return this;
     }
 
