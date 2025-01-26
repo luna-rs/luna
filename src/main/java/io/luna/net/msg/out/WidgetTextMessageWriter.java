@@ -17,7 +17,7 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
     /**
      * The text.
      */
-    private final String text;
+    private final Object text;
 
     /**
      * The widget identifier.
@@ -30,7 +30,7 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
      * @param text The text.
      * @param id The widget identifier.
      */
-    public WidgetTextMessageWriter(String text, int id) {
+    public WidgetTextMessageWriter(Object text, int id) {
         this.text = text;
         this.id = id;
     }
@@ -39,7 +39,7 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(232, MessageType.VAR_SHORT);
         msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
-        msg.putString(text);
+        msg.putString(text.toString());
         return msg;
     }
 }
