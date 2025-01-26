@@ -65,8 +65,8 @@ class QuestJournalInterface(private val title: String) : StandardInterface(8134)
      * Adds a line to be displayed.
      */
     fun addLine(obj: Any) {
-        if(size == 100) { // TODO throw exception?
-            return
+        if(size == 100) {
+            throw IllegalStateException("Maximum lines reached! (100)")
         }
         lines.add(obj)
         size++

@@ -15,6 +15,7 @@ import world.player.skill.magic.Magic
  */
 class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
     QueuedAction<Player>(plr, plr.bonesToItemsDelay, 3) {
+    // todo https://github.com/luna-rs/luna/issues/363
 
     companion object {
 
@@ -34,7 +35,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
         if (removeItems != null) {
             val count = mob.inventory.computeAmountForId(BONES)
             if (count == 0) {
-                // todo proper message
                 mob.sendMessage("You do not have any bones to convert.")
                 return
             }
@@ -47,7 +47,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
                 mob.animation(Animations.BONES_TO_ITEMS)
                 mob.graphic(Graphic(141, 100))
                 mob.magic.addExperience(type.xp)
-                // todo proper message
                 mob.sendMessage("You turn the bones in your inventory into $name.")
                 mob.unlock()
             }

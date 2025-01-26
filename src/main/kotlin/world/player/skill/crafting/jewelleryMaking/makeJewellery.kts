@@ -66,7 +66,7 @@ fun makeSilverJewellery(plr: Player, itemId: Int, times: Int) {
  * Opens the gold jewellery interface.
  */
 fun openGold(plr: Player): Boolean {
-    val hasMould = plr.inventory.anyMatch { GoldJewelleryTable.MOULDS.contains(it.id) }.isPresent
+    val hasMould = plr.inventory.any { GoldJewelleryTable.MOULDS.contains(it.id) }
     if (hasMould) {
         plr.interfaces.open(GoldJewelleryInterface())
         return true
@@ -78,7 +78,7 @@ fun openGold(plr: Player): Boolean {
  * Opens the silver jewellery interface.
  */
 fun openSilver(plr: Player): Boolean {
-    val hasMould = plr.inventory.anyMatch { SilverJewelleryTable.MOULDS.contains(it.id) }.isPresent
+    val hasMould = plr.inventory.any { SilverJewelleryTable.MOULDS.contains(it.id) }
     if (hasMould) {
         plr.interfaces.open(SilverJewelleryInterface())
         return true

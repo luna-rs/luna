@@ -44,7 +44,6 @@ cmd("finditem", RIGHTS_DEV) {
     }
 }
 
-// TODO move this  cmd
 /**
  * A command that searches for definition ids and displays them on the quest journal.
  */

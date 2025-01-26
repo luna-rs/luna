@@ -44,25 +44,28 @@ class FishActionItem(private val msg: NpcClickEvent,
         when {
             mob.fishing.level < tool.level -> {
                 // Check if we have required level.
-                mob.sendMessage("You need a Fishing level of ${tool.level} to fish here.")
+                mob.sendMessage("You need a Fishing level of ${tool.level} to fish this.")
                 false
             }
+
             tool.bait != null && !mob.inventory.contains(tool.bait) -> {
                 // Check if we have required bait.
-                mob.sendMessage("You do not have the bait required to fish here.")
+                mob.sendMessage(onNoMaterials())
                 false
             }
+
             !mob.inventory.contains(tool.id) -> {
                 // Check if we have required tool.
-                mob.sendMessage("You do not have the tool required to fish here.")
+                mob.sendMessage("You need ${addArticle(tool.id)} to fish here.")
                 false
             }
+
             else -> {
                 // Start fishing!
                 mob.animation(Animation(tool.animation))
-                mob.playSound(Sounds.FISH) // TODO fix sound https://i.imgur.com/cCWHeY2.png
+                mob.playSound(Sounds.FISH) // TODO https://github.com/luna-rs/luna/issues/357
                 if (start) {
-                    // TODO Send proper tool messages
+                    // TODO https://github.com/luna-rs/luna/issues/112
                     mob.sendMessage("You begin to fish...")
                     delay = getFishingDelay()
                 }
@@ -107,6 +110,13 @@ class FishActionItem(private val msg: NpcClickEvent,
             is FishActionItem -> msg.targetNpc == other.msg.targetNpc && tool == other.tool
             else -> false
         }
+
+    override fun onNoMaterials(): String {
+        return if (tool.bait != null) "You don't have ${itemName(tool.bait)} to fish here." else
+            super.onNoMaterials()
+    }
+
+    override fun onInventoryFull(): String = "Your inventory is too full to hold any more fish."
 
     /**
      * Computes the next fishing delay.

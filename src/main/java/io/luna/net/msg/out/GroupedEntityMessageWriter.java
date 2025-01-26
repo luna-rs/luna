@@ -17,7 +17,6 @@ import java.util.Collection;
  * @author lare96
  */
 public final class GroupedEntityMessageWriter extends GameMessageWriter {
-    // TODO Restrict to certain types of messages
 
     /**
      * The base position.

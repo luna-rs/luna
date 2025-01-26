@@ -1,7 +1,5 @@
 package io.luna.game.model;
 
-import io.luna.game.model.mob.Player;
-
 /**
  * Represents somewhere in the RS2 world an {@link Entity} can be located, at any scale.
  *

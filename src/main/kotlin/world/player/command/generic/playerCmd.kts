@@ -79,7 +79,6 @@ fun sendThievingOption(plr: Player) {
 fun sendAgilityOption(plr: Player) {
 
 }
-// TODO range at home, anvil at home, furnace,
 cmd("teleport") {
     sendDialogue1(plr)
 }
@@ -88,7 +87,6 @@ cmd("teleport") {
  * A command that changes the password of a player.
  */
 cmd("changepass") {
-    // TODO Is there a general purpose "enter string" packet that can be used instead?
     plr.interfaces.open(object : NameInputInterface() {
         override fun onNameInput(player: Player?, value: String?) {
             plr.password = value

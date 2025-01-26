@@ -10,8 +10,6 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Player.SkullIcon
 import java.util.*
 
-
-// TODO system for NPC drops and handling NPC deaths
 /**
  * The comparator that will be used to compare prices.
  */
