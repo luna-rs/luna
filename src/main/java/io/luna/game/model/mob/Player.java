@@ -5,7 +5,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
-import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.event.impl.RegionChangedEvent;
@@ -450,11 +449,6 @@ public class Player extends Mob {
     @Override
     public int getCombatLevel() {
         return skills.getCombatLevel();
-    }
-
-    @Override
-    public void onSubmitAction(Action action) {
-        interfaces.applyActionClose();
     }
 
     @Override

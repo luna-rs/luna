@@ -1,5 +1,6 @@
 package io.luna.game.action;
 
+import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 
 /**
@@ -37,6 +38,9 @@ public abstract class ThrottledAction<T extends Mob> extends Action<T> {
 
     @Override
     public void run() {
+        if(mob.getType() == EntityType.PLAYER) {
+            mob.asPlr().getInterfaces().applyActionClose();
+        }
         mob.getWalking().clear();
         if (source.ready(delay)) {
             execute();
