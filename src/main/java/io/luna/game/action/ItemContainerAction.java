@@ -12,7 +12,7 @@ import java.util.List;
  * A {@link RepeatingAction} implementation that supports inventory modifications. Users should override the {@link #add()}
  * and {@link #remove()} functions to add and remove items.
  *
- * @author lare96 
+ * @author lare96
  */
 public abstract class ItemContainerAction extends RepeatingAction<Player> {
 
@@ -34,19 +34,49 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
         }
     }
 
-    // todo rename to animatedinventoryaction, see if this is really needed. apply to other plugins
-    public static abstract class UnsynchronizedInventoryAction extends InventoryAction{
+    /**
+     * An {@link InventoryAction} implementation that requires time synchronization with an {@link Animation}.
+     */
+    public static abstract class AnimatedInventoryAction extends InventoryAction {
+
+        /**
+         * The animation delay, in ticks.
+         */
         private final int animationDelay;
+
+        /**
+         * The animation timer.
+         */
         private int animationTimer;
-        public UnsynchronizedInventoryAction(Player player, boolean instant, int actionDelay, int animationDelay, int repeatTimes) {
+
+        /**
+         * Creates a new {@link AnimatedInventoryAction}.
+         *
+         * @param player The player.
+         * @param instant If this action executes instantly
+         * @param actionDelay The delay of this action.
+         * @param animationDelay The animation delay, in ticks.
+         * @param repeatTimes The amount of times to repeat.
+         */
+        public AnimatedInventoryAction(Player player, boolean instant, int actionDelay, int animationDelay, int repeatTimes) {
             super(player, instant, actionDelay, repeatTimes);
             this.animationDelay = animationDelay;
         }
 
+        /**
+         * Called every {@link #animationDelay}.
+         *
+         * @return The animation that will be played every {@link #animationDelay}.
+         */
         public abstract Animation animation();
+
+        /**
+         * Forwarded from {@link #process()}.
+         */
         public void onProcess() {
 
         }
+
         @Override
         public final void process() {
             onProcess();
@@ -96,7 +126,7 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
      * @param times The amount of times to repeat.
      */
     public ItemContainerAction(Player player, ItemContainer container, boolean instant, int times) {
-        this(player,container, instant, 1, times);
+        this(player, container, instant, 1, times);
     }
 
     @Override
@@ -114,7 +144,7 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
 
         currentRemove = remove();
         if (isInterrupted() || !container.containsAll(currentRemove)) {
-            if(getExecutions() == 0) {
+            if (getExecutions() == 0) {
                 mob.sendMessage(onNoMaterials());
             }
             interrupt();
@@ -125,7 +155,7 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
         int addSpaces = container.computeSpaceForAll(currentRemove);
         int removeSpaces = container.computeSpaceForAll(currentAdd);
         int requiredSpaces = removeSpaces - addSpaces;
-        if(isInterrupted()) {
+        if (isInterrupted()) {
             return;
         }
         if (requiredSpaces > container.computeRemainingSize()) {
@@ -140,11 +170,17 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
         container.addAll(currentAdd);
         execute();
     }
-    //todo override
 
+    /**
+     * @return The message this action will send when the inventory is full.
+     */
     public String onInventoryFull() {
         return Inventory.INVENTORY_FULL_MESSAGE;
     }
+
+    /**
+     * @return The message this action will send if you lack the materials to start.
+     */
     public String onNoMaterials() {
         return "You do not have enough materials to do this.";
     }

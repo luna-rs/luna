@@ -8,16 +8,11 @@ import com.google.common.base.MoreObjects;
  * @author lare96
  */
 public final class Region implements Location {
- // todo explain more about the importance of region types in the runescape protocol
+
     /**
      * The length and width.
      */
     public static final int SIZE = 64;
-
-    /**
-     * The multiplicative factor to get the region ID.
-     */ // todo remove
-    public static final int MULTIPLICATIVE_FACTOR = 256;
 
     /**
      * The {@code x}  coordinate.
@@ -50,8 +45,8 @@ public final class Region implements Location {
      */
     public Region(int id) {
         this.id = id;
-        x = id / MULTIPLICATIVE_FACTOR;
-        y = id - (x * MULTIPLICATIVE_FACTOR);
+        x = id / 256;
+        y = id - (x * 256);
     }
 
     /**
@@ -63,7 +58,7 @@ public final class Region implements Location {
     public Region(int x, int y) {
         this.x = x;
         this.y = y;
-        id = x * MULTIPLICATIVE_FACTOR + y;
+        id = x * 256 + y;
     }
 
     @Override

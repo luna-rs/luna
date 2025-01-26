@@ -45,6 +45,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
          */
         val Player.superheatDelay by Attr.timeSource()
     }
+    // todo https://github.com/luna-rs/luna/issues/376
 
     override fun execute() {
         val removeItems = Magic.checkRequirements(mob, LEVEL, RUNES)
@@ -61,7 +62,6 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
                     mob.animation(Animations.SUPERHEAT)
                     mob.graphic(Graphic(148, 100))
                     mob.smithing.addExperience(barType.xp)
-                    // todo proper message
                     mob.sendMessage("You create a ${itemName(barType.id).toLowerCase()}.");
                     mob.tabs.show(TabIndex.MAGIC)
                     mob.unlock()
@@ -77,7 +77,6 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         val itemId = mob.inventory.computeIdForIndex(index).orElse(-1)
         val possibleBars = BarType.ORE_TO_BAR[itemId]
         if (possibleBars.isEmpty()) {
-            // todo proper message
             mob.sendMessage("You cannot use this spell on this item.")
             return null
         }
@@ -90,12 +89,11 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             return@run null
         }
         if (barType == null) {
-            // todo proper message
             mob.sendMessage("You do not have all the required ores to superheat this.")
             return null
         }
         if (mob.smithing.level < barType.level) {
-            // todo proper message
+            // https://github.com/luna-rs/luna/issues/376
             mob.sendMessage("You do not have the required level to superheat this.")
             return null
         }

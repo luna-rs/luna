@@ -17,7 +17,7 @@ import java.util.OptionalInt;
  * @author lare96
  */
 public class LocalProjectile extends LocalEntity {
-// TODO finish documenation once tested and all values figured out.
+// TODO https://github.com/luna-rs/luna/issues/377
 
     /**
      * A builder for {@link LocalProjectile} types.
@@ -29,7 +29,7 @@ public class LocalProjectile extends LocalEntity {
         private int endHeight;
         private int ticksToStart;
         private int ticksToEnd;
-        private int initialSlope = 25 * 128 / 180; // TODO number between 0-64
+        private int initialSlope = 25 * 128 / 180; // to-do number between 0-64
         private ChunkUpdatableView view = ChunkUpdatableView.globalView();
 
         public TargetBuilder setId(int id) {

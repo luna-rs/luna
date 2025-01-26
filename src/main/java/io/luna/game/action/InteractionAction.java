@@ -67,9 +67,7 @@ public abstract class InteractionAction extends RepeatingAction<Player> {
 
     @Override
     public boolean start() {
-        if (mob.isBot()) {
-            //todo remove, bot may not always need to walk
-            // handle in scripts or botActions
+        if (mob.isBot() && !mob.canInteractWith(interactWith, distance)) {
             mob.getWalking().walk(interactWith);
         }
         return true;

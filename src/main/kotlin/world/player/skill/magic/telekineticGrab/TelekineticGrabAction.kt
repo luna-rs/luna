@@ -60,7 +60,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : R
             }
 
             2 -> {
-                // todo projectile doesn't work
+                // todo https://github.com/luna-rs/luna/issues/377
                 val projectile = LocalProjectile.followPath(ctx).setSourcePosition(mob.position)
                     .setTargetPosition(groundItem.position).setDurationTicks(2).setStartHeight(35)
                     .setId(143).build()

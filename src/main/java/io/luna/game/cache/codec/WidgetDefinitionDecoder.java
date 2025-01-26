@@ -287,6 +287,11 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
                     tooltip = "Continue";
             }
         }
+        for(int idx = 0; idx < options.length; idx++) {
+            if(options[idx] == null) {
+                options[idx] = "null";
+            }
+        }
         return new WidgetDefinition(index, parentId, WidgetType.ALL.get(type), cs1opcodes, children, inventory,
                 options, disabledText, enabledText, disabledAnimation, enabledAnimation);
     }
