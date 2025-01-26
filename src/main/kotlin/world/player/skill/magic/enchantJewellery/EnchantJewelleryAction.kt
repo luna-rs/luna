@@ -28,7 +28,7 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
             val itemId = mob.inventory.computeIdForIndex(itemIndex).orElse(-1)
             val enchantItem = type.enchantMap[itemId]
             if (enchantItem == null) {
-                // todo proper message
+                // todo https://github.com/luna-rs/luna/issues/371
                 mob.sendMessage("You cannot use this spell on this item.")
                 return
             }

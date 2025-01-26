@@ -13,7 +13,7 @@ import java.awt.Color;
  *
  * @author lare96
  */
-public final class ColorChangeMessageWriter extends GameMessageWriter {
+public final class WidgetColorMessageWriter extends GameMessageWriter {
 
     /**
      * The identifier for the text to change the color of.
@@ -26,12 +26,12 @@ public final class ColorChangeMessageWriter extends GameMessageWriter {
     private final Color color;
 
     /**
-     * Creates a new {@link ColorChangeMessageWriter}.
+     * Creates a new {@link WidgetColorMessageWriter}.
      *
      * @param id The identifier for the text to change the color of.
      * @param color The new color to change it to.
      */
-    public ColorChangeMessageWriter(int id, Color color) {
+    public WidgetColorMessageWriter(int id, Color color) {
         this.id = id;
         this.color = color;
     }

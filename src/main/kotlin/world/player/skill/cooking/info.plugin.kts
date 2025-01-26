@@ -10,9 +10,8 @@ plugin {
         -> All "simple" cooking items
         -> Stopping burns after a certain cooking level is reached
         -> Fires burn more frequently than ranges
-        
-        TODO
-        -> bread, pies, stews, pizzas, cakes, wines, hto drinks, veggies, dairy? kebabs?
+        -> Fermenting wines
+        -> Preparing raw food like bread, pizzas, cakes, etc.
         """
     version = "1.0"
     authors += "lare96"

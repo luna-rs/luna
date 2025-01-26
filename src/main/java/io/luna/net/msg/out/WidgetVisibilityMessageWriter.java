@@ -19,23 +19,23 @@ public final class WidgetVisibilityMessageWriter extends GameMessageWriter {
     /**
      * If the widget should be hidden.
      */
-    private final boolean hide;
+    private final boolean hiddenUntilHovered;
 
     /**
      * Creates a new {@link WidgetVisibilityMessageWriter}.
      *
      * @param id The widget identifier.
-     * @param hide If the widget should be hidden.
+     * @param hiddenUntilHovered If the widget should be hidden.
      */
-    public WidgetVisibilityMessageWriter(int id, boolean hide) {
+    public WidgetVisibilityMessageWriter(int id, boolean hiddenUntilHovered) {
         this.id = id;
-        this.hide = hide;
+        this.hiddenUntilHovered = hiddenUntilHovered;
     }
 
     @Override
     public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(171);
-        msg.put(hide ? 1 : 0);
+        ByteMessage msg = ByteMessage.message(82);
+        msg.put(hiddenUntilHovered ? 1 : 0);
         msg.putShort(id);
         return msg;
     }
