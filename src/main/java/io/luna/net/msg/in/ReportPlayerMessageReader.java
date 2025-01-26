@@ -14,7 +14,7 @@ public final class ReportPlayerMessageReader extends GameMessageReader<NullEvent
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {
-        // TODO decode data
+        // TODO https://github.com/luna-rs/luna/issues/87
         return NullEvent.INSTANCE;
     }
 }

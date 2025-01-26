@@ -13,7 +13,7 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class SwapItemsMessageReader extends GameMessageReader<NullEvent> {
+public final class ArrangeBankMessageReader extends GameMessageReader<NullEvent> {
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {
@@ -29,7 +29,7 @@ public final class SwapItemsMessageReader extends GameMessageReader<NullEvent> {
         } else if (interfaceId == 5382) {
             itemContainer = player.getBank();
         }
-        if (itemContainer != null) {
+        if (itemContainer != null) {//arrange
             if (mode) {
                 itemContainer.insert(fromIndex, toIndex);
             } else {
