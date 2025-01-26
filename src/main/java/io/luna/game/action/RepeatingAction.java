@@ -10,7 +10,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * An {@link Action} implementation that automatically repeats for a specified duration.
  *
- * @author lare96 
+ * @author lare96
  */
 public abstract class RepeatingAction<T extends Mob> extends Action<T> {
 
@@ -28,12 +28,12 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
 
         @Override
         protected void onProcess() {
-           process();
+            process();
         }
 
         @Override
         protected boolean onSchedule() {
-            return start();
+           return start();
         }
 
         @Override

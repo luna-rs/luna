@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.Luna;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnItemEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ValueType;
@@ -28,5 +29,13 @@ public final class MagicOnItemMessageReader extends GameMessageReader<MagicOnIte
             return player.getInventory().contains(event.getTargetItemIndex(), event.getTargetItemId());
         }
         return false;
+    }
+
+    @Override
+    public void handle(Player player, MagicOnItemEvent event) {
+        if (Luna.settings().game().betaMode()) {
+            player.sendMessage("[MagicOnItemEvent]: spellId: " + event.getSpellId() + ", widget: " +
+                    event.getTargetItemInterface() + ", index: " + event.getTargetItemIndex() + ", id: " + event.getTargetItemId());
+        }
     }
 }

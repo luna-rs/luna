@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.bot;
-
-import api.bot.AioBotScript;
+import api.bot.ExampleBotScript;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.Futures;
@@ -50,9 +49,9 @@ public final class Bot extends Player {
     // TODO class to manage bot logins/logouts. randomly log them out and back in.
 
     /**
-     * The default script generator function, uses {@link AioBotScript}.
+     * The default script generator function, uses {@link ExampleBotScript}.
      */
-    private static final Function<Bot, BotScript> DEFAULT_SCRIPT_GENERATOR = AioBotScript::new;
+    private static final Function<Bot, BotScript> DEFAULT_SCRIPT_GENERATOR = ExampleBotScript::new;
 
     /**
      * The logger.

@@ -48,7 +48,7 @@ public abstract class BotScript {
      * Initializes this script by executing the necessary listeners.
      */
     void init() {
-        if(!start()) {
+        if (!start()) {
             bot.terminateScript();
         }
     }
@@ -93,5 +93,12 @@ public abstract class BotScript {
      */
     public int getExecutions() {
         return executions;
+    }
+
+    /**
+     * @return The bot instance.
+     */
+    public Bot getBot() {
+        return bot;
     }
 }

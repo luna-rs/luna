@@ -14,9 +14,9 @@ fun lookupBar(player: Player): BarType? {
     for (item in player.inventory) {
         if (item != null) {
             val bar = BarType.ID_TO_BAR[item.id]
-            /*if(bar == Bar.SLIVER || bar == Bar.GOLD) {
+            if(bar == BarType.SILVER || bar == BarType.GOLD) {
                 continue
-            }*/
+            }
             if (bar != null && player.smithing.level >= bar.level) {
                 return bar
             }

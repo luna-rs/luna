@@ -3,8 +3,15 @@ package world.player
 /**
  * A collection of sound constants.
  */
-enum class Sounds( val id: Int) {
+enum class Sounds(val id: Int) {
     PICK_LOCK(37),
+    TELEGRAB(200),
+    TELEPORT(202),
+    SUPERHEAT(217),
+    TELEOTHER(219),
+    LOW_ALCHEMY(224),
+    BONES_TO_ITEMS(227),
+    HIGH_ALCHEMY(223),
     SMELTING(352),
     PICKUP_ITEM(356),
     COOK_FOOD(357),

@@ -5,7 +5,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
-import io.luna.game.action.Action;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.event.impl.RegionChangedEvent;
@@ -453,11 +452,6 @@ public class Player extends Mob {
     }
 
     @Override
-    public void onSubmitAction(Action action) {
-        interfaces.applyActionClose();
-    }
-
-    @Override
     protected void onPositionChanged(Position oldPos) {
         checkRegionChanged(oldPos);
     }
@@ -759,6 +753,21 @@ public class Player extends Mob {
      */
     public void playRandomSound(Sounds... sound) {
         playSound(RandomUtils.random(sound), 0);
+    }
+
+    /**
+     * Plays the sound with {@code id} with {@code delay}.
+     */
+    public void playSound(int soundId, int delay) {
+        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
+        queue(new SoundMessageWriter(soundId, volume, delay));
+    }
+
+    /**
+     * Plays sound with {@code id} with no delay.
+     */
+    public void playSound(int soundId) {
+        playSound(soundId, 0);
     }
 
     /**

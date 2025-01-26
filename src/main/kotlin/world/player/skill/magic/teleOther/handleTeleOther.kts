@@ -7,7 +7,7 @@ import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.varp.PersistentVarp
 import world.player.skill.magic.Magic
-import world.player.skill.magic.Magic.teleOtherRequests
+import world.player.skill.magic.teleOther.TeleOtherAction.Companion.teleOtherRequests
 import java.util.concurrent.TimeUnit
 
 /**
@@ -23,7 +23,7 @@ class TeleOtherRequest {
     /**
      * If another request can be sent.
      */
-    fun isExpired() = timer.elapsed().toSeconds() >= Magic.TELEOTHER_DELAY_SECONDS
+    fun isExpired() = timer.elapsed().toSeconds() >= TeleOtherAction.TELEOTHER_DELAY_SECONDS
 }
 
 
@@ -31,7 +31,7 @@ class TeleOtherRequest {
  * Opens the [TeleOtherInterface] for the [target].
  */
 fun open(source: Player, target: Player, type: TeleOtherType) {
-    if(target.interfaces.isStandardOpen || target.interfaces.isInputOpen) {
+    if (target.interfaces.isStandardOpen || target.interfaces.isInputOpen) {
         source.sendMessage("That player is busy.")
         return
     }
@@ -44,14 +44,14 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
         return
     }
     val timestamp = source.teleOtherRequests[target.usernameHash]
-    if(timestamp != null) {
+    if (timestamp != null) {
         val elapsed = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - timestamp)
-        if(elapsed < Magic.TELEOTHER_DELAY_SECONDS) {
+        if (elapsed < TeleOtherAction.TELEOTHER_DELAY_SECONDS) {
             source.sendMessage("You have already recently sent a teleother request to this person.")
             return
         }
     }
-    if (Magic.checkRequirements(source, type.level, type.requirements)) {
+    if (Magic.checkRequirements(source, type.level, type.requirements) != null) {
         source.teleOtherRequests[target.usernameHash] = System.nanoTime()
         target.interfaces.open(TeleOtherInterface(source, target, type))
         target.walking.clear()

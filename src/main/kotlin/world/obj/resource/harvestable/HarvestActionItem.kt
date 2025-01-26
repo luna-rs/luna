@@ -35,7 +35,7 @@ class HarvestActionItem(plr: Player, val gameObject: GameObject, val resource: H
             // Schedule the resource for respawning.
             val ticks = resource.computeRespawnTicks()
             world.scheduleOnce(ticks.random()) {
-                world.addObject(gameObject.id, gameObject.position, ObjectType.DEFAULT, ObjectDirection.SOUTH)
+                world.addObject(gameObject.id, gameObject.position, gameObject.objectType, gameObject.direction)
             }
         }
     }

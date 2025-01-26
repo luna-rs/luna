@@ -272,21 +272,6 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     }
 
     override fun execute(plr: Player) {
-        val itemCount = chest.items.size()
-        val botCount = when {
-            itemCount < 15 -> rand(2, 4)
-            itemCount < 25 -> rand(4, 8)
-            itemCount < 50 -> rand(6, 12)
-            itemCount < 100 -> rand(8, 16)
-            itemCount < 150 -> rand(10, 20)
-            itemCount < 175 -> rand(12, 24)
-            else -> rand(14, 28)
-        }
-        if (botCount > 0) {
-            // TODO log in random bots with drop party script?
-            //val bot = Bot.Builder(ctx).setScript { DropPartyBotScript(it) }.build()
-            //bot.login()
-        }
         world.schedule(DropPartyCountdown())
     }
 

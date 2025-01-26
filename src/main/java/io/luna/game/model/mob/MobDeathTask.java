@@ -47,7 +47,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     mob.getPlugins().post(new DeathEvent(mob, source));
                     break;
                 case POST_DEATH:
-                    mob.teleport(Luna.settings().game().startingPosition());
+                    mob.move(Luna.settings().game().startingPosition());
                     mob.animation(new Animation(65535));
                     mob.queue(new WalkableInterfaceMessageWriter(65535));
                     mob.getSkills().resetAll();

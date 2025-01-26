@@ -1,7 +1,6 @@
 package world.player.login.init
 
 import api.predef.*
-import world.player.punishment.PunishmentHandler
 import io.luna.Luna
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
@@ -9,6 +8,7 @@ import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
 import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
+import world.player.punishment.PunishmentHandler
 import java.time.format.DateTimeFormatter
 
 /**
@@ -50,7 +50,7 @@ fun init(plr: Player) {
     plr.skills.forEach { plr.queue(SkillUpdateMessageWriter(it.id)) }
 
     plr.sendMessage("Welcome to Luna.")
-    if (Luna.settings().game().betaMode()) {
+    if (Luna.settings().game().betaMode() || plr.rights >= RIGHTS_ADMIN) {
         plr.sendMessage("Server currently running in ${Luna.settings().game().runtimeMode()} mode.")
     }
     checkMute(plr)

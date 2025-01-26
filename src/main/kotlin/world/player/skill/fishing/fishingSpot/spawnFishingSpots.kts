@@ -19,8 +19,8 @@ fun moveSpots() {
         .filter { it.countdown() }
         .forEach {
             when (it.position) {
-                it.home -> it.teleport(it.away)
-                it.away -> it.teleport(it.home)
+                it.home -> it.move(it.away)
+                it.away -> it.move(it.home)
             }
         }
 }

@@ -77,7 +77,6 @@ public class GameObject extends StationaryEntity {
      */
     private final boolean dynamic;
 
-    // TODO private constructor
     /**
      * Creates a new {@link GameObject} that can be either static or dynamic.
      *
@@ -90,13 +89,14 @@ public class GameObject extends StationaryEntity {
      * @param dynamic If this object is dynamic.
      */
     public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, ChunkUpdatableView view, boolean dynamic) {
+        // TODO private constructor
         super(context, position, EntityType.OBJECT, view);
         this.id = id;
         this.objectType = objectType;
         this.direction = direction;
         this.dynamic = dynamic;
         definition = GameObjectDefinition.ALL.get(id).orElse(null);
-        if(!dynamic) {
+        if (!dynamic) {
             setHidden(false);
         }
     }
@@ -153,7 +153,7 @@ public class GameObject extends StationaryEntity {
                 int offset = getChunk().offset(position);
                 AnimateGameObjectMessageWriter msg = new AnimateGameObjectMessageWriter(offset, objectType.getId(),
                         direction.getId(), animationId);
-                chunkRepository.queueUpdate(new ChunkUpdatableRequest(this,msg));
+                chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
             }
         }
     }
@@ -165,7 +165,7 @@ public class GameObject extends StationaryEntity {
      */
     public boolean replaces(GameObject object) {
         return position.equals(object.position) &&
-                type == object.type &&
+                objectType == object.objectType &&
                 getView().equals(object.getView());
     }
 

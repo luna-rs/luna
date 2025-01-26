@@ -1,6 +1,7 @@
 package world.player.skill.magic.bonesToItems
 
 import api.attr.Attr
+import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.QueuedAction
 import io.luna.game.model.mob.Player
@@ -29,7 +30,8 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
     }
 
     override fun execute() {
-        if (Magic.checkRequirements(mob, type.level, type.requirements)) {
+        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
+        if (removeItems != null) {
             val count = mob.inventory.computeAmountForId(BONES)
             if (count == 0) {
                 // todo proper message
@@ -40,9 +42,11 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
             mob.playSound(Sounds.BONES_TO_ITEMS)
             world.scheduleOnce(1) {
                 val name = if (type == BonesToItemsType.BANANAS) "bananas" else "peaches"
+                mob.inventory.removeAll(removeItems)
                 mob.inventory.replaceAll(BONES, type.id)
                 mob.animation(Animations.BONES_TO_ITEMS)
                 mob.graphic(Graphic(141, 100))
+                mob.magic.addExperience(type.xp)
                 // todo proper message
                 mob.sendMessage("You turn the bones in your inventory into $name.")
                 mob.unlock()

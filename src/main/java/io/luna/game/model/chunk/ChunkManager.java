@@ -61,6 +61,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
 
     /**
      * Creates a new {@link ChunkManager}.
+     *
      * @param world The world instance.
      */
     public ChunkManager(World world) {
@@ -219,6 +220,13 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
         // Send out grouped entity updates for new chunks in view.
         for (ChunkRepository chunk : newChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
+            // Chunk is being cleared, so resend static updates like displaying registered objects and items.
+            for(ChunkUpdatableRequest request : chunk.getPersistentUpdates()) {
+                ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
+                if (view.isViewableFor(player)) {
+                    updates.add(request.getMessage());
+                }
+            }
             if (!updates.isEmpty()) {
                 updatedChunks.add(chunk);
                 player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
@@ -238,10 +246,6 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
             }
             chunk.resetUpdates();
         }
-    }
-
-    public void clearTemporaryEntities() {
-
     }
 
     /**

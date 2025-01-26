@@ -1,7 +1,5 @@
 package io.luna.game.model.chunk;
 
-import io.luna.game.model.StationaryEntity;
-
 /**
  * Represents a pending update request for a {@link ChunkUpdatable} within a {@link Chunk}.
  *
@@ -20,15 +18,21 @@ public final class ChunkUpdatableRequest {
     private final ChunkUpdatableMessage message;
 
     /**
+     * If this request is persistent.
+     */
+    private final boolean persistent;
+
+    /**
      * Creates a new {@link ChunkUpdatableRequest}.
      *
-     * @param entity The {@link StationaryEntity} this update is for.
-     * @param owner The player to update for.
+     * @param updatable The {@link ChunkUpdatable} this update is for.
      * @param message The update message.
+     * @param persistent If this request is persistent.
      */
-    public ChunkUpdatableRequest(ChunkUpdatable updatable, ChunkUpdatableMessage message) {
+    public ChunkUpdatableRequest(ChunkUpdatable updatable, ChunkUpdatableMessage message, boolean persistent) {
         this.updatable = updatable;
         this.message = message;
+        this.persistent = persistent;
     }
 
     /**
@@ -43,5 +47,12 @@ public final class ChunkUpdatableRequest {
      */
     public ChunkUpdatableMessage getMessage() {
         return message;
+    }
+
+    /**
+     * @return If this request is persistent.
+     */
+    public boolean isPersistent() {
+        return persistent;
     }
 }

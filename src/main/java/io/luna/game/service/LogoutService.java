@@ -33,7 +33,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     /**
      * The maximum duration that a player can stay in the logout queue for.
      */
-    private static final Duration FORCE_LOGOUT_THRESHOLD = Duration.ofMinutes(5);
+    private static final Duration FORCE_LOGOUT_THRESHOLD = Duration.ofHours(1);
 
     /**
      * The login request model.
@@ -104,7 +104,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     boolean canFinishRequest(String username, LogoutRequest request) {
         Player player = request.player;
 
-        return (/* TODO No combat for 10 seconds? && */ player.getControllers().checkLogout()) ||
+        return (/* TODO No combat for 10 seconds? && */ player.getControllers().checkLogout() && !player.isLocked()) ||
                 request.isTimeout();
     }
 

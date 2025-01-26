@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.event.impl.ControllableEvent
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
+import world.player.skill.magic.teleportSpells.TeleportAction
 import world.player.wilderness.WildernessAreaController.wildernessLevel
 
 /**
@@ -24,11 +25,6 @@ object WildernessAreaController : PlayerLocationController() {
      * The player's current wilderness level. Will be `0` if not in the wilderness.
      */
     var Player.wildernessLevel by Attr.int()
-
-    /**
-     * A list of teleportation commands that don't work above level 20 wilderness.
-     */
-    val TELEPORT_COMMANDS = setOf("home")
 
     override fun canEnter(plr: Player): Boolean {
         setWildernessLevel(plr)
@@ -54,14 +50,8 @@ object WildernessAreaController : PlayerLocationController() {
         Area.of(2041, 3519, 3392, 3966)
     )
 
-    override fun onPlayerEvent(player: Player, event: ControllableEvent): Boolean {
-        if(player.rights >= RIGHTS_ADMIN)
-            return true
-        if(event is CommandEvent && TELEPORT_COMMANDS.contains(event.name) && !canTeleport(player)) {
-            // Block teleport commands after level 20 wilderness.
-            return false
-        }
-        return true
+    override fun canTeleport(player: Player, action: TeleportAction): Boolean {
+        return canTeleport(player)
     }
 
     /**

@@ -33,7 +33,7 @@ public final class TimeSource extends TickTimer {
      * @param duration The elapsed duration to check for.
      * @return {@code true} if an action is ready to be executed.
      */
-    boolean ready(int duration) {
+    public boolean ready(int duration) {
         if (!checked || getDurationTicks() >= duration) {
             checked = true;
             reset();

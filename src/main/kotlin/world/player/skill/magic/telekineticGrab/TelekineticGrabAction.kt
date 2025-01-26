@@ -5,6 +5,7 @@ import io.luna.game.action.Action
 import io.luna.game.action.RepeatingAction
 import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.Position
@@ -15,8 +16,6 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectGroup
-import io.luna.net.msg.out.AddProjectileMessageWriter
-import io.luna.net.msg.out.ChunkPlacementMessageWriter
 import world.player.Messages
 import world.player.Sounds
 import world.player.skill.magic.Magic
@@ -30,14 +29,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : R
 
     override fun start(): Boolean {
         mob.face(groundItem.position)
-
-        val pathBlockedFunc = { last: Position, _: Direction ->
-            val list = world.chunks.getViewableEntities<GameObject>(last, TYPE_OBJECT).filter {
-                it.objectType.group == ObjectGroup.WALL && it.position == last // todo figure out how to do properly
-            }
-            list.isNotEmpty()
-        }
-        if (!world.collisionManager.raycast(mob.position, groundItem.position, pathBlockedFunc)) {
+        if (!world.collisionManager.raycast(mob.position, groundItem.position)) {
             mob.sendMessage("I can't reach that!")
             return false
         }
@@ -46,10 +38,16 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : R
             mob.sendMessage(Messages.INVENTORY_FULL)
             return false
         }
-        return Magic.checkRequirements(mob, 33, listOf(
+        val removeItems = Magic.checkRequirements(mob, 33, listOf(
             RuneRequirement(Rune.AIR, 1),
             RuneRequirement(Rune.LAW, 1)
         ))
+        if (removeItems != null) {
+            mob.inventory.removeAll(removeItems)
+            mob.magic.addExperience(43.0)
+            return true
+        }
+        return false
     }
 
     override fun repeat() {

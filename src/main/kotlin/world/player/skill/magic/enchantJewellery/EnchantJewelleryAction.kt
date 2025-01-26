@@ -23,7 +23,8 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
     }
 
     override fun execute() {
-        if (Magic.checkRequirements(mob, type.level, type.requirements)) {
+        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
+        if (removeItems != null) {
             val itemId = mob.inventory.computeIdForIndex(itemIndex).orElse(-1)
             val enchantItem = type.enchantMap[itemId]
             if (enchantItem == null) {
@@ -32,6 +33,8 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
                 return
             }
             mob.inventory.set(itemIndex, Item(enchantItem.id))
+            mob.inventory.removeAll(removeItems)
+            mob.magic.addExperience(type.xp)
             mob.animation(enchantItem.animation)
             mob.graphic(enchantItem.graphic)
             mob.playSound(enchantItem.sound)

@@ -18,10 +18,11 @@ import java.util.OptionalInt;
  */
 public class LocalProjectile extends LocalEntity {
 // TODO finish documenation once tested and all values figured out.
+
     /**
      * A builder for {@link LocalProjectile} types.
      */
-    private static abstract class TargetBuilder {
+    public static abstract class TargetBuilder {
         private final LunaContext context;
         private int id = -1;
         private int startHeight;
@@ -31,23 +32,27 @@ public class LocalProjectile extends LocalEntity {
         private int initialSlope = 25 * 128 / 180; // TODO number between 0-64
         private ChunkUpdatableView view = ChunkUpdatableView.globalView();
 
-        public void setId(int id) {
+        public TargetBuilder setId(int id) {
             this.id = id;
+            return this;
         }
 
-        public void setStartHeight(int startHeight) {
+        public TargetBuilder setStartHeight(int startHeight) {
             this.startHeight = startHeight;
+            return this;
         }
 
-        public void setEndHeight(int endHeight) {
+        public TargetBuilder setEndHeight(int endHeight) {
             this.endHeight = endHeight;
+            return this;
         }
 
-        public void setDurationTicks(int durationTicks) {
+        public TargetBuilder setDurationTicks(int durationTicks) {
             int ticksToMs = durationTicks * 600;
             int msToClientTicks = ticksToMs / 20;
             ticksToStart = msToClientTicks;
             ticksToEnd = ticksToStart + msToClientTicks;
+            return this;
         }
 
         public void setInitialSlope(int initialSlope) {
@@ -122,16 +127,21 @@ public class LocalProjectile extends LocalEntity {
             return (sourceEntity.size() * 64) + (sourceDistanceOffset * 64); // startdistanceoffset?
         }
 
-        public void setSourceEntity(Entity sourceEntity) {
+        public EntityTargetBuilder setSourceEntity(Entity sourceEntity) {
             this.sourceEntity = sourceEntity;
+            return this;
         }
 
-        public void setTargetEntity(Entity targetEntity) {
+        public EntityTargetBuilder setTargetEntity(Entity targetEntity) {
             this.targetEntity = targetEntity;
+            return this;
+
         }
 
-        public void setSourceDistanceOffset(int sourceDistanceOffset) {
+        public EntityTargetBuilder setSourceDistanceOffset(int sourceDistanceOffset) {
             this.sourceDistanceOffset = sourceDistanceOffset;
+            return this;
+
         }
     }
 
@@ -146,12 +156,14 @@ public class LocalProjectile extends LocalEntity {
             super(context);
         }
 
-        public void setSourcePosition(Position sourcePosition) {
+        public PositionTargetBuilder setSourcePosition(Position sourcePosition) {
             this.sourcePosition = sourcePosition;
+            return this;
         }
 
-        public void setTargetPosition(Position targetPosition) {
+        public PositionTargetBuilder setTargetPosition(Position targetPosition) {
             this.targetPosition = targetPosition;
+            return this;
         }
 
         @Override

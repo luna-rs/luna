@@ -38,7 +38,7 @@ abstract class HarvestableResource : GameResource() {
     fun harvest(plr: Player, gameObject: GameObject) {
         if (plr.inventory.isFull) {
             plr.sendMessage("Your inventory is full.")
-        } else /*if(!gameObject.isHidden)*/ {// TODO after cache loading
+        } else {
             plr.submitAction(HarvestActionItem(plr, gameObject, this))
         }
     }

@@ -94,7 +94,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     public final void show() {
         if (hidden) {
             int offset = getChunk().offset(position);
-            queueUpdate(showMessage(offset));
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, showMessage(offset), true));
             hidden = false;
         }
     }
@@ -107,18 +107,10 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     public final void hide() {
         if (!hidden) {
             int offset = getChunk().offset(position);
-            queueUpdate(hideMessage(offset));
+            chunkRepository.removeUpdate(this);
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, hideMessage(offset), false));
             hidden = true;
         }
-    }
-
-    /**
-     * Queues update message {@code msg} to the owner of this entity.
-     *
-     * @param msg The message to queue.
-     */
-    protected final void queueUpdate(ChunkUpdatableMessage msg) {
-        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this,  msg));
     }
 
     /**
@@ -165,7 +157,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     /**
      * Sets the hidden flag.
      */
-   protected void setHidden(boolean hidden) {
+    protected void setHidden(boolean hidden) {
         this.hidden = hidden;
     }
 
@@ -176,7 +168,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
      * We retain references to the original sets instead of flattening them, so that they implicitly stay updated as
      * players move in and out of view of this entity. This means we only have to build the returned list once.
      */
-    public final ImmutableList<Set<Player>> getSurroundingPlayers() {
+    public final ImmutableList<Set<Player>> getSurroundingPlayers() { //todo test
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
             // Retrieve viewable chunks.

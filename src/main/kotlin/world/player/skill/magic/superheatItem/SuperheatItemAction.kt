@@ -25,7 +25,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         /**
          * The amount of magic XP to give.
          */
-        private const val XP = 53
+        private const val XP = 53.0
 
         /**
          * The magic level required.
@@ -47,14 +47,17 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
     }
 
     override fun execute() {
-        if (Magic.checkRequirements(mob, LEVEL, RUNES)) {
+        val removeItems = Magic.checkRequirements(mob, LEVEL, RUNES)
+        if (removeItems != null) {
             val barType = computeBarType()
             if (barType != null) {
                 mob.lock()
                 mob.playSound(Sounds.SUPERHEAT)
                 world.scheduleOnce(2) {
                     mob.inventory.removeAll(barType.oreRequired)
+                    mob.inventory.removeAll(removeItems)
                     mob.inventory.add(Item(barType.id))
+                    mob.magic.addExperience(XP)
                     mob.animation(Animations.SUPERHEAT)
                     mob.graphic(Graphic(148, 100))
                     mob.smithing.addExperience(barType.xp)

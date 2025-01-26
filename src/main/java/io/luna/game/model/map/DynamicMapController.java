@@ -9,12 +9,12 @@ public abstract class DynamicMapController extends PlayerController {
     // TODO finish, need to think more about what could be added here
     @Override
     public final void onRegister(Player player) {
-        player.teleport(enter(player));
+        player.move(enter(player));
     }
 
     @Override
     public final void onUnregister(Player player) {
-        player.teleport(exit(player));
+        player.move(exit(player));
     }
 
     public abstract Position enter(Player player);

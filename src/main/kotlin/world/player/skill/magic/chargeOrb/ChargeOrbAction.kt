@@ -30,11 +30,14 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
     }
 
     override fun execute() {
-        if (Magic.checkRequirements(mob, type.level, type.requirements)) {
+        val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
+        if (removeItems != null) {
             mob.lock()
             mob.playSound(type.sound)
             world.scheduleOnce(1) {
                 mob.inventory.add(Item(type.chargedOrb))
+                mob.inventory.removeAll(removeItems)
+                mob.magic.addExperience(type.xp)
                 mob.animation(Animations.CHARGE_ORB)
                 mob.graphic(Graphic(type.graphic, 100))
                 // todo proper message

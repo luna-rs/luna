@@ -1,6 +1,7 @@
 package io.luna.game.action;
 
 import io.luna.game.model.EntityState;
+import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
 
@@ -76,6 +77,9 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
 
     @Override
     public void run() {
+        if(mob.getType() == EntityType.PLAYER) {
+            mob.asPlr().getInterfaces().applyActionClose();
+        }
         mob.getWalking().clear();
         if (source.ready(delay)) {
             execute();

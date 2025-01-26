@@ -16,6 +16,18 @@ import world.player.skill.smithing.BarType
  */
 class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryAction(plr, true, 3, times) {
 
+    // TODO Proper messages https://github.com/luna-rs/luna/issues/358
+
+    override fun executeIf(start: Boolean): Boolean =
+        when {
+            mob.smithing.level < barType.level -> {
+                mob.sendMessage("You need a Smithing level of ${barType.level} to smelt this.")
+                false
+            }
+
+            else -> true
+        }
+
     override fun execute() {
         val wearingGoldsmithGauntlet = mob.equipment.computeIdForIndex(Equipment.HANDS).orElse(-1) == 776
         val xp = if (wearingGoldsmithGauntlet) barType.xp * 2.5 else barType.xp
