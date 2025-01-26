@@ -89,7 +89,7 @@ public final class GameObjectList extends StationaryEntityList<GameObject> {
     @Override
     protected boolean onUnregister(GameObject object) {
         Optional<GameObject> existingObject = findAll(object.getPosition()).
-                filter(object::replaces). // TODO object.equals?
+                filter(object::replaces).
                 findFirst();
         return removeFromSet(existingObject);
     }

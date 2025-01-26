@@ -14,7 +14,6 @@ public final class MouseFlaggedMessageReader extends GameMessageReader<NullEvent
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {
-        // TODO properly decode data
         return NullEvent.INSTANCE;
     }
 }

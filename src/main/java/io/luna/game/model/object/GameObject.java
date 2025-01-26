@@ -89,7 +89,6 @@ public class GameObject extends StationaryEntity {
      * @param dynamic If this object is dynamic.
      */
     public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, ChunkUpdatableView view, boolean dynamic) {
-        // TODO private constructor
         super(context, position, EntityType.OBJECT, view);
         this.id = id;
         this.objectType = objectType;

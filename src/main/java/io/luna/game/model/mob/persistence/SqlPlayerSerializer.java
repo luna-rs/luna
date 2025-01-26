@@ -96,12 +96,37 @@ public final class SqlPlayerSerializer extends PlayerSerializer {
 
     @Override
     public boolean delete(World world, String username) throws Exception {
-        // TODO Delete skills data
         try (Connection connection = connectionPool.take();
-             PreparedStatement loadData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;")) {
-            loadData.setString(1, username);
-            if (loadData.executeUpdate() < 1) {
+             PreparedStatement databaseId = connection.prepareStatement("SELECT id FROM main_data WHERE username = ?;");
+             PreparedStatement mainData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;");
+             PreparedStatement skillsData = connection.prepareStatement("DELETE FROM skills_data WHERE id = ?;")) {
+
+            int id = -1;
+            databaseId.setString(1, username);
+            try (var results = databaseId.executeQuery()) {
+                if (results.next()) {
+                    id = results.getInt("id");
+                }
+            }
+            if (id == -1) {
                 return false;
+            }
+
+            connection.setAutoCommit(false);
+            try {
+                mainData.setString(1, username);
+                if (mainData.executeUpdate() < 1) {
+                    connection.rollback();
+                    return false;
+                }
+                skillsData.setInt(1, id);
+                if (skillsData.executeUpdate() < 1) {
+                    connection.rollback();
+                    return false;
+                }
+                connection.commit();
+            } finally {
+                connection.setAutoCommit(true);
             }
         } catch (Exception e) {
             logger.warn(new ParameterizedMessage("Could not delete record for {}.", username), e);
