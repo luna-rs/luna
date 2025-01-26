@@ -102,7 +102,7 @@ enum class Fish(val id: Int,
     /**
      * The default catch message.
      */
-    val catchMessage = "You catch ${addArticle(formattedName)}."
+    val catchMessage = "You manage to catch ${addArticle(formattedName)}."
 
     /**
      * Retrieves the item instance from this fish.
