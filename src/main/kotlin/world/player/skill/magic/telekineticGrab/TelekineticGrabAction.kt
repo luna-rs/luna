@@ -5,6 +5,7 @@ import io.luna.game.action.Action
 import io.luna.game.action.RepeatingAction
 import io.luna.game.model.Direction
 import io.luna.game.model.EntityState
+import io.luna.game.model.EntityType
 import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.Position
@@ -27,13 +28,9 @@ import world.player.skill.magic.RuneRequirement
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : RepeatingAction<Player>(plr, false, 1) {
 
     override fun start(): Boolean {
-        mob.face(groundItem.position) // TODO do in packet?
-
-        val pathBlockedFunc = { last: Position, _: Direction ->
-            val list = world.chunks.getViewableEntities<GameObject>(last, TYPE_OBJECT).filter {
-                it.objectType.group == ObjectGroup.WALL && it.position == last // todo figure out how to do properly
-            }
-            list.isNotEmpty()
+        mob.face(groundItem.position)
+        val pathBlockedFunc = { last: Position, direction: Direction ->
+            !world.collisionManager.traversable(last, EntityType.PROJECTILE, direction)
         }
         if (!world.collisionManager.raycast(mob.position, groundItem.position, pathBlockedFunc)) {
             mob.sendMessage("I can't reach that!")
