@@ -16,7 +16,7 @@ import io.luna.net.msg.GameMessageReader;
 public final class SwapItemsMessageReader extends GameMessageReader<NullEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {   // TODO fix insert mode
+    public NullEvent decode(Player player, GameMessage msg) {
         int toIndex = msg.getPayload().getShort(ByteOrder.LITTLE, ValueType.ADD);
         int insertionMode = msg.getPayload().get(false, ValueType.ADD);
         int interfaceId = msg.getPayload().getShort(ValueType.ADD);
@@ -31,7 +31,7 @@ public final class SwapItemsMessageReader extends GameMessageReader<NullEvent> {
         }
         if (itemContainer != null) {
             if (mode) {
-                itemContainer.insert(toIndex, fromIndex);
+                itemContainer.insert(fromIndex, toIndex);
             } else {
                 itemContainer.swap(toIndex, fromIndex);
             }
