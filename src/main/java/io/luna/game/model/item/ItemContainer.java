@@ -22,7 +22,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -518,15 +517,6 @@ public class ItemContainer implements Iterable<Item> {
      */
     public final int replaceAll(int oldId, int newId) {
         return replace(oldId, newId, Integer.MAX_VALUE);
-    }
-
-    public final Optional<Item> anyMatch(Predicate<Item> cond) {
-        for (Item item : items) {
-            if (item != null && cond.test(item)) {
-                return Optional.of(item);
-            }
-        }
-        return Optional.empty();
     }
 
     /**
