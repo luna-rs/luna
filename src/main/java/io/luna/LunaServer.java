@@ -10,6 +10,7 @@ import io.luna.game.cache.codec.NpcDefinitionDecoder;
 import io.luna.game.cache.codec.ObjectDefinitionDecoder;
 import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.cache.codec.VarpDefinitionDecoder;
+import io.luna.game.cache.codec.WidgetDefinitionDecoder;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -101,6 +102,7 @@ public final class LunaServer {
         Cache cache = context.getCache();
         cache.open();
         cache.runDecoders(context, new ObjectDefinitionDecoder(),
+                new WidgetDefinitionDecoder(),
                 new ItemDefinitionDecoder(),
                 new NpcDefinitionDecoder(),
                 new VarBitDefinitionDecoder(),
