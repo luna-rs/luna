@@ -56,6 +56,9 @@ fun makeSilverJewellery(plr: Player, itemId: Int, times: Int) {
     val table = SilverJewelleryTable.ID_TO_TABLE[itemId]
     if (table != null) {
         plr.submitAction(CraftJewelleryAction(plr, BarType.SILVER, table.jewelleryItem, times))
+    } else if (SilverJewelleryTable.MOULDS.contains(itemId)) {
+        // todo https://github.com/luna-rs/luna/issues/361
+        plr.sendMessage("You need ${addArticle(itemId)} to make this.")
     }
 }
 
