@@ -61,12 +61,29 @@ fun smeltButtons(make1: Int, make5: Int, make10: Int, makeX: Int, barType: BarTy
     }
 }
 
+/**
+ * Determines if [plr] has any ores in their inventory.
+ */
+fun hasAnyOres(plr: Player): Boolean {
+    for (item in plr.inventory) {
+        if (item != null && BarType.ORE_TO_BAR.containsKey(item.id)) {
+            return true
+        }
+    }
+    return false
+}
+
 /* Use ore on furnace to smelt all or click furnace to open interface. */
 for (furnaceId in Smithing.FURNACE_OBJECTS) {
     for (ore in SmeltOre.VALUES) {
         useItem(ore.useId).onObject(furnaceId) { smelt(plr, ore.barType, 28) }
     }
-    object2(furnaceId) { plr.interfaces.open(SmeltingInterface()) }
+
+    object2(furnaceId) {
+        if (hasAnyOres(plr)) {
+            plr.interfaces.open(SmeltingInterface())
+        }
+    }
 }
 
 /* Smelt 1, 5, 10, X buttons for all bars. */
