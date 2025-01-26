@@ -28,7 +28,7 @@ public final class Item {
      * @param name The name.
      * @param amount The amount.
      * @return The item.
-     */ // todo if tradable and no noted version, ignore item?
+     */
     public static Item byName(String name, int amount) {
         boolean noted = name.endsWith("(noted)");
         return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&

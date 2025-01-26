@@ -204,15 +204,15 @@ public final class WalkingQueue {
                        simplePathfinder.find(mob.getPosition(), target);
         int size = path.size();
         if (size == 1) {
-            addFirst(path.poll().toStep());
+            addFirst(new Step(path.poll()));
         } else if (size > 1) {
-            addFirst(path.poll().toStep());
+            addFirst(new Step(path.poll()));
             for (; ; ) {
                 Position position = path.poll();
                 if (position == null) {
                     break;
                 }
-                add(position.toStep());
+                add(new Step(position));
             }
         }
     }

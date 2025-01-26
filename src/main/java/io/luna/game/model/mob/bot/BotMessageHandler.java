@@ -5,6 +5,7 @@ import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -53,9 +54,11 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class BotMessageHandler {
 
-// TODO split up into one class for handling read messages, and one 'actionhandler' type class for writes
-    // TODO everything in this class should return suspendablefuture for coroutines
-    // todo documentaition
+    // todo https://github.com/luna-rs/luna/issues/378
+// split up into one class for handling read messages, and one 'actionhandler' type class for writes
+    // everything in this class should return suspendablefuture for coroutines
+    //  documentaition
+
     /**
      * An enum representing chat color.
      */
@@ -350,22 +353,33 @@ public final class BotMessageHandler {
         return Collections.unmodifiableList(receivedMessages);
     }
 
-// todo convert to java
-   /* public SuspendableFuture depositItem(Item item) {
+    /**
+     * Deposits a single item if the banking interface is open.
+     *
+     * @param item The item to deposit.
+     * @return
+     */
+    public SuspendableFuture depositItem(int inventoryIndex, int amount) {
         SuspendableFuture future = new SuspendableFuture();
         if (bot.getBank().isOpen()) {
-
-    .filter {
-                widgetId == 5064 && plr.bank.isOpen
+            Item item = bot.getInventory().get(inventoryIndex);
+            if(item == null) {
+                return future.signal(false);
             }
-    .then {
-                deposit(this, 1)
-            }
+            sendItemWidgetClick(5, inventoryIndex, 5064, item.getId());
+            enterAmount(amount);
             return future;
         } else {
             return future.signal(false);
         }
-    }*/
+    }
+
+    public void enterAmount(int amount) {
+        ByteMessage msg = ByteMessage.raw();
+        msg.putInt(amount);
+        client.queueSimulated(new GameMessage(75, MessageType.FIXED, msg));
+    }
+
     /**
      * Sends the packets required to deposit all items on {@code inventoryIndex}.
      *
@@ -624,7 +638,7 @@ public final class BotMessageHandler {
         return future;
     }
 
-    public SuspendableFuture sendItemWidgetClick(int option, int index, int widgetId, int itemId) {
+    public SuspendableFuture sendItemWidgetClick(int option, int widgetIndex, int widgetId, int itemId) {
         SuspendableFuture future = new SuspendableFuture();
         checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
 
@@ -634,29 +648,29 @@ public final class BotMessageHandler {
             case 1:
                 msg.putShort(itemId, ValueType.ADD);
                 msg.putShort(widgetId);
-                msg.putShort(index);
+                msg.putShort(widgetIndex);
                 opcode = 3;
                 break;
             case 2:
-                msg.putShort(index, ValueType.ADD);
+                msg.putShort(widgetIndex, ValueType.ADD);
                 msg.putShort(itemId, ByteOrder.LITTLE);
                 msg.putShort(widgetId, ByteOrder.LITTLE);
                 opcode = 177;
                 break;
             case 3:
                 msg.putShort(itemId, ByteOrder.LITTLE);
-                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(widgetIndex, ByteOrder.LITTLE, ValueType.ADD);
                 msg.putShort(widgetId);
                 opcode = 91;
                 break;
             case 4:
                 msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
-                msg.putShort(index, ByteOrder.LITTLE);
+                msg.putShort(widgetIndex, ByteOrder.LITTLE);
                 msg.putShort(itemId);
                 opcode = 231;
                 break;
             case 5:
-                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(widgetIndex, ByteOrder.LITTLE, ValueType.ADD);
                 msg.putShort(itemId, ByteOrder.LITTLE, ValueType.ADD);
                 msg.putShort(widgetId, ByteOrder.LITTLE);
                 opcode = 158;

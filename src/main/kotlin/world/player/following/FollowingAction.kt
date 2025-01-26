@@ -30,7 +30,7 @@ class FollowingAction(mob: Mob, private val target: Mob) : RepeatingAction<Mob>(
         if (target.position == lastPosition) {
             return
         }
-        val distance = mob.position.getDistance(target.position)
+        val distance = mob.position.getEuclideanDistance(target.position)
         if (distance >= 15) {
             stop()
             return

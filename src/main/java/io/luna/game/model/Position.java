@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class Position implements Location {
-// todo new documentation, clean up, explain more stuff
+
     /**
      * The maximum amount of tiles a player can view.
      */
@@ -53,7 +53,7 @@ public final class Position implements Location {
     public Position(int x, int y, int z) {
         checkArgument(x >= 0, "x < 0");
         checkArgument(y >= 0, "y < 0");
-        checkArgument(HEIGHT_LEVELS.contains(z), z+" (z >= 0 && z < 4)");
+        checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
         this.x = x;
         this.y = y;
         this.z = z;
@@ -97,19 +97,13 @@ public final class Position implements Location {
     }
 
     /**
-     * Converts this position to a {@link Step}.
-     */
-    public Step toStep() {
-        return new Step(x, y);
-    }
-
-    /**
-     * Gets the distance between this position and another position. Only x and y are considered (i.e. 2 dimensions).
+     * Gets the euclidean distance between this position and another position. Only x and y are considered
+     * (i.e. 2 dimensions).
      *
      * @param other The other position.
      * @return The distance.
      */
-    public int getDistance(Position other) {
+    public int getEuclideanDistance(Position other) {
         int deltaX = getX() - other.getX();
         int deltaY = getY() - other.getY();
         return (int) Math.ceil(Math.sqrt(deltaX * deltaX + deltaY * deltaY));
@@ -182,6 +176,18 @@ public final class Position implements Location {
      * Returns a new position translated by the specified amounts. The z coordinate will remain
      * unchanged.
      *
+     * @param amountX The x amount.
+     * @param amountY The y amount
+     * @return The translated position.
+     */
+    public Position translate(int amountX, int amountY) {
+        return translate(amountX, amountY, 0);
+    }
+
+    /**
+     * Returns a new position translated by the specified amount. The z coordinate will remain
+     * unchanged.
+     *
      * @param amount The amount.
      * @param direction The direction.
      * @return The translated position.
@@ -192,19 +198,8 @@ public final class Position implements Location {
     }
 
     /**
-     * Returns a new position translated by the specified amounts. The z coordinate will remain
-     * unchanged.
-     *
-     * @param amountX The x amount.
-     * @param amountY The y amount
-     * @return The translated position.
-     */
-    public Position translate(int amountX, int amountY) {
-        return translate(amountX, amountY, 0);
-    }
-
-    /**
      * Returns a new {@link Position} identical to this one in values, except with {@code newZ}.
+     *
      * @param newZ The new {@code z}.
      * @return
      */
