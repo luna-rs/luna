@@ -115,7 +115,7 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
         currentRemove = remove();
         if (isInterrupted() || !container.containsAll(currentRemove)) {
             if(getExecutions() == 0) {
-                mob.sendMessage("You do not have enough materials to do this.");
+                mob.sendMessage(onNoMaterials());
             }
             interrupt();
             return;
@@ -129,13 +129,24 @@ public abstract class ItemContainerAction extends RepeatingAction<Player> {
             return;
         }
         if (requiredSpaces > container.computeRemainingSize()) {
-            mob.sendMessage(Inventory.INVENTORY_FULL_MESSAGE);
+            mob.sendMessage(onInventoryFull());
             interrupt();
             return;
+        }
+        if (getExecutions() == 0) {
+            mob.getInterfaces().applyActionClose();
         }
         container.removeAll(currentRemove);
         container.addAll(currentAdd);
         execute();
+    }
+    //todo override
+
+    public String onInventoryFull() {
+        return Inventory.INVENTORY_FULL_MESSAGE;
+    }
+    public String onNoMaterials() {
+        return "You do not have enough materials to do this.";
     }
 
     /**
