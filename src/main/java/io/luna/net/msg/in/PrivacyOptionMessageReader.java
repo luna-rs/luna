@@ -14,7 +14,6 @@ public final class PrivacyOptionMessageReader extends GameMessageReader<NullEven
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {
-        // TODO decode data
         return NullEvent.INSTANCE;
     }
 }

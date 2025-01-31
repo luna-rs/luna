@@ -16,9 +16,6 @@ enum class EnchantJewelleryType(val spellId: Int,
                                 val requirements: List<SpellRequirement>,
                                 val enchantMap: Map<Int, EnchantItem>) {
 
-    // todo different ring animations, grpahics, sounds?
-   // 210 206/205 ring sounds?
-    // 238 graphic ring?
     LVL_1(spellId = 1155,
           level = 7,
           xp = 17.5,

@@ -792,7 +792,8 @@ public class Player extends Mob {
     /**
      * Plays {@code sound} with {@code delay}.
      */
-    public void playSound(Sounds sound, int delay) {
+    public void playSound(Sounds sound, int delayTicks) {
+        int delay = (delayTicks * 600) / 30;
         int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
         queue(new SoundMessageWriter(sound.getId(), volume, delay));
     }

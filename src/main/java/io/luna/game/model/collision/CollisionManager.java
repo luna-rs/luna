@@ -152,7 +152,7 @@ public final class CollisionManager {
      * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
      */
     public boolean raycast(Position start, Position end) {
-        return raycast(start, end, (last, dir) -> !traversable(last, EntityType.NPC, dir));
+        return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
     }
 
     /**

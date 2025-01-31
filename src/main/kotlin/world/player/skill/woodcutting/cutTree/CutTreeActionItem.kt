@@ -4,7 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
 import io.luna.game.action.ItemContainerAction.InventoryAction
-import io.luna.game.action.ItemContainerAction.UnsynchronizedInventoryAction
+import io.luna.game.action.ItemContainerAction.AnimatedInventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
@@ -17,7 +17,7 @@ import world.player.skill.woodcutting.searchNest.Nest
  * An [InventoryAction] that will enable the cutting of trees.
  */
 class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    UnsynchronizedInventoryAction(plr, false, 1, 5, rand(RANDOM_FAIL_RATE)) {
+    AnimatedInventoryAction(plr, false, 1, 5, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 

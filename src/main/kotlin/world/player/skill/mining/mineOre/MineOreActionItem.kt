@@ -3,6 +3,7 @@ package world.player.skill.mining.mineOre
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
+import io.luna.game.action.ItemContainerAction.AnimatedInventoryAction
 import io.luna.game.action.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
@@ -18,7 +19,7 @@ import world.player.skill.mining.Pickaxe
  * An [InventoryAction] that will enable the mining of rocks.
  */
 class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
-    InventoryAction(plr, false, 1, rand(RANDOM_FAIL_RATE)) {
+    AnimatedInventoryAction(plr, false, 1, 4, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
@@ -43,20 +44,10 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         val BOOSTED_GEM_CHANCE = 86
 
         /**
-         * The mining animation delay.
-         */
-        private val ANIMATION_DELAY = 4
-
-        /**
          * All gems that can be received, in order of lowest level -> highest.
          */
         val GEMS = Gem.values().sortedBy { it.level }
     }
-
-    /**
-     * The counter for the mining animation delay.
-     */
-    private var animationDelay = 0
 
     override fun executeIf(start: Boolean) = when {
         mob.mining.level < ore.level -> {
@@ -100,17 +91,13 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         }
     }
 
-    override fun process() {
-        if (animationDelay > 0) {
-            animationDelay--
-            if (animationDelay != 0) {
-                mob.playSound(Sounds.MINE_ROCK)
-            }
-        } else {
-            mob.animation(pick.animation)
-            animationDelay = ANIMATION_DELAY
-        }
+    override fun animation(): Animation {
+        mob.playSound(Sounds.MINE_ROCK)
+        mob.playSound(Sounds.MINE_ROCK, 2)
+        mob.playSound(Sounds.MINE_ROCK, 4)
+        return pick.animation
     }
+
 
     override fun add(): List<Item?> = listOf(Item(ore.item))
 
