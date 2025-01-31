@@ -2,12 +2,20 @@ package world.player.item.enchantedJewellery
 
 import api.predef.*
 import api.predef.ext.*
+import api.predef.magic
+import api.predef.world
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 import io.luna.game.model.Position
 import io.luna.game.model.item.*
 import io.luna.game.model.mob.dialogue.*
+import io.luna.util.StringUtils
+import world.player.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
+import world.player.skill.magic.teleportSpells.TeleportStyle
+import world.player.skill.magic.teleportSpells.TeleportStyle.REGULAR
+import world.player.skill.magic.teleportSpells.TeleportAction
+import world.player.skill.magic.SpellRequirement
 
 val GAMES_NECKLACE_1 = 3867
 val GAMES_NECKLACE_2 = 3865
@@ -45,11 +53,13 @@ GAMES_NECKLACES.forEach {
         plr.newDialogue()
             .options(
                 "Burthorpe.", {
-                    plr.move(Position(2898, 3546))
+                    //plr.move(Position(2898, 3546))
+                    teleport(plr, Position(2898, 3546), "Burthorpe")
                     degrade(plr, necklaceId, index)
                  },
                 "Barbarian Outpost.", {
-                    plr.move(Position(2536, 3565))
+                    //plr.move(Position(2536, 3565))
+                    teleport(plr, Position(2536, 3565), "Barbarian Outpost")
                     degrade(plr, necklaceId, index)
                 })
             .open()
@@ -63,5 +73,22 @@ fun degrade(plr: Player, necklaceId: Int, index: Int) {
         plr.inventory.add(index ?: 0, Item(nextNecklace, 1))
     } else {
         plr.sendMessage("The necklace crumbles to dust.")
+    }
+}
+
+fun teleport(plr: Player, pos: Position, destinationName: String) {
+    if (plr.teleportDelay.ready(2)) { // So player can't button spam.
+        plr.submitAction(object : TeleportAction(
+            plr,
+            0,
+            0.0,
+            pos,
+            TeleportStyle.REGULAR,
+            emptyList<SpellRequirement>()
+        ) {
+            override fun onTeleport() {
+                plr.sendMessage("You teleport to ${StringUtils.capitalize(destinationName)}.")
+            }
+        })
     }
 }
