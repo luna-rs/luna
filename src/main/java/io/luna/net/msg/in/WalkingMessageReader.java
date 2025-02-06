@@ -26,11 +26,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
         if (opcode == 213) { // Minimap click.
             size -= 14;
-            player.interruptAction();
-            player.resetInteractingWith();
         } else if (opcode == 28) { // Yellow <x> click.
-            player.interruptAction();
-            player.resetInteractingWith();
         } else if (opcode == 247) { // Red <x> click.
         }
         player.getInterfaces().applyActionClose();
@@ -51,17 +47,24 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         for (int i = 0; i < pathSize; i++) {
             steps[i + 1] = new Step(path[i][0] + firstStepX, path[i][1] + firstStepY);
         }
-        return new WalkingEvent(player, steps, running, pathSize);
+        return new WalkingEvent(player, steps, running, pathSize, opcode);
     }
 
     @Override
     public boolean validate(Player player, WalkingEvent event) {
-        return !player.getWalking().isLocked();
+        return !player.getWalking().isLocked() && !player.isLocked();
     }
 
     @Override
     public void handle(Player player, WalkingEvent event) {
-        WalkingQueue walking = player.getWalking();
+        switch (event.getOpcode()) {
+            case 213:
+            case 28:
+                player.interruptAction();
+                player.resetInteractingWith();
+                break;
+        }
+        WalkingQueue walking = player.getWalking(); // todo pathfinder?
         Step[] path = event.getPath();
         walking.clear();
         walking.addFirst(path[0]);
