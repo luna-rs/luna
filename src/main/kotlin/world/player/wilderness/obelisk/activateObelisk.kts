@@ -2,9 +2,9 @@ package world.player.wilderness.obelisk
 
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.Player
 import io.luna.game.task.Task
 import java.util.*
 
@@ -33,11 +33,15 @@ fun selectNearbyPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
  */
 fun teleportPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
     val nextObelisk = Obelisk.ALL.filter { nextObelisk -> nextObelisk != obelisk }.random()
-    for (nearby in teleporting) {
+    val iterator = teleporting.iterator()
+    while (iterator.hasNext()) {
+        val nearby = iterator.next()
         if (obelisk.teleportFrom.contains(nearby)) {
             nearby.walking.isLocked = true
             nearby.move(nextObelisk.teleportTo)
             nearby.sendMessage("You have been teleported by ancient magic.")
+        } else {
+            iterator.remove()
         }
     }
     activatedSet.remove(obelisk)
