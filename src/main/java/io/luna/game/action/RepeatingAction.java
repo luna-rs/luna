@@ -104,13 +104,6 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     }
 
     /**
-     * Function called when this action is started.
-     *
-     * @return {@code false} to interrupt the action.
-     */
-    public abstract boolean start();
-
-    /**
      * Function called every {@code delay} by the {@link Worker}.
      */
     public abstract void repeat();
@@ -122,6 +115,15 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      * @param other The other {@link Action} to compare.
      */
     public abstract boolean ignoreIf(Action<?> other);
+
+    /**
+     * Function called when this action is started.
+     *
+     * @return {@code false} to interrupt the action.
+     */
+    public boolean start() {
+        return true;
+    }
 
     /**
      * Function called when this action is stopped (interrupted).

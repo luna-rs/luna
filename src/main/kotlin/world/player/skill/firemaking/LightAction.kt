@@ -33,7 +33,7 @@ abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Condition
             canLight()
         }
 
-    final override fun condition(): Boolean {
+    final override fun repeatIf(): Boolean {
         if (--delayTicks <= 0) {
             onLight()
             return false

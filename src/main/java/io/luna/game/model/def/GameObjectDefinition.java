@@ -2,7 +2,6 @@ package io.luna.game.model.def;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import java.util.OptionalInt;
 
@@ -128,8 +127,10 @@ public final class GameObjectDefinition implements Definition {
                 .add("solid", solid)
                 .add("impenetrable", impenetrable)
                 .add("interactive", interactive)
-                .add("actions", Iterables.toString(actions))
+                .add("animationId", animationId)
+                .add("actions", actions)
                 .add("obstructive", obstructive)
+                .add("varpDef", varpDef)
                 .toString();
     }
 

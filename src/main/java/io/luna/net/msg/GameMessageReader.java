@@ -92,7 +92,6 @@ public abstract class GameMessageReader<E extends Event> {
 
             // Validate the event with the decoder and the current controller if needed.
             if (event != NullEvent.INSTANCE && validate(player, event)) {
-
                 if (event instanceof ControllableEvent) {
                     if (player.isLocked() || !player.getControllers().checkEvent((ControllableEvent) event)) {
                         return;

@@ -42,6 +42,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     mob.sendMessage("Oh dear, you are dead!");
                     mob.animation(new Animation(2304, AnimationPriority.HIGH));
                     mob.getInterfaces().close();
+                    mob.getActions().interrupt();
                     break;
                 case DEATH:
                     mob.getPlugins().post(new DeathEvent(mob, source));

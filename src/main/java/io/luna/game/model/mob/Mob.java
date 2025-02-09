@@ -300,7 +300,7 @@ public abstract class Mob extends Entity {
                     asPlr().playSound(Sounds.TAKE_DAMAGE);
                 }
             } else {
-                // TODO determine if player is wearing armor/has shield then play different sound
+                // TODO combat sounds
                 asPlr().playSound(Sounds.UNARMED_BLOCK);
             }
         }
@@ -353,7 +353,6 @@ public abstract class Mob extends Entity {
     public final void move(Position position) {
         setPosition(position);
         walking.clear();
-        actions.interrupt();
         resetInteractingWith();
         onTeleport(position);
     }
@@ -387,34 +386,7 @@ public abstract class Mob extends Entity {
      * @param direction The direction to face.
      */
     public final void face(Direction direction) {
-        switch (direction) {
-            case NONE:
-                throw new IllegalArgumentException("cannot use <NONE>");
-            case NORTH_WEST:
-                face(position.translate(-1, 1));
-                break;
-            case NORTH:
-                face(position.translate(0, 1));
-                break;
-            case NORTH_EAST:
-                face(position.translate(1, 1));
-                break;
-            case WEST:
-                face(position.translate(-1, 0));
-                break;
-            case EAST:
-                face(position.translate(1, 0));
-                break;
-            case SOUTH_WEST:
-                face(position.translate(-1, -1));
-                break;
-            case SOUTH:
-                face(position.translate(0, -1));
-                break;
-            case SOUTH_EAST:
-                face(position.translate(1, -1));
-                break;
-        }
+        face(position.translate(direction.getTranslation().getX(), direction.getTranslation().getY()));
     }
 
     /**
@@ -456,7 +428,7 @@ public abstract class Mob extends Entity {
             face(entity.getPosition());
         }
         interactingWith = Optional.ofNullable(entity);
-    } // TODO Reloading region resets interaction for both this and position
+    }
 
     /**
      * Resets the current {@link Entity} we are interacting with.
@@ -535,10 +507,8 @@ public abstract class Mob extends Entity {
             int sizeX = target.sizeX();
             int sizeY = target.sizeY();
             for (int x = 0; x < sizeX; x++) {
-                for (int y = 0; y < sizeY; y++) { // TODO start from -size?
+                for (int y = 0; y < sizeY; y++) { // TODO http://github.com/luna-rs/luna/issues/381
                     Position interactable = targetPosition.translate(x, y);
-                    // TODO check for fences etc. in the way
-                    // TODO check if what is blocking the player IS the object we're trying to interact with. is that possible?
                     if (position.isWithinDistance(interactable, distance)) {
                         return true;
                     }
@@ -546,7 +516,7 @@ public abstract class Mob extends Entity {
             }
         }
         return false;
-    }
+    }// https://i.imgur.com/DvKYBBZ.png https://i.imgur.com/qG06FHR.png https://i.imgur.com/bCLKyj6.png
 
     /**
      * Retrieves the skill with {@code id}.

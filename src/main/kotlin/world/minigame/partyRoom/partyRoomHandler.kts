@@ -73,6 +73,7 @@ val PARTY_ROOM_SPAWN = Position(2734, 3476, 0)
  */
 fun teleport(plr: Player) {
     plr.interfaces.close()
+    plr.interruptAction()
     plr.move(PartyRoom.TELEPORT_POSITIONS.random())
     plr.sendMessage("You are teleported to the party room.")
 }
