@@ -49,7 +49,7 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
         return ImmutableList.of(
                 new AnimationUpdateBlock(),
                 new ForcedChatUpdateBlock(),
-                new ForcedMovementUpdateBlock(),
+                new ExactMovementUpdateBlock(),
                 new InteractionUpdateBlock(),
                 new FacePositionUpdateBlock(),
                 new GraphicUpdateBlock(),

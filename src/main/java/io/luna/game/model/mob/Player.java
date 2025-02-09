@@ -7,12 +7,10 @@ import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
-import io.luna.game.event.impl.RegionChangedEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.Region;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
@@ -21,7 +19,7 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.mob.block.Chat;
-import io.luna.game.model.mob.block.ForcedMovement;
+import io.luna.game.model.mob.block.ExactMovement;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.controller.ControllerManager;
@@ -43,6 +41,7 @@ import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.DynamicMapMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
@@ -238,7 +237,7 @@ public class Player extends Mob {
     /**
      * The forced movement route.
      */
-    private Optional<ForcedMovement> forcedMovement = Optional.empty();
+    private Optional<ExactMovement> exactMovement = Optional.empty();
 
     /**
      * The prayer icon.
@@ -424,7 +423,7 @@ public class Player extends Mob {
         regionChanged = false;
         teleporting = false;
         chat = Optional.empty();
-        forcedMovement = Optional.empty();
+        exactMovement = Optional.empty();
     }
 
     @Override
@@ -449,24 +448,6 @@ public class Player extends Mob {
     @Override
     public int getCombatLevel() {
         return skills.getCombatLevel();
-    }
-
-    @Override
-    protected void onPositionChanged(Position oldPos) {
-        checkRegionChanged(oldPos);
-    }
-
-    /**
-     * Sends a {@link RegionChangedEvent} if the region ID has changed as a result of a position change.
-     *
-     * @param oldPos The old position.
-     */
-    private void checkRegionChanged(Position oldPos) {
-        Region oldRegion = oldPos.getRegion();
-        Region newRegion = position.getRegion();
-        if (!oldRegion.equals(newRegion)) { // TODO remove, useless
-            context.getPlugins().post(new RegionChangedEvent(this, oldRegion, newRegion));
-        }
     }
 
     /**
@@ -694,9 +675,9 @@ public class Player extends Mob {
      *
      * @param forcedMovement The forced movement path.
      */
-    public void forceMovement(ForcedMovement forcedMovement) {
-        this.forcedMovement = Optional.of(forcedMovement);
-        flags.flag(UpdateFlag.FORCED_MOVEMENT);
+    public void exactMove(ExactMovement forcedMovement) {
+        this.exactMovement = Optional.of(forcedMovement);
+        flags.flag(UpdateFlag.EXACT_MOVEMENT);
     }
 
     /**
@@ -716,20 +697,14 @@ public class Player extends Mob {
     public void sendRegionUpdate(Position oldPosition) {
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
-           if (isInDynamicMap()) {
-                regionChanged = true;
-                lastRegion = position;
-                // comment ^ above out makes the player appear in a diff place????
-                // todo cache palette? or current dynamic map?>
-                // todo still need to update objects
-             // dynamicMap.sendUpdate(this);
-                return;
-            }
-
             fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionMessageWriter(position));
+            if (isInDynamicMap()) { // TODO
+                queue(new DynamicMapMessageWriter(dynamicMap, position));
+            } else {
+                queue(new RegionMessageWriter(position));
+            }
         }
         if (isTeleporting()) {
             fullRefresh = true;
@@ -1103,8 +1078,8 @@ public class Player extends Mob {
     /**
      * @return The forced movement route.
      */
-    public Optional<ForcedMovement> getForcedMovement() {
-        return forcedMovement;
+    public Optional<ExactMovement> getExactMovement() {
+        return exactMovement;
     }
 
     /**

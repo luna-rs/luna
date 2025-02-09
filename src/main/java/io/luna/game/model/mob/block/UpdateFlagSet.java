@@ -27,7 +27,7 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
         PRIMARY_HIT,
         SECONDARY_HIT,
         TRANSFORM,
-        FORCED_MOVEMENT
+        EXACT_MOVEMENT
     }
 
     /**
