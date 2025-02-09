@@ -34,7 +34,7 @@ public final class BotCredentials {
      * @return The generated username.
      */
     public static String generateUsername(World world, boolean temporary) {
-        // TODO Use javafaker for random names?
+        // TODO https://github.com/luna-rs/luna/issues/380
         int attempts = 0;
         String username = null;
         while (username == null) {

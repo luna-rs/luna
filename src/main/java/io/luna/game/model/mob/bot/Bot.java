@@ -45,8 +45,7 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Bot extends Player {
 
-    // TODO login all persisted bots at start of server (or maybe certain random percentage??)
-    // TODO class to manage bot logins/logouts. randomly log them out and back in.
+    // TODO bot session scheduling https://github.com/luna-rs/luna/issues/387
 
     /**
      * The default script generator function, uses {@link ExampleBotScript}.
@@ -233,7 +232,6 @@ public final class Bot extends Player {
             getMessageHandler().sendCharacterDesignSelection();
             return false;
         }
-        // TODO combat here and let user define different aggression styles?
         return true;
     }
 

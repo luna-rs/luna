@@ -19,7 +19,6 @@ public class BotMessage {
     /**
      * When this message was sent.
      */
-    // TODO Maybe better for timestamp to be the current execution cycle? More seamless integration with scripts
     private final Instant timestamp;
 
     /**
