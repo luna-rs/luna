@@ -50,17 +50,6 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Called when the player is about to move within any of {@link #locations}, and determines if the player can do so.
-     *
-     * @param player The player.
-     * @return {@code true} if the player can move within this controlled area.
-     */
-    public boolean canMove(Player player, Position newPos) {
-        return true;
-
-    }
-
-    /**
      * Determines if the player is within any of {@link #locations}.
      *
      * @return {@code true} if the player is within this controlled area.

@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.controller;
 
 import io.luna.game.event.impl.ControllableEvent;
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.game.service.LogoutService;
 import world.player.skill.magic.teleportSpells.TeleportAction;
@@ -31,6 +32,17 @@ public abstract class PlayerController {
      */
     public void onUnregister(Player player) {
 
+    }
+
+    /**
+     * Called when the player attempts to move.
+     *
+     * @param player The player.
+     * @param newPos The new position.
+     * @return {@code true} if the player can move to {@code newPos}.
+     */
+    public boolean canMove(Player player, Position newPos) {
+        return true;
     }
 
     /**
