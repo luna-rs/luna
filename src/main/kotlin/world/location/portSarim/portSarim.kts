@@ -14,7 +14,7 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 import io.luna.game.model.mob.dialogue.Expression
 import world.player.advanceLevel.LevelUpInterface
 
-ShopHandler.create("Gerrant's Fishy Business.") {
+ShopHandler.create("Brian's Battleaxe Bazaar.") {
     buy = BuyPolicy.EXISTING
     restock = RestockPolicy.DEFAULT
     currency = Currency.COINS
