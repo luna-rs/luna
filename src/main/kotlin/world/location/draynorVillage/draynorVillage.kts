@@ -15,7 +15,12 @@ import io.luna.game.model.mob.dialogue.Expression
 import world.player.advanceLevel.LevelUpInterface
 
 on(ServerLaunchEvent::class) {
+    // Bankers
     world.addNpc(494, 3090, 3245)
     world.addNpc(494, 3090, 3243)
     world.addNpc(494, 3090, 3242)
+
+    // Dark wizards
+    world.addNpc(174, 3086, 3238)
+    world.addNpc(174, 3084, 3235)
 }
