@@ -1,12 +1,12 @@
-package world.location.lumbridge
+package world.location.draynorVillage
 
 import api.plugin.dsl.plugin
 
 plugin {
-    name = "Lumbridge"
+    name = "Draynor Village"
     description =
         """
-        A plugin that populates Lumbridge with NPCs.
+        A plugin that populates Draynor Village with NPCs.
         """
     version = "1.0"
     authors += "hydrozoa"
