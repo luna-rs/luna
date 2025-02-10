@@ -23,4 +23,8 @@ on(ServerLaunchEvent::class) {
     // Dark wizards
     world.addNpc(174, 3086, 3238)
     world.addNpc(174, 3084, 3235)
+
+    // Fishing spots for shrimp
+    world.addNpc(316, 3085, 3230)
+    world.addNpc(316, 3086, 3227)
 }
