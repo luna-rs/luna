@@ -16,7 +16,7 @@ import java.util.stream.Stream
 /**
  * A [BotActionHandler] implementation for banking related actions.
  */
-class BotBankingActionHandler(bot: Bot) : BotActionHandler(bot) {
+class BotBankingActionHandler(private val bot: Bot, private val handler: BotActionHandler)  {
 
     /**
      * An action that forces the [Bot] to deposit an item into their bank. The returned future will unsuspend once the
@@ -42,9 +42,9 @@ class BotBankingActionHandler(bot: Bot) : BotActionHandler(bot) {
         }
         val amountSuspendCond =
             SuspendableCondition({ bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent })
-        output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
+        bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
         amountSuspendCond.submit().await() // Wait until amount input interface is open.
-        output.enterAmount(depositItem.amount) // Enter amount.
+        bot.output.enterAmount(depositItem.amount) // Enter amount.
         val depositSuspendCond = SuspendableCondition({ bot.inventory.computeAmountForId(item.id) < existingAmount })
         return depositSuspendCond.submit() // Unsuspend when the inventory amount changes.
     }
@@ -97,9 +97,9 @@ class BotBankingActionHandler(bot: Bot) : BotActionHandler(bot) {
         }
         val amountSuspendCond =
             SuspendableCondition({ bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent })
-        output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
+        bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
         amountSuspendCond.submit().await() // Wait until amount input interface is open.
-        output.enterAmount(withdrawItem.amount) // Enter amount.
+        bot.output.enterAmount(withdrawItem.amount) // Enter amount.
         val withdrawSuspendCond = SuspendableCondition({ bot.bank.computeAmountForId(item.id) < existingAmount })
         return withdrawSuspendCond.submit()
     }
@@ -125,9 +125,9 @@ class BotBankingActionHandler(bot: Bot) : BotActionHandler(bot) {
         }
         val suspendCond = SuspendableCondition({ currentNoted() == noted }, 5)
         if (!noted) {
-            output.clickButton(5387)
+            bot.output.clickButton(5387)
         } else {
-            output.clickButton(5386)
+            bot.output.clickButton(5386)
         }
         return suspendCond.submit()
     }

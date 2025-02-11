@@ -1,7 +1,10 @@
 package api.bot
 
+import api.bot.action.BotActionHandler
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.BotMessageHandler
+import io.luna.game.model.mob.bot.BotScript
+import io.luna.game.model.mob.bot.BotInputMessageHandler
+import io.luna.game.model.mob.bot.BotOutputMessageHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -14,9 +17,19 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class CoroutineBotScript(protected val bot: Bot) {
 
     /**
-     * The bot actions.
+     * The bot input handler.
      */
-    protected val botActions: BotMessageHandler = bot.messageHandler
+    protected val input: BotInputMessageHandler = bot.botClient.input
+
+    /**
+     * The bot output handler.
+     */
+    protected val output: BotOutputMessageHandler = bot.botClient.output
+
+    /**
+     * The action handler.
+     */
+    protected val handler: BotActionHandler = BotActionHandler(bot)
 
     /**
      * The progress of this script.

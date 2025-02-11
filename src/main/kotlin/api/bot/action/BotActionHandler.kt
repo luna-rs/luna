@@ -15,40 +15,30 @@ import io.luna.game.model.mob.bot.BotOutputMessageHandler
  * and/or send a signal to the future's channel to unsuspend it. Functions may also block coroutines with sub-tasks
  * before returning.
  */
-open class BotActionHandler(val bot: Bot) {
-
-    /**
-     * The input that will be used to read packets.
-     */
-    internal val input = bot.botClient.input
-
-    /**
-     * The output that will be used to send packets.
-     */
-    internal val output = bot.botClient.output
+class BotActionHandler(val bot: Bot) {
 
     /**
      * The banking action handler.
      */
-    val banking = BotBankingActionHandler(bot)
+    val banking = BotBankingActionHandler(bot, this)
 
     /**
      * The movement action handler.
      */
-    val movement = BotMovementActionHandler(bot)
+    val movement = BotMovementActionHandler(bot, this)
 
     /**
      * The equipment action handler.
      */
-    val equipment = BotEquipmentActionHandler(bot)
+    val equipment = BotEquipmentActionHandler(bot, this)
 
     /**
      * The interactions action handler.
      */
-    val interactions = BotInteractionActionHandler(bot)
+    val interactions = BotInteractionActionHandler(bot, this)
 
     /**
      * The widgets action handler.
      */
-    val widgets = BotWidgetActionHandler(bot)
+    val widgets = BotWidgetActionHandler(bot, this)
 }

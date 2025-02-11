@@ -1,6 +1,5 @@
 package api.bot.action
 
-import api.bot.Signals.within
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import io.luna.game.model.Entity
@@ -11,7 +10,7 @@ import io.luna.game.model.mob.bot.Bot
 /**
  * A [BotActionHandler] implementation for movement related actions.
  */
-class BotMovementActionHandler(bot: Bot) : BotActionHandler(bot) {
+class BotMovementActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
      * An action that forces the [Bot] to walk to [target]. The returned future will unsuspend once the bot is [radius]
@@ -22,7 +21,7 @@ class BotMovementActionHandler(bot: Bot) : BotActionHandler(bot) {
     fun walk(target: Position, radius: Int): SuspendableFuture {
         // Assuming each square takes 5 seconds to walk just to be safe.
         val timeoutSeconds = bot.position.computeLongestDistance(target) * 5L;
-        val suspendableCond = SuspendableCondition(within(target, radius), timeoutSeconds)
+        val suspendableCond = SuspendableCondition({ bot.isWithinDistance(target, radius) }, timeoutSeconds)
         bot.walking.walk(target);
         return suspendableCond.submit()
     }
@@ -39,14 +38,14 @@ class BotMovementActionHandler(bot: Bot) : BotActionHandler(bot) {
 
     /**
      * An action that forces the [Bot] to walk behind [target]. The returned future will unsuspend once the
-     * bot is within `target.size()` squares of the target.
+     * bot is within `target.size()` squares from the target.
      *
      * @param target The mob to walk behind.
      */
     fun walkBehind(target: Mob): SuspendableFuture {
         // Assuming each square takes 5 seconds to walk just to be safe.
         val timeoutSeconds = bot.position.computeLongestDistance(target.position) * 5L;
-        val suspendableCond = SuspendableCondition(within(target, target.size()), timeoutSeconds)
+        val suspendableCond = SuspendableCondition({ bot.isWithinDistance(target, 1) }, timeoutSeconds)
         bot.walking.walkBehind(target)
         return suspendableCond.submit()
     }

@@ -25,10 +25,11 @@ class ExampleBotScript(bot: Bot) : BotScript(bot) {
 
         if (executions == 0) {
             // Start coroutine only on first execution of script.
+            output.chat("Coroutine started")
             goHomeScript.start()
         } else if (goHomeScript.isDone()) {
             // Once coroutine completes, bot will send a chat.
-            botActions.chat("Coroutine complete.")
+            output.chat("Coroutine complete.")
         }
         return 2
     }
