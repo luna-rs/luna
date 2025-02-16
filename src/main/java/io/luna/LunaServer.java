@@ -11,6 +11,7 @@ import io.luna.game.cache.codec.ObjectDefinitionDecoder;
 import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.cache.codec.VarpDefinitionDecoder;
 import io.luna.game.cache.codec.WidgetDefinitionDecoder;
+import io.luna.game.model.World;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
@@ -128,12 +129,16 @@ public final class LunaServer {
      * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
     private void initServices() throws InterruptedException {
-        // Benchmark service started separately since it may not have to run.
-        benchmarkManager.getService().startAsync();
+        World world = context.getWorld();
 
+        // Independent services not linked to the core game.
+        benchmarkManager.getService().startAsync();
+        world.getBotScheduleService().startAsync();
+
+        // Core game services.
         var gameService = context.getGame();
-        var loginService = context.getWorld().getLoginService();
-        var logoutService = context.getWorld().getLogoutService();
+        var loginService = world.getLoginService();
+        var logoutService = world.getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
         logger.info("All services are now running.");

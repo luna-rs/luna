@@ -19,14 +19,9 @@ public final class BotCredentials {
     private static final int MAXIMUM_GENERATION_ATTEMPTS = 10;
 
     /**
-     * The base name for all persistent bots.
+     * The base generated name for all temporary bots.
      */
     private static final String BASE_USERNAME = "Bot";
-
-    /**
-     * The base name for all temporary bots.
-     */
-    private static final String BASE_TEMPORARY_USERNAME = "TBot";
 
     /**
      * Generates a random username, checking if the username currently exists.
@@ -34,25 +29,23 @@ public final class BotCredentials {
      * @return The generated username.
      */
     public static String generateUsername(World world, boolean temporary) {
-        // TODO https://github.com/luna-rs/luna/issues/380
-        int attempts = 0;
-        String username = null;
-        while (username == null) {
-            if (attempts >= MAXIMUM_GENERATION_ATTEMPTS) {
-                throw new IllegalStateException("Username generation for bot failed, too many attempts!");
+        if (temporary) {
+            // Generate dummy name for temporary bots.
+            int attempts = 0;
+            while (attempts < MAXIMUM_GENERATION_ATTEMPTS) {
+                int random = ThreadLocalRandom.current().nextInt(1, 5000);
+                int count = attempts == 0 ? world.getBots().getTemporaryCount() : random;
+                String genUsername = BASE_USERNAME + count;
+                if (world.getPlayerMap().containsKey(genUsername) || world.getBots().contains(genUsername)) {
+                    attempts++;
+                } else {
+                    return genUsername;
+                }
             }
-            int random = ThreadLocalRandom.current().nextInt(1, 100);
-            String baseUsername = temporary ? BASE_TEMPORARY_USERNAME : BASE_USERNAME;
-            int count = (temporary ? world.getBots().getTemporaryCount() :
-                    world.getBots().getPersistentCount()) + 1 + attempts + random;
-            String genUsername = baseUsername + count;
-            if (world.getPlayerMap().containsKey(genUsername) || world.getBots().contains(genUsername)) {
-                attempts++;
-            } else {
-                username = genUsername;
-            }
+            throw new IllegalStateException("Username generation for bot failed, too many attempts!");
+        } else {
+            return world.getBotCredentials().request();
         }
-        return username;
     }
 
     /**

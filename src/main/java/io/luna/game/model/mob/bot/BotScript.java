@@ -24,11 +24,6 @@ public abstract class BotScript {
     protected final BotClient client;
 
     /**
-     * The bot message handler instance.
-     */
-    protected final BotMessageHandler botActions;
-
-    /**
      * How many times {@link #process()} has been called on this script.
      */
     private int executions;
@@ -41,7 +36,6 @@ public abstract class BotScript {
     public BotScript(Bot bot) {
         this.bot = bot;
         client = bot.getBotClient();
-        botActions = bot.getMessageHandler();
     }
 
     /**
@@ -63,8 +57,8 @@ public abstract class BotScript {
     }
 
     /**
-     * Called when this script stops, either as a result of returning < 1 from {@link #process()} or
-     * calling {@link Bot#setScript(BotScript)}.
+     * Called when this script stops either as a result of returning < 1 from {@link #process()}, calling
+     * {@link Bot#setScript(BotScript)}, or when the bot is scheduled for logout.
      *
      * @return The fallback script that will be ran, possibly {@code null}.
      */
@@ -100,5 +94,19 @@ public abstract class BotScript {
      */
     public Bot getBot() {
         return bot;
+    }
+
+    /**
+     * @return The input message handler.
+     */
+    public BotInputMessageHandler getInput() {
+        return client.getInput();
+    }
+
+    /**
+     * @return The output message handler.
+     */
+    public BotOutputMessageHandler getOutput() {
+        return client.getOutput();
     }
 }

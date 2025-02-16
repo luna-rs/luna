@@ -1,6 +1,7 @@
 package io.luna;
 
 import io.luna.game.GameSettings;
+import io.luna.game.model.mob.bot.BotSettings;
 import io.luna.util.logging.LoggingSettings;
 import io.luna.util.benchmark.BenchmarkSettings;
 
@@ -14,6 +15,7 @@ public final class LunaSettings {
     private final GameSettings game;
     private final LoggingSettings logging;
     private final BenchmarkSettings benchmark;
+    private final BotSettings bots;
 
     /**
      * The game settings.
@@ -37,10 +39,18 @@ public final class LunaSettings {
         return benchmark;
     }
 
+    /**
+     * The bot settings.
+     */
+    public BotSettings bots() {
+        return bots;
+    }
+
     // Never called
-    private LunaSettings(GameSettings game, LoggingSettings logging, BenchmarkSettings benchmark) {
+    private LunaSettings(GameSettings game, LoggingSettings logging, BenchmarkSettings benchmark, BotSettings bots) {
         this.game = game;
         this.logging = logging;
         this.benchmark = benchmark;
+        this.bots = bots;
     }
 }

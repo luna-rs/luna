@@ -9,12 +9,12 @@ import java.time.Instant;
  *
  * @author lare96
  */
-public class BotMessage {
+public class BotMessage<T extends GameMessageWriter> {
 
     /**
      * The incoming message.
      */
-    private final GameMessageWriter message;
+    private final T message;
 
     /**
      * When this message was sent.
@@ -27,7 +27,7 @@ public class BotMessage {
      * @param message The incoming message
      * @param timestamp When this message was sent.
      */
-    public BotMessage(GameMessageWriter message, Instant timestamp) {
+    public BotMessage(T message, Instant timestamp) {
         this.message = message;
         this.timestamp = timestamp;
     }
@@ -35,7 +35,7 @@ public class BotMessage {
     /**
      * @return The incoming message
      */
-    public GameMessageWriter getMessage() {
+    public T getMessage() {
         return message;
     }
 

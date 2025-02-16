@@ -340,6 +340,11 @@ public class Player extends Mob {
     private final Stopwatch timeout = Stopwatch.createUnstarted();
 
     /**
+     * The time online.
+     */
+    private final Stopwatch timeOnline = Stopwatch.createUnstarted();
+
+    /**
      * The current dynamic map the player is in.
      */
     private DynamicMap dynamicMap;
@@ -400,6 +405,7 @@ public class Player extends Mob {
     protected void onActive() {
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
+        timeOnline.start();
         plugins.post(new LoginEvent(this));
     }
 
@@ -1300,6 +1306,13 @@ public class Player extends Mob {
      */
     public Stopwatch getTimeout() {
         return timeout;
+    }
+
+    /**
+     * @return The time online.
+     */
+    public Stopwatch getTimeOnline() {
+        return timeOnline;
     }
 
     /**

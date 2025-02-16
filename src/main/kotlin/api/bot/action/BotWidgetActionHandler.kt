@@ -59,7 +59,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * Clicks the widget to logout the [Bot] how a regular player would do it.
      */
     fun clickLogout() {
-        bot.output.clickButton(2458)
+        bot.output.clickLogout()
     }
 
     /**

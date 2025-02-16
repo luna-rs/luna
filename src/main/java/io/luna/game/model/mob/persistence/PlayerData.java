@@ -32,6 +32,7 @@ public final class PlayerData {
     public Position position;
     public PlayerRights rights;
     public String lastIp;
+    public Instant logoutTime;
     public int[] appearance;
     public PlayerMusicTab musicTab;
     public List<IndexedItem> inventory;
@@ -116,6 +117,7 @@ public final class PlayerData {
         position = player.getPosition();
         rights = player.getRights();
         lastIp = player.getClient().getIpAddress();
+        logoutTime = Instant.now();
         appearance = player.getAppearance().toArray();
         musicTab = player.getMusicTab().copy();
         inventory = player.getInventory().toList();

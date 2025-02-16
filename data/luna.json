@@ -1,6 +1,6 @@
 {
   "game": {
-    "runtime_mode": "DEVELOPMENT",
+    "runtime_mode": "BENCHMARK",
     "starting_position": {
       "x": 3093,
       "y": 3244
@@ -23,9 +23,13 @@
     ]
   },
   "benchmark": {
-    "frequency_minutes": 10,
+    "frequency_minutes": 1,
     "types": [
       "ALL"
     ]
+  },
+  "bots": {
+    "ideal_count": 50,
+    "keep_online": false
   }
 }
