@@ -26,11 +26,11 @@ public abstract class ConditionalAction<T extends Mob> extends RepeatingAction<T
      *
      * @return {@code false} to interrupt the action, {@code true} to be executing.
      */
-    public abstract boolean condition();
+    public abstract boolean repeatIf();
 
     @Override
     public final void repeat() {
-        if (!condition()) {
+        if (!repeatIf()) {
             interrupt();
         }
     }

@@ -2,9 +2,13 @@ package io.luna.game.action;
 
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.object.GameObject;
 import io.luna.game.task.Task;
+
+import java.util.Optional;
 
 /**
  * A {@link RepeatingAction} implementation that interacts with an entity when an appropriate interactable distance has
@@ -67,15 +71,19 @@ public abstract class InteractionAction extends RepeatingAction<Player> {
 
     @Override
     public boolean start() {
-        if (mob.isBot() && !mob.canInteractWith(interactWith, distance)) {
-            mob.getWalking().walk(interactWith);
+        if (mob.isBot() && !mob.canInteractWith(interactWith, distance)) { // TODO remove/cleanup
+            if (interactWith instanceof GameObject) {
+                mob.getWalking().walk(interactWith, Optional.of(((GameObject) interactWith).getDirection().toNormalDirection()));
+            } else if (interactWith instanceof Mob) {
+                mob.getWalking().walk(interactWith, Optional.of(((Mob) interactWith).getLastDirection()));
+            }
         }
         return true;
     }
 
     @Override
     public void repeat() {
-        if(mob.canInteractWith(interactWith, distance)) {
+        if (mob.canInteractWith(interactWith, distance)) {
             if (interactWith.getType() != EntityType.ITEM) {
                 mob.interact(interactWith);
                 if (interactWith.getType() == EntityType.NPC) {
