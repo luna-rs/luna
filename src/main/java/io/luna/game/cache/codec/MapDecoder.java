@@ -280,6 +280,10 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                         int plane = objectPositionData >> 12 & 0x3;
                         int otherData = data.readUnsignedByte();
 
+                        // TODO Figure out why plane value is 1 for gnome stronghold log? Cheapfix for now.
+                        if(id == 2295 && plane == 1) {
+                            plane = 0;
+                        }
                         ObjectType type = ObjectType.ALL.get(otherData >> 2);
                         ObjectDirection rotation = ObjectDirection.ALL.get(otherData & 3);
                         Position position = basePosition.translate(offsetX, offsetY).setZ(plane);
