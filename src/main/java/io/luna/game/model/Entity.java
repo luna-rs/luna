@@ -2,6 +2,7 @@ package io.luna.game.model;
 
 import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
@@ -12,6 +13,8 @@ import io.luna.game.service.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Comparator;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -21,6 +24,31 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public abstract class Entity {
+
+    /**
+     * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
+     */
+    public static final class EntityDistanceComparator implements Comparator<Entity> {
+
+        /**
+         * The position distance comparator.
+         */
+        private final PositionDistanceComparator comparator;
+
+        /**
+         * Creates a new {@link EntityDistanceComparator}.
+         *
+         * @param base The base entity.
+         */
+        public EntityDistanceComparator(Entity base) {
+            comparator = new PositionDistanceComparator(base.position);
+        }
+
+        @Override
+        public int compare(Entity o1, Entity o2) {
+            return comparator.compare(o1.position, o2.position);
+        }
+    }
 
     /**
      * The logger.
@@ -216,6 +244,28 @@ public abstract class Entity {
                 }
                 break;
         }
+    }
+
+    /**
+     * Determines if this entity is within {@code radius} to {@code other}.
+     *
+     * @param other The other entity.
+     * @param radius The radius.
+     * @return {@code true} if the entity is within range.
+     */
+    public boolean isWithinDistance(Entity other, int radius) {
+        return isWithinDistance(other.position, radius);
+    }
+
+    /**
+     * Determines if this entity is within {@code radius} to {@code other}.
+     *
+     * @param other The other position.
+     * @param radius The radius.
+     * @return {@code true} if the entity is within range.
+     */
+    public boolean isWithinDistance(Position other, int radius) {
+        return position.isWithinDistance(other, radius);
     }
 
     /**
