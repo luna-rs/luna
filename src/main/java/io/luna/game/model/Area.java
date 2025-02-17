@@ -30,24 +30,24 @@ public abstract class Area implements Location {
      * @param northEastY The north-east y coordinate.
      * @return The created {@link Area} instance.
      */
-    public static Area of(int southWestX, int southWestY, int northEastX, int northEastY) {
+    public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY) {
         return new SimpleBoxArea(southWestX, southWestY, northEastX, northEastY);
     }
 
     /**
-     * Creates an arbitrary polygonal {@link Area} requiring a list of vertices that make it up.
+     * Creates an arbitrary polygonal {@link Area} requiring a list of vertices.
      *
      * @param vertices The vertices that make up this polygon.
      * @return The created {@link Area} instance.
      */
-    public static Area of(List<Point> vertices) {
+    public static PolygonArea of(List<Point> vertices) {
         return new PolygonArea(vertices);
     }
 
     /**
      * The simple box implementation.
      */
-    private static class SimpleBoxArea extends Area {
+    public static class SimpleBoxArea extends Area {
 
         /**
          * The south-west x coordinate.
@@ -152,7 +152,7 @@ public abstract class Area implements Location {
     /**
      * The polygonal implementation.
      */
-    private static class PolygonArea extends Area {
+    public static class PolygonArea extends Area {
 
         /**
          * The representation of our arbitrary polygon.

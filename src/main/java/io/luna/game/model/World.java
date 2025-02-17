@@ -16,12 +16,12 @@ import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.mob.bot.BotScheduleService;
 import io.luna.game.model.mob.controller.ControllerProcessTask;
-import io.luna.game.model.mob.persistence.PlayerSerializerManager;
+import io.luna.game.persistence.GameSerializerManager;
 import io.luna.game.model.object.GameObjectList;
-import io.luna.game.service.GameService;
-import io.luna.game.service.LoginService;
-import io.luna.game.service.LogoutService;
-import io.luna.game.service.PersistenceService;
+import io.luna.game.GameService;
+import io.luna.game.LoginService;
+import io.luna.game.LogoutService;
+import io.luna.game.persistence.PersistenceService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -139,7 +139,7 @@ public final class World {
     /**
      * The serializer manager.
      */
-    private final PlayerSerializerManager serializerManager = new PlayerSerializerManager(this);
+    private final GameSerializerManager serializerManager = new GameSerializerManager(this);
 
     /**
      * The chunk manager.
@@ -502,7 +502,7 @@ public final class World {
     /**
      * @return The serializer manager.
      */
-    public PlayerSerializerManager getSerializerManager() {
+    public GameSerializerManager getSerializerManager() {
         return serializerManager;
     }
 
