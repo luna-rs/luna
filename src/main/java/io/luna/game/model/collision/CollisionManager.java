@@ -164,7 +164,6 @@ public final class CollisionManager {
      * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
      */
     public boolean raycast(Position start, Position end, BiFunction<Position, Direction, Boolean> conditionFunction) {
-        //todo doesnt work
         checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
         if (start.equals(end)) {
             return true;
@@ -286,7 +285,7 @@ public final class CollisionManager {
      * @param direction The direction the entity is travelling.
      * @return {@code true} if next tile is traversable, {@code false} otherwise.
      */
-    public boolean traversable(Position position, EntityType type, Direction direction) { // TODO cahnge to boolean projectile
+    public boolean traversable(Position position, EntityType type, Direction direction) {
         Position next = position.translate(1, direction);
         ChunkRepository repository = chunks.load(next);
 
