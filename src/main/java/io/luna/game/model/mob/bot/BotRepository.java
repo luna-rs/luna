@@ -41,18 +41,12 @@ public final class BotRepository implements Iterable<String> {
     private final Set<String> temporaryNames = Sets.newConcurrentHashSet();
 
     /**
-     * The session scheduler.
-     */
-    private final BotScheduleService sessionScheduler;
-
-    /**
      * Creates a new {@link BotRepository}.
      *
      * @param world The world.
      */
     public BotRepository(World world) {
         this.world = world;
-        sessionScheduler = new BotScheduleService(world);
     }
 
     /**
@@ -154,12 +148,5 @@ public final class BotRepository implements Iterable<String> {
     @Override
     public Iterator<String> iterator() {
         return Iterators.concat(persistentNames.iterator(), temporaryNames.iterator());
-    }
-
-    /**
-     * @return The session scheduler.
-     */
-    public BotScheduleService getSessionScheduler() {
-        return sessionScheduler;
     }
 }

@@ -19,7 +19,7 @@ public final class BotSchedule {
      *
      * @param username The persistent bot the session is being created for.
      */
-    public static BotSchedule createRandomSession(String username) {
+    public static BotSchedule createRandomSchedule(String username) {
         int selected = RandomUtils.inclusive(3);
         int logoutFor = 1;
         int playFor = 1;

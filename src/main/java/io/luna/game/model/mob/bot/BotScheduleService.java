@@ -38,16 +38,6 @@ public final class BotScheduleService extends AbstractScheduledService {
     private final World world;
 
     /**
-     * The bot repository.
-     */
-    private final BotRepository repository;
-
-    /**
-     * The serializer.
-     */
-    private final PlayerSerializer serializer;
-
-    /**
      * A queue of bots scheduled for login on the next execution.
      */
     private final Set<String> logins = new HashSet<>();
@@ -74,14 +64,13 @@ public final class BotScheduleService extends AbstractScheduledService {
      */
     public BotScheduleService(World world) {
         this.world = world;
-        repository = world.getBots();
-        serializer = world.getSerializerManager().getSerializer();
     }
 
     @Override
     protected void startUp() throws Exception {
+        PlayerSerializer serializer = world.getSerializerManager().getSerializer();
         Map<String, BotSchedule> loadedSchedules = serializer.synchronizeBotSchedules(world);
-        if (loadedSchedules.size() != repository.getPersistentCount()) {
+        if (loadedSchedules.size() != world.getBots().getPersistentCount()) {
             throw new IllegalStateException("Bot sessions and persistent bot count are not synchronized.");
         }
         scheduleMap.putAll(loadedSchedules);
@@ -214,6 +203,7 @@ public final class BotScheduleService extends AbstractScheduledService {
      * @param schedule The new schedule to assign.
      */
     public void updateSchedule(BotSchedule schedule) throws Exception {
+        PlayerSerializer serializer = world.getSerializerManager().getSerializer();
         if (serializer.saveBotSchedule(world, schedule)) {
             scheduleMap.put(schedule.getUsername(), schedule);
         }

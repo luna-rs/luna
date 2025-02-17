@@ -58,7 +58,10 @@ public final class BotCredentialsRepository {
     public void load() {
         try (Scanner scanner = new Scanner(USERNAME_CACHE)) {
             while (scanner.hasNextLine()) {
-                usernameSet.add(scanner.nextLine());
+                String nextLine = scanner.nextLine();
+                if(nextLine.length() <= 12) {
+                    usernameSet.add(nextLine);
+                }
             }
         } catch (Exception e) {
             logger.catching(e);
