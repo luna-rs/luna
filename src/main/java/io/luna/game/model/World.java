@@ -12,7 +12,9 @@ import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotRepository;
+import io.luna.game.model.mob.bot.BotScheduleService;
 import io.luna.game.model.mob.controller.ControllerProcessTask;
 import io.luna.game.model.mob.persistence.PlayerSerializerManager;
 import io.luna.game.model.object.GameObjectList;
@@ -107,7 +109,17 @@ public final class World {
     /**
      * A list of active bots.
      */
-    private final BotRepository botRepository = new BotRepository(this);
+    private final BotRepository botRepository;
+
+    /**
+     * The bot credentials repository.
+     */
+    private final BotCredentialsRepository botCredentials;
+
+    /**
+     * The bot schedule service.
+     */
+    private final BotScheduleService botService;
 
     /**
      * The login service.
@@ -195,6 +207,9 @@ public final class World {
         playerMap = new ConcurrentHashMap<>();
         collisionManager = new CollisionManager(this);
         dynamicMapSpacePool = new DynamicMapSpacePool(context);
+        botRepository = new BotRepository(this);
+        botCredentials = new BotCredentialsRepository(context);
+        botService = new BotScheduleService(this);
 
         // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
@@ -210,6 +225,7 @@ public final class World {
         collisionManager.build(false);
         schedule(new ControllerProcessTask(this));
         dynamicMapSpacePool.buildEmptySpacePool();
+        botCredentials.load();
     }
 
     /**
@@ -263,6 +279,8 @@ public final class World {
      * Pre-synchronization part of the game loop, process all tick-dependant player logic.
      */
     private void preSynchronize() {
+        BenchmarkManager benchmarks = context.getServer().getBenchmarkManager();
+        benchmarks.startBenchmark(BenchmarkType.PRE_SYNCHRONIZATION_PROCESS);
         for (Player player : playerList) {
             try {
                 if (player.getClient().isPendingLogout()) {
@@ -280,13 +298,17 @@ public final class World {
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
+        benchmarks.finishBenchmark(BenchmarkType.PRE_SYNCHRONIZATION_PROCESS);
 
         // Separate region update from other logic to ensure all chunk updates are sent.
         for (Player player : playerList) {
+            if (player.getClient().isPendingLogout()) {
+                continue;
+            }
             try {
+
                 Position oldPosition = player.getPosition();
                 player.sendRegionUpdate(oldPosition);
-                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("Could not send region updates for {}.", player, e));
@@ -326,6 +348,7 @@ public final class World {
             try {
                 player.resetFlags();
                 player.setCachedBlock(null);
+                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
@@ -484,9 +507,23 @@ public final class World {
     }
 
     /**
+     * @return The bot credentials repository.
+     */
+    public BotCredentialsRepository getBotCredentials() {
+        return botCredentials;
+    }
+
+    /**
      * @return A repository for instances created using the construct map region packet.
      */
     public DynamicMapSpacePool getDynamicMapSpacePool() {
         return dynamicMapSpacePool;
+    }
+
+    /**
+     * @return The bot schedule service.
+     */
+    public BotScheduleService getBotScheduleService() {
+        return botService;
     }
 }

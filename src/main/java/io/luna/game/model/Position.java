@@ -5,6 +5,7 @@ import com.google.common.collect.Range;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.mob.WalkingQueue.Step;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -15,6 +16,33 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class Position implements Location {
+
+    /**
+     * A {@link Comparator} that sorts {@link Position} types by closest to furthest distance from the base position.
+     */
+    public static final class PositionDistanceComparator implements Comparator<Position> {
+
+        /**
+         * The base position.
+         */
+        private final Position base;
+
+        /**
+         * Creates a new {@link PositionDistanceComparator}.
+         *
+         * @param base The base position.
+         */
+        public PositionDistanceComparator(Position base) {
+            this.base = base;
+        }
+
+        @Override
+        public int compare(Position o1, Position o2) {
+            int distance = base.computeLongestDistance(o1);
+            int distance2 = base.computeLongestDistance(o2);
+            return Integer.compare(distance2, distance);
+        }
+    }
 
     /**
      * The maximum amount of tiles a player can view.
