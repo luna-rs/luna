@@ -110,7 +110,10 @@ public final class ControllerManager implements Iterable<PlayerController> {
 
                     return false;
                 }
-            } else if (alreadyRegistered && !controller.canMove(player, newPos)) {
+            }
+        }
+        for(PlayerController controller : registered.values()) {
+            if(!controller.canMove(player, newPos)) {
                 return false;
             }
         }
