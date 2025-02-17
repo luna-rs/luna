@@ -1,7 +1,6 @@
-package io.luna.game.model.mob.persistence;
+package io.luna.game.persistence;
 
 import io.luna.game.model.World;
-import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.BotSchedule;
 
@@ -9,12 +8,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An abstraction model that handles loading and saving of data related to {@link Player} types.
+ * An abstraction model that allows for interfacing between in-memory game models and external data sources such as text
+ * files, JSON files, and SQL databases. Functions are usually applied within {@link PersistenceService}.
  *
  * @author lare96
  */
-public abstract class PlayerSerializer {
- // todo rename, more of general purpose game serializer
+public abstract class GameSerializer {
+
     /**
      * Loads {@link PlayerData} from an external data source.
      *
@@ -23,7 +23,7 @@ public abstract class PlayerSerializer {
      * @return The loaded data, {@code null} if no data was found for the player.
      * @throws Exception If any errors occur.
      */
-    public abstract PlayerData load(World world, String username) throws Exception;
+    public abstract PlayerData loadPlayer(World world, String username) throws Exception;
 
     /**
      * Saves {@link PlayerData} to an external data source.
@@ -33,7 +33,7 @@ public abstract class PlayerSerializer {
      * @param data The data to save.
      * @throws Exception If any errors occur.
      */
-    public abstract void save(World world, String username, PlayerData data) throws Exception;
+    public abstract void savePlayer(World world, String username, PlayerData data) throws Exception;
 
     /**
      * Deletes a record matching {@code username} from an external data source.
@@ -43,7 +43,7 @@ public abstract class PlayerSerializer {
      * @return {@code true} if the record was successfully deleted.
      * @throws Exception If any errors occurs.
      */
-    public abstract boolean delete(World world, String username) throws Exception;
+    public abstract boolean deletePlayer(World world, String username) throws Exception;
 
     /**
      * Loads the usernames of all {@link Bot} types from an external data source.

@@ -1,10 +1,10 @@
-package io.luna.game.service;
+package io.luna.game;
 
 import com.google.common.base.Stopwatch;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerData;
-import io.luna.game.service.LogoutService.LogoutRequest;
+import io.luna.game.persistence.PlayerData;
+import io.luna.game.LogoutService.LogoutRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -136,7 +136,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         return workers.submit(() -> {
             try {
                 Stopwatch timer = Stopwatch.createStarted();
-                world.getSerializerManager().getSerializer().save(world, request.getUsername(), saveData);
+                world.getSerializerManager().getSerializer().savePlayer(world, request.getUsername(), saveData);
                 logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {
                 logger.error(new ParameterizedMessage("Issue servicing {}'s logout request!", username), e);

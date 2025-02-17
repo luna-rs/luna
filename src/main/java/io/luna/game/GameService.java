@@ -1,4 +1,4 @@
-package io.luna.game.service;
+package io.luna.game;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -232,11 +232,11 @@ public final class GameService extends AbstractScheduledService {
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
 
-        // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
-        runKotlinTasks(ServerShutdownEvent::new, "Waiting for {} Kotlin shutdown task(s) to complete...");
-
         // Run last minute game tasks from other threads.
         runSynchronizationTasks();
+
+        // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
+        runKotlinTasks(ServerShutdownEvent::new, "Waiting for {} Kotlin shutdown task(s) to complete...");
 
         // Will stop any current and future logins.
         loginService.stopAsync().awaitTerminated();

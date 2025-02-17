@@ -1,4 +1,4 @@
-package io.luna.game.service;
+package io.luna.game.persistence;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractIdleService;
@@ -6,10 +6,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.luna.game.LoginService;
+import io.luna.game.LogoutService;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerData;
-import io.luna.game.model.mob.persistence.PlayerSerializerManager;
 import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +31,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * load off of the {@link LoginService} and {@link LogoutService}.
  * <p>
  * It's backed by a single thread, so requests are considered low priority and are not guaranteed to execute right
- * away. These functions should be used on the game thread to ensure complete thread safety.
+ * away. Functions within this class are all thread safe.
  *
  * @author lare96
  */
@@ -100,13 +100,13 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending data transformation request for {} to a worker...", username);
         return worker.submit(() -> {
             Stopwatch timer = Stopwatch.createStarted();
-            PlayerSerializerManager serializerManager = world.getSerializerManager();
-            PlayerData data = serializerManager.getSerializer().load(world, username);
+            GameSerializerManager serializerManager = world.getSerializerManager();
+            PlayerData data = serializerManager.getSerializer().loadPlayer(world, username);
             if (data == null) {
                 throw new NoSuchElementException("No player data available for " + username);
             }
             action.accept(data);
-            serializerManager.getSerializer().save(world, username, data);
+            serializerManager.getSerializer().savePlayer(world, username, data);
             logger.debug("Finished transforming {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return null;
         });
@@ -127,7 +127,7 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending load request for {} to a worker...", username);
         return worker.submit(() -> {
             var timer = Stopwatch.createStarted();
-            var data = world.getSerializerManager().getSerializer().load(world, username);
+            var data = world.getSerializerManager().getSerializer().loadPlayer(world, username);
             logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return data;
         });
@@ -161,7 +161,7 @@ public final class PersistenceService extends AbstractIdleService {
         logger.trace("Sending save request for {} to a worker...", username);
         return worker.submit(() -> {
             var timer = Stopwatch.createStarted();
-            world.getSerializerManager().getSerializer().save(world, username, data);
+            world.getSerializerManager().getSerializer().savePlayer(world, username, data);
             logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return null;
         });
@@ -196,7 +196,7 @@ public final class PersistenceService extends AbstractIdleService {
                     continue;
                 }
                 try {
-                    world.getSerializerManager().getSerializer().save(world, username, data);
+                    world.getSerializerManager().getSerializer().savePlayer(world, username, data);
                     logger.trace("Saved {}'s data.", username);
                 } catch (Exception e) {
                     logger.error(new ParameterizedMessage("Issue saving {}'s data during mass save.", username), e);
@@ -222,7 +222,7 @@ public final class PersistenceService extends AbstractIdleService {
         }
         return worker.submit(() -> {
             Stopwatch timer = Stopwatch.createStarted();
-            boolean successful = world.getSerializerManager().getSerializer().delete(world, username);
+            boolean successful = world.getSerializerManager().getSerializer().deletePlayer(world, username);
             if (successful) {
                 logger.info("Save record for {} has been deleted (took {}ms).", username, box(timer.elapsed().toMillis()));
             } else {

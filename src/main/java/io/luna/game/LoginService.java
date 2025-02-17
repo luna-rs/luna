@@ -1,12 +1,12 @@
-package io.luna.game.service;
+package io.luna.game;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerData;
-import io.luna.game.service.LoginService.LoginRequest;
+import io.luna.game.persistence.PlayerData;
+import io.luna.game.LoginService.LoginRequest;
 import io.luna.net.client.LoginClient;
 import io.luna.net.msg.login.LoginRequestMessage;
 import io.luna.net.msg.login.LoginResponse;
@@ -143,7 +143,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             try {
                 var player = request.player;
                 var timer = Stopwatch.createStarted();
-                var loadedData = world.getSerializerManager().getSerializer().load(world, username);
+                var loadedData = world.getSerializerManager().getSerializer().loadPlayer(world, username);
                 var response = client.getLoginResponse(loadedData, player.getPassword());
                 if (response == LoginResponse.NORMAL) {
                     request.loadedData = loadedData;

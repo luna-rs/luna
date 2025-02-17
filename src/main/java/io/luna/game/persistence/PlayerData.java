@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.persistence;
+package io.luna.game.persistence;
 
 import io.luna.Luna;
 import io.luna.game.GameSettings.PasswordStrength;
@@ -8,8 +8,8 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerMusicTab;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
-import io.luna.game.service.GameService;
-import io.luna.game.service.LogoutService;
+import io.luna.game.GameService;
+import io.luna.game.LogoutService;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.Instant;

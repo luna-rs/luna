@@ -1,4 +1,4 @@
-package io.luna.game.service;
+package io.luna.game;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.ListeningExecutorService;

@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.persistence;
+package io.luna.game.persistence;
 
 import io.luna.Luna;
 import io.luna.game.model.World;
@@ -12,12 +12,12 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 import java.util.function.Supplier;
 
 /**
- * A model that creates and manages a {@link PlayerSerializer}, used to load and save important data related to
+ * A model that creates and manages a {@link GameSerializer}, used to load and save important data related to
  * {@link Player} and {@link Bot} types.
  *
  * @author lare96
  */
-public class PlayerSerializerManager {
+public class GameSerializerManager {
 
     /**
      * The logger.
@@ -25,9 +25,9 @@ public class PlayerSerializerManager {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The default player serializer that will be used if one cannot be computed.
+     * The default game serializer that will be used if one cannot be computed.
      */
-    private static final Supplier<PlayerSerializer> DEFAULT = PassivePlayerSerializer::new;
+    private static final Supplier<GameSerializer> DEFAULT = PassiveGameSerializer::new;
 
     /**
      * The world instance.
@@ -37,14 +37,14 @@ public class PlayerSerializerManager {
     /**
      * The computed serializer.
      */
-    private final PlayerSerializer serializer;
+    private final GameSerializer serializer;
 
     /**
-     * Creates a new {@link PlayerSerializerManager}.
+     * Creates a new {@link GameSerializerManager}.
      *
      * @param world The world instance.
      */
-    public PlayerSerializerManager(World world) {
+    public GameSerializerManager(World world) {
         this.world = world;
         serializer = computeSerializer();
     }
@@ -55,7 +55,7 @@ public class PlayerSerializerManager {
      * @return The serializer.
      * @throws ClassCastException If the serializer could not be created.
      */
-    private PlayerSerializer computeSerializer() throws ClassCastException {
+    private GameSerializer computeSerializer() throws ClassCastException {
         String name = Luna.settings().game().serializer();
         try {
             String fullName = "io.luna.game.model.mob.persistence." + name;
@@ -67,12 +67,12 @@ public class PlayerSerializerManager {
                 }
             });
         } catch (ClassCastException e) {
-            logger.fatal(new ParameterizedMessage("{} not an instance of PlayerSerializer, using PassivePlayerSerializer instead.", name), e);
+            logger.fatal(new ParameterizedMessage("{} not an instance of GameSerializer, using PassiveGameSerializer instead.", name), e);
             return DEFAULT.get();
         }
     }
 
-    public PlayerSerializer getSerializer() {
+    public GameSerializer getSerializer() {
         if(serializer == null) {
             throw new NullPointerException("Serializer was not properly computed!");
         }
