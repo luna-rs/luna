@@ -9,7 +9,6 @@ import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Animation
 import io.luna.util.RandomUtils
 import io.luna.util.Rational
 import world.player.skill.thieving.pickpocketNpc.ThievableNpc
@@ -89,10 +88,10 @@ object Thieving {
     fun isDoubleLoot(plr: Player): Boolean {
         var chance = 0.0
         for (item in ROGUE_EQUIPMENT_ITEMS) {
-            if(plr.equipment.contains(item.equipDef.index, item.id)) {
-                if(chance >= 0.6) {  // We have all 5 pieces, 100% chance.
+            if (plr.equipment.contains(item.equipDef.index, item.id)) {
+                if (chance >= 0.6) {  // We have all 5 pieces, 100% chance.
                     chance = 1.0
-                } else if(chance >= 0.0) { // Increase chance by 15% per piece until 60%.
+                } else if (chance >= 0.0) { // Increase chance by 15% per piece until 60%.
                     chance += 0.15
                 }
             }

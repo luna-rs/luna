@@ -441,6 +441,13 @@ public abstract class Mob extends Entity {
     }
 
     /**
+     * Returns {@code true} if this mob is interacting with {@code entity}.
+     */
+    public boolean isInteractingWith(Entity entity) {
+        return interactingWith.filter(entity::equals).isPresent();
+    }
+
+    /**
      * Displays a primary hitsplat.
      *
      * @param hit The hit to display.
@@ -616,6 +623,7 @@ public abstract class Mob extends Entity {
         return lastDirection;
     }
 
+    // todo set this last direction field for immobile npcs that don't move on spawn. faceposition should set direction too? might solve for both?
     public void setLastDirection(Direction lastDirection) {
         this.lastDirection = lastDirection;
     }

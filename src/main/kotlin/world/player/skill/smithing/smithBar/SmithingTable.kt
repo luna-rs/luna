@@ -1,7 +1,6 @@
 package world.player.skill.smithing.smithBar
 
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableListMultimap
 import com.google.common.collect.ImmutableMap
 import io.luna.game.model.item.Item
 import world.player.skill.smithing.BarType

@@ -1,6 +1,6 @@
 package io.luna.game.task;
 
-import io.luna.game.service.GameService;
+import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

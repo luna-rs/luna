@@ -61,7 +61,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
 
             ChunkManager chunks = player.getWorld().getChunks();
             int playersAdded = 0;
-            for (Player other : chunks.getUpdatePlayers(player)) {
+            for (Player other : chunks.findUpdateMobs(player, Player.class)) {
                 if (playersAdded == 15 || player.getLocalPlayers().size() >= 255) {
                     break;
                 }

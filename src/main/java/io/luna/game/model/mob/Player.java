@@ -5,6 +5,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.LogoutService;
+import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
@@ -27,15 +29,13 @@ import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
-import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.game.model.object.GameObject;
-import io.luna.game.service.LogoutService;
-import io.luna.game.service.LogoutService.LogoutRequest;
-import io.luna.game.service.PersistenceService;
+import io.luna.game.persistence.PersistenceService;
+import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
@@ -543,10 +543,8 @@ public class Player extends Mob {
                 equipment.contains(id)) {
             return true;
         }
-        return world.getChunks().getViewableEntities(position, EntityType.ITEM).stream().anyMatch(it -> {
-            GroundItem groundItem = (GroundItem) it;
-            return groundItem.getId() == id && groundItem.getView().isViewableFor(this);
-        });
+        return world.getChunks().findViewable(position, GroundItem.class).stream().
+                anyMatch(it -> it.getId() == id && it.getView().isViewableFor(this));
     }
 
     /**

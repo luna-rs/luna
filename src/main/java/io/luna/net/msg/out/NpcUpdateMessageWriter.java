@@ -59,7 +59,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             ChunkManager chunks = player.getWorld().getChunks();
             int npcsAdded = 0;
 
-            for (Npc other : chunks.getUpdateNpcs(player)) {
+            for (Npc other : chunks.findUpdateMobs(player, Npc.class)) {
                 if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
                     break;
                 }

@@ -1,16 +1,12 @@
 package world.player.item.banking.regularBank
 
 import api.predef.*
-import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
-/**
- * A set of banking objects.
- */
-val bankObjects: Set<Int> = hashSetOf(3193, 2213, 3095)
-
-/**
- * Open the banking interface.
- */
-on(ObjectFirstClickEvent::class)
-    .match(bankObjects)
-    .then { plr.bank.open() }
+// Load all banking objects, make them open the bank.
+on(ServerLaunchEvent::class) {
+    Banking.loadBankingObjects()
+    for (id in Banking.bankingObjects) {
+        object1(id) { plr.bank.open() }
+    }
+}
