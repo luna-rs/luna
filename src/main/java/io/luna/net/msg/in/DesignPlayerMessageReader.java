@@ -1,7 +1,8 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.DesignPlayerEvent;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -12,26 +13,34 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class DesignPlayerMessageReader extends GameMessageReader<NullEvent> {
+public final class DesignPlayerMessageReader extends GameMessageReader<DesignPlayerEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
+    public DesignPlayerEvent decode(Player player, GameMessage msg) {
         int gender = msg.getPayload().get();
         byte[] models = msg.getPayload().getBytes(7);
         byte[] colors = msg.getPayload().getBytes(5);
         int[] values = new int[13];
         int index = 0;
-
         values[index++] = gender;
-        for (byte model : models) {
+        for (int model : models) {
             values[index++] = model;
         }
-        for (byte color : colors) {
+        for (int color : colors) {
             values[index++] = color;
         }
-        player.getAppearance().setValues(values);
+        return new DesignPlayerEvent(player, gender, models, colors, values);
+    }
+
+    @Override
+    public boolean validate(Player player, DesignPlayerEvent event) {
+        return player.getInterfaces().standardTo(DesignPlayerInterface.class).isPresent();
+    }
+
+    @Override
+    public void handle(Player player, DesignPlayerEvent event) {
+        player.getAppearance().setValues(event.getValues());
         player.getFlags().flag(UpdateFlag.APPEARANCE);
         player.getInterfaces().close();
-        return NullEvent.INSTANCE;
     }
 }
