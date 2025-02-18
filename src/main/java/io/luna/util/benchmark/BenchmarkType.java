@@ -22,6 +22,11 @@ public enum BenchmarkType {
     MOB_UPDATING,
 
     /**
+     * A pre-synchronization benchmark.
+     */
+    PRE_SYNCHRONIZATION_PROCESS,
+
+    /**
      * A benchmark of the entire game loop.
      */
     GAME_LOOP;

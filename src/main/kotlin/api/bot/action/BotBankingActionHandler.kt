@@ -3,6 +3,7 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.Entity.EntityDistanceComparator
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
@@ -144,7 +145,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         }
 
         // First check surrounding chunks.
-        val result = filterNearestBank(world.chunks.getEntities<GameObject>(bot.position, TYPE_OBJECT).stream())
+        val result = filterNearestBank(world.chunks.findViewable(bot.position, GameObject::class).stream())
         if (result.isPresent) {
             return result.get()
         }

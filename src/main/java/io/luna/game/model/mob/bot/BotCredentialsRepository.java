@@ -22,7 +22,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * @author lare96
  */
 public final class BotCredentialsRepository {
-
+ // todo lazy removals from cache? use scheduler to serialize and just remove multiple from cache at a time
     /**
      * The path to the username cache.
      */

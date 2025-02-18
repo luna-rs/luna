@@ -16,7 +16,7 @@ import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.persistence.PlayerData;
+import io.luna.game.persistence.PlayerData;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;

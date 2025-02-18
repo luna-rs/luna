@@ -80,7 +80,8 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
         return axe.animation
     }
 
-    override fun add(): List<Item?> = listOf(Item(tree.logsId))
+    override fun add(): List<Item?> = listOf(Item(
+        tree.logsId))
 
     override fun stop() = mob.animation(Animation.CANCEL)
 

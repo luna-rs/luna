@@ -33,7 +33,8 @@ class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId
         plr.crafting.addExperience(armor.exp)
     }
 
-    override fun remove() = listOf(Item(removeId), Item(STUDS))
+    override fun remove() = listOf(Item(removeId),
+                                   Item(STUDS))
 
     override fun add() = listOf(Item(armor.id))
 

@@ -16,9 +16,8 @@ import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
@@ -26,7 +25,6 @@ import io.luna.game.task.Task
 import world.minigame.partyRoom.PartyRoom
 import world.minigame.partyRoom.PartyRoomOption
 import java.time.Duration
-import java.util.*
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -160,7 +158,13 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * A data class representing a balloon object.
      */
     data class BalloonObject(private val pos: Position, val item: Item) :
-        GameObject(ctx, BALLOON_IDS.random(), pos, ObjectType.DEFAULT, ObjectDirection.SOUTH, ChunkUpdatableView.globalView(), true) {
+        GameObject(ctx,
+                   BALLOON_IDS.random(),
+                   pos,
+                   ObjectType.DEFAULT,
+                   ObjectDirection.SOUTH,
+                   ChunkUpdatableView.globalView(),
+                   true) {
         var stompedBy: Player? = null
 
         override fun onActive() {
