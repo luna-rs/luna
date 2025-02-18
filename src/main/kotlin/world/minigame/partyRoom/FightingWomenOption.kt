@@ -101,7 +101,6 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_1)),
                 world.addNpc(Npc(ctx, WOMAN_ID, POSITION_2))
         )
-        women.forEach { it.setInteractable(false) }
         val woman1 = women[0]
         val woman2 = women[1]
         woman1.interact(woman2)

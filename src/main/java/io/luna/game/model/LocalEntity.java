@@ -14,7 +14,7 @@ import io.luna.game.model.chunk.ChunkUpdatableView;
  * @author lare96
  */
 public abstract class LocalEntity implements ChunkUpdatable {
-
+// todo extend entity
     /**
      * The context.
      */

@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
 import io.luna.game.plugin.PluginManager;
-import io.luna.game.service.GameService;
+import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public abstract class Entity {
-
+// todo interactable conditions
     /**
      * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
      */
@@ -385,7 +385,7 @@ public abstract class Entity {
      * @param interactable The new value.
      */
     public void setInteractable(boolean interactable) {
-        this.interactable = interactable;
+        this.interactable = interactable; // todo use for local entities?
     }
 
     /**
