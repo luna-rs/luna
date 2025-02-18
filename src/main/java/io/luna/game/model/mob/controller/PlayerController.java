@@ -3,7 +3,7 @@ package io.luna.game.model.mob.controller;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
-import io.luna.game.service.LogoutService;
+import io.luna.game.LogoutService;
 import world.player.skill.magic.teleportSpells.TeleportAction;
 
 /**

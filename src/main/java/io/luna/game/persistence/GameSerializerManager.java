@@ -58,7 +58,7 @@ public class GameSerializerManager {
     private GameSerializer computeSerializer() throws ClassCastException {
         String name = Luna.settings().game().serializer();
         try {
-            String fullName = "io.luna.game.model.mob.persistence." + name;
+            String fullName = "io.luna.game.persistence." + name;
             return ReflectionUtils.newInstanceOf(fullName, type -> {
                 try {
                     return type.getDeclaredConstructor();
