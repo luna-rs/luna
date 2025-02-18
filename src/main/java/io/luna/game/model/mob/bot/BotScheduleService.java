@@ -6,8 +6,8 @@ import io.luna.Luna;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.persistence.PlayerData;
-import io.luna.game.model.mob.persistence.PlayerSerializer;
+import io.luna.game.persistence.GameSerializer;
+import io.luna.game.persistence.PlayerData;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -68,12 +68,16 @@ public final class BotScheduleService extends AbstractScheduledService {
 
     @Override
     protected void startUp() throws Exception {
-        PlayerSerializer serializer = world.getSerializerManager().getSerializer();
-        Map<String, BotSchedule> loadedSchedules = serializer.synchronizeBotSchedules(world);
-        if (loadedSchedules.size() != world.getBots().getPersistentCount()) {
-            throw new IllegalStateException("Bot sessions and persistent bot count are not synchronized.");
+        if(Luna.settings().bots().idealCount() == 0) {
+            stopAsync();
+        } else {
+            GameSerializer serializer = world.getSerializerManager().getSerializer();
+            Map<String, BotSchedule> loadedSchedules = serializer.synchronizeBotSchedules(world);
+            if (loadedSchedules.size() != world.getBots().getPersistentCount()) {
+                throw new IllegalStateException("Bot sessions and persistent bot count are not synchronized.");
+            }
+            scheduleMap.putAll(loadedSchedules);
         }
-        scheduleMap.putAll(loadedSchedules);
     }
 
     @Override
@@ -203,7 +207,7 @@ public final class BotScheduleService extends AbstractScheduledService {
      * @param schedule The new schedule to assign.
      */
     public void updateSchedule(BotSchedule schedule) throws Exception {
-        PlayerSerializer serializer = world.getSerializerManager().getSerializer();
+        GameSerializer serializer = world.getSerializerManager().getSerializer();
         if (serializer.saveBotSchedule(world, schedule)) {
             scheduleMap.put(schedule.getUsername(), schedule);
         }
