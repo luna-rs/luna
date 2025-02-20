@@ -95,16 +95,16 @@ public final class ControllerManager implements Iterable<PlayerController> {
     public boolean checkMovement(Position newPos) {
         for (ControllerKey<? extends PlayerLocationController> key : ControllerKey.getLocationKeys()) {
             PlayerLocationController controller = key.getController();
-            boolean inside = controller.inside(player);
+            boolean inside = controller.inside(newPos);
             boolean alreadyRegistered = contains(key);
             if (!alreadyRegistered && inside) {
-                if (controller.canEnter(player)) {
+                if (controller.canEnter(player, newPos)) {
                     registered.put(key, controller);
                 } else {
                     return false;
                 }
             } else if (alreadyRegistered && !inside) {
-                if (controller.canExit(player)) {
+                if (controller.canExit(player, newPos)) {
                     registered.remove(key);
                 } else {
 

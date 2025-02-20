@@ -3,6 +3,7 @@ package world.player
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.Area
 import io.luna.game.model.Location
+import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
 import io.luna.game.model.mob.Player
@@ -16,12 +17,12 @@ import io.luna.net.msg.out.MultiCombatMessageWriter
  */
 object MultiCombatAreaController : PlayerLocationController() {
 
-    override fun canEnter(plr: Player): Boolean {
+    override fun canEnter(plr: Player, newPos: Position): Boolean {
         plr.queue(MultiCombatMessageWriter(true))
         return true
     }
 
-    override fun canExit(plr: Player): Boolean {
+    override fun canExit(plr: Player, newPos: Position): Boolean {
         plr.queue(MultiCombatMessageWriter(false))
         return true
     }
