@@ -17,7 +17,6 @@ import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.ThreadUtils;
-import io.luna.util.benchmark.BenchmarkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -148,9 +147,7 @@ public final class GameService extends AbstractScheduledService {
 
     @Override
     protected void runOneIteration() {
-        server.getBenchmarkManager().startBenchmark(BenchmarkType.GAME_LOOP);
         loop();
-        server.getBenchmarkManager().finishBenchmark(BenchmarkType.GAME_LOOP);
     }
 
     @Override

@@ -18,7 +18,6 @@ import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
-import io.luna.util.benchmark.BenchmarkManager;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.MusicDefinitionFileParser;
@@ -64,11 +63,6 @@ public final class LunaServer {
      * A message repository.
      */
     private final GameMessageRepository messageRepository = new GameMessageRepository();
-
-    /**
-     * The benchmark manager.
-     */
-    private final BenchmarkManager benchmarkManager = new BenchmarkManager();
 
     /**
      * A package-private constructor.
@@ -132,7 +126,6 @@ public final class LunaServer {
         World world = context.getWorld();
 
         // Independent services not linked to the core game.
-        benchmarkManager.getService().startAsync();
         world.getBotScheduleService().startAsync();
 
         // Core game services.
@@ -195,12 +188,5 @@ public final class LunaServer {
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
-    }
-
-    /**
-     * @return The benchmark manager.
-     */
-    public BenchmarkManager getBenchmarkManager() {
-        return benchmarkManager;
     }
 }

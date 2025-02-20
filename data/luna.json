@@ -1,6 +1,6 @@
 {
   "game": {
-    "runtime_mode": "BENCHMARK",
+    "runtime_mode": "DEVELOPMENT",
     "starting_position": {
       "x": 3093,
       "y": 3244
@@ -20,12 +20,6 @@
       "CHAT",
       "COMMANDS",
       "PRIVATE_MESSAGE"
-    ]
-  },
-  "benchmark": {
-    "frequency_minutes": 1,
-    "types": [
-      "ALL"
     ]
   },
   "bots": {

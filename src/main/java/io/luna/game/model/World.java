@@ -27,8 +27,6 @@ import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
-import io.luna.util.benchmark.BenchmarkManager;
-import io.luna.util.benchmark.BenchmarkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -279,8 +277,6 @@ public final class World {
      * Pre-synchronization part of the game loop, process all tick-dependant player logic.
      */
     private void preSynchronize() {
-        BenchmarkManager benchmarks = context.getServer().getBenchmarkManager();
-        benchmarks.startBenchmark(BenchmarkType.PRE_SYNCHRONIZATION_PROCESS);
         for (Player player : playerList) {
             try {
                 if (player.getClient().isPendingLogout()) {
@@ -298,7 +294,6 @@ public final class World {
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
-        benchmarks.finishBenchmark(BenchmarkType.PRE_SYNCHRONIZATION_PROCESS);
 
         // Separate region update from other logic to ensure all chunk updates are sent.
         for (Player player : playerList) {
@@ -329,15 +324,11 @@ public final class World {
      * Synchronization part of the game loop, apply the update procedure in parallel.
      */
     private void synchronize() {
-        BenchmarkManager benchmarks = context.getServer().getBenchmarkManager();
-
-        benchmarks.startBenchmark(BenchmarkType.MOB_UPDATING);
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
             updatePool.execute(new PlayerSynchronizationTask(player));
         }
         synchronizer.arriveAndAwaitAdvance();
-        benchmarks.finishBenchmark(BenchmarkType.MOB_UPDATING);
     }
 
     /**
