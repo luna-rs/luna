@@ -17,7 +17,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
     /**
      * The {@link Task} processing this repeating action.
      */
-    private final class Worker extends Task {
+    final class Worker extends Task {
 
         /**
          * Creates a new {@link Worker}.
@@ -33,7 +33,7 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
 
         @Override
         protected boolean onSchedule() {
-           return start();
+            return start();
         }
 
         @Override
@@ -174,5 +174,9 @@ public abstract class RepeatingAction<T extends Mob> extends Action<T> {
      */
     final boolean isInterrupted() {
         return worker.getState() == TaskState.CANCELLED;
+    }
+
+    Worker getWorker() {
+        return worker;
     }
 }
