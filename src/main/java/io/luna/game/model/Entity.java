@@ -96,11 +96,6 @@ public abstract class Entity {
     protected volatile ChunkRepository chunkRepository;
 
     /**
-     * If this entity can be interacted with.
-     */
-    private boolean interactable = true;
-
-    /**
      * Creates a new {@link Entity}.
      *
      * @param context The context instance.
@@ -274,7 +269,8 @@ public abstract class Entity {
      * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
-        if (!newPosition.equals(position)) {
+        boolean isLocal = this instanceof LocalEntity;
+        if (!newPosition.equals(position) && !isLocal) {
             if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
                 Player player = (Player) this;
                 if (!player.getControllers().checkMovement(newPosition)) {
@@ -377,21 +373,5 @@ public abstract class Entity {
      */
     public ChunkRepository getChunkRepository() {
         return chunkRepository;
-    }
-
-    /**
-     * Sets if this entity can be interacted with.
-     *
-     * @param interactable The new value.
-     */
-    public void setInteractable(boolean interactable) {
-        this.interactable = interactable; // todo use for local entities?
-    }
-
-    /**
-     * @return If this entity can be interacted with.
-     */
-    public boolean isInteractable() {
-        return interactable;
     }
 }

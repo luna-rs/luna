@@ -1,5 +1,6 @@
 package io.luna.game.model;
 
+import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableView;
@@ -42,6 +43,15 @@ public final class LocalSound extends LocalEntity {
         return new AddLocalSoundMessageWriter(id, radius, volume, offset);
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("radius", radius)
+                .add("volume", volume)
+                .toString();
+    }
+
     /**
      * @return The radius of the sound.
      */
@@ -55,4 +65,5 @@ public final class LocalSound extends LocalEntity {
     public int getVolume() {
         return volume;
     }
+
 }
