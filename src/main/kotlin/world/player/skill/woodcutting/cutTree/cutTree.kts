@@ -13,7 +13,7 @@ fun cutTree(plr: Player, tree: Tree, treeObj: GameObject) {
         plr.sendMessage("You do not have an axe which you have the required level to use.")
         return
     }
-    plr.submitAction(CutTreeActionItem(plr, currentAxe, tree, treeObj))
+    plr.submitAction(CutTreeAction(plr, currentAxe, tree, treeObj))
 }
 
 // Object interactions for cutting trees.

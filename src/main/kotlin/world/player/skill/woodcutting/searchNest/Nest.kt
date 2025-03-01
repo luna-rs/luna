@@ -19,6 +19,9 @@ enum class Nest(val id: Int, val items: List<Int>) {
 
     companion object {
 
+        /**
+         * All values in this enum.
+         */
         val VALUES = setOf(*values())
 
         /**
@@ -27,6 +30,9 @@ enum class Nest(val id: Int, val items: List<Int>) {
         val NEST_MAP = values().associateBy { it.id }
     }
 
+    /**
+     * Picks a random item from this nest.
+     */
     fun pickItem() = Item(items.random())
 
 }

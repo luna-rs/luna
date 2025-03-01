@@ -3,8 +3,8 @@ package world.player.skill.woodcutting.cutTree
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
-import io.luna.game.action.ItemContainerAction.AnimatedInventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
@@ -16,15 +16,15 @@ import world.player.skill.woodcutting.searchNest.Nest
 /**
  * An [InventoryAction] that will enable the cutting of trees.
  */
-class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, false, 1, 5, rand(RANDOM_FAIL_RATE)) {
+class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
+    AnimatedInventoryAction(plr, 1, 5, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
         /**
          * How often the player will randomly stop cutting, in actions (<x> logs cut).
          */
-        val RANDOM_FAIL_RATE = 15..55
+        val RANDOM_FAIL_RATE = 5..50
 
         /**
          * The base cut time, the lower this number the faster logs will be cut overall.
@@ -68,7 +68,7 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
 
         if (tree.depletionChance == 1 || rand().nextInt(tree.depletionChance) == 0) {
             deleteAndRespawnTree()
-            interrupt()
+            complete()
         } else {
             delay = getWoodcuttingDelay()
         }
@@ -83,15 +83,12 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
     override fun add(): List<Item?> = listOf(Item(
         tree.logsId))
 
-    override fun stop() = mob.animation(Animation.CANCEL)
+    override fun onFinished() {
+        mob.animation(Animation.CANCEL)
+        println(state)
+    }
 
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is CutTreeActionItem -> treeObj == other.treeObj
-            else -> false
-        }
-
-    override fun onProcess() {
+    override fun onProcessAnimation() {
         if (soundDelay) {
             soundDelay = false
         } else {
@@ -111,20 +108,21 @@ class CutTreeActionItem(plr: Player, val axe: Axe, val tree: Tree, val treeObj: 
                     stumpId,
                     treeObj.position,
                     treeObj.objectType,
-                    treeObj.direction
-                )
+                    treeObj.direction)
             }
             world.scheduleOnce(tree.respawnTicks) {
                 world.addObject(
                     treeObj.id,
                     treeObj.position,
                     treeObj.objectType,
-                    treeObj.direction
-                )
+                    treeObj.direction)
             }
         }
     }
 
+    /**
+     * Determines how many ticks it will take to get the next log.
+     */
     private fun getWoodcuttingDelay(): Int {
         var baseTime = rand(BASE_CUT_RATE / 2, BASE_CUT_RATE)
         baseTime -= (axe.strength - tree.resistance)
