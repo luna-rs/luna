@@ -3,7 +3,7 @@ package world.player.skill.thieving.searchForTraps
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.ThrottledAction
+import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Hit
@@ -26,10 +26,7 @@ class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievableC
     }
 
     override fun execute() {
-        if (mob.thieving.level < thievable.level) {
-            mob.sendMessage("You need a Thieving level of ${thievable.level} to search for traps here.")
-            return
-        } else if (obj.state == EntityState.INACTIVE) {
+        if (obj.state == EntityState.INACTIVE) {
             return
         }
         mob.interact(obj)

@@ -2,8 +2,7 @@ package world.player.skill.thieving.searchForTraps
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
-import io.luna.game.action.RepeatingAction
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.Item
@@ -18,7 +17,7 @@ import world.player.skill.thieving.Thieving
  * A [RepeatingAction] that handles searching chests for traps.
  */
 class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: ThievableChest) :
-    RepeatingAction<Player>(plr, true, 1) {
+    LockedAction(plr) {
 
     companion object {
 
@@ -46,49 +45,42 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
      */
     private val loot = ArrayList<Item>()
 
-    override fun start(): Boolean = true
-
-    override fun repeat() {
+    override fun run(): Boolean {
         if (mob.thieving.level < thievable.level) {
             mob.sendMessage("You need a Thieving level of ${thievable.level} to search for traps here.")
-            interrupt()
-            return
+            return true
         } else if (obj.state == EntityState.INACTIVE) {
-            interrupt()
-            return
+            mob.sendMessage("You were too late!")
+            return true
         }
-        when (state) {
+        return when (state) {
             State.SEARCHING -> searchChest()
             State.LOOTING -> lootChest()
         }
     }
 
-    override fun ignoreIf(other: Action<*>?): Boolean = when (other) {
-        is SearchForTrapsAction -> other.thievable == thievable
-        else -> false
-    }
-
     /**
      * Start searching the chest for traps.
      */
-    private fun searchChest() {
+    private fun searchChest(): Boolean {
         val rolls = if (Thieving.isDoubleLoot(mob)) 2 else 1
         repeat(rolls) {
             loot += thievable.drops.roll(mob, obj)
         }
         if (!mob.inventory.hasSpaceForAll(loot)) {
             mob.sendMessage(Messages.INVENTORY_FULL)
-            return
+            return true
         }
         mob.interact(obj)
         mob.animation(Animations.PICKPOCKET)
         state = State.LOOTING
+        return false
     }
 
     /**
      * Loot the chest.
      */
-    private fun lootChest() {
+    private fun lootChest(): Boolean {
         if (mob.state != EntityState.INACTIVE && obj.state != EntityState.INACTIVE) {
             replaceChest()
             mob.sendMessage("You unlock the chest.")
@@ -101,7 +93,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
         } else {
             mob.sendMessage("You were too late!")
         }
-        interrupt()
+        return true
     }
 
     /**
@@ -109,8 +101,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
      */
     private fun replaceChest() {
         if (world.objects.unregister(obj)) {
-            val view =
-                if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
+            val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
                 world.objects.register(GameObject.createDynamic(
                     ctx, UNLOCKED_CHEST, obj.position, obj.objectType,
                     obj.direction, view))
