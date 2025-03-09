@@ -1,11 +1,13 @@
-package io.luna.game.action;
+package io.luna.game.action.impl;
 
-import io.luna.game.model.EntityType;
+import io.luna.game.action.Action;
+import io.luna.game.action.ActionType;
+import io.luna.game.action.TimeSource;
 import io.luna.game.model.mob.Mob;
 
 /**
  * An {@link Action} implementation that is throttled for a period of time. Throttling restricts how many times an action
- * can be submitted, ignoring actions that are considered equal until the delay is over. Some examples of throttled actions
+ * can run, ignoring actions from the same {@link TimeSource} until the delay is over. Some examples of throttled actions
  * include burying bones and identifying herbs.
  *
  * @param <T> The mob that this Action is dedicated to.
@@ -31,20 +33,18 @@ public abstract class ThrottledAction<T extends Mob> extends Action<T> {
      * @param delay The throttle delay, in ticks.
      */
     public ThrottledAction(T mob, TimeSource source, int delay) {
-        super(mob);
+        super(mob, ActionType.WEAK);
         this.source = source;
         this.delay = delay;
     }
 
     @Override
-    public void run() {
-        if(mob.getType() == EntityType.PLAYER) {
-            mob.asPlr().getInterfaces().applyActionClose();
-        }
+    public boolean run() {
         mob.getWalking().clear();
         if (source.ready(delay)) {
             execute();
         }
+        return true;
     }
 
     /**

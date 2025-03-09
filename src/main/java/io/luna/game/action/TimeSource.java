@@ -1,12 +1,14 @@
 package io.luna.game.action;
 
+import io.luna.game.action.impl.QueuedAction;
+import io.luna.game.action.impl.ThrottledAction;
 import io.luna.game.model.World;
 import io.luna.util.TickTimer;
 
 /**
  * A {@link TickTimer} implementation that acts as a source of time for {@link ThrottledAction}s and {@link QueuedAction}s.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class TimeSource extends TickTimer {
 
@@ -15,6 +17,16 @@ public final class TimeSource extends TickTimer {
      * {@code true}.
      */
     private boolean checked;
+
+    /**
+     * The queued action.
+     */
+    private QueuedAction<?> queued;
+
+    /**
+     * If this time source is waiting to queue an action.
+     */
+    private boolean waiting;
 
     /**
      * Creates a new {@link TimeSource}.
@@ -36,9 +48,39 @@ public final class TimeSource extends TickTimer {
     public boolean ready(int duration) {
         if (!checked || getDurationTicks() >= duration) {
             checked = true;
+            queued = null;
+            waiting = false;
             reset();
             return true;
         }
         return false;
+    }
+
+    /**
+     * @return The queued action.
+     */
+    public QueuedAction<?> getQueued() {
+        return queued;
+    }
+
+    /**
+     * Sets the queued action.
+     */
+    public void setQueued(QueuedAction<?> queued) {
+        this.queued = queued;
+    }
+
+    /**
+     * @return {@code true} If this time source is waiting to queue an action.
+     */
+    public boolean isWaiting() {
+        return waiting;
+    }
+
+    /**
+     * Sets if this time source is waiting to queue an action.
+     */
+    public void setWaiting(boolean waiting) {
+        this.waiting = waiting;
     }
 }
