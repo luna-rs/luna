@@ -3,6 +3,9 @@ package io.luna.game.model;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
+import io.luna.game.LoginService;
+import io.luna.game.LogoutService;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
@@ -16,11 +19,8 @@ import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.mob.bot.BotScheduleService;
 import io.luna.game.model.mob.controller.ControllerProcessTask;
-import io.luna.game.persistence.GameSerializerManager;
 import io.luna.game.model.object.GameObjectList;
-import io.luna.game.GameService;
-import io.luna.game.LoginService;
-import io.luna.game.LogoutService;
+import io.luna.game.persistence.GameSerializerManager;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
@@ -289,35 +289,40 @@ public final class World {
                     Bot bot = (Bot) player;
                     bot.process();
                 }
+                player.getActions().process();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
-        // Separate region update from other logic to ensure all chunk updates are sent.
-        for (Player player : playerList) {
-            if (player.getClient().isPendingLogout()) {
-                continue;
-            }
-            try {
-
-                Position oldPosition = player.getPosition();
-                player.sendRegionUpdate(oldPosition);
-            } catch (Exception e) {
-                player.logout();
-                logger.warn(new ParameterizedMessage("Could not send region updates for {}.", player, e));
-            }
-        }
-
         for (Npc npc : npcList) {
             try {
                 npc.getWalking().process();
+                npc.getActions().process();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
+
+        // Region update and action queue must be processed last.
+        for (Player player : playerList) {
+            if (player.getClient().isPendingLogout()) {
+                player.cleanUp();
+                continue;
+            }
+            try {
+                Position oldPosition = player.getPosition();
+
+                player.sendRegionUpdate(oldPosition);
+                player.getActions().process();
+            } catch (Exception e) {
+                player.logout();
+                logger.warn(new ParameterizedMessage("Could not finalize pre-synchronization for {}.", player, e));
+            }
+        }
+
     }
 
     /**
