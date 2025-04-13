@@ -8,7 +8,8 @@ import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 
 /**
- * A non-registered {@link ChunkUpdatable} type that exists temporarily in the game world.
+ * A temporary {@link Entity} that cannot be interacted with (i.e. Area-based sounds, projectiles, graphics). Discarded
+ * after being displayed within a {@link ChunkUpdatableRequest}.
  *
  * @author lare96
  */
