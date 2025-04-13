@@ -49,13 +49,15 @@ public final class ClimbAction extends LockedAction {
 
     @Override
     public boolean run() {
-        if (getExecutions() == 1) {
+        if (getExecutions() == 0) {
             mob.sendMessage(message);
             mob.animation(new Animation(828));
-        } else if (getExecutions() == 2) {
+            return false;
+        } else if (getExecutions() == 1) {
             mob.move(destination);
             mob.face(direction);
-        } else return getExecutions() >= 3;
-        return false;
+            return false;
+        }
+        return true;
     }
 }
