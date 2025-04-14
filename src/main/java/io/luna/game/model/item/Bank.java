@@ -222,9 +222,9 @@ public final class Bank extends ItemContainer {
         amount = Math.min(amount, existingAmount);
 
         if (player.getVarpManager().getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1) {
-            OptionalInt notedId = item.getItemDef().getUnnotedId();
-            if (notedId.isPresent()) {
-                id = notedId.getAsInt();
+            OptionalInt noted = item.getItemDef().getNotedId();
+            if (noted.isPresent()) {
+                id = noted.getAsInt();
             } else {
                 player.sendMessage("This item cannot be withdrawn as a note.");
             }
