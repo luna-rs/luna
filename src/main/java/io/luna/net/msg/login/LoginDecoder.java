@@ -31,6 +31,11 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.DecodeState> {
 
+<<<<<<< HEAD:src/main/java/io/luna/net/msg/login/LoginDecoder.java
+=======
+    private final RsaKey privateRsaKey;
+
+>>>>>>> ad60462186dcfbcc57fed662d7eab8f8bb67c550:src/main/java/io/luna/net/codec/login/LoginDecoder.java
     /**
      * An enumerated type representing login decoder states.
      */
@@ -69,7 +74,11 @@ public final class LoginDecoder extends ProgressiveMessageDecoder<LoginDecoder.D
      * @param repository The message repository.
      * @param privateRsaKey The private RSA key.
      */
+<<<<<<< HEAD:src/main/java/io/luna/net/msg/login/LoginDecoder.java
     public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateKeyPair) {
+=======
+    public LoginDecoder(LunaContext context, GameMessageRepository repository, RsaKey privateRsaKey) {
+>>>>>>> ad60462186dcfbcc57fed662d7eab8f8bb67c550:src/main/java/io/luna/net/codec/login/LoginDecoder.java
         super(DecodeState.HANDSHAKE);
         this.context = context;
         this.repository = repository;
