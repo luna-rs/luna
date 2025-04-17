@@ -170,6 +170,7 @@ public final class Position implements Location {
      * Forwards to {@link #isViewable(Position)} with {@link Entity#getPosition()} as the argument.
      */
     public boolean isViewable(Entity other) {
+        // refactor to isvisible
         return isViewable(other.getPosition());
     }
 
