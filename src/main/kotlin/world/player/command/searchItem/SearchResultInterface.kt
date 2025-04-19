@@ -16,7 +16,7 @@ class SearchResultInterface(private val searchToken: String) :
         // Perform search here, filter items based on search token.
         val itemsFound = ItemDefinition.ALL
             .stream()
-            .filter { it.id > 0 && !it.isNoted && it.name.toLowerCase().contains(searchToken) }
+            .filter { it.id > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
             .map { Item(it.id, 1) }
             .toList()
 

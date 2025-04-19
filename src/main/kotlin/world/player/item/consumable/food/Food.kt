@@ -137,7 +137,7 @@ enum class Food(val heal: Int,
     /**
      * The mappings of formatted names.
      */
-    val formattedName = itemName(id).toLowerCase()
+    val formattedName = itemName(id).lowercase()
 
     /**
      * Invoked when the food is eaten.

@@ -41,7 +41,7 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
             if (itemId == 1702) {
                 mob.sendMessage("You successfully enchant the dragonstone amulet.");
             } else {
-                mob.sendMessage("You successfully enchant the ${itemName(itemId).toLowerCase()}.");
+                mob.sendMessage("You successfully enchant the ${itemName(itemId).lowercase()}.");
             }
             mob.tabs.show(TabIndex.MAGIC)
         }
