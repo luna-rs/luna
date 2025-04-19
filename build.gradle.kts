@@ -52,12 +52,6 @@ java {
     }
 }
 
-kotlin {
-   sourceSets.main {
-       kotlin.srcDirs("plugins")
-   }
-}
-
 tasks.withType<JavaCompile> {
     options.compilerArgs = MutableList(1) { "-Xlint:unchecked" }
     options.encoding = "UTF-8"
@@ -66,7 +60,12 @@ tasks.withType<JavaCompile> {
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_23)
-        freeCompilerArgs.set(listOf("-Xjsr305=strict"))
+
+        // Add Kotlin scripting compiler options
+        freeCompilerArgs.set(listOf(
+            "-Xallow-any-scripts-in-source-roots",
+            "-Xuse-fir-lt=false"
+        ))
     }
 }
 
