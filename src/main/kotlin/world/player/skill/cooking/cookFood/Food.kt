@@ -213,5 +213,5 @@ enum class Food(val raw: Int,
     /**
      * The formatted name.
      */
-    val formattedName = itemName(cooked).toLowerCase()
+    val formattedName = itemName(cooked).lowercase()
 }

@@ -77,7 +77,7 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
             dropGem()
         } else {
-            mob.sendMessage("You manage to mine some ${ore.typeName.toLowerCase()}.")
+            mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
             mob.mining.addExperience(ore.exp)
         }
 

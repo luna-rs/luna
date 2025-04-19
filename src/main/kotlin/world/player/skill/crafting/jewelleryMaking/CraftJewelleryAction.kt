@@ -34,7 +34,7 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
         mob.playSound(Sounds.SMELTING)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
-        mob.sendMessage("You create the ${jewellery.item.itemDef.name.toLowerCase()}.")
+        mob.sendMessage("You create the ${jewellery.item.itemDef.name.lowercase()}.")
     }
 
     override fun ignoreIf(other: Action<*>?) =
