@@ -3,7 +3,7 @@ package world.player.skill.crafting.armorCrafting
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
@@ -73,10 +73,4 @@ class CraftArmorActionItem(private val plr: Player,
             listOf(rem)
         }
     }
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is CraftArmorActionItem -> armor == other.armor
-            else -> false
-        }
 }

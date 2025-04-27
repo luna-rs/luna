@@ -78,13 +78,13 @@ public final class DropItemMessageReader extends GameMessageReader<DropItemEvent
      * @param event The event instance.
      */
     private void dropItem(LunaContext ctx, Player player, Item inventoryItem, ItemDefinition itemDef, DropItemEvent event) {
-        player.interruptAction();
         if (itemDef.isTradeable() && !itemDef.getInventoryActions().contains("Destroy")) {
             GroundItem groundItem = new GroundItem(ctx, inventoryItem.getId(), inventoryItem.getAmount(),
                     player.getPosition(), ChunkUpdatableView.localView(player));
             if (ctx.getWorld().getItems().register(groundItem)) {
                 player.getInventory().set(event.getIndex(), null);
                 player.playSound(Sounds.DROP_ITEM);
+                player.getInterfaces().close();
             } else {
                 player.sendMessage("You cannot drop this here.");
             }

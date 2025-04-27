@@ -2,7 +2,7 @@ package world.player.skill.herblore.makePotion
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
@@ -40,10 +40,4 @@ class MakePotionActionItem(plr: Player,
     override fun add() = listOf(potion.idItem)
 
     override fun remove() = listOf(potion.unfItem, potion.secondaryItem)
-
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is MakePotionActionItem -> potion == other.potion
-            else -> false
-        }
 }

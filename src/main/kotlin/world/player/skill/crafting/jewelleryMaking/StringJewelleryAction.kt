@@ -2,7 +2,7 @@ package world.player.skill.crafting.jewelleryMaking
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
@@ -20,10 +20,4 @@ class StringJewelleryAction(plr: Player, times: Int,
     }
     override fun add() = listOf(Item(newId))
     override fun remove() = listOf(Item(usedId), Item(targetId))
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is StringJewelleryAction -> newId == other.newId
-            else -> false
-        }
 }

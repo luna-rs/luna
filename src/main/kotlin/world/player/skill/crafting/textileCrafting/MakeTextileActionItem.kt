@@ -2,7 +2,7 @@ package world.player.skill.crafting.textileCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
@@ -29,10 +29,4 @@ class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) 
 
     override fun add() = listOf(textile.processedItem)
     override fun remove() = listOf(textile.rawItem)
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is MakeTextileActionItem -> textile == other.textile
-            else -> false
-        }
 }

@@ -2,7 +2,7 @@ package world.player.skill.crafting.potteryCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -33,10 +33,4 @@ class PotteryOvenActionItem(val plr: Player, val unfired: Unfired, amount: Int) 
 
     override fun add() = listOf(Item(unfired.firedId))
     override fun remove() = listOf(Item(unfired.unfiredId))
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is PotteryOvenActionItem -> unfired == other.unfired
-            else -> false
-        }
 }

@@ -1,7 +1,7 @@
 package world.obj.resource.fillable
 
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
@@ -14,7 +14,6 @@ import io.luna.game.model.`object`.GameObject
 class FillActionItem(plr: Player,
                      val emptyId: Item,
                      val filledId: Item,
-                     val resourceObject: GameObject,
                      val resource: FillableResource,
                      amount: Int) : InventoryAction(plr, true, 2, amount) {
 
@@ -22,15 +21,5 @@ class FillActionItem(plr: Player,
     override fun add() = listOf(filledId)
     override fun execute() {
         resource.onFill(mob)
-    }
-
-    override fun ignoreIf(other: Action<*>): Boolean {
-        return when (other) {
-            is FillActionItem -> resource == other.resource &&
-                    resourceObject == other.resourceObject &&
-                    emptyId == other.emptyId &&
-                    filledId == other.filledId
-            else -> false
-        }
     }
 }

@@ -195,7 +195,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Attempts to log in this bot. Will create a new account if the credentials don't exist, otherwise the existing
+     * Attempts to asynchronously log in this bot. Will create a new account if the credentials don't exist, otherwise the existing
      * account data for the bot will be grabbed.
      *
      * @return The result of the attempt, if failed the generated username will not be consumed.

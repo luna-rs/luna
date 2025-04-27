@@ -2,7 +2,7 @@ package world.player.skill.cooking.cookFood
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
@@ -71,14 +71,6 @@ class CookFoodActionItem(plr: Player,
         } else {
             experience = food.exp
             listOf(food.cookedItem)
-        }
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is CookFoodActionItem -> other.food == food &&
-                    other.usingFire == usingFire
-
-            else -> false
         }
 
     /**

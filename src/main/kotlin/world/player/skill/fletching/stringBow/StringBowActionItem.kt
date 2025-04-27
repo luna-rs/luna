@@ -2,7 +2,7 @@ package world.player.skill.fletching.stringBow
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
@@ -42,10 +42,4 @@ class StringBowActionItem(plr: Player,
         mob.animation(ANIMATION)
         mob.fletching.addExperience(bow.exp)
     }
-
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is StringBowActionItem -> bow == other.bow
-            else -> false
-        }
 }

@@ -2,7 +2,7 @@ package world.player.skill.fishing.catchFish
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
@@ -103,13 +103,9 @@ class FishActionItem(private val msg: NpcClickEvent,
         if (tool.bait != null)
             listOf(Item(tool.bait)) else emptyList()
 
-    override fun stop() = mob.animation(Animation.CANCEL)
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is FishActionItem -> msg.targetNpc == other.msg.targetNpc && tool == other.tool
-            else -> false
-        }
+    override fun onFinished() {
+        mob.animation(Animation.CANCEL)
+    }
 
     override fun onNoMaterials(): String {
         return if (tool.bait != null) "You don't have ${itemName(tool.bait)} to fish here." else

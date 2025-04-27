@@ -2,7 +2,7 @@ package world.player.skill.crafting.gemCutting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
@@ -30,12 +30,6 @@ class CutGemActionItem(val plr: Player, val gem: Gem, amount: Int) : InventoryAc
 
         mob.crafting.addExperience(gem.exp)
     }
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is CutGemActionItem -> gem == other.gem
-            else -> false
-        }
 
     /**
      * Gets the cut gem item. Used for a chance of getting a crushed gem, when cutting semi-precious gems.

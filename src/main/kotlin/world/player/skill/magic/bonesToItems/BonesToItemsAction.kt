@@ -3,7 +3,7 @@ package world.player.skill.magic.bonesToItems
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.QueuedAction
+import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import world.player.Animations

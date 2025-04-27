@@ -3,7 +3,7 @@ package world.player.skill.crafting.jewelleryMaking
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import world.player.Animations
@@ -29,19 +29,12 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
             else -> true
         }
 
-
     override fun execute() {
         mob.playSound(Sounds.SMELTING)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
         mob.sendMessage("You create the ${jewellery.item.itemDef.name.toLowerCase()}.")
     }
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is CraftJewelleryAction -> jewellery.item.id == other.jewellery.item.id
-            else -> false
-        }
 
     override fun add(): List<Item> = listOf(jewellery.item)
 
