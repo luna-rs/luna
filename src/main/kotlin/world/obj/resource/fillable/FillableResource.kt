@@ -33,8 +33,7 @@ abstract class FillableResource : GameResource() {
                 override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
                     val emptyItem = Item(emptyId)
                     val filledItem = Item(filled)
-                    plr.submitAction(FillActionItem(plr, emptyItem, filledItem, resourceObject,
-                                                    this@FillableResource, forAmount))
+                    plr.submitAction(FillActionItem(plr, emptyItem, filledItem, this@FillableResource, forAmount))
                 }
             })
         }

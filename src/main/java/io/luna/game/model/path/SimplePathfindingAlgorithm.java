@@ -9,7 +9,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
 
-
 /**
  * A very simple pathfinding algorithm that simply walks in the direction of the target until it either reaches it or is
  * blocked.

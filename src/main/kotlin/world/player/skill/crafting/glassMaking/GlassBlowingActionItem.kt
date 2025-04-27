@@ -2,7 +2,7 @@ package world.player.skill.crafting.glassMaking
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
@@ -21,10 +21,4 @@ class GlassBlowingActionItem(plr: Player, private val material: GlassMaterial, a
 
     override fun add() = listOf(Item(material.id))
     override fun remove() = listOf(Item(1775))
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is MakeMoltenGlassActionItem -> true
-            else -> false
-        }
 }

@@ -9,7 +9,6 @@ import io.luna.game.model.mob.Player
  * Equips the item.
  */
 fun equip(plr: Player, index: Int) {
-    plr.interruptAction()
     plr.resetInteractingWith()
     plr.interfaces.close()
     plr.equipment.equip(index)

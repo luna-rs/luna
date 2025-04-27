@@ -2,7 +2,7 @@ package world.player.skill.herblore.grindIngredient
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
 
@@ -40,10 +40,4 @@ class GrindActionItem(plr: Player,
     override fun remove() = listOf(ingredient.oldItem)
 
     override fun add() = listOf(ingredient.newItem)
-
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is GrindActionItem -> ingredient == other.ingredient
-            else -> false
-        }
 }

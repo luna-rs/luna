@@ -2,8 +2,6 @@ package world.player.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
-import io.luna.game.model.Direction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.ObjectType
 import world.player.Sounds
@@ -15,8 +13,9 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
 
     override fun canLight(): Boolean {
+
         return when {
-            blocked(Direction.NONE) -> {
+            blocked() -> {
                 mob.sendMessage("You cannot light a fire here.")
                 false
             }
@@ -42,23 +41,17 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     }
 
     override fun onLight() {
-        if (blocked(Direction.NONE)) {
+        if (blocked()) {
             mob.sendMessage("You cannot light a fire here.")
             return
         }
-        lightFire()
+        light()
     }
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is LightLogAction -> log.id == other.log.id
-            else -> false
-        }
 
     /**
      * Attempts to light the fire if the log is still on the ground.
      */
-    private fun lightFire() {
+    private fun light() {
         if (world.items.removeFromPosition(mob.position) { it.id == log.id }) {
             val firePosition = mob.position
             when {
@@ -66,16 +59,7 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 else -> mob.playSound(Sounds.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
-            val direction = when {
-                !blocked(Direction.WEST) -> Direction.WEST
-                !blocked(Direction.EAST) -> Direction.EAST
-                !blocked(Direction.SOUTH) -> Direction.SOUTH
-                !blocked(Direction.NORTH) -> Direction.NORTH
-                else -> Direction.NONE
-            }
-            if (direction != Direction.NONE) {
-                mob.walking.walk(mob.position.translate(1, direction))
-            }
+            mob.walking.walkRandomDirection()
             val fireObject = world.addObject(Firemaking.FIRE_OBJECT, firePosition)
             world.scheduleOnce(rand(Firemaking.BURN_TIME)) {
                 world.removeObject(fireObject)
@@ -85,18 +69,15 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     }
 
     /**
-     * Determines if [direction] is blocked, [Direction.NONE] will check if a fire can be placed on the current tile.
+     * Determines if the player cannot light a fire on their current position.
      */
-    private fun blocked(direction: Direction): Boolean {
-        if (direction == Direction.NONE) {
-            return world.objects.findAll(mob.position)
-                .filter {
-                    it.objectType == ObjectType.DEFAULT ||
-                            it.objectType == ObjectType.STRAIGHT_WALL || it.objectType == ObjectType.DIAGONAL_WALL ||
-                            it.objectType == ObjectType.WALL_CORNER || it.objectType == ObjectType.DIAGONAL_CORNER_WALL
-                }.count() > 0
-        }
-        return !world.collisionManager.traversable(mob.position, TYPE_NPC, direction)
+    private fun blocked(): Boolean {
+        return world.objects.findAll(mob.position)
+            .filter {
+                it.objectType == ObjectType.DEFAULT ||
+                        it.objectType == ObjectType.STRAIGHT_WALL || it.objectType == ObjectType.DIAGONAL_WALL ||
+                        it.objectType == ObjectType.WALL_CORNER || it.objectType == ObjectType.DIAGONAL_CORNER_WALL
+            }.count() > 0
     }
 }
 

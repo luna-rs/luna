@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.block;
 
+import com.google.common.base.Objects;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
@@ -78,6 +79,21 @@ public final class ExactMovement {
     }
 
     /**
+     * Creates a new {@link ExactMovement} for movement across both the x and y axis.
+     *
+     * @param player The player.
+     * @param destination The destination.
+     * @return The exact movement instance.
+     */
+    public static ExactMovement to(Player player, Position destination) {
+        Position position = player.getPosition();
+        int durationTicks = position.computeLongestDistance(destination) + 1;
+        durationTicks = (durationTicks * 600) / 30;
+
+        return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
+    }
+
+    /**
      * Creates a new {@link ExactMovement}.
      *
      * @param startPosition The starting position.
@@ -92,6 +108,19 @@ public final class ExactMovement {
         this.durationStart = durationStart;
         this.durationEnd = durationEnd;
         this.direction = direction;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ExactMovement)) return false;
+        ExactMovement movement = (ExactMovement) o;
+        return durationStart == movement.durationStart && durationEnd == movement.durationEnd && Objects.equal(startPosition, movement.startPosition) && Objects.equal(endPosition, movement.endPosition) && direction == movement.direction;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(startPosition, endPosition, durationStart, durationEnd, direction);
     }
 
     /**
