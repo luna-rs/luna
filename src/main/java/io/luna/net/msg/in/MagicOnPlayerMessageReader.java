@@ -1,6 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.Luna;
+import io.luna.game.action.ActionQueue;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -13,7 +14,7 @@ import io.luna.net.msg.GameMessageReader;
  * any spell onto another player.
  *
  * @author notjuanortiz
- * @see io.luna.game.action.ActionManager#submit
+ * @see ActionQueue#submit
  */
 public final class MagicOnPlayerMessageReader extends GameMessageReader<MagicOnPlayerEvent> {
 

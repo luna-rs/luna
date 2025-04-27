@@ -3,20 +3,20 @@ package world.minigame.partyRoom
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.RepeatingAction
+import io.luna.game.action.ActionType
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.dialogue.Expression
 import world.minigame.partyRoom.dropParty.DropPartyOption
 
 /**
- * Represents the action that party pete will continuously do.
+ * An [Action] implementation that makes the party pete NPC dance and speak.
  */
-class PartyPeteAction(private val npc: Npc) : RepeatingAction<Npc>(npc, true, 3) {
+class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.SOFT, true, 3) {
 
     companion object {
 
@@ -24,15 +24,14 @@ class PartyPeteAction(private val npc: Npc) : RepeatingAction<Npc>(npc, true, 3)
          * All possible messages pete can speak.
          */
         private val MESSAGES = listOf<(Any) -> String>(
-                { "Event $it is active in the party room! Yeah!" },
-                { "The $it event is currently under way!" },
-                { "This $it event is so much fun! " }
+            { "Event $it is active in the party room! Yeah!" },
+            { "The $it event is currently under way!" },
+            { "This $it event is so much fun! " }
         )
     }
 
-    override fun start() = true
-
-    override fun repeat() {
+    override fun run(): Boolean {
+        // Every 3 ticks, never completes.
         npc.animation(Animation(if (rand().nextBoolean()) 866 else 862))
 
         when (PartyRoom.option) {
@@ -53,9 +52,8 @@ class PartyPeteAction(private val npc: Npc) : RepeatingAction<Npc>(npc, true, 3)
                 }
             }
         }
+        return false
     }
-
-    override fun ignoreIf(other: Action<*>?) = true
 }
 
 /**
@@ -73,7 +71,6 @@ val PARTY_ROOM_SPAWN = Position(2734, 3476, 0)
  */
 fun teleport(plr: Player) {
     plr.interfaces.close()
-    plr.interruptAction()
     plr.move(PartyRoom.TELEPORT_POSITIONS.random())
     plr.sendMessage("You are teleported to the party room.")
 }
@@ -86,8 +83,10 @@ fun talk(plr: Player, npc: Npc) {
         plr.newDialogue().npc(659, Expression.LAUGHING, "Weeeee! Wooooo! It's a paaaaarttyyy!!").open()
     } else {
         plr.newDialogue()
-            .npc(659, Expression.LAUGHING, if (PartyRoom.option == null) "Hello mister! Is there anything I can do for you?"
-            else "Yay! The ${PartyRoom.option!!.description} event is under way!")
+            .npc(659,
+                 Expression.LAUGHING,
+                 if (PartyRoom.option == null) "Hello mister! Is there anything I can do for you?"
+                 else "Yay! The ${PartyRoom.option!!.description} event is under way!")
             .options("Can you take me to the party room?", { talkAboutTeleporting(plr) },
                      "No thanks.", { plr.interfaces.close() }).open()
     }
