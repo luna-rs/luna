@@ -17,7 +17,7 @@ class ExampleSubScript(bot: Bot) : CoroutineBotScript(bot) {
     /**
      * The item the bot will attempt to buy from the general store.
      */
-    private val item = Item.byName("Lobster").id
+    private val item = item("Lobster").id
 
     override suspend fun run() {
         delay(3000)

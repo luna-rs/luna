@@ -8,11 +8,14 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.bot.Bot
+import io.luna.game.model.mob.inter.NameInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
 import world.player.crystalChest.CrystalChestDropTable
+import java.lang.Boolean.parseBoolean
 
 
 /**
@@ -23,6 +26,38 @@ cmd("config", RIGHTS_DEV) {
     val value = if (args.size == 1) 0 else asInt(1)
     plr.sendMessage("config[$id] = $value")
     plr.sendVarp(Varp(id, value))
+}
+
+/**
+ * A command that creates and logs in bots. Arguments for amount and if their equipment should be randomized.
+ */
+cmd("bots", RIGHTS_DEV) {
+    val count = if (args.isNotEmpty()) asInt(0) else 1
+    val randomEquipment = if (args.size == 2) parseBoolean(args[1]) else false
+    repeat(count) {
+        val bot = Bot.Builder(ctx).build()
+        bot.login()
+        bot.randomizeEquipment()
+    }
+}
+
+/**
+ * Deletes a saved record of a player.
+ */
+cmd("delete", RIGHTS_DEV) {
+    plr.interfaces.open(object : NameInputInterface() {
+        override fun onNameInput(player: Player?, value: String?) {
+            plr.newDialogue().empty("Are you sure you wish to delete all records for '$value' ?")
+                .options("Yes",
+                         {
+                             world.persistenceService.delete(value)
+                                 .addListener({ plr.sendMessage("Done, deleted $value") },
+                                              game.executor); plr.interfaces.close()
+                         },
+                         "No",
+                         { plr.interfaces.close() }).open()
+        }
+    })
 }
 
 /**
