@@ -7,6 +7,7 @@ import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.def.GameObjectDefinition
+import io.luna.game.model.item.Item
 import io.luna.util.StringUtils
 import java.text.NumberFormat
 import java.util.*
@@ -34,6 +35,11 @@ fun <T> lazyVal(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE,
  */
 fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
     .orElseThrow { NoSuchElementException("Name not found for item <$id>") }
+
+/**
+ * Computes and returns an [Item] instance matching `name` with `amount`.
+ */
+fun item(name: String, amount: Int = 1) = Item.byName(name, amount)
 
 /**
  * Computes and returns the name for [id] with one of the 'a' or 'an' articles prepended.
