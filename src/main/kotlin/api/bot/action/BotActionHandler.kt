@@ -11,7 +11,7 @@ import io.luna.game.model.mob.bot.BotOutputMessageHandler
  * utilize packets from [BotOutputMessageHandler]. These types of actions must be used within [CoroutineBotScript] types to
  * take advantage of being suspended by [SuspendableFuture].
  *
- * Almost every function in will return [SuspendableFuture] which can be used to suspend the underlying coroutine
+ * Almost every function will return [SuspendableFuture] which can be used to suspend the underlying coroutine
  * and/or send a signal to the future's channel to unsuspend it. Functions may also block coroutines with sub-tasks
  * before returning.
  */
@@ -22,6 +22,11 @@ class BotActionHandler(val bot: Bot) {
      */
     val banking = BotBankingActionHandler(bot, this)
 
+     /**
+     * The shop action handler.
+     */
+    val shop = BotShopActionHandler(bot, this)
+
     /**
      * The movement action handler.
      */
@@ -31,6 +36,11 @@ class BotActionHandler(val bot: Bot) {
      * The equipment action handler.
      */
     val equipment = BotEquipmentActionHandler(bot, this)
+
+    /**
+     * The inventory action handler.
+     */
+    val inventory = BotInventoryActionHandler(bot, this)
 
     /**
      * The interactions action handler.

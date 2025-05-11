@@ -136,21 +136,6 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Attempts to find the nearest bank to this [Bot].
      */
-    fun findNearestBank(): GameObject? {
-        // Filter and sort stream to find nearest bank.
-        fun filterNearestBank(stream: Stream<GameObject>): Optional<GameObject> {
-            return stream.filter { Banking.bankingObjects.contains(it.id) }
-                .sorted(EntityDistanceComparator(bot))
-                .findFirst()
-        }
-
-        // First check surrounding chunks.
-        val result = filterNearestBank(world.chunks.findViewable(bot.position, GameObject::class).stream())
-        if (result.isPresent) {
-            return result.get()
-        }
-
-        // Then check entire world.
-        return filterNearestBank(world.objects.stream()).orElse(null)
-    }
+    fun findNearestBank(): GameObject? = handler.interactions.
+    findNearest(GameObject::class) { Banking.bankingObjects.contains(it.id) }
 }

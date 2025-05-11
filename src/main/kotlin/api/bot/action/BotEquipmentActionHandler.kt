@@ -2,7 +2,6 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
-import api.predef.*
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.mob.bot.Bot
 
@@ -21,7 +20,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             return SuspendableFuture().signal(false)
         }
         val equipmentIndex = EquipmentDefinition.ALL.get(id).map { it.index }
-        if(equipmentIndex.isEmpty) {
+        if (equipmentIndex.isEmpty) {
             // Invalid item.
             return SuspendableFuture().signal(false)
         }
@@ -39,8 +38,26 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
         if (!itemId.isPresent) {
             return SuspendableFuture().signal(false)
         }
-        val suspendableCond = SuspendableCondition({ bot.equipment[index] == null }, 5)
+        val suspendableCond = SuspendableCondition({ bot.equipment[index] == null }, 3)
         bot.output.sendItemWidgetClick(1, index, 1688, itemId.asInt)
         return suspendableCond.submit()
+    }
+
+    /**
+     * Forces a [Bot] to unequip everything they are currently wearing.
+     */
+    suspend fun unequipAll() {
+        for (next in bot.equipment.withIndex()) {
+            unequip(next.index).await()
+        }
+    }
+
+    /**
+     * Forces a [Bot] to equip all [ids].
+     */
+    suspend fun equipAll(vararg ids: Int) {
+        for(next in ids) {
+            equip(next).await()
+        }
     }
 }

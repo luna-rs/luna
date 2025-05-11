@@ -1,22 +1,22 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
-import api.bot.SuspendableFuture
 import api.predef.*
-import api.predef.ext.*
 import io.luna.game.model.Entity
+import io.luna.game.model.Entity.EntityDistanceComparator
+import io.luna.game.model.EntityType
 import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.GroundItemClickMessageReader
-import io.luna.net.msg.`in`.ItemOnItemMessageReader
 import io.luna.net.msg.`in`.NpcClickMessageReader
 import io.luna.net.msg.`in`.ObjectClickMessageReader
 import io.luna.net.msg.`in`.PlayerClickMessageReader
+import java.util.*
+import kotlin.reflect.KClass
 
 /**
  * A [BotActionHandler] implementation for interaction related actions.
@@ -24,66 +24,8 @@ import io.luna.net.msg.`in`.PlayerClickMessageReader
 class BotInteractionActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
-     * A builder for use-item interactions.
-     */
-    inner class UseItemAction(private val usedId: Int) {
-
-        /**
-         * Use an item on a generic interactable entity.
-         */
-        private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): SuspendableFuture {
-            if (!bot.position.isWithinDistance(target.position, Position.VIEWING_DISTANCE)) {
-                if (!handler.movement.walk(target.position, Position.VIEWING_DISTANCE).await()) {
-                    // Walk to entity did not complete successfully.
-                    return SuspendableFuture().signal(false)
-                }
-            }
-            val usedIndex = bot.inventory.computeIndexForId(usedId)
-            if (usedIndex.isEmpty) {
-                // We don't have the item.
-                return SuspendableFuture().signal(false)
-            }
-            val suspendCond = SuspendableCondition({ bot.isInteractingWith(target) }, 60)
-            action(usedIndex.asInt)
-            return suspendCond.submit()
-        }
-
-        /**
-         * An action that forces a [Bot] to use an item on another item in their inventory. Sends the
-         * [ItemOnItemMessageReader] packet.
-         */
-        fun onItem(targetId: Int): Boolean {
-            val usedIndex = bot.inventory.computeIndexForId(usedId)
-            val targetIndex = bot.inventory.computeIndexForId(targetId)
-            if (usedIndex.isEmpty || targetIndex.isEmpty) {
-                return false
-            }
-            bot.output.useItemOnItem(targetIndex.asInt, usedIndex.asInt, targetId, usedId)
-            return true
-        }
-
-        /**
-         * An action that forces a [Bot] to use an item in their inventory on [target].
-         */
-        suspend fun onNpc(target: Npc): SuspendableFuture =
-            useOnEntity(target) { bot.output.useItemOnNpc(usedId, it, target) }
-
-        /**
-         * An action that forces a [Bot] to use an item in their inventory on [target].
-         */
-        suspend fun onPlayer(target: Player): SuspendableFuture =
-            useOnEntity(target) { bot.output.useItemOnPlayer(usedId, it, target) }
-
-        /**
-         * An action that forces a [Bot] to use an item in their inventory on [target].
-         */
-        suspend fun onObject(target: GameObject) =
-            useOnEntity(target) { bot.output.useItemOnObject(usedId, it, target) }
-    }
-
-    /**
      * An action that forces the [Bot] to interact with [target]. If the bot is out of viewing distance, it will walk
-     * within viewing distance before the correct interaction is sent. The returned future will unsuspend when the bot
+     * within viewing distance before the correct interaction is sent. This function will unsuspend when the bot
      * is interacting with the [target] or if the task cannot complete.
      *
      * One of the following packets will be sent from this function: [PlayerClickMessageReader],
@@ -91,15 +33,21 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      *
      * @param option The interaction option.
      * @param target The target to interact with.
+     * @return `false` if the interaction was unsuccessful.
      */
-    suspend fun interact(option: Int, target: Entity): SuspendableFuture {
-        if (!bot.position.isWithinDistance(target.position, Position.VIEWING_DISTANCE)) {
-            if (!handler.movement.walk(target.position, Position.VIEWING_DISTANCE).await()) {
-                // Walk to entity did not complete successfully.
-                return SuspendableFuture().signal(false)
+    suspend fun interact(option: Int, target: Entity): Boolean {
+        bot.resetInteractingWith()
+        bot.resetInteractionTask()
+        bot.resetMobFollowTask()
+
+        val walkingSuspendCond = SuspendableCondition({ bot.isViewableFrom(target) || bot.walking.isEmpty })
+        bot.walking.walkUntilReached(target)
+        if (!bot.isViewableFrom(target)) {
+            if (!walkingSuspendCond.submit().await()) {
+                return false
             }
         }
-        val suspendCond = SuspendableCondition({ bot.isInteractingWith(target) }, 60)
+        val interactSuspendCond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
         when (target) {
             is Player -> bot.output.sendPlayerInteraction(option, target)
             is Npc -> bot.output.sendNpcInteraction(option, target)
@@ -107,45 +55,98 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
             is GroundItem -> bot.output.sendGroundItemInteraction(option, target)
             else -> throw IllegalStateException("This entity cannot be interacted with.")
         }
-        return suspendCond.submit()
+        return interactSuspendCond.submit().await()
     }
 
     /**
-     * An action builder that forces a [Bot] to use an item in their inventory on a player, NPC, item, or object.
+     * Returns a set of all viewable entities matching [type] and [cond], sorted by closest -> furthest distance.
+     *
+     * @param type The type of entity.
+     * @param cond The condition.
      */
-    fun useItem(usedInventoryIndex: Int): UseItemAction = UseItemAction(usedInventoryIndex)
+    fun <T : Entity> findViewable(type: KClass<T>, cond: (T) -> Boolean): MutableSet<T> {
+        val base = bot.position
+        return world.chunks.find(bot.position,
+                                 type.java,
+                                 { TreeSet(EntityDistanceComparator(bot)) },
+                                 { it.isWithinDistance(base, Position.VIEWING_DISTANCE) && cond(it) },
+                                 Position.VIEWING_DISTANCE);
+    }
 
     /**
-     * An action that drops an item from the inventory of a [Bot]. Unsuspends when the item is dropped and/or
-     * destroyed.
+     * Returns the nearest entity matching [type] and [cond]. Returns `null` if no entity was found.
+     *
+     * @param type The type of entity.
+     * @param cond The condition.
      */
-   suspend fun dropItem(id: Int): SuspendableFuture {
-        val index = bot.inventory.computeIndexForId(id)
-        if (index.isEmpty) {
-            // We don't have the item.
-            return SuspendableFuture().signal(false)
+    fun <T : Entity> findNearest(type: KClass<T>, cond: (T) -> Boolean): T? {
+
+        // Check if entity is within viewable distance first.
+        val viewableResult = findViewable(type, cond)
+        if (viewableResult.isNotEmpty()) {
+            return viewableResult.firstOrNull()
         }
-        val suspendCond = SuspendableCondition({
-            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(DestroyItemDialogueInterface::class) })
-        bot.output.sendDropItem(index.asInt, id)
-        if (itemDef(id).isTradeable) {
-            return suspendCond.submit()
+
+        // Do a more expensive check. We can optimize for specific entity types.
+        val found = TreeSet<T>(EntityDistanceComparator(bot))
+        val searchList: Iterable<Entity>? =
+            when (type) {
+                Player::class -> world.players
+                Npc::class -> world.npcs
+                GameObject::class -> world.objects
+                GroundItem::class -> world.items
+                else -> null
+            }
+        if (searchList != null) {
+            // Do an optimized check, only search entities of matching type.
+            for (entity in searchList) {
+                @Suppress("UNCHECKED_CAST") // We know it's safe.
+                if (cond(entity as T)) {
+                    found.add(entity)
+                }
+            }
         } else {
-            suspendCond.submit().await()
-            return handler.widgets.clickDestroyItem()
-        }
-
-    }
-
-    /**
-     * An action that drops all items from the inventory of a [Bot]. Returns `true` if all items were dropped/destroyed.
-     */
-    suspend fun dropAllItems(): Boolean {
-        for (item in bot.inventory) {
-            if (item != null) {
-                dropItem(item.id).await()
+            // Worst case scenario, find entities by searching through every chunk in the game world.
+            for (repository in world.chunks) {
+                val entityType = EntityType.CLASS_TO_TYPE[type.java] ?: throw IllegalStateException("Invalid type.")
+                val search = repository.getAll<T>(entityType)
+                for (entity in search) {
+                    if (cond(entity)) {
+                        found.add(entity)
+                    }
+                }
             }
         }
-        return bot.inventory.size() == 0
+        return found.firstOrNull()
     }
+
+    /**
+     * Returns the nearest [Npc] matching [id] or `null` if nothing was found.
+     */
+    fun findNearestNpc(id: Int): Npc? = findNearest(Npc::class) { it.id == id }
+
+    /**
+     * Returns the nearest [Npc] matching [name] or `null` if nothing was found.
+     */
+    fun findNearestNpc(name: String): Npc? = findNearest(Npc::class) { it.definition.name == name }
+
+    /**
+     * Returns the nearest [GameObject] matching [id] or `null` if nothing was found.
+     */
+    fun findNearestObject(id: Int): GameObject? = findNearest(GameObject::class) { it.id == id }
+
+    /**
+     * Returns the nearest [GameObject] matching [name] or `null` if nothing was found.
+     */
+    fun findNearestObject(name: String): GameObject? = findNearest(GameObject::class) { it.definition.name == name }
+
+    /**
+     * Returns the nearest [GroundItem] matching [id] or `null` if nothing was found.
+     */
+    fun findNearestItem(id: Int): GroundItem? = findNearest(GroundItem::class) { it.id == id }
+
+    /**
+     * Returns the nearest [GroundItem] matching [name] or `null` if nothing was found.
+     */
+    fun findNearestItem(name: String): GroundItem? = findNearest(GroundItem::class) { it.def().name == name }
 }
