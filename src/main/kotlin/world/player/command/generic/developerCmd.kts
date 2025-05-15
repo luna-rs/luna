@@ -4,16 +4,17 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.NameInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
+import io.luna.util.CacheDumpUtils
 import world.player.crystalChest.CrystalChestDropTable
 import java.lang.Boolean.parseBoolean
 
@@ -29,6 +30,14 @@ cmd("config", RIGHTS_DEV) {
 }
 
 /**
+ * A command that re-dumps cache definitions.
+ */
+cmd("dumpcache", RIGHTS_DEV) {
+    game.submit { CacheDumpUtils.dump() }.addListener({ plr.sendMessage("Cache dump complete.") }, game.executor)
+    plr.sendMessage("Dumping cache data...")
+}
+
+/**
  * A command that creates and logs in bots. Arguments for amount and if their equipment should be randomized.
  */
 cmd("bots", RIGHTS_DEV) {
@@ -37,7 +46,9 @@ cmd("bots", RIGHTS_DEV) {
     repeat(count) {
         val bot = Bot.Builder(ctx).build()
         bot.login()
-        bot.randomizeEquipment()
+        if (randomEquipment) {
+            bot.randomizeEquipment()
+        }
     }
 }
 
