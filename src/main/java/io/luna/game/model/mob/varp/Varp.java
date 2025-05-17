@@ -1,5 +1,7 @@
 package io.luna.game.model.mob.varp;
 
+import io.luna.game.model.def.VarpDefinition;
+
 /**
  * A model representing a varP which stands for VarPlayer. They hold player related client values that can be changed
  * by the server.
@@ -9,14 +11,19 @@ package io.luna.game.model.mob.varp;
 public class Varp {
 
     /**
-     * The id.
+     * The varp id.
      */
     private final int id;
 
     /**
-     * The value.
+     * The varp value.
      */
     private final int value;
+
+    /**
+     * The varp definition.
+     */
+    private final VarpDefinition def;
 
     /**
      * Creates a new {@link Varp}.
@@ -27,19 +34,27 @@ public class Varp {
     public Varp(int id, int value) {
         this.id = id;
         this.value = value;
+        def = VarpDefinition.ALL.retrieve(id);
     }
 
     /**
-     * @return The id.
+     * @return The varp id.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return The value.
+     * @return The varp value.
      */
     public int getValue() {
         return value;
+    }
+
+    /**
+     * @return The varp definition.
+     */
+    public VarpDefinition getDef() {
+        return def;
     }
 }
