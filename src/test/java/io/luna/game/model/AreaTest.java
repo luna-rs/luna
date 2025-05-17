@@ -1,5 +1,6 @@
 package io.luna.game.model;
 
+import io.luna.game.model.area.Area;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

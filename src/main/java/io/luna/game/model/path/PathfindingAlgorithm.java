@@ -1,7 +1,7 @@
 package io.luna.game.model.path;
 
 import com.google.common.base.Preconditions;
-import io.luna.game.model.Area;
+import io.luna.game.model.area.Area;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
