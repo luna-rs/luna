@@ -49,6 +49,11 @@ public final class GameObjectDefinition implements Definition {
     private final int sizeY;
 
     /**
+     * The interaction direction.
+     */
+    private final int direction;
+
+    /**
      * If the object is solid.
      */
     private final boolean solid;
@@ -99,7 +104,7 @@ public final class GameObjectDefinition implements Definition {
      * @param obstructive If the object is obstructive.
      * @param varpDef The transformation definition.
      */
-    public GameObjectDefinition(int id, String name, String description, int sizeX, int sizeY, boolean solid,
+    public GameObjectDefinition(int id, String name, String description, int sizeX, int sizeY, int direction, boolean solid,
                                 boolean impenetrable, boolean interactive, OptionalInt animationId, ImmutableList<String> actions,
                                 boolean obstructive, VarpChildDefinition varpDef) {
         this.id = id;
@@ -107,6 +112,7 @@ public final class GameObjectDefinition implements Definition {
         this.description = description;
         this.sizeX = sizeX;
         this.sizeY = sizeY;
+        this.direction = direction;
         this.solid = solid;
         this.impenetrable = impenetrable;
         this.interactive = interactive;
@@ -179,6 +185,13 @@ public final class GameObjectDefinition implements Definition {
      */
     public int getSizeY() {
         return sizeY;
+    }
+
+    /**
+     * @return The interaction direction.
+     */
+    public int getDirection() {
+        return direction;
     }
 
     /**
