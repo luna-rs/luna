@@ -586,7 +586,7 @@ public final class Shop {
     /**
      * @return The shop items.
      */
-    ItemContainer getContainer() {
+    public ItemContainer getContainer() {
         return container;
     }
 

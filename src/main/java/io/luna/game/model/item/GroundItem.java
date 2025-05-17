@@ -59,7 +59,7 @@ public class GroundItem extends StationaryEntity {
         // Non-stackable ground items are placed one by one.
         ItemDefinition def = ItemDefinition.ALL.retrieve(id);
         checkArgument(def.isStackable() || amount == 1,
-                "Non-stackable ground items have a maximum amount of 1.");
+                "Non-stackable ground items [" + def.getName() + "] have a maximum amount of 1.");
 
         this.id = id;
         this.amount = amount;

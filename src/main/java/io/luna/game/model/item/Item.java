@@ -20,7 +20,7 @@ public final class Item {
     /**
      * A set of search restricted items that don't show up in {@link #byName(String)} queries.
      */
-    private static final ImmutableSet<Integer> SEARCH_RESTRICTED = ImmutableSet.of(6564, 6565, 6566);
+    private static final ImmutableSet<Integer> SEARCH_RESTRICTED = ImmutableSet.of(6564, 6565, 6566, 617);
 
     /**
      * Retrieves an item instance by name and amount.
