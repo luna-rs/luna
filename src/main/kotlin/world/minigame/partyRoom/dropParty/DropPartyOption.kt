@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.math.IntMath
 import com.google.common.primitives.Ints
 import io.luna.Luna
-import io.luna.game.model.Area
+import io.luna.game.model.area.Area
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
 import io.luna.game.model.chunk.ChunkUpdatableView

@@ -1,7 +1,8 @@
-package io.luna.game.model;
+package io.luna.game.model.area;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
+import io.luna.game.model.Position;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;

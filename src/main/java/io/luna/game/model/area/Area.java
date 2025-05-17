@@ -1,6 +1,8 @@
-package io.luna.game.model;
+package io.luna.game.model.area;
 
 import com.google.common.collect.ImmutableSet;
+import io.luna.game.model.Location;
+import io.luna.game.model.Position;
 
 import java.awt.Point;
 import java.util.List;
