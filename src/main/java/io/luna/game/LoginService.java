@@ -2,11 +2,11 @@ package io.luna.game;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
+import io.luna.game.LoginService.LoginRequest;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.LoginService.LoginRequest;
 import io.luna.net.client.LoginClient;
 import io.luna.net.msg.login.LoginRequestMessage;
 import io.luna.net.msg.login.LoginResponse;
@@ -74,7 +74,10 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         }
     }
 
-    private final Map<String, Future<Boolean>> loadResultMap = new ConcurrentHashMap<>();
+    /**
+     * A map containing the results of all load requests.
+     */
+    private final Map<String, Future<Boolean>> loadMap = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link LoginService}.
@@ -89,20 +92,20 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
     boolean addRequest(String username, LoginRequest request) {
         logger.trace("Sending {}'s login request to a worker...", username);
         Callable<Boolean> loadTask = startWorker(username, request);
-        loadResultMap.putIfAbsent(username, workers.submit(loadTask));
+        loadMap.putIfAbsent(username, workers.submit(loadTask));
         return true;
     }
 
     @Override
     boolean canFinishRequest(String username, LoginRequest request) {
-        Future<Boolean> result = loadResultMap.get(username);
-        return result.isDone();
+        Future<Boolean> result = loadMap.get(username);
+        return result != null && result.isDone();
     }
 
     @Override
     void finishRequest(String username, LoginRequest request) {
         try {
-            Future<Boolean> result = loadResultMap.remove(username);
+            Future<Boolean> result = loadMap.remove(username);
             if (!Futures.getDone(result)) {
                 // Load failed, don't send final login response.
                 return;
@@ -160,9 +163,5 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             }
             return false;
         };
-    }
-
-    public boolean isLoadPending(String username) {
-        return loadResultMap.containsKey(username);
     }
 }
