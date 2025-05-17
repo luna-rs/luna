@@ -14,7 +14,6 @@ import io.luna.net.msg.out.GroupedEntityMessageWriter;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -51,7 +51,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     /**
      * A map of loaded chunks.
      */
-    private final Map<Chunk, ChunkRepository> repositories = new HashMap<>(29_278);
+    private final Map<Chunk, ChunkRepository> repositories = new ConcurrentHashMap<>(29_278);
 
     /**
      * A queue of chunks that updates were sent to.
@@ -229,7 +229,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * @param <T> The type of entity to find.
      * @return The set of entities.
      */
-    private <T extends Entity> Set<T> find(Position base, Class<T> type, Supplier<Set<T>> setFunc, Predicate<T> cond, int distance) {
+    public  <T extends Entity> Set<T> find(Position base, Class<T> type, Supplier<Set<T>> setFunc, Predicate<T> cond, int distance) {
         checkArgument(distance > 0, "[distance] cannot be below 1.");
         int radius = Math.floorDiv(distance, Chunk.SIZE) + 2;
         Set<T> found = setFunc.get();
