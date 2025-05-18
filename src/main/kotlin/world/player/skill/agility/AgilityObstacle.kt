@@ -26,10 +26,20 @@ enum class AgilityObstacle(val startIf: Player.() -> Boolean = { true },
                         xp = 22.0),
     BARBARIAN_LOG_BALANCE(startIf = { x == 2551 && y == 3546 },
                           xp = 13.7),
-    BARBARIAN_OBSTACLE_NET(xp = 8.2),
+    BARBARIAN_OBSTACLE_NET(startIf = { x == 2539 && (y == 3545 || y == 3546) },
+                           xp = 8.2),
     BARBARIAN_BALANCING_LEDGE(xp = 22.0),
     BARBARIAN_LADDER(xp = 1.0),
     BARBARIAN_CRUMBLING_WALL(startIf = { (x == 2535 && y == 3553) || (x == 2538 && y == 3553) || (x == 2541 && y == 3553) },
                              xp = 13.7,
                              bonus = { x >= 2541 && y == 3553 }),
+
+    // Wilderness obstacles.
+    WILDERNESS_OBSTACLE_PIPE(startIf = { x == 3004 && y == 3937 },
+                             xp = 12.5),
+    WILDERNESS_ROPESWING(xp = 20.0),
+    WILDERNESS_STEPPING_STONE(xp = 20.0),
+    WILDERNESS_LOG_BALANCE(xp = 20.0),
+    WILDERNESS_ROCKS(xp = 1.0,
+                     bonus = { true })
 }

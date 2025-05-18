@@ -81,6 +81,7 @@ public final class AbstractInterfaceSet {
     public void close(boolean interruptActions) {
         if (interruptActions) {
             player.getActions().interruptWeak();
+            player.resetInteractingWith();
         }
         if (isStandardOpen() || isInputOpen()) {
             player.queue(new CloseWindowsMessageWriter());

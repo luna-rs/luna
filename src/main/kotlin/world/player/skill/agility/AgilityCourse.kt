@@ -15,4 +15,9 @@ enum class AgilityCourse(val level: Int, val bonus: Double, val obstacles: Set<A
                     bonus = 46.3,
                     obstacles = setOf(BARBARIAN_ROPESWING, BARBARIAN_LOG_BALANCE, BARBARIAN_OBSTACLE_NET,
                                       BARBARIAN_BALANCING_LEDGE, BARBARIAN_LADDER, BARBARIAN_CRUMBLING_WALL)),
+
+    WILDERNESS(level = 52,
+               bonus = 497.9,
+               obstacles = setOf(WILDERNESS_OBSTACLE_PIPE, WILDERNESS_ROPESWING, WILDERNESS_STEPPING_STONE,
+                                 WILDERNESS_LOG_BALANCE, WILDERNESS_ROCKS))
 }

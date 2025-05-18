@@ -2,7 +2,10 @@ package world.player.skill.agility
 
 import api.predef.*
 import io.luna.game.action.Action
+import io.luna.game.action.impl.ExactMovementAction
+import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.ExactMovement
 import io.luna.game.model.`object`.GameObject
 import world.player.skill.agility.Agility.completedObstacles
 
@@ -26,6 +29,20 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                     plr.agility.addExperience(courseType.bonus)
                     plr.completedObstacles.clear()
                 }
+            }
+        }
+    }
+
+    /**
+     * Creates a new [ExactMovementAction] based on the specified arguments.
+     */
+    fun movementAction(plr: Player,
+                       destination: Position,
+                       walkingAnimationId: Int,
+                       message: String): ExactMovementAction {
+        return object : ExactMovementAction(plr, ExactMovement.to(plr, destination), walkingAnimationId) {
+            override fun onMoveStart(movement: ExactMovement) {
+                plr.sendMessage(message)
             }
         }
     }
