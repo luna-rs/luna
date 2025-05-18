@@ -7,6 +7,7 @@ import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
 import io.luna.game.LogoutService.LogoutRequest;
+import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
@@ -33,15 +34,16 @@ import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
-import io.luna.game.model.object.GameObject;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
+import io.luna.game.task.TaskState;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.DynamicMapMessageWriter;
+import io.luna.net.msg.out.FullScreenInterfaceMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
@@ -59,9 +61,8 @@ import world.player.Sounds;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -153,11 +154,6 @@ public class Player extends Mob {
      * A set of local npcs. Should only be accessed from the updating threads.
      */
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
-
-    /**
-     * A set of local objects.
-     */
-    private final Set<GameObject> localObjects = new HashSet<>(4);
 
     /**
      * The appearance.
@@ -335,6 +331,11 @@ public class Player extends Mob {
     private final PersistentVarpManager varpManager = new PersistentVarpManager(this);
 
     /**
+     * All cached values for varps.
+     */
+    private final Map<Integer, Integer> cachedVarps = new HashMap<>();
+
+    /**
      * The timeout timer.
      */
     private final Stopwatch timeout = Stopwatch.createUnstarted();
@@ -348,6 +349,11 @@ public class Player extends Mob {
      * The current dynamic map the player is in.
      */
     private DynamicMap dynamicMap;
+
+    /**
+     * The current interaction task.
+     */
+    private InteractionTask interactionTask;
 
     /**
      * Creates a new {@link Player}.
@@ -411,17 +417,16 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        actions.interrupt();
+        interfaces.close();
         world.getTasks().forEachAttachment(this, Task::cancel);
         world.getPlayerMap().remove(getUsername());
-        removeLocalObjects();
-        interfaces.close();
         plugins.post(new LogoutEvent(this));
     }
 
     @Override
     public void onTeleport(Position position) {
         teleporting = true;
+        interfaces.close();
     }
 
     @Override
@@ -500,15 +505,31 @@ public class Player extends Mob {
     }
 
     /**
-     * Unregisters all assigned local objects.
+     * Attempts to handle {@code event} once this player has reached {@code entity}.
+     *
+     * @param entity The entity to reach.
+     * @param event The event to post once reached.
+     * @param action Will be run if the interaction is successful.
      */
-    public void removeLocalObjects() {
-        if (!localObjects.isEmpty()) {
-            Iterator<GameObject> objectIterator = localObjects.iterator();
-            while (objectIterator.hasNext()) {
-                world.getObjects().unregister(objectIterator.next());
-                objectIterator.remove();
-            }
+    public void handleInteractableEvent(Entity entity, InteractableEvent event, Runnable action) {
+        if (interactionTask == null || interactionTask.getState() == TaskState.CANCELLED) {
+            // Cancelled interaction task, create new one.
+            interactionTask = new InteractionTask(this, entity, event, action);
+            world.schedule(interactionTask);
+        } else if (interactionTask.getState() == TaskState.RUNNING) {
+            // We have an interaction pending, cancel old task and create new one.
+            interactionTask.cancel();
+            interactionTask = new InteractionTask(this, entity, event, action);
+            world.schedule(interactionTask);
+        }
+    }
+
+    /**
+     * Cancels the current {@link InteractionTask} if one exists.
+     */
+    public void resetInteractionTask() {
+        if (interactionTask != null) {
+            interactionTask.cancel();
         }
     }
 
@@ -543,7 +564,7 @@ public class Player extends Mob {
                 equipment.contains(id)) {
             return true;
         }
-        return world.getChunks().findViewable(position, GroundItem.class).stream().
+        return world.getItems().stream().
                 anyMatch(it -> it.getId() == id && it.getView().isViewableFor(this));
     }
 
@@ -570,6 +591,7 @@ public class Player extends Mob {
             varpManager.setValue(persistentVarp, varp.getValue());
         }
         queue(new VarpMessageWriter(varp));
+        cachedVarps.put(varp.getId(), varp.getValue());
     }
 
     /**
@@ -598,8 +620,38 @@ public class Player extends Mob {
      * @param varbit The varbit.
      */
     public void sendVarbit(Varbit varbit) {
-        Varp varp = varbit.toVarp();
+        int parentId = varbit.getDef().getParentVarpId();
+        int parentValue = cachedVarps.getOrDefault(parentId, 0);
+        Varp varp = new Varp(parentId, varbit.pack(parentValue));
         sendVarp(varp);
+    }
+
+    /**
+     * Shortcut to queue a new {@link VarpMessageWriter} packet for multiple varbits with the same parent varp.
+     *
+     * @param parentId The parent varp id.
+     * @param varbits The varbits.
+     */
+    public void sendVarbits(int parentId, List<Varbit> varbits) {
+        if (varbits.isEmpty()) {
+            return;
+        } else if (varbits.size() == 1) {
+            sendVarbit(varbits.iterator().next());
+        }
+        int parentValue = cachedVarps.getOrDefault(parentId, 0);
+        int value = 0;
+        for (Varbit vb : varbits) {
+            if (vb.getDef().getParentVarpId() != parentId) {
+                throw new IllegalArgumentException("All varbits must have the same parent.");
+            }
+            int packed = vb.pack(parentValue);
+            if (value == 0) {
+                value = packed;
+            } else {
+                value |= packed;
+            }
+        }
+        sendVarp(new Varp(parentId, value));
     }
 
     /**
@@ -998,6 +1050,7 @@ public class Player extends Mob {
      */
     public void setRunning(boolean running) {
         sendVarp(PersistentVarp.RUNNING, running);
+        walking.setRunningPath(running);
     }
 
     /**
@@ -1334,4 +1387,24 @@ public class Player extends Mob {
         return dynamicMap != null;
     }
 
+    /**
+     * @return The current interaction task.
+     */
+    public InteractionTask getInteractionTask() {
+        return interactionTask;
+    }
+
+    /**
+     * Sets the current interaction task.
+     */
+    public void setInteractionTask(InteractionTask interactionTask) {
+        this.interactionTask = interactionTask;
+    }
+
+    /**
+     * @return All cached values for varps.
+     */
+    public Map<Integer, Integer> getCachedVarps() {
+        return cachedVarps;
+    }
 }
