@@ -23,7 +23,7 @@ public final class PersistentVarpManager {
     /**
      * The map of {@link PersistentVarp} types.
      */
-    private final EnumMap<PersistentVarp, Integer> varps = new EnumMap<>(PersistentVarp.class);
+    private final EnumMap<PersistentVarp, Integer>  varps = new EnumMap<>(PersistentVarp.class);
 
     /**
      * Creates a new {@link PersistentVarpManager}.
@@ -82,6 +82,7 @@ public final class PersistentVarpManager {
      */
     public void setAndSendValue(PersistentVarp varpType, int value) {
         varps.put(varpType, value);
+        player.getCachedVarps().put(varpType.getClientId(), value);
         player.sendVarp(new Varp(varpType.getClientId(), value));
     }
 

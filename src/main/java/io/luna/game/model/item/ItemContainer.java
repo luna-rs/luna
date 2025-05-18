@@ -829,7 +829,6 @@ public class ItemContainer implements Iterable<Item> {
                 return 1;
             } else if (get(index).getAmount() + item.getAmount() < 0) {
                 // There is, and trying to add onto it will result in an overflow.
-                // TODO Maybe add an event for overflow?
                 return Integer.MAX_VALUE;
             } else {
                 // There is, no space needed.

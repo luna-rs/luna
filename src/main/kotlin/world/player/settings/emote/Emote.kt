@@ -1,5 +1,7 @@
 package world.player.settings.emote
 
+import io.luna.game.model.mob.varp.Varbit
+
 /**
  * An enum representing player animations triggered from the Player controls menu.
  */
@@ -59,12 +61,32 @@ enum class Emote(val id: Int, val button: Int) {
     GOBLIN_BOW(id = 2127,
                button = 13383),
     GOBLIN_DANCE(id = 2128,
-                 button = 13384);
+                 button = 13384),
+    SCARED(id = 2836,
+           button = 15166),
+    ZOMBIE_WALK(id = 3544,
+                button = 18464),
+    ZOMBIE_DANCE(id = 3543,
+                 button = 18465),
+    RABBIT_HOP(id = 3866,
+               button = 18686);
+
 
     companion object {
+
         /**
-         * Mapping of [ButtonClickEvent.Id] to [Emote] instances.
+         * Mapping of buttons to [Emote] instances.
          */
         val BUTTON_TO_EMOTE = values().associateBy { it.button }
+
+        /**
+         * Set of varbits that unlock emotes in the settings tab.
+         */
+        val UNLOCK_EMOTE_VARBITS = setOf(1367, 1368, 1369, 1370, 1371, 1920, 1921, 2055).map { Varbit(it, 1) }
+
+        /**
+         * The varbit that unlocks the goblin emotes.
+         */
+        val UNLOCK_GOBLIN_EMOTE_VARBIT = Varbit(532, 1)
     }
 }

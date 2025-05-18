@@ -20,6 +20,11 @@ public final class Varbit {
     private final int value;
 
     /**
+     * The varbit definition.
+     */
+    private transient final VarBitDefinition def;
+
+    /**
      * Creates a new {@link Varbit}.
      *
      * @param id The varbit id.
@@ -28,13 +33,41 @@ public final class Varbit {
     public Varbit(int id, int value) {
         this.id = id;
         this.value = value;
+        def = VarBitDefinition.ALL.retrieve(id);
     }
 
     /**
-     * Prepares this varbit type to be sent to the client as a {@link Varp}.
+     * Packs the value of this varbit into the value of the parent varp.
+     *
+     * @param parentValue The value of the parent varp.
+     * @return The packed value.
      */
-    public Varp toVarp() {
-        VarBitDefinition def = VarBitDefinition.ALL.retrieve(id);
-        return new Varp(def.getParentVarpId(), value << def.getLeastSignificantBit());
+    public int pack(int parentValue) {
+        int msb = def.getMostSignificantBit();
+        int lsb = def.getLeastSignificantBit();
+        int max = (1 << (1 + (msb - lsb))) - 1;
+        int clearedValue = parentValue & ~(max << lsb);
+        return clearedValue | value << lsb;
+    }
+
+    /**
+     * @return The varbit id.
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @return The value to send.
+     */
+    public int getValue() {
+        return value;
+    }
+
+    /**
+     * @return The varbit definition.
+     */
+    public VarBitDefinition getDef() {
+        return def;
     }
 }

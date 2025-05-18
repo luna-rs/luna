@@ -1,7 +1,7 @@
 package world.player.skill.crafting.potteryCrafting
 
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import world.obj.resource.fillable.WaterResource
@@ -24,7 +24,7 @@ class MakeSoftClayActionItem(val plr: Player) : InventoryAction(plr, true, 1, 28
 
     override fun add(): List<Item> {
         if (unfilledId == null) {
-            interrupt()
+            complete()
             return emptyList()
         }
         val newUnfilledId = unfilledId!!
@@ -35,18 +35,12 @@ class MakeSoftClayActionItem(val plr: Player) : InventoryAction(plr, true, 1, 28
     override fun remove(): List<Item> {
         val remove = getNextResources()
         if (remove == null) {
-            interrupt()
+            complete()
             return emptyList()
         }
         unfilledId = remove.first
         return remove.second
     }
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is MakeSoftClayActionItem -> true
-            else -> false
-        }
 
     /**
      * Determines the next water resource to use. If the player doesn't have any, interrupts the action.
@@ -61,7 +55,7 @@ class MakeSoftClayActionItem(val plr: Player) : InventoryAction(plr, true, 1, 28
                 return Pair(empty, remove)
             }
         }
-        interrupt()
+        complete()
         return null
     }
 }

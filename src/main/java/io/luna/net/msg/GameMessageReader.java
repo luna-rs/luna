@@ -1,6 +1,5 @@
 package io.luna.net.msg;
 
-import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.event.impl.InteractableEvent;
@@ -92,7 +91,6 @@ public abstract class GameMessageReader<E extends Event> {
 
             // Validate the event with the decoder and the current controller if needed.
             if (event != NullEvent.INSTANCE && validate(player, event)) {
-
                 if (event instanceof ControllableEvent) {
                     if (player.isLocked() || !player.getControllers().checkEvent((ControllableEvent) event)) {
                         return;
@@ -100,18 +98,10 @@ public abstract class GameMessageReader<E extends Event> {
                 }
 
                 // Handle it and post to plugins.
-                if (event instanceof InteractableEvent) {
-                    if (player.isLocked()) {
-                        return;
-                    }
+                if (event instanceof InteractableEvent && !player.isLocked()) {
                     InteractableEvent interactableEvent = (InteractableEvent) event;
-                    Entity interactingWith = interactableEvent.target();
-                    player.submitAction(new InteractionAction(player, interactingWith, interactableEvent.distance()) {
-                        @Override
-                        public void execute() {
-                            postEvent(player, event);
-                        }
-                    });
+                    Entity interactWith = interactableEvent.target();
+                    player.handleInteractableEvent(interactWith, interactableEvent, () -> postEvent(player, event));
                 } else {
                     postEvent(player, event);
                 }

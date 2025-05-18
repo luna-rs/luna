@@ -1,82 +1,36 @@
 package api.bot
 
-import api.predef.*
-import api.predef.ext.*
-import com.google.common.base.Preconditions.checkState
 import kotlinx.coroutines.channels.Channel
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.Future
 
 /**
- * Represents the result of requesting a bot to do an action. These types differ from Java futures in that instead of
- * returning an Object in the future, they allow for suspension of the underlying coroutine.
+ * A model similar to a Java [Future] types, used to return the result of suspendable jobs within
+ * [CoroutineBotScript] types. This model can also be used to block coroutines until a job completes or a certain
+ * condition is satisfied.
  */
-class SuspendableFuture {
-
-    companion object {
-
-        /**
-         * Run [runFunc] every [delayTicks] and suspend the underlying coroutine until [cond] is satisfied.
-         */
-        suspend fun runUntil(delayTicks: Int, runFunc: () -> Unit, cond: () -> Boolean) {
-            runFunc()
-            if (cond()) {
-                return
-            }
-
-            val future = SuspendableFuture()
-            world.schedule(delayTicks) {
-                if (cond()) {
-                    future.signal(true)
-                    it.cancel()
-                } else {
-                    runFunc()
-                }
-            }
-            future.await()
-        }
-    }
+class SuspendableFuture(private val channel: Channel<Boolean>) {
 
     /**
-     * The channel that will be used to suspend the coroutine. Acts like a [Phaser] for coroutines.
+     * No-args constructor for futures with no conditional signal.
      */
-    private val channel = Channel<Boolean>(1)
+    constructor() : this(Channel<Boolean>(1))
 
     /**
-     * Determines if this future is active.
+     * Sends a signal to the backing [channel] in order to unsuspend the underlying [CoroutineBotScript].
      */
-    private val active = AtomicBoolean()
-
-    /**
-     * Checks if [cond] is satisfied; if it is, sends [signal] in order for [await] to unsuspend the underlying
-     * [CoroutineBotScript]. Times out after [timeoutSeconds]. **Does not suspend the coroutine.**
-     */
-    fun signalWhen(timeoutSeconds: Long, cond: () -> Boolean): SuspendableFuture {
-        checkState(!active.getAndSet(true), "SuspendableFuture is already active.")
-        world.schedule(1) {
-            if (cond()) {
-                channel.offer(true)
-                it.cancel()
-            } else if (it.executionCounter >= Duration.ofSeconds(timeoutSeconds).toTicks()) {
-                channel.offer(false)
-                it.cancel()
-            }
-        }
-        return this
-    }
-
-    /**
-     * Suspends the underlying [CoroutineBotScript] until a signal from either [signal] or [signalWhen] is received.
-     */
-    suspend fun await(): Boolean = channel.receive()
-
-    /**
-     * Sends a signal to [await] to unsuspend the underlying [CoroutineBotScript]. [value] being false indicates an
-     * abnormal signal (exception, time out, etc). **Does not suspend the coroutine.**
-     */
-    fun signal(value: Boolean): SuspendableFuture {
-        checkState(!active.getAndSet(true), "SuspendableFuture is already active.")
+    internal fun signal(value: Boolean): SuspendableFuture {
         channel.offer(value)
         return this
+    }
+
+    /**
+     * Suspends the underlying [CoroutineBotScript] until a signal is received.
+     *
+     * Returns `true` if the signal was received successfully, `false` on timeout, error, or illegal state.
+     */
+    suspend fun await(): Boolean {
+        val result = channel.receive()
+        channel.close()
+        return result
     }
 }

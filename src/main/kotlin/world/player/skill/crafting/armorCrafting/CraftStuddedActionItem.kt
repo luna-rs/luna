@@ -2,7 +2,7 @@ package world.player.skill.crafting.armorCrafting
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
@@ -33,13 +33,8 @@ class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId
         plr.crafting.addExperience(armor.exp)
     }
 
-    override fun remove() = listOf(Item(removeId), Item(STUDS))
+    override fun remove() = listOf(Item(removeId),
+                                   Item(STUDS))
 
     override fun add() = listOf(Item(armor.id))
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is CraftStuddedActionItem -> armor == other.armor
-            else -> false
-        }
 }

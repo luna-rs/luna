@@ -1,5 +1,6 @@
 package io.luna.net.msg.in;
 
+import io.luna.game.action.ActionQueue;
 import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -14,7 +15,7 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author searledan
  * @author lare96
- * @see io.luna.game.action.ActionManager#submit
+ * @see ActionQueue#submit
  */
 public final class MagicOnNpcMessageReader extends GameMessageReader<MagicOnNpcEvent> {
 

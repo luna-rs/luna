@@ -32,9 +32,10 @@ public abstract class PlayerLocationController extends PlayerController {
      * Called when the player is about to enter any of {@link #locations}, and determines if the player can do so.
      *
      * @param player The player.
+     * @param newPos The position the player is about to move to (inside this area).
      * @return {@code true} if the player can enter this controlled area.
      */
-    public boolean canEnter(Player player) {
+    public boolean canEnter(Player player, Position newPos) {
         return true;
     }
 
@@ -42,31 +43,21 @@ public abstract class PlayerLocationController extends PlayerController {
      * Called when the player is about to exit any of {@link #locations}, and determines if the player can do so.
      *
      * @param player The player.
+     * @param newPos The position the player is about to move to (outside of this area).
      * @return {@code true} if the player can leave this controlled area.
      */
-    public boolean canExit(Player player) {
+    public boolean canExit(Player player, Position newPos) {
         return true;
 
     }
 
     /**
-     * Called when the player is about to move within any of {@link #locations}, and determines if the player can do so.
+     * Determines if the player is moving inside any of {@link #locations}.
      *
-     * @param player The player.
-     * @return {@code true} if the player can move within this controlled area.
-     */
-    public boolean canMove(Player player, Position newPos) {
-        return true;
-
-    }
-
-    /**
-     * Determines if the player is within any of {@link #locations}.
-     *
+     * @param position The position the player is moving to.
      * @return {@code true} if the player is within this controlled area.
      */
-    public final boolean inside(Player player) {
-        Position position = player.getPosition();
+    public final boolean inside(Position position) {
         for (Location location : getLocations()) {
             if (location.contains(position)) {
                 return true;

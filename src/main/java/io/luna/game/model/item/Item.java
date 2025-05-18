@@ -20,7 +20,7 @@ public final class Item {
     /**
      * A set of search restricted items that don't show up in {@link #byName(String)} queries.
      */
-    private static final ImmutableSet<Integer> SEARCH_RESTRICTED = ImmutableSet.of(6564, 6565, 6566);
+    private static final ImmutableSet<Integer> SEARCH_RESTRICTED = ImmutableSet.of(6564, 6565, 6566, 617);
 
     /**
      * Retrieves an item instance by name and amount.
@@ -28,7 +28,7 @@ public final class Item {
      * @param name The name.
      * @param amount The amount.
      * @return The item.
-     */ // todo if tradable and no noted version, ignore item?
+     */
     public static Item byName(String name, int amount) {
         boolean noted = name.endsWith("(noted)");
         return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&

@@ -12,7 +12,7 @@ import world.player.skill.mining.Pickaxe
 fun mineRock(plr: Player, ore: Ore, obj: GameObject) {
     val pick = Pickaxe.computePickType(plr)
     if (pick != null) {
-        plr.submitAction(MineOreActionItem(plr, pick, ore, obj))
+        plr.submitAction(MineOreAction(plr, pick, ore, obj))
     } else {
         plr.sendMessage("You need a pickaxe which you have the required level to use.")
     }

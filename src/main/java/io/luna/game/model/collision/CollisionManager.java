@@ -2,6 +2,7 @@ package io.luna.game.model.collision;
 
 import com.google.common.collect.HashMultimap;
 import io.luna.game.model.Direction;
+import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.World;
@@ -9,11 +10,15 @@ import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.collision.CollisionUpdate.DirectionFlag;
+import io.luna.game.model.item.GroundItem;
+import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -144,27 +149,23 @@ public final class CollisionManager {
     }
 
     /**
-     * Casts a ray into the world to check for impenetrable objects  from the given {@code start} position to the
-     * {@code end} position using Bresenham's line algorithm.
-     *
-     * @param start The start position of the ray.
-     * @param end The end position of the ray.
-     * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
+     * Forwards to {@link #raycast(Position, Position, BiFunction)} and returns {@code false} if an impenetrable
+     * object was found.
      */
     public boolean raycast(Position start, Position end) {
         return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
     }
 
     /**
-     * Casts a ray into the world to check for impenetrable objects  from the given {@code start} position to the
+     * Casts a ray into the world to check if {@code cond} is satisfied from the given {@code start} position to the
      * {@code end} position using Bresenham's line algorithm.
      *
      * @param start The start position of the ray.
      * @param end The end position of the ray.
-     * @return {@code false} if an impenetrable object was hit, {@code true} otherwise.
+     * @param cond The condition to check if satisfied.
+     * @return {@code false} if the condition was satisfied, {@code true} otherwise.
      */
-    public boolean raycast(Position start, Position end, BiFunction<Position, Direction, Boolean> conditionFunction) {
-        //todo doesnt work
+    public boolean raycast(Position start, Position end, BiFunction<Position, Direction, Boolean> cond) {
         checkArgument(start.getZ() == end.getZ(), "Positions must be on the same height");
         if (start.equals(end)) {
             return true;
@@ -232,7 +233,7 @@ public final class CollisionManager {
             Direction direction = Direction.between(lastX, lastY, currX, currY);
             Position last = new Position(lastX, lastY, start.getZ());
 
-            if (conditionFunction.apply(last, direction)) {
+            if (cond.apply(last, direction)) {
                 return false;
             }
 
@@ -286,7 +287,7 @@ public final class CollisionManager {
      * @param direction The direction the entity is travelling.
      * @return {@code true} if next tile is traversable, {@code false} otherwise.
      */
-    public boolean traversable(Position position, EntityType type, Direction direction) { // TODO cahnge to boolean projectile
+    public boolean traversable(Position position, EntityType type, Direction direction) {
         Position next = position.translate(1, direction);
         ChunkRepository repository = chunks.load(next);
 
@@ -312,4 +313,53 @@ public final class CollisionManager {
         return true;
     }
 
+    /**
+     * Determines if position {@code start} is within an interaction distance of {@code distance} to {@code target}.
+     *
+     * @param start The starting position.
+     * @param lastRegion The position to get local coordinates from.
+     * @param target The target entity.
+     * @param distance The interaction distance.
+     * @return {@code true} if the position has reached the target.
+     */
+    public boolean reached(Position start, Position lastRegion, Entity target, int distance) {
+        checkArgument(distance <= Position.VIEWING_DISTANCE, "distance must be below max viewable range");
+        if (!start.isViewable(target)) {
+            // Can't interact if the entity isn't visible.
+            return false;
+        }
+        Position end = target.getPosition();
+        CollisionMatrix matrices = target.getChunkRepository().getMatrices()[start.getZ()];
+        if (distance > 1) {
+            // As long as there's a clear path to the entity, and we're within range we can interact.
+            return start.isWithinDistance(end, distance) && raycast(start, end);
+        } else if (target instanceof Mob) {
+            // In the client, NPC sizes are all assumed 1x1.
+            return matrices.reachedFacingEntity(start, lastRegion, target, 1, 1, OptionalInt.empty());
+        } else if (target instanceof GameObject) {
+            // Normal object, wall, or decoration.
+            return matrices.reachedObject(start, lastRegion, (GameObject) target);
+        } else if (target instanceof GroundItem) {
+            // Only reached an item when you're on top of it.
+            return start.equals(end);
+        } else {
+            return start.isWithinDistance(target.getPosition(), target.size());
+        }
+    }
+
+    /**
+     * Forwards to {@link #reached(Player, Entity)} with distance of {@code 1}.
+     */
+    public boolean reached(Player player, Entity target) {
+        return reached(player, target, 1);
+    }
+
+    /**
+     * Forwards to {@link #reached(Position, Position, Entity, int)} using the data of {@code mob} for the
+     * start position and last region.
+     */
+    public boolean reached(Mob mob, Entity target, int distance) {
+        return reached(mob.getPosition(), mob instanceof Player ? mob.asPlr().getLastRegion() : mob.getPosition(),
+                target, distance);
+    }
 }

@@ -3,16 +3,13 @@ package io.luna.game.model.mob.bot;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
 import io.luna.game.model.World;
-import io.luna.game.model.mob.persistence.PlayerSerializerManager;
-import io.luna.game.task.Task;
+import io.luna.game.persistence.GameSerializerManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.Set;
-
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * Tracks all {@link Bot} types that need to be remembered by the server. For efficient tracking, bots need to be
@@ -100,6 +97,16 @@ public final class BotRepository implements Iterable<String> {
     }
 
     /**
+     * Determines if {@code username} is being tracked by the temporary set.
+     *
+     * @param name The username to check.
+     * @return {@code true} if this username is being tracked.
+     */
+    public boolean containsTemporary(String name) {
+        return temporaryNames.contains(name);
+    }
+
+    /**
      * @return The amount of temporary bots.
      */
     public int getTemporaryCount() {
@@ -119,28 +126,22 @@ public final class BotRepository implements Iterable<String> {
     public void load() {
         if (persistentNames.isEmpty()) {
             try {
-                PlayerSerializerManager serializerManager = world.getSerializerManager();
+                GameSerializerManager serializerManager = world.getSerializerManager();
                 Set<String> loadedNames = serializerManager.getSerializer().loadBotUsernames(world);
                 if (!loadedNames.isEmpty()) {
                     persistentNames.addAll(loadedNames);
-
-                    // After 6 seconds, start logging in bots.
-                    world.schedule(new Task(10) {
-                        @Override
-                        protected void execute() {
-                            cancel();
-                            for (String username : persistentNames) {
-                                Bot newBot = new Bot.Builder(world.getContext()).setUsername(username).build();
-                                newBot.login();
-                            }
-                        }
-                    });
-                    logger.info("Logging in {} persistent bot(s).", box(persistentNames.size()));
                 }
             } catch (Exception e) {
                 logger.catching(e);
             }
         }
+    }
+
+    /**
+     * Returns an {@link Iterator} that iterates only over persistent {@link Bot} types.
+     */
+    public Iterator<String> persistentIterator() {
+        return persistentNames.iterator();
     }
 
     @NotNull

@@ -121,7 +121,6 @@ public final class GameSettings {
     public boolean betaMode() {
         switch (runtimeMode) {
             case DEVELOPMENT:
-            case BENCHMARK:
                 return true;
             case PRODUCTION:
                 return false;
@@ -137,8 +136,6 @@ public final class GameSettings {
         switch (runtimeMode) {
             case PRODUCTION:
                 return Level.DISABLED;
-            case BENCHMARK:
-                return Level.SIMPLE;
             case DEVELOPMENT:
                 return Level.PARANOID;
             default:

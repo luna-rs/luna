@@ -5,7 +5,6 @@ package world.player.skill.woodcutting.cutTree
  */
 class TreeStump(val tree: Tree, val treeId: Int, val stumpId: Int) {
 
-
     companion object {
 
         /**
@@ -31,7 +30,9 @@ class TreeStump(val tree: Tree, val treeId: Int, val stumpId: Int) {
             stumpMap.map { TreeStump(tree, it.key, it.value) }.toList()
     }
 
-
+    /**
+     * An enum representing all tree stumps for all tree types.
+     */
     enum class Stump(val tree: Tree, val all: Map<Int, Int>) {
         // Alive tree ID -> Dead tree ID.
         NORMAL(tree = Tree.NORMAL,

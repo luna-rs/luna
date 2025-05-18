@@ -13,14 +13,14 @@ class MakeItemOption(val amount: Int, var index: Int) {
             // Make <x> option.
             plr.interfaces.open(object : AmountInputInterface() {
                 override fun onAmountInput(player: Player, value: Int) {
-                    inter.makeItemIndex(plr, index, value)
                     plr.interfaces.close()
+                    inter.makeItemIndex(plr, index, value)
                 }
             })
         } else {
             // Make specific amount option.
-            inter.makeItemIndex(plr, index, amount)
             plr.interfaces.close()
+            inter.makeItemIndex(plr, index, amount)
         }
     }
 }

@@ -3,16 +3,13 @@ package world.player.wilderness
 import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableSet
-import io.luna.game.event.impl.CommandEvent
-import io.luna.game.model.Area
+import io.luna.game.model.area.Area
 import io.luna.game.model.Location
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
-import io.luna.game.event.impl.ControllableEvent
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
 import world.player.skill.magic.teleportSpells.TeleportAction
-import world.player.wilderness.WildernessAreaController.wildernessLevel
 
 /**
  * A [PlayerLocationController] implementation for wilderness areas.
@@ -26,14 +23,16 @@ object WildernessAreaController : PlayerLocationController() {
      */
     var Player.wildernessLevel by Attr.int()
 
-    override fun canEnter(plr: Player): Boolean {
-        setWildernessLevel(plr)
+    override fun canEnter(plr: Player, newPos: Position): Boolean {
+        println(plr.position)
+        println(newPos)
+        setWildernessLevel(plr, newPos)
         plr.interfaces.open(WalkableInterface(197))
         plr.interactions.show(INTERACTION_ATTACK)
         return true
     }
 
-    override fun canExit(plr: Player): Boolean {
+    override fun canExit(plr: Player, newPos: Position): Boolean {
         plr.interactions.hide(INTERACTION_ATTACK)
         plr.interfaces.closeWalkable()
         plr.wildernessLevel = 0
@@ -42,7 +41,7 @@ object WildernessAreaController : PlayerLocationController() {
     }
 
     override fun canMove(plr: Player, newPos: Position): Boolean {
-        setWildernessLevel(plr)
+        setWildernessLevel(plr, newPos)
         return true
     }
 
@@ -57,8 +56,8 @@ object WildernessAreaController : PlayerLocationController() {
     /**
      * Sets and displays the wilderness level for [plr].
      */
-    private fun setWildernessLevel(plr: Player): Int {
-        var newLevel = if (plr.position.y > 6400) plr.position.y - 6400 else plr.position.y
+    private fun setWildernessLevel(plr: Player, newPos: Position): Int {
+        var newLevel = if (newPos.y > 6400) newPos.y - 6400 else newPos.y
         newLevel = ((newLevel - 3520) / 8) + 1
         plr.wildernessLevel = newLevel
         plr.sendText("@yel@Level: $newLevel", 199)

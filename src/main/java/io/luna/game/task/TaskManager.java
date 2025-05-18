@@ -31,9 +31,12 @@ public final class TaskManager {
      * @param task The task to schedule.
      */
     public void schedule(Task task) {
-        if (task.getState() == TaskState.IDLE && task.onSchedule()) {
+        if (task.getState() == TaskState.IDLE) {
+            if(!task.onSchedule()) {
+                task.cancel();
+                return;
+            }
             task.setState(TaskState.RUNNING);
-
             if (task.isInstant()) {
                 task.runTask();
             }

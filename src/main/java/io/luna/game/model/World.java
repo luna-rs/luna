@@ -3,6 +3,9 @@ package io.luna.game.model;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
+import io.luna.game.LoginService;
+import io.luna.game.LogoutService;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
@@ -12,21 +15,18 @@ import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotRepository;
+import io.luna.game.model.mob.bot.BotScheduleService;
 import io.luna.game.model.mob.controller.ControllerProcessTask;
-import io.luna.game.model.mob.persistence.PlayerSerializerManager;
 import io.luna.game.model.object.GameObjectList;
-import io.luna.game.service.GameService;
-import io.luna.game.service.LoginService;
-import io.luna.game.service.LogoutService;
-import io.luna.game.service.PersistenceService;
+import io.luna.game.persistence.GameSerializerManager;
+import io.luna.game.persistence.PersistenceService;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ThreadUtils;
-import io.luna.util.benchmark.BenchmarkManager;
-import io.luna.util.benchmark.BenchmarkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -107,7 +107,17 @@ public final class World {
     /**
      * A list of active bots.
      */
-    private final BotRepository botRepository = new BotRepository(this);
+    private final BotRepository botRepository;
+
+    /**
+     * The bot credentials repository.
+     */
+    private final BotCredentialsRepository botCredentials;
+
+    /**
+     * The bot schedule service.
+     */
+    private final BotScheduleService botService;
 
     /**
      * The login service.
@@ -127,7 +137,7 @@ public final class World {
     /**
      * The serializer manager.
      */
-    private final PlayerSerializerManager serializerManager = new PlayerSerializerManager(this);
+    private final GameSerializerManager serializerManager = new GameSerializerManager(this);
 
     /**
      * The chunk manager.
@@ -195,6 +205,9 @@ public final class World {
         playerMap = new ConcurrentHashMap<>();
         collisionManager = new CollisionManager(this);
         dynamicMapSpacePool = new DynamicMapSpacePool(context);
+        botRepository = new BotRepository(this);
+        botCredentials = new BotCredentialsRepository(context);
+        botService = new BotScheduleService(this);
 
         // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
@@ -210,6 +223,7 @@ public final class World {
         collisionManager.build(false);
         schedule(new ControllerProcessTask(this));
         dynamicMapSpacePool.buildEmptySpacePool();
+        botCredentials.load();
     }
 
     /**
@@ -275,47 +289,51 @@ public final class World {
                     Bot bot = (Bot) player;
                     bot.process();
                 }
+                player.getActions().process();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
 
-        // Separate region update from other logic to ensure all chunk updates are sent.
-        for (Player player : playerList) {
-            try {
-                Position oldPosition = player.getPosition();
-                player.sendRegionUpdate(oldPosition);
-                player.getClient().flush();
-            } catch (Exception e) {
-                player.logout();
-                logger.warn(new ParameterizedMessage("Could not send region updates for {}.", player, e));
-            }
-        }
-
         for (Npc npc : npcList) {
             try {
                 npc.getWalking().process();
+                npc.getActions().process();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
             }
         }
+
+        // Region update and action queue must be processed last.
+        for (Player player : playerList) {
+            if (player.getClient().isPendingLogout()) {
+                player.cleanUp();
+                continue;
+            }
+            try {
+                Position oldPosition = player.getPosition();
+
+                player.sendRegionUpdate(oldPosition);
+                player.getActions().process();
+            } catch (Exception e) {
+                player.logout();
+                logger.warn(new ParameterizedMessage("Could not finalize pre-synchronization for {}.", player, e));
+            }
+        }
+
     }
 
     /**
      * Synchronization part of the game loop, apply the update procedure in parallel.
      */
     private void synchronize() {
-        BenchmarkManager benchmarks = context.getServer().getBenchmarkManager();
-
-        benchmarks.startBenchmark(BenchmarkType.MOB_UPDATING);
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
             updatePool.execute(new PlayerSynchronizationTask(player));
         }
         synchronizer.arriveAndAwaitAdvance();
-        benchmarks.finishBenchmark(BenchmarkType.MOB_UPDATING);
     }
 
     /**
@@ -326,6 +344,7 @@ public final class World {
             try {
                 player.resetFlags();
                 player.setCachedBlock(null);
+                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
@@ -479,8 +498,15 @@ public final class World {
     /**
      * @return The serializer manager.
      */
-    public PlayerSerializerManager getSerializerManager() {
+    public GameSerializerManager getSerializerManager() {
         return serializerManager;
+    }
+
+    /**
+     * @return The bot credentials repository.
+     */
+    public BotCredentialsRepository getBotCredentials() {
+        return botCredentials;
     }
 
     /**
@@ -488,5 +514,12 @@ public final class World {
      */
     public DynamicMapSpacePool getDynamicMapSpacePool() {
         return dynamicMapSpacePool;
+    }
+
+    /**
+     * @return The bot schedule service.
+     */
+    public BotScheduleService getBotScheduleService() {
+        return botService;
     }
 }

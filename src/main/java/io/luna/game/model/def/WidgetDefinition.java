@@ -134,7 +134,7 @@ public final class WidgetDefinition implements Definition {
     /**
      * The CS1 opcodes.
      */
-    private final int[][] cs1opcodes; // TODO further documentation, opcode types, etc.
+    private final int[][] cs1opcodes;
 
     /**
      * The widget children.

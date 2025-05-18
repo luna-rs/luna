@@ -1,8 +1,8 @@
 package io.luna;
 
 import io.luna.game.GameSettings;
+import io.luna.game.model.mob.bot.BotSettings;
 import io.luna.util.logging.LoggingSettings;
-import io.luna.util.benchmark.BenchmarkSettings;
 
 /**
  * Holds settings parsed in the {@code ./data/luna.json} file.
@@ -13,7 +13,7 @@ public final class LunaSettings {
 
     private final GameSettings game;
     private final LoggingSettings logging;
-    private final BenchmarkSettings benchmark;
+    private final BotSettings bots;
 
     /**
      * The game settings.
@@ -30,17 +30,16 @@ public final class LunaSettings {
     }
 
     /**
-     * The benchmark settings. Only active when {@link GameSettings#runtimeMode()} is equal to
-     * {@link LunaRuntime#BENCHMARK}.
+     * The bot settings.
      */
-    public BenchmarkSettings benchmark() {
-        return benchmark;
+    public BotSettings bots() {
+        return bots;
     }
 
     // Never called
-    private LunaSettings(GameSettings game, LoggingSettings logging, BenchmarkSettings benchmark) {
+    private LunaSettings(GameSettings game, LoggingSettings logging, BotSettings bots) {
         this.game = game;
         this.logging = logging;
-        this.benchmark = benchmark;
+        this.bots = bots;
     }
 }

@@ -2,7 +2,7 @@ package world.player.skill.cooking.prepareFood
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import world.obj.resource.fillable.WaterResource
@@ -70,13 +70,6 @@ class PrepareFoodActionItem(plr: Player, val food: IncompleteFood, private val r
 
         else -> removeIds.map { Item(it) }
     }
-
-
-    override fun ignoreIf(other: Action<*>?): Boolean =
-        when (other) {
-            is PrepareFoodActionItem -> other.food == food
-            else -> false
-        }
 
     /**
      * Determines if and what a removed item will be replaced by. Used to empty containers.

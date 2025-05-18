@@ -2,7 +2,7 @@ package world.player.skill.fletching.attachArrow
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 
@@ -54,9 +54,4 @@ class MakeArrowActionItem(plr: Player,
         mob.fletching.addExperience(arrow.exp * setAmount)
     }
 
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is MakeArrowActionItem -> arrow == other.arrow
-            else -> false
-        }
 }

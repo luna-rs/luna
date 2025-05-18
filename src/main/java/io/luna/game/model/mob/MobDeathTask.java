@@ -6,9 +6,9 @@ import io.luna.game.event.impl.DeathEvent;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
 import io.luna.game.model.def.NpcCombatDefinition;
+import io.luna.game.model.mob.Player.SkullIcon;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Animation.AnimationPriority;
-import io.luna.game.model.mob.Player.SkullIcon;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
@@ -52,7 +52,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     mob.queue(new WalkableInterfaceMessageWriter(65535));
                     mob.getSkills().resetAll();
                     mob.setSkullIcon(SkullIcon.NONE);
-                    // TODO Reset all prayers.
+                    // TODO Reset all prayers. https://github.com/luna-rs/luna/issues/369
                     mob.getFlags().flag(UpdateFlag.APPEARANCE);
                     break;
             }
@@ -75,7 +75,6 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
         public void handleDeath(DeathStage stage, Mob source) {
             switch (stage) {
                 case PRE_DEATH:
-                    mob.getActions().interrupt();
                     mob.getCombatDefinition().ifPresent(def ->
                             mob.animation(new Animation(def.getDeathAnimation(), AnimationPriority.HIGH)));
                     break;
@@ -84,7 +83,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     world.getNpcs().remove(mob);
                     break;
                 case POST_DEATH:
-                    if(mob.isRespawn()) {
+                    if (mob.isRespawn()) {
                         var defOptional = mob.getCombatDefinition().
                                 filter(def -> def.getRespawnTime() != -1).
                                 map(NpcCombatDefinition::getRespawnTime);
@@ -92,10 +91,9 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                             @Override
                             protected void execute() {
                                 cancel();
-
-                                var respawnedNpc = new Npc(mob.getContext(), mob.getBaseId(), mob.getBasePosition()).setRespawning();
-                                // TODO Configure same random walking configurations, etc.
-                                world.getNpcs().add(respawnedNpc);
+                                Npc respawn = new Npc(mob.getContext(), mob.getBaseId(),
+                                        mob.getBasePosition()).setRespawning();
+                                world.getNpcs().add(respawn);
                             }
                         }));
                     }
@@ -177,7 +175,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
     protected boolean onSchedule() {
         mob.skill(Skill.HITPOINTS).setLevel(0);
         mob.getWalking().clear();
-        mob.getActions().interrupt();
+        mob.getActions().interruptWeak();
         // TODO Calculate the source of death.
         // source = ???
         return true;
@@ -191,6 +189,8 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
             handleDeath(DeathStage.DEATH, source);
         } else if (currentLoop == 5) {
             handleDeath(DeathStage.POST_DEATH, source);
+            cancel();
+        } else if (currentLoop > 5) {
             cancel();
         }
         currentLoop++;

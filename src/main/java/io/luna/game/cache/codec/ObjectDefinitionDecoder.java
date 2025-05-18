@@ -64,6 +64,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
         String description = "null";
         int width = 1;
         int length = 1;
+        int direction = 0;
         OptionalInt animationId = OptionalInt.empty();
         boolean solid = true;
         boolean impenetrable = true;
@@ -77,8 +78,8 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             int opcode = data.readUnsignedByte();
 
             if (opcode == 0) {
-                return new GameObjectDefinition(id, name, description, width, length, solid, impenetrable, interactive,
-                        animationId, ImmutableList.copyOf(actions), obstructive, varpDef);
+                return new GameObjectDefinition(id, name, description, width, length, direction, solid, impenetrable,
+                        interactive, animationId, ImmutableList.copyOf(actions), obstructive, varpDef);
             } else if (opcode == 1) {
                 int amount = data.readUnsignedByte();
                 for (int i = 0; i < amount; i++) {
@@ -122,7 +123,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             } else if (opcode == 60 || opcode >= 65 && opcode <= 68) {
                 data.readShort();
             } else if (opcode == 69) {
-                data.readByte();
+                direction = data.readByte();
             } else if (opcode >= 70 && opcode <= 72) {
                 data.readShort();
             } else if (opcode == 73) {

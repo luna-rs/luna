@@ -2,7 +2,7 @@ package world.player.item.consumable.potion
 
 import api.attr.Attr
 import api.predef.*
-import io.luna.game.action.ThrottledAction
+import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player

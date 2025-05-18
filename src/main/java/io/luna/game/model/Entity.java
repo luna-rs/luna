@@ -2,15 +2,18 @@ package io.luna.game.model;
 
 import io.luna.Luna;
 import io.luna.LunaContext;
-import io.luna.game.model.chunk.ChunkRepository;
+import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
+import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
 import io.luna.game.plugin.PluginManager;
-import io.luna.game.service.GameService;
+import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Comparator;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -21,6 +24,31 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public abstract class Entity {
+// todo interactable conditions
+    /**
+     * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
+     */
+    public static final class EntityDistanceComparator implements Comparator<Entity> {
+
+        /**
+         * The position distance comparator.
+         */
+        private final PositionDistanceComparator comparator;
+
+        /**
+         * Creates a new {@link EntityDistanceComparator}.
+         *
+         * @param base The base entity.
+         */
+        public EntityDistanceComparator(Entity base) {
+            comparator = new PositionDistanceComparator(base.position);
+        }
+
+        @Override
+        public int compare(Entity o1, Entity o2) {
+            return comparator.compare(o1.position, o2.position);
+        }
+    }
 
     /**
      * The logger.
@@ -66,11 +94,6 @@ public abstract class Entity {
      * The current chunk.
      */
     protected volatile ChunkRepository chunkRepository;
-
-    /**
-     * If this entity can be interacted with.
-     */
-    private boolean interactable = true;
 
     /**
      * Creates a new {@link Entity}.
@@ -219,12 +242,25 @@ public abstract class Entity {
     }
 
     /**
-     * Invoked when this entity's position changes.
+     * Determines if this entity is within {@code radius} to {@code other}.
      *
-     * @param oldPos The old position.
+     * @param other The other entity.
+     * @param radius The radius.
+     * @return {@code true} if the entity is within range.
      */
-    protected void onPositionChanged(Position oldPos) {
+    public boolean isWithinDistance(Entity other, int radius) {
+        return isWithinDistance(other.position, radius);
+    }
 
+    /**
+     * Determines if this entity is within {@code radius} to {@code other}.
+     *
+     * @param other The other position.
+     * @param radius The radius.
+     * @return {@code true} if the entity is within range.
+     */
+    public boolean isWithinDistance(Position other, int radius) {
+        return position.isWithinDistance(other, radius);
     }
 
     /**
@@ -233,7 +269,8 @@ public abstract class Entity {
      * @param newPosition The new position.
      */
     public final void setPosition(Position newPosition) {
-        if (!newPosition.equals(position)) {
+        boolean isLocal = this instanceof LocalEntity;
+        if (!newPosition.equals(position) && !isLocal) {
             if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
                 Player player = (Player) this;
                 if (!player.getControllers().checkMovement(newPosition)) {
@@ -241,12 +278,9 @@ public abstract class Entity {
                 }
             }
 
-            Position old = position;
             position = newPosition;
-
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
-                onPositionChanged(old);
             }
         }
     }
@@ -339,21 +373,5 @@ public abstract class Entity {
      */
     public ChunkRepository getChunkRepository() {
         return chunkRepository;
-    }
-
-    /**
-     * Sets if this entity can be interacted with.
-     *
-     * @param interactable The new value.
-     */
-    public void setInteractable(boolean interactable) {
-        this.interactable = interactable;
-    }
-
-    /**
-     * @return If this entity can be interacted with.
-     */
-    public boolean isInteractable() {
-        return interactable;
     }
 }

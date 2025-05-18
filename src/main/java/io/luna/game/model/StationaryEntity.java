@@ -172,8 +172,7 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
         if (surroundingPlayers == null) {
             ImmutableList.Builder<Set<Player>> builder = ImmutableList.builder();
             // Retrieve viewable chunks.
-            Set<ChunkRepository> viewableChunks = world.getChunks().getViewableChunks(position);
-            for (ChunkRepository chunk : viewableChunks) {
+            for (ChunkRepository chunk : world.getChunks().findViewableChunks(position)) {
                 // Wrap players in immutable view, add it.
                 Set<Player> players = Collections.unmodifiableSet(chunk.getAll(EntityType.PLAYER));
                 builder.add(players);

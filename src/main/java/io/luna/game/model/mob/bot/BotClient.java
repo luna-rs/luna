@@ -22,14 +22,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public final class BotClient extends GameClient {
 
     /**
-     * The IO message handler.
+     * The input message handler.
      */
-    private final BotMessageHandler messageHandler;
+    private final BotInputMessageHandler input;
+
+    /**
+     * The output message handler.
+     */
+    private final BotOutputMessageHandler output;
 
     /**
      * All pending write messages, completed when {@link #flush()} is called.
      */
-    private final Queue<BotMessage> pendingWriteMessages = new ConcurrentLinkedQueue<>();
+    private final Queue<BotMessage<?>> pendingWriteMessages = new ConcurrentLinkedQueue<>();
 
     /**
      * The bot instance.
@@ -44,13 +49,14 @@ public final class BotClient extends GameClient {
     public BotClient(Bot bot, GameMessageRepository repository) {
         super(BotChannel.CHANNEL, repository);
         this.bot = bot;
-        messageHandler = new BotMessageHandler(this, bot);
+        input = new BotInputMessageHandler();
+        output = new BotOutputMessageHandler(this);
     }
 
     @Override
     public void onMessageReceived(GameMessage msg) {
-        /* Shouldn't ever be called. The equivalent to this method for a bot is "flush()" since we're receiving all
-        server messages sent (just not from Netty like here). */
+        /* Shouldn't ever be called. The equivalent to this method for a bot is "queue(GameMessageWriter, Player)" since
+        we're receiving all server messages sent (just not from Netty like here). */
         throw new IllegalStateException("Unexpected: " + bot.getUsername() + " calling onMessageReceived.");
     }
 
@@ -63,18 +69,18 @@ public final class BotClient extends GameClient {
             throw new IllegalStateException("Unexpected: " + player.getUsername() + " not a bot, but using BotClient.");
         }
         Instant timestamp = Instant.now();
-        pendingWriteMessages.add(new BotMessage(msg, timestamp));
+        pendingWriteMessages.add(new BotMessage<>(msg, timestamp));
     }
 
     @Override
     public void flush() {
         // Send messages to the client, which is our bot!
         for (; ; ) {
-            BotMessage writer = pendingWriteMessages.poll();
+            BotMessage<?> writer = pendingWriteMessages.poll();
             if (writer == null) {
                 break;
             }
-            messageHandler.addMessage(writer);
+            input.add(writer);
         }
     }
 
@@ -95,9 +101,16 @@ public final class BotClient extends GameClient {
     }
 
     /**
-     * @return The IO message handler.
+     * @return The input message handler.
      */
-    public BotMessageHandler getMessageHandler() {
-        return messageHandler;
+    public BotInputMessageHandler getInput() {
+        return input;
+    }
+
+    /**
+     * @return The output message handler.
+     */
+    public BotOutputMessageHandler getOutput() {
+        return output;
     }
 }

@@ -3,8 +3,7 @@ package world.player.skill.magic.teleOther
 import api.attr.Attr
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
-import io.luna.game.action.RepeatingAction
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
@@ -15,7 +14,7 @@ import world.player.skill.magic.Magic
  * A [RepeatingAction] that handles [source] teleporting [target] to another location based on [type].
  */
 class TeleOtherAction(private val source: Player, private val target: Player, private val type: TeleOtherType) :
-    RepeatingAction<Player>(source, true, 1) {
+    LockedAction(source) {
 
     companion object {
 
@@ -30,43 +29,43 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
         val Player.teleOtherRequests by Attr.map<Long, Long>()
     }
 
-    override fun start(): Boolean {
+    override fun onLock() {
         val removeItems = Magic.checkRequirements(source, type.level, type.requirements)
-        if (removeItems != null) {
-            source.inventory.removeAll(removeItems)
-            source.magic.addExperience(type.xp)
-            return true
+        if (removeItems == null) {
+            complete()
+            return
         }
-        return false
+        source.inventory.removeAll(removeItems)
+        source.magic.addExperience(type.xp)
+        target.lock()
     }
 
-    override fun repeat() {
-        when (executions) {
+    override fun run(): Boolean {
+        return when (executions) {
             0 -> {
-                source.lock()
-                target.lock()
                 source.animation(Animations.CAST_TELEPORT_OTHER)
                 source.graphic(Graphic(343, 50))
+                false
             }
-
+            1, 2 -> false
             3 -> {
                 target.graphic(Graphic(342))
                 target.animation(Animations.RECEIVE_TELEPORT_OTHER)
+                false
             }
-
+            4,5 -> false
             6 -> {
                 target.move(type.destination)
                 source.sendMessage("You teleport ${target.username} to ${type.location}.")
-                target.sendMessage("You are teleported to ${type.location}.")
+                target.sendMessage("You are teleported to ${type.location} by {${source.username}.")
                 target.animation(Animation.CANCEL)
+               true
             }
+            else -> true
         }
     }
 
-    override fun stop() {
-        source.unlock()
+    override fun onUnlock() {
         target.unlock()
     }
-
-    override fun ignoreIf(other: Action<*>?): Boolean = true // Other actions always ignored while in progress.
 }

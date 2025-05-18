@@ -11,11 +11,9 @@ import io.luna.util.RandomUtils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkElementIndex;
 
 /**
  * A model containing player appearance data.
@@ -132,10 +130,13 @@ public final class PlayerAppearance {
      */
     private static final ImmutableMap<Integer, Range<Integer>> VALID_COLORS;
 
-    public static int[] randomValues() {
+    /**
+     * Returns an appearance array of randomly generated values.
+     */
+    public static int[] randomValues() { // todo returns invalid values
         int[] appearance = new int[13];
         int index = 0;
-        int gender = ThreadLocalRandom.current().nextInt(3) == 1 ? 1 : 0;
+        int gender = RandomUtils.randomBoolean() ? 1 : 0;
         appearance[index++] = gender;
         for (int loops = 0; loops < 7; loops++) {
             appearance[index] = RandomUtils.random(VALID_MODELS.get(gender, index++));

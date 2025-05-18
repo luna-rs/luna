@@ -2,23 +2,21 @@ package world.player.skill.magic.teleportSpells
 
 import api.attr.Attr
 import api.predef.*
-import io.luna.game.action.Action
-import io.luna.game.action.RepeatingAction
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import world.player.skill.magic.Magic
 import world.player.skill.magic.SpellRequirement
 
 /**
- * A [RepeatingAction] that teleports a player to another destination.
+ * A [LockedAction] implementation that teleports a player to another destination.
  */
-abstract class TeleportAction(plr: Player,
-                              val level: Int = 1,
-                              val xp: Double = 0.0,
-                              val destination: Position,
-                              val style: TeleportStyle,
-                              val requirements: List<SpellRequirement> = emptyList()) :
-    RepeatingAction<Player>(plr, true, 1) {
+open class TeleportAction(plr: Player,
+                          val level: Int = 1,
+                          val xp: Double = 0.0,
+                          val destination: Position,
+                          val style: TeleportStyle,
+                          val requirements: List<SpellRequirement> = emptyList()) : LockedAction(plr) {
 
     companion object {
 
@@ -28,46 +26,36 @@ abstract class TeleportAction(plr: Player,
         val Player.teleportDelay by Attr.timeSource()
     }
 
-    override fun start(): Boolean {
-        if(!mob.controllers.checkTeleport(this)) {
-            return false
+    override fun onLock() {
+        if (!mob.controllers.checkTeleport(this)) {
+            complete()
+            return
         }
         val removeItems = Magic.checkRequirements(mob, level, requirements)
-        if (removeItems != null) {
-            if (removeItems.isNotEmpty()) {
-                mob.inventory.removeAll(removeItems)
-            }
-            if (xp > 0.0) {
-                mob.magic.addExperience(xp)
-            }
-            return true
+        if (removeItems == null) {
+            complete()
+            return
         }
-        return false
-    }
-
-    override fun repeat() {
-        if (executions == 0) {
-            mob.lock()
-            onTeleport()
+        onTeleport()
+        if (removeItems.isNotEmpty()) {
+            mob.inventory.removeAll(removeItems)
         }
-        if (!style.action(this)) {
-            interrupt()
+        if (xp > 0.0) {
+            mob.magic.addExperience(xp)
         }
     }
 
-    override fun stop() {
+    override fun run(): Boolean = !style.action(this)
+
+    override fun onFinished() {
         mob.unlock()
         mob.teleportDelay.reset()
     }
 
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is TeleportAction -> destination == other.destination && style == other.style
-            else -> false
-        }
-
     /**
      * Invoked one tick before the teleportation starts. Send teleport messages, etc. here.
      */
-    abstract fun onTeleport()
+    open fun onTeleport() {
+
+    }
 }

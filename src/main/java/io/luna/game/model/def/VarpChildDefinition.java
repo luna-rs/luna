@@ -1,5 +1,6 @@
 package io.luna.game.model.def;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.object.GameObject;
@@ -37,6 +38,15 @@ public final class VarpChildDefinition {
         this.varBitId = varBitId;
         this.varpId = varpId;
         this.childIdList = childIdList;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("varBitId", varBitId)
+                .add("varpId", varpId)
+                .add("childIdList", childIdList)
+                .toString();
     }
 
     /**

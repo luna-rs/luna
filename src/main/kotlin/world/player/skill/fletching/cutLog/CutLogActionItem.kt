@@ -3,7 +3,7 @@ package world.player.skill.fletching.cutLog
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
@@ -57,10 +57,4 @@ class CutLogActionItem(plr: Player,
         mob.animation(Animations.CUT_LOG)
         mob.fletching.addExperience(bow.exp)
     }
-
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is CutLogActionItem -> log == other.log && bow == other.bow
-            else -> false
-        }
 }

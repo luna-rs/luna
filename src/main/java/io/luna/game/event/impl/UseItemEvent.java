@@ -177,7 +177,7 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * The target player.
          */
-        private final Player targetPlayer;
+        private final Player targetPlr;
 
         /**
          * Creates a new {@link ItemOnPlayerEvent}.
@@ -186,23 +186,23 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
          * @param usedId The used item identifier.
          * @param usedIndex The used item index.
          * @param usedInterfaceId The used interface identifier.
-         * @param targetPlayer The target player.
+         * @param targetPlr The target player.
          */
-        public ItemOnPlayerEvent(Player player, int usedId, int usedIndex, int usedInterfaceId, Player targetPlayer) {
+        public ItemOnPlayerEvent(Player player, int usedId, int usedIndex, int usedInterfaceId, Player targetPlr) {
             super(player, usedId, usedIndex, usedInterfaceId);
-            this.targetPlayer = targetPlayer;
+            this.targetPlr = targetPlr;
         }
 
         @Override
         public Entity target() {
-            return targetPlayer;
+            return targetPlr;
         }
 
         /**
          * @return The target player.
          */
-        public Player getTargetPlayer() {
-            return targetPlayer;
+        public Player getTargetPlr() {
+            return targetPlr;
         }
     }
 

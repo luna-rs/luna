@@ -142,7 +142,6 @@ public final class DialogueQueueBuilder {
      * @return This builder, for chaining.
      */
     public DialogueQueueBuilder options(List<DialogueOption> options) {
-        // TODO Unlimited options? With "pages" functionality?
         checkLocked();
         switch (options.size()) {
             case 0:

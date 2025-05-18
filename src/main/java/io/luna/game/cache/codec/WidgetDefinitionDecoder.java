@@ -27,7 +27,6 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
         try {
             int parentId = -1;
             int count = dataBuf.readShort();
-            logger.info(count);
             while (dataBuf.readerIndex() < dataBuf.writerIndex()) {
                 int index = dataBuf.readUnsignedShort();
                 if (index == 65535) {

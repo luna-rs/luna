@@ -85,6 +85,15 @@ public final class RandomUtils {
     }
 
     /**
+     * Returns a pseudo-random {@code boolean} value.
+     *
+     * @return The generated boolean.
+     */
+    public static boolean randomBoolean() {
+        return ThreadLocalRandom.current().nextBoolean();
+    }
+
+    /**
      * Pseudo-randomly retrieves an element from {@code array}.
      *
      * @param array The array.

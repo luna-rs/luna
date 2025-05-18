@@ -2,7 +2,7 @@ package io.luna.game.model.mob;
 
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
-import io.luna.game.action.ActionManager;
+import io.luna.game.action.ActionQueue;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -27,12 +27,12 @@ import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.mob.Skill.HITPOINTS;
 
 /**
- * A model representing an entity able to move around.
+ * A model representing an interactable entity able to move around.
  *
  * @author lare96
  */
 public abstract class Mob extends Entity {
-// todo documentation
+
     /**
      * The attribute map.
      */
@@ -51,7 +51,7 @@ public abstract class Mob extends Entity {
     /**
      * The action set.
      */
-    protected final ActionManager actions = new ActionManager();
+    protected final ActionQueue actions = new ActionQueue(this);
 
     /**
      * The walking queue.
@@ -190,15 +190,6 @@ public abstract class Mob extends Entity {
     public abstract int getTotalHealth();
 
     /**
-     * Invoked when this mob submits an action.
-     *
-     * @param action The action that was submitted.
-     */
-    public void onSubmitAction(Action action) {
-
-    }
-
-    /**
      * @return The current health of this mob.
      */
     public final int getHealth() {
@@ -210,8 +201,7 @@ public abstract class Mob extends Entity {
      *
      * @param amount The new health.
      */
-    public final void setHealth(int amount) { // TODO rename into dealdamage or something, hp.getLevel() portion is
-        // confusing when you just want to modify the skill itself
+    public final void setHealth(int amount) {
         var hp = skill(HITPOINTS);
         if (hp.getLevel() > 0) {
             hp.setLevel(amount);
@@ -232,7 +222,7 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Shortcut to function {@link ActionManager#submit(Action)}.
+     * Shortcut to function {@link ActionQueue#submit(Action)}.
      *
      * @param pending The action to submit.
      */
@@ -241,22 +231,24 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Shortcut to function {@link ActionManager#interrupt()}.
-     */
-    public final void interruptAction() {
-        actions.interrupt();
-    }
-
-    /**
      * Action-locks this mob for the specified amount of ticks.
      */
     public void lock(int ticks) {
+        lock(ticks, () -> {
+        });
+    }
+
+    /**
+     * Action-locks this mob for the specified amount of ticks and runs {@code onUnlock} on unlock.
+     */
+    public void lock(int ticks, Runnable onUnlock) {
         if (!locked) {
             locked = true;
             world.schedule(new Task(ticks) {
                 @Override
                 protected void execute() {
                     locked = false;
+                    onUnlock.run();
                     cancel();
                 }
             });
@@ -264,7 +256,17 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Action-locks this mob completely. Please use with caution as
+     * Follows the target {@link Mob}.
+     *
+     * @param target The target.
+     */
+    public void follow(Mob target) {
+        submitAction(new MobFollowAction(this, target));
+    }
+
+    /**
+     * Action-locks this mob completely. <strong{@link #unlock()} must be called at some point or the player will
+     * not be able to perform any action, even logout!</strong>
      */
     public void lock() {
         locked = true;
@@ -300,7 +302,7 @@ public abstract class Mob extends Entity {
                     asPlr().playSound(Sounds.TAKE_DAMAGE);
                 }
             } else {
-                // TODO determine if player is wearing armor/has shield then play different sound
+                // TODO combat sounds
                 asPlr().playSound(Sounds.UNARMED_BLOCK);
             }
         }
@@ -353,7 +355,6 @@ public abstract class Mob extends Entity {
     public final void move(Position position) {
         setPosition(position);
         walking.clear();
-        actions.interrupt();
         resetInteractingWith();
         onTeleport(position);
     }
@@ -387,34 +388,7 @@ public abstract class Mob extends Entity {
      * @param direction The direction to face.
      */
     public final void face(Direction direction) {
-        switch (direction) {
-            case NONE:
-                throw new IllegalArgumentException("cannot use <NONE>");
-            case NORTH_WEST:
-                face(position.translate(-1, 1));
-                break;
-            case NORTH:
-                face(position.translate(0, 1));
-                break;
-            case NORTH_EAST:
-                face(position.translate(1, 1));
-                break;
-            case WEST:
-                face(position.translate(-1, 0));
-                break;
-            case EAST:
-                face(position.translate(1, 0));
-                break;
-            case SOUTH_WEST:
-                face(position.translate(-1, -1));
-                break;
-            case SOUTH:
-                face(position.translate(0, -1));
-                break;
-            case SOUTH_EAST:
-                face(position.translate(1, -1));
-                break;
-        }
+        face(position.translate(direction.getTranslation().getX(), direction.getTranslation().getY()));
     }
 
     /**
@@ -456,7 +430,7 @@ public abstract class Mob extends Entity {
             face(entity.getPosition());
         }
         interactingWith = Optional.ofNullable(entity);
-    } // TODO Reloading region resets interaction for both this and position
+    }
 
     /**
      * Resets the current {@link Entity} we are interacting with.
@@ -466,6 +440,13 @@ public abstract class Mob extends Entity {
         if (interactingWith.isPresent()) {
             interact(null);
         }
+    }
+
+    /**
+     * Returns {@code true} if this mob is interacting with {@code entity}.
+     */
+    public boolean isInteractingWith(Entity entity) {
+        return interactingWith.filter(entity::equals).isPresent();
     }
 
     /**
@@ -519,33 +500,6 @@ public abstract class Mob extends Entity {
         primaryHit = Optional.empty();
         secondaryHit = Optional.empty();
         flags.clear();
-    }
-
-    /**
-     * Determines if this mob can interact with {@code target} based on their position and size.
-     *
-     * @param target The target.
-     * @return {@code true} if the target can be interacted with.
-     */
-    public boolean canInteractWith(Entity target, int distance) {
-        Position targetPosition = target.getPosition();
-        if (position.isWithinDistance(targetPosition, distance)) {
-            return true;
-        } else {
-            int sizeX = target.sizeX();
-            int sizeY = target.sizeY();
-            for (int x = 0; x < sizeX; x++) {
-                for (int y = 0; y < sizeY; y++) { // TODO start from -size?
-                    Position interactable = targetPosition.translate(x, y);
-                    // TODO check for fences etc. in the way
-                    // TODO check if what is blocking the player IS the object we're trying to interact with. is that possible?
-                    if (position.isWithinDistance(interactable, distance)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -646,6 +600,7 @@ public abstract class Mob extends Entity {
         return lastDirection;
     }
 
+    // todo set this last direction field for immobile npcs that don't move on spawn. faceposition should set direction too? might solve for both?
     public void setLastDirection(Direction lastDirection) {
         this.lastDirection = lastDirection;
     }
@@ -730,7 +685,7 @@ public abstract class Mob extends Entity {
     /**
      * @return The action set.
      */
-    public ActionManager getActions() {
+    public ActionQueue getActions() {
         return actions;
     }
 

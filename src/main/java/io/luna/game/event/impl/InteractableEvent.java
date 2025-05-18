@@ -1,11 +1,11 @@
 package io.luna.game.event.impl;
 
-import io.luna.game.action.InteractionAction;
 import io.luna.game.event.Event;
 import io.luna.game.model.Entity;
+import io.luna.game.model.mob.InteractionTask;
 
 /**
- * Represents an {@link Event} type that needs to be posted within an {@link InteractionAction}. Events like this are
+ * Represents an {@link Event} type that needs to be posted within an {@link InteractionTask}. Events like this are
  * not posted until the interaction can be successfully completed.
  *
  * @author lare96
@@ -21,8 +21,6 @@ public interface InteractableEvent {
      * The interaction distance.
      */
     default int distance() {
-        // TODO plugins should be able to define interaction distance.. counter-intuitive design to let
-        // events define them
         return 1;
     }
 }

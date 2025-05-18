@@ -11,13 +11,13 @@ import io.luna.game.cache.codec.ObjectDefinitionDecoder;
 import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.cache.codec.VarpDefinitionDecoder;
 import io.luna.game.cache.codec.WidgetDefinitionDecoder;
+import io.luna.game.model.World;
 import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.AsyncExecutor;
 import io.luna.util.ThreadUtils;
-import io.luna.util.benchmark.BenchmarkManager;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.MusicDefinitionFileParser;
@@ -63,11 +63,6 @@ public final class LunaServer {
      * A message repository.
      */
     private final GameMessageRepository messageRepository = new GameMessageRepository();
-
-    /**
-     * The benchmark manager.
-     */
-    private final BenchmarkManager benchmarkManager = new BenchmarkManager();
 
     /**
      * A package-private constructor.
@@ -128,12 +123,15 @@ public final class LunaServer {
      * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
      */
     private void initServices() throws InterruptedException {
-        // Benchmark service started separately since it may not have to run.
-        benchmarkManager.getService().startAsync();
+        World world = context.getWorld();
 
+        // Independent services not linked to the core game.
+        world.getBotScheduleService().startAsync();
+
+        // Core game services.
         var gameService = context.getGame();
-        var loginService = context.getWorld().getLoginService();
-        var logoutService = context.getWorld().getLogoutService();
+        var loginService = world.getLoginService();
+        var logoutService = world.getLogoutService();
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
         logger.info("All services are now running.");
@@ -190,12 +188,5 @@ public final class LunaServer {
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
-    }
-
-    /**
-     * @return The benchmark manager.
-     */
-    public BenchmarkManager getBenchmarkManager() {
-        return benchmarkManager;
     }
 }

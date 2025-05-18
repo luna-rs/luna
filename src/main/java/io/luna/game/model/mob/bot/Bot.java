@@ -1,12 +1,13 @@
 package io.luna.game.model.mob.bot;
+
 import api.bot.ExampleBotScript;
+import api.bot.LogoutBotScript;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
-import io.luna.game.model.World;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
@@ -14,9 +15,9 @@ import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
-import io.luna.game.model.mob.attr.Attribute;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.persistence.PlayerData;
+import io.luna.game.persistence.PlayerData;
+import io.luna.game.task.Task;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
@@ -39,14 +40,11 @@ import static java.util.Objects.requireNonNull;
  * see {@link BotRepository} (persistence) and {@link BotClient} (networking).
  * All logic processing is done through a {@link BotScript} which controls how the bot will function in the world, and
  * {@link BotClient} gives access to all bot IO. For bots that are persisted and automatically login when the server
- * starts, see {@link BotRepository}.
+ * starts, see {@link BotRepository} and {@link BotScheduleService}.
  *
  * @author lare96
  */
 public final class Bot extends Player {
-
-    // TODO login all persisted bots at start of server (or maybe certain random percentage??)
-    // TODO class to manage bot logins/logouts. randomly log them out and back in.
 
     /**
      * The default script generator function, uses {@link ExampleBotScript}.
@@ -57,11 +55,6 @@ public final class Bot extends Player {
      * The logger.
      */
     private static final Logger logger = LogManager.getLogger();
-
-    /**
-     * The bot status attribute. Used to determine what the bot was doing in between server restarts.
-     */
-    public static final Attribute<String> STATUS = new Attribute<>("null").persist("status");
 
     /**
      * A builder class that creates {@link Bot} instances.
@@ -98,13 +91,12 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets the username of a persistent bot. Will throw an {@link IllegalArgumentException} if no persistent bot
-         * is found with {@code username}.
+         * Sets the username of a persistent bot.
          */
         public Builder setUsername(String username) throws IllegalArgumentException {
-            World world = context.getWorld();
-            if (!world.getBots().containsPersistent(username)) {
-                throw new IllegalArgumentException("Persistent bot with username[" + username + "] not found!");
+            BotRepository repository = context.getWorld().getBots();
+            if (repository.containsTemporary(username)) {
+                throw new IllegalStateException("Username is already in use by a temporary bot.");
             }
             this.username = username;
             temporary = false;
@@ -120,6 +112,14 @@ public final class Bot extends Player {
         }
 
         /**
+         * Sets this bot as persistent.
+         */
+        public Builder setPersistent() {
+            temporary = false;
+            return this;
+        }
+
+        /**
          * Builds the {@link Bot} instance, generating a random username if needed.
          */
         public Bot build() {
@@ -127,7 +127,7 @@ public final class Bot extends Player {
                 username = BotCredentials.generateUsername(context.getWorld(), temporary);
             }
             Bot bot = new Bot(context, username, BotCredentials.generatePassword(), temporary);
-            bot.script = scriptGen.apply(bot);
+            bot.defaultScript = scriptGen.apply(bot);
             return bot;
         }
     }
@@ -155,9 +155,19 @@ public final class Bot extends Player {
     private long nextExecution = -1;
 
     /**
+     * The default script received from the builder.
+     */
+    private BotScript defaultScript;
+
+    /**
      * The script that will control this bot.
      */
     private BotScript script;
+
+    /**
+     * If this bot is trying to logout due to its {@link BotSchedule}.
+     */
+    private boolean logoutScheduled;
 
     /**
      * Creates a new {@link Bot}.
@@ -175,13 +185,9 @@ public final class Bot extends Player {
     }
 
     @Override
-    protected void onActive() {
-        script.init();
-    }
-
-    @Override
     protected void onInactive() {
         world.getBots().remove(this);
+        super.onInactive();
     }
 
     @Override
@@ -191,7 +197,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Attempts to log in this bot. Will create a new account if the credentials don't exist, otherwise the existing
+     * Attempts to asynchronously log in this bot. Will create a new account if the credentials don't exist, otherwise the existing
      * account data for the bot will be grabbed.
      *
      * @return The result of the attempt, if failed the generated username will not be consumed.
@@ -217,6 +223,15 @@ public final class Bot extends Player {
             world.getPlayers().add(this);
             setState(EntityState.ACTIVE);
             logger.info("{} has logged in.", username);
+            world.schedule(new Task(1) {
+                @Override
+                protected void execute() {
+                    if (script == null) {
+                        setScript(defaultScript);
+                    }
+                    cancel();
+                }
+            });
         }, service.getExecutor());
         return result;
     }
@@ -230,10 +245,17 @@ public final class Bot extends Player {
     boolean processBasicActions() {
         // Bot is a new account, select random appearance.
         if (getInterfaces().standardTo(DesignPlayerInterface.class).isPresent()) {
-            getMessageHandler().sendCharacterDesignSelection();
+            botClient.getOutput().sendCharacterDesignSelection();
             return false;
         }
-        // TODO combat here and let user define different aggression styles?
+        // TODO handle combat logic here
+
+        // Bot is scheduled for logout.
+        if (logoutScheduled) {
+            script.stop();
+            botClient.getOutput().clickLogout();
+            return true;
+        }
         return true;
     }
 
@@ -308,9 +330,9 @@ public final class Bot extends Player {
      */
     void terminateScript() {
         BotScript fallback = script.stop();
-        if (fallback != null) {
+        if (fallback != null || logoutScheduled) {
             // Run fallback script when main script terminated.
-            setScript(fallback);
+            setScript(logoutScheduled ? new LogoutBotScript(this) : fallback);
         } else if (temporary) {
             // Bot with no fallback script, disconnect.
             logout();
@@ -328,13 +350,6 @@ public final class Bot extends Player {
      */
     public boolean isTemporary() {
         return temporary;
-    }
-
-    /**
-     * @return The message handler.
-     */
-    public BotMessageHandler getMessageHandler() {
-        return botClient.getMessageHandler();
     }
 
     /**
@@ -373,5 +388,33 @@ public final class Bot extends Player {
      */
     public long getCycles() {
         return cycles;
+    }
+
+    /**
+     * @return {@code true} if this bot is trying to logout due to its {@link BotSchedule}.
+     */
+    public boolean isLogoutScheduled() {
+        return logoutScheduled;
+    }
+
+    /**
+     * Sets if this bot is trying to logout due to its {@link BotSchedule}.
+     */
+    public void setLogoutScheduled(boolean logoutScheduled) {
+        this.logoutScheduled = logoutScheduled;
+    }
+
+    /**
+     * @return The input message handler.
+     */
+    public BotInputMessageHandler getInput() {
+        return botClient.getInput();
+    }
+
+    /**
+     * @return The output message handler.
+     */
+    public BotOutputMessageHandler getOutput() {
+        return botClient.getOutput();
     }
 }

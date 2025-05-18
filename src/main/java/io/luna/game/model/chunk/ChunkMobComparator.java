@@ -174,7 +174,8 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      * @param right The right mob.
      * @return The factor values and weight for each mob.
      */
-    private ComparableFactorData compareCombat(Mob left, Mob right) { /* TODO finish when combat is done */
+    private ComparableFactorData compareCombat(Mob left, Mob right) {
+        //todo needs combat to finish
         int leftCombat = /* left.inCombat() ? 1 :*/ 0;
         int rightCombat = /* right.inCombat() ? 1 :*/ 0;
         return computeWeightFactor(leftCombat, rightCombat, 5);

@@ -2,7 +2,9 @@ package io.luna.game.model.chunk;
 
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.LocalEntity;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.World;
@@ -128,7 +130,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void updateCollisionMap(Entity entity, boolean removal) {
         if (entity.getType() != EntityType.OBJECT) {
-            return; // todo npcs when spawned, then also when they walk
+            return; // todo https://github.com/luna-rs/luna/issues/379
         }
 
         CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
@@ -148,7 +150,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void add(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        checkState(entitySet.add(entity), "Entity could not be added to chunk.");
+        checkState(entitySet.add(entity), entity + " could not be added to chunk.");
     }
 
     /**
@@ -158,7 +160,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void remove(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        checkState(entitySet.remove(entity), "Entity could not be removed from chunk.");
+        checkState(entitySet.remove(entity), entity + " could not be removed from chunk.");
     }
 
     /**
@@ -195,6 +197,11 @@ public final class ChunkRepository implements Iterable<Entity> {
             var request = it.next();
             if (request.isPersistent()) {
                 persistentUpdates.put((StationaryEntity) request.getUpdatable(), request);
+            }
+            if(request.getUpdatable() instanceof LocalEntity) {
+                // End life-cycle for local entities.
+                LocalEntity entity = (LocalEntity) request.getUpdatable();
+                entity.setState(EntityState.INACTIVE);
             }
             it.remove();
         }

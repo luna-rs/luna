@@ -1,6 +1,7 @@
 package world.player.wilderness.obelisk
 
-import io.luna.game.model.Area
+import com.google.common.collect.ImmutableSet
+import io.luna.game.model.area.Area
 import io.luna.game.model.Position
 
 /**
@@ -37,6 +38,6 @@ enum class Obelisk(val id: Int, val teleportTo: Position, val teleportFrom: Area
         /**
          * A set of all obelisks in this enumeration.
          */
-        val ALL: Set<Obelisk> = HashSet(values().toList())
+        val ALL: ImmutableSet<Obelisk> = ImmutableSet.copyOf(values())
     }
 }

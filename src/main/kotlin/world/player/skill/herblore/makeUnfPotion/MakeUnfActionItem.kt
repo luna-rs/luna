@@ -2,7 +2,7 @@ package world.player.skill.herblore.makeUnfPotion
 
 import api.predef.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
@@ -39,10 +39,4 @@ class MakeUnfActionItem(plr: Player,
     override fun add() = listOf(unfPotion.idItem)
 
     override fun remove() = listOf(unfPotion.herbItem, Item(UnfPotion.VIAL_OF_WATER))
-
-    override fun ignoreIf(other: Action<*>) =
-        when (other) {
-            is MakeUnfActionItem -> unfPotion == other.unfPotion
-            else -> false
-        }
 }

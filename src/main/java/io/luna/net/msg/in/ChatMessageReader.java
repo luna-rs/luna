@@ -40,7 +40,7 @@ public final class ChatMessageReader extends GameMessageReader<ChatEvent> {
 
     @Override
     public boolean validate(Player player, ChatEvent event) {
-        return event.getEffect() >= 0 && event.getColor() >= 0 && size >= 1 && !player.isMuted();
+        return event.getEffect() >= 0 && event.getColor() >= 0 && !event.getUnpackedMessage().isEmpty() && !player.isMuted();
     }
 
     @Override

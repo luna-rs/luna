@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.inter;
 
+import io.luna.game.action.Action;
 import io.luna.game.model.item.shop.ShopInterface;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.CloseWindowsMessageWriter;
@@ -51,13 +52,13 @@ public final class AbstractInterfaceSet {
     public void open(AbstractInterface inter) {
         if (inter.isStandard()) {
             setCurrentStandard((StandardInterface) inter);
-            player.interruptAction();
         } else if (inter.isInput()) {
             setCurrentInput((InputInterface) inter);
         } else if (inter.isWalkable()) {
             setCurrentWalkable((WalkableInterface) inter);
         }
         inter.setOpened(player);
+        player.getActions().interruptWeak();
     }
 
     /**
@@ -68,9 +69,20 @@ public final class AbstractInterfaceSet {
     }
 
     /**
-     * Closes all windows except {@link WalkableInterface} interface types.
+     * Closes all windows except {@link WalkableInterface} interface types, resets all weak {@link Action} types.
      */
     public void close() {
+        close(true);
+    }
+
+    /**
+     * Closes all windows except {@link WalkableInterface} interface types, resets all weak {@link Action} types.
+     */
+    public void close(boolean interruptActions) {
+        if (interruptActions) {
+            player.getActions().interruptWeak();
+            player.resetInteractingWith();
+        }
         if (isStandardOpen() || isInputOpen()) {
             player.queue(new CloseWindowsMessageWriter());
             player.resetDialogues();
@@ -95,25 +107,6 @@ public final class AbstractInterfaceSet {
     public void closeAll() {
         close();
         closeWalkable();
-    }
-
-    /**
-     * Closes all necessary interfaces on movement or action initialization.
-     */
-    public void applyActionClose() {
-
-        // Close standard and input interfaces if needed.
-        if (isAutoClose(currentStandard) || isAutoClose(currentInput)) {
-            close();
-        }
-
-        // Close walkable interfaces if needed.
-        if (isAutoClose(currentWalkable)) {
-            closeWalkable();
-        }
-
-        // Reset dialogues.
-        player.resetDialogues();
     }
 
     /**

@@ -57,7 +57,7 @@ enum class Axe(val id: Int, val level: Int, val animation: Animation, val streng
             val weapon = plr.equipment[Equipment.WEAPON]
             if (weapon != null) { // See if weapon is an axe.
                 val axeFound = VALUES[weapon.id]
-                if(axeFound != null && plr.woodcutting.level > axeFound.level) {
+                if(axeFound != null && plr.woodcutting.level >= axeFound.level) {
                     axe = axeFound
                 }
             }

@@ -4,12 +4,16 @@ import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
+import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
+import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NameInputInterface
+import java.lang.Boolean.parseBoolean
 
 /**
  * A command that makes all stats 99.
@@ -18,6 +22,35 @@ cmd("master", RIGHTS_ADMIN) {
     plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
     plr.hitpoints.level = 99
     plr.sendMessage("You have set all your skills to level 99.")
+}
+
+/**
+ * A command that makes the player view someone's bank.
+ */
+cmd("viewbank", RIGHTS_ADMIN) {
+    val viewing = getInputFrom(0)
+    val viewingPlr = world.getPlayer(viewing).orElseThrow()
+    val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
+        override fun buildDisplayItems(player: Player?): MutableList<Item> =
+            viewingPlr.bank.filterNotNull().toMutableList()
+    }
+    plr.interfaces.open(bankInterface)
+}
+
+/**
+ * A command that teleports the player to an object matching the entered name.
+ */
+cmd("teleobj", RIGHTS_ADMIN) {
+    val name = getInputFrom(0)
+    val it = world.objects.iterator()
+    val list = ArrayList<Position>()
+    while (it.hasNext()) {
+        val obj = it.next()
+        if (obj.definition.name.equals(name, true)) {
+            list += obj.position
+        }
+    }
+    plr.move(list.random())
 }
 
 /**
@@ -60,6 +93,20 @@ cmd("move", RIGHTS_ADMIN) {
         else -> plr.position.z
     }
     plr.move(Position(x, y, z))
+}
+
+/**
+ * A command that moves a player up.
+ */
+cmd("up", RIGHTS_ADMIN) {
+    plr.move(plr.position.translate(0, 0, 1))
+}
+
+/**
+ * A command that moves a player down.
+ */
+cmd("down", RIGHTS_ADMIN) {
+    plr.move(plr.position.translate(0, 0, -1))
 }
 
 fun showShutdownTimes(plr: Player) {

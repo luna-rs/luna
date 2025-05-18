@@ -3,7 +3,7 @@ package world.player.skill.smithing.smeltOre
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -40,12 +40,6 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
             mob.sendMessage("You smelt the ore to create ${addArticle(itemName(barType.id))}.")
         }
     }
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is SmeltAction -> barType == other.barType
-            else -> false
-        }
 
     override fun add(): List<Item> {
         val barList = arrayListOf(Item(barType.id))

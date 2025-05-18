@@ -21,7 +21,7 @@ import kotlin.reflect.KClass
 /**
  * The player dedicated event listener consumer alias.
  */
-private typealias EventAction<E> = E.() -> Unit
+typealias EventAction<E> = E.() -> Unit
 
 /**
  * The command key, used to match [CommandEvent]s.

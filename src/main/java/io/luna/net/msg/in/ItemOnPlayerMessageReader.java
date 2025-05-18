@@ -31,7 +31,7 @@ public final class ItemOnPlayerMessageReader extends GameMessageReader<ItemOnPla
         if (event.getUsedItemInterface() < 1 ||
                 event.getUsedItemIndex() < 0 ||
                 !ItemDefinition.isIdValid(event.getUsedItemId()) ||
-                event.getTargetPlayer() == null) {
+                event.getTargetPlr() == null) {
             return false;
         }
         if (event.getUsedItemInterface() == 3214) {

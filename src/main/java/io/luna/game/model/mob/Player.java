@@ -5,14 +5,15 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.LogoutService;
+import io.luna.game.LogoutService.LogoutRequest;
+import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
-import io.luna.game.event.impl.RegionChangedEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.Region;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.Bank;
 import io.luna.game.model.item.Equipment;
@@ -21,7 +22,7 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.mob.block.Chat;
-import io.luna.game.model.mob.block.ForcedMovement;
+import io.luna.game.model.mob.block.ExactMovement;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.controller.ControllerManager;
@@ -29,20 +30,20 @@ import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
-import io.luna.game.model.mob.persistence.PlayerData;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
-import io.luna.game.model.object.GameObject;
-import io.luna.game.service.LogoutService;
-import io.luna.game.service.LogoutService.LogoutRequest;
-import io.luna.game.service.PersistenceService;
+import io.luna.game.persistence.PersistenceService;
+import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
+import io.luna.game.task.TaskState;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.DynamicMapMessageWriter;
+import io.luna.net.msg.out.FullScreenInterfaceMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
@@ -61,9 +62,8 @@ import world.player.Sounds;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -157,11 +157,6 @@ public class Player extends Mob {
     private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
 
     /**
-     * A set of local objects.
-     */
-    private final Set<GameObject> localObjects = new HashSet<>(4);
-
-    /**
      * The appearance.
      */
     private final PlayerAppearance appearance = new PlayerAppearance();
@@ -239,7 +234,7 @@ public class Player extends Mob {
     /**
      * The forced movement route.
      */
-    private Optional<ForcedMovement> forcedMovement = Optional.empty();
+    private Optional<ExactMovement> exactMovement = Optional.empty();
 
     /**
      * The prayer icon.
@@ -337,9 +332,19 @@ public class Player extends Mob {
     private final PersistentVarpManager varpManager = new PersistentVarpManager(this);
 
     /**
+     * All cached values for varps.
+     */
+    private final Map<Integer, Integer> cachedVarps = new HashMap<>();
+
+    /**
      * The timeout timer.
      */
     private final Stopwatch timeout = Stopwatch.createUnstarted();
+
+    /**
+     * The time online.
+     */
+    private final Stopwatch timeOnline = Stopwatch.createUnstarted();
 
     /**
      * The current dynamic map the player is in.
@@ -347,6 +352,11 @@ public class Player extends Mob {
     private DynamicMap dynamicMap;
 
     private LocalDate creationDate;
+
+    /**
+     * The current interaction task.
+     */
+    private InteractionTask interactionTask;
 
     /**
      * Creates a new {@link Player}.
@@ -412,22 +422,22 @@ public class Player extends Mob {
     protected void onActive() {
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
+        timeOnline.start();
         plugins.post(new LoginEvent(this));
     }
 
     @Override
     protected void onInactive() {
-        actions.interrupt();
+        interfaces.close();
         world.getTasks().forEachAttachment(this, Task::cancel);
         world.getPlayerMap().remove(getUsername());
-        removeLocalObjects();
-        interfaces.close();
         plugins.post(new LogoutEvent(this));
     }
 
     @Override
     public void onTeleport(Position position) {
         teleporting = true;
+        interfaces.close();
     }
 
     @Override
@@ -435,7 +445,7 @@ public class Player extends Mob {
         regionChanged = false;
         teleporting = false;
         chat = Optional.empty();
-        forcedMovement = Optional.empty();
+        exactMovement = Optional.empty();
     }
 
     @Override
@@ -460,24 +470,6 @@ public class Player extends Mob {
     @Override
     public int getCombatLevel() {
         return skills.getCombatLevel();
-    }
-
-    @Override
-    protected void onPositionChanged(Position oldPos) {
-        checkRegionChanged(oldPos);
-    }
-
-    /**
-     * Sends a {@link RegionChangedEvent} if the region ID has changed as a result of a position change.
-     *
-     * @param oldPos The old position.
-     */
-    private void checkRegionChanged(Position oldPos) {
-        Region oldRegion = oldPos.getRegion();
-        Region newRegion = position.getRegion();
-        if (!oldRegion.equals(newRegion)) { // TODO remove, useless
-            context.getPlugins().post(new RegionChangedEvent(this, oldRegion, newRegion));
-        }
     }
 
     /**
@@ -525,15 +517,31 @@ public class Player extends Mob {
     }
 
     /**
-     * Unregisters all assigned local objects.
+     * Attempts to handle {@code event} once this player has reached {@code entity}.
+     *
+     * @param entity The entity to reach.
+     * @param event The event to post once reached.
+     * @param action Will be run if the interaction is successful.
      */
-    public void removeLocalObjects() {
-        if (!localObjects.isEmpty()) {
-            Iterator<GameObject> objectIterator = localObjects.iterator();
-            while (objectIterator.hasNext()) {
-                world.getObjects().unregister(objectIterator.next());
-                objectIterator.remove();
-            }
+    public void handleInteractableEvent(Entity entity, InteractableEvent event, Runnable action) {
+        if (interactionTask == null || interactionTask.getState() == TaskState.CANCELLED) {
+            // Cancelled interaction task, create new one.
+            interactionTask = new InteractionTask(this, entity, event, action);
+            world.schedule(interactionTask);
+        } else if (interactionTask.getState() == TaskState.RUNNING) {
+            // We have an interaction pending, cancel old task and create new one.
+            interactionTask.cancel();
+            interactionTask = new InteractionTask(this, entity, event, action);
+            world.schedule(interactionTask);
+        }
+    }
+
+    /**
+     * Cancels the current {@link InteractionTask} if one exists.
+     */
+    public void resetInteractionTask() {
+        if (interactionTask != null) {
+            interactionTask.cancel();
         }
     }
 
@@ -568,10 +576,8 @@ public class Player extends Mob {
                 equipment.contains(id)) {
             return true;
         }
-        return world.getChunks().getViewableEntities(position, EntityType.ITEM).stream().anyMatch(it -> {
-            GroundItem groundItem = (GroundItem) it;
-            return groundItem.getId() == id && groundItem.getView().isViewableFor(this);
-        });
+        return world.getItems().stream().
+                anyMatch(it -> it.getId() == id && it.getView().isViewableFor(this));
     }
 
     /**
@@ -597,6 +603,7 @@ public class Player extends Mob {
             varpManager.setValue(persistentVarp, varp.getValue());
         }
         queue(new VarpMessageWriter(varp));
+        cachedVarps.put(varp.getId(), varp.getValue());
     }
 
     /**
@@ -625,8 +632,38 @@ public class Player extends Mob {
      * @param varbit The varbit.
      */
     public void sendVarbit(Varbit varbit) {
-        Varp varp = varbit.toVarp();
+        int parentId = varbit.getDef().getParentVarpId();
+        int parentValue = cachedVarps.getOrDefault(parentId, 0);
+        Varp varp = new Varp(parentId, varbit.pack(parentValue));
         sendVarp(varp);
+    }
+
+    /**
+     * Shortcut to queue a new {@link VarpMessageWriter} packet for multiple varbits with the same parent varp.
+     *
+     * @param parentId The parent varp id.
+     * @param varbits The varbits.
+     */
+    public void sendVarbits(int parentId, List<Varbit> varbits) {
+        if (varbits.isEmpty()) {
+            return;
+        } else if (varbits.size() == 1) {
+            sendVarbit(varbits.iterator().next());
+        }
+        int parentValue = cachedVarps.getOrDefault(parentId, 0);
+        int value = 0;
+        for (Varbit vb : varbits) {
+            if (vb.getDef().getParentVarpId() != parentId) {
+                throw new IllegalArgumentException("All varbits must have the same parent.");
+            }
+            int packed = vb.pack(parentValue);
+            if (value == 0) {
+                value = packed;
+            } else {
+                value |= packed;
+            }
+        }
+        sendVarp(new Varp(parentId, value));
     }
 
     /**
@@ -706,9 +743,9 @@ public class Player extends Mob {
      *
      * @param forcedMovement The forced movement path.
      */
-    public void forceMovement(ForcedMovement forcedMovement) {
-        this.forcedMovement = Optional.of(forcedMovement);
-        flags.flag(UpdateFlag.FORCED_MOVEMENT);
+    public void exactMove(ExactMovement forcedMovement) {
+        this.exactMovement = Optional.of(forcedMovement);
+        flags.flag(UpdateFlag.EXACT_MOVEMENT);
     }
 
     /**
@@ -728,20 +765,14 @@ public class Player extends Mob {
     public void sendRegionUpdate(Position oldPosition) {
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
-           if (isInDynamicMap()) {
-                regionChanged = true;
-                lastRegion = position;
-                // comment ^ above out makes the player appear in a diff place????
-                // todo cache palette? or current dynamic map?>
-                // todo still need to update objects
-             // dynamicMap.sendUpdate(this);
-                return;
-            }
-
             fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
-            queue(new RegionMessageWriter(position));
+            if (isInDynamicMap()) { // TODO
+                queue(new DynamicMapMessageWriter(dynamicMap, position));
+            } else {
+                queue(new RegionMessageWriter(position));
+            }
         }
         if (isTeleporting()) {
             fullRefresh = true;
@@ -1031,6 +1062,7 @@ public class Player extends Mob {
      */
     public void setRunning(boolean running) {
         sendVarp(PersistentVarp.RUNNING, running);
+        walking.setRunningPath(running);
     }
 
     /**
@@ -1115,8 +1147,8 @@ public class Player extends Mob {
     /**
      * @return The forced movement route.
      */
-    public Optional<ForcedMovement> getForcedMovement() {
-        return forcedMovement;
+    public Optional<ExactMovement> getExactMovement() {
+        return exactMovement;
     }
 
     /**
@@ -1340,6 +1372,13 @@ public class Player extends Mob {
     }
 
     /**
+     * @return The time online.
+     */
+    public Stopwatch getTimeOnline() {
+        return timeOnline;
+    }
+
+    /**
      * Sets the current dynamic map the player is in.
      */
     public void setDynamicMap(DynamicMap dynamicMap) {
@@ -1360,4 +1399,24 @@ public class Player extends Mob {
         return dynamicMap != null;
     }
 
+    /**
+     * @return The current interaction task.
+     */
+    public InteractionTask getInteractionTask() {
+        return interactionTask;
+    }
+
+    /**
+     * Sets the current interaction task.
+     */
+    public void setInteractionTask(InteractionTask interactionTask) {
+        this.interactionTask = interactionTask;
+    }
+
+    /**
+     * @return All cached values for varps.
+     */
+    public Map<Integer, Integer> getCachedVarps() {
+        return cachedVarps;
+    }
 }

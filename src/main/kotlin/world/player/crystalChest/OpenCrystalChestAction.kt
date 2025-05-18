@@ -2,8 +2,7 @@ package world.player.crystalChest
 
 import api.predef.ext.*
 import io.luna.game.action.Action
-import io.luna.game.action.RepeatingAction
-import io.luna.game.model.mob.block.Animation
+import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import world.player.Animations
@@ -13,7 +12,8 @@ import world.player.Animations
  *
  * @author lare96
  */
-class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, val runOnce: Boolean) : RepeatingAction<Player>(plr, true, 2) {
+class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private val runOnce: Boolean) :
+    Action<Player>(plr, ActionType.WEAK, true, 2) {
 
     /**
      * All possible states this action can be in.
@@ -28,54 +28,50 @@ class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, val runOnc
      */
     private var state = State.OPENING
 
-    override fun ignoreIf(other: Action<*>?): Boolean = when (other) {
-        is OpenCrystalChestAction -> true
-        else -> false
-    }
-
-    override fun start(): Boolean {
+    override fun onSubmit() {
         mob.interact(gameObject)
-        return true
     }
 
-    override fun stop() {
-        mob.walking.isLocked = false
-    }
-
-    override fun repeat() {
+    override fun run(): Boolean =
         when (state) {
             State.OPENING -> openChest()
             State.SEARCHING -> searchChest()
         }
+
+    override fun onFinished() {
+        mob.unlock()
     }
 
     /**
      * Replaces the chest object for [mob] and removes the key from the inventory.
      */
-    private fun openChest() {
-        if (mob.inventory.remove(989)) {
+    private fun openChest(): Boolean {
+        if (mob.inventory.contains(989)) {
+            mob.lock()
             mob.sendMessage("You unlock the chest with your key.")
             mob.animation(Animations.PICKPOCKET)
             world.addObject(173, gameObject.position, gameObject.objectType, gameObject.direction, mob)
-            mob.walking.isLocked = true
             state = State.SEARCHING
+            return false
         } else {
-            interrupt()
             mob.sendMessage("You do not have any keys to open this chest with.")
+            return true
         }
     }
 
     /**
      * Closes the chest object for [mob] and adds chest loot to inventory.
      */
-    private fun searchChest() {
-        CrystalChestDropTable.roll(mob, gameObject).forEach(mob::giveItem)
-        mob.sendMessage("You find some treasure in the chest!")
-        world.addObject(172, gameObject.position, gameObject.objectType, gameObject.direction, mob)
-        mob.walking.isLocked = false
-        state = State.OPENING
-        if(runOnce) {
-            interrupt()
+    private fun searchChest(): Boolean {
+        if(mob.inventory.remove(989)) {
+            mob.unlock()
+            CrystalChestDropTable.roll(mob, gameObject).forEach(mob::giveItem)
+            mob.sendMessage("You find some treasure in the chest!")
+            world.addObject(172, gameObject.position, gameObject.objectType, gameObject.direction, mob)
+            state = State.OPENING
+            return runOnce
         }
+        mob.sendMessage("You do not have any keys to open this chest with.")
+        return true
     }
 }
