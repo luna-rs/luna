@@ -189,6 +189,9 @@ public final class WalkingQueue {
     public void process() {
         // TODO clean up function, traversable checks don't work
         // TODO retest traversable checks, figure out a better way for runningPath to work thats less clunky
+        if(mob instanceof Npc && mob.asNpc().isStationary()) {
+            return;
+        }
         Step currentStep = new Step(mob.getPosition());
 
         Direction walkingDirection = Direction.NONE;

@@ -492,14 +492,20 @@ public abstract class Mob extends Entity {
      * Resets update flag data for the next tick.
      */
     public final void resetFlags() {
+        boolean defaultDirection = this instanceof Npc && asNpc().isStationary();
         reset();
         animation = Optional.empty();
         forcedChat = Optional.empty();
-        facePosition = Optional.empty();
+        if(!defaultDirection) { // Persist face position for stationary NPCs.
+            facePosition = Optional.empty();
+        }
         interactionIndex = OptionalInt.empty();
         primaryHit = Optional.empty();
         secondaryHit = Optional.empty();
         flags.clear();
+        if(defaultDirection) {
+            flags.flag(UpdateFlag.FACE_POSITION);
+        }
     }
 
     /**
