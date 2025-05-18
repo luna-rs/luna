@@ -23,14 +23,19 @@ public class Npc extends Mob {
 
 
     /**
-     * The base identifier. The one the class was created with.
+     * The spawn identifier.
      */
     private final int id;
 
     /**
-     * The base position. The one the class was created with.
+     * The spawn position.
      */
     private final Position basePosition;
+
+    /**
+     * The direction this NPC should always face. NPCs with this value present will not move.
+     */
+    private Optional<Direction> defaultDirection = Optional.empty();
 
     /**
      * The definition.
@@ -260,6 +265,28 @@ public class Npc extends Mob {
      */
     public boolean isRespawn() {
         return respawn;
+    }
+
+    /**
+     * @return {@code true} if this NPC doesn't move, {@code false} otherwise.
+     */
+    public boolean isStationary() {
+        return defaultDirection.isPresent();
+    }
+
+    /**
+     * @return The direction this NPC should always face. NPCs with this value set will not move.
+     */
+    public Optional<Direction> getDefaultDirection() {
+        return defaultDirection;
+    }
+
+    /**
+     * Sets the direction this NPC should always face. NPCs with this value set will not move.
+     */
+    public void setDefaultDirection(Optional<Direction> defaultDirection) {
+        this.defaultDirection = defaultDirection;
+        defaultDirection.ifPresent(this::face);
     }
 
     /**
