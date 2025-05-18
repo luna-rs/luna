@@ -1,7 +1,7 @@
 package world.player
 
 import com.google.common.collect.ImmutableSet
-import io.luna.game.model.Area
+import io.luna.game.model.area.Area
 import io.luna.game.model.Location
 import io.luna.game.model.Position
 import io.luna.game.model.Region
