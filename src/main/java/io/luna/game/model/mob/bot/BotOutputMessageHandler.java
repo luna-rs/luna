@@ -21,6 +21,7 @@ import io.luna.net.msg.in.DesignPlayerMessageReader;
 import io.luna.net.msg.in.DropItemMessageReader;
 import io.luna.net.msg.in.EquipItemMessageReader;
 import io.luna.net.msg.in.GroundItemClickMessageReader;
+import io.luna.net.msg.in.ItemClickMessageReader;
 import io.luna.net.msg.in.ItemOnItemMessageReader;
 import io.luna.net.msg.in.ItemOnNpcMessageReader;
 import io.luna.net.msg.in.ItemOnObjectMessageReader;
@@ -307,6 +308,53 @@ public class BotOutputMessageHandler {
     }
 
     /**
+     * Sends one of the {@link ItemClickMessageReader} packets.
+     *
+     * @param option The option (1-5).
+     * @param index The index on the widget.
+     * @param itemId The item id.
+     */
+    public void sendInventoryItemClick(int option, int index, int itemId) {
+        checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
+
+        ByteMessage msg = ByteMessage.raw();
+        int opcode = -1;
+        switch (option) {
+            case 1:
+                msg.putShort(3214, ValueType.ADD);
+                msg.putShort(index, ByteOrder.LITTLE);
+                msg.putShort(itemId, ByteOrder.LITTLE);
+                opcode = 203;
+                break;
+            case 2:
+                msg.putShort(itemId);
+                msg.putShort(index, ValueType.ADD);
+                msg.putShort(3214, ValueType.ADD);
+                opcode = 24;
+                break;
+            case 3:
+                msg.putShort(itemId, ValueType.ADD);
+                msg.putShort(index, ByteOrder.LITTLE, ValueType.ADD);
+                msg.putShort(3214, ByteOrder.LITTLE, ValueType.ADD);
+                opcode = 161;
+                break;
+            case 4:
+                msg.putShort(index, ByteOrder.LITTLE);
+                msg.putShort(itemId, ValueType.ADD);
+                msg.putShort(3214);
+                opcode = 228;
+                break;
+            case 5:
+                msg.putShort(itemId,ValueType.ADD);
+                msg.putShort(3214);
+                msg.putShort(index, ValueType.ADD);
+                opcode = 4;
+                break;
+        }
+        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
+    }
+
+    /**
      * Sends one of the {@link WidgetItemClickMessageReader} packets.
      *
      * @param option The option (1-5).
@@ -409,17 +457,17 @@ public class BotOutputMessageHandler {
      * @param text The text to chat.
      */
     public void chat(String text) {
-        chat(ChatColor.YELLOW, ChatEffect.NONE, text);
+        chat(text, ChatColor.YELLOW, ChatEffect.NONE);
     }
 
     /**
      * Sends the {@link ChatMessageReader} packet.
      *
+     * @param text The text to chat.
      * @param color The text color.
      * @param effect The text effect.
-     * @param text The text to chat.
      */
-    public void chat(ChatColor color, ChatEffect effect, String text) {
+    public void chat(String text, ChatColor color, ChatEffect effect) {
         ByteMessage textMsg = ByteMessage.raw();
         try {
             StringUtils.packText(text, textMsg);
