@@ -3,17 +3,13 @@ package world.player.wilderness
 import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableSet
-import io.luna.game.event.impl.CommandEvent
-import io.luna.game.model.Area
+import io.luna.game.model.area.Area
 import io.luna.game.model.Location
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
-import io.luna.game.event.impl.ControllableEvent
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
-import io.netty.util.internal.SocketUtils
 import world.player.skill.magic.teleportSpells.TeleportAction
-import world.player.wilderness.WildernessAreaController.wildernessLevel
 
 /**
  * A [PlayerLocationController] implementation for wilderness areas.

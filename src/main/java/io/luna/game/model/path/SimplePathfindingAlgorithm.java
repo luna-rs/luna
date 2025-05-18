@@ -1,6 +1,6 @@
 package io.luna.game.model.path;
 
-import io.luna.game.model.Area;
+import io.luna.game.model.area.Area;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
