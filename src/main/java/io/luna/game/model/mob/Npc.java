@@ -286,7 +286,6 @@ public class Npc extends Mob {
      */
     public void setDefaultDirection(Optional<Direction> defaultDirection) {
         this.defaultDirection = defaultDirection;
-        defaultDirection.ifPresent(this::face);
     }
 
     /**
