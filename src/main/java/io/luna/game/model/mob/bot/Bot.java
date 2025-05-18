@@ -17,6 +17,7 @@ import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.persistence.PlayerData;
+import io.luna.game.task.Task;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
@@ -94,7 +95,7 @@ public final class Bot extends Player {
          */
         public Builder setUsername(String username) throws IllegalArgumentException {
             BotRepository repository = context.getWorld().getBots();
-            if(repository.containsTemporary(username)) {
+            if (repository.containsTemporary(username)) {
                 throw new IllegalStateException("Username is already in use by a temporary bot.");
             }
             this.username = username;
@@ -126,7 +127,7 @@ public final class Bot extends Player {
                 username = BotCredentials.generateUsername(context.getWorld(), temporary);
             }
             Bot bot = new Bot(context, username, BotCredentials.generatePassword(), temporary);
-            bot.script = scriptGen.apply(bot);
+            bot.defaultScript = scriptGen.apply(bot);
             return bot;
         }
     }
@@ -154,6 +155,11 @@ public final class Bot extends Player {
     private long nextExecution = -1;
 
     /**
+     * The default script received from the builder.
+     */
+    private BotScript defaultScript;
+
+    /**
      * The script that will control this bot.
      */
     private BotScript script;
@@ -179,13 +185,9 @@ public final class Bot extends Player {
     }
 
     @Override
-    protected void onActive() {
-        script.init();
-    }
-
-    @Override
     protected void onInactive() {
         world.getBots().remove(this);
+        super.onInactive();
     }
 
     @Override
@@ -221,6 +223,15 @@ public final class Bot extends Player {
             world.getPlayers().add(this);
             setState(EntityState.ACTIVE);
             logger.info("{} has logged in.", username);
+            world.schedule(new Task(1) {
+                @Override
+                protected void execute() {
+                    if (script == null) {
+                        setScript(defaultScript);
+                    }
+                    cancel();
+                }
+            });
         }, service.getExecutor());
         return result;
     }
