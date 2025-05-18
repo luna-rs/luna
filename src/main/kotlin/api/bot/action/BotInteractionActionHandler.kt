@@ -38,7 +38,6 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
     suspend fun interact(option: Int, target: Entity): Boolean {
         bot.resetInteractingWith()
         bot.resetInteractionTask()
-        bot.resetMobFollowTask()
 
         val walkingSuspendCond = SuspendableCondition({ bot.isViewableFrom(target) || bot.walking.isEmpty })
         bot.walking.walkUntilReached(target)
