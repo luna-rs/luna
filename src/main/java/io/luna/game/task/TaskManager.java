@@ -8,8 +8,37 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Consumer;
 
+
 /**
  * A model containing functions to handle processing of tasks.
+ * <p>
+ * The TaskManager is responsible for scheduling, executing, and managing the lifecycle of {@link Task} instances.
+ * It maintains two collections:
+ * <ul>
+ *   <li>A list of pending tasks that are waiting to be executed based on their delay</li>
+ *   <li>A queue of tasks that are ready to be executed in the current game tick</li>
+ * </ul>
+ * <p>
+ * The task system is designed to be run on the game thread and provides a way to schedule delayed
+ * or periodic actions without blocking the main game loop. Each game tick (typically 600ms),
+ * the {@link #runTaskIteration()} method is called to process all pending tasks.
+ * <p>
+ * Example usage:
+ * <pre>
+ * // Create a TaskManager
+ * TaskManager taskManager = new TaskManager();
+ *
+ * // Create and schedule a task
+ * Task myTask = new Task(5) {
+ *     protected void execute() {
+ *         // Task logic here
+ *     }
+ * };
+ * taskManager.schedule(myTask);
+ *
+ * // Process tasks each game tick
+ * taskManager.runTaskIteration();
+ * </pre>
  *
  * @author lare96
  */
