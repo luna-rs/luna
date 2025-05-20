@@ -3,16 +3,18 @@ package world.player.wilderness
 import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableSet
-import io.luna.game.model.area.Area
 import io.luna.game.model.Location
 import io.luna.game.model.Position
+import io.luna.game.model.area.Area
+import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
 import world.player.skill.magic.teleportSpells.TeleportAction
 
 /**
- * A [PlayerLocationController] implementation for wilderness areas.
+ * A [PlayerLocationController] implementation for the wilderness area.
  *
  * @author lare96
  */
@@ -53,6 +55,22 @@ object WildernessAreaController : PlayerLocationController() {
         return canTeleport(player)
     }
 
+    override fun canAttack(player: Player, target: Mob): Boolean {
+        if(target is Player) {
+            val combatLevel = player.combatLevel
+            val wildernessLevel = player.wildernessLevel
+            val attackRange = combatLevel - wildernessLevel..combatLevel + wildernessLevel
+            val attackable = attackRange.contains(target.asPlr().combatLevel)
+            if(!attackable) {
+                player.sendMessage("Your level difference is too great!")
+                player.sendMessage("You need to move deeper into the Wilderness.")
+                return false
+            }
+            return true
+        }
+        return true
+    }
+
     /**
      * Sets and displays the wilderness level for [plr].
      */
@@ -70,7 +88,7 @@ object WildernessAreaController : PlayerLocationController() {
     private fun canTeleport(plr: Player): Boolean {
         if (plr.wildernessLevel >= 20) {
             plr.sendMessage("A mysterious force blocks your teleport spell!")
-            plr.sendMessage("You can't use this teleport after level 20 wilderness.")
+            plr.sendMessage("You can't use this teleport after level 20 Wilderness.")
             return false
         }
         return true
