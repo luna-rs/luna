@@ -72,7 +72,7 @@ public class CircularArea extends Area {
         for (int x = center.getX() - radius; x < center.getX() + radius; x++) {
             for (int y = center.getY() - radius; y < center.getY() + radius; y++) {
                 int dx = x - center.getX();
-                int dy = y - center.getX();
+                int dy = y - center.getY();
                 if (Math.pow(dx, 2) * Math.pow(dy, 2) <= radiusSquared) {
                     set.add(new Position(x, y));
                 }
