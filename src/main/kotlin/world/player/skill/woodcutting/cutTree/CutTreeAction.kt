@@ -16,7 +16,7 @@ import world.player.skill.woodcutting.searchNest.Nest
  * An [InventoryAction] that will enable the cutting of trees.
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, 1, 5, rand(RANDOM_FAIL_RATE)) {
+    AnimatedInventoryAction(plr, 1, 6, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
@@ -34,7 +34,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     /**
      * Sound delay for woodcutting.
      */
-    private var soundDelay = true
+    private var soundDelay = -1
 
     override fun executeIf(start: Boolean) = when {
         mob.inventory.isFull -> {
@@ -42,6 +42,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             mob.sendMessage(onInventoryFull())
             false
         }
+
         mob.woodcutting.level < tree.level -> {
             // Check if we have required level.
             mob.sendMessage("You need a Woodcutting level of ${tree.level} to cut this.")
@@ -84,7 +85,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun animation(): Animation {
         mob.playSound(Sounds.CUT_TREE_2)
-        soundDelay = true
+        soundDelay = 2
         return axe.animation
     }
 
@@ -96,7 +97,9 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     override fun onProcessAnimation() {
-        mob.playSound(Sounds.CUT_TREE_2)
+        if (soundDelay-- == 0) {
+            mob.playSound(Sounds.CUT_TREE_2)
+        }
     }
 
     /**
