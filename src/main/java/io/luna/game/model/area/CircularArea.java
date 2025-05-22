@@ -7,13 +7,12 @@ import io.luna.game.model.Position;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CircularArea extends Area {
-    private final int centerX;
-    private final int centerY;
+    
+    private final Position center;
     private final int radius;
 
     public CircularArea(int centerX, int centerY, int radius) {
-        this.centerX = centerX;
-        this.centerY = centerY;
+        this.center = new Position(centerX, centerY);
 
         if (radius < 1) {
             throw new IllegalArgumentException("Circular radius cannot be less than 1");
@@ -24,7 +23,7 @@ public class CircularArea extends Area {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(centerX, centerY, radius);
+        return Objects.hashCode(center.getX(), center.getY(), radius);
     }
 
     @Override
@@ -42,15 +41,14 @@ public class CircularArea extends Area {
         }
         CircularArea ca = (CircularArea) o;
 
-        return Objects.equal(centerX, ca.centerX) &&
-                Objects.equal(centerY, ca.centerY) &&
+        return Objects.equal(center.getX(), ca.center.getX()) &&
+                Objects.equal(center.getY(), ca.center.getY()) &&
                 Objects.equal(radius, ca.radius);
     }
 
     @Override
     public boolean contains(Position position) {
-        final Position pos = new Position(centerX, centerY);
-        return pos.isWithinDistance(position, radius);
+        return center.isWithinDistance(position, radius);
     }
 
     @Override
@@ -71,10 +69,10 @@ public class CircularArea extends Area {
         int radiusSquared = radius * radius;
 
         // Pythagorean theorem works for circles too
-        for (int x = centerX - radius; x < centerX + radius; x++) {
-            for (int y = centerY - radius; y < centerY + radius; y++) {
-                int dx = x - centerX;
-                int dy = y - centerY;
+        for (int x = center.getX() - radius; x < center.getX() + radius; x++) {
+            for (int y = center.getY() - radius; y < center.getY() + radius; y++) {
+                int dx = x - center.getX();
+                int dy = y - center.getX();
                 if (Math.pow(dx, 2) * Math.pow(dy, 2) <= radiusSquared) {
                     set.add(new Position(x, y));
                 }
