@@ -118,15 +118,15 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
      * Replaces the stall object once its been looted.
      */
     private fun replaceStall() {
-        if (world.objects.unregister(obj)) {
-            val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
-            val newId = ThievableStall.FULL_TO_EMPTY[obj.id]
-            if (newId != null && newId != -1) {
-                world.objects.register(GameObject.createDynamic(
-                    ctx, newId, obj.position, obj.objectType,
-                    obj.direction, view))
-            }
-
+        val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
+        val newId = ThievableStall.FULL_TO_EMPTY[obj.id]
+        if(newId == null || newId == -1) {
+            return
+        }
+        val emptyObj = GameObject.createDynamic(
+            ctx, newId, obj.position, obj.objectType,
+            obj.direction, view)
+        if (world.objects.register(emptyObj)) {
             world.scheduleOnce(thievable.respawnTicks) {
                 world.objects.register(GameObject.createDynamic(ctx, obj.id, obj.position, obj.objectType,
                                                                 obj.direction, view))
