@@ -12,7 +12,7 @@ enum class ThievableChest(val id: Int,
                           val xp: Double,
                           val respawnTicks: Int,
                           val drops: DropTable,
-                          val globalRefresh: Boolean = false) {
+                          val globalRefresh: Boolean = true) {
 
     TEN_COIN(id = 2566,
              level = 13,
