@@ -20,7 +20,7 @@ fun selectNearbyPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
     val players = world.chunks.findViewable(obelisk.teleportTo, Player::class)
     for (nearby in players) {
         if (obelisk.teleportFrom.contains(nearby)) {
-            nearby.walking.isLocked = true
+            nearby.lock()
             nearby.graphic(Graphic(342))
             nearby.animation(Animation(1816))
             teleporting.add(nearby)
@@ -37,10 +37,10 @@ fun teleportPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
     while (iterator.hasNext()) {
         val nearby = iterator.next()
         if (obelisk.teleportFrom.contains(nearby)) {
-            nearby.walking.isLocked = true
             nearby.move(nextObelisk.teleportTo)
             nearby.sendMessage("You have been teleported by ancient magic.")
         } else {
+            nearby.unlock()
             iterator.remove()
         }
     }
@@ -56,7 +56,6 @@ fun teleportPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
 fun finishPlayerTeleport(teleporting: ArrayList<Player>) {
     for (nearby in teleporting) {
         nearby.animation(Animation(715))
-        nearby.walking.isLocked = false
     }
 }
 
@@ -66,7 +65,7 @@ fun finishPlayerTeleport(teleporting: ArrayList<Player>) {
 fun cancelTeleportTask(task: Task, teleporting: ArrayList<Player>) {
     task.cancel()
     for (nearby in teleporting) {
-        nearby.walking.isLocked = false
+        nearby.unlock()
     }
 }
 

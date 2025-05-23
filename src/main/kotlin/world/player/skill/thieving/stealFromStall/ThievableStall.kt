@@ -7,14 +7,15 @@ import api.predef.ext.*
 import com.google.common.collect.ImmutableMap
 
 /**
- * Represents a stall that can be stolen from.
+ * Represents a stall that can be stolen from. The [globalRefresh] property determines if stalls become empty for all
+ * players, or just the player stealing.
  */
 enum class ThievableStall(val stalls: Set<Pair<Int, Int>>,
                           val level: Int,
                           val xp: Double,
                           val respawnTicks: Int,
                           val drops: DropTable,
-                          val globalRefresh: Boolean = false) {
+                          val globalRefresh: Boolean = true) {
     VEGETABLE(stalls = setOf(4706 to 634,
                              4708 to 634),
               level = 2,

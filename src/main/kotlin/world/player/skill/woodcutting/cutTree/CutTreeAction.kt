@@ -2,13 +2,12 @@ package world.player.skill.woodcutting.cutTree
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
-import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 import world.player.Sounds
 import world.player.skill.woodcutting.searchNest.Nest
@@ -17,7 +16,7 @@ import world.player.skill.woodcutting.searchNest.Nest
  * An [InventoryAction] that will enable the cutting of trees.
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, 1, 5, rand(RANDOM_FAIL_RATE)) {
+    AnimatedInventoryAction(plr, 1, 6, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
@@ -35,9 +34,15 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     /**
      * Sound delay for woodcutting.
      */
-    private var soundDelay = true
+    private var soundDelay = -1
 
     override fun executeIf(start: Boolean) = when {
+        mob.inventory.isFull -> {
+            // No inventory space.
+            mob.sendMessage(onInventoryFull())
+            false
+        }
+
         mob.woodcutting.level < tree.level -> {
             // Check if we have required level.
             mob.sendMessage("You need a Woodcutting level of ${tree.level} to cut this.")
@@ -64,6 +69,10 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             val name = itemName(tree.logsId)
             mob.sendMessage("You get some ${name.toLowerCase()}.")
             mob.woodcutting.addExperience(tree.exp)
+
+            if (mob.inventory.isFull) {
+                interrupt()
+            }
         }
 
         if (tree.depletionChance == 1 || rand().nextInt(tree.depletionChance) == 0) {
@@ -76,7 +85,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun animation(): Animation {
         mob.playSound(Sounds.CUT_TREE_2)
-        soundDelay = true
+        soundDelay = 2
         return axe.animation
     }
 
@@ -85,13 +94,10 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun onFinished() {
         mob.animation(Animation.CANCEL)
-        println(state)
     }
 
     override fun onProcessAnimation() {
-        if (soundDelay) {
-            soundDelay = false
-        } else {
+        if (soundDelay-- == 0) {
             mob.playSound(Sounds.CUT_TREE_2)
         }
     }
