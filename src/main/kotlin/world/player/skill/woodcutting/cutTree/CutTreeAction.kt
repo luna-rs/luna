@@ -53,7 +53,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
         else -> {
             if (start) {
                 mob.playSound(Sounds.CUT_TREE_1, 40)
-                mob.sendMessage("You swing your axe at the tree...")
+                mob.sendMessage("You swing your axe at the tree.")
                 delay = getWoodcuttingDelay()
             }
             true
