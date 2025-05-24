@@ -86,9 +86,9 @@ object Thieving {
         var chance = 0.0
         for (item in ROGUE_EQUIPMENT_ITEMS) {
             if (plr.equipment.contains(item.equipDef.index, item.id)) {
-                if (chance >= 0.6) {  // We have all 5 pieces, 100% chance.
+                if (chance >= 0.75) {  // We have all 5 pieces, 100% chance.
                     chance = 1.0
-                } else if (chance >= 0.0) { // Increase chance by 15% per piece until 60%.
+                } else if (chance >= 0.0) { // Increase chance by 15% per piece until 75%.
                     chance += 0.15
                 }
             }
