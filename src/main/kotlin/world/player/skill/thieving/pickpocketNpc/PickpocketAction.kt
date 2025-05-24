@@ -17,7 +17,6 @@ import world.player.Sounds
 import world.player.skill.thieving.Thieving
 import java.time.Duration
 
-
 /**
  * A [QueuedAction] implementation that enables pickpocketing [Npc] types.
  */

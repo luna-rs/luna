@@ -62,10 +62,7 @@ object Thieving {
         val level = mob.thieving.level
         val baseChance = 5.0 / 833 * level
         val reqChance = 0.65 - (thievable.level * 0.0032) - 0.02
-        var chance: Double = baseChance + reqChance
-        /*if (mob is Player && mob.isBot) { // Bot pickpocket chance reduced by 15%
-            chance *= 0.85
-        }*/
+        val chance: Double = baseChance + reqChance
         return rand().nextDouble() < chance
     }
 
