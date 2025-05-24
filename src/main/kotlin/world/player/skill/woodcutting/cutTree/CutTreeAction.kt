@@ -48,8 +48,16 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             mob.sendMessage("You need a Woodcutting level of ${tree.level} to cut this.")
             false
         }
-        // Check if tree isn't already cut and if we still have an axe.
-        treeObj.state == EntityState.INACTIVE || !Axe.hasAxe(mob, axe) -> false
+
+        // Check if tree isn't already cut.
+        treeObj.state == EntityState.INACTIVE -> false
+
+        !Axe.hasAxe(mob, axe) -> {
+            mob.sendMessage("You need an axe to chop this tree.")
+            mob.sendMessage("You do not have an axe that you have the woodcutting level to use.")
+            false
+        }
+
         else -> {
             if (start) {
                 mob.playSound(Sounds.CUT_TREE_1, 40)
