@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.attr;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.internal.LinkedTreeMap;
 
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 /**
  * A model that contains key-value mappings for {@link Attribute} types.
@@ -76,8 +74,14 @@ public final class AttributeMap {
                 try {
                     // Get the type, and perform the necessary conversions to be able to add it.
                     Class<?> typeClass = Class.forName(attrType);
+                    Object objValue = newKey.getValue();
+                    if(objValue == null || objValue.equals("null")) {
+                        // Value is nullable and was set to null. Don't load anything.
+                        return;
+                    }
                     // Convert from Object -> JsonObject.
-                    JsonElement jsonValue = Attribute.getGsonInstance().toJsonTree(newKey.getValue()).getAsJsonObject();
+                    JsonElement jsonValue = Attribute.getGsonInstance().toJsonTree(objValue).getAsJsonObject();
+
                     // Then from JsonObject -> typeClass using type adapters.
                     Object convertedValue = Attribute.getGsonInstance().fromJson(jsonValue, typeClass);
                     checkState(loadedAttributes.put(attrName, convertedValue) == null,
@@ -102,11 +106,11 @@ public final class AttributeMap {
         attributes.forEach((Attribute<?> key, Object value) -> {
             // Persist all necessary attributes.
             if (key.isPersistent()) {
-                Class<?> valueClass = value.getClass();
+                Class<?> valueClass = key.getValueType();
                 if (Attribute.isSpecialType(valueClass)) {
                     // Persist special types in their own map, save with type.
                     Map<String, Object> specialAttribute = new HashMap<>();
-                    specialAttribute.put(key.getPersistenceKey() + "@" + valueClass.getName(), value);
+                    specialAttribute.put(key.getPersistenceKey() + "@" + valueClass.getName(), value == null ? "null" : value);
                     complexAttributes.add(specialAttribute);
                 } else {
                     // Persist basic attributes normally.
@@ -129,7 +133,6 @@ public final class AttributeMap {
      * @return The previous value, possibly null if there was no value.
      */
     public <T> T set(Attribute<T> attr, T value) {
-        requireNonNull(value, "Value cannot be null.");
         var previousValue = attributes.put(attr, value);
         lastKey = attr;
         lastValue = value;
