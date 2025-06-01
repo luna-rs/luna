@@ -81,7 +81,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
      * Loot the chest.
      */
     private fun lootChest(): Boolean {
-        if (mob.state != EntityState.INACTIVE && obj.state != EntityState.INACTIVE) {
+        if (obj.state != EntityState.INACTIVE) {
             replaceChest()
             mob.sendMessage("You unlock the chest.")
             mob.thieving.addExperience(thievable.xp)
@@ -100,15 +100,12 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
      * Replaces the chest object once it's been looted.
      */
     private fun replaceChest() {
-        if (world.objects.unregister(obj)) {
-            val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
-                world.objects.register(GameObject.createDynamic(
-                    ctx, UNLOCKED_CHEST, obj.position, obj.objectType,
-                    obj.direction, view))
-
+        val view = if (thievable.globalRefresh) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(mob)
+        val emptyObj = GameObject.createDynamic(ctx, UNLOCKED_CHEST, obj.position, obj.objectType, obj.direction, view)
+        if (world.objects.register(emptyObj)) {
             world.scheduleOnce(thievable.respawnTicks) {
                 world.objects.register(GameObject.createDynamic(ctx, obj.id, obj.position, obj.objectType,
-                                                                obj.direction, view))
+                                                                                                             obj.direction, view))
             }
         }
     }

@@ -1,4 +1,3 @@
-
 package world.player.skill.runecrafting.equipTiara
 
 import api.predef.*
@@ -22,8 +21,11 @@ fun loginUpdate(plr: Player) {
  * Sends tiara altar config on equipment change.
  */
 fun equipmentUpdate(plr: Player, newItem: Item?) {
+    val resetValue = plr.cachedVarps[491] != 0
     val new = Tiara.ID_TO_TIARA[newItem?.id]
-    plr.sendVarp(Varp(491, new?.config ?: 0))
+    if(resetValue || new != null) {
+        plr.sendVarp(Varp(491, new?.config ?: 0))
+    }
 }
 
 /**

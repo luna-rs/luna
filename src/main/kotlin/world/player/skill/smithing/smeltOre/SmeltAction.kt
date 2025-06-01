@@ -2,7 +2,6 @@ package world.player.skill.smithing.smeltOre
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
@@ -16,12 +15,10 @@ import world.player.skill.smithing.BarType
  */
 class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryAction(plr, true, 3, times) {
 
-    // TODO Proper messages https://github.com/luna-rs/luna/issues/358
-
     override fun executeIf(start: Boolean): Boolean =
         when {
             mob.smithing.level < barType.level -> {
-                mob.sendMessage("You need a Smithing level of ${barType.level} to smelt this.")
+                mob.sendMessage("You need a Smithing level of ${barType.level}.")
                 false
             }
 
@@ -34,10 +31,14 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
 
         mob.playSound(Sounds.SMELTING)
         mob.animation(Animations.SMELT)
-        if (currentAdd.isNotEmpty()) {
-            // Only add XP if we're getting a bar (for Iron ore).
+        if (currentAdd.isNotEmpty()) { // Only add XP if we're getting a bar (for Iron ore).
+            val oreRequired = barType.oreRequired
+            val baseOre = itemName(oreRequired.first).toLowerCase()
+            val secondOre = if(oreRequired.second == null) null else itemName(oreRequired.second!!).toLowerCase()
+            val oreMessage = if (secondOre == null) baseOre else "$baseOre and $secondOre together"
             mob.smithing.addExperience(xp)
-            mob.sendMessage("You smelt the ore to create ${addArticle(itemName(barType.id))}.")
+            mob.sendMessage("You smelt the $oreMessage in the furnace.")
+            mob.sendMessage("You retrieve a bar of ${barType.lowercaseName}.")
         }
     }
 
@@ -50,5 +51,5 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         return barList
     }
 
-    override fun remove(): List<Item> = barType.oreRequired
+    override fun remove(): List<Item> = barType.oreList
 }

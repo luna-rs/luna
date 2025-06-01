@@ -2,7 +2,6 @@ package world.player.skill.smithing.smithBar
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

@@ -13,23 +13,23 @@ import world.player.skill.smithing.Smithing
  */
 enum class SmeltOre(val barType: BarType, val useItem: Item) {
     TIN(barType = BarType.BRONZE,
-        useItem = Item.byName("Tin ore")),
+        useItem = item("Tin ore")),
     COPPER(barType = BarType.BRONZE,
-           useItem = Item.byName("Copper ore")),
+           useItem = item("Copper ore")),
     IRON(barType = BarType.IRON,
-         useItem = Item.byName("Iron ore")),
+         useItem = item("Iron ore")),
     COAL(barType = BarType.STEEL,
-         useItem = Item.byName("Coal")),
+         useItem = item("Coal")),
     SILVER(barType = BarType.SILVER,
-           useItem = Item.byName("Silver ore")),
+           useItem = item("Silver ore")),
     GOLD(barType = BarType.GOLD,
-         useItem = Item.byName("Gold ore")),
+         useItem = item("Gold ore")),
     MITHRIL(barType = BarType.MITHRIL,
-            useItem = Item.byName("Mithril ore")),
+            useItem = item("Mithril ore")),
     ADAMANTITE(barType = BarType.ADAMANT,
-               useItem = Item.byName("Adamantite ore")),
+               useItem = item("Adamantite ore")),
     RUNITE(barType = BarType.RUNE,
-           useItem = Item.byName("Runite ore"));
+           useItem = item("Runite ore"));
 
     companion object {
         val VALUES = ImmutableList.copyOf(values())
