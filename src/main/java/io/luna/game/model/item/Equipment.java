@@ -3,6 +3,7 @@ package io.luna.game.model.item;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.event.impl.EquipmentChangeEvent;
 import io.luna.game.model.def.EquipmentDefinition;
+import io.luna.game.model.def.EquipmentDefinition.Requirement;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -13,7 +14,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.IntUnaryOperator;
 
-import static io.luna.util.OptionalUtils.ifPresent;
 import static io.luna.util.OptionalUtils.mapToInt;
 import static io.luna.util.OptionalUtils.matches;
 
@@ -280,8 +280,8 @@ public final class Equipment extends ItemContainer {
      * An immutable list of bonus names.
      */
     public static final ImmutableList<String> BONUS_NAMES = ImmutableList.of(
-        "Stab", "Slash", "Crush", "Magic", "Range", "Stab",
-        "Slash", "Crush", "Magic", "Range", "Strength", "Prayer"
+            "Stab", "Slash", "Crush", "Magic", "Range", "Stab",
+            "Slash", "Crush", "Magic", "Range", "Strength", "Prayer"
     );
 
     /**
@@ -402,14 +402,14 @@ public final class Equipment extends ItemContainer {
         int equipIndex = equipDef.getIndex();
 
         // Check equipment requirements.
-        boolean failedToMeet = ifPresent(equipDef.getFailedRequirement(player),
-                req -> req.sendFailureMessage(player));
-        if (failedToMeet) {
+        Optional<Requirement> failedReq = equipDef.getFailedRequirement(player);
+        if (failedReq.isPresent()) {
+            failedReq.get().sendFailureMessage(player);
             return false;
         }
 
         // Unequip something if we have to.
-        OptionalInt unequipIndex = OptionalInt.empty();
+        var unequipIndex = OptionalInt.empty();
         if (equipIndex == WEAPON && equipDef.isTwoHanded()) {
 
             // Equipping 2h weapon, so unequip shield.
