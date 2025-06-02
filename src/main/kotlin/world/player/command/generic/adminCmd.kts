@@ -10,10 +10,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
-import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.AmountInputInterface
-import io.luna.game.model.mob.inter.NameInputInterface
-import java.lang.Boolean.parseBoolean
 
 /**
  * A command that makes all stats 99.
@@ -35,6 +32,19 @@ cmd("viewbank", RIGHTS_ADMIN) {
             viewingPlr.bank.filterNotNull().toMutableList()
     }
     plr.interfaces.open(bankInterface)
+}
+
+/**
+ * A command that moves the player to another player.
+ */
+cmd("moveto", RIGHTS_ADMIN) {
+    val name = getInputFrom(0)
+    val target = world.getPlayer(name.toLowerCase())
+    if(target.isPresent) {
+        plr.move(target.get().position)
+    } else {
+        plr.sendMessage("Player '$name' not found.")
+    }
 }
 
 /**
