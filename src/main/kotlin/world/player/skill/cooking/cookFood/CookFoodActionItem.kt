@@ -55,10 +55,10 @@ class CookFoodActionItem(plr: Player,
         mob.animation(if (usingFire) FIRE_ANIMATION else RANGE_ANIMATION)
 
         if (experience != null) {
-            mob.sendMessage("You cook the ${food.formattedName}.")
+            mob.sendMessage("You successfully cook a ${food.formattedName}.")
             mob.cooking.addExperience(experience!!)
         } else {
-            mob.sendMessage("Oops! You accidentally burn the ${food.formattedName}.")
+            mob.sendMessage("You accidentally burn the ${food.formattedName}.")
         }
     }
 

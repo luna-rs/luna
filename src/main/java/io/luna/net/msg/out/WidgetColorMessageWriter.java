@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 import java.awt.Color;
 
 /**
- * A {@link GameMessageWriter} implementation that changes the color of the text on an interface.
+ * A {@link GameMessageWriter} implementation that changes the color of a widget.
  *
  * @author lare96
  */

@@ -227,6 +227,15 @@ public final class CollisionMatrix {
         set(x, y, flag.asShort());
     }
 
+    /**
+     * Replaces the data in this collision matrix with the data in {@code other}.
+     *
+     * @param other The matrix to replace this one with.
+     */
+    public void replace(CollisionMatrix other) {
+        System.arraycopy(other.matrix, 0, matrix, 0, matrix.length);
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).add("width", width).add("length", length)

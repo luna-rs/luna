@@ -1,7 +1,6 @@
 package world.player.skill.fishing.catchFish
 
 import api.predef.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.item.Item
@@ -12,8 +11,8 @@ import world.player.skill.fishing.Tool
 /**
  * An [InventoryAction] implementation that will catch fish.
  */
-class FishActionItem(private val msg: NpcClickEvent,
-                     private val tool: Tool
+class CatchFishAction(private val msg: NpcClickEvent,
+                      private val tool: Tool
 ) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
 
 
