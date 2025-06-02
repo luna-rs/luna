@@ -34,6 +34,7 @@ public final class MobFollowAction extends Action<Mob> {
 
     @Override
     public boolean run() {
+        // todo 'dancing'
         int distance = mob.getPosition().getEuclideanDistance(target.getPosition());
         if (distance >= 15) {
             return true;

@@ -23,8 +23,7 @@ public final class VarpMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link VarpMessageWriter}.
      *
-     * @param varpId The identifier.
-     * @param state The value.
+     * @param varp The varP to send.
      */
     public VarpMessageWriter(Varp varp) {
         this.varp = varp;
@@ -40,7 +39,7 @@ public final class VarpMessageWriter extends GameMessageWriter {
             msg.putShort(varp.getId(), ByteOrder.LITTLE);
         } else {
             msg = ByteMessage.message(182);
-            msg.putShort(varp.getId() & 0xff, ValueType.ADD);
+            msg.putShort(varp.getId(), ValueType.ADD);
             msg.put(varp.getValue(), ValueType.SUBTRACT);
         }
         return msg;

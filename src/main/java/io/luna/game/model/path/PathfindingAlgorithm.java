@@ -17,7 +17,8 @@ import java.util.Optional;
  */
 abstract class PathfindingAlgorithm {
 
-    private final CollisionManager collisionManager;
+    //todo concurrency for long paths?
+    protected final CollisionManager collisionManager;
 
     /**
      * Creates the PathfindingAlgorithm.

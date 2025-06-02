@@ -4,8 +4,9 @@ import api.predef.*
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.mob.Player
 
+// TODO finish
 enum class SlayerTaskType(val level: Int = 1,
-                          val plural: String = "",
+                          val plural: String = "", // TODO remove default value
                           val npcXp: Map<Int, Double>,
                           val difficulty: Player.() -> Boolean = { true },
                           val tip: String = "Err... Well..? Have fun!") {
@@ -393,6 +394,7 @@ enum class SlayerTaskType(val level: Int = 1,
 
                   )),
     CAVE_BUG(level = 7,
+             plural = "cave bugs",
              npcXp = mapOf(
 
              )),

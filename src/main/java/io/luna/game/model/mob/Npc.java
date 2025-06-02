@@ -21,7 +21,6 @@ import java.util.OptionalInt;
  */
 public class Npc extends Mob {
 
-
     /**
      * The spawn identifier.
      */

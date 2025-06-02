@@ -10,6 +10,9 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /**
  * A {@link GameMessageReader} implementation that intercepts player movement data when performing minimap, yellow,
  * and red clicks.
@@ -29,7 +32,6 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         } else if (opcode == 28) { // Yellow <x> click.
         } else if (opcode == 247) { // Red <x> click.
         }
-        player.getInterfaces().applyActionClose();
 
         int pathSize = (size - 5) / 2;
         int[][] path = new int[pathSize][2];
@@ -42,10 +44,10 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
             path[i][1] = payload.get();
         }
 
-        Step[] steps = new Step[pathSize + 1];
-        steps[0] = new Step(firstStepX, firstStepY);
+        Deque<Step> steps = new ArrayDeque<>(pathSize + 1);
+        steps.add(new Step(firstStepX, firstStepY));
         for (int i = 0; i < pathSize; i++) {
-            steps[i + 1] = new Step(path[i][0] + firstStepX, path[i][1] + firstStepY);
+            steps.add(new Step(path[i][0] + firstStepX, path[i][1] + firstStepY));
         }
         return new WalkingEvent(player, steps, running, pathSize, opcode);
     }
@@ -57,20 +59,18 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
     @Override
     public void handle(Player player, WalkingEvent event) {
+        player.getInterfaces().close(); // todo when slayer shop is opened through dialogues, shop interface doesnt close
+        // when clicking to move with minimap
         switch (event.getOpcode()) {
             case 213:
             case 28:
-                player.interruptAction();
                 player.resetInteractingWith();
+                player.resetInteractionTask();
                 break;
         }
-        WalkingQueue walking = player.getWalking(); // todo pathfinder?
-        Step[] path = event.getPath();
+        WalkingQueue walking = player.getWalking();
         walking.clear();
-        walking.addFirst(path[0]);
-        for (int index = 0; index < event.getPathSize(); index++) {
-            walking.add(path[index + 1]);
-        }
+        walking.addPath(event.getPath());
         walking.setRunningPath(event.isRunning() || player.isRunning());
     }
 }

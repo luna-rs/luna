@@ -3,6 +3,8 @@ package io.luna.game.event.impl;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.WalkingQueue.Step;
 
+import java.util.Deque;
+
 /**
  * An event sent when a player walks.
  *
@@ -13,7 +15,7 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     /**
      * The walking path.
      */
-    private final Step[] path;
+    private final Deque<Step> path;
 
     /**
      * If the player is running.
@@ -39,7 +41,7 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
      * @param pathSize The path size.
      * @param opcode The opcode.
      */
-    public WalkingEvent(Player player, Step[] path, boolean running, int pathSize, int opcode) {
+    public WalkingEvent(Player player, Deque<Step> path, boolean running, int pathSize, int opcode) {
         super(player);
         this.path = path;
         this.running = running;
@@ -50,7 +52,7 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     /**
      * @return The walking path.
      */
-    public Step[] getPath() {
+    public Deque<Step> getPath() {
         return path;
     }
 

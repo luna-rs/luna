@@ -61,14 +61,11 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
         // Check if rock isn't already mined and if we still have a pickaxe.
         rockObj.state == EntityState.INACTIVE || !Pickaxe.hasPick(mob, pick) -> false
-        else -> {
-            mob.lock(1) // Arrive delay.
-            true
-        }
+        else -> true
     }
 
     override fun execute() {
-        if(executions == 0) {
+        if (executions == 0) {
             mob.sendMessage("You swing your pick at the rock.")
             mob.interact(rockObj)
             delay = getMiningDelay()
