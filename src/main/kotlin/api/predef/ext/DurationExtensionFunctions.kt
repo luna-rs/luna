@@ -2,7 +2,6 @@ package api.predef.ext
 
 import com.google.common.primitives.Ints
 import java.time.Duration
-import kotlin.time.ExperimentalTime
 
 /**
  * Converts a [Duration] instance to ticks.
@@ -14,8 +13,7 @@ fun Duration.toTicks(): Int {
 /**
  * Converts a [Duration] instance to ticks.
  */
-@OptIn(ExperimentalTime::class)
 fun kotlin.time.Duration.inTicks(): Int {
-    return Ints.saturatedCast(toLongMilliseconds() / 600)
+    return Ints.saturatedCast(inWholeMilliseconds / 600)
 }
 

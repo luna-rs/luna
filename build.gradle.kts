@@ -1,8 +1,8 @@
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.4.21"
+    val kotlinVersion = "2.1.20"
 
     java
     application
@@ -12,8 +12,6 @@ plugins {
 repositories {
     mavenCentral()
 }
-
-val junitVersion: String by project
 
 dependencies {
     implementation("com.google.code.gson:gson:2.9.1")
@@ -25,7 +23,7 @@ dependencies {
     implementation("com.google.guava:guava:33.0.0-jre")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("io.github.classgraph:classgraph:4.8.179")
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
     implementation(kotlin("script-runtime"))
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
@@ -43,32 +41,34 @@ group = "luna"
 version = "1.0"
 
 application {
-    mainClassName = "io.luna.Luna"
+    mainClass.set("io.luna.Luna")
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-}
-
-sourceSets {
-    main {
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDirs("plugins")
-        }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 tasks.withType<JavaCompile> {
-
     options.compilerArgs = MutableList(1) { "-Xlint:unchecked" }
     options.encoding = "UTF-8"
 }
 
-tasks.withType<KotlinCompile>().all {
-    kotlinOptions.jvmTarget = "11"
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
+
+        // Add Kotlin scripting compiler options
+        freeCompilerArgs.set(listOf(
+            "-Xallow-any-scripts-in-source-roots",
+            "-Xuse-fir-lt=false"
+        ))
+    }
 }
 
-tasks.named<Test>("test") {
+tasks.test {
     useJUnitPlatform()
 }

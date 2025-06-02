@@ -75,7 +75,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
             world.addItem(nest.id, 1, mob.position, mob)
         } else {
             val name = itemName(tree.logsId)
-            mob.sendMessage("You get some ${name.toLowerCase()}.")
+            mob.sendMessage("You get some ${name.lowercase()}.")
             mob.woodcutting.addExperience(tree.exp)
 
             if (mob.inventory.isFull) {

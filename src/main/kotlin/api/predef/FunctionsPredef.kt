@@ -112,7 +112,7 @@ private typealias TableEntry<R, C, V> = Pair<Pair<R, C>, V>
 /**
  * Creates an immutable table of [entries]. The syntax for creating entries is (row [to] column [to] value).
  */
-fun <R, C, V> immutableTableOf(vararg entries: TableEntry<R, C, V>): Table<R, C, V> =
+fun <R : Any, C : Any, V : Any> immutableTableOf(vararg entries: TableEntry<R, C, V>): Table<R, C, V> =
     when (entries.size) {
         0 -> ImmutableTable.of()
         1 -> {
@@ -122,11 +122,11 @@ fun <R, C, V> immutableTableOf(vararg entries: TableEntry<R, C, V>): Table<R, C,
         }
 
         else -> {
-            val table = ImmutableTable.builder<R, C, V>()
+            val builder = ImmutableTable.builder<R, C, V>()
             for (entry in entries) {
                 val key = entry.first
-                table.put(key.first, key.second, entry.second)
+                builder.put(key.first, key.second, entry.second)
             }
-            table.build()
+            builder.build()
         }
     }

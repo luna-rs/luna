@@ -7,11 +7,11 @@ import io.luna.net.msg.out.WidgetTextMessageWriter
 /**
  * A [StandardInterface] representing the teleother confirmation screen.
  */
-class TeleOtherInterface(val source: Player, val target: Player, val type: TeleOtherType) :
+class TeleOtherInterface(val source: Player, val target: Player, val teleOtherType: TeleOtherType) :
     StandardInterface(12468) {
 
     override fun onOpen(player: Player) {
         player.queue(WidgetTextMessageWriter(source.username, 12558))
-        player.queue(WidgetTextMessageWriter(type.name, 12560))
+        player.queue(WidgetTextMessageWriter(teleOtherType.name, 12560))
     }
 }

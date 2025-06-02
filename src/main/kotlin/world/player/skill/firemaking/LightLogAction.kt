@@ -29,12 +29,12 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 if (removeLog) {
                     if (mob.inventory.remove(log.id)) {
                         world.addItem(log.id, 1, mob.position, mob)
-                        mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                        mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                         return true
                     }
                     return false
                 }
-                mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                 return true
             }
         }
