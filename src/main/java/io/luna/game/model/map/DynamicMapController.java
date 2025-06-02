@@ -5,11 +5,11 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.controller.PlayerController;
 
 public abstract class DynamicMapController extends PlayerController {
+    // TODO finish, test, need to think more about what could be added here
 
-    // TODO finish, need to think more about what could be added here
     @Override
     public final void onRegister(Player player) {
-        player.move(enter(player));
+        enter(player);
     }
 
     @Override
@@ -17,7 +17,18 @@ public abstract class DynamicMapController extends PlayerController {
         player.move(exit(player));
     }
 
-    public abstract Position enter(Player player);
+    @Override
+    public final boolean canMove(Player player, Position newPos) {
+        /*if(!player.getDynamicMap().getAssignedSpace().contains(newPos)) {
+            System.out.println(newPos.getRegion());
+            System.out.println(player.getDynamicMap().getAssignedSpace().getAllRegions());
+            player.getWalking().clear();
+            return false;
+        }*/
+        return true;
+    }
+
+    public abstract void enter(Player player);
 
     public abstract Position exit(Player player);
 }

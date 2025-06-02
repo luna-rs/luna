@@ -48,7 +48,7 @@ public final class DynamicMapChunk {
     private final Chunk chunk;
 
     /**
-     * The plane on the palette.
+     * The real chunk plane.
      */
     private final int plane;
 
@@ -61,7 +61,7 @@ public final class DynamicMapChunk {
      * Creates a new {@link DynamicMapChunk}.
      *
      * @param chunk The real world base chunk.
-     * @param plane The plane on the palette.
+     * @param plane The real chunk plane.
      * @param rotation The rotation of the base chunk in the palette.
      */
     public DynamicMapChunk(Chunk chunk, int plane, Rotation rotation) {
@@ -70,13 +70,25 @@ public final class DynamicMapChunk {
         this.rotation = rotation;
     }
 
+
     /**
      * Creates a new {@link DynamicMapChunk} with a normal rotation value.
      *
      * @param chunk The real world base chunk.
      */
-    public DynamicMapChunk(Chunk chunk) {
-        this(chunk, 0, Rotation.NORMAL);
+    public DynamicMapChunk(Chunk chunk, int plane) {
+        this(chunk, plane, Rotation.NORMAL);
+    }
+
+    /**
+     * Creates a new {@link DynamicMapChunk}.
+     *
+     * @param x The real world base chunk.
+     * @param y The real world base chunk.
+     * @param plane The real chunk plane.
+     */
+    public DynamicMapChunk(int x, int y, int plane) {
+        this(new Chunk(x, y), plane);
     }
 
     /**
@@ -87,7 +99,7 @@ public final class DynamicMapChunk {
     }
 
     /**
-     * @return The plane on the palette.
+     * @return The real chunk plane.
      */
     public int getPlane() {
         return plane;

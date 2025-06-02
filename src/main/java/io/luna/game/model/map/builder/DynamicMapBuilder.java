@@ -1,6 +1,7 @@
 package io.luna.game.model.map.builder;
 
 import io.luna.LunaContext;
+import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.map.DynamicMap;
@@ -16,6 +17,16 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class DynamicMapBuilder {
+
+    /**
+     * A chunk that consists of water.
+     */
+    public static final DynamicMapChunk WATER = new DynamicMapChunk(376, 392, 0);
+
+    /**
+     * A chunk that consists of moving water.
+     */
+    public static final DynamicMapChunk MOVING_WATER = new DynamicMapChunk(new Position(1885, 4814).getChunk(), 0);
 
     /**
      * A builder for the controller portion.
@@ -83,8 +94,8 @@ public final class DynamicMapBuilder {
      * @param regionId The region to fill the palette with.
      * @return The next builder.
      */
-    public DynamicMapControllerBuilder fillWithRegion(int regionId) {
-        return fillWithRegion(new Region(regionId));
+    public DynamicMapControllerBuilder fillWithRegion(int regionId, int regionZ) {
+        return fillWithRegion(new Region(regionId), regionZ);
 
     }
 
@@ -94,26 +105,26 @@ public final class DynamicMapBuilder {
      * @param region The region to fill the palette with.
      * @return The next builder.
      */
-    public DynamicMapControllerBuilder fillWithRegion(Region region) {
+    public DynamicMapControllerBuilder fillWithRegion(Region region, int regionZ) {
         DynamicMapPalette palette = new DynamicMapPalette();
-        palette.setRegion(4, 0, region);
+        palette.setRegion(4, 0, region, regionZ);
         DynamicMapChunk mapChunk = palette.getChunk(6, 6, 0);
         return new DynamicMapControllerBuilder(palette, mapChunk.getChunk());
     }
 
     /**
-     * Fills this builder's palette with chunks surrounding {@code baseChunk} with {@code radius} at height level
+     * Fills this builder's palette with chunks surrounding {@code chunk} with {@code radius} at height level
      * {@code 0}.
      *
-     * @param baseChunk The base chunk.
+     * @param chunk The base chunk.
      * @param radius The radius.
      * @return The next builder.
      */
-    public DynamicMapControllerBuilder fillWithChunks(Chunk baseChunk, int radius) {
-        checkArgument(radius >= 0 && radius < 6, "radius must be >= 0 && < 6");
+    public DynamicMapControllerBuilder fillWithChunks(DynamicMapChunk chunk, int radius) {
+        checkArgument(radius >= 0 && radius <= 6, "radius must be >= 0 && < 7");
         DynamicMapPalette palette = new DynamicMapPalette();
-        palette.setChunkRadius(6 - radius, 6 - radius, 0, baseChunk, radius, radius);
-        return new DynamicMapControllerBuilder(palette, baseChunk);
+        palette.setChunkRadius(6, 6, 0, chunk.getChunk(), chunk.getPlane(), radius, radius);
+        return new DynamicMapControllerBuilder(palette, chunk.getChunk());
     }
 
     /**
