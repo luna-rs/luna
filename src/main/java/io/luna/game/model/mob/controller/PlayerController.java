@@ -1,9 +1,10 @@
 package io.luna.game.model.mob.controller;
 
+import io.luna.game.LogoutService;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import io.luna.game.LogoutService;
 import world.player.skill.magic.teleportSpells.TeleportAction;
 
 /**
@@ -64,6 +65,19 @@ public abstract class PlayerController {
      * @return {@code true} if the action can proceed, {@code false} otherwise.
      */
     public boolean canTeleport(Player player, TeleportAction action) {
+        return true;
+    }
+
+    /**
+     * Called when {@code player} attempts to attack {@code target}.
+     *
+     * @param player The player.
+     * @param target The target.
+     * @return {@code true} if the player can attack, {@code false} otherwise.
+     */
+    public boolean canAttack(Player player, Mob target) {
+        // todo add to packet verification, verify NPC options
+        //  return player.getInteractions().contains(PlayerInteraction.ATTACK) && target instanceof Player || target instanceof Npc;
         return true;
     }
 
