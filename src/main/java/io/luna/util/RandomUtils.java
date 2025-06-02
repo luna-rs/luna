@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class RandomUtils {
 
-
     /**
      * Determines if {@code rational} will be picked based on its rarity.
      *
@@ -203,13 +202,13 @@ public final class RandomUtils {
         int low = range.hasLowerBound() ? range.lowerEndpoint() : Integer.MIN_VALUE;
         int high = range.hasUpperBound() ? range.upperEndpoint() : Integer.MAX_VALUE;
         if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.CLOSED) {
-            return inclusive(low - 1, high);
-        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN) {
             return inclusive(low, high - 1);
+        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN) {
+            return inclusive(low + 1, high);
         } else if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN) {
-            return inclusive(low, high);
+            return inclusive(low + 1, high - 1);
         } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.CLOSED) {
-            return inclusive(low - 1, high - 1);
+            return inclusive(low, high);
         }
         throw new Error("impossible");
     }
