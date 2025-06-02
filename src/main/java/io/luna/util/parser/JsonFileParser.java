@@ -39,6 +39,6 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
 
     @Override
     public boolean hasNext(JsonArray parser) {
-        return currentIndex + 1 != parser.size();
+        return currentIndex + 1 <= parser.size();
     }
 }
