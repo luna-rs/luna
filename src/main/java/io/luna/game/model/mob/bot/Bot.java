@@ -264,6 +264,7 @@ public final class Bot extends Player {
      */
     public void process() throws Exception {
         try {
+            getInput().process();
             if (processBasicActions() && script != null && cycles > 1) {
                 if (nextExecution == -1 || cycles >= nextExecution) {
                     int delay = script.process();

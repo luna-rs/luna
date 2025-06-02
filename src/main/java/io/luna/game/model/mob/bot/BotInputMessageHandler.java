@@ -1,11 +1,13 @@
 package io.luna.game.model.mob.bot;
 
+import io.luna.game.event.Event;
 import io.luna.net.msg.GameMessageWriter;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * A model handling data for input messages received by bots from this server. Messages can be cleared and sorted by
@@ -36,6 +38,14 @@ public final class BotInputMessageHandler {
         receivedMessages.clear();
     }
 
+    // TODO better input processing for bots, some sort of listener system. integrate with coroutines
+    void process() {
+
+    }
+
+    public <T extends Event> void listenFor(Consumer<T> onReceived) {
+
+    }
     /**
      * Retrieves all messages sent by this server to the {@link BotClient} since the last call to
      * {@link #clear()}, and received after {@code since}.
