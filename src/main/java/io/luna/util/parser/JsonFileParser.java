@@ -19,7 +19,7 @@ public abstract class JsonFileParser<R> extends FileParser<JsonArray, JsonObject
     /**
      * Creates a new {@link JsonFileParser}.
      *
-     * @param files The files to parse.
+     * @param filePath The path to the files being parsed.
      */
     public JsonFileParser(Path filePath) {
         super(filePath);
