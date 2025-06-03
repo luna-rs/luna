@@ -100,10 +100,14 @@ public abstract class FileParser<P, T, R> implements Runnable {
             P parser = newParser(buf);
 
             while (hasNext(parser)) {
-                R tokenObj = convert(parse(parser));
-                if (tokenObj != null) {
-                    tokenObjects.add(tokenObj);
-                    currentIndex++;
+                try {
+                    R tokenObj = convert(parse(parser));
+                    if (tokenObj != null) {
+                        tokenObjects.add(tokenObj);
+                        currentIndex++;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace(); // todo use logger
                 }
             }
             onCompleted(ImmutableList.copyOf(tokenObjects));

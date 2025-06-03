@@ -1,5 +1,6 @@
 package api.attr
 
+import api.attr.typeAdapters.ActiveSlayerTaskTypeAdapter
 import api.attr.typeAdapters.ItemContainerTypeAdapter
 import api.predef.*
 import com.google.gson.FieldNamingPolicy
@@ -9,6 +10,7 @@ import io.luna.game.action.TimeSource
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.util.TickTimer
+import world.player.skill.slayer.ActiveSlayerTask
 import kotlin.reflect.KClass
 
 /**
@@ -29,6 +31,7 @@ object Attr {
 
         // Register special types.
         Attribute.addSpecialType(builder, ItemContainer::class.java, ItemContainerTypeAdapter)
+        Attribute.addSpecialType(builder, ActiveSlayerTask::class.java, ActiveSlayerTaskTypeAdapter)
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())
@@ -67,14 +70,16 @@ object Attr {
         val attr = Attribute(type.java, initialValue)
         return AttributeDelegate(attr)
     }
+
     /**
      * Creates a general purpose [Object]/[Any] attribute. If [Attribute.persist] is chained, please consider writing
      * a custom [TypeAdapter] to control serialization.
      */
-    fun <E : Any> obj(initialValue: E): AttributeDelegate<E> { // NON-NULL
+    fun <E : Any> obj(initialValue: E): AttributeDelegate<E> {
         val attr = Attribute(initialValue)
         return AttributeDelegate(attr)
     }
+
     /**
      * Creates a [TimeSource] attribute.
      */

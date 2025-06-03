@@ -3,6 +3,7 @@ package io.luna.game.model.map.builder;
 import io.luna.game.model.Region;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.map.DynamicMap;
+import io.luna.game.model.map.builder.DynamicMapChunk.Rotation;
 
 import java.util.ArrayDeque;
 import java.util.LinkedHashSet;
@@ -19,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public final class DynamicMapPalette {
-
+// todo finish, document
     /**
      * Retrieves all {@link Chunk} locations within {@code regionId}.
      *
@@ -103,7 +104,7 @@ public final class DynamicMapPalette {
      * @param region The region to place.
      * @return This palette.
      */
-    public DynamicMapPalette setRegion(int startXY, int z, Region region) {
+    public DynamicMapPalette setRegion(int startXY, int z, Region region, int regionZ) {
         // TODO test different xy values and see if that changes instance coordinates?
         checkArgument(startXY >= 0 && startXY <= 5, "startXY must be above or equal to 0 and below or equal to 5.");
 
@@ -113,7 +114,7 @@ public final class DynamicMapPalette {
             for (int y = startXY; y < startXY + 8; y++) {
                 Chunk chunk = regionChunks.poll();
                 checkState(chunk != null, "Size mismatch, expected 64 chunks in regionChunks.");
-                palette[x][y][z] = new DynamicMapChunk(chunk);
+                palette[x][y][z] = new DynamicMapChunk(chunk, regionZ, Rotation.NORMAL);
             }
         }
         return this;
@@ -130,12 +131,12 @@ public final class DynamicMapPalette {
      * @param radiusY The {@code y} radius of the base chunk.
      * @return This palette.
      */
-    public DynamicMapPalette setChunkRadius(int startX, int startY, int z, Chunk baseChunk, int radiusX, int radiusY) {
+    public DynamicMapPalette setChunkRadius(int startX, int startY, int z, Chunk baseChunk, int chunkZ, int radiusX, int radiusY) {
         int lowerBoundX = startX - radiusX;
         int upperBoundX = startX + radiusX;
         int lowerBoundY = startY - radiusY;
         int upperBoundY = startY + radiusY;
-        checkArgument(lowerBoundX > 0 && lowerBoundY > 0, "[startX - radiusX && startY - radiusY] cannot be below 0");
+        checkArgument(lowerBoundX >= 0 && lowerBoundY >= 0, "[startX - radiusX && startY - radiusY] cannot be below 0");
         checkArgument(upperBoundX < palette.length && upperBoundY < palette.length, "[startX + radiusX && startY + radiusY] cannot exceed palette size");
 
         Queue<Chunk> regionChunks = new ArrayDeque<>(getSurroundingChunks(baseChunk, radiusX, radiusY));
@@ -143,9 +144,56 @@ public final class DynamicMapPalette {
             for (int y = startY - radiusY; y <= startY + radiusY; y++) {
                 Chunk chunk = regionChunks.poll();
                 checkState(chunk != null, "Size mismatch in regionChunks.");
-                palette[x][y][z] = new DynamicMapChunk(chunk);
+                palette[x][y][z] = new DynamicMapChunk(chunk, chunkZ, Rotation.NORMAL);
             }
         }
+        return this;
+    }
+    /**
+     * Fills this builder's palette with {@code regionId} at height level {@code 0}.
+     *
+     * @param regionId The region to fill the palette with.
+     * @return The next builder.
+     */
+    public DynamicMapPalette fillWithRegion(int regionId, int regionZ) {
+        return fillWithRegion(new Region(regionId), regionZ);
+
+    }
+
+    /**
+     * Fills this builder's palette with {@code region} at height level {@code 0}.
+     *
+     * @param region The region to fill the palette with.
+     * @return The next builder.
+     */
+    public DynamicMapPalette fillWithRegion(Region region, int regionZ) {
+        DynamicMapPalette palette = new DynamicMapPalette();
+        palette.setRegion(4, 0, region, regionZ);
+        DynamicMapChunk mapChunk = palette.getChunk(6, 6, 0);
+        return this;
+    }
+
+    /**
+     * Fills this builder's palette with chunks surrounding {@code baseChunk} with {@code radius} at height level
+     * {@code 0}.
+     *
+     * @param baseChunk The base chunk.
+     * @param radius The radius.
+     * @return The next builder.
+     */
+    public DynamicMapPalette fillWithChunks(Chunk baseChunk, int chunkZ, int radius) {
+        checkArgument(radius >= 0 && radius < 6, "radius must be >= 0 && < 6");
+        DynamicMapPalette palette = new DynamicMapPalette();
+        palette.setChunkRadius(6 - radius, 6 - radius, 0, baseChunk,chunkZ, radius, radius);
+        return this;
+    }
+
+    public DynamicMapPalette fillEmpty(DynamicMapChunk chunk, int plane) {
+        forEach(((x, y, z) -> {
+            if(z == plane && palette[x][y][z] == null) {
+                palette[x][y][z] = chunk;
+            }
+        }));
         return this;
     }
 

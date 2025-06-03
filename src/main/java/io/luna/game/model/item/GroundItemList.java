@@ -252,7 +252,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
      * Adds unstackable ground items.
      *
      * @param item The item.
-     * @return {@code true} if successful.
+     * @return {@code true} if at least one item was added.
      */
     private boolean add(GroundItem item) {
         int addAmount = item.getAmount();
@@ -276,7 +276,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
      * Removes unstackable ground items.
      *
      * @param item The item.
-     * @return {@code true} if successful.
+     * @return {@code true}if at least one item was removed.
      */
     private boolean remove(GroundItem item) {
         int loops = item.getAmount();

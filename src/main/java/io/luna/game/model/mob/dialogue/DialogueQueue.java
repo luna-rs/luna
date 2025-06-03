@@ -5,7 +5,6 @@ import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.Queue;
-import java.util.function.Consumer;
 
 /**
  * A model representing a queue of {@link DialogueInterface}s that will be shown in sequential order. New
@@ -45,10 +44,10 @@ public final class DialogueQueue {
             player.getInterfaces().open(nextDialogue);
         } else {
             AbstractInterfaceSet interfaces = player.getInterfaces();
+            player.resetDialogues();
             if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
                 interfaces.close();
             }
-            player.resetDialogues();
         }
     }
 }

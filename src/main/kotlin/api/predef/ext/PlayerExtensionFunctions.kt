@@ -1,10 +1,11 @@
 package api.predef.ext
 
 import io.luna.game.model.def.MusicDefinition
+import io.luna.game.model.item.Inventory
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerMusicTab
-import io.luna.net.msg.out.WidgetColorMessageWriter
 import io.luna.net.msg.out.MusicMessageWriter
+import io.luna.net.msg.out.WidgetColorMessageWriter
 import java.awt.Color
 
 /**

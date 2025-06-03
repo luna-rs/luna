@@ -37,6 +37,11 @@ fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
     .orElseThrow { NoSuchElementException("Name not found for item <$id>") }
 
 /**
+ * Computes and returns the name for [item].
+ */
+fun itemName(item: Item): String = itemName(item.id)
+
+/**
  * Computes and returns an [Item] instance matching `name` with `amount`.
  */
 fun item(name: String, amount: Int = 1) = Item.byName(name, amount)

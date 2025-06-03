@@ -25,34 +25,34 @@ public final class StringUtils {
     /**
      * An array containing valid {@code char}s.
      */
-    public static final char[] VALID_CHARACTERS = new char[] {
-        '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-        'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-        'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8',
-        '9', '!', '@', '#', '$', '%', '^', '&', '*',
-        '(', ')', '-', '+', '=', ':', ';', '.', '>',
-        '<', ',', '"', '[', ']', '|', '?', '/', '`'
+    public static final char[] VALID_CHARACTERS = new char[]{
+            '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+            'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            '0', '1', '2', '3', '4', '5', '6', '7', '8',
+            '9', '!', '@', '#', '$', '%', '^', '&', '*',
+            '(', ')', '-', '+', '=', ':', ';', '.', '>',
+            '<', ',', '"', '[', ']', '|', '?', '/', '`'
     };
 
     /**
      * The character table that will aid in unpacking text.
      */
     private static final char[] FREQUENCY_ORDERED_CHARS = new char[]{
-        ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
-        'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
-        'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
-        '3', '4', '5', '6', '7', '8', '9', ' ', '!', '?',
-        '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
-        '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
+            ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
+            'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
+            'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
+            '3', '4', '5', '6', '7', '8', '9', ' ', '!', '?',
+            '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
+            '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
     };
-    
+
     /**
      * A private constructor to discourage external instantiation.
      */
     private StringUtils() {
     }
-    
+
     /**
      * Unpacks text received from the client.
      *
@@ -77,6 +77,7 @@ public final class StringUtils {
         }
         return new String(decodeBuf, 0, idx);
     }
+
     public static void packText(String str, ByteMessage buf) {
         if (str.length() > 80)
             str = str.substring(0, 80);
@@ -112,6 +113,7 @@ public final class StringUtils {
         if (carry != -1)
             buf.put(carry << 4);
     }
+
     /**
      * Computes the indefinite article of {@code thing}.
      *
@@ -198,9 +200,33 @@ public final class StringUtils {
         if (s.isEmpty()) {
             return s;
         }
-        
+
         StringBuilder builder = new StringBuilder(s);
         builder.setCharAt(0, Character.toUpperCase(s.charAt(0)));
         return builder.toString();
+    }
+
+    /**
+     * Packs {@code address} into an integer value.
+     *
+     * @param address The IP address to pack.
+     * @return The packed address.
+     */
+    public static int packIpAddress(String address) {
+        int start = 24;
+        int minus = 8;
+        int last = 0;
+        String[] splitAddress = address.split("\\.");
+        int[] splitIntAddress = new int[splitAddress.length];
+        for (int index = 0; index < splitIntAddress.length; index++) {
+            String section = splitAddress[index];
+            int total = Integer.parseInt(section) << start;
+            start -= minus;
+            splitIntAddress[index] = total;
+        }
+        for (int section : splitIntAddress) {
+            last = last == 0 ? section : last | section;
+        }
+        return last;
     }
 }

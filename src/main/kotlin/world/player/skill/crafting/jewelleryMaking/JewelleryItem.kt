@@ -1,5 +1,6 @@
 package world.player.skill.crafting.jewelleryMaking
 
+import api.predef.*
 import io.luna.game.model.item.Item
 
 /**
@@ -10,10 +11,10 @@ class JewelleryItem(name: String, val level: Int, val xp: Double, requiredName: 
     /**
      * The crafted jewellery item.
      */
-    val item: Item = Item.byName(name)
+    val item: Item = item(name)
 
     /**
      * The additional required item (other than a silver/gold bar).
      */
-    val requiredItem: Item? = if(requiredName != null) Item.byName(requiredName) else null
+    val requiredItem: Item? = if(requiredName != null) item(requiredName) else null
 }

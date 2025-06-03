@@ -43,7 +43,6 @@ import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.DynamicMapMessageWriter;
-import io.luna.net.msg.out.FullScreenInterfaceMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
@@ -53,7 +52,6 @@ import io.luna.net.msg.out.UpdateWeightMessageWriter;
 import io.luna.net.msg.out.VarpMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.util.RandomUtils;
-import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import world.player.Messages;
@@ -554,13 +552,16 @@ public class Player extends Mob {
     public void giveItem(Item item) {
         if (inventory.hasSpaceFor(item)) {
             inventory.add(item);
-        } else if (bank.hasSpaceFor(item)) {
+            return;
+        }
+        String name = item.getItemDef().getName() + "(x" + item.getAmount() + ")";
+        if (bank.hasSpaceFor(item)) {
             bank.add(item);
-            sendMessage(StringUtils.addArticle(item.getItemDef().getName()) + " has been deposited into your bank.");
+            sendMessage(name + " has been deposited into your bank.");
         } else {
             world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
                     position, ChunkUpdatableView.localView(this)));
-            sendMessage(StringUtils.addArticle(item.getItemDef().getName()) + " has been dropped on the floor under you.");
+            sendMessage(name + " has been dropped on the floor under you.");
         }
     }
 

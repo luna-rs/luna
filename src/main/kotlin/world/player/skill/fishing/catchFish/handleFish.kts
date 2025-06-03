@@ -7,10 +7,10 @@ import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent
 import world.player.skill.fishing.Tool
 
 /**
- * Submits a [FishActionItem] to start fishing.
+ * Submits a [CatchFishAction] to start fishing.
  */
 fun fish(msg: NpcClickEvent, tool: Tool) {
-    msg.plr.submitAction(FishActionItem(msg, tool))
+    msg.plr.submitAction(CatchFishAction(msg, tool))
 }
 
 // Spawn fishing spots.

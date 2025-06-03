@@ -13,7 +13,7 @@ import world.player.Animations
  * @author lare96
  */
 class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private val runOnce: Boolean) :
-    Action<Player>(plr, ActionType.WEAK, true, 2) {
+    Action<Player>(plr, ActionType.WEAK, false, 2) {
 
     /**
      * All possible states this action can be in.
@@ -28,15 +28,15 @@ class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private va
      */
     private var state = State.OPENING
 
-    override fun onSubmit() {
-        mob.interact(gameObject)
-    }
-
-    override fun run(): Boolean =
-        when (state) {
+    override fun run(): Boolean {
+        if (executions == 0) {
+            mob.interact(gameObject)
+        }
+        return when (state) {
             State.OPENING -> openChest()
             State.SEARCHING -> searchChest()
         }
+    }
 
     override fun onFinished() {
         mob.unlock()
@@ -63,7 +63,7 @@ class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private va
      * Closes the chest object for [mob] and adds chest loot to inventory.
      */
     private fun searchChest(): Boolean {
-        if(mob.inventory.remove(989)) {
+        if (mob.inventory.remove(989)) {
             mob.unlock()
             CrystalChestDropTable.roll(mob, gameObject).forEach(mob::giveItem)
             mob.sendMessage("You find some treasure in the chest!")

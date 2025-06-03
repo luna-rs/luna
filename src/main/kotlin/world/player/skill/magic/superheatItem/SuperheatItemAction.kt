@@ -55,7 +55,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
                 mob.lock()
                 mob.playSound(Sounds.SUPERHEAT)
                 world.scheduleOnce(2) {
-                    mob.inventory.removeAll(barType.oreRequired)
+                    mob.inventory.removeAll(barType.oreList)
                     mob.inventory.removeAll(removeItems)
                     mob.inventory.add(Item(barType.id))
                     mob.magic.addExperience(XP)
@@ -82,7 +82,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
         }
         val barType = run {
             for (bar in possibleBars) {
-                if (mob.inventory.containsAll(bar.oreRequired)) {
+                if (mob.inventory.containsAll(bar.oreList)) {
                     return@run bar
                 }
             }

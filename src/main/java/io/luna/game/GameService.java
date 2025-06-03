@@ -105,7 +105,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * The synchronization executor.
      */
-    private final GameServiceExecutor gameExecutor = new GameServiceExecutor();
+    private final GameServiceExecutor gameExecutor;
 
     /**
      * The synchronizer for the Kotlin startup tasks.
@@ -142,6 +142,7 @@ public final class GameService extends AbstractScheduledService {
         world = context.getWorld();
         server = context.getServer();
         fastPool = ExecutorUtils.threadPool(serviceName() + "Worker");
+        gameExecutor = new GameServiceExecutor();
         addListener(new GameServiceListener(), MoreExecutors.directExecutor());
     }
 

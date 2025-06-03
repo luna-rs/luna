@@ -1,12 +1,14 @@
 package world.obj.resource.harvestable
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import io.luna.util.Rational
 import world.obj.resource.GameResource
+import world.player.Messages
 
 /**
  * A [GameResource] that can be harvested by a player.
@@ -37,7 +39,7 @@ abstract class HarvestableResource : GameResource() {
      */
     fun harvest(plr: Player, gameObject: GameObject) {
         if (plr.inventory.isFull) {
-            plr.sendMessage("Your inventory is full.")
+            plr.sendMessage(Messages.INVENTORY_FULL)
         } else {
             plr.submitAction(HarvestActionItem(plr, gameObject, this))
         }

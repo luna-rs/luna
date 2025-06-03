@@ -30,7 +30,7 @@ fun bury(plr: Player, bone: Bone) {
             mob.inventory.remove(bone.boneItem)
             mob.playSound(Sounds.BURY_BONE)
 
-            mob.sendMessage("You dig a hole in the ground.")
+            mob.sendMessage("You dig a hole in the ground...")
             mob.sendMessage("You bury the bones.")
         }
     })

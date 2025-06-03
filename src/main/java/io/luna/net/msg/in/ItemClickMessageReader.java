@@ -46,7 +46,7 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
                 interfaceId = payload.getShort(true, ByteOrder.LITTLE, ValueType.ADD);
                 return new ItemThirdClickEvent(player, id, index, interfaceId);
             case 228:
-                index = payload.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
+                index = payload.getShort(true, ByteOrder.LITTLE);
                 id = payload.getShort(false, ValueType.ADD);
                 interfaceId = payload.getShort(true);
                 return new ItemFourthClickEvent(player, id, index, interfaceId);

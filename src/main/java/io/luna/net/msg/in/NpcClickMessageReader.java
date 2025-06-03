@@ -38,10 +38,10 @@ public final class NpcClickMessageReader extends GameMessageReader<NpcClickEvent
                 npcIndex = payload.getShort(ValueType.ADD);
                 return new NpcThirdClickEvent(player, world.getNpcs().get(npcIndex));
             case 42:
-                npcIndex = payload.getShort(false);
+                npcIndex = payload.getShort(ByteOrder.LITTLE);
                 return new NpcFourthClickEvent(player, world.getNpcs().get(npcIndex));
             case 8:
-                npcIndex = payload.getShort(false, ByteOrder.LITTLE);
+                npcIndex = payload.getShort(ByteOrder.LITTLE);
                 return new NpcFifthClickEvent(player, world.getNpcs().get(npcIndex));
         }
         throw new IllegalStateException("invalid opcode");

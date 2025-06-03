@@ -4,6 +4,7 @@ import io.luna.LunaContext;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.Region;
 import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
@@ -15,7 +16,7 @@ import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.controller.ControllerKey;
 import io.luna.game.model.object.GameObject;
-import io.luna.net.msg.out.DynamicMapMessageWriter;
+import io.luna.game.task.Task;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,6 +39,7 @@ import java.util.Set;
 public final class DynamicMap {
 
     // Todo test test test
+    // todo need a reliable way to translate positions from real world chunks to instanced ones
 
     /**
      * The world instance.
@@ -85,7 +87,7 @@ public final class DynamicMap {
      */
     public void create() {
         // Request empty space from the pool.
-        assignedSpace = world.getDynamicMapSpacePool().request();
+        world.getDynamicMapSpacePool().request(this);
 
         // Get the base chunks from the palette.
         Set<Chunk> realChunks = new HashSet<>();
@@ -96,8 +98,9 @@ public final class DynamicMap {
             }
         });
 
-        // Now add the static objects in the real map to our instanced map.
         for (Chunk chunk : realChunks) {
+
+            // Now add the static objects in the real map to our instanced map.
             ChunkRepository repository = world.getChunks().load(chunk);
             repository.getAll(EntityType.OBJECT).stream().map(it -> (GameObject) it).
                     filter(it -> !it.isDynamic()).forEach(it -> {
@@ -105,6 +108,12 @@ public final class DynamicMap {
                                 getInstancePosition(it.getPosition()), it.getObjectType(), it.getDirection());
                         world.getObjects().register(instanceObject);
                     });
+
+            // Add collision data as well.
+            ChunkRepository instancedRepository = world.getChunks().load(getInstancePosition(chunk.getAbsPosition()));
+            for(int index = 0; index < repository.getMatrices().length; index++) {
+                instancedRepository.getMatrices()[index].replace(repository.getMatrices()[index]);
+            }
         }
     }
 
@@ -113,11 +122,22 @@ public final class DynamicMap {
      *
      * @param plr The player to add.
      */
-    public boolean join(Player plr) {
-        if (players.add(plr)) {
+    public boolean add(Player plr) { // todo bad name
+        if (players.add(plr) && assignedSpace != null) {
+            plr.lock();
             plr.setDynamicMap(this);
-            plr.getControllers().register(controllerKey);
-            sendUpdate(plr);
+            plr.move(assignedSpace.getPrimary().getAbsPosition());
+            plr.setLastRegion(null);
+          //  plr.                queue(new DynamicMapMessageWriter(this, ));
+
+            world.schedule(new Task(1) {
+                @Override
+                protected void execute() {
+                    plr.unlock();
+                    plr.getControllers().register(controllerKey);
+                    cancel();
+                }
+            });
             return true;
         }
         return false;
@@ -128,7 +148,7 @@ public final class DynamicMap {
      *
      * @param plr The player to remove.
      */
-    public boolean leave(Player plr) {
+    public boolean remove(Player plr) {
         if (players.remove(plr)) {
             Position oldPosition = plr.getPosition();
             plr.setLastRegion(null);
@@ -141,22 +161,22 @@ public final class DynamicMap {
     }
 
     /**
-     * Deletes this instance by forcing all players to leave, and clearing the area of entities.
+     * Deletes this instance by forcing all players to leave, clearing the area of entities, and releasing the occupied
+     * space back to the {@link DynamicMapSpacePool}.
      */
     public void delete() {
         // Force all players to leave.
         Set<Player> removePlayers = new HashSet<>(players);
         for (Player player : removePlayers) {
-            leave(player);
+            remove(player);
         }
 
         // Clear all entities.
-        int mainRegionId = assignedSpace.getMain().getId();
-        int paddingRegionId = assignedSpace.getPadding().getId();
-
         Set<Chunk> clearChunks = new HashSet<>();
-        clearChunks.addAll(DynamicMapPalette.getAllChunksInRegion(mainRegionId));
-        clearChunks.addAll(DynamicMapPalette.getAllChunksInRegion(paddingRegionId));
+        for (Region region : assignedSpace.getAllRegions()) {
+            int id = region.getId();
+            clearChunks.addAll(DynamicMapPalette.getAllChunksInRegion(id));
+        }
 
         List<Runnable> removalActions = new ArrayList<>();
         for (Chunk chunk : clearChunks) {
@@ -191,30 +211,29 @@ public final class DynamicMap {
     }
 
     /**
-     * Sends the {@link DynamicMapMessageWriter} that will display this instance for {@code player}.
-     *
-     * @param player The player.
-     */
-    public void sendUpdate(Player player) {
-        player.queue(new DynamicMapMessageWriter(palette));
-    }
-
-    /**
      * Retrieves the {@link Position} in this instance that mirrors the actual coordinate.
      *
      * @param actualPosition The real position to get the instance position of.
      * @return The instance position.
      */
     public Position getInstancePosition(Position actualPosition) {
+        // TODO find chunk of actual, link it to the dynamic map chunk in the palette. then get the base chunk of the
+        // instance coordinates with the same chunk.
+
         // Determine the deltas between a real arbitrary base position and the base display chunk. We can use
         // these deltas later to translate from our instance position the exact same way.
         Position basePosition = baseChunk.getAbsPosition();
+        System.out.println("base " + basePosition);
+        System.out.println("actual " + actualPosition);
         int deltaX = actualPosition.getX() - basePosition.getX();
         int deltaY = actualPosition.getY() - basePosition.getY();
-
+        System.out.println("dx " + deltaX);
+        System.out.println("dy " + deltaY);
+        System.out.println("assigned abs " + assignedSpace.getPrimary().getAbsPosition());
+        System.out.println();
         // The base position in our instance will always be the same spot as base display chunk. Therefore we can do a
         // 1:1 translation using the previous deltas.
-        return assignedSpace.getMain().getAbsPosition().translate(deltaX, deltaY);
+        return assignedSpace.getPrimary().getAbsPosition().translate(deltaX, deltaY);
     }
 
     /**
@@ -245,6 +264,13 @@ public final class DynamicMap {
      */
     public DynamicMapSpace getAssignedSpace() {
         return assignedSpace;
+    }
+
+    /**
+     * Sets the empty space that this instance is assigned to.
+     */
+    void setAssignedSpace(DynamicMapSpace assignedSpace) {
+        this.assignedSpace = assignedSpace;
     }
 
     /**
