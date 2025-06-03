@@ -67,7 +67,7 @@ fun clickAccept(target: Player) {
         target.interfaces.close()
 
         val source = openInterface.source
-        source.teleOtherRequests.remove(target)
+        source.teleOtherRequests.remove(target.usernameHash)
         if (!source.position.isWithinDistance(target.position, 10)) {
             source.sendMessage("You are too far away from ${target.username} to teleport them.")
             target.sendMessage("You are too far away from ${source.username} to be teleported.")
