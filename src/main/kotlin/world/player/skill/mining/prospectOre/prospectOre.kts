@@ -26,7 +26,7 @@ fun prospect(plr: Player,  ore: Ore?) {
             world.scheduleOnce(rand(2, 4)) {
                 when (ore) { // todo sound 431
                     null -> plr.sendMessage("There is no ore left in the rock.")
-                    else -> plr.sendMessage("This rock contains ${ore.typeName.lowercase()}.")
+                    else -> plr.sendMessage("This rock contains ${ore.typeName.toLowerCase()}.")
                 }
                 plr.walking.isLocked = false
             }

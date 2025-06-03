@@ -98,7 +98,7 @@ enum class Fish(val id: Int,
     /**
      * The formatted name.
      */
-    val formattedName = name.lowercase().replace('_', ' ')
+    val formattedName = name.toLowerCase().replace('_', ' ')
 
     /**
      * The default catch message.

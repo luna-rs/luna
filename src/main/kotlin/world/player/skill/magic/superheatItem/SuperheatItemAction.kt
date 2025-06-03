@@ -62,7 +62,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
                     mob.animation(Animations.SUPERHEAT)
                     mob.graphic(Graphic(148, 100))
                     mob.smithing.addExperience(barType.xp)
-                    mob.sendMessage("You create a ${itemName(barType.id).lowercase()}.");
+                    mob.sendMessage("You create a ${itemName(barType.id).toLowerCase()}.");
                     mob.tabs.show(TabIndex.MAGIC)
                     mob.unlock()
                 }

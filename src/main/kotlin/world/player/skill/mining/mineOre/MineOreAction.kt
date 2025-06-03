@@ -2,9 +2,8 @@ package world.player.skill.mining.mineOre
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.action.Action
-import io.luna.game.action.ItemContainerAction.AnimatedInventoryAction
-import io.luna.game.action.ItemContainerAction.InventoryAction
+import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -18,8 +17,8 @@ import world.player.skill.mining.Pickaxe
 /**
  * An [InventoryAction] that will enable the mining of rocks.
  */
-class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
-    AnimatedInventoryAction(plr, false, 1, 4, rand(RANDOM_FAIL_RATE)) {
+class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
+    AnimatedInventoryAction(plr, 1, 4, rand(RANDOM_FAIL_RATE)) {
 
     companion object {
 
@@ -62,32 +61,32 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
         }
         // Check if rock isn't already mined and if we still have a pickaxe.
         rockObj.state == EntityState.INACTIVE || !Pickaxe.hasPick(mob, pick) -> false
-        else -> {
-            if (start) {
-                mob.sendMessage("You swing your pick at the rock.")
-                delay = getMiningDelay()
-            }
-            true
-        }
+        else -> true
     }
 
     override fun execute() {
-        val hasGlory = mob.equipment.amulet?.itemDef?.name?.contains("Amulet of glory")
-        val gemChance = if (hasGlory != null && hasGlory) BOOSTED_GEM_CHANCE else BASE_GEM_CHANCE
-        if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
-            dropGem()
-        } else {
-            mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
-            mob.mining.addExperience(ore.exp)
-        }
-
-        val removeChance = ore.depletionChance
-        if (removeChance != null && (removeChance == 1 || rand().nextInt(removeChance) == 0)) {
-            mob.playSound(Sounds.MINING_COMPLETED)
-            deleteAndRespawnRock()
-            interrupt()
-        } else {
+        if (executions == 0) {
+            mob.sendMessage("You swing your pick at the rock.")
+            mob.interact(rockObj)
             delay = getMiningDelay()
+        } else {
+            val hasGlory = mob.equipment.amulet?.itemDef?.name?.contains("Amulet of glory")
+            val gemChance = if (hasGlory != null && hasGlory) BOOSTED_GEM_CHANCE else BASE_GEM_CHANCE
+            if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
+                dropGem()
+            } else {
+                mob.sendMessage("You manage to mine some ${ore.typeName.toLowerCase()}.")
+                mob.mining.addExperience(ore.exp)
+            }
+
+            val removeChance = ore.depletionChance
+            if (removeChance != null && (removeChance == 1 || rand().nextInt(removeChance) == 0)) {
+                mob.playSound(Sounds.MINING_COMPLETED)
+                deleteAndRespawnRock()
+                complete()
+            } else {
+                delay = getMiningDelay()
+            }
         }
     }
 
@@ -101,13 +100,7 @@ class MineOreActionItem(plr: Player, val pick: Pickaxe, val ore: Ore, val rockOb
 
     override fun add(): List<Item?> = listOf(Item(ore.item))
 
-    override fun stop() = mob.animation(Animation.CANCEL)
-
-    override fun ignoreIf(other: Action<*>?) =
-        when (other) {
-            is MineOreActionItem -> rockObj == other.rockObj
-            else -> false
-        }
+    override fun onFinished() = mob.animation(Animation.CANCEL)
 
     /**
      * Deletes and respawns an [Ore] rock object.

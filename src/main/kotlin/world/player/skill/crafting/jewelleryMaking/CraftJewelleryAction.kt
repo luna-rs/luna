@@ -33,7 +33,7 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
         mob.playSound(Sounds.SMELTING)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
-        mob.sendMessage("You create the ${jewellery.item.itemDef.name.lowercase()}.")
+        mob.sendMessage("You create the ${jewellery.item.itemDef.name.toLowerCase()}.")
     }
 
     override fun add(): List<Item> = listOf(jewellery.item)

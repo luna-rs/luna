@@ -152,5 +152,5 @@ enum class HideArmor(val id: Int, val level: Int, val exp: Double, val hides: Pa
     /**
      * The formatted name.
      */
-    val formattedName = itemName(id).lowercase()
+    val formattedName = itemName(id).toLowerCase()
 }

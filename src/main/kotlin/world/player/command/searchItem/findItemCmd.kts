@@ -48,17 +48,17 @@ cmd("finditem", RIGHTS_DEV) {
  * A command that searches for definition ids and displays them on the quest journal.
  */
 cmd("finddef", RIGHTS_DEV) {
-    val type = args[0].lowercase().trim()
-    val search = getInputFrom(1).lowercase().trim()
+    val type = args[0].toLowerCase().trim()
+    val search = getInputFrom(1).toLowerCase().trim()
     val matches = arrayListOf<Pair<Int, String>>()
     when (type) {
-        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
+        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
-        "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
+        "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
-        "npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
+        "npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
     }
     if (matches.isNotEmpty()) {
