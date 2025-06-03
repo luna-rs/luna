@@ -1,4 +1,4 @@
-# Luna | [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
+# Luna | [![Build](https://github.com/luna-rs/luna/actions/workflows/gradle.yml/badge.svg?branch=master)](https://github.com/luna-rs/luna/actions/workflows/gradle.yml) [![Discord chat](https://img.shields.io/discord/1235328604506685551)](https://discord.gg/bqkGY7cmVX) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/lare96/luna/master/LICENSE.txt)
 Luna is a #377 RS2 server designed to be lightweight, fast, and easy to use.
 
 Some of the sweetness within Luna
