@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.4.21"
+    val kotlinVersion = "1.6.21"
 
     java
     application
@@ -13,8 +13,6 @@ repositories {
     mavenCentral()
 }
 
-val junitVersion: String by project
-
 dependencies {
     implementation("com.google.code.gson:gson:2.9.1")
     implementation("org.apache.logging.log4j:log4j-core:2.23.1")
@@ -22,10 +20,9 @@ dependencies {
     implementation("org.slf4j:slf4j-nop:2.0.16")
     implementation("com.lmax:disruptor:3.4.2")
     implementation("io.netty:netty-all:4.1.107.Final")
-    implementation("com.google.guava:guava:33.0.0-jre")
+    implementation("com.google.guava:guava:33.4.8-jre")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("io.github.classgraph:classgraph:4.8.179")
-    implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("script-runtime"))
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
@@ -43,7 +40,7 @@ group = "luna"
 version = "1.0"
 
 application {
-    mainClassName = "io.luna.Luna"
+    mainClass = "io.luna.Luna"
 }
 
 java {
@@ -60,12 +57,13 @@ sourceSets {
 }
 
 tasks.withType<JavaCompile> {
-
     options.compilerArgs = MutableList(1) { "-Xlint:unchecked" }
     options.encoding = "UTF-8"
 }
 
 tasks.withType<KotlinCompile>().all {
+    // todo Will need this flag in later versions.
+    //kotlinOptions.freeCompilerArgs = MutableList(1) { "-Xallow-any-scripts-in-source-roots" }
     kotlinOptions.jvmTarget = "11"
 }
 

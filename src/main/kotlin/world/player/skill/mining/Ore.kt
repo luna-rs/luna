@@ -11,7 +11,7 @@ enum class Ore(val rocks: List<Pair<Int, Int>>,
                val respawnTicks: Int?,
                val resistance: Int,
                val exp: Double,
-               val depletionChance: Int? = 8) {
+               val depletionChance: Int? = 8) { // TODO correct depletion chances?
     RUNE_ESSENCE(rocks = listOf(2491 to -1),
             level = 1,
             item = 1436,
