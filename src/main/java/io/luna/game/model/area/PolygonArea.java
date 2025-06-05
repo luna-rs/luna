@@ -4,8 +4,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.Position;
 
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
+import java.awt.Point;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,9 +16,19 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PolygonArea extends Area {
 
     /**
-     * The representation of our arbitrary polygon.
+     * The rectangular bounding box constraints of this polygon.
      */
-    private final Polygon polygon;
+    private int southWestX;
+    private int southWestY;
+    private int northEastX;
+    private int northEastY;
+
+    /**
+     * The points of this polygon.
+     */
+    private int npoints;
+    private int[] xpoints;
+    private int[] ypoints;
 
     /**
      * The precomputed hashcode.
@@ -46,7 +55,7 @@ public class PolygonArea extends Area {
         // Precompute hashcode
         hashCode = Objects.hashCode(vertices);
 
-        // Reformat to create java.awt.Polygon
+        // Extract the points for this polygon from the vertices
         int index = 0;
         int totalSize = vertices.size();
         int[] x = new int[totalSize];
@@ -56,7 +65,11 @@ public class PolygonArea extends Area {
             y[index] = (int) point.getY();
             index++;
         }
-        polygon = new Polygon(x, y, totalSize);
+
+        this.npoints = totalSize;
+        this.xpoints = x;
+        this.ypoints = y;
+        calculateBounds(xpoints, ypoints, npoints);
     }
 
     @Override
@@ -74,7 +87,69 @@ public class PolygonArea extends Area {
 
     @Override
     public boolean contains(Position position) {
-        return polygon.contains(position.getX(), position.getY());
+        int x = position.getX();
+        int y = position.getY();
+
+        if (npoints <= 2 || !inBounds(x, y)) {
+            return false;
+        }
+        int hits = 0;
+
+        int lastx = xpoints[npoints - 1];
+        int lasty = ypoints[npoints - 1];
+        int curx, cury;
+
+        // Walk the edges of the polygon
+        for (int i = 0; i < npoints; lastx = curx, lasty = cury, i++) {
+            curx = xpoints[i];
+            cury = ypoints[i];
+
+            if (cury == lasty) {
+                continue;
+            }
+
+            int leftx;
+            if (curx < lastx) {
+                if (x >= lastx) {
+                    continue;
+                }
+                leftx = curx;
+            } else {
+                if (x >= curx) {
+                    continue;
+                }
+                leftx = lastx;
+            }
+
+            double test1, test2;
+            if (cury < lasty) {
+                if (y < cury || y >= lasty) {
+                    continue;
+                }
+                if (x < leftx) {
+                    hits++;
+                    continue;
+                }
+                test1 = x - curx;
+                test2 = y - cury;
+            } else {
+                if (y < lasty || y >= cury) {
+                    continue;
+                }
+                if (x < leftx) {
+                    hits++;
+                    continue;
+                }
+                test1 = x - lastx;
+                test2 = y - lasty;
+            }
+
+            if (test1 < (test2 / (lasty - cury) * (lastx - curx))) {
+                hits++;
+            }
+        }
+
+        return ((hits & 1) != 0);
     }
 
     @Override
@@ -97,12 +172,6 @@ public class PolygonArea extends Area {
 
     @Override
     public ImmutableSet<Position> computePositionSet() {
-        // Create a rectangle that encompasses our polygon.
-        Rectangle2D outer = polygon.getBounds2D();
-        int southWestX = (int) outer.getMinX();
-        int southWestY = (int) outer.getMinY();
-        int northEastX = (int) outer.getMaxX();
-        int northEastY = (int) outer.getMaxY();
 
         // Build it into a simple box area, get every position inside.
         ImmutableSet<Position> outerPositionSet =
@@ -111,12 +180,37 @@ public class PolygonArea extends Area {
         // Loop through the positions, save the ones contained within our actual polygon.
         ImmutableSet.Builder<Position> innerPositionSet = ImmutableSet.builder();
         for (Position outerPosition : outerPositionSet) {
-            int outerPositionX = outerPosition.getX();
-            int outerPositionY = outerPosition.getY();
-            if (polygon.contains(outerPositionX, outerPositionY)) {
+            if (contains(outerPosition)) {
                 innerPositionSet.add(outerPosition);
             }
         }
         return innerPositionSet.build();
+    }
+
+    private void calculateBounds(int[] xpoints, int[] ypoints, int npoints) {
+        int boundsMinX = Integer.MAX_VALUE;
+        int boundsMinY = Integer.MAX_VALUE;
+        int boundsMaxX = Integer.MIN_VALUE;
+        int boundsMaxY = Integer.MIN_VALUE;
+
+        for (int i = 0; i < npoints; i++) {
+            int x = xpoints[i];
+            boundsMinX = Math.min(boundsMinX, x);
+            boundsMaxX = Math.max(boundsMaxX, x);
+            int y = ypoints[i];
+            boundsMinY = Math.min(boundsMinY, y);
+            boundsMaxY = Math.max(boundsMaxY, y);
+        }
+        this.southWestX = boundsMinX;
+        this.southWestY = boundsMinY;
+        this.northEastX = boundsMaxX;
+        this.northEastY = boundsMaxY;
+    }
+
+    /**
+     * Checks if a point is within the bounds. This is an early check to avoid checking all the points via the logic in contains.
+     */
+    private boolean inBounds(int x, int y) {
+        return x >= this.southWestX && y >= this.southWestY && x < northEastX && y < northEastY;
     }
 }
