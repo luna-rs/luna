@@ -8,7 +8,7 @@ import io.luna.game.model.mob.Player
 /**
  * An enumerated type representing all pickaxes that can be used to mine [Ore]s.
  */
-enum class Pickaxe(val level: Int, val itemId: Int, val animation: Animation, val strength: Int) {
+enum class Pickaxe(val level: Int, val itemId: Int, val animation: Animation, val strength: Int) { // TODO correct 'strength' values?
     BRONZE(level = 1,
            itemId = 1265,
            animation = Animation(625),
