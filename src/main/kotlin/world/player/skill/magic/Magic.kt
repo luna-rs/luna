@@ -119,24 +119,18 @@ object Magic {
                 sound.display()
                 true
             }
-
             1 -> {
                 plr.animation(Animation(714))
+                plr.graphic(Graphic(111, 92))
                 true
             }
-
-            2 -> {
-                plr.graphic(Graphic(308, 50))
-                true
-            }
-
+            2 -> true
             3 -> true
             4 -> {
                 plr.move(action.destination)
                 plr.animation(Animation(715))
                 false
             }
-
             else -> false
         }
     }
