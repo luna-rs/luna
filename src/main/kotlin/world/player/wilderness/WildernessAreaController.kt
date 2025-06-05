@@ -48,7 +48,7 @@ object WildernessAreaController : PlayerLocationController() {
     }
 
     override fun computeLocations(): ImmutableSet<Location> = ImmutableSet.of(
-        Area.of(2041, 3519, 3392, 3966)
+        Area.of(2944, 3519, 3392, 3966)
     )
 
     override fun canTeleport(player: Player, action: TeleportAction): Boolean {
