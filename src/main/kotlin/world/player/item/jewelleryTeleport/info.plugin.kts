@@ -1,4 +1,4 @@
-package world.player.item.teleJewellery
+package world.player.item.jewelleryTeleport
 
 import api.plugin.dsl.plugin
 
