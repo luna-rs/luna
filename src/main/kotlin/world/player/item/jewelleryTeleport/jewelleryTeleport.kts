@@ -21,7 +21,7 @@ TeleportJewellery.values().forEach {
 
         if (lastItem && !jewellery.disappear) {
             item4(itemID) {
-                plr.sendMessage(jewellery.crumbleMessage)
+                plr.sendMessage(jewellery.lastChargeMessage)
             }
             continue
         }
@@ -31,8 +31,8 @@ TeleportJewellery.values().forEach {
             world.scheduleOnce(1, {
                 val dialogueOptions = mutableListOf<DialogueOption>()
                 for (destination in jewellery.destinations) {
-                    dialogueOptions.add(DialogueOption(destination.destinationName, {
-                        teleport(plr, destination.destination, destination.destinationName)
+                    dialogueOptions.add(DialogueOption(destination.second, {
+                        teleport(plr, destination.first, destination.second)
                         degrade(plr, itemID, index, jewellery)
                     }))
                 }
@@ -56,7 +56,7 @@ fun degrade(plr: Player, necklaceId: Int, index: Int, type: TeleportJewellery) {
             || (type.disappear && jewelleryIndex+1 == type.itemIDs.size)
 
     if (lastCharge) {
-        plr.sendMessage(type.crumbleMessage)
+        plr.sendMessage(type.lastChargeMessage)
         if (type.disappear) {
             return
         }
