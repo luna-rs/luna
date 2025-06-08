@@ -4,6 +4,7 @@ import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
 import api.predef.*
+import io.luna.game.model.def.NpcCombatDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder
 import io.luna.game.model.mob.dialogue.Expression
@@ -40,22 +41,39 @@ object Slayer {
     var Player.difficultyChecking: Boolean by Attr.boolean(true).persist("slayer_difficulty_checking")
 
     /**
-     * Decrement `1` from the remaining amount of tasks. If the remaining amount of monsters is equal or lower to `0`,
-     * the task will be completed.
+     * Decrement `1` from the remaining amount of tasks and adds XP for [npcId]. If the remaining amount of monsters is
+     * equal or lower to `0`, the task will be completed.
      */
-    fun record(plr: Player, npcId: Int? = null) { // TODO implement after combat
-        val currentTask = plr.activeSlayerTask?.task
-        if (currentTask != null) {
-            val xp = if (npcId == null) 0.0 else currentTask.npcXp[npcId] ?: return
-            if (xp > 0.0) {
-                plr.slayer.addExperience(xp * XP_MULTIPLIER)
+    fun record(plr: Player, npcId: Int) { // TODO implement after combat
+        val activeTask = plr.activeSlayerTask
+        val taskType = activeTask?.task
+        if (taskType != null && taskType.npcs.contains(npcId)) {
+            addXp(plr, npcId)
+            if (activeTask.decrement()) {
+                completeTask(plr)
             }
-            if (--plr.activeSlayerTask!!.remaining <= 0) {
-                val completed = ++plr.completedSlayerTasks
-                val count = if (completed == 1) "1 task" else "$completed tasks"
-                plr.sendMessage("You've completed $count in a row; return to a Slayer master.")
-                plr.activeSlayerTask = null
-            }
+        }
+    }
+
+    /**
+     * Performs the process of completing a slayer task for [plr], and resets the current task.
+     */
+    private fun completeTask(plr: Player) {
+        val completed = ++plr.completedSlayerTasks
+        val count = if (completed == 1) "1 task" else "$completed tasks"
+        plr.sendMessage("You've completed $count in a row; return to a Slayer master.")
+        plr.activeSlayerTask = null
+    }
+
+    /**
+     * Gives [plr] the slayer experience for killing an NPC with ID [npcId].
+     */
+    private fun addXp(plr: Player, npcId: Int) {
+        val addXp = NpcCombatDefinition.ALL.get(npcId)
+            .map { it.hitpoints * XP_MULTIPLIER }
+            .orElseThrow { IllegalStateException("No combat definition for [npcId=$npcId].") }
+        if (addXp > 0.0) {
+            plr.slayer.addExperience(addXp)
         }
     }
 
