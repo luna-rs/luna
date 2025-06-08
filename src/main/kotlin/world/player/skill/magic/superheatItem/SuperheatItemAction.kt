@@ -45,7 +45,6 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
          */
         val Player.superheatDelay by Attr.timeSource()
     }
-    // todo https://github.com/luna-rs/luna/issues/376
 
     override fun execute() {
         val removeItems = Magic.checkRequirements(mob, LEVEL, RUNES)
@@ -62,7 +61,6 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
                     mob.animation(Animations.SUPERHEAT)
                     mob.graphic(Graphic(148, 100))
                     mob.smithing.addExperience(barType.xp)
-                    mob.sendMessage("You create a ${itemName(barType.id).toLowerCase()}.");
                     mob.tabs.show(TabIndex.MAGIC)
                     mob.unlock()
                 }
@@ -93,8 +91,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             return null
         }
         if (mob.smithing.level < barType.level) {
-            // https://github.com/luna-rs/luna/issues/376
-            mob.sendMessage("You do not have the required level to superheat this.")
+            mob.sendMessage("Your Smithing level is not high enough to superheat this.")
             return null
         }
         return barType
