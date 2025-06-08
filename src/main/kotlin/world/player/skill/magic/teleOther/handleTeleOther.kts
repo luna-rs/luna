@@ -67,7 +67,7 @@ fun clickAccept(target: Player) {
         target.interfaces.close()
 
         val source = openInterface.source
-        source.teleOtherRequests.remove(target)
+        source.teleOtherRequests.remove(target.usernameHash)
         if (!source.position.isWithinDistance(target.position, 10)) {
             source.sendMessage("You are too far away from ${target.username} to teleport them.")
             target.sendMessage("You are too far away from ${source.username} to be teleported.")
@@ -91,12 +91,12 @@ fun clickDecline(target: Player) {
 
 
 /* Interactions for teleother spellbook actions and interface buttons. */
-on(MagicOnPlayerEvent::class).filter { spellId == 12425 } // Lumbridge
+on(MagicOnPlayerEvent::class).filter { spellId == 12425 }
     .then { open(plr, targetPlr, TeleOtherType.LUMBRIDGE) }
 on(MagicOnPlayerEvent::class).filter { spellId == 12435 }
-    .then { open(plr, targetPlr, TeleOtherType.FALADOR) } // Falador
+    .then { open(plr, targetPlr, TeleOtherType.FALADOR) }
 on(MagicOnPlayerEvent::class).filter { spellId == 12455 }
-    .then { open(plr, targetPlr, TeleOtherType.CAMELOT) } // Camelot
+    .then { open(plr, targetPlr, TeleOtherType.CAMELOT) }
 
 
 // Accept

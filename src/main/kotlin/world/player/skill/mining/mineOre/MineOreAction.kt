@@ -3,7 +3,6 @@ package world.player.skill.mining.mineOre
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
-import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -56,11 +55,12 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         }
 
         !Pickaxe.hasPick(mob, pick) -> {
+            // Check if we still have a pickaxe.
             mob.sendMessage("You need a pickaxe to mine ores.")
             false
         }
-        // Check if rock isn't already mined and if we still have a pickaxe.
-        rockObj.state == EntityState.INACTIVE || !Pickaxe.hasPick(mob, pick) -> false
+        // Check if rock isn't already mined .
+        rockObj.state == EntityState.INACTIVE -> false
         else -> true
     }
 
@@ -75,7 +75,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
             if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
                 dropGem()
             } else {
-                mob.sendMessage("You manage to mine some ${ore.typeName.toLowerCase()}.")
+                mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
                 mob.mining.addExperience(ore.exp)
             }
 
@@ -92,13 +92,10 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
 
     override fun animation(): Animation {
         mob.playSound(Sounds.MINE_ROCK)
-        mob.playSound(Sounds.MINE_ROCK, 2)
-        mob.playSound(Sounds.MINE_ROCK, 4)
         return pick.animation
     }
 
-
-    override fun add(): List<Item?> = listOf(Item(ore.item))
+    override fun add(): List<Item> = if (executions == 0) emptyList() else listOf(Item(ore.item))
 
     override fun onFinished() = mob.animation(Animation.CANCEL)
 
@@ -106,11 +103,9 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      * Deletes and respawns an [Ore] rock object.
      */
     private fun deleteAndRespawnRock() {
-        if (world.removeObject(rockObj)) {
-            val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
-            if (emptyId != null) {
-                world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
-            }
+        val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
+        if (emptyId != null) {
+            world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
             val respawn = ore.respawnTicks
             if (respawn != null) {
                 world.scheduleOnce(respawn) {

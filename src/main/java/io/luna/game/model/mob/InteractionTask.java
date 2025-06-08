@@ -101,11 +101,13 @@ public final class InteractionTask extends Task {
 
     @Override
     protected void execute() {
+        int distance = event.distance();
         boolean isMob = interactWith instanceof Mob;
         boolean standing = player.getWalking().isEmpty();
         CollisionManager collision = player.getWorld().getCollisionManager();
-        boolean reached = collision.reached(player, interactWith, event.distance());
+        boolean reached = collision.reached(player, interactWith, distance);
         if (reached) {
+            player.getWalking().clear();
             if (isMob || interactWith.size() == 1) {
                 boolean delayed = false;
                 Position current = player.getPosition();
