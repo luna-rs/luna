@@ -73,6 +73,10 @@ enum class ChargeOrbType(val spellId: Int,
     );
 
     companion object {
+
+        /**
+         * An immutable copy of [values].
+         */
         val VALUES = ImmutableList.copyOf(values())
     }
 }

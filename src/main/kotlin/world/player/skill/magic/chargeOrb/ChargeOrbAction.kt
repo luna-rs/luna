@@ -40,8 +40,7 @@ class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Playe
                 mob.magic.addExperience(type.xp)
                 mob.animation(Animations.CHARGE_ORB)
                 mob.graphic(Graphic(type.graphic, 100))
-                // todo https://github.com/luna-rs/luna/issues/374
-                mob.sendMessage("You create ${articleItemName(type.chargedOrb).toLowerCase()}.");
+                mob.sendMessage("You charge the orb and place it in your inventory.");
                 mob.tabs.show(TabIndex.MAGIC)
                 mob.unlock()
             }
