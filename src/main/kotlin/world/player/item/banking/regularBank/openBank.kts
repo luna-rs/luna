@@ -43,6 +43,5 @@ fun bankerDialogue(plr: Player) {
                     })
                     .open()
             })
-        .then({plr.bank.open()})
         .open();
 }
