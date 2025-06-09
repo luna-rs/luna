@@ -4,20 +4,31 @@ import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.*
 
-val bankerId = 494
+val bankerIds = listOf(166, 494, 495, 496, 497, 498, 499, 953, 1036, 1360, 1702, 2163, 2164, 2354, 2355, 2568, 2569, 2570, 3046, 3198, 3199)
 
 // Load all banking objects, make them open the bank.
 on(ServerLaunchEvent::class) {
     Banking.loadBankingObjects()
     for (id in Banking.bankingObjects) {
-        object1(id) { bankerDialogue(plr) }
+        object1(id) {
+            val npc: Npc? = plr.localNpcs.firstOrNull { npc ->
+                npc.position.isWithinDistance(gameObject.position, 1)
+                && bankerIds.contains(npc.id)
+            }
+
+            if (npc != null) {
+                bankerDialogue(plr, npc.id)
+            } else {
+                bankerDialogue(plr, bankerIds.get(1)) // use default banker when no npc nearby
+            }
+        }
         if (objectDef(id).actions.contains("Use-quickly")) {
             object2(id) { plr.bank.open() }
         }
     }
 }
 
-fun bankerDialogue(plr: Player) {
+fun bankerDialogue(plr: Player, bankerId: Int) {
     plr.newDialogue()
         .npc(bankerId, "Good day, how may I help you?")
         .options("I'd like to access my bank account, please.", {
