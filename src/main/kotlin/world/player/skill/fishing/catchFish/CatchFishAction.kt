@@ -3,6 +3,7 @@ package world.player.skill.fishing.catchFish
 import api.predef.*
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
+import io.luna.game.model.def.*
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import world.player.Sounds
@@ -55,7 +56,8 @@ class CatchFishAction(private val msg: NpcClickEvent,
 
             !mob.inventory.contains(tool.id) -> {
                 // Check if we have required tool.
-                mob.sendMessage("You need ${addArticle(tool.id)} to fish here.")
+                val toolName = ItemDefinition.ALL.retrieve(tool.id).name
+                mob.sendMessage("You need ${addArticle(toolName)} to fish here.")
                 false
             }
 
