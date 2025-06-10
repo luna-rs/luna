@@ -2,9 +2,10 @@ package world.player.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.Player
-import io.luna.game.model.`object`.ObjectType
-import world.player.Sounds
+import io.luna.game.model.*
+import io.luna.game.model.mob.*
+import io.luna.game.model.`object`.*
+import world.player.*
 
 /**
  * A [LightAction] implementation that enables lighting logs to create fires.
@@ -29,12 +30,12 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 if (removeLog) {
                     if (mob.inventory.remove(log.id)) {
                         world.addItem(log.id, 1, mob.position, mob)
-                        mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                        mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                         return true
                     }
                     return false
                 }
-                mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                 return true
             }
         }
@@ -59,7 +60,19 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 else -> mob.playSound(Sounds.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
-            mob.walking.walkRandomDirection()
+
+            // Walk in a non-blocked direction prioritizing east
+            val collision = mob.world.collisionManager
+            val directions = listOf(Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH)
+            for (dir in directions) {
+                if (collision.traversable(mob.position, EntityType.NPC, dir)) {
+                    mob.walking.walk(mob.position.translate(1, dir))
+                    world.scheduleOnce(1, {
+                        mob.face(dir.opposite())
+                    })
+                    break
+                }
+            }
             val fireObject = world.addObject(Firemaking.FIRE_OBJECT, firePosition)
             world.scheduleOnce(rand(Firemaking.BURN_TIME)) {
                 world.removeObject(fireObject)
