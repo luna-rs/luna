@@ -63,11 +63,12 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
 
             // Walk in a non-blocked direction prioritizing east
             val collision = mob.world.collisionManager
-            val directions = listOf(Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH)
+            val directions = listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
             for (dir in directions) {
                 if (collision.traversable(mob.position, EntityType.NPC, dir)) {
-                    mob.walking.walk(mob.position.translate(1, dir))
-                    world.scheduleOnce(1, {
+                    val newPosition = mob.position.translate(1, dir)
+                    mob.walking.walk(newPosition)
+                    world.scheduleOnce(2, {
                         mob.face(dir.opposite())
                     })
                     break
