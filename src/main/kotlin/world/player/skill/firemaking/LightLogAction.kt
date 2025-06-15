@@ -13,6 +13,11 @@ import world.player.*
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
 
+    /**
+     * Directions in prioritized order to try to walk after lighting a log
+     */
+    private val WALK_DIRECTIONS : List<Direction> = listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
+
     override fun canLight(): Boolean {
 
         return when {
@@ -63,14 +68,15 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
 
             // Walk in a non-blocked direction prioritizing east
             val collision = mob.world.collisionManager
-            val directions = listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
-            for (dir in directions) {
+            for (dir in WALK_DIRECTIONS) {
                 if (collision.traversable(mob.position, EntityType.NPC, dir)) {
                     val newPosition = mob.position.translate(1, dir)
                     mob.walking.walk(newPosition)
-                    world.scheduleOnce(2, {
+                    mob.lock()
+                    world.scheduleOnce(2) {
                         mob.face(dir.opposite())
-                    })
+                        mob.unlock()
+                    }
                     break
                 }
             }
