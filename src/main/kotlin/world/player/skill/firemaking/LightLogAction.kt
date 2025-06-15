@@ -66,13 +66,13 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
             }
             mob.firemaking.addExperience(log.exp)
 
-            // Walk in a non-blocked direction prioritizing east
+            // Walk in a non-blocked direction prioritizing west
             val collision = mob.world.collisionManager
             for (dir in WALK_DIRECTIONS) {
                 if (collision.traversable(mob.position, EntityType.NPC, dir)) {
                     val newPosition = mob.position.translate(1, dir)
-                    mob.walking.walk(newPosition)
                     mob.lock()
+                    mob.walking.walk(newPosition)
                     world.scheduleOnce(2) {
                         mob.face(dir.opposite())
                         mob.unlock()
