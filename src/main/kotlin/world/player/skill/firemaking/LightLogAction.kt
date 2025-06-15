@@ -75,6 +75,8 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                     mob.walking.walk(newPosition)
                     world.scheduleOnce(2) {
                         mob.face(dir.opposite())
+                    }
+                    world.scheduleOnce(3) {
                         mob.unlock()
                     }
                     break
