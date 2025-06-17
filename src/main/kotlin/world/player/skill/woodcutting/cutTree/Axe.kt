@@ -2,45 +2,53 @@ package world.player.skill.woodcutting.cutTree
 
 import api.predef.*
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An enumerated type representing all axes that can be used to cut [Tree]s.
  */
-enum class Axe(val id: Int, val level: Int, val animation: Animation, val strength: Int) {
+enum class Axe(val id: Int, val level: Int, val animation: Animation, val speed: Int, val strength: Double) {
     BRONZE(id = 1351,
            level = 1,
            animation = Animation(879),
-           strength = 1),
+           speed = 4,
+           strength = 0.45),
     IRON(id = 1349,
          level = 1,
          animation = Animation(877),
-         strength = 2),
+         speed = 4,
+         strength = 0.50),
     STEEL(id = 1353,
           level = 6,
           animation = Animation(875),
-          strength = 4),
+          speed = 4,
+          strength = 0.60),
     BLACK(id = 1361,
           level = 6,
           animation = Animation(875),
-          strength = 4),
+          speed = 4,
+          strength = 0.65),
     MITHRIL(id = 1355,
             level = 21,
             animation = Animation(871),
-            strength = 6),
+            speed = 4,
+            strength = 0.75),
     ADAMANT(id = 1357,
             level = 31,
             animation = Animation(869),
-            strength = 7),
+            speed = 4,
+            strength = 0.85),
     RUNE(id = 1359,
-           level = 41,
-           animation = Animation(867),
-           strength = 8),
+         level = 41,
+         animation = Animation(867),
+         speed = 4,
+         strength = 0.95),
     DRAGON(id = 6739,
            level = 61,
            animation = Animation(2846),
-           strength = 10);
+           speed = 3,
+           strength = 1.05);
 
     companion object {
 
@@ -57,7 +65,7 @@ enum class Axe(val id: Int, val level: Int, val animation: Animation, val streng
             val weapon = plr.equipment[Equipment.WEAPON]
             if (weapon != null) { // See if weapon is an axe.
                 val axeFound = VALUES[weapon.id]
-                if(axeFound != null && plr.woodcutting.level >= axeFound.level) {
+                if (axeFound != null && plr.woodcutting.level >= axeFound.level) {
                     axe = axeFound
                 }
             }
@@ -68,8 +76,9 @@ enum class Axe(val id: Int, val level: Int, val animation: Animation, val streng
                 }
                 val newAxe = VALUES[item.id]
                 if (newAxe != null &&
-                        plr.woodcutting.level >= newAxe.level &&
-                        (axe == null || newAxe.strength > axe.strength)) {
+                    plr.woodcutting.level >= newAxe.level &&
+                    (axe == null || newAxe.strength > axe.strength)
+                ) {
                     axe = newAxe
                 }
             }
