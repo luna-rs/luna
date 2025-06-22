@@ -2,18 +2,14 @@ package world.player.item.banking.regularBank
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.*
 
-val DEFAULT_BANKER = 494
-
-val bankerIds = mutableListOf<Int>()
-
 on(ServerLaunchEvent::class) {
-    // Find all banker npcs and store their ids
-    NpcDefinition.ALL
-        .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
-        .forEach({ npcDefinition -> bankerIds.add(npcDefinition.id)})
+    // Load all banking npcs and make them initialize dialogue
+    Banking.loadBankingNpcs()
+    for (id in Banking.bankingNpcs) {
+        npc1(id, {bankerDialogue(plr, id)})
+    }
 
     // Load all banking objects, make them open the bank.
     Banking.loadBankingObjects()
@@ -21,13 +17,13 @@ on(ServerLaunchEvent::class) {
         object1(id) {
             val npc: Npc? = plr.localNpcs.firstOrNull { npc ->
                 npc.position.isWithinDistance(gameObject.position, 1)
-                && bankerIds.contains(npc.id)
+                && Banking.bankingNpcs.contains(npc.id)
             }
 
             if (npc != null) {
                 bankerDialogue(plr, npc.id)
             } else {
-                bankerDialogue(plr, DEFAULT_BANKER) // use default banker when no npc nearby
+                bankerDialogue(plr, Banking.DEFAULT_BANKER) // use default banker when no npc nearby
             }
         }
         if (objectDef(id).actions.contains("Use-quickly")) {
