@@ -11,4 +11,5 @@ plugin {
     version = "1.0"
     corePlugin = true
     authors += "lare96"
+    authors += "hydrozoa"
 }
