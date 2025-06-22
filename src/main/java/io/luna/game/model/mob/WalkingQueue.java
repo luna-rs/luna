@@ -10,17 +10,13 @@ import io.luna.game.model.Region;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.path.AStarPathfindingAlgorithm;
 import io.luna.game.model.path.EuclideanHeuristic;
+import io.luna.game.model.path.PathfindingAlgorithm;
 import io.luna.game.model.path.SimplePathfindingAlgorithm;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * A model representing an implementation of the walking queue.
@@ -124,16 +120,7 @@ public final class WalkingQueue {
      * The collision manager.
      */
     private final CollisionManager collisionManager;
-
-    /**
-     * The simple pathfinder.
-     */
-    private final SimplePathfindingAlgorithm simplePathfinder;
-
-    /**
-     * The A* pathfinder.
-     */
-    private final AStarPathfindingAlgorithm astarPathfinder;
+    private final PathfindingAlgorithm pathfindingAlgorithm;
 
     /**
      * The mob.
@@ -163,8 +150,11 @@ public final class WalkingQueue {
     public WalkingQueue(Mob mob) {
         this.mob = mob;
         collisionManager = mob.getWorld().getCollisionManager();
-        simplePathfinder = new SimplePathfindingAlgorithm(collisionManager);
-        astarPathfinder = new AStarPathfindingAlgorithm(collisionManager, new EuclideanHeuristic());
+        if (mob instanceof Player) {
+            this.pathfindingAlgorithm = new AStarPathfindingAlgorithm(collisionManager, new EuclideanHeuristic());
+        } else {
+            this.pathfindingAlgorithm = new SimplePathfindingAlgorithm(collisionManager);
+        }
     }
 
     /**
@@ -265,7 +255,7 @@ public final class WalkingQueue {
      */
     public void walkUntilReached(Entity target) {
         Deque<Step> newPath = new ArrayDeque<>();
-        Deque<Position> path = astarPathfinder.find(mob.getPosition(), target.getPosition());
+        Deque<Position> path = pathfindingAlgorithm.find(mob.getPosition(), target.getPosition());
         Position lastPosition = mob.getPosition();
         for (; ; ) {
             Position nextPosition = path.poll();
@@ -507,8 +497,7 @@ public final class WalkingQueue {
      * @return The path.
      */
     private Deque<Step> findPath(Position target) {
-        Deque<Position> positionPath = mob.getType() == EntityType.PLAYER ? astarPathfinder.find(mob.getPosition(), target) :
-                simplePathfinder.find(mob.getPosition(), target);
+        Deque<Position> positionPath = pathfindingAlgorithm.find(mob.getPosition(), target);
         Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
         for (; ; ) {
             // TODO remove step class?
