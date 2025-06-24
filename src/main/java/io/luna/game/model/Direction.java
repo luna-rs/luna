@@ -141,11 +141,13 @@ public enum Direction {
      *
      * @param currentX The current x coordinate.
      * @param currentY The current y coordinate.
-     * @param nextX The next x coordinate.
-     * @param nextY The next y coordinate.
+     * @param nextX    The next x coordinate.
+     * @param nextY    The next y coordinate.
      * @return The direction between the current and next coordinates.
+     * @deprecated Use {@link Vector2#distanceTo(Vector2)}.
      */
     @SuppressWarnings("Duplicates")
+    @Deprecated
     public static Direction between(int currentX, int currentY, int nextX, int nextY) {
         int deltaX = Integer.signum(nextX - currentX);
         int deltaY = Integer.signum(nextY - currentY);
@@ -184,7 +186,10 @@ public enum Direction {
      * @param current The current step.
      * @param next The next step.
      * @return The direction between the current and next steps.
+     *
+     * @deprecated Use {@link Vector2#distanceTo(Vector2)}.
      */
+    @Deprecated
     public static Direction between(Vector2 current, Vector2 next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
     }
