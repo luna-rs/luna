@@ -1,6 +1,5 @@
 package io.luna.game.model.mob;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
@@ -19,9 +18,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
 
 /**
  * A model representing an implementation of the walking queue.
@@ -297,13 +294,14 @@ public final class WalkingQueue {
      * @param path The path to walk.
      */
     public void addPath(Deque<Step> path) {
+    public void addPath(Deque<Vector2> path) {
         int size = path.size();
         if (size == 1) {
             addFirst(path.poll());
         } else if (size > 1) {
             addFirst(path.poll());
             for (; ; ) {
-                Step nextStep = path.poll();
+                Vector2 nextStep = path.poll();
                 if (nextStep == null) {
                     break;
                 }
@@ -325,11 +323,12 @@ public final class WalkingQueue {
      *
      * @param step The step to add.
      */
-    private void addFirst(Step step) {
+    private void addFirst(Vector2 step) {
         current.clear();
         Queue<Step> backtrack = new ArrayDeque<>();
+        Deque<Vector2> backtrack = new ArrayDeque<>();
         for (; ; ) {
-            Step prev = previous.pollLast();
+            Vector2 prev = previous.pollLast();
             if (prev == null) {
                 break;
             }
@@ -374,7 +373,7 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
-            current.add(new Step(nextX - deltaX, nextY - deltaY));
+            current.add(new Vector2(nextX - deltaX, nextY - deltaY));
         }
     }
 

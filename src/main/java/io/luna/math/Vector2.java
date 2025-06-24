@@ -2,12 +2,14 @@ package io.luna.math;
 
 import com.google.common.base.MoreObjects;
 import io.luna.game.model.Position;
-import io.luna.game.model.mob.WalkingQueue;
 
 import java.util.Objects;
 
 /**
- * A model representing a step in the walking queue.
+ * A vector with 2 axis (x,y).
+ *
+ * @author lare96
+ * @author notjuanortiz
  */
 public final class Vector2 {
 
@@ -39,6 +41,40 @@ public final class Vector2 {
      */
     public Vector2(Position position) {
         this(position.getX(), position.getY());
+    }
+
+    public Vector2 add(Vector2 other) {
+        return new Vector2(this.x + other.x, this.y + other.y);
+    }
+
+    public Vector2 subtract(Vector2 other) {
+        return new Vector2(this.x - other.x, this.x - other.y);
+    }
+
+    public Vector2 max(Vector2 other) {
+        return new Vector2(Math.max(this.x, other.x), Math.max(this.x, other.x));
+    }
+
+    public Vector2 min(Vector2 other) {
+        return new Vector2(Math.min(this.x, other.x), Math.min(this.x, other.x));
+    }
+
+    /**
+     * Converts a vector into a unit vector. Unit vectors, by definition, have a magnitude of 1.
+     */
+    public Vector2 normalize() {
+        int magnitude = (int) Math.sqrt((this.x * this.x) + (this.y * this.y));
+        if (magnitude == 0) { // We cannot divide by 0
+            return new Vector2(0, 0);
+        }
+        return new Vector2(this.x / magnitude, this.y / magnitude);
+    }
+
+    /**
+     * Returns the directional distance from this vector to another vector.
+     */
+    public Vector2 distanceTo(Vector2 other) {
+        return new Vector2(other.x - this.x, other.y - this.y);
     }
 
     @Override
