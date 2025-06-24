@@ -3,7 +3,7 @@ package io.luna.net.msg.in;
 import io.luna.game.event.impl.WalkingEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.WalkingQueue;
-import io.luna.game.model.mob.WalkingQueue.Step;
+import io.luna.math.Vector2;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
@@ -44,10 +44,10 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
             path[i][1] = payload.get();
         }
 
-        Deque<Step> steps = new ArrayDeque<>(pathSize + 1);
-        steps.add(new Step(firstStepX, firstStepY));
+        Deque<Vector2> steps = new ArrayDeque<>(pathSize + 1);
+        steps.add(new Vector2(firstStepX, firstStepY));
         for (int i = 0; i < pathSize; i++) {
-            steps.add(new Step(path[i][0] + firstStepX, path[i][1] + firstStepY));
+            steps.add(new Vector2(path[i][0] + firstStepX, path[i][1] + firstStepY));
         }
         return new WalkingEvent(player, steps, running, pathSize, opcode);
     }
