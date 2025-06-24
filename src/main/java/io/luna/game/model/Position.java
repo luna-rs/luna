@@ -3,7 +3,7 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.mob.WalkingQueue.Step;
+import io.luna.math.Vector2;
 
 import java.util.Comparator;
 import java.util.Objects;
@@ -222,7 +222,7 @@ public final class Position implements Location {
      * @return The translated position.
      */
     public Position translate(int amount, Direction direction) {
-        Step translation = direction.getTranslation();
+        Vector2 translation = direction.getTranslation();
         return translate(amount * translation.getX(), amount * translation.getY(), 0);
     }
 

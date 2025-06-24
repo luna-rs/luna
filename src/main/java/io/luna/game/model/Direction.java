@@ -1,7 +1,7 @@
 package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.game.model.mob.WalkingQueue.Step;
+import io.luna.math.Vector2;
 
 import java.util.Set;
 
@@ -14,15 +14,15 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Graham
  */
 public enum Direction {
-    NONE(-1, new Step(0, 0)),
-    NORTH_WEST(0, new Step(-1, 1)),
-    NORTH(1, new Step(0, 1)),
-    NORTH_EAST(2, new Step(1, 1)),
-    WEST(3, new Step(-1, 0)),
-    EAST(4, new Step(1, 0)),
-    SOUTH_WEST(5, new Step(-1, -1)),
-    SOUTH(6, new Step(0, -1)),
-    SOUTH_EAST(7, new Step(1, -1));
+    NONE(-1, new Vector2(0, 0)),
+    NORTH_WEST(0, new Vector2(-1, 1)),
+    NORTH(1, new Vector2(0, 1)),
+    NORTH_EAST(2, new Vector2(1, 1)),
+    WEST(3, new Vector2(-1, 0)),
+    EAST(4, new Vector2(1, 0)),
+    SOUTH_WEST(5, new Vector2(-1, -1)),
+    SOUTH(6, new Vector2(0, -1)),
+    SOUTH_EAST(7, new Vector2(1, -1));
 // todo cleanup, documentation
     /**
      * A list of directions representing all possible directions of the NPC view cone, in order.
@@ -58,19 +58,19 @@ public enum Direction {
      * The direction identifier.
      */
     private final int id;
-    private final Step translate;
+    private final Vector2 translate;
 
     /**
      * Creates a new {@link Direction}.
      *
      * @param id The direction identifier.
      */
-    Direction(int id, Step translate) {
+    Direction(int id, Vector2 translate) {
         this.id = id;
         this.translate = translate;
     }
 
-    public Step getTranslation() {
+    public Vector2 getTranslation() {
         return translate;
     }
 
@@ -185,7 +185,7 @@ public enum Direction {
      * @param next The next step.
      * @return The direction between the current and next steps.
      */
-    public static Direction between(Step current, Step next) {
+    public static Direction between(Vector2 current, Vector2 next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
     }
 
