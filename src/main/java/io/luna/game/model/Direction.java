@@ -144,7 +144,7 @@ public enum Direction {
      * @param nextX    The next x coordinate.
      * @param nextY    The next y coordinate.
      * @return The direction between the current and next coordinates.
-     * @deprecated Use {@link Vector2#distanceTo(Vector2)}.
+     * @deprecated Use {@link Vector2#directionTowards(Vector2)}.
      */
     @SuppressWarnings("Duplicates")
     @Deprecated
@@ -187,7 +187,7 @@ public enum Direction {
      * @param next The next step.
      * @return The direction between the current and next steps.
      *
-     * @deprecated Use {@link Vector2#distanceTo(Vector2)}.
+     * @deprecated Use {@link Vector2#directionTowards(Vector2)}.
      */
     @Deprecated
     public static Direction between(Vector2 current, Vector2 next) {

@@ -76,10 +76,11 @@ public final class Vector2 {
     }
 
     /**
-     * Returns the directional distance from this vector to another vector.
+     * Returns a unit vector representing the direction from this vector to another vector.
+     * The resulting vector will have a magnitude of 1 (unless it's a zero vector).
      */
-    public Vector2 distanceTo(Vector2 other) {
-        return new Vector2(other.x - this.x, other.y - this.y);
+    public Vector2 directionTowards(Vector2 other) {
+        return other.subtract(this).normalize();
     }
 
     @Override
