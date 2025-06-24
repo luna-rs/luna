@@ -294,18 +294,6 @@ public final class WalkingQueue {
      * @param path The path to walk.
      */
     public void addPath(Deque<Vector2> path) {
-//        if (path == null || path.isEmpty()) {
-//            return;
-//        }
-//
-//        Step firstStep = path.poll();
-//        addFirst(firstStep);
-//
-//        for (Step step : path) {
-//            add(step);
-//        }
-
-//        path.clear(); // Clear it just in case.
         int size = path.size();
         if (size == 1) {
             addFirst(path.poll());
