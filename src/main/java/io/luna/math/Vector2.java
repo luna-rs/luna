@@ -70,8 +70,8 @@ public final class Vector2 {
 
         // Since our game world is a grid (and therefore integer-based),
         // we round to the closest integer
-        int xNorm = (int) Math.round(this.x / magnitude);
-        int yNorm = (int) Math.round(this.y / magnitude);
+        int xNorm = (int) Math.ceil(this.x / magnitude);
+        int yNorm = (int) Math.ceil(this.y / magnitude);
         return new Vector2(xNorm, yNorm);
     }
 
