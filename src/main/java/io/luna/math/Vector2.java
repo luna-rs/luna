@@ -48,26 +48,31 @@ public final class Vector2 {
     }
 
     public Vector2 subtract(Vector2 other) {
-        return new Vector2(this.x - other.x, this.x - other.y);
+        return new Vector2(this.x - other.x, this.y - other.y);
     }
 
     public Vector2 max(Vector2 other) {
-        return new Vector2(Math.max(this.x, other.x), Math.max(this.x, other.x));
+        return new Vector2(Math.max(this.x, other.x), Math.max(this.y, other.y));
     }
 
     public Vector2 min(Vector2 other) {
-        return new Vector2(Math.min(this.x, other.x), Math.min(this.x, other.x));
+        return new Vector2(Math.min(this.x, other.x), Math.min(this.y, other.y));
     }
 
     /**
      * Converts a vector into a unit vector. Unit vectors, by definition, have a magnitude of 1.
      */
     public Vector2 normalize() {
-        int magnitude = (int) Math.sqrt((this.x * this.x) + (this.y * this.y));
+        double magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
         if (magnitude == 0) { // We cannot divide by 0
             return new Vector2(0, 0);
         }
-        return new Vector2(this.x / magnitude, this.y / magnitude);
+
+        // Since our game world is a grid (and therefore integer-based),
+        // we round to the closest integer
+        int xNorm = (int) Math.round(this.x / magnitude);
+        int yNorm = (int) Math.round(this.y / magnitude);
+        return new Vector2(xNorm, yNorm);
     }
 
     /**

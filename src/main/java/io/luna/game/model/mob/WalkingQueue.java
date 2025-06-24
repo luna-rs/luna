@@ -293,8 +293,19 @@ public final class WalkingQueue {
      *
      * @param path The path to walk.
      */
-    public void addPath(Deque<Step> path) {
     public void addPath(Deque<Vector2> path) {
+//        if (path == null || path.isEmpty()) {
+//            return;
+//        }
+//
+//        Step firstStep = path.poll();
+//        addFirst(firstStep);
+//
+//        for (Step step : path) {
+//            add(step);
+//        }
+
+//        path.clear(); // Clear it just in case.
         int size = path.size();
         if (size == 1) {
             addFirst(path.poll());
@@ -325,7 +336,6 @@ public final class WalkingQueue {
      */
     private void addFirst(Vector2 step) {
         current.clear();
-        Queue<Step> backtrack = new ArrayDeque<>();
         Deque<Vector2> backtrack = new ArrayDeque<>();
         for (; ; ) {
             Vector2 prev = previous.pollLast();
