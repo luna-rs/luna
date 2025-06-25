@@ -51,16 +51,28 @@ public final class Vector2 {
         return new Vector2(this.x - other.x, this.y - other.y);
     }
 
+    /**
+     * Returns a new vector containing the maximum components of this vector and another vector.
+     *
+     * @param other The other vector to compare against.
+     * @return A new vector where each component is the maximum of the corresponding components.
+     */
     public Vector2 max(Vector2 other) {
         return new Vector2(Math.max(this.x, other.x), Math.max(this.y, other.y));
     }
 
+    /**
+     * Returns a new vector containing the minimum components of this vector and another vector.
+     *
+     * @param other The other vector to compare against.
+     * @return A new vector where each component is the minimum of the corresponding components.
+     */
     public Vector2 min(Vector2 other) {
         return new Vector2(Math.min(this.x, other.x), Math.min(this.y, other.y));
     }
 
     /**
-     * Converts this vector into a unit vector with axes values of -1, 0, or 1.
+     * Converts this vector into a unit vector with component values of -1, 0, or 1.
      * <p>
      * This normalization function is optimized for a grid-based system.
      * </p>
