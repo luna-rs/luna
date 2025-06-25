@@ -85,7 +85,7 @@ class Vector2Test {
     void testDistanceTo() {
         Vector2 vec1 = new Vector2(1, 2);
         Vector2 vec2 = new Vector2(4, 6);
-        Vector2 distance = vec1.distanceTo(vec2);
+        Vector2 distance = vec1.directionTowards(vec2);
 
         assertEquals(3, distance.getX()); // 4 - 1
         assertEquals(4, distance.getY()); // 6 - 2

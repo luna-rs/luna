@@ -423,15 +423,14 @@ public final class WalkingQueue {
      */
     private Deque<Vector2> findPath(Position target) {
         Deque<Position> positionPath = pathfindingAlgorithm.find(mob.getPosition(), target);
-        Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
+        Deque<Vector2> stepPath = new ArrayDeque<>(positionPath.size());
         for (; ; ) {
             // TODO remove step class?
             Position next = positionPath.poll();
             if (next == null) {
                 break;
             }
-            stepPath.add(new Step(next));
-        Deque<Vector2> stepPath = new ArrayDeque<>(positionPath.size());
+            stepPath.add(new Vector2(next));
         }
         return stepPath;
     }
