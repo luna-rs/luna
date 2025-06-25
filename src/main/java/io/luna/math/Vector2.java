@@ -60,24 +60,17 @@ public final class Vector2 {
     }
 
     /**
-     * Converts a vector into a unit vector. Unit vectors, by definition, have a magnitude of 1.
+     * Converts this vector into a unit vector with axes values of -1, 0, or 1.
+     * <p>
+     * This normalization function is optimized for a grid-based system.
+     * </p>
      */
     public Vector2 normalize() {
-        double magnitude = Math.sqrt((this.x * this.x) + (this.y * this.y));
-        if (magnitude == 0) { // We cannot divide by 0
-            return new Vector2(0, 0);
-        }
-
-        // Since our game world is a grid (and therefore integer-based),
-        // we round to the closest integer
-        int xNorm = (int) Math.ceil(this.x / magnitude);
-        int yNorm = (int) Math.ceil(this.y / magnitude);
-        return new Vector2(xNorm, yNorm);
+        return new Vector2(Integer.signum(this.x), Integer.signum(this.y));
     }
 
     /**
      * Returns a unit vector representing the direction from this vector to another vector.
-     * The resulting vector will have a magnitude of 1 (unless it's a zero vector).
      */
     public Vector2 directionTowards(Vector2 other) {
         return other.subtract(this).normalize();

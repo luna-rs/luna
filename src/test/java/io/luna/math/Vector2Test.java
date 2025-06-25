@@ -66,13 +66,12 @@ class Vector2Test {
     @Test
     void testNormalize() {
         // Test with non-zero vector
-        Vector2 vec = new Vector2(5, 12);
+        Vector2 vec = new Vector2(5, -200);
         Vector2 normalized = vec.normalize();
 
-        // 5-12-13 triangle, so normalized should be (5/13, 12/13)
-        assertEquals(1, normalized.getX()); // 5/13 = 0.38, ceiling to 1
-        assertEquals(1, normalized.getY()); // 12/13 = 0.92, ceiling to 1
-        // The normalized vector is (1,1) which is facing north-east ;)
+        // Both values are positive, therefore the normalized vector should be (1, -1), or facing south-east
+        assertEquals(1, normalized.getX());
+        assertEquals(-1, normalized.getY());
 
         // Test with zero vector
         Vector2 zero = new Vector2(0, 0);
@@ -82,13 +81,16 @@ class Vector2Test {
     }
 
     @Test
-    void testDistanceTo() {
-        Vector2 vec1 = new Vector2(1, 2);
-        Vector2 vec2 = new Vector2(4, 6);
+    void testDirectionTowards() {
+        Vector2 vec1 = new Vector2(4, 2);
+        Vector2 vec2 = new Vector2(1, 6);
         Vector2 distance = vec1.directionTowards(vec2);
 
-        assertEquals(3, distance.getX()); // 4 - 1
-        assertEquals(4, distance.getY()); // 6 - 2
+        // The distance vector is subtracted, then normalized.
+        // The subtraction vector should be is (-3, 4)
+        // Normalized to (-1, 1) which is pointing north-west.
+        assertEquals(-1, distance.getX()); // 1 - 4 = -3, norm(-3) = -1
+        assertEquals(1, distance.getY()); // 6 - 2 = 4, norm(4) = 1
     }
 
     @Test
