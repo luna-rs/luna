@@ -16,12 +16,12 @@ public final class Vector2 {
     /**
      * The x coordinate.
      */
-    private final int x;
+    private int x;
 
     /**
      * The y coordinate.
      */
-    private final int y;
+    private int y;
 
     /**
      * Creates a new {@link Vector2}.
@@ -44,11 +44,15 @@ public final class Vector2 {
     }
 
     public Vector2 add(Vector2 other) {
-        return new Vector2(this.x + other.x, this.y + other.y);
+        x += other.x;
+        y += other.y;
+        return this;
     }
 
     public Vector2 subtract(Vector2 other) {
-        return new Vector2(this.x - other.x, this.y - other.y);
+        x -= other.x;
+        y -= other.y;
+        return this;
     }
 
     /**
@@ -58,7 +62,9 @@ public final class Vector2 {
      * @return A new vector where each component is the maximum of the corresponding components.
      */
     public Vector2 max(Vector2 other) {
-        return new Vector2(Math.max(this.x, other.x), Math.max(this.y, other.y));
+        x = Math.max(x, other.x);
+        y = Math.max(y, other.y);
+        return this;
     }
 
     /**
@@ -68,7 +74,9 @@ public final class Vector2 {
      * @return A new vector where each component is the minimum of the corresponding components.
      */
     public Vector2 min(Vector2 other) {
-        return new Vector2(Math.min(this.x, other.x), Math.min(this.y, other.y));
+        x = Math.min(x, other.x);
+        y = Math.min(y, other.y);
+        return this;
     }
 
     /**
@@ -78,7 +86,9 @@ public final class Vector2 {
      * </p>
      */
     public Vector2 normalize() {
-        return new Vector2(Integer.signum(this.x), Integer.signum(this.y));
+        x = Integer.signum(x);
+        y = Integer.signum(y);
+        return this;
     }
 
     /**
