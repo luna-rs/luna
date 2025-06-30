@@ -1,11 +1,10 @@
 package world.player.skill.woodcutting
 
 import api.attr.Attr
-import api.predef.*
 import io.luna.game.model.`object`.GameObject
+import world.player.skill.Skills
 import world.player.skill.woodcutting.cutTree.Axe
 import world.player.skill.woodcutting.cutTree.Tree
-import kotlin.math.min
 
 /**
  * Contains utility functions related to the woodcutting skill.
@@ -18,13 +17,24 @@ object Woodcutting {
     var GameObject.treeHealth: Int by Attr.int(-1)
 
     /**
-     * Increasing this value will make cutting logs faster while decreasing will do the opposite. Normal values range
-     * from -1 to 1.
+     * Determines which method to use for handling tree stump behavior: OSRS-style or 317-style.
+     *
+     * If `true`, uses the 317 method: every tree has a flat 1-in-8 chance to fall when chopped, regardless of type.
+     * If `false`, uses the OSRS method: each tree has a [treeHealth] value that scales with its level, determining
+     * when it becomes a stump.
      */
-    private val BONUS_STRENGTH = 0.0
+    val USE_317_TREE_STUMPS = false
 
     /**
-     * Simulate the result of woodcutting for [attempts] tries, and print the result to the console.
+     * The interval (in game ticks) between each attempt to cut a log while woodcutting.
+     *
+     * Lower values result in faster log collection, while higher values slow it down.
+     * A value of `4` matches the timing behavior in both 317 and OSRS.
+     */
+    val CUT_SPEED_TICKS = 4
+
+    /**
+     * Simulate the result of woodcutting for [attempts] tries, and print the result.
      */
     fun simulate(attempts: Int = 10_000) {
         fun simulateOnce(playerLevel: Int, tree: Tree, axe: Axe) {
@@ -32,10 +42,10 @@ object Woodcutting {
             var totalTicksElapsed = 0
 
             repeat(attempts) {
-                if (attemptSuccess(playerLevel, tree, axe)) {
+                if (success(playerLevel, tree, axe)) {
                     logsChopped++
                 }
-                totalTicksElapsed += axe.speed
+                totalTicksElapsed += CUT_SPEED_TICKS
             }
 
             val avgTicksPerLog = if (logsChopped > 0) totalTicksElapsed.toDouble() / logsChopped else 0.0
@@ -72,17 +82,8 @@ object Woodcutting {
     /**
      * A function that determines if a log was successfully cut from a tree.
      */
-    fun attemptSuccess(level: Int, tree: Tree, axe: Axe): Boolean {
-        // Normalize level factor, 0.0 (just meets req) to ~1.0 (99 WC vs low-level tree)
-        val levelFactor = (level - tree.level).coerceAtLeast(0) / (99.0 - tree.level)
-
-        // Axe modifier: scales chance without hard thresholds
-        val axeFactor = axe.strength + BONUS_STRENGTH
-
-        // Effective success chance: soft-capped to 100%
-        val successChance = (0.3 + levelFactor * 0.6) * axeFactor
-        val finalChance = min(1.0, successChance)
-
-        return rand().nextDouble() <= finalChance
+    fun success(level: Int, tree: Tree, axe: Axe): Boolean {
+        val (low, high) = axe.chances[tree]!!
+        return Skills.success(low, high, level)
     }
 }

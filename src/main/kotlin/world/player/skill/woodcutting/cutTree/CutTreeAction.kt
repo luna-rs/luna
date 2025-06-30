@@ -18,7 +18,7 @@ import world.player.skill.woodcutting.searchNest.Nest
  * An [InventoryAction] that will enable the cutting of trees.
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, axe.speed, 6, Int.MAX_VALUE) {
+    AnimatedInventoryAction(plr, Woodcutting.CUT_SPEED_TICKS, 6, Int.MAX_VALUE) {
 
     /**
      * Sound delay for woodcutting.
@@ -71,13 +71,20 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     complete()
                 }
             }
-            if (treeObj.treeHealth == -1) {
-                // Initialize health for trees that haven't been cut.
-                treeObj.treeHealth = tree.maxHealth.random()
-            }
-            if (--treeObj.treeHealth <= 0) {
-                deleteAndRespawnTree()
-                complete()
+            if (Woodcutting.USE_317_TREE_STUMPS) {
+                if (rand().nextInt(8) == 0) {
+                    deleteAndRespawnTree()
+                    complete()
+                }
+            } else {
+                if (treeObj.treeHealth == -1) {
+                    // Initialize health for trees that haven't been cut.
+                    treeObj.treeHealth = tree.maxHealth.random()
+                }
+                if (--treeObj.treeHealth <= 0) {
+                    deleteAndRespawnTree()
+                    complete()
+                }
             }
         }
     }
@@ -89,7 +96,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     override fun add(): List<Item> =
-        if (Woodcutting.attemptSuccess(mob.woodcutting.level, tree, axe)) listOf(Item(tree.logId)) else emptyList()
+        if (Woodcutting.success(mob.woodcutting.level, tree, axe)) listOf(Item(tree.logId)) else emptyList()
 
     override fun onFinished() {
         mob.animation(Animation.CANCEL)
