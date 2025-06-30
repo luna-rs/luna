@@ -2,15 +2,21 @@ package world.player.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.Player
-import io.luna.game.model.`object`.ObjectType
-import world.player.Sounds
+import io.luna.game.model.*
+import io.luna.game.model.mob.*
+import io.luna.game.model.`object`.*
+import world.player.*
 
 /**
  * A [LightAction] implementation that enables lighting logs to create fires.
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
+
+    /**
+     * Directions in prioritized order to try to walk after lighting a log
+     */
+    private val WALK_DIRECTIONS : List<Direction> = listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
 
     override fun canLight(): Boolean {
 
@@ -29,12 +35,12 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 if (removeLog) {
                     if (mob.inventory.remove(log.id)) {
                         world.addItem(log.id, 1, mob.position, mob)
-                        mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                        mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                         return true
                     }
                     return false
                 }
-                mob.sendMessage("You light the ${itemName(log.id).toLowerCase()}...")
+                mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                 return true
             }
         }
@@ -59,7 +65,23 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
                 else -> mob.playSound(Sounds.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
-            mob.walking.walkRandomDirection()
+
+            // Walk in a non-blocked direction prioritizing west
+            val collision = mob.world.collisionManager
+            for (dir in WALK_DIRECTIONS) {
+                if (collision.traversable(mob.position, EntityType.NPC, dir)) {
+                    val newPosition = mob.position.translate(1, dir)
+                    mob.lock()
+                    mob.walking.walk(newPosition)
+                    world.scheduleOnce(2) {
+                        mob.face(dir.opposite())
+                    }
+                    world.scheduleOnce(3) {
+                        mob.unlock()
+                    }
+                    break
+                }
+            }
             val fireObject = world.addObject(Firemaking.FIRE_OBJECT, firePosition)
             world.scheduleOnce(rand(Firemaking.BURN_TIME)) {
                 world.removeObject(fireObject)
