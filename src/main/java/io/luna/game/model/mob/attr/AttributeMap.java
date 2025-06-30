@@ -34,7 +34,7 @@ public final class AttributeMap {
     /**
      * A map that holds attribute key and value pairs.
      */
-    private final Map<Attribute<?>, Object> attributes = new IdentityHashMap<>(64);
+    private final Map<Attribute<?>, Object> attributes = new IdentityHashMap<>(12);
 
     /**
      * The last accessed key.

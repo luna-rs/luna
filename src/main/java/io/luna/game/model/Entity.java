@@ -8,6 +8,7 @@ import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.plugin.PluginManager;
 import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +25,7 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public abstract class Entity {
-// todo interactable conditions
+
     /**
      * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
      */
@@ -94,6 +95,11 @@ public abstract class Entity {
      * The current chunk.
      */
     protected volatile ChunkRepository chunkRepository;
+
+    /**
+     * The attribute map.
+     */
+    private AttributeMap attributes;
 
     /**
      * Creates a new {@link Entity}.
@@ -310,6 +316,17 @@ public abstract class Entity {
         if (chunkRepository != null) {
             chunkRepository.remove(this);
         }
+    }
+
+    /**
+     * @return The attribute map.
+     */
+    public final AttributeMap getAttributes() {
+        if(attributes == null) {
+            // Lazy initialization is necessary, otherwise way too much memory will be used.
+            attributes = new AttributeMap();
+        }
+        return attributes;
     }
 
     /**

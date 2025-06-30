@@ -1,5 +1,6 @@
 package api.attr
 
+import io.luna.game.model.Entity
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.attr.Attribute
 import kotlin.reflect.KProperty
@@ -14,14 +15,14 @@ class AttributeDelegate<T : Any?>(val attr: Attribute<T>) {
     /**
      * Retrieve the attribute value.
      */
-    operator fun getValue(player: Player, property: KProperty<*>): T =
-        player.attributes[attr]
+    operator fun getValue(entity: Entity, property: KProperty<*>): T =
+        entity.attributes[attr]
 
     /**
      * Set the attribute value.
      */
-    operator fun setValue(player: Player, property: KProperty<*>, value: T) {
-        player.attributes[attr] = value
+    operator fun setValue(entity: Entity, property: KProperty<*>, value: T) {
+        entity.attributes[attr] = value
     }
 
     /**

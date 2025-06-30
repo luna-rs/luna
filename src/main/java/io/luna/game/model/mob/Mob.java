@@ -9,7 +9,6 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.MobDeathTask.NpcDeathTask;
 import io.luna.game.model.mob.MobDeathTask.PlayerDeathTask;
-import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.block.Hit;
@@ -32,11 +31,6 @@ import static io.luna.game.model.mob.Skill.HITPOINTS;
  * @author lare96
  */
 public abstract class Mob extends Entity {
-
-    /**
-     * The attribute map.
-     */
-    protected final AttributeMap attributes = new AttributeMap();
 
     /**
      * The update flag set.
@@ -553,13 +547,6 @@ public abstract class Mob extends Entity {
      */
     public void onTeleport(Position newPosition) {
 
-    }
-
-    /**
-     * @return The attribute map.
-     */
-    public final AttributeMap getAttributes() {
-        return attributes;
     }
 
     /**
