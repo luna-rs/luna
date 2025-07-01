@@ -13,7 +13,7 @@ enum class Axe(val id: Int,
                val level: Int,
                val animation: Animation,
                val chances: Map<Tree, Pair<Int, Int>>) {
-    // 'chances' property based off
+    /* https://docs.google.com/spreadsheets/d/1Kym-CmZqB4SXGTWsTWq8k6gblfDYUx4ilHxioX6dFWI/edit?gid=1983210074 */
     BRONZE(id = 1351,
            level = 1,
            animation = Animation(879),
