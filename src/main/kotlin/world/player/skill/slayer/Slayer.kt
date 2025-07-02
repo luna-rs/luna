@@ -15,12 +15,12 @@ import io.luna.game.model.mob.dialogue.Expression
 object Slayer {
 
     /**
-     * If slayer equipment is needed in order to finish off slayer monsters.
+     * If specialized slayer equipment is needed in order to fight specific slayer monsters.
      */
-    const val EQUIPMENT_NEEDED = true // TODO slayer equipment after combat, implement constant
+    const val EQUIPMENT_NEEDED = true
 
     /**
-     * The XP multiplier only for slayer.
+     * The XP multiplier specifically for slayer.
      */
     private val XP_MULTIPLIER = 1.0
 
@@ -44,7 +44,7 @@ object Slayer {
      * Decrement `1` from the remaining amount of tasks and adds XP for [npcId]. If the remaining amount of monsters is
      * equal or lower to `0`, the task will be completed.
      */
-    fun record(plr: Player, npcId: Int) { // TODO implement after combat
+    fun record(plr: Player, npcId: Int) {
         val activeTask = plr.activeSlayerTask
         val taskType = activeTask?.task
         if (taskType != null && taskType.npcs.contains(npcId)) {
