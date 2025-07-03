@@ -16,14 +16,16 @@ enum class ThievableNpc(val level: Int,
                         val stun: Long,
                         val damage: IntRange,
                         val names: List<String>,
-                        val drops: DropTable) {
+                        val drops: DropTable,
+                        val chance: Pair<Int, Int>) {
     MAN_AND_WOMAN(level = 1,
                   xp = 8.0,
                   master = 85,
                   stun = 5,
                   damage = 1..1,
                   names = listOf("Man", "Woman"),
-                  drops = DropTableHandler.createSingleton { "Coins" x 3 }),
+                  drops = DropTableHandler.createSingleton { "Coins" x 3 },
+                  chance = 180 to 240),
     FARMER(level = 10,
            xp = 14.5,
            master = 90,
@@ -33,14 +35,16 @@ enum class ThievableNpc(val level: Int,
            drops = DropTableHandler.createSimple {
                "Coins" x 9 chance (15 of 16)
                "Potato seed" x 1 chance (1 of 25)
-           }),
+           },
+           chance = 150 to 240),
     WARRIOR(level = 25,
             xp = 26.0,
             master = 93,
             stun = 5,
             damage = 1..2,
             names = emptyList(),
-            drops = DropTableHandler.createSingleton { "Coins" x 18 }),
+            drops = DropTableHandler.createSingleton { "Coins" x 18 },
+            chance = 100 to 240),
     ROGUE(level = 32,
           xp = 36.5,
           master = 94,
@@ -53,7 +57,8 @@ enum class ThievableNpc(val level: Int,
               "Air rune" x 8 chance (1 of 16)
               "Jug of wine" x 1 chance (1 of 21)
               "Lockpick" x 1 chance (1 of 26)
-          }),
+          },
+          chance = 74 to 240),
     MASTER_FARMER(
         level = 38,
         xp = 43.0,
@@ -61,22 +66,24 @@ enum class ThievableNpc(val level: Int,
         stun = 5,
         damage = 2..4,
         names = emptyList(),
-        drops = GenericDropTables.generalSeedDropTable(false)
-    ),
+        drops = GenericDropTables.generalSeedDropTable(false),
+        chance = 90 to 240),
     GUARD(level = 40,
           xp = 46.8,
           master = 95,
           stun = 5,
           damage = 2..2,
           names = emptyList(),
-          drops = DropTableHandler.createSingleton { "Coins" x 30 }),
+          drops = DropTableHandler.createSingleton { "Coins" x 30 },
+          chance = 50 to 240),
     KNIGHT_OF_ARDOUGNE(level = 55,
                        xp = 84.3,
                        master = 95,
                        stun = 6,
                        damage = 3..5,
                        names = emptyList(),
-                       drops = DropTableHandler.createSingleton { "Coins" x 50 }),
+                       drops = DropTableHandler.createSingleton { "Coins" x 50 },
+                       chance = 50 to 240),
     WATCHMAN(level = 65,
              xp = 137.5,
              master = 110,
@@ -86,7 +93,8 @@ enum class ThievableNpc(val level: Int,
              drops = DropTableHandler.createSimple {
                  "Bread" x 1 chance ALWAYS
                  "Coins" x 60 chance ALWAYS
-             }),
+             },
+             chance = 15 to 160),
     PALADIN(level = 70,
             xp = 131.8,
             master = 115,
@@ -97,7 +105,8 @@ enum class ThievableNpc(val level: Int,
                 "Chaos rune" x 2 chance ALWAYS
                 "Coins" x 80 chance ALWAYS
                 // TODO clue scroll hard 1/1000
-            }),
+            },
+            chance = 40 to 170),
     GNOME(level = 75,
           xp = 133.5,
           master = 120,
@@ -111,7 +120,8 @@ enum class ThievableNpc(val level: Int,
               "Earth rune" x 1 chance UNCOMMON
               "Fire orb" x 1 chance UNCOMMON
               // TODO medium clue scroll 1/150
-          }),
+          },
+          chance = 43 to 175),
     HERO(level = 80,
          xp = 163.3,
          master = 125,
@@ -126,7 +136,8 @@ enum class ThievableNpc(val level: Int,
              "Fire orb" x 1 chance (1 of 64)
              "Diamond" x 1 chance (1 of 128)
              "Gold ore" x 1 chance (1 of 128)
-         });
+         },
+         chance = 39 to 160);
 
     companion object {
 

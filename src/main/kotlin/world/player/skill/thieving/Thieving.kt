@@ -11,6 +11,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.util.RandomUtils
 import io.luna.util.Rational
+import world.player.skill.Skills
 import world.player.skill.thieving.pickpocketNpc.ThievableNpc
 
 /**
@@ -54,16 +55,13 @@ object Thieving {
     /**
      * If a pickpocketing action will be successful or not.
      */
-    fun canPickpocket(mob: Mob, thievable: ThievableNpc): Boolean {
-        if (mob.thieving.level >= thievable.master) {
+    fun canPickpocket(plr: Player, thievable: ThievableNpc): Boolean {
+        val level = plr.thieving.level
+        if (level >= thievable.master) {
             return true
         }
-
-        val level = mob.thieving.level
-        val baseChance = 5.0 / 833 * level
-        val reqChance = 0.65 - (thievable.level * 0.0032) - 0.02
-        val chance: Double = baseChance + reqChance
-        return rand().nextDouble() < chance
+        val (low, high) = thievable.chance
+        return Skills.success(low, high, level)
     }
 
     /**
