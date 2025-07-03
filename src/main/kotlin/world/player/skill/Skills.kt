@@ -29,8 +29,8 @@ object Skills {
      * [maxLevel] is the maximum level in the skill. This is 99 for all skills in OSRS/317.
      */
     fun successRate(low: Int, high: Int, level: Int, maxLevel: Int = 99): Double {
-        val lowRate = (low * (maxLevel - level)) / (maxLevel - 1.0)
-        val highRate = (high * (level - 1)) / (maxLevel - 1.0)
+        val lowRate = floor((low * (maxLevel - level)) / (maxLevel - 1.0))
+        val highRate = floor((high * (level - 1)) / (maxLevel - 1.0))
         return (1.0 + floor(lowRate + highRate + 0.5)) / 256.0
     }
 }
