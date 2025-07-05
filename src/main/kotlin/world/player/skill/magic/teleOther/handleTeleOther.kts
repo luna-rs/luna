@@ -11,23 +11,6 @@ import world.player.skill.magic.teleOther.TeleOtherAction.Companion.teleOtherReq
 import java.util.concurrent.TimeUnit
 
 /**
- * Represents a teleother request.
- */
-class TeleOtherRequest {
-
-    /**
-     * The timer for this request.
-     */
-    private val timer = Stopwatch.createStarted()
-
-    /**
-     * If another request can be sent.
-     */
-    fun isExpired() = timer.elapsed().toSeconds() >= TeleOtherAction.TELEOTHER_DELAY_SECONDS
-}
-
-
-/**
  * Opens the [TeleOtherInterface] for the [target].
  */
 fun open(source: Player, target: Player, type: TeleOtherType) {
