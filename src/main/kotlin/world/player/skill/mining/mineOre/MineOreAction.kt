@@ -9,43 +9,18 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 import world.player.Sounds
-import world.player.skill.crafting.gemCutting.Gem
+import world.player.skill.Skills
+import world.player.skill.mining.Mining
 import world.player.skill.mining.Ore
+import world.player.skill.mining.Ore.PURE_ESSENCE
+import world.player.skill.mining.Ore.RUNE_ESSENCE
 import world.player.skill.mining.Pickaxe
 
 /**
  * An [InventoryAction] that will enable the mining of rocks.
  */
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
-    AnimatedInventoryAction(plr, 1, 4, rand(RANDOM_FAIL_RATE)) {
-
-    companion object {
-
-        /**
-         * How often the player will randomly stop mining.
-         */
-        val RANDOM_FAIL_RATE = 15..55
-
-        /**
-         * The base mining rate, the lower this number the faster ores will be mined overall.
-         */
-        val BASE_MINE_RATE = 25
-
-        /**
-         * The base chance of mining a gem.
-         */
-        val BASE_GEM_CHANCE = 256
-
-        /**
-         * The base chance of mining a gem when wearing an amulet of glory.
-         */
-        val BOOSTED_GEM_CHANCE = 86
-
-        /**
-         * All gems that can be received, in order of lowest level -> highest.
-         */
-        val GEMS = Gem.values().sortedBy { it.level }
-    }
+    AnimatedInventoryAction(plr, 1, 4, Int.MAX_VALUE) {
 
     override fun executeIf(start: Boolean) = when {
         mob.mining.level < ore.level -> {
@@ -68,24 +43,21 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         if (executions == 0) {
             mob.sendMessage("You swing your pick at the rock.")
             mob.interact(rockObj)
-            delay = getMiningDelay()
+            delay = pick.speed
         } else {
-            val hasGlory = mob.equipment.amulet?.itemDef?.name?.contains("Amulet of glory")
-            val gemChance = if (hasGlory != null && hasGlory) BOOSTED_GEM_CHANCE else BASE_GEM_CHANCE
-            if (!mob.inventory.isFull && rand().nextInt(gemChance) == 0) {
-                dropGem()
-            } else {
+            val gemItems = Mining.MINING_GEM_DROP_TABLE.roll(mob, rockObj)
+            if (!mob.inventory.isFull && gemItems.isNotEmpty()) {
+                // Gem rolls happen independently of ore rolls.
+                mob.inventory.add(gemItems.removeFirst())
+                mob.sendMessage("You find a gem in the rock.")
+            }
+            if (currentAdd.isNotEmpty()) {
+                // Ore roll was successful.
                 mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
                 mob.mining.addExperience(ore.exp)
-            }
-
-            val removeChance = ore.depletionChance
-            if (removeChance != null && (removeChance == 1 || rand().nextInt(removeChance) == 0)) {
                 mob.playSound(Sounds.MINING_COMPLETED)
                 deleteAndRespawnRock()
                 complete()
-            } else {
-                delay = getMiningDelay()
             }
         }
     }
@@ -95,7 +67,19 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
         return pick.animation
     }
 
-    override fun add(): List<Item> = if (executions == 0) emptyList() else listOf(Item(ore.item))
+    override fun add(): List<Item> {
+        val (low, high) = ore.chance
+        return when {
+            executions == 0 -> emptyList()
+
+            ore == RUNE_ESSENCE -> if (mob.mining.level >= PURE_ESSENCE.level)
+                listOf(Item(PURE_ESSENCE.item)) else listOf(Item(RUNE_ESSENCE.item))
+
+            Skills.success(low, high, mob.mining.level) -> listOf(Item(ore.item))
+
+            else -> emptyList()
+        }
+    }
 
     override fun onFinished() = mob.animation(Animation.CANCEL)
 
@@ -104,7 +88,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
      */
     private fun deleteAndRespawnRock() {
         val emptyId = Ore.ORE_TO_EMPTY[rockObj.id]
-        if (emptyId != null) {
+        if (emptyId != null && emptyId != -1) {
             world.addObject(emptyId, rockObj.position, rockObj.objectType, rockObj.direction, null)
             val respawn = ore.respawnTicks
             if (respawn != null) {
@@ -113,45 +97,5 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 }
             }
         }
-    }
-
-    /**
-     * Computes the mining delay.
-     */
-    private fun getMiningDelay(): Int {
-        var baseTime = rand(BASE_MINE_RATE / 2, BASE_MINE_RATE)
-        baseTime -= (pick.strength - ore.resistance)
-        if (mob.mining.level > ore.level) {
-            val oreLvlFactor = ore.level / 9
-            val miningLvlFactor = mob.mining.level / 8
-            baseTime -= (miningLvlFactor - oreLvlFactor)
-        }
-        if (baseTime < 1) {
-            baseTime = 1
-        }
-        if (baseTime > BASE_MINE_RATE) {
-            baseTime = BASE_MINE_RATE
-        }
-        return baseTime
-    }
-
-    /**
-     * Drops a random gem from the [Ore] rock.
-     */
-    private fun dropGem() {
-        var foundGem: Gem? = null
-        var chance = 2
-        for (gem in GEMS) {
-            if (rand().nextInt(chance) == 0) {
-                foundGem = gem
-            } else {
-                chance += 2
-            }
-        }
-        if (foundGem == null) {
-            foundGem = GEMS.first()
-        }
-        mob.sendMessage("You find a gem in the rock.")
-        mob.inventory.add(Item(foundGem.uncut))
     }
 }

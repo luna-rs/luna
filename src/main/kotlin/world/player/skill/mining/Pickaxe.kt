@@ -2,37 +2,40 @@ package world.player.skill.mining
 
 import api.predef.*
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An enumerated type representing all pickaxes that can be used to mine [Ore]s.
  */
-enum class Pickaxe(val level: Int, val itemId: Int, val animation: Animation, val strength: Int) { // TODO correct 'strength' values?
+enum class Pickaxe(val level: Int,
+                   val itemId: Int,
+                   val animation: Animation,
+                   val speed: Int) {
     BRONZE(level = 1,
            itemId = 1265,
            animation = Animation(625),
-           strength = 1),
+           speed = 8),
     IRON(level = 1,
          itemId = 1267,
          animation = Animation(626),
-         strength = 2),
+         speed = 7),
     STEEL(level = 5,
           itemId = 1269,
           animation = Animation(627),
-          strength = 4),
+          speed = 6),
     MITHRIL(level = 20,
             itemId = 1273,
             animation = Animation(629),
-            strength = 5),
+            speed = 5),
     ADAMANT(level = 30,
             itemId = 1271,
             animation = Animation(628),
-            strength = 6),
+            speed = 4),
     RUNE(level = 40,
          itemId = 1275,
          animation = Animation(624),
-         strength = 7);
+         speed = 3);
 
 
     companion object {
@@ -61,8 +64,8 @@ enum class Pickaxe(val level: Int, val itemId: Int, val animation: Animation, va
                 }
                 val newPick = ID_TO_PICKAXE[item.id]
                 if (newPick != null &&
-                        plr.mining.level >= newPick.level &&
-                        (pick == null || newPick.strength > pick.strength)) {
+                    plr.mining.level >= newPick.level &&
+                    (pick == null || newPick.level > pick.level)) {
                     pick = newPick
                 }
             }
