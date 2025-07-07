@@ -2,13 +2,18 @@ package api.item.dropTable
 
 import api.item.dropTable.dsl.DropTableItemChanceReceiver
 import api.item.dropTable.dsl.DropTableItemReceiver
-import api.item.dropTable.dsl.NpcDropSetReceiver
+import api.item.dropTable.dsl.MergedDropTableReceiver
 import api.item.dropTable.dsl.SpecializedTableReceiver
 import api.predef.*
+import api.predef.ext.*
+import com.google.common.base.Preconditions.checkState
+import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
-import io.luna.util.RandomUtils
+import io.luna.game.model.mob.Player
 import io.luna.util.Rational
+import kotlin.reflect.KClass
 
 /**
  * A type alias for lists of [DropTableItem] types.
@@ -16,37 +21,54 @@ import io.luna.util.Rational
 typealias DropTableItemList = List<DropTableItem>
 
 /**
- * Handles global functions related to drop tables.
+ * Central manager for all drop table-related operations. Provides DSL-based creation, registration, and evaluation
+ * of drop tables.
+ *
+ * Features include:
+ * - NPC-specific and type-based drop table registration
+ * - Combined drop tables using [MergedDropTable]
+ * - Builder DSLs for constructing item lists and specialized drop tables
  *
  * @author lare96
  */
 object DropTableHandler {
 
     /**
-     * Represents a single conditional drop.
+     * Map of NPC IDs to their assigned [MergedDropTable] instances.
      */
-    internal class ConditionalDrop(val condFunc: (Mob?, Npc) -> Boolean, val tableSet: NpcDropTableSet)
+    private val npcIdMap = hashMapOf<Int, MergedDropTable>()
 
     /**
-     * The conditional drop list.
+     * Map of NPC types (classes) to their assigned [MergedDropTable] instances.
      */
-    private val conditionalDropList = arrayListOf<ConditionalDrop>()
+    private val npcTypeMap = hashMapOf<Class<out Npc>, MergedDropTable>()
 
     /**
-     * The NPC id -> NpcDropTableSet map.
+     * Handles NPC death by checking for a registered [MergedDropTable] via ID or type and applying the
+     * resulting drops to the world, visible to the killer or globally.
+     *
+     * @param killer The mob who dealt the final blow.
+     * @param victim The NPC that died.
      */
-    private val npcIdDropMap = hashMapOf<Int, NpcDropTableSet>()
+    fun <T : Npc> onDeath(killer: Mob, victim: T) {
+        val table = npcTypeMap.getOrDefault(victim.javaClass, npcIdMap[victim.id])
+        if (table != null) {
+            val dropItems = table.roll(killer, victim)
+            for (item in dropItems) {
+                val view = if (killer is Player) ChunkUpdatableView.localView(killer) else
+                    ChunkUpdatableView.globalView()
+                world.addItem(GroundItem(ctx, item.id, item.amount, victim.position, view))
+            }
+        }
+    }
 
     /**
-     * Determines if [tableItem] will be picked based on its rarity.
-     */
-    internal fun rollSuccess(tableItem: DropTableItem): Boolean = RandomUtils.rollSuccess(tableItem.chance)
-
-    /**
-     * Creates a generic [DropTable] using our specialized DSL.
+     * Constructs a generic drop table using a DSL-style builder.
+     *
+     * @param action The block defining the drop table items.
+     * @return A specialized table receiver to define further table behavior.
      */
     fun create(action: DropTableItemReceiver.() -> Unit): SpecializedTableReceiver {
-        // Build the table.
         val items = arrayListOf<DropTableItem>()
         val builder = DropTableItemReceiver(items, false)
         action(builder)
@@ -54,14 +76,22 @@ object DropTableHandler {
     }
 
     /**
-     * Creates a new [SimpleDropTable] instance using our specialized DSL.
+     * Creates a [SimpleDropTable] using a DSL and an optional drop [chance].
+     *
+     * @param chance The chance for the table to be rolled. Defaults to [Rational.ALWAYS].
+     * @param action The block defining the drop table items.
+     * @return A simple drop table instance.
      */
     fun createSimple(chance: Rational = Rational.ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
         return create(action).table { SimpleDropTable(items, chance) }
     }
 
     /**
-     * Creates a new [SimpleDropTable] with a single item.
+     * Creates a [SimpleDropTable] with a single item and specified drop [chance].
+     *
+     * @param chance The chance for the table to be rolled.
+     * @param action The block returning a single drop item.
+     * @return A simple drop table with one item.
      */
     fun createSingleton(
         chance: Rational = Rational.ALWAYS,
@@ -71,43 +101,54 @@ object DropTableHandler {
     }
 
     /**
-     * Creates a new [List] of [DropTableItem] instances using our specialized DSL.
+     * Builds a raw [List] of [DropTableItem]s using the item DSL.
+     *
+     * @param action The block that defines item entries.
+     * @return A list of drop table items.
      */
     fun createList(action: DropTableItemReceiver.() -> Unit): DropTableItemList {
-        // Build the table.
         val items = arrayListOf<DropTableItem>()
         action(DropTableItemReceiver(items, false))
         return items
     }
 
     /**
-     * Creates a new [NpcDropTableSet] instance using our specialized DSL.
+     * Constructs a combined [MergedDropTable] from multiple tables using the DSL.
+     *
+     * @param action The block defining the merged table structure.
+     * @return A merged drop table instance.
      */
-    fun createNpcSet(action: NpcDropSetReceiver.() -> Unit): NpcDropTableSet {
-        // Build the tables.
+    fun createMerged(action: MergedDropTableReceiver.() -> Unit): MergedDropTable {
         val tables = arrayListOf<DropTable>()
-        action(NpcDropSetReceiver(tables))
-        return NpcDropTableSet(tables)
+        action(MergedDropTableReceiver(tables))
+        return MergedDropTable(tables)
     }
 
     /**
-     * Registers a [NpcDropTableSet] to trigger on [condFunc] when an [Npc] dies.
+     * Registers a [MergedDropTable] for a specific NPC ID.
+     *
+     * @param npcId The ID of the NPC to assign the drop table to.
+     * @param action The block defining the table structure.
+     * @return The constructed merged drop table.
      */
-    fun register(condFunc: (Mob?, Npc) -> Boolean, tableSet: NpcDropTableSet) =
-        conditionalDropList.add(ConditionalDrop(condFunc, tableSet))
-
-    /**
-     * Registers a [NpcDropTableSet] to trigger when an [Npc] with [id] dies.
-     */
-    fun register(id: Int, tableSet: NpcDropTableSet) {
-        check(npcIdDropMap.putIfAbsent(id, tableSet) != null)
-        { "NPC with id[$id] already has a registered NpcDropTableSet" }
+    fun createNpc(npcId: Int, action: MergedDropTableReceiver.() -> Unit): MergedDropTable {
+        val table = createMerged(action)
+        checkState(npcIdMap.putIfAbsent(npcId, table) == null,
+                   "NPC ID $npcId already registered to a table.")
+        return table
     }
 
     /**
-     * Combines [tables] into one standard [MergedDropTable].
+     * Registers a [MergedDropTable] for a specific NPC type/class.
+     *
+     * @param npcType The Kotlin class of the NPC type to assign the drop table to.
+     * @param action The block defining the table structure.
+     * @return The constructed merged drop table.
      */
-    fun createMerged(vararg tables: DropTable): DropTable {
-        return MergedDropTable(tables.toList())
+    fun createNpc(npcType: KClass<out Npc>, action: MergedDropTableReceiver.() -> Unit): MergedDropTable {
+        val table = createMerged(action)
+        checkState(npcTypeMap.putIfAbsent(npcType.java, table) == null,
+                   "Class ${npcType.java} already registered to a table.")
+        return table
     }
 }

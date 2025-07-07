@@ -10,15 +10,22 @@ import io.luna.util.RandomUtils.rollSuccess
 import io.luna.util.Rational
 
 /**
- * Handles commonly used drop tables to reduce boilerplate. Highly based on [OSRS Drop Tables](https://oldschool.runescape.wiki/w/Drop_table).
+ * Provides standardized drop tables for common loot types, heavily inspired by the
+ * [OSRS Drop Tables](https://oldschool.runescape.wiki/w/Drop_table). Designed to reduce boilerplate.
+ *
+ * Includes gem, rare, seed, and herb tables with special handling for Ring of Wealth (RoW) bonuses.
  *
  * @author lare96
  */
 object GenericDropTables {
 
     /**
-     * The gem drop table, has a chance to roll on the [megaRareDropTable]. Wearing a RoW will increase drop rates and
-     * remove empty slots.
+     * The gem drop table. May optionally roll on [megaRareDropTable].
+     * If [rowBonus] is enabled or the player wears a Ring of Wealth (ID 2572), empty slots are removed and
+     * drop chances are improved.
+     *
+     * @param chance Chance to roll on this table.
+     * @param rowBonus Enables RoW effects programmatically.
      */
     fun gemDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
@@ -62,7 +69,10 @@ object GenericDropTables {
     }
 
     /**
-     * The rare drop table, has a chance to roll on either the [megaRareDropTable] or the [gemDropTable].
+     * The rare drop table. Has a chance to roll on [megaRareDropTable] or [gemDropTable], followed by the rare loot list.
+     *
+     * @param chance Chance to roll on this table.
+     * @param rowBonus Enables RoW effects programmatically.
      */
     fun rareDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
@@ -108,7 +118,10 @@ object GenericDropTables {
     }
 
     /**
-     * The mega rare drop table. Wearing a RoW will remove empty slots.
+     * The mega rare drop table. Mostly empty slots; a Ring of Wealth removes these and increases useful drops.
+     *
+     * @param chance Chance to roll on this table.
+     * @param rowBonus Enables RoW effects programmatically.
      */
     fun megaRareDropTable(chance: Rational = ALWAYS, rowBonus: Boolean = false): DropTable {
         return DropTableHandler.create {
@@ -136,15 +149,14 @@ object GenericDropTables {
     }
 
     /**
-     * The general seed drop table.
+     * A general-purpose seed drop table that adjusts outcomes based on the combat level of the NPC or player.
+     *
+     * @param combatLevelFactor If true, seed tier is scaled by the mob's combat level.
+     * @param chance Chance to roll on this table.
      */
     fun generalSeedDropTable(combatLevelFactor: Boolean = true, chance: Rational = ALWAYS): DropTable {
         return DropTableHandler.create {}.table {
-            object : DropTable() {
-                override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return rollSuccess(chance)
-                }
-
+            object : DropTable(chance) {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
                     val roll =
                         if (combatLevelFactor) {
@@ -176,9 +188,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-1 general seed drop list.
-     */
+    /** Tier 1 general seed drops: basic allotment seeds. */
     fun generalSeedDropList1(): DropTableItemList {
         return DropTableHandler.createList {
             "Potato seed" x 1..4 chance (1 of 2)
@@ -191,9 +201,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-2 general seed drop list.
-     */
+    /** Tier 2 general seed drops: early hops and niche crops. */
     fun generalSeedDropList2(): DropTableItemList {
         return DropTableHandler.createList {
             "Barley seed" x 1..4 chance (1 of 4)
@@ -206,9 +214,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-3 general seed drop list.
-     */
+    /** Tier 3 general seed drops: low-level flower and herb seeds. */
     fun generalSeedDropList3(): DropTableItemList {
         return DropTableHandler.createList {
             "Marigold seed" x 1 chance (1 of 2)
@@ -219,9 +225,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-4 general seed drop list.
-     */
+    /** Tier 4 general seed drops: common berry and bush seeds. */
     fun generalSeedDropList4(): DropTableItemList {
         return DropTableHandler.createList {
             "Redberry seed" x 1 chance (1 of 2)
@@ -233,9 +237,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-5 general seed drop list.
-     */
+    /** Tier 5 general seed drops: herb seeds from Guam to Torstol. */
     fun generalSeedDropList5(): DropTableItemList {
         return DropTableHandler.createList {
             "Guam seed" x 1 chance (1 of 3)
@@ -255,9 +257,7 @@ object GenericDropTables {
         }
     }
 
-    /**
-     * The tier-6 general seed drop list.
-     */
+    /** Tier 6 general seed drops: tree, cactus, and mushroom spores. */
     fun generalSeedDropList6(): DropTableItemList {
         return DropTableHandler.createList {
             "Mushroom spore" x 1 chance (1 of 2)
@@ -267,7 +267,9 @@ object GenericDropTables {
     }
 
     /**
-     * The rare seed drop table.
+     * Rare herb and tree seed drops with progressively rarer items.
+     *
+     * @param chance Chance to roll on this table.
      */
     fun rareSeedDropTable(chance: Rational = ALWAYS): SimpleDropTable {
         return DropTableHandler.create {
@@ -287,7 +289,9 @@ object GenericDropTables {
     }
 
     /**
-     * The tree herb seed drop table.
+     * High-tier herb and tree seed drops including spirit, magic, and palm tree seeds.
+     *
+     * @param chance Chance to roll on this table.
      */
     fun treeHerbSeedDropTable(chance: Rational): SimpleDropTable {
         return DropTableHandler.create {
@@ -308,8 +312,9 @@ object GenericDropTables {
     }
 
     /**
-     * A drop table that is a combination of [generalSeedDropList3], [generalSeedDropList4], [generalSeedDropList5],
-     * [generalSeedDropList6], and [rareSeedDropTable].
+     * A combined drop table of mid-to-high tier seeds and [rareSeedDropTable] contents.
+     *
+     * @param chance Chance to roll on this table.
      */
     fun uncommonSeedDropTable(chance: Rational = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
@@ -322,7 +327,9 @@ object GenericDropTables {
     }
 
     /**
-     * The useful herb drop table.
+     * Drops noted useful high-level herbs (e.g. Ranarr, Torstol).
+     *
+     * @param chance Chance to roll on this table.
      */
     fun usefulHerbDropTable(chance: Rational = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
@@ -336,7 +343,9 @@ object GenericDropTables {
     }
 
     /**
-     * The grimy herb drop table.
+     * Drops a wide range of grimy herbs, including lower and higher-tier varieties.
+     *
+     * @param chance Chance to roll on this table.
      */
     fun herbDropTable(chance: Rational = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {

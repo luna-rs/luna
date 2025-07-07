@@ -1,6 +1,5 @@
 package api.item.dropTable
 
-import api.item.dropTable.DropTableHandler.rollSuccess
 import api.predef.*
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
@@ -9,19 +8,27 @@ import io.luna.util.RandomUtils
 import io.luna.util.Rational
 
 /**
- * Represents a standard drop table. All drop tables must maintain an immutable internal state to ensure
- * instances can be reused.
+ * Represents a drop table with a fixed chance to roll for item drops. This is the base class for all drop table types
+ * and ensures immutability for safe reuse across NPCs or drop sources.
+ *
+ * Drop tables can include:
+ * - Always-dropped items.
+ * - Probabilistic drops calculated using rational odds.
+ *
+ * Subclasses determine how the drop table is computed dynamically based on the context.
  *
  * @author lare96
  */
 abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropTableItem> {
 
     /**
-     * Rolls on this drop table and returns the selected items.
+     * Rolls on the drop table based on the provided context [mob] (killer) and [source] (victim).
+     *
+     * @return A mutable list of all items successfully rolled from the drop table.
      */
-    fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
+   open fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
         val allItems = mutableListOf<Item>()
-        if (canRollOnTable(mob, source)) {
+        if (RandomUtils.rollSuccess(chance) && canRollOnTable(mob, source)) {
             val items = computeTable(mob, source).filterNot {
                 val alwaysDrop = it.chance == ALWAYS
                 if (alwaysDrop) {
@@ -32,7 +39,7 @@ abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropT
                 }
                 alwaysDrop
             }
-            val pickedItem = rollOnTable(mob, source, items)
+            val pickedItem = rollOnTable(items)
             if (pickedItem != null) {
                 allItems += pickedItem
             }
@@ -42,34 +49,36 @@ abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropT
     }
 
     /**
-     * Rolls on the table items by building a rational table with empty slots, and returns the rolled on item.
+     * Performs the core drop logic for probabilistic items, creating a rational table that may include empty slots to
+     * simulate odds.
      */
-    private fun rollOnTable(mob: Mob?, source: Entity?, items: DropTableItemList): Item? {
-        if(items.isEmpty()) {
-            return null
-        } else if (items.size == 1) {
-            // Only one item, so our rational table is just the chance that the single item is dropped.
-            val pickedItem = items.first()
-            return if (rollSuccess(pickedItem)) pickedItem.toItem() else null
-        } else {
-            return RationalTable(items.map { it.chance to it }).roll()?.toItem()
+    private fun rollOnTable(items: DropTableItemList): Item? {
+        return when {
+            items.isEmpty() -> null
+            items.size == 1 -> {
+                val item = items.first()
+                if (RandomUtils.rollSuccess(item.chance)) item.toItem() else null
+            }
+
+            else -> RationalTable(items.map { it.chance to it }).roll()?.toItem()
         }
     }
 
     /**
-     * Determines if this table can be rolled on. If `false`, `null` will always be returned from [roll].
+     * Determines if the drop table is eligible for rolling based on the external context. This is independent of
+     * the [chance] roll. Override this for dynamic eligibility logic.
      */
     open fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-        return RandomUtils.rollSuccess(chance)
+        return true
     }
 
     /**
-     * Dynamically computes the table of items that will be rolled on.
+     * Dynamically computes the drop list that will be evaluated for this instance.
      */
     abstract fun computeTable(mob: Mob?, source: Entity?): DropTableItemList
 
     /**
-     * Returns all possible items that can be rolled on.
+     * Returns all potential drops regardless of context (used for previewing drop tables).
      */
     abstract fun computePossibleItems(): DropTableItemList
 
