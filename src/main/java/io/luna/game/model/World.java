@@ -277,6 +277,15 @@ public final class World {
      * Pre-synchronization part of the game loop, process all tick-dependant player logic.
      */
     private void preSynchronize() {
+        for (Npc npc : npcList) {
+            try {
+                npc.getWalking().process();
+                npc.getActions().process();
+            } catch (Exception e) {
+                npcList.remove(npc);
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
+            }
+        }
         for (Player player : playerList) {
             try {
                 if (player.getClient().isPendingLogout()) {
@@ -290,39 +299,12 @@ public final class World {
                     bot.process();
                 }
                 player.getActions().process();
+                player.sendRegionUpdate(player.getPosition());
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
-
-        for (Npc npc : npcList) {
-            try {
-                npc.getWalking().process();
-                npc.getActions().process();
-            } catch (Exception e) {
-                npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
-            }
-        }
-
-        // Region update and action queue must be processed last.
-        for (Player player : playerList) {
-            if (player.getClient().isPendingLogout()) {
-                player.cleanUp();
-                continue;
-            }
-            try {
-                Position oldPosition = player.getPosition();
-
-                player.sendRegionUpdate(oldPosition);
-                player.getActions().process();
-            } catch (Exception e) {
-                player.logout();
-                logger.warn(new ParameterizedMessage("Could not finalize pre-synchronization for {}.", player, e));
-            }
-        }
-
     }
 
     /**
@@ -340,6 +322,14 @@ public final class World {
      * Post-synchronization part of the game loop, reset variables.
      */
     private void postSynchronize() {
+        for (Npc npc : npcList) {
+            try {
+                npc.resetFlags();
+            } catch (Exception e) {
+                npcList.remove(npc);
+                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
+            }
+        }
         for (Player player : playerList) {
             try {
                 player.resetFlags();
@@ -348,15 +338,6 @@ public final class World {
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
-            }
-        }
-
-        for (Npc npc : npcList) {
-            try {
-                npc.resetFlags();
-            } catch (Exception e) {
-                npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
             }
         }
     }
