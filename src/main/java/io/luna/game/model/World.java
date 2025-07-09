@@ -73,7 +73,6 @@ public final class World {
                 try {
                     player.queue(new PlayerUpdateMessageWriter());
                     player.queue(new NpcUpdateMessageWriter());
-                    player.getClient().flush();
                 } catch (Exception e) {
                     logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
                     player.logout();
@@ -299,7 +298,6 @@ public final class World {
                     bot.process();
                 }
                 player.getActions().process();
-                player.sendRegionUpdate(player.getPosition());
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
@@ -313,6 +311,7 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
+            player.sendRegionUpdate(player.getPreviousPosition());
             updatePool.execute(new PlayerSynchronizationTask(player));
         }
         synchronizer.arriveAndAwaitAdvance();
