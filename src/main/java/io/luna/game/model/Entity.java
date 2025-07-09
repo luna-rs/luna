@@ -92,6 +92,11 @@ public abstract class Entity {
     protected volatile Position position;
 
     /**
+     * The previous position.
+     */
+    protected volatile Position previousPosition;
+
+    /**
      * The current chunk.
      */
     protected volatile ChunkRepository chunkRepository;
@@ -283,7 +288,7 @@ public abstract class Entity {
                     return;
                 }
             }
-
+            previousPosition = position;
             position = newPosition;
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
@@ -376,6 +381,13 @@ public abstract class Entity {
      */
     public final Position getPosition() {
         return position;
+    }
+
+    /**
+     * @return The previous position.
+     */
+    public final Position getPreviousPosition() {
+        return previousPosition == null ? position : previousPosition;
     }
 
     /**
