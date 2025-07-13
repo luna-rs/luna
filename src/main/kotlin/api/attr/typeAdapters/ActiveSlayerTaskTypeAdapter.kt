@@ -5,15 +5,19 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.item.ItemContainer.StackPolicy
 import world.player.skill.slayer.ActiveSlayerTask
 import world.player.skill.slayer.SlayerMaster
 import world.player.skill.slayer.SlayerTaskType
 
-object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() { // todo documentation
+/**
+ * A type adapter that will enable [ActiveSlayerTask]s to be persisted as attributes.
+ *
+ * @author lare96
+ */
+object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() {
+
     override fun write(writer: JsonWriter, value: ActiveSlayerTask?) {
-        if(value != null) {
+        if (value != null) {
             writer.beginObject()
             writer.name("task").value(value.task.name)
             writer.name("assignee").value(value.assignee.name)
@@ -25,8 +29,7 @@ object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() { // todo 
     }
 
     override fun read(reader: JsonReader): ActiveSlayerTask? {
-        if(reader.peek() == JsonToken.STRING &&
-            reader.nextString().equals("null")) {
+        if (reader.peek() == JsonToken.STRING && reader.nextString().equals("null")) {
             return null
         }
         reader.beginObject()
