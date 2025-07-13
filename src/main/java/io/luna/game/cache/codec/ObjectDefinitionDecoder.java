@@ -55,7 +55,7 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
     /**
      * Decodes a single {@link GameObjectDefinition}.
      *
-     * @param id The object ID.
+     * @param id   The object ID.
      * @param data The data.
      * @return The definition.
      */

@@ -1,7 +1,8 @@
 package world.player.skill.cooking.prepareFood
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.articleItemName
+import api.predef.cooking
+import api.predef.itemName
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -10,8 +11,13 @@ import world.obj.resource.fillable.WaterResource
 /**
  * An [InventoryAction] that prepares an [IncompleteFood] type.
  */
-class PrepareFoodActionItem(plr: Player, val food: IncompleteFood, private val removeIds: MutableSet<Int>, amount: Int) :
-        InventoryAction(plr, true, 1, amount) {
+class PrepareFoodActionItem(
+    plr: Player,
+    val food: IncompleteFood,
+    private val removeIds: MutableSet<Int>,
+    amount: Int
+) :
+    InventoryAction(plr, true, 1, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {

@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * An enumerated type whose elements represent different object types.
  *
- * @author lare96 
+ * @author lare96
  */
 public enum ObjectType {
     STRAIGHT_WALL(0, ObjectGroup.WALL),
@@ -36,7 +36,7 @@ public enum ObjectType {
 
     static {
         ImmutableMap.Builder<Integer, ObjectType> map = ImmutableMap.builder();
-        for(ObjectType next: ObjectType.values()) {
+        for (ObjectType next : ObjectType.values()) {
             map.put(next.id, next);
         }
         ALL = map.build();

@@ -37,10 +37,10 @@ public final class AnimateGameObjectMessageWriter extends GameMessageWriter impl
     /**
      * Creates an {@link AnimateGameObjectMessageWriter}.
      *
-     * @param offset The object offset.
-     * @param type The object type.
+     * @param offset    The object offset.
+     * @param type      The object type.
      * @param direction The object direction.
-     * @param id The animation ID.
+     * @param id        The animation ID.
      */
     public AnimateGameObjectMessageWriter(int offset, int type, int direction, int id) {
         this.offset = offset;

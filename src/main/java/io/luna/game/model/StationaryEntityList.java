@@ -30,7 +30,7 @@ public abstract class StationaryEntityList<E extends StationaryEntity> implement
      * Creates a new {@link StationaryEntityList}.
      *
      * @param world The world.
-     * @param type The type of the entities.
+     * @param type  The type of the entities.
      */
     public StationaryEntityList(World world, EntityType type) {
         this.world = world;
@@ -94,7 +94,7 @@ public abstract class StationaryEntityList<E extends StationaryEntity> implement
      * Unregisters all entities on {@code position} that match {@code filter}.
      *
      * @param position The position to unregister entities on.
-     * @param test The filter to apply.
+     * @param test     The filter to apply.
      * @return {@code true} if at least one entity was unregistered.
      */
     public final boolean removeFromPosition(Position position, Predicate<E> test) {
@@ -115,8 +115,8 @@ public abstract class StationaryEntityList<E extends StationaryEntity> implement
      * @return {@code true} if occupied.
      */
     public final boolean isOccupied(Position position) {
-        for(Entity entity : world.getChunks().load(position).getAll(type)) {
-            if(entity.getPosition().equals(position)) {
+        for (Entity entity : world.getChunks().load(position).getAll(type)) {
+            if (entity.getPosition().equals(position)) {
                 return true;
             }
         }

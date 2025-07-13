@@ -55,7 +55,7 @@ public final class RestockTask extends Task {
             int initialAmount = shop.getAmountMap()[restockIndex].orElse(-1);
 
             // The item is not restockable, or has been restocked. Remove it.
-            if(initialAmount == -1 || restockItem.getAmount() >= initialAmount) {
+            if (initialAmount == -1 || restockItem.getAmount() >= initialAmount) {
                 restockIterator.remove();
                 continue;
             }

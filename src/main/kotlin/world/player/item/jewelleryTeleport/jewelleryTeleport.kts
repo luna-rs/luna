@@ -1,23 +1,24 @@
 package world.player.item.jewelleryTeleport
 
-import api.predef.*
-import api.predef.ext.*
-import io.luna.game.model.mob.Player
+import api.predef.ext.scheduleOnce
+import api.predef.item4
+import api.predef.world
 import io.luna.game.model.Position
-import io.luna.game.model.item.*
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.util.StringUtils
+import world.player.skill.magic.SpellRequirement
+import world.player.skill.magic.teleportSpells.TeleportAction
 import world.player.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
 import world.player.skill.magic.teleportSpells.TeleportStyle
-import world.player.skill.magic.teleportSpells.TeleportAction
-import world.player.skill.magic.SpellRequirement
 
 TeleportJewellery.values().forEach {
     val jewellery = it
 
-    for (i in 0..jewellery.itemIDs.size-1) {
+    for (i in 0..jewellery.itemIDs.size - 1) {
         val itemID: Int = jewellery.itemIDs.get(i)
-        val lastItem: Boolean = i == jewellery.itemIDs.size-1
+        val lastItem: Boolean = i == jewellery.itemIDs.size - 1
 
         if (lastItem && !jewellery.disappear) {
             item4(itemID) {
@@ -52,8 +53,8 @@ fun degrade(plr: Player, necklaceId: Int, index: Int, type: TeleportJewellery) {
     plr.inventory.remove(index, Item(necklaceId, 1))
 
     val jewelleryIndex = type.itemIDs.indexOf(necklaceId)
-    val lastCharge = (!type.disappear && jewelleryIndex+2 == type.itemIDs.size)
-            || (type.disappear && jewelleryIndex+1 == type.itemIDs.size)
+    val lastCharge = (!type.disappear && jewelleryIndex + 2 == type.itemIDs.size)
+            || (type.disappear && jewelleryIndex + 1 == type.itemIDs.size)
 
     if (lastCharge) {
         plr.sendMessage(type.lastChargeMessage)
@@ -61,7 +62,7 @@ fun degrade(plr: Player, necklaceId: Int, index: Int, type: TeleportJewellery) {
             return
         }
     }
-    val nextJewellery = type.itemIDs.get(jewelleryIndex+1)
+    val nextJewellery = type.itemIDs.get(jewelleryIndex + 1)
     plr.inventory.add(index, Item(nextJewellery, 1))
 }
 

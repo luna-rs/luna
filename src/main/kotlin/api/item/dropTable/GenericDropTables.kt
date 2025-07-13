@@ -1,7 +1,8 @@
 package api.item.dropTable
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ALWAYS
+import api.predef.ext.of
+import api.predef.rand
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc

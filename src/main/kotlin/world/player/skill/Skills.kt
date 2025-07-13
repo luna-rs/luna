@@ -1,6 +1,6 @@
 package world.player.skill
 
-import api.predef.*
+import api.predef.rand
 import kotlin.math.floor
 
 /**

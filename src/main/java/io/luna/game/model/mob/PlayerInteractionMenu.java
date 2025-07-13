@@ -11,7 +11,7 @@ import java.util.Optional;
  * A model representing the displayed interactions when right-clicking a Player, along with functions that
  * manipulate those interactions.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class PlayerInteractionMenu implements Iterable<PlayerInteraction> {
 
@@ -47,9 +47,9 @@ public final class PlayerInteractionMenu implements Iterable<PlayerInteraction> 
      */
     public Optional<PlayerInteraction> forInteraction(String name) {
         return Arrays.stream(interactions)
-            .filter(Objects::nonNull)
-            .filter(interaction -> interaction.getName().equals(name))
-            .findAny();
+                .filter(Objects::nonNull)
+                .filter(interaction -> interaction.getName().equals(name))
+                .findAny();
     }
 
     /**

@@ -35,8 +35,8 @@ public final class CameraShakeMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link CameraShakeMessageWriter}.
      *
-     * @param cameraId The camera identifier.
-     * @param jitter The jitter value.
+     * @param cameraId  The camera identifier.
+     * @param jitter    The jitter value.
      * @param amplitude The amplitude value.
      * @param frequency The frequency value.
      */

@@ -28,8 +28,8 @@ public final class LoginResponseMessage {
     /**
      * Creates a new {@link LoginResponseMessage}.
      *
-     * @param response The login response.
-     * @param rights The authority level.
+     * @param response     The login response.
+     * @param rights       The authority level.
      * @param suspectedBot If the server suspects the {@link Client} is a bot.
      */
     public LoginResponseMessage(LoginResponse response, PlayerRights rights, boolean suspectedBot) {

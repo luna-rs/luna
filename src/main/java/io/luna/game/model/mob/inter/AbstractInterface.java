@@ -7,7 +7,7 @@ import java.util.OptionalInt;
 /**
  * A stateful abstraction model representing an interface.
  *
- * @author lare96 
+ * @author lare96
  */
 public abstract class AbstractInterface {
 
@@ -29,7 +29,7 @@ public abstract class AbstractInterface {
     /**
      * Creates a new {@link AbstractInterface}.
      *
-     * @param id The interface identifier.
+     * @param id   The interface identifier.
      * @param type The interface type.
      */
     private AbstractInterface(OptionalInt id, InterfaceType type) {
@@ -40,7 +40,7 @@ public abstract class AbstractInterface {
     /**
      * Creates a new {@link AbstractInterface} with {@code id} wrapped in an optional.
      *
-     * @param id The interface identifier.
+     * @param id   The interface identifier.
      * @param type The interface type.
      */
     AbstractInterface(int id, InterfaceType type) {
@@ -91,7 +91,7 @@ public abstract class AbstractInterface {
     /**
      * A function called when this interface is replaced with another interface.
      *
-     * @param player The player to apply to listener for.
+     * @param player  The player to apply to listener for.
      * @param replace The interface replacing this one.
      */
     public void onReplace(Player player, AbstractInterface replace) {

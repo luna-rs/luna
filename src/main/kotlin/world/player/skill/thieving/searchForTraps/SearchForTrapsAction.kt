@@ -104,8 +104,12 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
         val emptyObj = GameObject.createDynamic(ctx, UNLOCKED_CHEST, obj.position, obj.objectType, obj.direction, view)
         if (world.objects.register(emptyObj)) {
             world.scheduleOnce(thievable.respawnTicks) {
-                world.objects.register(GameObject.createDynamic(ctx, obj.id, obj.position, obj.objectType,
-                                                                                                             obj.direction, view))
+                world.objects.register(
+                    GameObject.createDynamic(
+                        ctx, obj.id, obj.position, obj.objectType,
+                        obj.direction, view
+                    )
+                )
             }
         }
     }

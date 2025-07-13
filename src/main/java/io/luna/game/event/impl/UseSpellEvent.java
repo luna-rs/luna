@@ -32,8 +32,8 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link PlayerEvent}.
          *
-         * @param caster The player casting a spell.
-         * @param spellId The id of the spell being cast.
+         * @param caster    The player casting a spell.
+         * @param spellId   The id of the spell being cast.
          * @param targetNpc The targeted npc.
          */
         public MagicOnNpcEvent(Player caster, int spellId, Npc targetNpc) {
@@ -75,8 +75,8 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link PlayerEvent}.
          *
-         * @param caster The player casting a spell.
-         * @param spellId The id of the spell being casted.
+         * @param caster    The player casting a spell.
+         * @param spellId   The id of the spell being casted.
          * @param targetPlr The targeted player.
          */
         public MagicOnPlayerEvent(Player caster, int spellId, Player targetPlr) {
@@ -127,11 +127,11 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link MagicOnItemEvent}.
          *
-         * @param plr The player.
-         * @param spellId The spell identifier.
+         * @param plr                 The player.
+         * @param spellId             The spell identifier.
          * @param targetItemInterface The target interface identifier.
-         * @param targetItemIndex The target item index.
-         * @param targetItemId The target item identifier.
+         * @param targetItemIndex     The target item index.
+         * @param targetItemId        The target item identifier.
          */
         public MagicOnItemEvent(Player plr, int spellId, int targetItemInterface, int targetItemIndex, int targetItemId) {
             super(plr, spellId);
@@ -177,8 +177,8 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link MagicOnGroundItemEvent}.
          *
-         * @param plr The player.
-         * @param spellId The spell identifier.
+         * @param plr        The player.
+         * @param spellId    The spell identifier.
          * @param targetItem The target ground item.
          */
         public MagicOnGroundItemEvent(Player plr, int spellId, GroundItem targetItem) {
@@ -209,7 +209,7 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
      *
      * @author lare96
      */
-    public static final class MagicOnObjectEvent extends UseSpellEvent implements InteractableEvent{
+    public static final class MagicOnObjectEvent extends UseSpellEvent implements InteractableEvent {
 
         /**
          * The target object.
@@ -219,8 +219,8 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link MagicOnGroundItemEvent}.
          *
-         * @param plr The player.
-         * @param spellId The spell identifier.
+         * @param plr          The player.
+         * @param spellId      The spell identifier.
          * @param targetObject The target object.
          */
         public MagicOnObjectEvent(Player plr, int spellId, GameObject targetObject) {
@@ -254,7 +254,7 @@ public class UseSpellEvent extends PlayerEvent implements ControllableEvent {
     /**
      * Creates a new {@link UseSpellEvent}.
      *
-     * @param plr The player.
+     * @param plr     The player.
      * @param spellId The spell identifier.
      */
     private UseSpellEvent(Player plr, int spellId) {

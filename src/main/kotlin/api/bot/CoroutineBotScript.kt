@@ -2,9 +2,9 @@ package api.bot
 
 import api.bot.action.BotActionHandler
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.BotScript
 import io.luna.game.model.mob.bot.BotInputMessageHandler
 import io.luna.game.model.mob.bot.BotOutputMessageHandler
+import io.luna.game.model.mob.bot.BotScript
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job

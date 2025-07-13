@@ -38,8 +38,8 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     /**
      * Adds the encoded block set to the main updating buffer.
      *
-     * @param mob The mob.
-     * @param msg The main updating buffer.
+     * @param mob   The mob.
+     * @param msg   The main updating buffer.
      * @param state The updating state.
      */
     public abstract void addBlockSet(E mob, ByteMessage msg, UpdateState state);
@@ -47,8 +47,8 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     /**
      * Encodes a single update block.
      *
-     * @param mob The mob.
-     * @param block The update block to encode.
+     * @param mob      The mob.
+     * @param block    The update block to encode.
      * @param blockMsg The update block set buffer.
      */
     public abstract void encodeBlock(E mob, UpdateBlock block, ByteMessage blockMsg);
@@ -61,9 +61,9 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     /**
      * Encodes the backing group of update blocks.
      *
-     * @param mob The mob.
+     * @param mob      The mob.
      * @param blockMsg The update block set buffer.
-     * @param state The update state.
+     * @param state    The update state.
      */
     final void encodeBlockSet(E mob, ByteMessage blockMsg, UpdateState state) {
         List<UpdateBlock> encodeBlocks = new ArrayList<>(updateBlocks.size());
@@ -110,8 +110,8 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     /**
      * Encodes this enitre block set.
      *
-     * @param mob The mob.
-     * @param msg The main updating buffer.
+     * @param mob   The mob.
+     * @param msg   The main updating buffer.
      * @param state The update state.
      */
     public void encode(E mob, ByteMessage msg, UpdateState state) {

@@ -25,7 +25,7 @@ public final class Item {
     /**
      * Retrieves an item instance by name and amount.
      *
-     * @param name The name.
+     * @param name   The name.
      * @param amount The amount.
      * @return The item.
      */
@@ -60,7 +60,7 @@ public final class Item {
     /**
      * Creates a new {@link Item}.
      *
-     * @param id The identifier.
+     * @param id     The identifier.
      * @param amount The amount.
      */
     public Item(int id, int amount) {

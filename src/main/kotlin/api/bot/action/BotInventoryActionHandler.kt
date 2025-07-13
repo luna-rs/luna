@@ -2,8 +2,9 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.isOpen
+import api.predef.itemDef
+import api.predef.logger
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
@@ -35,7 +36,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             bot.walking.walkUntilReached(target)
             val walkingSuspendCond = SuspendableCondition({ bot.isViewableFrom(target) || bot.walking.isEmpty })
             if (!bot.isViewableFrom(target)) {
-                if(!walkingSuspendCond.submit().await()) {
+                if (!walkingSuspendCond.submit().await()) {
                     return false
                 }
             }
@@ -93,9 +94,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             return SuspendableFuture().signal(false)
         }
         val suspendCond = SuspendableCondition({
-                                                   bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
-                                                       DestroyItemDialogueInterface::class)
-                                               })
+            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
+                DestroyItemDialogueInterface::class
+            )
+        })
         bot.output.sendDropItem(index.asInt, id)
         if (itemDef(id).isTradeable) {
             return suspendCond.submit()

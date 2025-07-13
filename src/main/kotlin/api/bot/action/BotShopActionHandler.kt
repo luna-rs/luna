@@ -2,7 +2,8 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
-import api.predef.ext.*
+import api.predef.ext.get
+import api.predef.ext.isOpen
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
 
@@ -68,7 +69,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Attempts to sell either 1, 5, or 10 of an item.
      */
     private fun sell(id: Int, amount: Int): SuspendableFuture {
-        if(!bot.interfaces.isOpen(ShopInterface::class)) {
+        if (!bot.interfaces.isOpen(ShopInterface::class)) {
             // No shop is currently open.
             return SuspendableFuture().signal(false)
         }

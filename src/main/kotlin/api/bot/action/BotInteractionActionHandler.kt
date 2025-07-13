@@ -1,7 +1,7 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
-import api.predef.*
+import api.predef.world
 import io.luna.game.model.Entity
 import io.luna.game.model.Entity.EntityDistanceComparator
 import io.luna.game.model.EntityType
@@ -65,11 +65,13 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      */
     fun <T : Entity> findViewable(type: KClass<T>, cond: (T) -> Boolean): MutableSet<T> {
         val base = bot.position
-        return world.chunks.find(bot.position,
-                                 type.java,
-                                 { TreeSet(EntityDistanceComparator(bot)) },
-                                 { it.isWithinDistance(base, Position.VIEWING_DISTANCE) && cond(it) },
-                                 Position.VIEWING_DISTANCE);
+        return world.chunks.find(
+            bot.position,
+            type.java,
+            { TreeSet(EntityDistanceComparator(bot)) },
+            { it.isWithinDistance(base, Position.VIEWING_DISTANCE) && cond(it) },
+            Position.VIEWING_DISTANCE
+        );
     }
 
     /**

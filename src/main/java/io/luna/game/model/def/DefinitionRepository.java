@@ -4,15 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -24,7 +16,7 @@ import static com.google.common.base.Preconditions.checkState;
  * A model representing a repository for a definition implementation. Definition repositories are immutable
  * after they are locked and ordered by definition identifier.
  *
- * @author lare96 
+ * @author lare96
  */
 public abstract class DefinitionRepository<T extends Definition> implements Iterable<T> {
 
@@ -57,7 +49,7 @@ public abstract class DefinitionRepository<T extends Definition> implements Iter
     /**
      * Stores {@code definition} in this repository. Should only ever be used by this class.
      *
-     * @param id The definition identifier.
+     * @param id         The definition identifier.
      * @param definition The definition.
      */
     abstract boolean put(int id, T definition);

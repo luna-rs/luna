@@ -102,9 +102,9 @@ public class ItemClickEvent extends PlayerEvent implements ControllableEvent {
     /**
      * Creates a new {@link ItemClickEvent}.
      *
-     * @param player The player.
-     * @param id The identifier of the item clicked.
-     * @param index The index of the item clicked.
+     * @param player      The player.
+     * @param id          The identifier of the item clicked.
+     * @param index       The index of the item clicked.
      * @param interfaceId The identifier of the interface the item was clicked on.
      */
     private ItemClickEvent(Player player, int id, int index, int interfaceId) {

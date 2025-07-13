@@ -1,10 +1,9 @@
 package world.player.settings.emote
 
-import api.predef.*
+import api.predef.button
+import api.predef.on
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.block.Animation
-import io.luna.game.model.mob.varp.Varbit
-import kotlin.math.E
 
 // Map all button interactions.
 for (entry in Emote.BUTTON_TO_EMOTE.entries) {

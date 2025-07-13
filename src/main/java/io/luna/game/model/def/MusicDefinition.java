@@ -77,11 +77,11 @@ public final class MusicDefinition implements Definition {
     /**
      * Creates a new {@link MusicDefinition}.
      *
-     * @param id The song id.
-     * @param name The song name.
-     * @param lineId The song line id.
+     * @param id       The song id.
+     * @param name     The song name.
+     * @param lineId   The song line id.
      * @param buttonId The song button id.
-     * @param regions The regions this song is played in.
+     * @param regions  The regions this song is played in.
      */
     public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<Region> regions) {
         this.id = id;

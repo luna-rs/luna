@@ -37,8 +37,8 @@ public final class Plugin {
      * Creates a new {@link Plugin}.
      *
      * @param packageName The top-level package of this plugin.
-     * @param infoScript The {@code info.plugin.kts} script for this plugin.
-     * @param scripts The content scripts for this plugin.
+     * @param infoScript  The {@code info.plugin.kts} script for this plugin.
+     * @param scripts     The content scripts for this plugin.
      */
     public Plugin(String packageName, InfoScript infoScript, ImmutableList<Script> scripts) {
         this.packageName = packageName;
@@ -48,8 +48,12 @@ public final class Plugin {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Plugin)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Plugin)) {
+            return false;
+        }
         Plugin plugin = (Plugin) o;
         return Objects.equals(packageName, plugin.packageName);
     }

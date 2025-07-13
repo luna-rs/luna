@@ -103,8 +103,8 @@ public final class PluginBootstrap {
     /**
      * Loads runtime information about all compiled scripts.
      *
-     * @param result The scan result.
-     * @param infoScripts The info script map.
+     * @param result        The scan result.
+     * @param infoScripts   The info script map.
      * @param pluginScripts The plugin script map.
      */
     private void loadScripts(ScanResult result, Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
@@ -123,7 +123,7 @@ public final class PluginBootstrap {
     /**
      * Ensures all plugins have a correct and valid {@code info.plugin.kts} file.
      *
-     * @param infoScripts The info script map.
+     * @param infoScripts   The info script map.
      * @param pluginScripts The plugin script map.
      */
     private void validatePlugins(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
@@ -158,7 +158,7 @@ public final class PluginBootstrap {
     /**
      * Organizes all the validated scripts into a map of plugins.
      *
-     * @param infoScripts The info script map.
+     * @param infoScripts   The info script map.
      * @param pluginScripts The plugin script map.
      * @return The plugin map.
      */
@@ -208,7 +208,7 @@ public final class PluginBootstrap {
      * Runs the contents within a compiled script, and returns a {@link Script} instance.
      *
      * @param packageName The plugin package name.
-     * @param scriptInfo The runtime information about the script.
+     * @param scriptInfo  The runtime information about the script.
      * @return The script instance.
      * @throws ReflectiveOperationException If any errors occur.
      */

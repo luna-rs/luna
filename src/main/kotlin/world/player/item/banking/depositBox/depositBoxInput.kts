@@ -1,7 +1,7 @@
 package world.player.item.banking.depositBox
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.isOpen
+import api.predef.on
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface

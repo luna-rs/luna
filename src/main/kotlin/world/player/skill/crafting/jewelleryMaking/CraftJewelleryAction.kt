@@ -13,8 +13,10 @@ import world.player.skill.smithing.BarType
 /**
  * An [InventoryAction] that enables crafting silver and gold jewellery for players.
  */
-class CraftJewelleryAction(plr: Player, private val barType: BarType,
-                           private val jewellery: JewelleryItem, times: Int) :
+class CraftJewelleryAction(
+    plr: Player, private val barType: BarType,
+    private val jewellery: JewelleryItem, times: Int
+) :
     InventoryAction(plr, true, 3, times) {
     // todo https://github.com/luna-rs/luna/issues/361
 

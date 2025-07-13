@@ -17,7 +17,8 @@ public class InventoryOverlayInterface extends StandardInterface {
 
     /**
      * Creates a new {@link InventoryOverlayInterface}
-     * @param id The interface identifier.
+     *
+     * @param id        The interface identifier.
      * @param overlayId The overlay identifier.
      */
     public InventoryOverlayInterface(int id, int overlayId) {

@@ -36,7 +36,7 @@ public abstract class UpdateBlock {
      * Encodes this update block for {@code player}. The default behaviour is to throw an exception.
      *
      * @param player The player to encode for.
-     * @param msg The buffer.
+     * @param msg    The buffer.
      */
     public void encodeForPlayer(Player player, ByteMessage msg) {
         throw new UnsupportedOperationException(flag + " not supported for Players.");
@@ -85,7 +85,7 @@ public abstract class UpdateBlock {
      * exist.
      *
      * @param optional The optional to unwrap.
-     * @param <T> The value type.
+     * @param <T>      The value type.
      * @return The unwrapped value.
      * @throws NoBlockValueException If the value doesn't exist.
      */

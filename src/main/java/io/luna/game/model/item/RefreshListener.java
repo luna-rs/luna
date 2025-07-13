@@ -37,7 +37,7 @@ public abstract class RefreshListener implements ItemContainerListener {
         /**
          * Creates a new {@link RefreshListener}.
          *
-         * @param player The player.
+         * @param player          The player.
          * @param capacityMessage The message sent when capacity is exceeded.
          */
         public PlayerRefreshListener(Player player, StandardInterface inter, String capacityMessage) {
@@ -89,9 +89,9 @@ public abstract class RefreshListener implements ItemContainerListener {
     /**
      * A function invoked when a display update message has been created and needs to be sent.
      *
-     * @param items The item container.
+     * @param items       The item container.
      * @param updateItems The items that the message was created for.
-     * @param msg The display update message.
+     * @param msg         The display update message.
      */
     public abstract void displayUpdate(ItemContainer items, List<IndexedItem> updateItems,
                                        WidgetIndexedItemsMessageWriter msg);
@@ -100,7 +100,7 @@ public abstract class RefreshListener implements ItemContainerListener {
      * Converts {@code item} into an item with an index.
      *
      * @param index The index.
-     * @param item The item to convert.
+     * @param item  The item to convert.
      * @return The indexed item.
      */
     private IndexedItem getItem(int index, Optional<Item> item) {
@@ -111,7 +111,7 @@ public abstract class RefreshListener implements ItemContainerListener {
     /**
      * Forwards display update message instances to listener function.
      *
-     * @param items The underlying container.
+     * @param items       The underlying container.
      * @param updateItems The items to create messages for.
      */
     private void sendMsg(ItemContainer items, List<IndexedItem> updateItems) {

@@ -167,7 +167,7 @@ public final class AbstractInterfaceSet {
      * Casts the current standard interface to {@code type}.
      *
      * @param type The type to cast to.
-     * @param <I> The type.
+     * @param <I>  The type.
      * @return The cast interface.
      */
     public <I extends StandardInterface> Optional<I> standardTo(Class<I> type) {
@@ -211,7 +211,7 @@ public final class AbstractInterfaceSet {
      * Casts the current input interface to {@code type}.
      *
      * @param type The type to cast to.
-     * @param <I> The type.
+     * @param <I>  The type.
      * @return The cast interface.
      */
     public <I extends InputInterface> Optional<I> inputTo(Class<I> type) {
@@ -248,7 +248,7 @@ public final class AbstractInterfaceSet {
      * Casts the current walkable interface to {@code type}.
      *
      * @param type The type to cast to.
-     * @param <I> The type.
+     * @param <I>  The type.
      * @return The cast interface.
      */
     public <I extends WalkableInterface> Optional<I> walkableTo(Class<I> type) {

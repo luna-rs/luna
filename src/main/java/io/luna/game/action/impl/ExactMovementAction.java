@@ -60,7 +60,7 @@ public class ExactMovementAction extends LockedAction {
     /**
      * Creates a new {@link ExactMovementAction} with a single movement route.
      *
-     * @param player The player.
+     * @param player   The player.
      * @param movement The movement route.
      */
     public ExactMovementAction(Player player, ExactMovement movement) {
@@ -71,8 +71,8 @@ public class ExactMovementAction extends LockedAction {
     /**
      * Creates a new {@link ExactMovementAction} with a single movement route and an initial walking animation.
      *
-     * @param player The player.
-     * @param movement The movement route.
+     * @param player             The player.
+     * @param movement           The movement route.
      * @param walkingAnimationId The walking animation.
      */
     public ExactMovementAction(Player player, ExactMovement movement, int walkingAnimationId) {

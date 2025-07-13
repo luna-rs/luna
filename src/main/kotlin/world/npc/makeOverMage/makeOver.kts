@@ -10,17 +10,19 @@ import io.luna.game.model.mob.PlayerAppearance
  */
 npc1(599) {
     plr.newDialogue()
-            .npc(targetNpc.id, "Would you like to change your appearance?")
-            .options(
-                    "Yes", {plr.interfaces.open(PlayerAppearance.DesignPlayerInterface()) },
-                    "No", { plr.interfaces.close() }).open()
+        .npc(targetNpc.id, "Would you like to change your appearance?")
+        .options(
+            "Yes", { plr.interfaces.open(PlayerAppearance.DesignPlayerInterface()) },
+            "No", { plr.interfaces.close() }).open()
 }
 
 /**
  * Spawn make-over mage NPC.
  */
 on(ServerLaunchEvent::class) {
-    world.addNpc(id = 599,
-                 x = 3092,
-                 y = 3250)
+    world.addNpc(
+        id = 599,
+        x = 3092,
+        y = 3250
+    )
 }

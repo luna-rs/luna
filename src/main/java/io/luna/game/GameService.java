@@ -1,10 +1,6 @@
 package io.luna.game;
 
-import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.*;
 import io.luna.LunaContext;
 import io.luna.LunaServer;
 import io.luna.game.event.Event;
@@ -21,13 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 import static com.google.common.util.concurrent.Futures.getUnchecked;
@@ -202,7 +192,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * Runs both synchronous and asynchronous logic from Kotlin scripts and waits for it to complete.
      *
-     * @param eventFunction Produces the event message to pass.
+     * @param eventFunction  Produces the event message to pass.
      * @param waitingMessage The message to log while waiting for tasks to complete.
      */
     private <E extends Event> void runKotlinTasks(Function<AsyncExecutor, E> eventFunction, String waitingMessage) {

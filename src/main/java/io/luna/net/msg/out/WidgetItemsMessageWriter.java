@@ -31,7 +31,7 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetItemsMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param id    The widget identifier.
      * @param items The items.
      */
     public WidgetItemsMessageWriter(int id, Item[] items) {
@@ -41,7 +41,7 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetItemsMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param id    The widget identifier.
      * @param items The items.
      */
     public WidgetItemsMessageWriter(int id, Collection<Item> items) {

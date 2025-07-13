@@ -36,7 +36,7 @@ public final class EventListener<E extends Event> {
      * Creates a new {@link EventListener}.
      *
      * @param eventType The type of event being intercepted.
-     * @param listener The listener function.
+     * @param listener  The listener function.
      */
     public EventListener(Class<E> eventType, Consumer<E> listener) {
         this.eventType = eventType;

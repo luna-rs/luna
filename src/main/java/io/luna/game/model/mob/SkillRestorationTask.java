@@ -45,12 +45,12 @@ public final class SkillRestorationTask extends Task {
                 continue;
             }
             if (level != staticLevel) {
-              done = false;
-              if(level < staticLevel) {
-                  nextSkill.addLevels(1, false);
-              } else {
-                  nextSkill.removeLevels(1);
-              }
+                done = false;
+                if (level < staticLevel) {
+                    nextSkill.addLevels(1, false);
+                } else {
+                    nextSkill.removeLevels(1);
+                }
             }
         }
         if (done) {

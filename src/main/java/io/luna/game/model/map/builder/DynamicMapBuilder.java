@@ -116,7 +116,7 @@ public final class DynamicMapBuilder {
      * Fills this builder's palette with chunks surrounding {@code chunk} with {@code radius} at height level
      * {@code 0}.
      *
-     * @param chunk The base chunk.
+     * @param chunk  The base chunk.
      * @param radius The radius.
      * @return The next builder.
      */
@@ -131,7 +131,7 @@ public final class DynamicMapBuilder {
      * Fills this builder's palette with {@code palette}.
      *
      * @param baseChunk The base chunk that will be used to translate coordinates between the real and instanced map.
-     * @param palette The palette to fill this builder with.
+     * @param palette   The palette to fill this builder with.
      * @return The next builder.
      */
     public DynamicMapControllerBuilder setPalette(Chunk baseChunk, DynamicMapPalette palette) {

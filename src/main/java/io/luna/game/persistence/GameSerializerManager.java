@@ -73,7 +73,7 @@ public class GameSerializerManager {
     }
 
     public GameSerializer getSerializer() {
-        if(serializer == null) {
+        if (serializer == null) {
             throw new NullPointerException("Serializer was not properly computed!");
         }
         return serializer;

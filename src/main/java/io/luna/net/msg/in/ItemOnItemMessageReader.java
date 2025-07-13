@@ -34,7 +34,7 @@ public final class ItemOnItemMessageReader extends GameMessageReader<ItemOnItemE
         if (event.getTargetItemIndex() < 0 ||
                 event.getUsedItemIndex() < 0 ||
                 !ItemDefinition.isIdValid(event.getTargetItemId()) ||
-                    !ItemDefinition.isIdValid(event.getUsedItemId()) ||
+                !ItemDefinition.isIdValid(event.getUsedItemId()) ||
                 event.getTargetItemInterface() < 1 ||
                 event.getUsedItemInterface() < 1) {
             return false;
@@ -48,7 +48,7 @@ public final class ItemOnItemMessageReader extends GameMessageReader<ItemOnItemE
     }
 
     @Override
-    public void handle(Player player, ItemOnItemEvent event)  {
+    public void handle(Player player, ItemOnItemEvent event) {
         player.getInterfaces().close();
     }
 }

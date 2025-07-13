@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.Location;
 import io.luna.game.model.Position;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.List;
 
 /**

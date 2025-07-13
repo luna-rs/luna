@@ -22,7 +22,7 @@ class BotActionHandler(val bot: Bot) {
      */
     val banking = BotBankingActionHandler(bot, this)
 
-     /**
+    /**
      * The shop action handler.
      */
     val shop = BotShopActionHandler(bot, this)

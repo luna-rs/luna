@@ -1,15 +1,16 @@
 package world.player.skill.crafting.textileCrafting
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.articleItemName
+import api.predef.crafting
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An [InventoryAction] implementation that makes textiles.
  */
-class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) : InventoryAction(plr, true, 2, amount) {
+class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) :
+    InventoryAction(plr, true, 2, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {

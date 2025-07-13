@@ -1,6 +1,9 @@
 package world.player.login.init
 
-import api.predef.*
+import api.predef.INTERACTION_FOLLOW
+import api.predef.INTERACTION_TRADE
+import api.predef.RIGHTS_ADMIN
+import api.predef.on
 import io.luna.Luna
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener

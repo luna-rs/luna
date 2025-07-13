@@ -7,8 +7,6 @@ import io.luna.game.model.def.DefinitionRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.Callable;
-
 /**
  * Extracts and stores important information from a {@link Cache}.
  *
@@ -25,7 +23,7 @@ public abstract class CacheDecoder<T> {
     /**
      * Decodes elements from {@code cache} into a series of decoded objects.
      *
-     * @param cache The cache to decode from.
+     * @param cache          The cache to decode from.
      * @param decodedObjects The list of decoded objects to add to.
      */
     public abstract void decode(Cache cache, ImmutableList.Builder<T> decodedObjects) throws Exception;
@@ -33,7 +31,7 @@ public abstract class CacheDecoder<T> {
     /**
      * Handles the decoded objects, usually by storing them in a {@link DefinitionRepository}.
      *
-     * @param cache The cache that was decoded from.
+     * @param cache          The cache that was decoded from.
      * @param decodedObjects The objects that were decoded.
      */
     public void handle(LunaContext ctx, Cache cache, ImmutableList<T> decodedObjects) throws Exception {

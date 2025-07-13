@@ -36,10 +36,10 @@ public final class AddGraphicMessageWriter extends GameMessageWriter implements 
     /**
      * Creates a new {@link AddGraphicMessageWriter}.
      *
-     * @param id The identifier.
+     * @param id     The identifier.
      * @param offset The offset.
      * @param height The graphic height.
-     * @param delay The graphic delay.
+     * @param delay  The graphic delay.
      */
     public AddGraphicMessageWriter(int id, int offset, int height, int delay) {
         this.id = id;

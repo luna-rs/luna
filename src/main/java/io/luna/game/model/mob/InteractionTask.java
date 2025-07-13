@@ -77,10 +77,10 @@ public final class InteractionTask extends Task {
     /**
      * Creates a new {@link InteractionTask}.
      *
-     * @param player The interacting player.
+     * @param player       The interacting player.
      * @param interactWith The entity to interact with.
-     * @param event The event to post.
-     * @param action The action to run.
+     * @param event        The event to post.
+     * @param action       The action to run.
      */
     public InteractionTask(Player player, Entity interactWith, InteractableEvent event, Runnable action) {
         super(true, 1);

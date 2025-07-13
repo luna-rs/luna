@@ -27,10 +27,10 @@ public final class DropItemEvent extends PlayerEvent implements ControllableEven
     /**
      * Creates a new {@link DropItemEvent}.
      *
-     * @param player The player.
-     * @param itemId The item identifier.
+     * @param player   The player.
+     * @param itemId   The item identifier.
      * @param widgetId The widget identifier.
-     * @param index The index of the item.
+     * @param index    The index of the item.
      */
     public DropItemEvent(Player player, int itemId, int widgetId, int index) {
         super(player);

@@ -53,8 +53,12 @@ class GoldJewelleryInterface : StandardInterface(4161) {
      */
     private fun resetItems(plr: Player, table: GoldJewelleryTable) {
         plr.queue(ClearWidgetItemsMessageWriter(table.buttonWidgetId))
-        plr.queue(WidgetTextMessageWriter("You need a ${table.baseName} mould to craft ${table.baseName}s.",
-                                          table.textWidgetId))
+        plr.queue(
+            WidgetTextMessageWriter(
+                "You need a ${table.baseName} mould to craft ${table.baseName}s.",
+                table.textWidgetId
+            )
+        )
         plr.queue(WidgetItemModelMessageWriter(table.mouldWidgetId, 100, table.mouldId))
     }
 }

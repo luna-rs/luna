@@ -1,6 +1,6 @@
 package world.player.skill.woodcutting.cutTree
 
-import api.predef.*
+import api.predef.object1
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 

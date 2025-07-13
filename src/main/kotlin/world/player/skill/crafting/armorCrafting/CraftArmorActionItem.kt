@@ -11,9 +11,11 @@ import io.luna.game.model.mob.Player
 /**
  * An [InventoryAction] used for crafting armor from tanned hides.
  */
-class CraftArmorActionItem(private val plr: Player,
-                           private val armor: HideArmor,
-                           amount: Int) : InventoryAction(plr, true, 4, amount) {
+class CraftArmorActionItem(
+    private val plr: Player,
+    private val armor: HideArmor,
+    amount: Int
+) : InventoryAction(plr, true, 4, amount) {
 
     companion object {
 

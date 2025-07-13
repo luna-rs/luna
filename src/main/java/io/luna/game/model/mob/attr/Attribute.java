@@ -33,7 +33,7 @@ public final class Attribute<T> {
     /**
      * Adds a specialized type that can be persisted.
      *
-     * @param typeClass The class of the type.
+     * @param typeClass   The class of the type.
      * @param typeAdapter The type adapter.
      */
     public static <E> void addSpecialType(GsonBuilder builder, Class<E> typeClass, TypeAdapter<E> typeAdapter) {
@@ -94,7 +94,7 @@ public final class Attribute<T> {
     /**
      * Creates a new {@link Attribute} that might not have an initial value.
      *
-     * @param type The type of the value.
+     * @param type         The type of the value.
      * @param initialValue The initial value, possibly {@code null}.
      */
     public Attribute(Class<T> type, T initialValue) {

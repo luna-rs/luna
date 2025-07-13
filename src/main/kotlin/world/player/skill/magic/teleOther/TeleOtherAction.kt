@@ -47,20 +47,23 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
                 source.graphic(Graphic(343, 50))
                 false
             }
+
             1, 2 -> false
             3 -> {
                 target.graphic(Graphic(342))
                 target.animation(Animations.RECEIVE_TELEPORT_OTHER)
                 false
             }
-            4,5 -> false
+
+            4, 5 -> false
             6 -> {
                 target.move(type.destination)
                 source.sendMessage("You teleport ${target.username} to ${type.location}.")
                 target.sendMessage("You are teleported to ${type.location} by {${source.username}.")
                 target.animation(Animation.CANCEL)
-               true
+                true
             }
+
             else -> true
         }
     }

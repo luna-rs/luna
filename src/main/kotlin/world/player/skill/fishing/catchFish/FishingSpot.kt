@@ -7,9 +7,11 @@ import io.luna.game.model.mob.Npc
 /**
  * A model representing a fishing spot.
  */
-class FishingSpot(id: Int,
-                  val home: Position,
-                  val away: List<Position>) : Npc(ctx, id, home) {
+class FishingSpot(
+    id: Int,
+    val home: Position,
+    val away: List<Position>
+) : Npc(ctx, id, home) {
 
     override fun onActive() {
         submitAction(MoveFishingSpotAction(this))

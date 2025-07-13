@@ -2,11 +2,7 @@ package io.luna.game.model.mob.controller;
 
 import com.google.common.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 /**
@@ -37,9 +33,9 @@ public final class ControllerKey<T extends PlayerController> {
     /**
      * Creates a new {@link ControllerKey} for type {@link T}.
      *
-     * @param controllerType The type of controller to create a key for.
+     * @param controllerType     The type of controller to create a key for.
      * @param controllerSupplier Generate a new controller.
-     * @param <T> The type of controller to create a key for.
+     * @param <T>                The type of controller to create a key for.
      * @return The new key.
      */
     public static <T extends PlayerController> ControllerKey<T> of(Class<T> controllerType, Supplier<T> controllerSupplier) {
@@ -77,8 +73,12 @@ public final class ControllerKey<T extends PlayerController> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ControllerKey<?> that = (ControllerKey<?>) o;
         return Objects.equals(name, that.name);
     }

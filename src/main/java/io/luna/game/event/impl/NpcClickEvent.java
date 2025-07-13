@@ -94,7 +94,7 @@ public class NpcClickEvent extends PlayerEvent implements ControllableEvent, Int
     /**
      * Creates a new {@link NpcClickEvent}.
      *
-     * @param player The player.
+     * @param player    The player.
      * @param targetNpc The non-player character.
      */
     private NpcClickEvent(Player player, Npc targetNpc) {

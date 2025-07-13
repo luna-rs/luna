@@ -1,6 +1,7 @@
 package world.player.skill.crafting.textileCrafting
 
-import api.predef.*
+import api.predef.object2
+import api.predef.useItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 

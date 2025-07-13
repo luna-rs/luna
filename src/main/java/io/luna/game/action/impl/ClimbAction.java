@@ -30,10 +30,10 @@ public final class ClimbAction extends LockedAction {
     /**
      * Creates a new {@link ClimbAction}.
      *
-     * @param player The player.
+     * @param player      The player.
      * @param destination The destination.
-     * @param direction The direction.
-     * @param message The message.
+     * @param direction   The direction.
+     * @param message     The message.
      */
     public ClimbAction(Player player, Position destination, Direction direction, String message) {
         super(player);

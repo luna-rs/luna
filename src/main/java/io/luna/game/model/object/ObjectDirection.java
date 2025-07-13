@@ -6,7 +6,7 @@ import io.luna.game.model.Direction;
 /**
  * An enumerated type whose elements represent different object directions.
  *
- * @author lare96 
+ * @author lare96
  */
 public enum ObjectDirection {
     NORTH(1),
@@ -21,11 +21,12 @@ public enum ObjectDirection {
 
     static {
         ImmutableMap.Builder<Integer, ObjectDirection> map = ImmutableMap.builder();
-        for(ObjectDirection next: ObjectDirection.values()) {
+        for (ObjectDirection next : ObjectDirection.values()) {
             map.put(next.id, next);
         }
         ALL = map.build();
     }
+
     /**
      * The direction identifier.
      */

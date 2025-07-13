@@ -17,15 +17,16 @@ fun plugin(func: PluginBuilderReceiver.() -> Unit) {
     }
     val pluginName = receiver.name
     val authorList = ImmutableList.copyOf(receiver.authors)
-    val compareResult = buildScriptInfo.compareAndSet(null,
-                                                      InfoScriptData(
-                                                          receiver.name,
-                                                          receiver.description,
-                                                          receiver.version,
-                                                          authorList
-                                                      )
+    val compareResult = buildScriptInfo.compareAndSet(
+        null,
+        InfoScriptData(
+            receiver.name,
+            receiver.description,
+            receiver.version,
+            authorList
+        )
     )
-    if(!compareResult) {
+    if (!compareResult) {
         throw IllegalStateException("Build script for plugin [$pluginName] already processing and was not cleared.")
     }
 }

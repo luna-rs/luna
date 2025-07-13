@@ -2,14 +2,6 @@ package world.obj.resource
 
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.`object`.GameObject
-import world.obj.resource.fillable.MilkResource
-import world.obj.resource.fillable.SandResource
-import world.obj.resource.fillable.WaterResource
-import world.obj.resource.harvestable.CabbageResource
-import world.obj.resource.harvestable.FlaxResource
-import world.obj.resource.harvestable.OnionResource
-import world.obj.resource.harvestable.PotatoResource
-import world.obj.resource.harvestable.WheatResource
 
 /**
  * Represents a regenerative [GameObject] based resource that can be interacted with by the player.

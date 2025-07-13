@@ -42,7 +42,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
 
     @Override
     protected String[] getSupportedTypes() {
-        return new String[] { "*" };
+        return new String[]{"*"};
     }
 
     /**
@@ -101,7 +101,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
                     fileAppender.add(getPatternLayout(builder));
                 } else {
                     fileAppender.add(builder.newLayout("PatternLayout")
-                            .addAttribute("pattern","[%d{EEEE | dd, MMM yyyy | h:mm:ss a}] %msg%n"));
+                            .addAttribute("pattern", "[%d{EEEE | dd, MMM yyyy | h:mm:ss a}] %msg%n"));
                 }
                 builder.add(fileAppender);
                 newFileLogs.add(type);
@@ -161,7 +161,7 @@ public final class LoggingConfigurationFactory extends ConfigurationFactory {
     /**
      * Returns the filter for an appender with {@code minLevel} and {@code maxLevel}.
      *
-     * @param builder The builder.
+     * @param builder  The builder.
      * @param minLevel The minimum logging level.
      * @param maxLevel The maximum logging level.
      * @return The filter.

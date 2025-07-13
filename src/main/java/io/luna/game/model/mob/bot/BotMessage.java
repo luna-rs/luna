@@ -24,7 +24,7 @@ public class BotMessage<T extends GameMessageWriter> {
     /**
      * Creates a new {@link BotMessage}.
      *
-     * @param message The incoming message
+     * @param message   The incoming message
      * @param timestamp When this message was sent.
      */
     public BotMessage(T message, Instant timestamp) {

@@ -27,7 +27,7 @@ public final class TabInterfaceMessageWriter extends GameMessageWriter {
      * Creates a new {@link TabInterfaceMessageWriter}.
      *
      * @param tab The tab index.
-     * @param id The interface identifier.
+     * @param id  The interface identifier.
      */
     public TabInterfaceMessageWriter(TabIndex tab, int id) {
         this.tab = tab;

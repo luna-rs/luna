@@ -1,18 +1,19 @@
 package world.player.skill.herblore.makeUnfPotion
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.herblore
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An [InventoryAction] that will make unfinished potions.
  */
-class MakeUnfActionItem(plr: Player,
-                        val unfPotion: UnfPotion,
-                        makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
+class MakeUnfActionItem(
+    plr: Player,
+    val unfPotion: UnfPotion,
+    makeTimes: Int
+) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 
@@ -28,6 +29,7 @@ class MakeUnfActionItem(plr: Player,
                 mob.sendMessage("You need a Herblore level of ${unfPotion.level} to make this potion.")
                 false
             }
+
             else -> true
         }
 

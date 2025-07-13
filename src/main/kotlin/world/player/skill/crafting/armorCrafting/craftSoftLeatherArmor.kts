@@ -7,13 +7,15 @@ import io.luna.game.model.mob.Player
 /**
  * The armor that is displayed on the [SoftLeatherInterface].
  */
-val armorList = listOf(HideArmor.LEATHER_BODY,
-                       HideArmor.LEATHER_GLOVES,
-                       HideArmor.LEATHER_BOOTS,
-                       HideArmor.LEATHER_VAMBRACES,
-                       HideArmor.LEATHER_CHAPS,
-                       HideArmor.COIF,
-                       HideArmor.LEATHER_COWL)
+val armorList = listOf(
+    HideArmor.LEATHER_BODY,
+    HideArmor.LEATHER_GLOVES,
+    HideArmor.LEATHER_BOOTS,
+    HideArmor.LEATHER_VAMBRACES,
+    HideArmor.LEATHER_CHAPS,
+    HideArmor.COIF,
+    HideArmor.LEATHER_COWL
+)
 
 /**
  * Called when a button on the [SoftLeatherInterface] is clicked.

@@ -1,6 +1,6 @@
 package world.obj.resource.harvestable
 
-import api.predef.*
+import api.predef.rand
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 

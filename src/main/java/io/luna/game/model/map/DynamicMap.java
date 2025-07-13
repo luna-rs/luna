@@ -1,11 +1,7 @@
 package io.luna.game.model.map;
 
 import io.luna.LunaContext;
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
-import io.luna.game.model.Position;
-import io.luna.game.model.Region;
-import io.luna.game.model.World;
+import io.luna.game.model.*;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.item.GroundItem;
@@ -18,11 +14,7 @@ import io.luna.game.model.mob.controller.ControllerKey;
 import io.luna.game.model.object.GameObject;
 import io.luna.game.task.Task;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A dynamically constructed map; also known as an instance, somewhere in the rs2 world. These can be used for things
@@ -111,7 +103,7 @@ public final class DynamicMap {
 
             // Add collision data as well.
             ChunkRepository instancedRepository = world.getChunks().load(getInstancePosition(chunk.getAbsPosition()));
-            for(int index = 0; index < repository.getMatrices().length; index++) {
+            for (int index = 0; index < repository.getMatrices().length; index++) {
                 instancedRepository.getMatrices()[index].replace(repository.getMatrices()[index]);
             }
         }
@@ -128,7 +120,7 @@ public final class DynamicMap {
             plr.setDynamicMap(this);
             plr.move(assignedSpace.getPrimary().getAbsPosition());
             plr.setLastRegion(null);
-          //  plr.                queue(new DynamicMapMessageWriter(this, ));
+            //  plr.                queue(new DynamicMapMessageWriter(this, ));
 
             world.schedule(new Task(1) {
                 @Override

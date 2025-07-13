@@ -32,10 +32,10 @@ public final class SkillChangeEvent extends MobEvent {
     /**
      * Creates a new {@link SkillChangeEvent}.
      *
-     * @param oldExp The old amount of experience.
+     * @param oldExp       The old amount of experience.
      * @param oldStaticLvl The old static level.
-     * @param oldLvl The old level.
-     * @param id The id of the skill that was changed.
+     * @param oldLvl       The old level.
+     * @param id           The id of the skill that was changed.
      */
     public SkillChangeEvent(Mob mob, double oldExp, int oldStaticLvl, int oldLvl, int id) {
         super(mob);

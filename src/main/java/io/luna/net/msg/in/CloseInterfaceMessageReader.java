@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageReader;
  * A {@link GameMessageReader} implementation that intercepts data for when a close button
  * on an interface is clicked.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class CloseInterfaceMessageReader extends GameMessageReader<NullEvent> {
 

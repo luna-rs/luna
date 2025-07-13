@@ -1,10 +1,9 @@
 package world.player.inter.clickOption
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.button
+import api.predef.ext.get
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.dialogue.OptionDialogueInterface
-import io.luna.game.model.mob.inter.StandardInterface
 
 /**
  * Invoked when the player clicks an option on an option dialogue.

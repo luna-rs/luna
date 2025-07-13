@@ -42,7 +42,7 @@ class MergedDropTable(val tableList: List<DropTable>) : DropTable() {
      */
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
         return DropTableHandler.createList {
-            for(table in tableList) {
+            for (table in tableList) {
                 items += table.computeTable(mob, source)
             }
         }

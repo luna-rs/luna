@@ -2,6 +2,7 @@ package io.luna.game.model;
 
 import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
 import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
@@ -10,7 +11,6 @@ import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.plugin.PluginManager;
-import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -109,9 +109,9 @@ public abstract class Entity {
     /**
      * Creates a new {@link Entity}.
      *
-     * @param context The context instance.
+     * @param context  The context instance.
      * @param position The current position.
-     * @param type The type.
+     * @param type     The type.
      */
     public Entity(LunaContext context, Position position, EntityType type) {
         this.context = context;
@@ -127,7 +127,7 @@ public abstract class Entity {
      * Creates a new {@link Entity}.
      *
      * @param context The context instance.
-     * @param type The type.
+     * @param type    The type.
      */
     public Entity(LunaContext context, EntityType type) {
         this.context = context;
@@ -255,7 +255,7 @@ public abstract class Entity {
     /**
      * Determines if this entity is within {@code radius} to {@code other}.
      *
-     * @param other The other entity.
+     * @param other  The other entity.
      * @param radius The radius.
      * @return {@code true} if the entity is within range.
      */
@@ -266,7 +266,7 @@ public abstract class Entity {
     /**
      * Determines if this entity is within {@code radius} to {@code other}.
      *
-     * @param other The other position.
+     * @param other  The other position.
      * @param radius The radius.
      * @return {@code true} if the entity is within range.
      */
@@ -327,7 +327,7 @@ public abstract class Entity {
      * @return The attribute map.
      */
     public final AttributeMap getAttributes() {
-        if(attributes == null) {
+        if (attributes == null) {
             // Lazy initialization is necessary, otherwise way too much memory will be used.
             attributes = new AttributeMap();
         }

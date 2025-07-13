@@ -84,6 +84,7 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
     public void clear() {
         flags.clear();
     }
+
     public int size() {
         return flags.size();
     }

@@ -103,8 +103,8 @@ public final class RestockPolicy {
     /**
      * Creates a new {@link RestockPolicy}.
      *
-     * @param amount The amount to be restocked.
-     * @param rate The rate in which the restock occurs.
+     * @param amount       The amount to be restocked.
+     * @param rate         The rate in which the restock occurs.
      * @param startPercent The percentage of items remaining that the restock will start at.
      */
     private RestockPolicy(int amount, int rate, int startPercent) {

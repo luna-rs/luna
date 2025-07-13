@@ -30,8 +30,8 @@ public final class Graphic {
     /**
      * Creates a new {@link Graphic}.
      *
-     * @param id The identifier.
-     * @param delay The delay.
+     * @param id     The identifier.
+     * @param delay  The delay.
      * @param height The height.
      */
     public Graphic(int id, int delay, int height) {
@@ -43,7 +43,7 @@ public final class Graphic {
     /**
      * Creates a new {@link Graphic} with a delay of {@code 0}.
      *
-     * @param id The identifier.
+     * @param id     The identifier.
      * @param height The height.
      */
     public Graphic(int id, int height) {

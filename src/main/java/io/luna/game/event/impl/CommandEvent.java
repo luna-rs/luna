@@ -29,8 +29,8 @@ public final class CommandEvent extends PlayerEvent implements ControllableEvent
      * Creates a new {@link CommandEvent}.
      *
      * @param player The player.
-     * @param name The command name.
-     * @param args The command arguments.
+     * @param name   The command name.
+     * @param args   The command arguments.
      */
     public CommandEvent(Player player, String completeString, String name, String[] args) {
         super(player);

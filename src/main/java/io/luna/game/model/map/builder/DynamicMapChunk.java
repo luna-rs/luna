@@ -60,8 +60,8 @@ public final class DynamicMapChunk {
     /**
      * Creates a new {@link DynamicMapChunk}.
      *
-     * @param chunk The real world base chunk.
-     * @param plane The real chunk plane.
+     * @param chunk    The real world base chunk.
+     * @param plane    The real chunk plane.
      * @param rotation The rotation of the base chunk in the palette.
      */
     public DynamicMapChunk(Chunk chunk, int plane, Rotation rotation) {
@@ -83,8 +83,8 @@ public final class DynamicMapChunk {
     /**
      * Creates a new {@link DynamicMapChunk}.
      *
-     * @param x The real world base chunk.
-     * @param y The real world base chunk.
+     * @param x     The real world base chunk.
+     * @param y     The real world base chunk.
      * @param plane The real chunk plane.
      */
     public DynamicMapChunk(int x, int y, int plane) {

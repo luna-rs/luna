@@ -40,7 +40,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
 
     @Override
     public final void run() {
-       parseFile(filePath);
+        parseFile(filePath);
     }
 
     /**

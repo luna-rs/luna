@@ -8,11 +8,11 @@ import io.luna.game.model.Position;
  */
 public final class EuclideanHeuristic extends Heuristic {
 
-	/**
-	 * @see Position#getEuclideanDistance(Position)
-	 */
-	@Override
-	public int estimate(Position current, Position target) {
-		return current.getEuclideanDistance(target);
-	}
+    /**
+     * @see Position#getEuclideanDistance(Position)
+     */
+    @Override
+    public int estimate(Position current, Position target) {
+        return current.getEuclideanDistance(target);
+    }
 }

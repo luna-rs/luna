@@ -7,7 +7,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that updates the loading status for the friends list.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class FriendsListStatusMessageWriter extends GameMessageWriter {
 

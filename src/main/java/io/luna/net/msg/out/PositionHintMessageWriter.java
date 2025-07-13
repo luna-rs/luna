@@ -10,7 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
  *
  * @author lare96
  */
-public final class PositionHintMessageWriter extends GameMessageWriter{
+public final class PositionHintMessageWriter extends GameMessageWriter {
 
     /**
      * The target of the hint icon.

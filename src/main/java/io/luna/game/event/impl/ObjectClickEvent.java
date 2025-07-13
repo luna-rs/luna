@@ -59,12 +59,12 @@ public class ObjectClickEvent extends PlayerEvent implements ControllableEvent, 
     /**
      * The clicked object.
      */
-    public  GameObject gameObject;
+    public GameObject gameObject;
 
     /**
      * Creates a new {@link ObjectClickEvent}.
      *
-     * @param player The player.
+     * @param player     The player.
      * @param gameObject The clicked object.
      */
     private ObjectClickEvent(Player player, GameObject gameObject) {

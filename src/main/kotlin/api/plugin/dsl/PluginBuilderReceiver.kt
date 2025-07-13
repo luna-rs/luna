@@ -29,6 +29,6 @@ class PluginBuilderReceiver {
 
     /**
      * The authors of this plugin.
-      */
+     */
     val authors: MutableList<String> = ArrayList(2)
 }

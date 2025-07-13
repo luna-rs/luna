@@ -29,9 +29,9 @@ public abstract class ItemContainerAction extends Action<Player> {
         /**
          * Creates a new {@link InventoryAction}.
          *
-         * @param player The player.
-         * @param instant If this action should run instantly.
-         * @param delay The delay of this action.
+         * @param player      The player.
+         * @param instant     If this action should run instantly.
+         * @param delay       The delay of this action.
          * @param repeatTimes The amount of times to repeat.
          */
         public InventoryAction(Player player, boolean instant, int delay, int repeatTimes) {
@@ -57,10 +57,10 @@ public abstract class ItemContainerAction extends Action<Player> {
         /**
          * Creates a new {@link AnimatedInventoryAction}.
          *
-         * @param player The player.
-         * @param actionDelay The delay of this action.
+         * @param player         The player.
+         * @param actionDelay    The delay of this action.
          * @param animationDelay The animation delay, in ticks.
-         * @param repeatTimes The amount of times to repeat.
+         * @param repeatTimes    The amount of times to repeat.
          */
         public AnimatedInventoryAction(Player player, int actionDelay, int animationDelay, int repeatTimes) {
             super(player, false, actionDelay, repeatTimes);
@@ -114,11 +114,11 @@ public abstract class ItemContainerAction extends Action<Player> {
     /**
      * Creates a new {@link ItemContainerAction}.
      *
-     * @param player The player.
+     * @param player    The player.
      * @param container The container.
-     * @param instant If this action should run instantly.
-     * @param delay The delay of this action.
-     * @param repeat The amount of times to repeat.
+     * @param instant   If this action should run instantly.
+     * @param delay     The delay of this action.
+     * @param repeat    The amount of times to repeat.
      */
     public ItemContainerAction(Player player, ItemContainer container, boolean instant, int delay, int repeat) {
         super(player, ActionType.WEAK, instant, delay);
@@ -129,9 +129,9 @@ public abstract class ItemContainerAction extends Action<Player> {
     /**
      * Creates a new {@link ItemContainerAction} with a delay of {@code 1} that runs instantly.
      *
-     * @param player The player.
+     * @param player    The player.
      * @param container The container.
-     * @param repeat The amount of times to repeat.
+     * @param repeat    The amount of times to repeat.
      */
     public ItemContainerAction(Player player, ItemContainer container, int repeat) {
         this(player, container, true, 1, repeat);
@@ -139,7 +139,7 @@ public abstract class ItemContainerAction extends Action<Player> {
 
     @Override
     public final void onSubmit() {
-        if(executeIf(true)) {
+        if (executeIf(true)) {
             mob.getWalking().clear();
         } else {
             complete();

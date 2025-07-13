@@ -1,6 +1,7 @@
 package world.player.skill.thieving.searchForTraps
 
-import api.predef.*
+import api.predef.object1
+import api.predef.object2
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player

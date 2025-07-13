@@ -27,7 +27,7 @@ object Agility {
      * Checks the player's agility level against [level] and awards [xp] if successful, sends a message otherwise.
      */
     fun checkLevel(plr: Player, level: Int): Boolean {
-        if(plr.agility.level >= level) {
+        if (plr.agility.level >= level) {
             return true
         }
         // TODO proper message https://github.com/luna-rs/luna/issues/384, may need msg parameter

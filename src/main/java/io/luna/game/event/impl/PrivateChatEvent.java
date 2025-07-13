@@ -28,8 +28,8 @@ public final class PrivateChatEvent extends PlayerEvent implements ControllableE
     /**
      * Creates a new {@link PrivateChatEvent}.
      *
-     * @param player The player.
-     * @param name The name of the receiver.
+     * @param player  The player.
+     * @param name    The name of the receiver.
      * @param message The message to send.
      */
     public PrivateChatEvent(Player player, long name, byte[] message) {

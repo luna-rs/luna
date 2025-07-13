@@ -2,12 +2,7 @@ package io.luna.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
-import io.luna.game.model.def.GameObjectDefinition;
-import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.def.NpcDefinition;
-import io.luna.game.model.def.VarBitDefinition;
-import io.luna.game.model.def.VarpDefinition;
-import io.luna.game.model.def.WidgetDefinition;
+import io.luna.game.model.def.*;
 
 import java.nio.file.Paths;
 

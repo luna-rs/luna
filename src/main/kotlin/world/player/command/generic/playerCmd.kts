@@ -1,7 +1,9 @@
 package world.player.command.generic
 
 import api.event.Matcher
-import api.predef.*
+import api.predef.CommandKey
+import api.predef.cmd
+import api.predef.world
 import com.google.common.collect.HashMultimap
 import io.luna.Luna
 import io.luna.game.event.impl.CommandEvent
@@ -26,10 +28,10 @@ cmd("empty") {
 
 fun sendDialogue1(plr: Player) {
     plr.newDialogue().options("Mining", { sendMiningOption(it) },
-                              "Smithing", { sendSmithingOption(it) },
-                              "Fishing", { sendFishingOption(it) },
-                              "Woodcutting", { sendWoodcuttingOption(it) },
-                              "Next", { sendDialogue2(it) })
+        "Smithing", { sendSmithingOption(it) },
+        "Fishing", { sendFishingOption(it) },
+        "Woodcutting", { sendWoodcuttingOption(it) },
+        "Next", { sendDialogue2(it) })
 
 }
 

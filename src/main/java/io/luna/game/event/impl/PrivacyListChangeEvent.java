@@ -17,7 +17,7 @@ public class PrivacyListChangeEvent extends PlayerEvent implements ControllableE
         /**
          * Creates a new {@link AddFriendEvent}.
          *
-         * @param plr The player.
+         * @param plr  The player.
          * @param name The name of the player to update in the list.
          */
         public AddFriendEvent(Player plr, long name) {
@@ -33,7 +33,7 @@ public class PrivacyListChangeEvent extends PlayerEvent implements ControllableE
         /**
          * Creates a new {@link AddIgnoreEvent}.
          *
-         * @param plr The player.
+         * @param plr  The player.
          * @param name The name of the player to update in the list.
          */
         public AddIgnoreEvent(Player plr, long name) {
@@ -49,7 +49,7 @@ public class PrivacyListChangeEvent extends PlayerEvent implements ControllableE
         /**
          * Creates a new {@link RemoveFriendEvent}.
          *
-         * @param plr The player.
+         * @param plr  The player.
          * @param name The name of the player to update in the list.
          */
         public RemoveFriendEvent(Player plr, long name) {
@@ -65,7 +65,7 @@ public class PrivacyListChangeEvent extends PlayerEvent implements ControllableE
         /**
          * Creates a new {@link RemoveIgnoreEvent}.
          *
-         * @param plr The player.
+         * @param plr  The player.
          * @param name The name of the player to update in the list.
          */
         public RemoveIgnoreEvent(Player plr, long name) {
@@ -81,7 +81,7 @@ public class PrivacyListChangeEvent extends PlayerEvent implements ControllableE
     /**
      * Creates a new {@link PrivacyListChangeEvent}.
      *
-     * @param plr The player.
+     * @param plr  The player.
      * @param name The name of the player to update in the list.
      */
     private PrivacyListChangeEvent(Player plr, long name) {

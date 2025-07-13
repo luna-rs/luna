@@ -37,10 +37,10 @@ public final class AddObjectMessageWriter extends GameMessageWriter implements C
     /**
      * Creates a new {@link AddObjectMessageWriter}.
      *
-     * @param id The identifier.
-     * @param type The type.
+     * @param id        The identifier.
+     * @param type      The type.
      * @param direction The orientation.
-     * @param offset The offset.
+     * @param offset    The offset.
      */
     public AddObjectMessageWriter(int id, int type, int direction, int offset) {
         this.id = id;

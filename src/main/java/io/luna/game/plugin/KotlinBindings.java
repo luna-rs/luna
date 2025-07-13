@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * A model representing values that will be reflectively injected into the Kotlin scripting API.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class KotlinBindings {
 

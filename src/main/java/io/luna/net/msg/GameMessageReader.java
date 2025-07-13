@@ -51,7 +51,7 @@ public abstract class GameMessageReader<E extends Event> {
      * no event data to create.
      *
      * @param player The player.
-     * @param msg The raw message data.
+     * @param msg    The raw message data.
      */
     public abstract E decode(Player player, GameMessage msg);
 
@@ -59,7 +59,7 @@ public abstract class GameMessageReader<E extends Event> {
      * Validates the decoded {@link Event} before its handled and posted to plugins.
      *
      * @param player The player.
-     * @param event The event to validate.
+     * @param event  The event to validate.
      * @return {@code true} if the event is valid.
      */
     public boolean validate(Player player, E event) {
@@ -70,7 +70,7 @@ public abstract class GameMessageReader<E extends Event> {
      * Handles a decoded and validated event before its posted to plugins.
      *
      * @param player The player.
-     * @param event The event to handle.
+     * @param event  The event to handle.
      */
     public void handle(Player player, E event) {
 
@@ -80,7 +80,7 @@ public abstract class GameMessageReader<E extends Event> {
      * Submits a raw {@link GameMessage} to be decoded and handled.
      *
      * @param player The player.
-     * @param msg The game message.
+     * @param msg    The game message.
      */
     public final void submitMessage(Player player, GameMessage msg) {
         try {
@@ -130,7 +130,7 @@ public abstract class GameMessageReader<E extends Event> {
      * Handles the event and posts it to plugins.
      *
      * @param player The player to handle and post for.
-     * @param event The event to handle and post.
+     * @param event  The event to handle and post.
      */
     private void postEvent(Player player, E event) {
         handle(player, event);

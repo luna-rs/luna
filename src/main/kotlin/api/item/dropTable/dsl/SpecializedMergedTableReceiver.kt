@@ -7,8 +7,10 @@ import api.item.dropTable.DropTable
  *
  * @author lare96
  */
-class SpecializedMergedTableReceiver(private val tableList: ArrayList<DropTable>,
-                                     private val receiver: DropTableItemReceiver) {
+class SpecializedMergedTableReceiver(
+    private val tableList: ArrayList<DropTable>,
+    private val receiver: DropTableItemReceiver
+) {
 
     /**
      * Transfers the items in [receiver] to the returned table and adds it to the merged table.

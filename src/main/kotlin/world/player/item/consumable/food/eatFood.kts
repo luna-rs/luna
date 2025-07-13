@@ -1,10 +1,11 @@
 package world.player.item.consumable.food
 
-import api.predef.*
+import api.predef.hitpoints
+import api.predef.item1
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import world.player.item.consume.food.Food
 import world.player.item.consume.food.Food.Companion.lastEat
 

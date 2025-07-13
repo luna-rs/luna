@@ -27,9 +27,9 @@ public final class EquipItemEvent extends PlayerEvent implements ControllableEve
     /**
      * Creates a new {@link EquipItemEvent}.
      *
-     * @param player The player.
-     * @param index The clicked index.
-     * @param itemId The item identifier clicked.
+     * @param player      The player.
+     * @param index       The clicked index.
+     * @param itemId      The item identifier clicked.
      * @param interfaceId The interface containing the clicked index.
      */
     public EquipItemEvent(Player player, int index, int itemId, int interfaceId) {

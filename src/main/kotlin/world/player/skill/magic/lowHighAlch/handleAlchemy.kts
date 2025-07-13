@@ -1,6 +1,6 @@
 package world.player.skill.magic.lowHighAlch
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.UseSpellEvent.MagicOnItemEvent
 
 /* Intercept events for low and high alchemy. */

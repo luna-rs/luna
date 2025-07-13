@@ -1,6 +1,6 @@
 package world.player.skill.mining.prospectOre
 
-import api.predef.*
+import api.predef.rand
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Player
 import world.player.Sounds

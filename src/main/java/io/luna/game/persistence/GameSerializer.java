@@ -18,7 +18,7 @@ public abstract class GameSerializer {
     /**
      * Loads {@link PlayerData} from an external data source.
      *
-     * @param world The world context.
+     * @param world    The world context.
      * @param username The username of the player to load.
      * @return The loaded data, {@code null} if no data was found for the player.
      * @throws Exception If any errors occur.
@@ -28,9 +28,9 @@ public abstract class GameSerializer {
     /**
      * Saves {@link PlayerData} to an external data source.
      *
-     * @param world The world context.
+     * @param world    The world context.
      * @param username The username of the player to save
-     * @param data The data to save.
+     * @param data     The data to save.
      * @throws Exception If any errors occur.
      */
     public abstract void savePlayer(World world, String username, PlayerData data) throws Exception;
@@ -38,7 +38,7 @@ public abstract class GameSerializer {
     /**
      * Deletes a record matching {@code username} from an external data source.
      *
-     * @param world The world context.
+     * @param world    The world context.
      * @param username The username of the record to delete.
      * @return {@code true} if the record was successfully deleted.
      * @throws Exception If any errors occurs.
@@ -67,7 +67,7 @@ public abstract class GameSerializer {
     /**
      * Saves a single {@link BotSchedule} to an external data source.
      *
-     * @param world The world context.
+     * @param world    The world context.
      * @param schedule The schedule.
      * @return {@code true} if successful.
      * @throws Exception If any errors occur.

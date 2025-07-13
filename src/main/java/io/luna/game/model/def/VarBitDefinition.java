@@ -35,10 +35,10 @@ public final class VarBitDefinition implements Definition {
     /**
      * Creates a new {@link VarBitDefinition}.
      *
-     * @param id The var bit id.
-     * @param parentVarpId The parent varp id.
+     * @param id                  The var bit id.
+     * @param parentVarpId        The parent varp id.
      * @param leastSignificantBit The least significant bit.
-     * @param mostSignificantBit The most significant bit.
+     * @param mostSignificantBit  The most significant bit.
      */
     public VarBitDefinition(int id, int parentVarpId, int leastSignificantBit, int mostSignificantBit) {
         this.id = id;

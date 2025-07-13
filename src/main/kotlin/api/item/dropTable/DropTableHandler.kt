@@ -4,8 +4,9 @@ import api.item.dropTable.dsl.DropTableItemChanceReceiver
 import api.item.dropTable.dsl.DropTableItemReceiver
 import api.item.dropTable.dsl.MergedDropTableReceiver
 import api.item.dropTable.dsl.SpecializedTableReceiver
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ctx
+import api.predef.ext.addItem
+import api.predef.world
 import com.google.common.base.Preconditions.checkState
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
@@ -133,8 +134,10 @@ object DropTableHandler {
      */
     fun createNpc(npcId: Int, action: MergedDropTableReceiver.() -> Unit): MergedDropTable {
         val table = createMerged(action)
-        checkState(npcIdMap.putIfAbsent(npcId, table) == null,
-                   "NPC ID $npcId already registered to a table.")
+        checkState(
+            npcIdMap.putIfAbsent(npcId, table) == null,
+            "NPC ID $npcId already registered to a table."
+        )
         return table
     }
 
@@ -147,8 +150,10 @@ object DropTableHandler {
      */
     fun createNpc(npcType: KClass<out Npc>, action: MergedDropTableReceiver.() -> Unit): MergedDropTable {
         val table = createMerged(action)
-        checkState(npcTypeMap.putIfAbsent(npcType.java, table) == null,
-                   "Class ${npcType.java} already registered to a table.")
+        checkState(
+            npcTypeMap.putIfAbsent(npcType.java, table) == null,
+            "Class ${npcType.java} already registered to a table."
+        )
         return table
     }
 }

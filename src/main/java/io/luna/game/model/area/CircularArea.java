@@ -7,7 +7,7 @@ import io.luna.game.model.Position;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CircularArea extends Area {
-    
+
     private final Position center;
     private final int radius;
 

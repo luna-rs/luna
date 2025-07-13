@@ -1,7 +1,9 @@
 package world.player.skill.smithing.smithBar
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.isOpen
+import api.predef.on
+import api.predef.smithing
+import api.predef.useItem
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
 import world.player.skill.smithing.BarType
@@ -14,7 +16,7 @@ fun lookupBar(player: Player): BarType? {
     for (item in player.inventory) {
         if (item != null) {
             val bar = BarType.ID_TO_BAR[item.id]
-            if(bar == BarType.SILVER || bar == BarType.GOLD) {
+            if (bar == BarType.SILVER || bar == BarType.GOLD) {
                 continue
             }
             if (bar != null && player.smithing.level >= bar.level) {

@@ -18,8 +18,7 @@ public final class ArrayDefinitionRepository<T extends Definition> extends Defin
     /**
      * Creates a new {@link ArrayDefinitionRepository}.
      *
-     * @param length
-     *         The length of the backing array.
+     * @param length The length of the backing array.
      */
     @SuppressWarnings("unchecked")
     public ArrayDefinitionRepository(int length) {
@@ -28,7 +27,7 @@ public final class ArrayDefinitionRepository<T extends Definition> extends Defin
 
     @Override
     boolean put(int id, T definition) {
-        if(definitions[id] != null) {
+        if (definitions[id] != null) {
             return false;
         }
         definitions[id] = definition;

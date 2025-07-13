@@ -1,6 +1,7 @@
 package world.player.following
 
-import api.predef.*
+import api.predef.INTERACTION_FOLLOW
+import api.predef.on
 import io.luna.game.event.impl.PlayerClickEvent.PlayerThirdClickEvent
 
 /**

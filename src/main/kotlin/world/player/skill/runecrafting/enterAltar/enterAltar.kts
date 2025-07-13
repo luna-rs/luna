@@ -1,10 +1,13 @@
 package world.player.skill.runecrafting.enterAltar
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.scheduleOnce
+import api.predef.itemName
+import api.predef.object1
+import api.predef.useItem
+import api.predef.world
 import io.luna.game.model.item.Equipment
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * The entering an altar with a talisman animation.

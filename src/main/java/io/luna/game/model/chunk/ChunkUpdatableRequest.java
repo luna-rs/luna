@@ -25,8 +25,8 @@ public final class ChunkUpdatableRequest {
     /**
      * Creates a new {@link ChunkUpdatableRequest}.
      *
-     * @param updatable The {@link ChunkUpdatable} this update is for.
-     * @param message The update message.
+     * @param updatable  The {@link ChunkUpdatable} this update is for.
+     * @param message    The update message.
      * @param persistent If this request is persistent.
      */
     public ChunkUpdatableRequest(ChunkUpdatable updatable, ChunkUpdatableMessage message, boolean persistent) {

@@ -207,7 +207,7 @@ public final class Skill {
     /**
      * Creates a new {@link Skill}.
      *
-     * @param id The skill identifier.
+     * @param id  The skill identifier.
      * @param set The skill set.
      */
     public Skill(int id, SkillSet set) {
@@ -251,9 +251,9 @@ public final class Skill {
     /**
      * Notifies plugins of any level or experience changes.
      *
-     * @param oldExperience The old experience amount.
+     * @param oldExperience  The old experience amount.
      * @param oldStaticLevel The old static level.
-     * @param oldLevel The old dynamic level.
+     * @param oldLevel       The old dynamic level.
      */
     private void notifyListeners(double oldExperience, int oldStaticLevel, int oldLevel) {
         if (set.isFiringEvents()) {
@@ -323,9 +323,9 @@ public final class Skill {
     /**
      * Increases the dynamic skill level by {@code amount}.
      *
-     * @param amount The amount to increase by.
+     * @param amount            The amount to increase by.
      * @param exceedStaticLevel If the bound should be set higher than the static level, or at the
-     * static level.
+     *                          static level.
      */
     public void addLevels(int amount, boolean exceedStaticLevel) {
         int bound = exceedStaticLevel ? getStaticLevel() + amount : getStaticLevel();

@@ -46,7 +46,9 @@ npc1(520) {
  * Spawn general store NPC.
  */
 on(ServerLaunchEvent::class) {
-    world.addNpc(id = 520,
-                 x = 3091,
-                 y = 3250)
+    world.addNpc(
+        id = 520,
+        x = 3091,
+        y = 3250
+    )
 }

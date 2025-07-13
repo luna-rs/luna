@@ -1,7 +1,8 @@
 package api.bot.scripts
 
 import api.bot.CoroutineBotScript
-import api.predef.*
+import api.predef.item
+import api.predef.rand
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation

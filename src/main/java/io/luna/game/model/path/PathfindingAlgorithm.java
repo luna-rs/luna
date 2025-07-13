@@ -1,10 +1,10 @@
 package io.luna.game.model.path;
 
 import com.google.common.base.Preconditions;
-import io.luna.game.model.area.Area;
 import io.luna.game.model.Direction;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.area.Area;
 import io.luna.game.model.collision.CollisionManager;
 
 import java.util.Deque;
@@ -24,7 +24,7 @@ public abstract class PathfindingAlgorithm {
      * Creates the PathfindingAlgorithm.
      *
      * @param collisionManager The {@link CollisionManager} used to check if there is a collision
-     * between two {@link Position}s in a path.
+     *                         between two {@link Position}s in a path.
      */
     public PathfindingAlgorithm(CollisionManager collisionManager) {
         this.collisionManager = collisionManager;
@@ -43,7 +43,7 @@ public abstract class PathfindingAlgorithm {
      * Returns whether or not a {@link Position} walking one step in any of the specified {@link Direction}s would lead
      * to is traversable.
      *
-     * @param current The current Position.
+     * @param current    The current Position.
      * @param directions The Directions that should be checked.
      * @return {@code true} if any of the Directions lead to a traversable tile, otherwise {@code false}.
      */
@@ -55,8 +55,8 @@ public abstract class PathfindingAlgorithm {
      * Returns whether or not a {@link Position} walking one step in any of the specified {@link Direction}s would lead
      * to is traversable.
      *
-     * @param current The current Position.
-     * @param area The {@link Optional} containing the Area boundary.
+     * @param current    The current Position.
+     * @param area       The {@link Optional} containing the Area boundary.
      * @param directions The Directions that should be checked.
      * @return {@code true} if any of the Directions lead to a traversable tile, otherwise {@code false}.
      */

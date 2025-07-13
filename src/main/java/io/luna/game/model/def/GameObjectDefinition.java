@@ -91,18 +91,18 @@ public final class GameObjectDefinition implements Definition {
     /**
      * Creates a new {@link GameObjectDefinition}.
      *
-     * @param id The identifier.
-     * @param name The name.
-     * @param description The examine text.
-     * @param sizeX The width.
-     * @param sizeY The length.
-     * @param solid If the object is solid.
+     * @param id           The identifier.
+     * @param name         The name.
+     * @param description  The examine text.
+     * @param sizeX        The width.
+     * @param sizeY        The length.
+     * @param solid        If the object is solid.
      * @param impenetrable If the object is impenetrable.
-     * @param interactive If the object is interactive.
-     * @param animationId The object animation identifier, if it has one.
-     * @param actions An immutable list of actions.
-     * @param obstructive If the object is obstructive.
-     * @param varpDef The transformation definition.
+     * @param interactive  If the object is interactive.
+     * @param animationId  The object animation identifier, if it has one.
+     * @param actions      An immutable list of actions.
+     * @param obstructive  If the object is obstructive.
+     * @param varpDef      The transformation definition.
      */
     public GameObjectDefinition(int id, String name, String description, int sizeX, int sizeY, int direction, boolean solid,
                                 boolean impenetrable, boolean interactive, OptionalInt animationId, ImmutableList<String> actions,
@@ -148,7 +148,7 @@ public final class GameObjectDefinition implements Definition {
     /**
      * Determines if the object action at {@code index} is equal to {@code action}.
      *
-     * @param index The action index.
+     * @param index  The action index.
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */

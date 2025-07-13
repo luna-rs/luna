@@ -45,11 +45,11 @@ public class GroundItem extends StationaryEntity {
     /**
      * Creates a new {@link GroundItem}.
      *
-     * @param context The context instance.
-     * @param id The item identifier.
-     * @param amount The item amount.
+     * @param context  The context instance.
+     * @param id       The item identifier.
+     * @param amount   The item amount.
      * @param position The position of the item.
-     * @param view Who this item is viewable to.
+     * @param view     Who this item is viewable to.
      */
     public GroundItem(LunaContext context, int id, int amount, Position position, ChunkUpdatableView view) {
         super(context, position, EntityType.ITEM, view);

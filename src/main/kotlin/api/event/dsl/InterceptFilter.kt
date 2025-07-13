@@ -1,6 +1,6 @@
 package api.event.dsl
 
-import api.predef.*
+import api.predef.scriptListeners
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
 import kotlin.reflect.KClass
@@ -11,9 +11,11 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-class InterceptFilter<E : Event>(private val eventType: KClass<E>,
-                                 private val condition: E.() -> Boolean,
-                                 private val testValue: Boolean) {
+class InterceptFilter<E : Event>(
+    private val eventType: KClass<E>,
+    private val condition: E.() -> Boolean,
+    private val testValue: Boolean
+) {
 
     /**
      * Test condition, and run if satisfied!

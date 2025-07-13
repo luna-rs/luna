@@ -4,17 +4,7 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.World;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -122,7 +112,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         // Initialize the index cache.
         this.indexes = IntStream.rangeClosed(1, capacity).boxed()
-            .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
+                .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
     }
 
     @Override
@@ -230,7 +220,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
             mob.setState(EntityState.INACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
             checkState(mob.asPlr().getState() == EntityState.INACTIVE,
-                "Player must be inactive. Use Player#logout.");
+                    "Player must be inactive. Use Player#logout.");
             world.removePlayer(mob.asPlr());
         }
 

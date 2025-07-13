@@ -6,11 +6,7 @@ import io.luna.util.AsyncExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,7 +124,7 @@ public final class Cache implements Closeable {
      * Gets a file from the cache.
      *
      * @param cache The cache id.
-     * @param file The file id.
+     * @param file  The file id.
      * @return The file.
      * @throws IOException if an I/O error occurs.
      */

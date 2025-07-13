@@ -36,7 +36,7 @@ public final class DialogueQueueBuilder {
         /**
          * Creates a new {@link DialogueOption}.
          *
-         * @param name The name of this option.
+         * @param name   The name of this option.
          * @param action What happens when this option is clicked.
          */
         public DialogueOption(String name, Consumer<Player> action) {
@@ -63,7 +63,7 @@ public final class DialogueQueueBuilder {
     /**
      * Creates a new {@link DialogueQueueBuilder}.
      *
-     * @param player The player.
+     * @param player      The player.
      * @param initialSize The initial size of the internal queue.
      */
     public DialogueQueueBuilder(Player player, int initialSize) {

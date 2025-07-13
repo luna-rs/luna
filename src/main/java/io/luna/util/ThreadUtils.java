@@ -31,7 +31,7 @@ public final class ThreadUtils {
      *
      * @param service The executor to wait for.
      * @param timeout The time to wait for.
-     * @param unit The time unit.
+     * @param unit    The time unit.
      */
     public static void awaitTerminationUninterruptibly(ExecutorService service, long timeout, TimeUnit unit) {
         boolean interrupted = false;

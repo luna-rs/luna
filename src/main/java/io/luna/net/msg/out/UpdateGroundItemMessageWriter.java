@@ -35,10 +35,10 @@ public final class UpdateGroundItemMessageWriter extends GameMessageWriter imple
     /**
      * Creates a new {@link UpdateGroundItemMessageWriter}.
      *
-     * @param offset The offset.
-     * @param id The id.
+     * @param offset         The offset.
+     * @param id             The id.
      * @param previousAmount The previous amount.
-     * @param newAmount The new amount.
+     * @param newAmount      The new amount.
      */
     public UpdateGroundItemMessageWriter(int offset, int id, int previousAmount, int newAmount) {
         this.offset = offset;

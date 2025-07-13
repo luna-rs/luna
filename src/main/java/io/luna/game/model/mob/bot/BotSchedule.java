@@ -61,9 +61,9 @@ public final class BotSchedule {
     /**
      * Creates a new {@link BotSchedule}.
      *
-     * @param username The username of the persistent bot.
+     * @param username  The username of the persistent bot.
      * @param logoutFor When the bot is scheduled for login.
-     * @param loginFor How long the bot will play for.
+     * @param loginFor  How long the bot will play for.
      */
     public BotSchedule(String username, Duration logoutFor, Duration loginFor) {
         this.username = username;
@@ -73,8 +73,12 @@ public final class BotSchedule {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BotSchedule)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BotSchedule)) {
+            return false;
+        }
         BotSchedule session = (BotSchedule) o;
         return Objects.equal(username, session.username);
     }
@@ -110,7 +114,7 @@ public final class BotSchedule {
      * @return {@code true} if the bot is ready to logout.
      */
     public boolean canLogin(Instant logoutTime) {
-        if(logoutTime == null) {
+        if (logoutTime == null) {
             return true;
         }
         return Instant.now().isAfter(logoutTime.plus(logoutFor));

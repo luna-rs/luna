@@ -22,9 +22,10 @@ import java.util.concurrent.atomic.AtomicReference
  * The Kotlin bindings. Not accessible to scripts.
  */
 private val bindings: KotlinBindings = ReflectionUtils.getStaticField(
-        PluginBootstrap::class.java,
-        "bindings",
-        KotlinBindings::class.java)
+    PluginBootstrap::class.java,
+    "bindings",
+    KotlinBindings::class.java
+)
 
 /**
  * The [LunaContext] instance.

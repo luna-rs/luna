@@ -1,19 +1,20 @@
 package world.player.skill.fletching.stringBow
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.fletching
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import world.player.Sounds
 
 /**
  * An [InventoryAction] implementation that strings bows.
  */
-class StringBowActionItem(plr: Player,
-                          val bow: Bow,
-                          count: Int) : InventoryAction(plr, true, 2, count) {
+class StringBowActionItem(
+    plr: Player,
+    val bow: Bow,
+    count: Int
+) : InventoryAction(plr, true, 2, count) {
 
     companion object {
 
@@ -32,6 +33,7 @@ class StringBowActionItem(plr: Player,
                 mob.sendMessage("You need a Fletching level of ${bow.level} to string this bow.")
                 false
             }
+
             !mob.inventory.containsAll(Bow.BOW_STRING, bow.unstrung) -> false
             else -> true
         }

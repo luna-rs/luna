@@ -1,6 +1,6 @@
 package world.player.skill.magic.enchantJewellery
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.UseSpellEvent.MagicOnItemEvent
 
 /* Add all interactions for enchanting spells. */

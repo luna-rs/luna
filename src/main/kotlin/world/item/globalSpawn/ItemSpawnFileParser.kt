@@ -1,7 +1,11 @@
 package world.item.globalSpawn
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.addItem
+import api.predef.ext.scheduleOnce
+import api.predef.game
+import api.predef.itemDef
+import api.predef.logger
+import api.predef.world
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import io.luna.game.model.Position

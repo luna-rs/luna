@@ -3,8 +3,10 @@ package world.player.skill.thieving
 import api.item.dropTable.DropTable
 import api.item.dropTable.DropTableHandler
 import api.item.dropTable.DropTableItemList
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ALWAYS
+import api.predef.addArticle
+import api.predef.ext.of
+import api.predef.thieving
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob

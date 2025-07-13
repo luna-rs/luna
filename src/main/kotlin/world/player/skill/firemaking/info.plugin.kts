@@ -1,4 +1,3 @@
-
 package world.player.skill.firemaking
 
 import api.plugin.dsl.plugin

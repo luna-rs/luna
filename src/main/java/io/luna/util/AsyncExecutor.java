@@ -1,19 +1,9 @@
 package io.luna.util;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.util.concurrent.*;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -21,7 +11,7 @@ import static com.google.common.base.Preconditions.checkState;
  * An {@link Executor} implementation that asynchronously executes a series of user-defined tasks, and
  * provides functionality to wait until they're completed.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class AsyncExecutor implements Executor {
 
@@ -48,7 +38,7 @@ public final class AsyncExecutor implements Executor {
     /**
      * Creates a new {@link AsyncExecutor}.
      *
-     * @param threadCount The thread pool worker count.
+     * @param threadCount   The thread pool worker count.
      * @param threadFactory The thread factory to create workers with.
      */
     public AsyncExecutor(int threadCount, ThreadFactory threadFactory) {
@@ -64,7 +54,7 @@ public final class AsyncExecutor implements Executor {
      * Creates a new {@link AsyncExecutor} using a named thread factory.
      *
      * @param threadCount The thread pool worker count.
-     * @param threadName The name of worker threads.
+     * @param threadName  The name of worker threads.
      */
     public AsyncExecutor(int threadCount, String threadName) {
         this(threadCount, new ThreadFactoryBuilder().setNameFormat(threadName).build());
@@ -88,7 +78,7 @@ public final class AsyncExecutor implements Executor {
     public void await(boolean terminate) throws ExecutionException {
         checkState(isRunning(), "Backing thread pool has already been terminated.");
 
-        for (;;) {
+        for (; ; ) {
             Future<?> pending = pendingTasks.poll();
 
             if (pending == null) {

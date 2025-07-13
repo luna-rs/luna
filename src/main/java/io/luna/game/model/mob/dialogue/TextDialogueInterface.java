@@ -7,7 +7,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 /**
  * A {@link DialogueInterface} that opens a dialogue with text and no head model.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class TextDialogueInterface extends DialogueInterface {
 

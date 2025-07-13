@@ -56,7 +56,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      * Forces a [Bot] to equip all [ids].
      */
     suspend fun equipAll(vararg ids: Int) {
-        for(next in ids) {
+        for (next in ids) {
             equip(next).await()
         }
     }

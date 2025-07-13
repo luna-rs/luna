@@ -2,11 +2,7 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
-import io.luna.game.model.Direction;
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
-import io.luna.game.model.Position;
-import io.luna.game.model.Region;
+import io.luna.game.model.*;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.path.AStarPathfindingAlgorithm;
 import io.luna.game.model.path.EuclideanHeuristic;
@@ -179,7 +175,7 @@ public final class WalkingQueue {
     public void process() {
         // TODO clean up function, traversable checks don't work
         // TODO retest traversable checks, figure out a better way for runningPath to work thats less clunky
-        if(mob instanceof Npc && mob.asNpc().isStationary()) {
+        if (mob instanceof Npc && mob.asNpc().isStationary()) {
             return;
         }
         Step currentStep = new Step(mob.getPosition());
@@ -452,7 +448,7 @@ public final class WalkingQueue {
             return true;
         }
         Player player = (Player) mob;
-        if(player.getRunEnergy() <= 0.0) {
+        if (player.getRunEnergy() <= 0.0) {
             return false;
         }
         double totalWeight = player.getWeight();
@@ -472,8 +468,9 @@ public final class WalkingQueue {
      * A function that implements an algorithm to restore run energy.
      */
     private void incrementRunEnergy() {
-        if (mob.getType() != EntityType.PLAYER)
+        if (mob.getType() != EntityType.PLAYER) {
             return;
+        }
         Player player = mob.asPlr();
 
         double runEnergy = player.getRunEnergy();

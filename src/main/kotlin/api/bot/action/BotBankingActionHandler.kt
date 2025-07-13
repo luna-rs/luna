@@ -2,22 +2,17 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
-import api.predef.*
-import api.predef.ext.*
-import io.luna.game.model.Entity.EntityDistanceComparator
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import world.player.item.banking.regularBank.Banking
-import java.util.*
-import java.util.stream.Stream
 
 /**
  * A [BotActionHandler] implementation for banking related actions.
  */
-class BotBankingActionHandler(private val bot: Bot, private val handler: BotActionHandler)  {
+class BotBankingActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
      * An action that forces the [Bot] to deposit an item into their bank. The returned future will unsuspend once the
@@ -136,6 +131,6 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     /**
      * Attempts to find the nearest bank to this [Bot].
      */
-    fun findNearestBank(): GameObject? = handler.interactions.
-    findNearest(GameObject::class) { Banking.bankingObjects.contains(it.id) }
+    fun findNearestBank(): GameObject? =
+        handler.interactions.findNearest(GameObject::class) { Banking.bankingObjects.contains(it.id) }
 }

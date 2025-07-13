@@ -6,7 +6,7 @@ import io.luna.game.model.mob.inter.InventoryOverlayInterface
 /**
  * An [InventoryOverlayInterface] implementation representing the deposit box interface.
  *
- * @author lare96 
+ * @author lare96
  */
 class DepositBoxInterface : InventoryOverlayInterface(4465, 197) {
 

@@ -1,8 +1,8 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.ChatEvent;
-import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.block.Chat;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;

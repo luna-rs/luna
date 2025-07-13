@@ -1,6 +1,6 @@
 package world.player.skill.thieving.pickpocketNpc
 
-import api.predef.*
+import api.predef.npc2
 import io.luna.game.model.def.NpcDefinition
 
 /* Add NPC interactions for all NPCs able to be stolen from. */

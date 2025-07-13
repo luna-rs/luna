@@ -31,7 +31,7 @@ public final class AddGroundItemMessageWriter extends GameMessageWriter implemen
     /**
      * Creates a new {@link AddGroundItemMessageWriter}.
      *
-     * @param id The item identifier.
+     * @param id     The item identifier.
      * @param amount The amount.
      * @param offset The position offset.
      */

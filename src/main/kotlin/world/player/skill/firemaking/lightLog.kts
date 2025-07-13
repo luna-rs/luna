@@ -1,6 +1,7 @@
 package world.player.skill.firemaking
 
-import api.predef.*
+import api.predef.groundItem2
+import api.predef.useItem
 
 for (log in Log.VALUES) {
     // Use tinderbox on log in inventory.

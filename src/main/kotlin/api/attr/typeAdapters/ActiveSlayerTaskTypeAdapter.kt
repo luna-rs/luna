@@ -5,15 +5,13 @@ import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import io.luna.game.model.item.ItemContainer
-import io.luna.game.model.item.ItemContainer.StackPolicy
 import world.player.skill.slayer.ActiveSlayerTask
 import world.player.skill.slayer.SlayerMaster
 import world.player.skill.slayer.SlayerTaskType
 
 object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() { // todo documentation
     override fun write(writer: JsonWriter, value: ActiveSlayerTask?) {
-        if(value != null) {
+        if (value != null) {
             writer.beginObject()
             writer.name("task").value(value.task.name)
             writer.name("assignee").value(value.assignee.name)
@@ -25,8 +23,9 @@ object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() { // todo 
     }
 
     override fun read(reader: JsonReader): ActiveSlayerTask? {
-        if(reader.peek() == JsonToken.STRING &&
-            reader.nextString().equals("null")) {
+        if (reader.peek() == JsonToken.STRING &&
+            reader.nextString().equals("null")
+        ) {
             return null
         }
         reader.beginObject()

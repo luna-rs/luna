@@ -1,6 +1,6 @@
 package world.player.login.starterPackage
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -17,7 +17,8 @@ val inventoryStarter = listOf(
     Item(554, 250), // Fire runes
     Item(557, 250), // Earth runes
     Item(558, 500), // Mind runes
-    Item(841)) // Shortbow
+    Item(841)
+) // Shortbow
 
 /**
  * Equipment starter items.
@@ -33,7 +34,8 @@ val equipmentStarter = listOf(
     Item(1063), // Leather vambraces
     Item(2570), // Ring of life
     Item(1019), // Black cape
-    Item(882, 750)) // Bronze arrows
+    Item(882, 750)
+) // Bronze arrows
 
 /**
  * Called when the player logs in for the first time.

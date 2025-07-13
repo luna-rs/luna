@@ -12,8 +12,9 @@ import world.player.skill.fishing.Tool
 /**
  * An [InventoryAction] implementation that will catch fish.
  */
-class CatchFishAction(private val msg: NpcClickEvent,
-                      private val tool: Tool
+class CatchFishAction(
+    private val msg: NpcClickEvent,
+    private val tool: Tool
 ) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
 
 

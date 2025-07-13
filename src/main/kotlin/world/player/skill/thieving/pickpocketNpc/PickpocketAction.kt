@@ -1,8 +1,11 @@
 package world.player.skill.thieving.pickpocketNpc
 
 import api.attr.Attr
-import api.predef.*
-import api.predef.ext.*
+import api.predef.addArticle
+import api.predef.ext.animation
+import api.predef.ext.scheduleOnce
+import api.predef.ext.toTicks
+import api.predef.thieving
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.item.Item

@@ -28,7 +28,7 @@ public final class InventoryOverlayMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link InventoryOverlayMessageWriter}.
      *
-     * @param interfaceId The interface identifier.
+     * @param interfaceId        The interface identifier.
      * @param overlayInterfaceId The inventory overlay interface identifier.
      */
     public InventoryOverlayMessageWriter(int interfaceId, int overlayInterfaceId) {

@@ -11,25 +11,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.in.AmountInputMessageReader;
-import io.luna.net.msg.in.ButtonClickMessageReader;
-import io.luna.net.msg.in.ChatMessageReader;
-import io.luna.net.msg.in.CloseInterfaceMessageReader;
-import io.luna.net.msg.in.CommandMessageReader;
-import io.luna.net.msg.in.ContinueDialogueMessageReader;
-import io.luna.net.msg.in.DesignPlayerMessageReader;
-import io.luna.net.msg.in.DropItemMessageReader;
-import io.luna.net.msg.in.EquipItemMessageReader;
-import io.luna.net.msg.in.GroundItemClickMessageReader;
-import io.luna.net.msg.in.ItemClickMessageReader;
-import io.luna.net.msg.in.ItemOnItemMessageReader;
-import io.luna.net.msg.in.ItemOnNpcMessageReader;
-import io.luna.net.msg.in.ItemOnObjectMessageReader;
-import io.luna.net.msg.in.ItemOnPlayerMessageReader;
-import io.luna.net.msg.in.NpcClickMessageReader;
-import io.luna.net.msg.in.ObjectClickMessageReader;
-import io.luna.net.msg.in.PlayerClickMessageReader;
-import io.luna.net.msg.in.WidgetItemClickMessageReader;
+import io.luna.net.msg.in.*;
 import io.luna.util.StringUtils;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -183,7 +165,7 @@ public class BotOutputMessageHandler {
     /**
      * Sends one of the {@link PlayerClickMessageReader} packets.
      *
-     * @param option The interaction option, between 1-5.
+     * @param option       The interaction option, between 1-5.
      * @param targetPlayer The target player.
      * @return {@code true} if successfully sent.
      */
@@ -242,7 +224,7 @@ public class BotOutputMessageHandler {
     /**
      * Sends one of the {@link ObjectClickMessageReader} packets.
      *
-     * @param option The interaction option, between 1-3
+     * @param option      The interaction option, between 1-3
      * @param localObject The target object.
      */
     public void sendObjectInteraction(int option, GameObject localObject) {
@@ -279,7 +261,7 @@ public class BotOutputMessageHandler {
     /**
      * Sends one of the {@link GroundItemClickMessageReader} packets.
      *
-     * @param option The interaction option, between 1-2.
+     * @param option     The interaction option, between 1-2.
      * @param targetItem The target item.
      */
     public void sendGroundItemInteraction(int option, GroundItem targetItem) {
@@ -311,7 +293,7 @@ public class BotOutputMessageHandler {
      * Sends one of the {@link ItemClickMessageReader} packets.
      *
      * @param option The option (1-5).
-     * @param index The index on the widget.
+     * @param index  The index on the widget.
      * @param itemId The item id.
      */
     public void sendInventoryItemClick(int option, int index, int itemId) {
@@ -345,7 +327,7 @@ public class BotOutputMessageHandler {
                 opcode = 228;
                 break;
             case 5:
-                msg.putShort(itemId,ValueType.ADD);
+                msg.putShort(itemId, ValueType.ADD);
                 msg.putShort(3214);
                 msg.putShort(index, ValueType.ADD);
                 opcode = 4;
@@ -357,10 +339,10 @@ public class BotOutputMessageHandler {
     /**
      * Sends one of the {@link WidgetItemClickMessageReader} packets.
      *
-     * @param option The option (1-5).
+     * @param option      The option (1-5).
      * @param widgetIndex The index on the widget.
-     * @param widgetId The widget id.
-     * @param itemId The item id.
+     * @param widgetId    The widget id.
+     * @param itemId      The item id.
      */
     public void sendItemWidgetClick(int option, int widgetIndex, int widgetId, int itemId) {
         checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
@@ -416,9 +398,9 @@ public class BotOutputMessageHandler {
     /**
      * Sends one of the {@link NpcClickMessageReader} packets.
      *
-     * @param option The interaction option, between 1-5.
+     * @param option   The interaction option, between 1-5.
      * @param localNpc The target npc.
-     * \     * @return {@code true} if successfully sent.
+     *                 \     * @return {@code true} if successfully sent.
      */
     public void sendNpcInteraction(int option, Npc localNpc) {
         checkArgument(option >= 1 && option <= 5, "[option] must be between 1 and 5.");
@@ -463,8 +445,8 @@ public class BotOutputMessageHandler {
     /**
      * Sends the {@link ChatMessageReader} packet.
      *
-     * @param text The text to chat.
-     * @param color The text color.
+     * @param text   The text to chat.
+     * @param color  The text color.
      * @param effect The text effect.
      */
     public void chat(String text, ChatColor color, ChatEffect effect) {
@@ -504,7 +486,7 @@ public class BotOutputMessageHandler {
      * Sends the {@link DropItemMessageReader} packet.
      *
      * @param inventoryIndex The inventory index to drop.
-     * @param itemId The item id.
+     * @param itemId         The item id.
      * @return {@code true} if successfully sent.
      */
     public void sendDropItem(int inventoryIndex, int itemId) {
@@ -561,9 +543,9 @@ public class BotOutputMessageHandler {
      * Sends the {@link ItemOnItemMessageReader} packet.
      *
      * @param targetInventoryIndex The inventory index to use the item with.
-     * @param usedInventoryIndex The inventory index to use the item with.
-     * @param targetId The target item id.
-     * @param usedId The used item id.
+     * @param usedInventoryIndex   The inventory index to use the item with.
+     * @param targetId             The target item id.
+     * @param usedId               The used item id.
      * @return {@code true} if successfully sent.
      */
     public void useItemOnItem(int targetInventoryIndex, int usedInventoryIndex, int targetId, int usedId) {
@@ -581,8 +563,8 @@ public class BotOutputMessageHandler {
      * Sends the {@link ItemOnNpcMessageReader} packet.
      *
      * @param usedInventoryIndex The used inventory index.
-     * @param usedId The used item id.
-     * @param targetNpc The npc to use the item with.
+     * @param usedId             The used item id.
+     * @param targetNpc          The npc to use the item with.
      * @return {@code true} if successfully sent.
      */
     public void useItemOnNpc(int usedInventoryIndex, int usedId, Npc targetNpc) {

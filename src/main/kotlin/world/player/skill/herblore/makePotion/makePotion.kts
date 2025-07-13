@@ -1,6 +1,6 @@
 package world.player.skill.herblore.makePotion
 
-import api.predef.*
+import api.predef.useItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 

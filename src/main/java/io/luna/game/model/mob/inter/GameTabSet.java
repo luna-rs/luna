@@ -62,7 +62,7 @@ public final class GameTabSet {
         /**
          * Creates a new {@link TabIndex}.
          *
-         * @param index The index.
+         * @param index        The index.
          * @param defaultTabId The default tab.
          */
         TabIndex(int index, int defaultTabId) {
@@ -108,7 +108,7 @@ public final class GameTabSet {
      * Sets the tab interface at {@code index}.
      *
      * @param index The tab to set the interface at.
-     * @param id The identifier of the interface to set.
+     * @param id    The identifier of the interface to set.
      * @return {@code true} if the interface was set.
      */
     public boolean set(TabIndex index, int id) {

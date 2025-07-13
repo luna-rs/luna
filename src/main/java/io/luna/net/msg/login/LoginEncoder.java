@@ -10,7 +10,8 @@ import io.netty.handler.codec.MessageToByteEncoder;
  *
  * @author lare96
  */
-@Sharable public final class LoginEncoder extends MessageToByteEncoder<LoginResponseMessage> {
+@Sharable
+public final class LoginEncoder extends MessageToByteEncoder<LoginResponseMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, LoginResponseMessage msg, ByteBuf out) throws Exception {

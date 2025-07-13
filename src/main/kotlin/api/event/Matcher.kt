@@ -1,18 +1,17 @@
 package api.event
 
-import api.predef.*
+import api.predef.CommandKey
+import api.predef.on
+import api.predef.pipelines
+import api.predef.scriptMatchers
 import com.google.common.collect.ArrayListMultimap
 import io.luna.game.event.Event
 import io.luna.game.event.EventMatcher
 import io.luna.game.event.EventMatcherListener
-import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.event.impl.CommandEvent
+import io.luna.game.event.impl.*
 import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent
-import io.luna.game.event.impl.ItemClickEvent
 import io.luna.game.event.impl.ItemClickEvent.*
-import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.event.impl.NpcClickEvent.*
-import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.event.impl.UseItemEvent.*
@@ -63,27 +62,29 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
 
         init {
             // Map all matchers to their matching event types.
-            ALL = listOf(CommandMatcher,
-                         ButtonMatcher,
-                         ItemOnItemMatcher,
-                         ItemOnObjectMatcher,
-                         ItemOnNpcMatcher,
-                         ItemOnPlayerMatcher,
-                         ItemOnGroundItemMatcher,
-                         GroundItemSecondClickMatcher,
-                         NpcMatcher(NpcFirstClickEvent::class),
-                         NpcMatcher(NpcSecondClickEvent::class),
-                         NpcMatcher(NpcThirdClickEvent::class),
-                         NpcMatcher(NpcFourthClickEvent::class),
-                         NpcMatcher(NpcFifthClickEvent::class),
-                         ItemMatcher(ItemFirstClickEvent::class),
-                         ItemMatcher(ItemSecondClickEvent::class),
-                         ItemMatcher(ItemThirdClickEvent::class),
-                         ItemMatcher(ItemFourthClickEvent::class),
-                         ItemMatcher(ItemFifthClickEvent::class),
-                         ObjectMatcher(ObjectFirstClickEvent::class),
-                         ObjectMatcher(ObjectSecondClickEvent::class),
-                         ObjectMatcher(ObjectThirdClickEvent::class))
+            ALL = listOf(
+                CommandMatcher,
+                ButtonMatcher,
+                ItemOnItemMatcher,
+                ItemOnObjectMatcher,
+                ItemOnNpcMatcher,
+                ItemOnPlayerMatcher,
+                ItemOnGroundItemMatcher,
+                GroundItemSecondClickMatcher,
+                NpcMatcher(NpcFirstClickEvent::class),
+                NpcMatcher(NpcSecondClickEvent::class),
+                NpcMatcher(NpcThirdClickEvent::class),
+                NpcMatcher(NpcFourthClickEvent::class),
+                NpcMatcher(NpcFifthClickEvent::class),
+                ItemMatcher(ItemFirstClickEvent::class),
+                ItemMatcher(ItemSecondClickEvent::class),
+                ItemMatcher(ItemThirdClickEvent::class),
+                ItemMatcher(ItemFourthClickEvent::class),
+                ItemMatcher(ItemFifthClickEvent::class),
+                ObjectMatcher(ObjectFirstClickEvent::class),
+                ObjectMatcher(ObjectSecondClickEvent::class),
+                ObjectMatcher(ObjectThirdClickEvent::class)
+            )
                 .associateBy { it.eventType }
 
             // Add all the matcher's listeners.

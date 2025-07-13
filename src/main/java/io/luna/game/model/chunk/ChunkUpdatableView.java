@@ -67,8 +67,12 @@ public final class ChunkUpdatableView {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ChunkUpdatableView)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ChunkUpdatableView)) {
+            return false;
+        }
         ChunkUpdatableView that = (ChunkUpdatableView) o;
         return Objects.equal(allowedViewers, that.allowedViewers);
     }

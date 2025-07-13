@@ -18,7 +18,7 @@ public final class ButtonClickEvent extends PlayerEvent implements ControllableE
      * Creates a new {@link ButtonClickEvent}.
      *
      * @param player The player.
-     * @param id The clicked button.
+     * @param id     The clicked button.
      */
     public ButtonClickEvent(Player player, int id) {
         super(player);

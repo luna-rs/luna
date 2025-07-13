@@ -15,7 +15,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 /**
  * A {@link Client} implementation model representing post-login I/O communications.
  *
- * @author lare96 
+ * @author lare96
  */
 public class GameClient extends Client<GameMessage> {
 
@@ -42,7 +42,7 @@ public class GameClient extends Client<GameMessage> {
     /**
      * Creates a new {@link GameClient}.
      *
-     * @param channel The client's channel.
+     * @param channel    The client's channel.
      * @param repository The message repository.
      */
     public GameClient(Channel channel, GameMessageRepository repository) {
@@ -56,7 +56,7 @@ public class GameClient extends Client<GameMessage> {
     }
 
     @Override
-   public  void onMessageReceived(GameMessage msg) {
+    public void onMessageReceived(GameMessage msg) {
         if (!pendingReadMessages.offer(msg)) {
             msg.getPayload().releaseAll();
         }

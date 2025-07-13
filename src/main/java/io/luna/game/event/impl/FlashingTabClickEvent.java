@@ -19,7 +19,7 @@ public final class FlashingTabClickEvent extends PlayerEvent {
      * Creates a new {@link FlashingTabClickEvent}.
      *
      * @param player The player.
-     * @param tab The flashing tab that was clicked.
+     * @param tab    The flashing tab that was clicked.
      */
     public FlashingTabClickEvent(Player player, TabIndex tab) {
         super(player);

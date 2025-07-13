@@ -34,9 +34,9 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
     /**
      * Creates a new {@link QueuedAction}.
      *
-     * @param mob The mob assigned to this action.
+     * @param mob    The mob assigned to this action.
      * @param source The time source.
-     * @param delay The delay of this action. How long (in ticks) the mob must wait before executions of this action.
+     * @param delay  The delay of this action. How long (in ticks) the mob must wait before executions of this action.
      */
     public QueuedAction(T mob, TimeSource source, int delay) {
         super(mob, ActionType.WEAK);

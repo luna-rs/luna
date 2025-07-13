@@ -2,11 +2,7 @@ package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.LunaContext;
-import io.luna.game.model.chunk.ChunkRepository;
-import io.luna.game.model.chunk.ChunkUpdatable;
-import io.luna.game.model.chunk.ChunkUpdatableMessage;
-import io.luna.game.model.chunk.ChunkUpdatableRequest;
-import io.luna.game.model.chunk.ChunkUpdatableView;
+import io.luna.game.model.chunk.*;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessageWriter;
 
@@ -38,10 +34,10 @@ public abstract class StationaryEntity extends Entity implements ChunkUpdatable 
     /**
      * Creates a new local {@link StationaryEntity}.
      *
-     * @param context The context instance.
+     * @param context  The context instance.
      * @param position The position.
-     * @param type The entity type.
-     * @param view Who this entity can be viewed by.
+     * @param type     The entity type.
+     * @param view     Who this entity can be viewed by.
      */
     public StationaryEntity(LunaContext context, Position position, EntityType type, ChunkUpdatableView view) {
         super(context, position, type);

@@ -9,9 +9,9 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that removes an object.
  *
- * @author lare96 
+ * @author lare96
  */
-public final class RemoveObjectMessageWriter extends GameMessageWriter  implements ChunkUpdatableMessage {
+public final class RemoveObjectMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
     /**
      * The object type.
@@ -31,9 +31,9 @@ public final class RemoveObjectMessageWriter extends GameMessageWriter  implemen
     /**
      * Creates a new {@link RemoveObjectMessageWriter}.
      *
-     * @param type The object type.
+     * @param type      The object type.
      * @param direction The object orientation.
-     * @param offset The offset.
+     * @param offset    The offset.
      */
     public RemoveObjectMessageWriter(int type, int direction, int offset) {
         this.type = type;

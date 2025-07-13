@@ -1,6 +1,7 @@
 package world.player.skill.firemaking
 
-import api.predef.*
+import api.predef.firemaking
+import api.predef.rand
 import io.luna.game.model.mob.Player
 
 /**

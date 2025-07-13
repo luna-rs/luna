@@ -77,7 +77,7 @@ public final class Rational extends Number implements Comparable<Rational> {
     /**
      * Create a {@link Rational}.
      *
-     * @param numerator The numerator.
+     * @param numerator   The numerator.
      * @param denominator The denominator.
      */
     public Rational(long numerator, long denominator) {

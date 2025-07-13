@@ -1,7 +1,6 @@
 package world.player.skill.mining.prospectOre
 
-import api.attr.Attr
-import api.predef.*
+import api.predef.object2
 import io.luna.game.model.mob.Player
 import world.player.skill.mining.Ore
 

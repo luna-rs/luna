@@ -33,7 +33,9 @@ public final class RandomUtils {
             return false;
         } else if (rational.getNumerator() >= rational.getDenominator()) {
             return true;
-        } else return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
+        } else {
+            return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
+        }
     }
 
     /**

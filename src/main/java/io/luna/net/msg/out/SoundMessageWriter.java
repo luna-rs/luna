@@ -29,9 +29,9 @@ public final class SoundMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link SoundMessageWriter}.
      *
-     * @param id The sound identifier.
+     * @param id     The sound identifier.
      * @param volume The sound volume.
-     * @param delay The sound delay.
+     * @param delay  The sound delay.
      */
     public SoundMessageWriter(int id, int volume, int delay) {
         this.id = id;

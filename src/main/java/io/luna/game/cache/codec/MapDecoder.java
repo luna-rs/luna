@@ -9,13 +9,7 @@ import io.luna.game.cache.Archive;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
 import io.luna.game.cache.CacheUtils;
-import io.luna.game.cache.map.MapIndex;
-import io.luna.game.cache.map.MapIndexTable;
-import io.luna.game.cache.map.MapObject;
-import io.luna.game.cache.map.MapObjectSet;
-import io.luna.game.cache.map.MapTile;
-import io.luna.game.cache.map.MapTileGrid;
-import io.luna.game.cache.map.MapTileGridSet;
+import io.luna.game.cache.map.*;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 import io.luna.game.model.World;
@@ -155,10 +149,10 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         /**
          * Creates a new {@link MapTileDecoder}.
          *
-         * @param x The {@code x} coordinate of the tile being decoded.
-         * @param y The {@code y} coordinate of the tile being decoded.
-         * @param z The {@code z} coordinate of the tile being decoded.
-         * @param data The data to decode.
+         * @param x     The {@code x} coordinate of the tile being decoded.
+         * @param y     The {@code y} coordinate of the tile being decoded.
+         * @param z     The {@code z} coordinate of the tile being decoded.
+         * @param data  The data to decode.
          * @param tiles The current tile map.
          */
         private MapTileDecoder(int x, int y, int z, ByteBuf data, MapTile[][][] tiles) {
@@ -194,12 +188,10 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
             }
         }
 
-        /**
-         * Converts the decoded data into a {@link MapTile} type.
-         */
         public MapTile toMapTile() {
             return new MapTile(x, y, z, height, overlay, overlayType, overlayOrientation, attributes, underlay);
         }
+
     }
 
     @Override
@@ -207,7 +199,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         Archive versionListArchive = Archive.decode(cache.getFile(0, 5));
         ByteBuf buf = versionListArchive.getFileData("map_index");
         try {
-            int indices = buf.readableBytes() / 7;
+            int indices = buf.readUnsignedShort();
             for (int i = 0; i < indices; i++) {
                 Region region = new Region(buf.readUnsignedShort());
                 int tileFileId = buf.readUnsignedShort();
@@ -225,15 +217,12 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         ImmutableMap.Builder<Region, MapIndex> tableBuilder = ImmutableMap.builder();
         decodedObjects.forEach(it -> tableBuilder.put(it.getRegion(), it));
         ImmutableMap<Region, MapIndex> table = tableBuilder.build();
-
         ImmutableList<MapObject> mapObjects = decodeMapObjects(cache, table.values());
         ImmutableMap<MapIndex, MapTileGrid> mapTiles = decodeMapTiles(cache, table.values());
-
         MapIndexTable indexTable = new MapIndexTable(table,
                 new MapObjectSet(mapObjects),
                 new MapTileGridSet(mapTiles));
         cache.setMapIndexTable(indexTable);
-
         ctx.getGame().sync(() -> {
             World world = ctx.getWorld();
             for (MapObject object : indexTable.getObjectSet().getObjects()) {
@@ -245,7 +234,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
     /**
      * Decodes the {@link MapObject} types using the provided cache and map indices.
      *
-     * @param cache The cache resource.
+     * @param cache   The cache resource.
      * @param indices The map indices.
      * @return The collection of map objects.
      * @throws Exception If any errors occur.
@@ -265,7 +254,6 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                         break;
                     }
                     id += idOffset;
-
                     int objectPositionData = 0;
                     int objectDataOffset;
                     while (true) {
@@ -274,16 +262,10 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                             break;
                         }
                         objectPositionData += objectDataOffset - 1;
-
                         int offsetX = objectPositionData >> 6 & 0x3f;
                         int offsetY = objectPositionData & 0x3f;
                         int plane = objectPositionData >> 12 & 0x3;
                         int otherData = data.readUnsignedByte();
-
-                        // TODO Figure out why plane value is 1 for gnome stronghold log? Cheapfix for now.
-                        if((id == 2294 || id == 2295 || id == 2311) && plane == 1) {
-                            plane = 0;
-                        }
                         ObjectType type = ObjectType.ALL.get(otherData >> 2);
                         ObjectDirection rotation = ObjectDirection.ALL.get(otherData & 3);
                         Position position = basePosition.translate(offsetX, offsetY).setZ(plane);
@@ -300,7 +282,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
     /**
      * Decodes the {@link MapTile} types using the provided cache and map indices.
      *
-     * @param cache The cache resource.
+     * @param cache   The cache resource.
      * @param indices The map indices.
      * @return The tile map.
      * @throws Exception If any errors occur.
@@ -315,7 +297,6 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                     for (int x = 0; x < MAP_SIZE; x++) {
                         for (int y = 0; y < MAP_SIZE; y++) {
                             MapTileDecoder decoder = new MapTileDecoder(x, y, z, data, tiles);
-
                             int opcode = data.readUnsignedByte();
                             decoder.accept(opcode);
                             while (opcode >= 2) {
@@ -333,4 +314,5 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         }
         return tileMap.build();
     }
+
 }

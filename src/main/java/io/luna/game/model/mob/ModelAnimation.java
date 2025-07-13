@@ -3,7 +3,7 @@ package io.luna.game.model.mob;
 /**
  * A model representing the default animation of a {@link Player} model.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ModelAnimation {
 
@@ -179,13 +179,13 @@ public final class ModelAnimation {
     /**
      * Creates a new {@link ModelAnimation}.
      *
-     * @param standingId The standing animation.
-     * @param standingTurnId The standing and turning animation.
-     * @param walkingId The walking animation.
+     * @param standingId          The standing animation.
+     * @param standingTurnId      The standing and turning animation.
+     * @param walkingId           The walking animation.
      * @param turning180DegreesId The 180 degree turning animation.
-     * @param turningRightId The 90 degree clockwise turning animation.
-     * @param turningLeftId The 90 degree counterclockwise turning animation.
-     * @param runningId The running animation.
+     * @param turningRightId      The 90 degree clockwise turning animation.
+     * @param turningLeftId       The 90 degree counterclockwise turning animation.
+     * @param runningId           The running animation.
      */
     private ModelAnimation(int standingId, int standingTurnId, int walkingId, int turning180DegreesId,
                            int turningRightId, int turningLeftId, int runningId) {

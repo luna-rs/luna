@@ -1,7 +1,8 @@
 package world.player.skill.magic.enchantJewellery
 
 import api.attr.Attr
-import api.predef.*
+import api.predef.itemName
+import api.predef.magic
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

@@ -1,6 +1,6 @@
 package world.player.skill.magic.bonesToItems
 
-import api.predef.*
+import api.predef.button
 
 // Bones to bananas.
 button(1159) { plr.submitAction(BonesToItemsAction(plr, BonesToItemsType.BANANAS)) }

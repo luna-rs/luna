@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that removes a ground item.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class RemoveGroundItemMessageWriter extends GameMessageWriter implements ChunkUpdatableMessage {
 
@@ -26,7 +26,7 @@ public final class RemoveGroundItemMessageWriter extends GameMessageWriter imple
     /**
      * Creates a new {@link RemoveGroundItemMessageWriter}.
      *
-     * @param id The item identifier.
+     * @param id     The item identifier.
      * @param offset The offset.
      */
     public RemoveGroundItemMessageWriter(int id, int offset) {

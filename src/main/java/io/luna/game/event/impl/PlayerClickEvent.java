@@ -102,7 +102,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     /**
      * Creates a new {@link PlayerClickEvent}.
      *
-     * @param player The player.
+     * @param player    The player.
      * @param targetPlr The other player.
      */
     public PlayerClickEvent(Player player, Player targetPlr) {

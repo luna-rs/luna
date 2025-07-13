@@ -157,19 +157,19 @@ public final class NpcCombatDefinition implements Definition {
     /**
      * Creates a new {@link NpcCombatDefinition}.
      *
-     * @param id The identifier.
-     * @param respawnTime The respawn time (in ticks).
-     * @param aggressive If the non-player is aggressive.
-     * @param poisonous If the non-player is poisonous.
-     * @param level The combat level.
-     * @param hitpoints The hitpoint amount.
-     * @param maximumHit The maximum hit.
-     * @param attackSpeed The attack speed.
-     * @param attackAnimation The attack animation.
+     * @param id               The identifier.
+     * @param respawnTime      The respawn time (in ticks).
+     * @param aggressive       If the non-player is aggressive.
+     * @param poisonous        If the non-player is poisonous.
+     * @param level            The combat level.
+     * @param hitpoints        The hitpoint amount.
+     * @param maximumHit       The maximum hit.
+     * @param attackSpeed      The attack speed.
+     * @param attackAnimation  The attack animation.
      * @param defenceAnimation The defence animation
-     * @param deathAnimation The death animation.
-     * @param skills A list of skills.
-     * @param bonuses A list of bonuses.
+     * @param deathAnimation   The death animation.
+     * @param skills           A list of skills.
+     * @param bonuses          A list of bonuses.
      */
     public NpcCombatDefinition(int id, int respawnTime, boolean aggressive, boolean poisonous, int level,
                                int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
@@ -263,7 +263,7 @@ public final class NpcCombatDefinition implements Definition {
     public int getDeathAnimation() {
         return deathAnimation;
     }
-    
+
     /**
      * Gets the skill at the specified identifier.
      *

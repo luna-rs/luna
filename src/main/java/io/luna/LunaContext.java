@@ -1,9 +1,9 @@
 package io.luna;
 
+import io.luna.game.GameService;
 import io.luna.game.cache.Cache;
 import io.luna.game.model.World;
 import io.luna.game.plugin.PluginManager;
-import io.luna.game.GameService;
 
 /**
  * A model representing a single instance of Runescape. Only one instance should exist at a time.

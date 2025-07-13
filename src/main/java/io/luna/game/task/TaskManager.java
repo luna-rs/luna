@@ -1,11 +1,6 @@
 package io.luna.game.task;
 
-import java.util.ArrayDeque;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
+import java.util.*;
 import java.util.function.Consumer;
 
 
@@ -61,7 +56,7 @@ public final class TaskManager {
      */
     public void schedule(Task task) {
         if (task.getState() == TaskState.IDLE) {
-            if(!task.onSchedule()) {
+            if (!task.onSchedule()) {
                 task.cancel();
                 return;
             }
@@ -112,7 +107,7 @@ public final class TaskManager {
      * Applies {@code action} to every task that has {@code attachment} as an attachment.
      *
      * @param attachment The attachment.
-     * @param action The action.
+     * @param action     The action.
      */
     public void forEachAttachment(Object attachment, Consumer<Task> action) {
         for (Task task : pending) {

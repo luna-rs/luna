@@ -24,12 +24,12 @@ public class GameObject extends StationaryEntity {
     /**
      * Creates a dynamic {@link GameObject}. Dynamic objects are spawned and deleted by the server as needed.
      *
-     * @param context The context instance.
-     * @param id The identifier.
-     * @param position The position.
+     * @param context    The context instance.
+     * @param id         The identifier.
+     * @param position   The position.
      * @param objectType The type.
-     * @param direction The direction.
-     * @param view WHo this object is viewable to.
+     * @param direction  The direction.
+     * @param view       WHo this object is viewable to.
      * @return The dynamic {@link GameObject}.
      */
     public static GameObject createDynamic(LunaContext context, int id, Position position, ObjectType objectType,
@@ -40,11 +40,11 @@ public class GameObject extends StationaryEntity {
     /**
      * Creates a static {@link GameObject}. Static objects exist natively and are updated for everyone by default.
      *
-     * @param context The context instance.
-     * @param id The identifier.
-     * @param position The position.
+     * @param context    The context instance.
+     * @param id         The identifier.
+     * @param position   The position.
      * @param objectType The type.
-     * @param direction The direction.
+     * @param direction  The direction.
      * @return The static {@link GameObject}.
      */
     public static GameObject createStatic(LunaContext context, int id, Position position, ObjectType objectType,
@@ -80,13 +80,13 @@ public class GameObject extends StationaryEntity {
     /**
      * Creates a new {@link GameObject} that can be either static or dynamic.
      *
-     * @param context The context instance.
-     * @param id The identifier.
-     * @param position The position.
+     * @param context    The context instance.
+     * @param id         The identifier.
+     * @param position   The position.
      * @param objectType The type.
-     * @param direction The direction.
-     * @param view Who this object is viewable to.
-     * @param dynamic If this object is dynamic.
+     * @param direction  The direction.
+     * @param view       Who this object is viewable to.
+     * @param dynamic    If this object is dynamic.
      */
     public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, ChunkUpdatableView view, boolean dynamic) {
         super(context, position, EntityType.OBJECT, view);

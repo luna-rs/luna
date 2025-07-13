@@ -1,6 +1,6 @@
 package world.player.skill.magic.telekineticGrab
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.UseSpellEvent.MagicOnGroundItemEvent
 
 // Intercept event for telegrab spell.

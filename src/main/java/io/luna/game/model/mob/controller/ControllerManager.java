@@ -112,8 +112,8 @@ public final class ControllerManager implements Iterable<PlayerController> {
                 }
             }
         }
-        for(PlayerController controller : registered.values()) {
-            if(!controller.canMove(player, newPos)) {
+        for (PlayerController controller : registered.values()) {
+            if (!controller.canMove(player, newPos)) {
                 return false;
             }
         }
@@ -155,7 +155,6 @@ public final class ControllerManager implements Iterable<PlayerController> {
      * Determines if the player is able to teleport or not.
      *
      * @param action The teleport action.
-     *
      * @return {@code true} if the player is able to teleport.
      */
     public boolean checkTeleport(TeleportAction action) {

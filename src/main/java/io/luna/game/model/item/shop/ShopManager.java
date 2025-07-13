@@ -12,7 +12,7 @@ import java.util.Optional;
  * A model that manages global shop instances. Shops are created dynamically, registered within this model, and are
  * then retrievable by their {@link Shop#getName()}.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ShopManager {
 

@@ -1,6 +1,6 @@
 package api.item.dropTable
 
-import api.predef.*
+import api.predef.ALWAYS
 import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
 import io.luna.util.Rational

@@ -17,14 +17,14 @@ class TanInterface : StandardInterface(14670) {
          * A list of hides displayed on the interface.
          */
         val HIDES = listOf(
-                SOFT_LEATHER,
-                HARD_LEATHER,
-                SWAMP_SNAKESKIN,
-                SNAKESKIN,
-                GREEN_D_LEATHER,
-                BLUE_D_LEATHER,
-                RED_D_LEATHER,
-                BLACK_D_LEATHER
+            SOFT_LEATHER,
+            HARD_LEATHER,
+            SWAMP_SNAKESKIN,
+            SNAKESKIN,
+            GREEN_D_LEATHER,
+            BLUE_D_LEATHER,
+            RED_D_LEATHER,
+            BLACK_D_LEATHER
         )
     }
 

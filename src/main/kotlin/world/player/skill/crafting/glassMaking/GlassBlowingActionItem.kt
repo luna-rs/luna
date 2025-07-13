@@ -10,7 +10,8 @@ import io.luna.game.model.mob.Player
 /**
  * An [InventoryAction] that blows molten glass into a [GlassMaterial].
  */
-class GlassBlowingActionItem(plr: Player, private val material: GlassMaterial, amount: Int) : InventoryAction(plr, true, 2, amount) {
+class GlassBlowingActionItem(plr: Player, private val material: GlassMaterial, amount: Int) :
+    InventoryAction(plr, true, 2, amount) {
 
     override fun executeIf(start: Boolean): Boolean = true
     override fun execute() {

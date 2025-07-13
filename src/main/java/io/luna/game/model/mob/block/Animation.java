@@ -3,7 +3,7 @@ package io.luna.game.model.mob.block;
 /**
  * A model representing an animation performed by a mob.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class Animation {
 
@@ -54,8 +54,8 @@ public final class Animation {
     /**
      * Creates a new {@link Animation}.
      *
-     * @param id The identifier.
-     * @param delay The delay.
+     * @param id       The identifier.
+     * @param delay    The delay.
      * @param priority The priority.
      */
     public Animation(int id, int delay, AnimationPriority priority) {
@@ -67,7 +67,7 @@ public final class Animation {
     /**
      * Creates a new {@link Animation} with a delay of {@code 0}.
      *
-     * @param id The identifier.
+     * @param id       The identifier.
      * @param priority The priority.
      */
     public Animation(int id, AnimationPriority priority) {

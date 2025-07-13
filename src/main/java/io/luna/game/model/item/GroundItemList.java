@@ -1,22 +1,11 @@
 package io.luna.game.model.item;
 
 import com.google.common.collect.Iterators;
-import io.luna.game.model.StationaryEntityList;
-import io.luna.game.model.EntityState;
-import io.luna.game.model.EntityType;
-import io.luna.game.model.Position;
-import io.luna.game.model.World;
+import io.luna.game.model.*;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.task.Task;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -300,7 +289,7 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     /**
      * Determines if this tile has space for {@code addAmount} new item models.
      *
-     * @param position The tile.
+     * @param position  The tile.
      * @param addAmount The amount of item models.
      * @return {@code true} if this tile has enough space.
      */

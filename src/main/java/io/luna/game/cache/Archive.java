@@ -1,15 +1,14 @@
 package io.luna.game.cache;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-
 import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Represents an archive within the cache.
@@ -100,9 +99,9 @@ public final class Archive {
     /**
      * Creates an {@link Archive}.
      *
-     * @param data Holds the data within this archive.
+     * @param data   Holds the data within this archive.
      * @param packed If the data is packed.
-     * @param files A map of files within this archive.
+     * @param files  A map of files within this archive.
      */
     private Archive(ByteBuf data, boolean packed, ImmutableMap<Integer, ArchiveFile> files) {
         this.data = data;

@@ -27,7 +27,7 @@ public final class ClearChunkMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link ChunkPlacementMessageWriter}.
      *
-     * @param basePosition The base position.
+     * @param basePosition             The base position.
      * @param placementChunkRepository The placement chunk.
      */
     public ClearChunkMessageWriter(Position basePosition, ChunkRepository placementChunkRepository) {

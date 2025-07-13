@@ -30,7 +30,7 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetIndexedItemsMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param id    The widget identifier.
      * @param items The items to display.
      */
     public WidgetIndexedItemsMessageWriter(int id, Collection<IndexedItem> items) {
@@ -41,7 +41,7 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetIndexedItemsMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param id    The widget identifier.
      * @param items The items to display.
      */
     public WidgetIndexedItemsMessageWriter(int id, IndexedItem... items) {

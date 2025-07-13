@@ -89,7 +89,7 @@ public final class JsonGameSerializer extends GameSerializer {
 
         for (Iterator<String> it = world.getBots().persistentIterator(); it.hasNext(); ) { // Build new ones where needed.
             String username = it.next();
-            if(scheduleMap.containsKey(username)) {
+            if (scheduleMap.containsKey(username)) {
                 continue;
             }
             Path schedulePath = parentPath.resolve(username + ".json");

@@ -1,11 +1,7 @@
 package io.luna.game.model;
 
 import io.luna.LunaContext;
-import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.chunk.ChunkUpdatable;
-import io.luna.game.model.chunk.ChunkUpdatableMessage;
-import io.luna.game.model.chunk.ChunkUpdatableRequest;
-import io.luna.game.model.chunk.ChunkUpdatableView;
+import io.luna.game.model.chunk.*;
 
 /**
  * A temporary {@link Entity} that cannot be interacted with (i.e. Area-based sounds, projectiles, graphics). Discarded
@@ -28,11 +24,11 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     /**
      * Creates a new {@link LocalEntity}.
      *
-     * @param context The context.
-     * @param id The id.
-     * @param type The type.
+     * @param context  The context.
+     * @param id       The id.
+     * @param type     The type.
      * @param position The position.
-     * @param view Who this entity is viewable for.
+     * @param view     Who this entity is viewable for.
      */
     public LocalEntity(LunaContext context, int id, EntityType type, Position position, ChunkUpdatableView view) {
         super(context, position, type);

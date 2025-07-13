@@ -36,9 +36,9 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link GroupedEntityMessageWriter}.
      *
-     * @param basePosition The base position.
+     * @param basePosition             The base position.
      * @param placementChunkRepository The placement position.
-     * @param messages The messages to write.
+     * @param messages                 The messages to write.
      */
     public GroupedEntityMessageWriter(Position basePosition, ChunkRepository placementChunkRepository, Collection<ChunkUpdatableMessage> messages) {
         this.basePosition = basePosition;

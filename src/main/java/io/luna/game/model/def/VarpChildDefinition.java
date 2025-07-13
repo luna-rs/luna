@@ -30,8 +30,8 @@ public final class VarpChildDefinition {
     /**
      * Creates a new {@link VarpChildDefinition}.
      *
-     * @param varBitId The varbit id.
-     * @param varpId The varp id.
+     * @param varBitId    The varbit id.
+     * @param varpId      The varp id.
      * @param childIdList The child ids.
      */
     public VarpChildDefinition(int varBitId, int varpId, ImmutableList<Integer> childIdList) {

@@ -1,6 +1,6 @@
 package api.item.dropTable
 
-import api.predef.*
+import api.predef.ALWAYS
 import io.luna.game.model.Entity
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
@@ -26,7 +26,7 @@ abstract class DropTable(private val chance: Rational = ALWAYS) : Iterable<DropT
      *
      * @return A mutable list of all items successfully rolled from the drop table.
      */
-   open fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
+    open fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
         val allItems = mutableListOf<Item>()
         if (RandomUtils.rollSuccess(chance) && canRollOnTable(mob, source)) {
             val items = computeTable(mob, source).filterNot {

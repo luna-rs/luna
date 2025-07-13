@@ -49,9 +49,9 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
     /**
      * Decodes a single widget from the cache.
      *
-     * @param id The widget id.
+     * @param id       The widget id.
      * @param parentId The widget parent id.
-     * @param data The buffer.
+     * @param data     The buffer.
      * @return The decoded widget definition.
      */
     private WidgetDefinition decodeEntry(int id, int parentId, ByteBuf data) {
@@ -76,10 +76,11 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
         int height = data.readUnsignedShort();
         int alpha = (byte) data.readUnsignedByte();
         int hoveredPopup = data.readUnsignedByte();
-        if (hoveredPopup != 0)
+        if (hoveredPopup != 0) {
             hoveredPopup = (hoveredPopup - 1 << 8) + data.readUnsignedByte();
-        else
+        } else {
             hoveredPopup = -1;
+        }
 
         int conditionCount = data.readUnsignedByte();
         if (conditionCount > 0) {
@@ -162,8 +163,9 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
             options = new String[5];
             for (int optionId = 0; optionId < 5; optionId++) {
                 options[optionId] = CacheUtils.readString(data);
-                if (options[optionId].length() == 0)
+                if (options[optionId].length() == 0) {
                     options[optionId] = null;
+                }
             }
 
         }
@@ -186,7 +188,9 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
             enabledText = CacheUtils.readString(data);
         }
         if (type == 1 || type == 3 || type == 4)
-            /* disabledColor =  */ data.readInt();
+            /* disabledColor =  */ {
+            data.readInt();
+        }
         if (type == 3 || type == 4) {
             /*  enabledColor =  */
             data.readInt();
@@ -223,15 +227,17 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
                 data.readUnsignedByte();
             }
             id = data.readUnsignedByte();
-            if (id != 0)
+            if (id != 0) {
                 disabledAnimation = (id - 1 << 8) + data.readUnsignedByte();
-            else
+            } else {
                 disabledAnimation = -1;
+            }
             id = data.readUnsignedByte();
-            if (id != 0)
+            if (id != 0) {
                 enabledAnimation = (id - 1 << 8) + data.readUnsignedByte();
-            else
+            } else {
                 enabledAnimation = -1;
+            }
             /*   zoom = */
             data.readUnsignedShort();
             /*   rotationX =  */
@@ -258,13 +264,15 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
             options = new String[5];
             for (int optionId = 0; optionId < 5; optionId++) {
                 options[optionId] = CacheUtils.readString(data);
-                if (options[optionId].isEmpty())
+                if (options[optionId].isEmpty()) {
                     options[optionId] = null;
+                }
             }
 
         }
-        if (type == 8)
+        if (type == 8) {
             disabledText = CacheUtils.readString(data);
+        }
         if (actionType == 2 || type == 2) {
             // optionCircumfix =
             // optionText =
@@ -276,18 +284,22 @@ public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition
         if (actionType == 1 || actionType == 4 || actionType == 5 || actionType == 6) {
             tooltip = CacheUtils.readString(data);
             if (tooltip.length() == 0) {
-                if (actionType == 1)
+                if (actionType == 1) {
                     tooltip = "Ok";
-                if (actionType == 4)
+                }
+                if (actionType == 4) {
                     tooltip = "Select";
-                if (actionType == 5)
+                }
+                if (actionType == 5) {
                     tooltip = "Select";
-                if (actionType == 6)
+                }
+                if (actionType == 6) {
                     tooltip = "Continue";
+                }
             }
         }
-        for(int idx = 0; idx < options.length; idx++) {
-            if(options[idx] == null) {
+        for (int idx = 0; idx < options.length; idx++) {
+            if (options[idx] == null) {
                 options[idx] = "null";
             }
         }

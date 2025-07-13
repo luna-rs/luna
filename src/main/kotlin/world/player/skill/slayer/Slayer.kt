@@ -3,7 +3,10 @@ package world.player.skill.slayer
 import api.attr.Attr
 import api.attr.getValue
 import api.attr.setValue
-import api.predef.*
+import api.predef.npcDef
+import api.predef.numF
+import api.predef.rand
+import api.predef.slayer
 import io.luna.game.model.def.NpcCombatDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder
@@ -111,9 +114,9 @@ object Slayer {
     fun openDialogue(plr: Player, master: SlayerMaster) {
         plr.newDialogue().npc(master.id, Expression.DEFAULT, "'Ello, and what are you after then?")
             .options("I need another assignment.", { openAssignmentDialogue(it, master) },
-                     "Have you anything to trade?", { openShopDialogue(it, master) },
-                     "Let's talk about the difficulty of my assignments.", { openDifficultyDialogue(it, master) },
-                     "Err... Nothing...", { it.newDialogue().player("Err... Nothing...").open() }).open()
+                "Have you anything to trade?", { openShopDialogue(it, master) },
+                "Let's talk about the difficulty of my assignments.", { openDifficultyDialogue(it, master) },
+                "Err... Nothing...", { it.newDialogue().player("Err... Nothing...").open() }).open()
     }
 
     /**
@@ -132,34 +135,42 @@ object Slayer {
                 last!!.npc(master.id, Expression.DEFAULT, "Sorry, I can't find any task to assign...").open()
             } else {
                 plr.activeSlayerTask = selectedTask
-                last!!.npc(master.id,
-                           Expression.DEFAULT,
-                           "Excellent, you're doing great.",
-                           "Your new task is to kill ${selectedTask.remaining} ${selectedTask.task.plural}.")
+                last!!.npc(
+                    master.id,
+                    Expression.DEFAULT,
+                    "Excellent, you're doing great.",
+                    "Your new task is to kill ${selectedTask.remaining} ${selectedTask.task.plural}."
+                )
                     .options("Got any tips for me?",
-                             {
-                                 val tip = selectedTask.task.tip.split("\n")
-                                 val currentDialogue = it.newDialogue().player("Got any tips for me?")
-                                 val nextDialogue = run {
-                                     if (tip.size > 1) {
-                                         currentDialogue.npc(master.id,
-                                                             Expression.DEFAULT,
-                                                             *tip.toTypedArray())
-                                     } else {
-                                         currentDialogue.npc(master.id,
-                                                             Expression.DEFAULT,
-                                                             tip[0])
-                                     }
-                                 }
-                                 nextDialogue.player("Great, thanks!").open()
-                             },
-                             "Okay, great!",
-                             {
-                                 it.newDialogue().player("Okay, great!")
-                                     .npc(master.id, Expression.DEFAULT,
-                                          "Good luck! Don't forget to come back when you need a new assignment.")
-                                     .open()
-                             })
+                        {
+                            val tip = selectedTask.task.tip.split("\n")
+                            val currentDialogue = it.newDialogue().player("Got any tips for me?")
+                            val nextDialogue = run {
+                                if (tip.size > 1) {
+                                    currentDialogue.npc(
+                                        master.id,
+                                        Expression.DEFAULT,
+                                        *tip.toTypedArray()
+                                    )
+                                } else {
+                                    currentDialogue.npc(
+                                        master.id,
+                                        Expression.DEFAULT,
+                                        tip[0]
+                                    )
+                                }
+                            }
+                            nextDialogue.player("Great, thanks!").open()
+                        },
+                        "Okay, great!",
+                        {
+                            it.newDialogue().player("Okay, great!")
+                                .npc(
+                                    master.id, Expression.DEFAULT,
+                                    "Good luck! Don't forget to come back when you need a new assignment."
+                                )
+                                .open()
+                        })
                     .open()
             }
         }
@@ -169,19 +180,21 @@ object Slayer {
                 // No slayer task, but we have high levels.
                 val nextMasterId = SlayerMaster.computeNextBestMaster(master).id
                 val nextMasterName = npcDef(nextMasterId).name
-                dialogue.npc(master.id,
-                             Expression.DEFAULT,
-                             "You're actually very strong, are you sure you",
-                             "don't want $nextMasterName to assign you a task?")
+                dialogue.npc(
+                    master.id,
+                    Expression.DEFAULT,
+                    "You're actually very strong, are you sure you",
+                    "don't want $nextMasterName to assign you a task?"
+                )
                     .options("No that's okay, I'll take a task from you.",
-                             {
-                                 it.newDialogue().player("No that's okay, I'll take a task from you.")
-                                     .then { assignTaskDialogue(null) }.open()
-                             },
-                             "Oh okay then, I'll go talk to $nextMasterName.",
-                             {
-                                 it.newDialogue().player("Oh okay then, I'll go talk to $nextMasterName.").open()
-                             })
+                        {
+                            it.newDialogue().player("No that's okay, I'll take a task from you.")
+                                .then { assignTaskDialogue(null) }.open()
+                        },
+                        "Oh okay then, I'll go talk to $nextMasterName.",
+                        {
+                            it.newDialogue().player("Oh okay then, I'll go talk to $nextMasterName.").open()
+                        })
                     .open()
             } else {
                 // No slayer task.
@@ -191,45 +204,59 @@ object Slayer {
             val activeTask = plr.activeSlayerTask!!.task
             val remaining = plr.activeSlayerTask!!.remaining
             if (master == SlayerMaster.TURAEL && !master.types.contains(activeTask)) {
-                dialogue.npc(master.id,
-                             Expression.DEFAULT,
-                             "You're still hunting ${activeTask.plural}, with $remaining to go.")
-                    .npc(master.id,
-                         Expression.DEFAULT,
-                         "Although, it's not an assignment that I'd normally",
-                         "give... I guess I could give you a new assignment, if",
-                         "you'd like.")
-                    .npc(master.id,
-                         Expression.DEFAULT,
-                         "If you do get a new one, you will reset your task",
-                         "streak of ${numF(plr.completedSlayerTasks)}. Is that okay?")
+                dialogue.npc(
+                    master.id,
+                    Expression.DEFAULT,
+                    "You're still hunting ${activeTask.plural}, with $remaining to go."
+                )
+                    .npc(
+                        master.id,
+                        Expression.DEFAULT,
+                        "Although, it's not an assignment that I'd normally",
+                        "give... I guess I could give you a new assignment, if",
+                        "you'd like."
+                    )
+                    .npc(
+                        master.id,
+                        Expression.DEFAULT,
+                        "If you do get a new one, you will reset your task",
+                        "streak of ${numF(plr.completedSlayerTasks)}. Is that okay?"
+                    )
                     .options("Yes, please.", {
                         plr.activeSlayerTask = null
                         plr.completedSlayerTasks = 0
                         it.interfaces.close()
                     },
-                             "No, thanks.", { it.interfaces.close() })
+                        "No, thanks.", { it.interfaces.close() })
                     .open()
             } else if (plr.slayer.level < activeTask.level || !activeTask.difficulty(plr)) {
-                dialogue.npc(master.id,
-                             Expression.DEFAULT,
-                             "You're still hunting ${activeTask.plural}, with $remaining to go.")
-                    .npc(master.id,
-                         Expression.DEFAULT,
-                         "I don't think that's a suitable task for you.",
-                         "Shall I cancel it? This will not wipe your task streaks.")
+                dialogue.npc(
+                    master.id,
+                    Expression.DEFAULT,
+                    "You're still hunting ${activeTask.plural}, with $remaining to go."
+                )
+                    .npc(
+                        master.id,
+                        Expression.DEFAULT,
+                        "I don't think that's a suitable task for you.",
+                        "Shall I cancel it? This will not wipe your task streaks."
+                    )
                     .options("Yes, please cancel it.", {
                         it.newDialogue().player("Yes, please cancel it.")
-                            .npc(master.id, Expression.DEFAULT, "Alright, consider the task cancelled.",
-                                 "You can now get a new assignment when you want one.")
+                            .npc(
+                                master.id, Expression.DEFAULT, "Alright, consider the task cancelled.",
+                                "You can now get a new assignment when you want one."
+                            )
                             .then { plr.activeSlayerTask = null }
                     },
-                             "No, thanks, I want to try doing it.", { it.interfaces.close() }).open()
+                        "No, thanks, I want to try doing it.", { it.interfaces.close() }).open()
             } else {
-                dialogue.npc(master.id,
-                             Expression.DEFAULT,
-                             "You're still hunting ${activeTask.plural}, you have $remaining to go.",
-                             "Come back when you've finished your task.")
+                dialogue.npc(
+                    master.id,
+                    Expression.DEFAULT,
+                    "You're still hunting ${activeTask.plural}, you have $remaining to go.",
+                    "Come back when you've finished your task."
+                )
                     .open()
             }
         }
@@ -250,41 +277,49 @@ object Slayer {
     private fun openDifficultyDialogue(plr: Player, master: SlayerMaster) {
         val dialogue = plr.newDialogue().player("Let's talk about the difficulty of my assignments.")
         if (!plr.difficultyChecking) {
-            dialogue.npc(master.id, Expression.DEFAULT, "The Slayer Masters may currently assign you any",
-                         "task in our lists, regardless of your combat level.")
+            dialogue.npc(
+                master.id, Expression.DEFAULT, "The Slayer Masters may currently assign you any",
+                "task in our lists, regardless of your combat level."
+            )
                 .options("That's fine - I can handle any task.", {
                     it.newDialogue().player("That's fine - I can handle any task.")
                         .npc(master.id, Expression.DEFAULT, "That's the spirit.").open()
                 },
-                         "In future, please don't give anything too tough.", {
-                             it.newDialogue()
-                                 .player("In future, please don't give anything too tough.")
-                                 .npc(master.id,
-                                      Expression.DEFAULT,
-                                      "Okay, from now on, all the Slayer Masters will take",
-                                      "your combat level into account when choosing tasks",
-                                      "for you, so you shouldn't get anything too hard.")
-                                 .then { plr.difficultyChecking = true }.open()
-                         }).open()
+                    "In future, please don't give anything too tough.", {
+                        it.newDialogue()
+                            .player("In future, please don't give anything too tough.")
+                            .npc(
+                                master.id,
+                                Expression.DEFAULT,
+                                "Okay, from now on, all the Slayer Masters will take",
+                                "your combat level into account when choosing tasks",
+                                "for you, so you shouldn't get anything too hard."
+                            )
+                            .then { plr.difficultyChecking = true }.open()
+                    }).open()
         } else {
-            dialogue.npc(master.id,
-                         Expression.DEFAULT,
-                         "The Slayer Masters will take your combat level into",
-                         "account when choosing tasks for you, so you shouldn't",
-                         "get anything too hard.")
+            dialogue.npc(
+                master.id,
+                Expression.DEFAULT,
+                "The Slayer Masters will take your combat level into",
+                "account when choosing tasks for you, so you shouldn't",
+                "get anything too hard."
+            )
                 .options("That's fine - I don't want anything too tough.", {
                     it.newDialogue().player("That's fine - I don't want anything too tough.")
                         .npc(master.id, Expression.DEFAULT, "Okay, we'll keep checking your combat level.").open()
                 },
-                         "Stop checking my combat level - I can take anything!", {
-                             it.newDialogue().player("Stop checking my combat level - I can take anything!")
-                                 .npc(master.id,
-                                      Expression.DEFAULT,
-                                      "Okay, from now on, all the Slayer Masters will",
-                                      "assign you anything from their lists, regardless",
-                                      "of your combat level.")
-                                 .then { plr.difficultyChecking = false }.open()
-                         }).open()
+                    "Stop checking my combat level - I can take anything!", {
+                        it.newDialogue().player("Stop checking my combat level - I can take anything!")
+                            .npc(
+                                master.id,
+                                Expression.DEFAULT,
+                                "Okay, from now on, all the Slayer Masters will",
+                                "assign you anything from their lists, regardless",
+                                "of your combat level."
+                            )
+                            .then { plr.difficultyChecking = false }.open()
+                    }).open()
         }
     }
 }

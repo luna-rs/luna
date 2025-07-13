@@ -1,7 +1,7 @@
 package world.player.item.trading.tradeScreen
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.get
+import api.predef.on
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
@@ -29,7 +29,8 @@ fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
     val inter = plr.interfaces.get(OfferTradeInterface::class)
     if (inter != null) {
-        val container = if(mod == Add) plr.inventory else if(mod == Remove) inter.items else throw IllegalArgumentException("Invalid mod value.")
+        val container =
+            if (mod == Add) plr.inventory else if (mod == Remove) inter.items else throw IllegalArgumentException("Invalid mod value.")
         val newAmount = if (amount == -1) container.computeAmountForId(msg.itemId) else amount
         when (mod) {
             Add -> inter.add(plr, msg.index, newAmount)

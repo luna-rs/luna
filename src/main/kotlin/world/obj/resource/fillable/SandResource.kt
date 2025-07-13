@@ -1,9 +1,9 @@
 package world.obj.resource.fillable
 
-import api.predef.*
+import api.predef.useItem
 import io.luna.game.model.def.GameObjectDefinition
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * A [FillableResource] implementation for sand.

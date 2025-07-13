@@ -22,7 +22,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * @author lare96
  */
 public final class BotCredentialsRepository {
- // todo lazy removals from cache? use scheduler to serialize and just remove multiple from cache at a time
+    // todo lazy removals from cache? use scheduler to serialize and just remove multiple from cache at a time
     /**
      * The path to the username cache.
      */
@@ -59,7 +59,7 @@ public final class BotCredentialsRepository {
         try (Scanner scanner = new Scanner(USERNAME_CACHE)) {
             while (scanner.hasNextLine()) {
                 String nextLine = scanner.nextLine();
-                if(nextLine.length() <= 12) {
+                if (nextLine.length() <= 12) {
                     usernameSet.add(nextLine);
                 }
             }

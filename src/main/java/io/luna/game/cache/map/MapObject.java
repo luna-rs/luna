@@ -38,7 +38,7 @@ public final class MapObject {
      *
      * @param objectId The object id.
      * @param position The object position.
-     * @param type The object type.
+     * @param type     The object type.
      * @param rotation The object direction.
      */
     public MapObject(int objectId, Position position, ObjectType type, ObjectDirection rotation) {

@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Player
  * An [InventoryAction] implementation that will make studded armor.
  */
 class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId: Int) :
-        InventoryAction(plr, true, 2, Int.MAX_VALUE) {
+    InventoryAction(plr, true, 2, Int.MAX_VALUE) {
 
     companion object {
 
@@ -26,6 +26,7 @@ class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId
                 plr.sendMessage("You need a Crafting level of ${armor.level} to make this.")
                 false
             }
+
             else -> true
         }
 
@@ -33,8 +34,10 @@ class CraftStuddedActionItem(val plr: Player, val armor: HideArmor, val removeId
         plr.crafting.addExperience(armor.exp)
     }
 
-    override fun remove() = listOf(Item(removeId),
-                                   Item(STUDS))
+    override fun remove() = listOf(
+        Item(removeId),
+        Item(STUDS)
+    )
 
     override fun add() = listOf(Item(armor.id))
 }

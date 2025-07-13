@@ -1,6 +1,7 @@
 package world.player.item.banking.regularBank
 
-import api.predef.*
+import api.predef.button
+import api.predef.on
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player

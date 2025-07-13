@@ -4,7 +4,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.Position;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,8 +74,12 @@ public class PolygonArea extends Area {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         PolygonArea that = (PolygonArea) o;
         return Objects.equal(vertices, that.vertices);
     }

@@ -34,10 +34,10 @@ public class Script {
     /**
      * Creates a new {@link Script}.
      *
-     * @param context The context.
+     * @param context     The context.
      * @param packageName The package that this script belongs to.
-     * @param info Info related to the scripts runtime class.
-     * @param definition The script definition instance.
+     * @param info        Info related to the scripts runtime class.
+     * @param definition  The script definition instance.
      */
     public Script(LunaContext context, String packageName, ClassInfo info, ScriptTemplateWithArgs definition) {
         this.context = context;

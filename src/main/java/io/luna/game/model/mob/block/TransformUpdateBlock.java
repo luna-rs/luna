@@ -3,7 +3,6 @@ package io.luna.game.model.mob.block;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 
 /**

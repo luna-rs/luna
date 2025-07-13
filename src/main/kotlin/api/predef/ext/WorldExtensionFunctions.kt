@@ -47,16 +47,21 @@ fun World.addObject(obj: GameObject): Boolean {
 /**
  * Spawns a [GameObject] for [plr].
  */
-fun World.addObject(id: Int,
-                    x: Int,
-                    y: Int,
-                    z: Int = 0,
-                    type: ObjectType = ObjectType.DEFAULT,
-                    direction: ObjectDirection = ObjectDirection.WEST,
-                    plr: Player? = null): GameObject {
-    val obj = GameObject.createDynamic(ctx, id, Position(x, y, z), type, direction,
-                                       if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(
-                                           plr))
+fun World.addObject(
+    id: Int,
+    x: Int,
+    y: Int,
+    z: Int = 0,
+    type: ObjectType = ObjectType.DEFAULT,
+    direction: ObjectDirection = ObjectDirection.WEST,
+    plr: Player? = null
+): GameObject {
+    val obj = GameObject.createDynamic(
+        ctx, id, Position(x, y, z), type, direction,
+        if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(
+            plr
+        )
+    )
     addObject(obj)
     return obj
 }
@@ -64,14 +69,19 @@ fun World.addObject(id: Int,
 /**
  * Spawns a [GameObject] for [plr].
  */
-fun World.addObject(id: Int,
-                    position: Position,
-                    type: ObjectType = ObjectType.DEFAULT,
-                    direction: ObjectDirection = ObjectDirection.WEST,
-                    plr: Player? = null): GameObject {
-    val obj = GameObject.createDynamic(ctx, id, position, type, direction,
-                                       if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(
-                                           plr))
+fun World.addObject(
+    id: Int,
+    position: Position,
+    type: ObjectType = ObjectType.DEFAULT,
+    direction: ObjectDirection = ObjectDirection.WEST,
+    plr: Player? = null
+): GameObject {
+    val obj = GameObject.createDynamic(
+        ctx, id, position, type, direction,
+        if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(
+            plr
+        )
+    )
     addObject(obj)
     return obj
 }
@@ -101,32 +111,40 @@ fun World.addItem(item: GroundItem): GroundItem {
 /**
  * Spawns a [GroundItem] for [plr].
  */
-fun World.addItem(id: Int,
-                  amount: Int = 1,
-                  x: Int,
-                  y: Int,
-                  z: Int = 0,
-                  plr: Player? = null): GroundItem {
-    val item = GroundItem(ctx,
-                          id,
-                          amount,
-                          Position(x, y, z),
-                          if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr))
+fun World.addItem(
+    id: Int,
+    amount: Int = 1,
+    x: Int,
+    y: Int,
+    z: Int = 0,
+    plr: Player? = null
+): GroundItem {
+    val item = GroundItem(
+        ctx,
+        id,
+        amount,
+        Position(x, y, z),
+        if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr)
+    )
     return addItem(item)
 }
 
 /**
  * Spawns a [GroundItem] for [plr].
  */
-fun World.addItem(id: Int,
-                  amount: Int = 1,
-                  position: Position,
-                  plr: Player? = null): GroundItem {
-    val item = GroundItem(ctx,
-                          id,
-                          amount,
-                          position,
-                          if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr))
+fun World.addItem(
+    id: Int,
+    amount: Int = 1,
+    position: Position,
+    plr: Player? = null
+): GroundItem {
+    val item = GroundItem(
+        ctx,
+        id,
+        amount,
+        position,
+        if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr)
+    )
     return addItem(item)
 }
 

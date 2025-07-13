@@ -9,7 +9,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 /**
  * A {@link DialogueInterface} implementation that opens a "Make item" dialogue.
  *
- * @author lare96 
+ * @author lare96
  */
 public class MakeItemDialogueInterface extends DialogueInterface {
 
@@ -31,8 +31,8 @@ public class MakeItemDialogueInterface extends DialogueInterface {
     /**
      * Applies {@link #makeItem(Player, int, int, int)} for {@code index}.
      *
-     * @param player The player.
-     * @param index The index.
+     * @param player    The player.
+     * @param index     The index.
      * @param forAmount The amount.
      */
     public final void makeItemIndex(Player player, int index, int forAmount) {
@@ -42,9 +42,9 @@ public class MakeItemDialogueInterface extends DialogueInterface {
     /**
      * A function invoked when the "Make ..." buttons are clicked.
      *
-     * @param player The player.
-     * @param id The identifier of the item clicked.
-     * @param index The item index.
+     * @param player    The player.
+     * @param id        The identifier of the item clicked.
+     * @param index     The item index.
      * @param forAmount The amount clicked.
      */
     public void makeItem(Player player, int id, int index, int forAmount) {

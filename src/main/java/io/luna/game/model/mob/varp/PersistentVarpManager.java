@@ -23,7 +23,7 @@ public final class PersistentVarpManager {
     /**
      * The map of {@link PersistentVarp} types.
      */
-    private final EnumMap<PersistentVarp, Integer>  varps = new EnumMap<>(PersistentVarp.class);
+    private final EnumMap<PersistentVarp, Integer> varps = new EnumMap<>(PersistentVarp.class);
 
     /**
      * Creates a new {@link PersistentVarpManager}.
@@ -38,7 +38,7 @@ public final class PersistentVarpManager {
      * Sets the value of {@code varp}.
      *
      * @param varpType The varp type.
-     * @param value The value.
+     * @param value    The value.
      */
     public void setValue(PersistentVarp varpType, int value) {
         varps.put(varpType, value);
@@ -78,7 +78,7 @@ public final class PersistentVarpManager {
      * Sets the currently stored value for {@code varpType} and sends it.
      *
      * @param varpType The varp type.
-     * @param value The value.
+     * @param value    The value.
      */
     public void setAndSendValue(PersistentVarp varpType, int value) {
         varps.put(varpType, value);

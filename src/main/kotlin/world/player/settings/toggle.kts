@@ -1,6 +1,6 @@
 package world.player.settings
 
-import api.predef.*
+import api.predef.button
 import io.luna.game.model.mob.varp.PersistentVarp
 
 // Brightness constants.

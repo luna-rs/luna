@@ -1,6 +1,6 @@
 package world.player.logout.logoutButton
 
-import api.predef.*
+import api.predef.button
 
 /**
  * Disconnect player if the logout button is clicked.

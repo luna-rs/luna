@@ -27,7 +27,7 @@ public final class Varbit {
     /**
      * Creates a new {@link Varbit}.
      *
-     * @param id The varbit id.
+     * @param id    The varbit id.
      * @param value The value to send.
      */
     public Varbit(int id, int value) {

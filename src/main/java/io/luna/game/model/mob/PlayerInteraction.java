@@ -11,7 +11,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * the name "Attack" are <strong>always</strong> pinned as long as the combat level of the Player interacting
  * is higher than the Player being interacted with.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class PlayerInteraction {
 
@@ -53,8 +53,8 @@ public final class PlayerInteraction {
     /**
      * Creates a new {@link PlayerInteraction}.
      *
-     * @param index The index.
-     * @param name The name.
+     * @param index  The index.
+     * @param name   The name.
      * @param pinned If this should be the topmost interaction.
      */
     public PlayerInteraction(int index, String name, boolean pinned) {

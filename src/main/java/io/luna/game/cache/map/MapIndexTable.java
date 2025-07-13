@@ -31,8 +31,8 @@ public final class MapIndexTable {
      * Creates a new {@link MapIndexTable}.
      *
      * @param indexTable The index table, mapped by region.
-     * @param objectSet The object set.
-     * @param tileSet The tile set.
+     * @param objectSet  The object set.
+     * @param tileSet    The tile set.
      */
     public MapIndexTable(ImmutableMap<Region, MapIndex> indexTable, MapObjectSet objectSet, MapTileGridSet tileSet) {
         this.indexTable = indexTable;

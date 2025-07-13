@@ -45,11 +45,11 @@ public final class ChatEvent extends PlayerEvent implements ControllableEvent {
     /**
      * Creates a new {@link ChatEvent}.
      *
-     * @param player The player.
-     * @param effect The chat effects.
-     * @param color The chat color.
-     * @param messageLength The message length.
-     * @param message The message.
+     * @param player          The player.
+     * @param effect          The chat effects.
+     * @param color           The chat color.
+     * @param messageLength   The message length.
+     * @param message         The message.
      * @param unpackedMessage The unpacked message.
      */
     public ChatEvent(Player player, int effect, int color, int messageLength, byte[] message, String unpackedMessage) {
@@ -92,7 +92,7 @@ public final class ChatEvent extends PlayerEvent implements ControllableEvent {
     /**
      * @return The unpacked message.
      */
-    public String getUnpackedMessage(){
+    public String getUnpackedMessage() {
         return unpackedMessage;
     }
 

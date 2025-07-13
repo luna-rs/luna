@@ -3,12 +3,7 @@ package io.luna.game.model.mob.attr;
 import com.google.gson.JsonElement;
 import com.google.gson.internal.LinkedTreeMap;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -75,7 +70,7 @@ public final class AttributeMap {
                     // Get the type, and perform the necessary conversions to be able to add it.
                     Class<?> typeClass = Class.forName(attrType);
                     Object objValue = newKey.getValue();
-                    if(objValue == null || objValue.equals("null")) {
+                    if (objValue == null || objValue.equals("null")) {
                         // Value is nullable and was set to null. Don't load anything.
                         return;
                     }
@@ -127,9 +122,9 @@ public final class AttributeMap {
     /**
      * Sets {@code attr} to {@code value}.
      *
-     * @param attr The attribute to set.
+     * @param attr  The attribute to set.
      * @param value The value to set it to.
-     * @param <T> The attribute type.
+     * @param <T>   The attribute type.
      * @return The previous value, possibly null if there was no value.
      */
     public <T> T set(Attribute<T> attr, T value) {
@@ -149,7 +144,7 @@ public final class AttributeMap {
      * value.
      *
      * @param attr The attribute to retrieve.
-     * @param <T> The attribute type.
+     * @param <T>  The attribute type.
      * @return The value of the attribute.
      */
     public <T> T get(Attribute<T> attr) {

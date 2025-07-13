@@ -141,8 +141,8 @@ public enum Direction {
      *
      * @param currentX The current x coordinate.
      * @param currentY The current y coordinate.
-     * @param nextX The next x coordinate.
-     * @param nextY The next y coordinate.
+     * @param nextX    The next x coordinate.
+     * @param nextY    The next y coordinate.
      * @return The direction between the current and next coordinates.
      */
     @SuppressWarnings("Duplicates")
@@ -182,7 +182,7 @@ public enum Direction {
      * Returns the direction between two steps.
      *
      * @param current The current step.
-     * @param next The next step.
+     * @param next    The next step.
      * @return The direction between the current and next steps.
      */
     public static Direction between(Step current, Step next) {
@@ -193,7 +193,7 @@ public enum Direction {
      * Returns the direction between two steps.
      *
      * @param current The current step.
-     * @param next The next step.
+     * @param next    The next step.
      * @return The direction between the current and next steps.
      */
     public static Direction between(Position current, Position next) {

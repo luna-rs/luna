@@ -72,10 +72,10 @@ public final class DropItemMessageReader extends GameMessageReader<DropItemEvent
     /**
      * Drops {@code inventoryItem} if it's tradeable, otherwise opens the {@link DestroyItemDialogueInterface}.
      *
-     * @param ctx The context instance.
-     * @param player The player.
+     * @param ctx           The context instance.
+     * @param player        The player.
      * @param inventoryItem The inventory item.
-     * @param event The event instance.
+     * @param event         The event instance.
      */
     private void dropItem(LunaContext ctx, Player player, Item inventoryItem, ItemDefinition itemDef, DropItemEvent event) {
         if (itemDef.isTradeable() && !itemDef.getInventoryActions().contains("Destroy")) {

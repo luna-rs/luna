@@ -33,7 +33,7 @@ public final class CollisionUpdate {
     /**
      * Creates the CollisionUpdate.
      *
-     * @param type The {@link CollisionUpdateType} of this update.
+     * @param type  The {@link CollisionUpdateType} of this update.
      * @param flags A {@link Multimap} of {@link Position}s to their {@link DirectionFlag}s.
      */
     public CollisionUpdate(CollisionUpdateType type, Multimap<Position, DirectionFlag> flags) {
@@ -79,7 +79,7 @@ public final class CollisionUpdate {
          * Creates a new {@link DirectionFlag}.
          *
          * @param impenetrable If the direction is impenetrable.
-         * @param direction The direction.
+         * @param direction    The direction.
          */
         public DirectionFlag(boolean impenetrable, Direction direction) {
             this.impenetrable = impenetrable;
@@ -157,7 +157,7 @@ public final class CollisionUpdate {
         /**
          * Sets the tile at the given {@code position} as untraversable in the given directions.
          *
-         * @param position The world position of the tile.
+         * @param position   The world position of the tile.
          * @param directions The directions that are untraversable from this tile.
          */
         public void tile(Position position, boolean impenetrable, Direction... directions) {
@@ -173,9 +173,9 @@ public final class CollisionUpdate {
          * as the tile the wall exists on and the tile one step in the facing direction. So for a wall facing south,
          * the tile one step to the south be flagged as untraversable from the north.
          *
-         * @param position The position of the wall.
+         * @param position     The position of the wall.
          * @param impenetrable If projectiles can pass through this wall.
-         * @param orientation The facing direction of this wall.
+         * @param orientation  The facing direction of this wall.
          */
         public void wall(Position position, boolean impenetrable, Direction orientation) {
             tile(position, impenetrable, orientation);
@@ -191,9 +191,9 @@ public final class CollisionUpdate {
          * <p>
          * todo: "large corner wall", is that really what this is?
          *
-         * @param position The position of the corner wall.
+         * @param position     The position of the corner wall.
          * @param impenetrable If projectiles can pass through this corner wall.
-         * @param orientation The direction of this corner wall
+         * @param orientation  The direction of this corner wall
          */
         public void largeCornerWall(Position position, boolean impenetrable, Direction orientation) {
             Direction[] directions = Direction.diagonalComponents(orientation);
@@ -258,11 +258,11 @@ public final class CollisionUpdate {
      * the tile(s) it is located on being blocked.
      *
      * @param definition The {@link GameObjectDefinition} of the object.
-     * @param type The type of the object.
+     * @param type       The type of the object.
      * @return {@code true} iff the tile(s) the object is on should be blocked.
      */
     private static boolean unwalkable(GameObjectDefinition definition, int type) {
-            boolean isSolidFloorDecoration = type == GROUND_DECORATION.getId() && definition.isInteractive();
+        boolean isSolidFloorDecoration = type == GROUND_DECORATION.getId() && definition.isInteractive();
         boolean isRoof = type > DIAGONAL_DEFAULT.getId() && type < GROUND_DECORATION.getId();
 
         boolean isWall = type >= STRAIGHT_WALL.getId() && type <= STRAIGHT_WALL.getId() ||

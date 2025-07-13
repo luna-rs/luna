@@ -1,7 +1,6 @@
 package world.player.skill.thieving.stealFromStall
 
-import api.predef.*
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import api.predef.object2
 
 /* Add object interactions for all full stalls. */
 for (stall in ThievableStall.FULL_STALLS.entries) {

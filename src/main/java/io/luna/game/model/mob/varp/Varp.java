@@ -28,7 +28,7 @@ public class Varp {
     /**
      * Creates a new {@link Varp}.
      *
-     * @param id The id.
+     * @param id    The id.
      * @param value The value.
      */
     public Varp(int id, int value) {

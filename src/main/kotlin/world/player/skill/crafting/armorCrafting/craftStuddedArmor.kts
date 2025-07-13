@@ -25,8 +25,10 @@ fun makeStudded(plr: Player, armor: HideArmor) {
     when (armor) {
         HideArmor.STUDDED_BODY ->
             plr.submitAction(CraftStuddedActionItem(plr, armor, leatherBody))
+
         HideArmor.STUDDED_CHAPS ->
             plr.submitAction(CraftStuddedActionItem(plr, armor, leatherChaps))
+
         else -> {
         }
     }

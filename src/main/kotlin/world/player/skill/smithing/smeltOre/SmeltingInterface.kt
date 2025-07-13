@@ -11,7 +11,7 @@ import world.player.skill.smithing.BarType
 class SmeltingInterface : DialogueInterface(2400) {
 
     override fun init(player: Player): Boolean {
-        for(bar in BarType.VALUES) {
+        for (bar in BarType.VALUES) {
             player.queue(WidgetItemModelMessageWriter(bar.widget, 150, bar.id))
         }
         return true

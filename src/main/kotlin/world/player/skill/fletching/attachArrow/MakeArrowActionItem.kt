@@ -1,7 +1,7 @@
 package world.player.skill.fletching.attachArrow
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.fletching
+import api.predef.itemName
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -9,9 +9,11 @@ import io.luna.game.model.mob.Player
 /**
  * An [InventoryAction] that will attach arrowtips to headless arrows.
  */
-class MakeArrowActionItem(plr: Player,
-                          val arrow: Arrow,
-                          makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
+class MakeArrowActionItem(
+    plr: Player,
+    val arrow: Arrow,
+    makeTimes: Int
+) : InventoryAction(plr, true, 3, makeTimes) {
 
     /**
      * The amount of arrows to make in this set.

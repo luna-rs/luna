@@ -59,9 +59,9 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
     /**
      * Retrieves an existing game object instance from the packet data.
      *
-     * @param player The player.
-     * @param objectX The x coordinate of the object.
-     * @param objectY The y coordinate of the object.
+     * @param player   The player.
+     * @param objectX  The x coordinate of the object.
+     * @param objectY  The y coordinate of the object.
      * @param objectId The object ID.
      * @return The game object, {@code null} if none matching the criteria were found.
      */

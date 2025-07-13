@@ -8,7 +8,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that sends a private message.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class PrivateChatMessageWriter extends GameMessageWriter {
 
@@ -25,7 +25,7 @@ public final class PrivateChatMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link PrivateChatMessageWriter}.
      *
-     * @param name The receiver of the message.
+     * @param name    The receiver of the message.
      * @param message The message to send.
      */
     public PrivateChatMessageWriter(long name, byte[] message) {

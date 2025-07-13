@@ -1,6 +1,6 @@
 package world.player.skill.runecrafting.equipTiara
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.Equipment
@@ -23,7 +23,7 @@ fun loginUpdate(plr: Player) {
 fun equipmentUpdate(plr: Player, newItem: Item?) {
     val resetValue = plr.cachedVarps[491] != 0
     val new = Tiara.ID_TO_TIARA[newItem?.id]
-    if(resetValue || new != null) {
+    if (resetValue || new != null) {
         plr.sendVarp(Varp(491, new?.config ?: 0))
     }
 }

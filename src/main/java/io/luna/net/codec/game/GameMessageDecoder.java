@@ -56,7 +56,7 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
     /**
      * Creates a new {@link GameMessageDecoder}.
      *
-     * @param decryptor The decryptor.
+     * @param decryptor  The decryptor.
      * @param repository The message repository.
      */
     public GameMessageDecoder(IsaacCipher decryptor, GameMessageRepository repository) {

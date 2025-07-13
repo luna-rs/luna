@@ -1,11 +1,7 @@
 package io.luna.game.model.collision;
 
 import com.google.common.collect.HashMultimap;
-import io.luna.game.model.Direction;
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
-import io.luna.game.model.Position;
-import io.luna.game.model.World;
+import io.luna.game.model.*;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
@@ -15,11 +11,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.OptionalInt;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -161,8 +153,8 @@ public final class CollisionManager {
      * {@code end} position using Bresenham's line algorithm.
      *
      * @param start The start position of the ray.
-     * @param end The end position of the ray.
-     * @param cond The condition to check if satisfied.
+     * @param end   The end position of the ray.
+     * @param cond  The condition to check if satisfied.
      * @return {@code false} if the condition was satisfied, {@code true} otherwise.
      */
     public boolean raycast(Position start, Position end, BiFunction<Position, Direction, Boolean> cond) {
@@ -246,11 +238,11 @@ public final class CollisionManager {
     /**
      * Apply a {@link CollisionUpdate} flag to a {@link CollisionMatrix}.
      *
-     * @param type The type of update to apply.
+     * @param type   The type of update to apply.
      * @param matrix The matrix the update is being applied to.
      * @param localX The local X position of the tile the flag represents.
      * @param localY The local Y position of the tile the flag represents.
-     * @param flag The {@link CollisionFlag} to update.
+     * @param flag   The {@link CollisionFlag} to update.
      */
     private void flag(CollisionUpdateType type, CollisionMatrix matrix, int localX, int localY, CollisionFlag flag) {
         if (type == CollisionUpdateType.ADDING) {
@@ -282,8 +274,8 @@ public final class CollisionManager {
      * Checks if the given {@link EntityType} can traverse to the next tile from {@code position} in the given
      * {@code direction}.
      *
-     * @param position The current position of the entity.
-     * @param type The type of the entity.
+     * @param position  The current position of the entity.
+     * @param type      The type of the entity.
      * @param direction The direction the entity is travelling.
      * @return {@code true} if next tile is traversable, {@code false} otherwise.
      */
@@ -316,10 +308,10 @@ public final class CollisionManager {
     /**
      * Determines if position {@code start} is within an interaction distance of {@code distance} to {@code target}.
      *
-     * @param start The starting position.
+     * @param start      The starting position.
      * @param lastRegion The position to get local coordinates from.
-     * @param target The target entity.
-     * @param distance The interaction distance.
+     * @param target     The target entity.
+     * @param distance   The interaction distance.
      * @return {@code true} if the position has reached the target.
      */
     public boolean reached(Position start, Position lastRegion, Entity target, int distance) {

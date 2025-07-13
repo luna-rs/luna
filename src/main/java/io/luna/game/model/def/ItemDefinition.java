@@ -142,28 +142,28 @@ public final class ItemDefinition implements Definition {
     /**
      * Creates a new {@link ItemDefinition}.
      *
-     * @param id The item identifier.
-     * @param name The item name.
-     * @param description The item description.
-     * @param modelId The item mode identifier.
-     * @param modelZoom The item model zoom.
-     * @param modelRotationX The item model {@code x} rotation.
-     * @param modelRotationY The item model {@code y} rotation.
-     * @param modelRotationZ The item model {@code z} rotation.
-     * @param modelOffsetX The item model {@code x} offset.
-     * @param modelOffsetY The item model {@code y} offset.
-     * @param stackable If the item is stackable.
-     * @param value The item value.
-     * @param members If the item is members only.
+     * @param id               The item identifier.
+     * @param name             The item name.
+     * @param description      The item description.
+     * @param modelId          The item mode identifier.
+     * @param modelZoom        The item model zoom.
+     * @param modelRotationX   The item model {@code x} rotation.
+     * @param modelRotationY   The item model {@code y} rotation.
+     * @param modelRotationZ   The item model {@code z} rotation.
+     * @param modelOffsetX     The item model {@code x} offset.
+     * @param modelOffsetY     The item model {@code y} offset.
+     * @param stackable        If the item is stackable.
+     * @param value            The item value.
+     * @param members          If the item is members only.
      * @param inventoryActions The item inventory actions.
-     * @param groundActions The item ground actions.
-     * @param unnotedId The item's unnoted identifier, if it has one.
-     * @param modelScaleX The item model {@code x} scale.
-     * @param modelScaleY The item model {@code y} scale.
-     * @param modelScaleZ The item model {@code z} scale.
-     * @param teamId The team id of this item, if it has one.
-     * @param weight The weight of this item.
-     * @param tradeable If this item is tradeable.
+     * @param groundActions    The item ground actions.
+     * @param unnotedId        The item's unnoted identifier, if it has one.
+     * @param modelScaleX      The item model {@code x} scale.
+     * @param modelScaleY      The item model {@code y} scale.
+     * @param modelScaleZ      The item model {@code z} scale.
+     * @param teamId           The team id of this item, if it has one.
+     * @param weight           The weight of this item.
+     * @param tradeable        If this item is tradeable.
      */
     public ItemDefinition(int id, String name, String description, int modelId, int modelZoom, int modelRotationX,
                           int modelRotationY, int modelRotationZ, int modelOffsetX, int modelOffsetY, boolean stackable,
@@ -211,7 +211,7 @@ public final class ItemDefinition implements Definition {
     /**
      * Determines if the inventory action at {@code index} is equal to {@code action}.
      *
-     * @param index The action index.
+     * @param index  The action index.
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */
@@ -222,7 +222,7 @@ public final class ItemDefinition implements Definition {
     /**
      * Determines if the ground action at {@code index} is equal to {@code action}.
      *
-     * @param index The action index.
+     * @param index  The action index.
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */

@@ -10,7 +10,8 @@ import io.luna.game.model.mob.Player
 /**
  * An [InventoryAction] that shapes soft clay into [Unfired] pottery materials.
  */
-class PotteryWheelActionItem(val plr: Player, val unfired: Unfired, amount: Int) : InventoryAction(plr, true, 2, amount) {
+class PotteryWheelActionItem(val plr: Player, val unfired: Unfired, amount: Int) :
+    InventoryAction(plr, true, 2, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {

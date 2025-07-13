@@ -10,7 +10,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that marks a chunk.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ChunkPlacementMessageWriter extends GameMessageWriter {
 
@@ -27,7 +27,7 @@ public final class ChunkPlacementMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link ChunkPlacementMessageWriter}.
      *
-     * @param basePosition The base position.
+     * @param basePosition             The base position.
      * @param placementChunkRepository The placement chunk.
      */
     public ChunkPlacementMessageWriter(Position basePosition, ChunkRepository placementChunkRepository) {

@@ -2,7 +2,8 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
-import api.predef.ext.*
+import api.predef.ext.get
+import api.predef.ext.isOpen
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 import io.luna.game.model.mob.dialogue.OptionDialogueInterface

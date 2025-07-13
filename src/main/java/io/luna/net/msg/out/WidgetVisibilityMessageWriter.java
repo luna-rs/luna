@@ -24,7 +24,7 @@ public final class WidgetVisibilityMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetVisibilityMessageWriter}.
      *
-     * @param id The widget identifier.
+     * @param id                 The widget identifier.
      * @param hiddenUntilHovered If the widget should be hidden.
      */
     public WidgetVisibilityMessageWriter(int id, boolean hiddenUntilHovered) {

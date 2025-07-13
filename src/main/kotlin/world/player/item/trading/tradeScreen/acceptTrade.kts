@@ -1,7 +1,7 @@
 package world.player.item.trading.tradeScreen
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.button
+import api.predef.ext.get
 import world.player.item.trading.tradeScreen.ConfirmTradeInterface
 
 /**

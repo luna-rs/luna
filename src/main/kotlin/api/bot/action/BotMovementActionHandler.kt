@@ -35,8 +35,10 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
         val collisionManager = bot.world.collisionManager
         val timeoutSeconds = bot.computeLongestDistance(target) * 5L;
         val suspendableCond =
-            SuspendableCondition({ bot.walking.isEmpty || collisionManager.reached(bot, target) },
-                                 timeoutSeconds)
+            SuspendableCondition(
+                { bot.walking.isEmpty || collisionManager.reached(bot, target) },
+                timeoutSeconds
+            )
         bot.walking.walkUntilReached(target)
         return suspendableCond.submit()
     }

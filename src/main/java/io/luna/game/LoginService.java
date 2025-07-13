@@ -63,8 +63,8 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         /**
          * Creates a new {@link LoginRequest}.
          *
-         * @param player The player.
-         * @param client The player's client.
+         * @param player  The player.
+         * @param client  The player's client.
          * @param message The login request message.
          */
         public LoginRequest(Player player, LoginClient client, LoginRequestMessage message) {
@@ -137,7 +137,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
      * Starts a worker that will handle a load request and returns the future result of the task.
      *
      * @param username The username of the player being loaded.
-     * @param request The request to handle.
+     * @param request  The request to handle.
      * @return The result of the load ({@code true} if the login response was normal).
      */
     private Callable<Boolean> startWorker(String username, LoginRequest request) {

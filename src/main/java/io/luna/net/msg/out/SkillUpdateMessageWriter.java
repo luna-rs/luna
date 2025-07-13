@@ -3,7 +3,6 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 

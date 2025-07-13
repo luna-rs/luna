@@ -73,10 +73,10 @@ public abstract class Action<T extends Mob> {
     /**
      * Creates a new {@link Action} that will run every {@code delay}.
      *
-     * @param mob The mob assigned to this action.
+     * @param mob        The mob assigned to this action.
      * @param actionType The action type.
-     * @param instant If the first execution of this action should run instantly.
-     * @param delay The delay.
+     * @param instant    If the first execution of this action should run instantly.
+     * @param delay      The delay.
      */
     public Action(T mob, ActionType actionType, boolean instant, int delay) {
         checkArgument(delay > 0, "Delay must be above 0!");
@@ -90,7 +90,7 @@ public abstract class Action<T extends Mob> {
     /**
      * Creates a new {@link Action} that runs instantly on its first execution, and every {@code 600}ms afterward.
      *
-     * @param mob The mob assigned to this action.
+     * @param mob        The mob assigned to this action.
      * @param actionType The action type.
      */
     public Action(T mob, ActionType actionType) {
@@ -110,7 +110,7 @@ public abstract class Action<T extends Mob> {
     final boolean isComplete() {
 
         // Run instantly on first execution if needed.
-        if(instant && executions == 0) {
+        if (instant && executions == 0) {
             counter = delay;
         }
 

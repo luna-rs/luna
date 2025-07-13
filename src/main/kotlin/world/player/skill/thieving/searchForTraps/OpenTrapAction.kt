@@ -1,8 +1,8 @@
 package world.player.skill.thieving.searchForTraps
 
 import api.attr.Attr
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.animation
+import api.predef.rand
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player

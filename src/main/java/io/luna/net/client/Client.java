@@ -33,7 +33,7 @@ public abstract class Client<I> {
      * @return The IP address of the channel.
      */
     public static String getIpAddress(Channel channel) {
-        if(channel == BotChannel.CHANNEL) {
+        if (channel == BotChannel.CHANNEL) {
             return "bot-client";
         }
         try {

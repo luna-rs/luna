@@ -1,7 +1,9 @@
 package world.player.skill.smithing.smeltOre
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.animation
+import api.predef.itemName
+import api.predef.rand
+import api.predef.smithing
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
@@ -34,7 +36,7 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         if (currentAdd.isNotEmpty()) { // Only add XP if we're getting a bar (for Iron ore).
             val oreRequired = barType.oreRequired
             val baseOre = itemName(oreRequired.first).toLowerCase()
-            val secondOre = if(oreRequired.second == null) null else itemName(oreRequired.second!!).toLowerCase()
+            val secondOre = if (oreRequired.second == null) null else itemName(oreRequired.second!!).toLowerCase()
             val oreMessage = if (secondOre == null) baseOre else "$baseOre and $secondOre together"
             mob.smithing.addExperience(xp)
             mob.sendMessage("You smelt the $oreMessage in the furnace.")

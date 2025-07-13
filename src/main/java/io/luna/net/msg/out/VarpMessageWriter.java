@@ -33,7 +33,7 @@ public final class VarpMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         boolean isLargeVarp = varp.getValue() > Byte.MAX_VALUE;
         ByteMessage msg;
-        if(isLargeVarp) {
+        if (isLargeVarp) {
             msg = ByteMessage.message(115);
             msg.putInt(varp.getValue(), ByteOrder.INVERSE_MIDDLE);
             msg.putShort(varp.getId(), ByteOrder.LITTLE);

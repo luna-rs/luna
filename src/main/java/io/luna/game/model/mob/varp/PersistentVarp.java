@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.varp;
 
 import com.google.common.collect.ImmutableMap;
-import io.luna.game.model.mob.Player;
 
 /**
  * An enum representing an identifier for a {@link Varp} that is persisted by this server. These varps are usually

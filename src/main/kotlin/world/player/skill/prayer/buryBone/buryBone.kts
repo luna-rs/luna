@@ -1,10 +1,11 @@
 package world.player.skill.prayer.buryBone
 
 import api.attr.Attr
-import api.predef.*
+import api.predef.item1
+import api.predef.prayer
 import io.luna.game.action.impl.ThrottledAction
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import world.player.Sounds
 import world.player.skill.prayer.Bone
 

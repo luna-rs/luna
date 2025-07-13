@@ -1,17 +1,18 @@
 package world.player.skill.herblore.grindIngredient
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.itemName
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 
 /**
  * An [InventoryAction] that will grind all ingredients in an inventory.
  */
-class GrindActionItem(plr: Player,
-                      val ingredient: Ingredient,
-                      makeTimes: Int) : InventoryAction(plr, true, 2, makeTimes) {
+class GrindActionItem(
+    plr: Player,
+    val ingredient: Ingredient,
+    makeTimes: Int
+) : InventoryAction(plr, true, 2, makeTimes) {
 
     companion object {
 

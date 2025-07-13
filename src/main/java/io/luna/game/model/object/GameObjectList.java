@@ -3,17 +3,12 @@ package io.luna.game.model.object;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.luna.game.cache.Cache;
-import io.luna.game.model.StationaryEntityList;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.StationaryEntityList;
 import io.luna.game.model.World;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 
 /**
  * A {@link StationaryEntityList} that tracks all {@link GameObject} types existing natively and spawned by the server.

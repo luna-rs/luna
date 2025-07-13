@@ -71,7 +71,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
     /**
      * Encodes values related to equipment.
      *
-     * @param buf The update block buffer.
+     * @param buf    The update block buffer.
      * @param player The player.
      */
     @SuppressWarnings("ConstantConditions")
@@ -97,7 +97,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
         }
 
         // Shield model.
-        if(equipment.occupied(Equipment.SHIELD)) {
+        if (equipment.occupied(Equipment.SHIELD)) {
             buf.putShort(0x200 + getId(equipment, Equipment.SHIELD));
         } else {
             buf.put(0);
@@ -113,7 +113,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Legs model.
         if (equipment.occupied(Equipment.LEGS)) {
-            buf.putShort(0x200 + getId(equipment,Equipment.LEGS));
+            buf.putShort(0x200 + getId(equipment, Equipment.LEGS));
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.LEGS));
         }
@@ -128,7 +128,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
         // Hands model.
         if (equipment.occupied(Equipment.HANDS)) {
-            buf.putShort(0x200 + getId(equipment,Equipment.HANDS));
+            buf.putShort(0x200 + getId(equipment, Equipment.HANDS));
         } else {
             buf.putShort(0x100 + appearance.get(PlayerAppearance.HANDS));
         }
@@ -151,7 +151,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
     /**
      * Encodes values related to model colors.
      *
-     * @param buf The update block buffer.
+     * @param buf    The update block buffer.
      * @param player The player.
      */
     private void encodeModelColors(ByteMessage buf, Player player) {
@@ -166,7 +166,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
     /**
      * Encodes values related to model animations.
      *
-     * @param buf The update block buffer.
+     * @param buf    The update block buffer.
      * @param player The player.
      */
     private void encodeAnimations(ByteMessage buf, Player player) {
@@ -184,7 +184,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
      * Returns either the item identifier on {@code index} or {@code 0}.
      *
      * @param equipment The equipment.
-     * @param index The index.
+     * @param index     The index.
      * @return The item identifier or {@code 0}.
      */
     private int getId(Equipment equipment, int index) {
@@ -195,8 +195,8 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
      * Returns either the result of {@code defFunc} or {@code false}.
      *
      * @param equipment The equipment.
-     * @param index The index.
-     * @param defFunc The equipment definition function.
+     * @param index     The index.
+     * @param defFunc   The equipment definition function.
      * @return The result of the function or {@code false}.
      */
     private boolean getDef(Equipment equipment, int index, Function<EquipmentDefinition, Boolean> defFunc) {

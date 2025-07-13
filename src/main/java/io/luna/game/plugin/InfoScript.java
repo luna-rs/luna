@@ -20,11 +20,11 @@ public final class InfoScript extends Script {
     /**
      * Creates a new {@link Script}.
      *
-     * @param context The context.
+     * @param context     The context.
      * @param packageName The package that this script belongs to.
-     * @param info Info related to the scripts runtime class.
-     * @param definition The script definition instance.
-     * @param data The metadata contained within the {@code info.plugin.kts} file.
+     * @param info        Info related to the scripts runtime class.
+     * @param definition  The script definition instance.
+     * @param data        The metadata contained within the {@code info.plugin.kts} file.
      */
     public InfoScript(LunaContext context, String packageName, ClassInfo info, ScriptTemplateWithArgs definition, InfoScriptData data) {
         super(context, packageName, info, definition);

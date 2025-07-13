@@ -52,8 +52,12 @@ public class SimpleBoxArea extends Area {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         SimpleBoxArea that = (SimpleBoxArea) o;
         return southWestX == that.southWestX && southWestY == that.southWestY &&
                 northEastX == that.northEastX && northEastY == that.northEastY;

@@ -1,8 +1,8 @@
 package world.player.skill.magic.lowHighAlch
 
 import api.attr.Attr
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.animation
+import api.predef.magic
 import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

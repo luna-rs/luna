@@ -1,6 +1,6 @@
 package world.player.skill.mining
 
-import api.predef.*
+import api.predef.mining
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
@@ -8,34 +8,48 @@ import io.luna.game.model.mob.block.Animation
 /**
  * An enumerated type representing all pickaxes that can be used to mine [Ore]s.
  */
-enum class Pickaxe(val level: Int,
-                   val itemId: Int,
-                   val animation: Animation,
-                   val speed: Int) {
-    BRONZE(level = 1,
-           itemId = 1265,
-           animation = Animation(625),
-           speed = 8),
-    IRON(level = 1,
-         itemId = 1267,
-         animation = Animation(626),
-         speed = 7),
-    STEEL(level = 5,
-          itemId = 1269,
-          animation = Animation(627),
-          speed = 6),
-    MITHRIL(level = 20,
-            itemId = 1273,
-            animation = Animation(629),
-            speed = 5),
-    ADAMANT(level = 30,
-            itemId = 1271,
-            animation = Animation(628),
-            speed = 4),
-    RUNE(level = 40,
-         itemId = 1275,
-         animation = Animation(624),
-         speed = 3);
+enum class Pickaxe(
+    val level: Int,
+    val itemId: Int,
+    val animation: Animation,
+    val speed: Int
+) {
+    BRONZE(
+        level = 1,
+        itemId = 1265,
+        animation = Animation(625),
+        speed = 8
+    ),
+    IRON(
+        level = 1,
+        itemId = 1267,
+        animation = Animation(626),
+        speed = 7
+    ),
+    STEEL(
+        level = 5,
+        itemId = 1269,
+        animation = Animation(627),
+        speed = 6
+    ),
+    MITHRIL(
+        level = 20,
+        itemId = 1273,
+        animation = Animation(629),
+        speed = 5
+    ),
+    ADAMANT(
+        level = 30,
+        itemId = 1271,
+        animation = Animation(628),
+        speed = 4
+    ),
+    RUNE(
+        level = 40,
+        itemId = 1275,
+        animation = Animation(624),
+        speed = 3
+    );
 
 
     companion object {
@@ -65,7 +79,8 @@ enum class Pickaxe(val level: Int,
                 val newPick = ID_TO_PICKAXE[item.id]
                 if (newPick != null &&
                     plr.mining.level >= newPick.level &&
-                    (pick == null || newPick.level > pick.level)) {
+                    (pick == null || newPick.level > pick.level)
+                ) {
                     pick = newPick
                 }
             }

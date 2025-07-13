@@ -11,11 +11,7 @@ import io.luna.game.model.item.ItemContainer.StackPolicy;
 import io.luna.game.model.mob.Player;
 
 import java.text.NumberFormat;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.OptionalInt;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A model representing a single shop where items can be bought and sold.
@@ -149,10 +145,10 @@ public final class Shop {
     /**
      * Creates a new {@link Shop}.
      *
-     * @param name The shop name.
+     * @param name          The shop name.
      * @param restockPolicy The restock policy.
-     * @param buyPolicy The sell policy.
-     * @param currency The currency used to buy items.
+     * @param buyPolicy     The sell policy.
+     * @param currency      The currency used to buy items.
      */
     public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy, Currency currency) {
         this.world = world;
@@ -169,7 +165,7 @@ public final class Shop {
      * Sends the sell value of the inventory item on {@code index} to the Player.
      *
      * @param player The player.
-     * @param index The index of the item.
+     * @param index  The index of the item.
      */
     public void sendSellValue(Player player, int index) {
         Item item = player.getInventory().get(index);
@@ -188,7 +184,7 @@ public final class Shop {
      * Sends the buy value of the shop item on {@code index} to the Player.
      *
      * @param player The player.
-     * @param index The index of the item.
+     * @param index  The index of the item.
      */
     public void sendBuyValue(Player player, int index) {
         Item item = container.get(index);
@@ -206,8 +202,8 @@ public final class Shop {
     /**
      * Buy an item from this shop.
      *
-     * @param player The player.
-     * @param index The item's index.
+     * @param player    The player.
+     * @param index     The item's index.
      * @param buyAmount The amount to buy.
      * @return {@code true} if the item was bought.
      */
@@ -274,8 +270,8 @@ public final class Shop {
     /**
      * Sell an item to this shop.
      *
-     * @param player The player.
-     * @param index The item's index.
+     * @param player     The player.
+     * @param index      The item's index.
      * @param sellAmount The amount to sell.
      * @return {@code true} if the item was sold.
      */
@@ -326,8 +322,8 @@ public final class Shop {
      * accounts for the different shop formulas used with items that the store normally stocks
      * (for example: selling a staff to Zaff, or a security book to a general store).
      *
-     * @param item The item.
-     * @param index The index of the item in the shop.
+     * @param item         The item.
+     * @param index        The index of the item in the shop.
      * @param amountBought The amount of the item to be purchased.
      * @return The buy value.
      */
@@ -446,7 +442,7 @@ public final class Shop {
      * In specialty stores. Sell values start at 55% of base value, and decrease by 2% for every item the shop
      * has overstocked.
      *
-     * @param item The item.
+     * @param item       The item.
      * @param amountSold The amount of item sold to the shop.
      * @return The sell value.
      */

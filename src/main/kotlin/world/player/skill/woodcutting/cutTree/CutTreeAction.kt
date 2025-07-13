@@ -1,7 +1,12 @@
 package world.player.skill.woodcutting.cutTree
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.addItem
+import api.predef.ext.addObject
+import api.predef.ext.removeObject
+import api.predef.ext.scheduleOnce
+import api.predef.itemName
+import api.predef.rand
+import api.predef.woodcutting
 import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
@@ -120,14 +125,16 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     stumpId,
                     treeObj.position,
                     treeObj.objectType,
-                    treeObj.direction)
+                    treeObj.direction
+                )
             }
             world.scheduleOnce(tree.respawnTicks) {
                 val newTreeObj = world.addObject(
                     treeObj.id,
                     treeObj.position,
                     treeObj.objectType,
-                    treeObj.direction)
+                    treeObj.direction
+                )
                 newTreeObj.treeHealth = tree.maxHealth.random()
             }
         }

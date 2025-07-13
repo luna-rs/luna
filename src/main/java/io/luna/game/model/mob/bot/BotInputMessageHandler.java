@@ -46,6 +46,7 @@ public final class BotInputMessageHandler {
     public <T extends Event> void listenFor(Consumer<T> onReceived) {
 
     }
+
     /**
      * Retrieves all messages sent by this server to the {@link BotClient} since the last call to
      * {@link #clear()}, and received after {@code since}.

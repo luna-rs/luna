@@ -8,6 +8,7 @@ package io.luna.game.model.mob.block;
 public final class Hit {
     // TODO when doing combat, add source of damage
     // TODO change to builder style
+
     /**
      * An enum representing hitsplat types.
      */
@@ -53,7 +54,7 @@ public final class Hit {
      * Creates a new {@link Hit}.
      *
      * @param damage The damage.
-     * @param type The type.
+     * @param type   The type.
      */
     public Hit(int damage, HitType type) {
         this.damage = damage;

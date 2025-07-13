@@ -40,8 +40,8 @@ public final class CollisionMatrix {
     /**
      * Creates an array of CollisionMatrix objects, all of the specified width and length.
      *
-     * @param count The length of the array to create.
-     * @param width The width of each CollisionMatrix.
+     * @param count  The length of the array to create.
+     * @param width  The width of each CollisionMatrix.
      * @param length The length of each CollisionMatrix.
      * @return The array of CollisionMatrix objects.
      */
@@ -69,7 +69,7 @@ public final class CollisionMatrix {
     /**
      * Creates the CollisionMatrix.
      *
-     * @param width The width of the matrix.
+     * @param width  The width of the matrix.
      * @param length The length of the matrix.
      */
     public CollisionMatrix(int width, int length) {
@@ -82,8 +82,8 @@ public final class CollisionMatrix {
      * Returns whether or not <strong>all</strong> of the specified {@link CollisionFlag}s are set for the specified
      * coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x     The x coordinate.
+     * @param y     The y coordinate.
      * @param flags The CollisionFlags.
      * @return {@code true} iff all of the CollisionFlags are set.
      */
@@ -101,8 +101,8 @@ public final class CollisionMatrix {
      * Returns whether or not <strong>any</strong> of the specified {@link CollisionFlag}s are set for the specified
      * coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x     The x coordinate.
+     * @param y     The y coordinate.
      * @param flags The CollisionFlags.
      * @return {@code true} iff any of the CollisionFlags are set.
      */
@@ -120,8 +120,8 @@ public final class CollisionMatrix {
      * Completely blocks the tile at the specified coordinate pair, while optionally allowing projectiles
      * to pass through.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x            The x coordinate.
+     * @param y            The y coordinate.
      * @param impenetrable If projectiles should be permitted to traverse this tile.
      */
     public void block(int x, int y, boolean impenetrable) {
@@ -142,8 +142,8 @@ public final class CollisionMatrix {
      * Clears (i.e. sets to {@code false}) the value of the specified {@link CollisionFlag} for the specified
      * coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x    The x coordinate.
+     * @param y    The y coordinate.
      * @param flag The CollisionFlag.
      */
     public void clear(int x, int y, CollisionFlag flag) {
@@ -153,8 +153,8 @@ public final class CollisionMatrix {
     /**
      * Adds an additional {@link CollisionFlag} for the specified coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x    The x coordinate.
+     * @param y    The y coordinate.
      * @param flag The CollisionFlag.
      */
     public void flag(int x, int y, CollisionFlag flag) {
@@ -164,8 +164,8 @@ public final class CollisionMatrix {
     /**
      * Returns whether or not the specified {@link CollisionFlag} is set for the specified coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x    The x coordinate.
+     * @param y    The y coordinate.
      * @param flag The CollisionFlag.
      * @return {@code true} iff the CollisionFlag is set.
      */
@@ -219,8 +219,8 @@ public final class CollisionMatrix {
      * Sets (i.e. sets to {@code true}) the value of the specified {@link CollisionFlag} for the specified coordinate
      * pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x    The x coordinate.
+     * @param y    The y coordinate.
      * @param flag The CollisionFlag.
      */
     public void set(int x, int y, CollisionFlag flag) {
@@ -246,9 +246,9 @@ public final class CollisionMatrix {
      * Returns whether or not an Entity of the specified {@link EntityType type} cannot traverse the tile at the
      * specified coordinate pair.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param entity The {@link EntityType}.
+     * @param x         The x coordinate.
+     * @param y         The y coordinate.
+     * @param entity    The {@link EntityType}.
      * @param direction The {@link Direction} the Entity is approaching from.
      * @return {@code true} iff the tile at the specified coordinate pair is not traversable.
      */
@@ -295,8 +295,8 @@ public final class CollisionMatrix {
     /**
      * Sets the appropriate index for the specified coordinate pair to the specified value.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x     The x coordinate.
+     * @param y     The y coordinate.
      * @param value The value.
      */
     private void set(int x, int y, short value) {
@@ -309,7 +309,7 @@ public final class CollisionMatrix {
      *
      * <p><p><strong>Refactored from the #377 client.</strong>
      *
-     * @param start The start position.
+     * @param start      The start position.
      * @param lastRegion The position to get local coordinates from.
      * @param wallObject The wall to determine if reached.
      * @return {@code true} if the position has reached the wall, {@code false} otherwise.
@@ -341,67 +341,93 @@ public final class CollisionMatrix {
                 }
                 return startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0;
             } else if (wallObject.getDirection() == ObjectDirection.EAST) {
-                if (startX == endX + 1 && startY == endY)
+                if (startX == endX + 1 && startY == endY) {
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                }
+                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0) {
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                }
+                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0) {
                     return true;
+                }
             } else if (wallObject.getDirection() == ObjectDirection.SOUTH) {
-                if (startX == endX && startY == endY - 1)
+                if (startX == endX && startY == endY - 1) {
                     return true;
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                }
+                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0) {
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                }
+                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0) {
                     return true;
+                }
             }
         } else if (wallObject.getObjectType() == ObjectType.WALL_CORNER) {
             if (wallObject.getDirection() == ObjectDirection.WEST) {
-                if (startX == endX - 1 && startY == endY)
+                if (startX == endX - 1 && startY == endY) {
                     return true;
-                if (startX == endX && startY == endY + 1)
+                }
+                if (startX == endX && startY == endY + 1) {
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                }
+                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0) {
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                }
+                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0) {
                     return true;
+                }
             } else if (wallObject.getDirection() == ObjectDirection.NORTH) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0) {
                     return true;
-                if (startX == endX && startY == endY + 1)
+                }
+                if (startX == endX && startY == endY + 1) {
                     return true;
-                if (startX == endX + 1 && startY == endY)
+                }
+                if (startX == endX + 1 && startY == endY) {
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0)
+                }
+                if (startX == endX && startY == endY - 1 && (get(start) & 0x1280102) == 0) {
                     return true;
+                }
             } else if (wallObject.getDirection() == ObjectDirection.EAST) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & 0x1280108) == 0) {
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                }
+                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0) {
                     return true;
-                if (startX == endX + 1 && startY == endY)
+                }
+                if (startX == endX + 1 && startY == endY) {
                     return true;
-                if (startX == endX && startY == endY - 1)
+                }
+                if (startX == endX && startY == endY - 1) {
                     return true;
+                }
             } else if (wallObject.getDirection() == ObjectDirection.SOUTH) {
-                if (startX == endX - 1 && startY == endY)
+                if (startX == endX - 1 && startY == endY) {
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0)
+                }
+                if (startX == endX && startY == endY + 1 && (get(start) & 0x1280120) == 0) {
                     return true;
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0)
+                }
+                if (startX == endX + 1 && startY == endY && (get(start) & 0x1280180) == 0) {
                     return true;
-                if (startX == endX && startY == endY - 1)
+                }
+                if (startX == endX && startY == endY - 1) {
                     return true;
+                }
             }
         } else if (wallObject.getObjectType() == ObjectType.DIAGONAL_WALL) {
-            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0) {
                 return true;
-            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+            }
+            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0) {
                 return true;
-            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+            }
+            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0) {
                 return true;
-            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+            }
+            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0) {
                 return true;
+            }
         }
         return false;
     }
@@ -412,8 +438,8 @@ public final class CollisionMatrix {
      *
      * <p><p><strong>Refactored from the #377 client.</strong>
      *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
+     * @param start            The start position.
+     * @param lastRegion       The position to get local coordinates from.
      * @param decorationObject The decoration to determine if reached.
      * @return {@code true} if the position has reached the decoration, {@code false} otherwise.
      */
@@ -425,44 +451,58 @@ public final class CollisionMatrix {
         int endX = end.getLocalX(end);
         int endY = end.getLocalY(end);
 
-        if (startX == endX && startY == endY)
+        if (startX == endX && startY == endY) {
             return true;
+        }
         int objectType = decorationObject.getObjectType().getId();
         int objectRotation = decorationObject.getDirection().getId();
         if (objectType == 6 || objectType == 7) {
-            if (objectType == 7)
+            if (objectType == 7) {
                 objectRotation = objectRotation + 2 & 3;
+            }
             if (objectRotation == 0) {
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0) {
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+                }
+                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0) {
                     return true;
+                }
             } else if (objectRotation == 1) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0) {
                     return true;
-                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+                }
+                if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0) {
                     return true;
+                }
             } else if (objectRotation == 2) {
-                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+                if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0) {
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+                }
+                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0) {
                     return true;
+                }
             } else if (objectRotation == 3) {
-                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+                if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0) {
                     return true;
-                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+                }
+                if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0) {
                     return true;
+                }
             }
         }
         if (objectType == 8) {
-            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0)
+            if (startX == endX && startY == endY + 1 && (get(start) & 0x20) == 0) {
                 return true;
-            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0)
+            }
+            if (startX == endX && startY == endY - 1 && (get(start) & 2) == 0) {
                 return true;
-            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0)
+            }
+            if (startX == endX - 1 && startY == endY && (get(start) & 8) == 0) {
                 return true;
-            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0)
+            }
+            if (startX == endX + 1 && startY == endY && (get(start) & 0x80) == 0) {
                 return true;
+            }
         }
         return false;
     }
@@ -472,9 +512,9 @@ public final class CollisionMatrix {
      *
      * <p><p><strong>Refactored from the #377 client.</strong>
      *
-     * @param start The start position.
+     * @param start      The start position.
      * @param lastRegion The position to get local coordinates from.
-     * @param object The object to determine if reached.
+     * @param object     The object to determine if reached.
      * @return {@code true} if the position has reached the object, {@code false} otherwise.
      */
     public boolean reachedObject(Position start, Position lastRegion, GameObject object) {
@@ -518,11 +558,11 @@ public final class CollisionMatrix {
      *
      * <p><p><strong>Refactored from the #377 client.</strong>
      *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
-     * @param target The entity to determine if reached.
-     * @param sizeX The width of the entity.
-     * @param sizeY The length of the entity.
+     * @param start            The start position.
+     * @param lastRegion       The position to get local coordinates from.
+     * @param target           The entity to determine if reached.
+     * @param sizeX            The width of the entity.
+     * @param sizeY            The length of the entity.
      * @param packedDirections Packed value for which directions the entity can be reached from. Only used for objects.
      * @return {@code true} if the player has reached the entity, {@code false} otherwise.
      */
@@ -538,8 +578,9 @@ public final class CollisionMatrix {
 
         int radiusX = (endX + sizeX) - 1;
         int radiusY = (endY + sizeY) - 1;
-        if (startX >= endX && startX <= radiusX && startY >= endY && startY <= radiusY)
+        if (startX >= endX && startX <= radiusX && startY >= endY && startY <= radiusY) {
             return true;
+        }
         return startX == endX - 1 && startY >= endY && startY <= radiusY && (get(start) & 8) == 0 && (packed & 8) == 0
                 || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (get(start) & 0x80) == 0 && (packed & 2) == 0
                 || startY == endY - 1 && startX >= endX && startX <= radiusX && (get(start) & 2) == 0 && (packed & 4) == 0

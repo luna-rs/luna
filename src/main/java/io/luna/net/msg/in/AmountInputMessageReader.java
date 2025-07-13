@@ -15,7 +15,7 @@ import java.util.OptionalInt;
  * A {@link GameMessageReader} implementation that intercepts data for when a number is entered on an
  * {@link AmountInputInterface}.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class AmountInputMessageReader extends GameMessageReader<NullEvent> {
 

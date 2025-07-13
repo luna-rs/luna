@@ -1,7 +1,7 @@
 package world.player.inter.destroyItem
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.button
+import api.predef.ext.get
 import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 
 /**

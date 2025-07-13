@@ -1,6 +1,6 @@
 package world.player.skill.smithing.smithBar
 
-import api.predef.*
+import api.predef.smithing
 import com.google.common.collect.ArrayListMultimap
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.mob.Player

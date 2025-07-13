@@ -32,7 +32,7 @@ public final class DesignPlayerEvent extends PlayerEvent {
     /**
      * Creates a new {@link DesignPlayerEvent}.
      *
-     * @param plr The player.
+     * @param plr    The player.
      * @param gender The gender.
      * @param models The models.
      * @param colors The colors.

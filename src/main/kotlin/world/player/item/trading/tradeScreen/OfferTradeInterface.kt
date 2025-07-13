@@ -1,7 +1,7 @@
 package world.player.item.trading.tradeScreen
 
 import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.get
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
@@ -23,8 +23,10 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      */
     inner class OfferListener(private val plr: Player) : RefreshListener() {
 
-        override fun displayUpdate(items: ItemContainer, updateItems: List<IndexedItem>,
-                                   msg: WidgetIndexedItemsMessageWriter) {
+        override fun displayUpdate(
+            items: ItemContainer, updateItems: List<IndexedItem>,
+            msg: WidgetIndexedItemsMessageWriter
+        ) {
 
             plr.queue(msg) // Send to left panel.
             other.queue(WidgetIndexedItemsMessageWriter(3416, updateItems)) // Send to right panel.
@@ -71,7 +73,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
     }
 
     override fun onClose(plr: Player) {
-        if(!completed) {
+        if (!completed) {
             plr.tradingWith = -1
 
             plr.inventory.resetSecondaryRefresh()

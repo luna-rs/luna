@@ -7,7 +7,7 @@ import java.util.Arrays;
 /**
  * An enumerated type representing the currencies that can be used to purchase items from {@link Shop} types.
  *
- * @author lare96 
+ * @author lare96
  */
 public enum Currency {
     COINS(995),

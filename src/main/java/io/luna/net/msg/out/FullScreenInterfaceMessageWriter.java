@@ -26,7 +26,7 @@ public final class FullScreenInterfaceMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link FullScreenInterfaceMessageWriter}.
      *
-     * @param primaryId The primary identifier.
+     * @param primaryId   The primary identifier.
      * @param secondaryId The secondary identifier.
      */
     public FullScreenInterfaceMessageWriter(int primaryId, int secondaryId) {

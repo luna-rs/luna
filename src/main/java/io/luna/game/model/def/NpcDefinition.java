@@ -92,20 +92,20 @@ public final class NpcDefinition implements Definition {
     /**
      * Creates a new {@link NpcDefinition}.
      *
-     * @param id The NPC id.
-     * @param name The NPC name.
-     * @param description The NPC description.
-     * @param size The NPC size.
-     * @param standAnimationId The NPC stand animation.
-     * @param walkAnimationId The NPC walk animation.
-     * @param turnBackAnimationId The NPC turn back animation.
+     * @param id                   The NPC id.
+     * @param name                 The NPC name.
+     * @param description          The NPC description.
+     * @param size                 The NPC size.
+     * @param standAnimationId     The NPC stand animation.
+     * @param walkAnimationId      The NPC walk animation.
+     * @param turnBackAnimationId  The NPC turn back animation.
      * @param turnRightAnimationId The NPC turn right animation.
-     * @param turnLeftAnimationId The NPC turn left animation.
-     * @param degreesToTurn The NPC degrees to turn.
-     * @param actions The NPC context menu actions.
-     * @param minimapVisible If the NPC is visible on the minimap.
-     * @param combatLevel The NPC combat level.
-     * @param varpDef The NPC transformation varP definition.
+     * @param turnLeftAnimationId  The NPC turn left animation.
+     * @param degreesToTurn        The NPC degrees to turn.
+     * @param actions              The NPC context menu actions.
+     * @param minimapVisible       If the NPC is visible on the minimap.
+     * @param combatLevel          The NPC combat level.
+     * @param varpDef              The NPC transformation varP definition.
      */
     public NpcDefinition(int id, String name, String description, int size, int standAnimationId, int walkAnimationId,
                          int turnBackAnimationId, int turnRightAnimationId, int turnLeftAnimationId, int degreesToTurn,
@@ -131,7 +131,7 @@ public final class NpcDefinition implements Definition {
     /**
      * Determines if the NPC action at {@code index} is equal to {@code action}.
      *
-     * @param index The action index.
+     * @param index  The action index.
      * @param action The action to compare.
      * @return {@code true} if the actions are equal.
      */

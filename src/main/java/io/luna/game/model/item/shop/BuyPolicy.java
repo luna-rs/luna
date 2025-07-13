@@ -3,7 +3,7 @@ package io.luna.game.model.item.shop;
 /**
  * An enumerated type representing the possible buy policies of a {@link Shop}.
  *
- * @author lare96 
+ * @author lare96
  */
 public enum BuyPolicy {
 

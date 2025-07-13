@@ -1,7 +1,7 @@
 package api.event.dsl
 
 import api.event.Matcher
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.Event
 import javax.script.ScriptException
 import kotlin.reflect.KClass

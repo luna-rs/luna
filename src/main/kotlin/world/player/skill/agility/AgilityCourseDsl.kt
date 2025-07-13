@@ -1,6 +1,7 @@
 package world.player.skill.agility
 
-import api.predef.*
+import api.predef.agility
+import api.predef.object1
 import io.luna.game.action.Action
 import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Position
@@ -17,9 +18,11 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
     /**
      * Adds an agility obstacle to this course.
      */
-    fun obstacle(id: Int,
-                 type: AgilityObstacle,
-                 action: Player.(GameObject) -> Action<Player>) {
+    fun obstacle(
+        id: Int,
+        type: AgilityObstacle,
+        action: Player.(GameObject) -> Action<Player>
+    ) {
         object1(id) {
             if (type.startIf(plr) && Agility.checkLevel(plr, courseType.level)) {
                 plr.submitAction(action(plr, gameObject))
@@ -36,10 +39,12 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
     /**
      * Creates a new [ExactMovementAction] based on the specified arguments.
      */
-    fun movementAction(plr: Player,
-                       destination: Position,
-                       walkingAnimationId: Int,
-                       message: String): ExactMovementAction {
+    fun movementAction(
+        plr: Player,
+        destination: Position,
+        walkingAnimationId: Int,
+        message: String
+    ): ExactMovementAction {
         return object : ExactMovementAction(plr, ExactMovement.to(plr, destination), walkingAnimationId) {
             override fun onMoveStart(movement: ExactMovement) {
                 plr.sendMessage(message)

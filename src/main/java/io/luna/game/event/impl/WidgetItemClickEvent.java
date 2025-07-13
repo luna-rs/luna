@@ -19,10 +19,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link WidgetItemFirstClickEvent}.
          *
-         * @param player The player.
-         * @param index The item's index.
+         * @param player   The player.
+         * @param index    The item's index.
          * @param widgetId The widget identifier.
-         * @param itemId The item identifier.
+         * @param itemId   The item identifier.
          */
         public WidgetItemFirstClickEvent(Player player, int index, int widgetId, int itemId) {
             super(player, index, widgetId, itemId);
@@ -39,10 +39,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link WidgetItemSecondClickEvent}.
          *
-         * @param player The player.
-         * @param index The item's index.
+         * @param player   The player.
+         * @param index    The item's index.
          * @param widgetId The widget identifier.
-         * @param itemId The item identifier.
+         * @param itemId   The item identifier.
          */
         public WidgetItemSecondClickEvent(Player player, int index, int widgetId, int itemId) {
             super(player, index, widgetId, itemId);
@@ -59,10 +59,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link WidgetItemThirdClickEvent}.
          *
-         * @param player The player.
-         * @param index The item's index.
+         * @param player   The player.
+         * @param index    The item's index.
          * @param widgetId The widget identifier.
-         * @param itemId The item identifier.
+         * @param itemId   The item identifier.
          */
         public WidgetItemThirdClickEvent(Player player, int index, int widgetId, int itemId) {
             super(player, index, widgetId, itemId);
@@ -79,10 +79,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link WidgetItemFourthClickEvent}.
          *
-         * @param player The player.
-         * @param index The item's index.
+         * @param player   The player.
+         * @param index    The item's index.
          * @param widgetId The widget identifier.
-         * @param itemId The item identifier.
+         * @param itemId   The item identifier.
          */
         public WidgetItemFourthClickEvent(Player player, int index, int widgetId, int itemId) {
             super(player, index, widgetId, itemId);
@@ -99,10 +99,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link WidgetItemFifthClickEvent}.
          *
-         * @param player The player.
-         * @param index The item's index.
+         * @param player   The player.
+         * @param index    The item's index.
          * @param widgetId The widget identifier.
-         * @param itemId The item identifier.
+         * @param itemId   The item identifier.
          */
         public WidgetItemFifthClickEvent(Player player, int index, int widgetId, int itemId) {
             super(player, index, widgetId, itemId);
@@ -127,10 +127,10 @@ public class WidgetItemClickEvent extends PlayerEvent implements ControllableEve
     /**
      * Creates a new {@link WidgetItemClickEvent}.
      *
-     * @param player The player.
-     * @param index The item's index.
+     * @param player   The player.
+     * @param index    The item's index.
      * @param widgetId The widget identifier.
-     * @param itemId The item identifier.
+     * @param itemId   The item identifier.
      */
     public WidgetItemClickEvent(Player player, int index, int widgetId, int itemId) {
         super(player);

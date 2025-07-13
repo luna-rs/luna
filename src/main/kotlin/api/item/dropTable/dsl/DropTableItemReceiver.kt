@@ -1,7 +1,6 @@
 package api.item.dropTable.dsl
 
 import api.item.dropTable.DropTableItem
-import io.luna.game.model.def.ItemDefinition
 import io.luna.util.Rational
 
 /**

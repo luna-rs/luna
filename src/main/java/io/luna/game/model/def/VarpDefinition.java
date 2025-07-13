@@ -58,7 +58,7 @@ public final class VarpDefinition implements Definition {
     /**
      * Creates a new {@link VarpDefinition}.
      *
-     * @param id The id of the varP.
+     * @param id   The id of the varP.
      * @param type The varP type.
      */
     public VarpDefinition(int id, int type) {

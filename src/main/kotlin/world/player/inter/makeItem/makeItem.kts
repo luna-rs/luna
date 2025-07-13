@@ -1,7 +1,8 @@
 package world.player.inter.makeItem
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.get
+import api.predef.ext.isOpen
+import api.predef.on
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 
@@ -9,21 +10,22 @@ import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
  * A list of button ids and the indexes that they correspond to.
  */
 val buttonList = listOf(
-        ButtonIndex(make1 = 8893, index = 0),
-        ButtonIndex(make1 = 8874, index = 0),
-        ButtonIndex(make1 = 8878, index = 1),
-        ButtonIndex(make1 = 8889, index = 0),
-        ButtonIndex(make1 = 8893, index = 1),
-        ButtonIndex(make1 = 8897, index = 2),
-        ButtonIndex(make1 = 8909, index = 0),
-        ButtonIndex(make1 = 8913, index = 1),
-        ButtonIndex(make1 = 8917, index = 2),
-        ButtonIndex(make1 = 8921, index = 3),
-        ButtonIndex(make1 = 8949, index = 0),
-        ButtonIndex(make1 = 8953, index = 1),
-        ButtonIndex(make1 = 8957, index = 2),
-        ButtonIndex(make1 = 8961, index = 3),
-        ButtonIndex(make1 = 8965, index = 4))
+    ButtonIndex(make1 = 8893, index = 0),
+    ButtonIndex(make1 = 8874, index = 0),
+    ButtonIndex(make1 = 8878, index = 1),
+    ButtonIndex(make1 = 8889, index = 0),
+    ButtonIndex(make1 = 8893, index = 1),
+    ButtonIndex(make1 = 8897, index = 2),
+    ButtonIndex(make1 = 8909, index = 0),
+    ButtonIndex(make1 = 8913, index = 1),
+    ButtonIndex(make1 = 8917, index = 2),
+    ButtonIndex(make1 = 8921, index = 3),
+    ButtonIndex(make1 = 8949, index = 0),
+    ButtonIndex(make1 = 8953, index = 1),
+    ButtonIndex(make1 = 8957, index = 2),
+    ButtonIndex(make1 = 8961, index = 3),
+    ButtonIndex(make1 = 8965, index = 4)
+)
 
 /**
  * A mapping of every option's button to its [MakeItemOption].

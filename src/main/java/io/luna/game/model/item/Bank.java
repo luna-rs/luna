@@ -20,7 +20,7 @@ import java.util.OptionalInt;
 /**
  * An item container model representing a player's bank.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class Bank extends ItemContainer {
 
@@ -163,7 +163,7 @@ public final class Bank extends ItemContainer {
      * Deposits an item from the inventory.
      *
      * @param inventoryIndex The index of the item to deposit.
-     * @param amount The amount to deposit.
+     * @param amount         The amount to deposit.
      * @return {@code true} if successful.
      */
     public boolean deposit(int inventoryIndex, int amount) {
@@ -198,7 +198,7 @@ public final class Bank extends ItemContainer {
      * Withdraws an item from the bank.
      *
      * @param bankIndex The index of the item to withdraw.
-     * @param amount The amount to withdraw.
+     * @param amount    The amount to withdraw.
      * @return {@code true} if successful.
      */
     public boolean withdraw(int bankIndex, int amount) {

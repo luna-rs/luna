@@ -1,6 +1,6 @@
 package world.player.item.banking.depositBox
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 
 /**

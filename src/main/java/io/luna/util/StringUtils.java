@@ -66,10 +66,11 @@ public final class StringUtils {
         for (int i = 0; i < size * 2; i++) {
             int val = message[i / 2] >> (4 - 4 * (i % 2)) & 0xf;
             if (highNibble == -1) {
-                if (val < 13)
+                if (val < 13) {
                     decodeBuf[idx++] = FREQUENCY_ORDERED_CHARS[val];
-                else
+                } else {
                     highNibble = val;
+                }
             } else {
                 decodeBuf[idx++] = FREQUENCY_ORDERED_CHARS[((highNibble << 4) + val) - 195];
                 highNibble = -1;
@@ -79,8 +80,9 @@ public final class StringUtils {
     }
 
     public static void packText(String str, ByteMessage buf) {
-        if (str.length() > 80)
+        if (str.length() > 80) {
             str = str.substring(0, 80);
+        }
         str = str.toLowerCase();
 
         int carry = -1;
@@ -88,19 +90,22 @@ public final class StringUtils {
             char c = str.charAt(i);
             int index = 0;
             for (int j = 0; j < FREQUENCY_ORDERED_CHARS.length; j++) {
-                if (c != FREQUENCY_ORDERED_CHARS[j])
+                if (c != FREQUENCY_ORDERED_CHARS[j]) {
                     continue;
+                }
                 index = j;
                 break;
             }
 
-            if (index > 12)
+            if (index > 12) {
                 index += 195;
+            }
             if (carry == -1) {
-                if (index < 13)
+                if (index < 13) {
                     carry = index;
-                else
+                } else {
                     buf.put(index);
+                }
             } else if (index < 13) {
                 buf.put((carry << 4) + index);
                 carry = -1;
@@ -110,8 +115,9 @@ public final class StringUtils {
             }
         }
 
-        if (carry != -1)
+        if (carry != -1) {
             buf.put(carry << 4);
+        }
     }
 
     /**

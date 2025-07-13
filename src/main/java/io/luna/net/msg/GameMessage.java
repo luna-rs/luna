@@ -36,8 +36,8 @@ public final class GameMessage {
     /**
      * Creates a new {@link GameMessage}.
      *
-     * @param opcode The opcode.
-     * @param type The message type.
+     * @param opcode  The opcode.
+     * @param type    The message type.
      * @param payload The payload.
      */
     public GameMessage(int opcode, MessageType type, ByteMessage payload) {

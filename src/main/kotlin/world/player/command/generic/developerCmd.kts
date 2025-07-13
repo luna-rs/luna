@@ -1,7 +1,8 @@
 package world.player.command.generic
 
 import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.addNpc
+import api.predef.ext.addObject
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -60,13 +61,15 @@ cmd("delete", RIGHTS_DEV) {
         override fun onNameInput(player: Player?, value: String?) {
             plr.newDialogue().empty("Are you sure you wish to delete all records for '$value' ?")
                 .options("Yes",
-                         {
-                             world.persistenceService.delete(value)
-                                 .addListener({ plr.sendMessage("Done, deleted $value") },
-                                              game.executor); plr.interfaces.close()
-                         },
-                         "No",
-                         { plr.interfaces.close() }).open()
+                    {
+                        world.persistenceService.delete(value)
+                            .addListener(
+                                { plr.sendMessage("Done, deleted $value") },
+                                game.executor
+                            ); plr.interfaces.close()
+                    },
+                    "No",
+                    { plr.interfaces.close() }).open()
         }
     })
 }
@@ -84,11 +87,13 @@ cmd("npc", RIGHTS_DEV) {
  */
 cmd("object", RIGHTS_DEV) {
     val pos = plr.position
-    world.addObject(id = asInt(0),
-                    x = pos.x,
-                    y = pos.y,
-                    z = pos.z,
-                    plr = plr)
+    world.addObject(
+        id = asInt(0),
+        x = pos.x,
+        y = pos.y,
+        z = pos.z,
+        plr = plr
+    )
 }
 
 cmd("roll", RIGHTS_DEV) {

@@ -40,7 +40,7 @@ cmd("viewbank", RIGHTS_ADMIN) {
 cmd("moveto", RIGHTS_ADMIN) {
     val name = getInputFrom(0)
     val target = world.getPlayer(name.toLowerCase())
-    if(target.isPresent) {
+    if (target.isPresent) {
         plr.move(target.get().position)
     } else {
         plr.sendMessage("Player '$name' not found.")
@@ -121,22 +121,22 @@ cmd("down", RIGHTS_ADMIN) {
 
 fun showShutdownTimes(plr: Player) {
     plr.newDialogue().options(
-            "1 Minute", { game.scheduleSystemUpdate(100) },
-            "5 Minutes", { game.scheduleSystemUpdate(500) },
-            "10 Minutes", { game.scheduleSystemUpdate(800) },
-            "<x> Minutes", {
-                plr.interfaces.close()
-                plr.interfaces.open(object : AmountInputInterface() {
-                    override fun onAmountInput(player: Player, value: Int) {
-                        if (value < 1 || value > 60) {
-                            plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
-                            return
-                        }
-                        game.scheduleSystemUpdate(value * 100)
-                        plr.interfaces.close()
+        "1 Minute", { game.scheduleSystemUpdate(100) },
+        "5 Minutes", { game.scheduleSystemUpdate(500) },
+        "10 Minutes", { game.scheduleSystemUpdate(800) },
+        "<x> Minutes", {
+            plr.interfaces.close()
+            plr.interfaces.open(object : AmountInputInterface() {
+                override fun onAmountInput(player: Player, value: Int) {
+                    if (value < 1 || value > 60) {
+                        plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
+                        return
                     }
-                })
-            }).open()
+                    game.scheduleSystemUpdate(value * 100)
+                    plr.interfaces.close()
+                }
+            })
+        }).open()
 }
 
 /**

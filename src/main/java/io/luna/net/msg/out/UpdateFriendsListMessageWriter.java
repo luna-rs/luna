@@ -24,7 +24,7 @@ public final class UpdateFriendsListMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link UpdateFriendsListMessageWriter}.
      *
-     * @param name The hash of the name to update.
+     * @param name   The hash of the name to update.
      * @param online The online status to update with.
      */
     public UpdateFriendsListMessageWriter(long name, boolean online) {

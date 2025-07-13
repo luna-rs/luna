@@ -1,7 +1,6 @@
 package world.player.skill.crafting.battlestaffCrafting
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.crafting
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.Player
 import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BATTLESTAFF_ITEM
@@ -10,7 +9,7 @@ import world.player.skill.crafting.battlestaffCrafting.Battlestaff.Companion.BAT
  * An [InventoryAction] implementation that makes battlestaves.
  */
 class MakeBattlestaffActionItem(val plr: Player, val battlestaff: Battlestaff, amount: Int) :
-        InventoryAction(plr, true, 2, amount) {
+    InventoryAction(plr, true, 2, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {
@@ -18,6 +17,7 @@ class MakeBattlestaffActionItem(val plr: Player, val battlestaff: Battlestaff, a
                 plr.sendMessage("You need a Crafting level of ${battlestaff.level} to make this.")
                 false
             }
+
             else -> true
         }
 

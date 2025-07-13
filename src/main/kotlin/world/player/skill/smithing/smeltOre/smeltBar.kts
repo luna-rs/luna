@@ -1,6 +1,9 @@
 package world.player.skill.smithing.smeltOre
 
-import api.predef.*
+import api.predef.button
+import api.predef.item
+import api.predef.object2
+import api.predef.useItem
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -12,24 +15,42 @@ import world.player.skill.smithing.Smithing
  * An enum representing all types of ores that can be used with a furnace.
  */
 enum class SmeltOre(val barType: BarType, val useItem: Item) {
-    TIN(barType = BarType.BRONZE,
-        useItem = item("Tin ore")),
-    COPPER(barType = BarType.BRONZE,
-           useItem = item("Copper ore")),
-    IRON(barType = BarType.IRON,
-         useItem = item("Iron ore")),
-    COAL(barType = BarType.STEEL,
-         useItem = item("Coal")),
-    SILVER(barType = BarType.SILVER,
-           useItem = item("Silver ore")),
-    GOLD(barType = BarType.GOLD,
-         useItem = item("Gold ore")),
-    MITHRIL(barType = BarType.MITHRIL,
-            useItem = item("Mithril ore")),
-    ADAMANTITE(barType = BarType.ADAMANT,
-               useItem = item("Adamantite ore")),
-    RUNITE(barType = BarType.RUNE,
-           useItem = item("Runite ore"));
+    TIN(
+        barType = BarType.BRONZE,
+        useItem = item("Tin ore")
+    ),
+    COPPER(
+        barType = BarType.BRONZE,
+        useItem = item("Copper ore")
+    ),
+    IRON(
+        barType = BarType.IRON,
+        useItem = item("Iron ore")
+    ),
+    COAL(
+        barType = BarType.STEEL,
+        useItem = item("Coal")
+    ),
+    SILVER(
+        barType = BarType.SILVER,
+        useItem = item("Silver ore")
+    ),
+    GOLD(
+        barType = BarType.GOLD,
+        useItem = item("Gold ore")
+    ),
+    MITHRIL(
+        barType = BarType.MITHRIL,
+        useItem = item("Mithril ore")
+    ),
+    ADAMANTITE(
+        barType = BarType.ADAMANT,
+        useItem = item("Adamantite ore")
+    ),
+    RUNITE(
+        barType = BarType.RUNE,
+        useItem = item("Runite ore")
+    );
 
     companion object {
         val VALUES = ImmutableList.copyOf(values())

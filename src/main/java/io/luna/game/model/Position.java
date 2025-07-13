@@ -140,7 +140,7 @@ public final class Position implements Location {
     /**
      * Determines if this position is within the given distance of another position.
      *
-     * @param other The position to compare.
+     * @param other    The position to compare.
      * @param distance The distance from {@code other} to compare. This parameter must be non-negative.
      * @return {@code true} if {@code other} is within {@code distance}, and on the same plane.
      * @throws IllegalArgumentException If distance < 0.
@@ -217,7 +217,7 @@ public final class Position implements Location {
      * Returns a new position translated by the specified amount. The z coordinate will remain
      * unchanged.
      *
-     * @param amount The amount.
+     * @param amount    The amount.
      * @param direction The direction.
      * @return The translated position.
      */

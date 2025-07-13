@@ -10,7 +10,7 @@ import java.util.Queue;
  * A model representing a queue of {@link DialogueInterface}s that will be shown in sequential order. New
  * instances of this class should be created through the {@link DialogueQueueBuilder}.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class DialogueQueue {
 
@@ -27,7 +27,7 @@ public final class DialogueQueue {
     /**
      * Creates a new {@link DialogueQueue}.
      *
-     * @param player The player.
+     * @param player    The player.
      * @param dialogues The queue of dialogues.
      */
     DialogueQueue(Player player, Queue<DialogueInterface> dialogues) {

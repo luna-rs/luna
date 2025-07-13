@@ -1,11 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.ItemClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemFifthClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemFirstClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemFourthClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemSecondClickEvent;
-import io.luna.game.event.impl.ItemClickEvent.ItemThirdClickEvent;
+import io.luna.game.event.impl.ItemClickEvent.*;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -74,7 +70,7 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
     }
 
     @Override
-    public void handle(Player player, ItemClickEvent event){
+    public void handle(Player player, ItemClickEvent event) {
         player.getInterfaces().close();
     }
 }

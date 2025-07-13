@@ -1,6 +1,7 @@
 package world.obj.restorePrayer
 
-import api.predef.*
+import api.predef.object1
+import api.predef.prayer
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 

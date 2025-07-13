@@ -13,7 +13,7 @@ import static java.util.Objects.requireNonNull;
  * the client.
  *
  * @param <E> The Enum type representing the state of this decoder.
- * @author lare96 
+ * @author lare96
  */
 public abstract class ProgressiveMessageDecoder<E extends Enum<E>> extends ByteToMessageDecoder {
 
@@ -51,8 +51,8 @@ public abstract class ProgressiveMessageDecoder<E extends Enum<E>> extends ByteT
     /**
      * Decodes a message. Will be called until there are no more bytes left to read.
      *
-     * @param ctx The channel handler context.
-     * @param in The buffer to read from.
+     * @param ctx   The channel handler context.
+     * @param in    The buffer to read from.
      * @param state The current state.
      * @return The decoded message. {@code null} if no message was decoded.
      * @throws Exception If any errors occur while decoding messages.

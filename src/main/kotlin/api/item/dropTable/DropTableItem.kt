@@ -1,6 +1,5 @@
 package api.item.dropTable
 
-import api.predef.*
 import com.google.common.base.MoreObjects
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
@@ -22,7 +21,7 @@ class DropTableItem(val id: Int, val amount: IntRange, val chance: Rational) {
          * A priority lookup for known item name → ID mappings to prevent ambiguity.
          */
         private val PRIORITY = mapOf(
-                "Coins" to 995
+            "Coins" to 995
         )
 
         /**

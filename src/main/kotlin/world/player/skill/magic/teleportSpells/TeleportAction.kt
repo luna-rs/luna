@@ -1,7 +1,7 @@
 package world.player.skill.magic.teleportSpells
 
 import api.attr.Attr
-import api.predef.*
+import api.predef.magic
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
@@ -11,12 +11,14 @@ import world.player.skill.magic.SpellRequirement
 /**
  * A [LockedAction] implementation that teleports a player to another destination.
  */
-open class TeleportAction(plr: Player,
-                          val level: Int = 1,
-                          val xp: Double = 0.0,
-                          val destination: Position,
-                          val style: TeleportStyle,
-                          val requirements: List<SpellRequirement> = emptyList()) : LockedAction(plr) {
+open class TeleportAction(
+    plr: Player,
+    val level: Int = 1,
+    val xp: Double = 0.0,
+    val destination: Position,
+    val style: TeleportStyle,
+    val requirements: List<SpellRequirement> = emptyList()
+) : LockedAction(plr) {
 
     companion object {
 

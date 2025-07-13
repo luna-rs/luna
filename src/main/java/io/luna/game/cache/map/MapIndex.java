@@ -34,10 +34,10 @@ public final class MapIndex {
     /**
      * Creates a new {@link MapIndex}.
      *
-     * @param region The map region this index identifies.
-     * @param tileFileId The map tile file id.
+     * @param region       The map region this index identifies.
+     * @param tileFileId   The map tile file id.
      * @param objectFileId The map object file id.
-     * @param priority If the region detailed by this index is a priority region.
+     * @param priority     If the region detailed by this index is a priority region.
      */
     public MapIndex(Region region, int tileFileId, int objectFileId, boolean priority) {
         this.region = region;
@@ -48,8 +48,12 @@ public final class MapIndex {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         MapIndex mapIndex = (MapIndex) o;
         return Objects.equal(region, mapIndex.region);
     }

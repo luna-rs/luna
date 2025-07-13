@@ -52,7 +52,7 @@ public final class NpcDefinitionDecoder extends CacheDecoder<NpcDefinition> {
     /**
      * Decodes a single {@link NpcDefinition}.
      *
-     * @param id The npc ID.
+     * @param id   The npc ID.
      * @param data The data.
      * @return The definition.
      */

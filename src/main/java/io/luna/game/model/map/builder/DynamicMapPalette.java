@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class DynamicMapPalette {
 // todo finish, document
+
     /**
      * Retrieves all {@link Chunk} locations within {@code regionId}.
      *
@@ -46,8 +47,8 @@ public final class DynamicMapPalette {
      * Retrieves all {@link Chunk} locations within {@code radiusX} and {@code radiusY} surrounding {@code baseChunk}.
      *
      * @param baseChunk The base chunk.
-     * @param radiusX The {@code x} radius.
-     * @param radiusY The {@code y} radius.
+     * @param radiusX   The {@code x} radius.
+     * @param radiusY   The {@code y} radius.
      * @return All chunks within the radius.
      */
     public static Set<Chunk> getSurroundingChunks(Chunk baseChunk, int radiusX, int radiusY) {
@@ -100,8 +101,8 @@ public final class DynamicMapPalette {
      * Fills this palette at height level {@code z} with all chunks located within {@code region}.
      *
      * @param startXY Where on the palette to place the region (min 0, max 5).
-     * @param z The height level on the palette to place the region.
-     * @param region The region to place.
+     * @param z       The height level on the palette to place the region.
+     * @param region  The region to place.
      * @return This palette.
      */
     public DynamicMapPalette setRegion(int startXY, int z, Region region, int regionZ) {
@@ -123,12 +124,12 @@ public final class DynamicMapPalette {
     /**
      * Fills this palette at height level {@code z} with all chunks surrounding {@code baseChunk} with {@code radius}.
      *
-     * @param startX The {@code x} placement coordinate on the palette.
-     * @param startY The {@code y} placement coordinate on the palette.
-     * @param z The height level on the palette to place the chunks.
+     * @param startX    The {@code x} placement coordinate on the palette.
+     * @param startY    The {@code y} placement coordinate on the palette.
+     * @param z         The height level on the palette to place the chunks.
      * @param baseChunk The base chunk.
-     * @param radiusX The {@code x} radius of the base chunk.
-     * @param radiusY The {@code y} radius of the base chunk.
+     * @param radiusX   The {@code x} radius of the base chunk.
+     * @param radiusY   The {@code y} radius of the base chunk.
      * @return This palette.
      */
     public DynamicMapPalette setChunkRadius(int startX, int startY, int z, Chunk baseChunk, int chunkZ, int radiusX, int radiusY) {
@@ -149,6 +150,7 @@ public final class DynamicMapPalette {
         }
         return this;
     }
+
     /**
      * Fills this builder's palette with {@code regionId} at height level {@code 0}.
      *
@@ -178,19 +180,19 @@ public final class DynamicMapPalette {
      * {@code 0}.
      *
      * @param baseChunk The base chunk.
-     * @param radius The radius.
+     * @param radius    The radius.
      * @return The next builder.
      */
     public DynamicMapPalette fillWithChunks(Chunk baseChunk, int chunkZ, int radius) {
         checkArgument(radius >= 0 && radius < 6, "radius must be >= 0 && < 6");
         DynamicMapPalette palette = new DynamicMapPalette();
-        palette.setChunkRadius(6 - radius, 6 - radius, 0, baseChunk,chunkZ, radius, radius);
+        palette.setChunkRadius(6 - radius, 6 - radius, 0, baseChunk, chunkZ, radius, radius);
         return this;
     }
 
     public DynamicMapPalette fillEmpty(DynamicMapChunk chunk, int plane) {
         forEach(((x, y, z) -> {
-            if(z == plane && palette[x][y][z] == null) {
+            if (z == plane && palette[x][y][z] == null) {
                 palette[x][y][z] = chunk;
             }
         }));

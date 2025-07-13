@@ -110,20 +110,24 @@ object Magic {
         val plr = action.mob
         return when (action.executions) {
             0 -> {
-                val sound = LocalSound(ctx,
-                                       Sounds.TELEPORT,
-                                       plr.position,
-                                       ChunkUpdatableView.globalView(),
-                                       Position.VIEWING_DISTANCE / 2,
-                                       100)
+                val sound = LocalSound(
+                    ctx,
+                    Sounds.TELEPORT,
+                    plr.position,
+                    ChunkUpdatableView.globalView(),
+                    Position.VIEWING_DISTANCE / 2,
+                    100
+                )
                 sound.display()
                 true
             }
+
             1 -> {
                 plr.animation(Animation(714))
                 plr.graphic(Graphic(111, 92))
                 true
             }
+
             2 -> true
             3 -> true
             4 -> {
@@ -131,6 +135,7 @@ object Magic {
                 plr.animation(Animation(715))
                 false
             }
+
             else -> false
         }
     }

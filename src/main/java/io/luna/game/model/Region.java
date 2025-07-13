@@ -87,7 +87,7 @@ public final class Region implements Location {
         }
         return false;
     }
-    
+
     /**
      * Checks if {@code region} is within distance of {@code distance} (in regions).
      */
@@ -96,7 +96,7 @@ public final class Region implements Location {
         int deltaY = Math.abs(region.getY() - y);
         return deltaX <= distance && deltaY <= distance;
     }
-    
+
     /**
      * Returns the base {@link Position} in this region.
      *

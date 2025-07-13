@@ -14,12 +14,7 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
+import java.util.*;
 
 /**
  * A {@link CacheDecoder} implementation that loads item definitions from the cache.
@@ -51,8 +46,8 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
         /**
          * Creates a new {@link ItemDefinitionChild}.
          *
-         * @param id The item identifier.
-         * @param weight The weight of the item.
+         * @param id        The item identifier.
+         * @param weight    The weight of the item.
          * @param tradeable If the item is tradeable or not.
          */
         private ItemDefinitionChild(int id, double weight, boolean tradeable) {
@@ -154,7 +149,7 @@ public final class ItemDefinitionDecoder extends CacheDecoder<ItemDefinition> {
     /**
      * Decodes a single {@link ItemDefinition}.
      *
-     * @param id The item ID.
+     * @param id   The item ID.
      * @param data The data.
      * @return The definition.
      */

@@ -17,7 +17,7 @@ public final class PlayerTimeoutMessageReader extends GameMessageReader<NullEven
     public NullEvent decode(Player player, GameMessage msg) {
         if (!player.getTimeout().isRunning()) {
             player.getTimeout().start();
-        } else if(player.getTimeout().elapsed().toMinutes() >= 5) {
+        } else if (player.getTimeout().elapsed().toMinutes() >= 5) {
             player.logout();
         }
         return NullEvent.INSTANCE;

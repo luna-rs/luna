@@ -32,8 +32,8 @@ public final class WidgetItemModelMessageWriter extends GameMessageWriter {
      * Creates a new {@link WidgetItemModelMessageWriter}.
      *
      * @param widgetId The widget identifier.
-     * @param scale The item's scale.
-     * @param itemId The item.
+     * @param scale    The item's scale.
+     * @param itemId   The item.
      */
     public WidgetItemModelMessageWriter(int widgetId, int scale, int itemId) {
         this.widgetId = widgetId;

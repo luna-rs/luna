@@ -37,9 +37,9 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
      * Creates a new {@link AddLocalSoundMessageWriter}.
      *
      * @param soundId The sound ID.
-     * @param radius The sound radius.
-     * @param volume The sound volume.
-     * @param offset The offset.
+     * @param radius  The sound radius.
+     * @param volume  The sound volume.
+     * @param offset  The offset.
      */
     public AddLocalSoundMessageWriter(int soundId, int radius, int volume, int offset) {
         this.soundId = soundId;

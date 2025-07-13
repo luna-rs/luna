@@ -20,7 +20,7 @@ import static io.luna.util.OptionalUtils.matches;
 /**
  * An item container model representing a player's equipment.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class Equipment extends ItemContainer {
 
@@ -75,7 +75,7 @@ public final class Equipment extends ItemContainer {
         /**
          * Posts an equipment change event.
          *
-         * @param index The index of the change.
+         * @param index   The index of the change.
          * @param oldItem The old item.
          * @param newItem The new item.
          */
@@ -389,7 +389,7 @@ public final class Equipment extends ItemContainer {
      * Equips an item from the inventory.
      *
      * @param inventoryIndex The inventory index of the item.
-     * Returns {@code true} if successful.
+     *                       Returns {@code true} if successful.
      */
     public boolean equip(int inventoryIndex) {
 

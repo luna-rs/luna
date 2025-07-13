@@ -3,7 +3,6 @@ package api.item.dropTable.dsl
 import api.item.dropTable.DropTable
 import api.item.dropTable.DropTableHandler
 import api.item.dropTable.DropTableItem
-import api.item.dropTable.DropTableItemList
 import api.item.dropTable.SimpleDropTable
 import api.predef.*
 import io.luna.util.Rational

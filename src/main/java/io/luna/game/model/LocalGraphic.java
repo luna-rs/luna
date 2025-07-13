@@ -31,12 +31,12 @@ public final class LocalGraphic extends LocalEntity {
     /**
      * Creates a new {@link LocalGraphic}.
      *
-     * @param context The context instance.
-     * @param id The id of the graphic.
-     * @param height The graphic height.
-     * @param delay The graphic delay.
+     * @param context  The context instance.
+     * @param id       The id of the graphic.
+     * @param height   The graphic height.
+     * @param delay    The graphic delay.
      * @param position The position.
-     * @param view Who this graphic is viewable for.
+     * @param view     Who this graphic is viewable for.
      */
     public LocalGraphic(LunaContext context, int id, int height, int delay, Position position, ChunkUpdatableView view) {
         super(context, id, EntityType.GRAPHIC, position, view);

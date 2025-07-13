@@ -1,29 +1,13 @@
 package io.luna.game.model.chunk;
 
-import io.luna.game.model.Direction;
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityState;
-import io.luna.game.model.EntityType;
-import io.luna.game.model.LocalEntity;
-import io.luna.game.model.Position;
-import io.luna.game.model.StationaryEntity;
-import io.luna.game.model.World;
+import io.luna.game.model.*;
 import io.luna.game.model.collision.CollisionMatrix;
 import io.luna.game.model.collision.CollisionUpdate;
 import io.luna.game.model.collision.CollisionUpdateType;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -110,8 +94,8 @@ public final class ChunkRepository implements Iterable<Entity> {
      * Determines if a tile beside position {@code next}, is traversable for entity with {@code type}, when coming from
      * {@code direction}.
      *
-     * @param next The position.
-     * @param type The entity type.
+     * @param next      The position.
+     * @param type      The entity type.
      * @param direction The direction.
      * @return {@code true} if traversable.
      */
@@ -125,7 +109,7 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * Updates the collision map with {@code entity}.
      *
-     * @param entity The entity to update with.
+     * @param entity  The entity to update with.
      * @param removal If the entity is being removed.
      */
     public void updateCollisionMap(Entity entity, boolean removal) {
@@ -198,7 +182,7 @@ public final class ChunkRepository implements Iterable<Entity> {
             if (request.isPersistent()) {
                 persistentUpdates.put((StationaryEntity) request.getUpdatable(), request);
             }
-            if(request.getUpdatable() instanceof LocalEntity) {
+            if (request.getUpdatable() instanceof LocalEntity) {
                 // End life-cycle for local entities.
                 LocalEntity entity = (LocalEntity) request.getUpdatable();
                 entity.setState(EntityState.INACTIVE);
@@ -229,7 +213,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * the argued type or a {@link ClassCastException} will be thrown.
      *
      * @param type The type of entities to get.
-     * @param <E> The type to cast to.
+     * @param <E>  The type to cast to.
      * @return A set of entities cast to {@code <E>}. It must match the correct {@code type}.
      */
     public <E extends Entity> Set<E> getAll(EntityType type) {
@@ -240,7 +224,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      * Returns a stream over {@code type} entities in this chunk.
      *
      * @param type The entity type.
-     * @param <E> The type.
+     * @param <E>  The type.
      * @return The stream.
      */
     public <E extends Entity> Stream<E> stream(EntityType type) {

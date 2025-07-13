@@ -1,8 +1,8 @@
 package world.player.skill.magic.teleOther
 
-import api.predef.*
-import api.predef.ext.*
-import com.google.common.base.Stopwatch
+import api.predef.button
+import api.predef.ext.get
+import api.predef.on
 import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.varp.PersistentVarp

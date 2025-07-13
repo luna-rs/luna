@@ -7,7 +7,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 /**
  * A {@link DialogueInterface} implementation that opens a dialogue which displays a series of options.
  *
- * @author lare96 
+ * @author lare96
  */
 public class OptionDialogueInterface extends DialogueInterface {
 

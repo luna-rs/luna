@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * A {@link GameMessageReader} that intercepts data for when "Click to continue" is clicked on a dialogue.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ContinueDialogueMessageReader extends GameMessageReader<NullEvent> {
 

@@ -103,7 +103,7 @@ npc1(804) {
     plr.newDialogue()
         .npc(targetNpc.id, "Would you like me to tan some hides?")
         .options("Yes", { open(it) },
-                 "No", { it.interfaces.close() })
+            "No", { it.interfaces.close() })
         .open()
 }
 

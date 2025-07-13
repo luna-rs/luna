@@ -40,8 +40,8 @@ public final class ExactMovement {
     /**
      * Creates a new {@link ExactMovement} for movement across the x-axis.
      *
-     * @param player The player.
-     * @param amount The amount to move.
+     * @param player        The player.
+     * @param amount        The amount to move.
      * @param durationTicks The duration.
      * @return The exact movement instance.
      */
@@ -52,8 +52,8 @@ public final class ExactMovement {
     /**
      * Creates a new {@link ExactMovement} for movement across the y-axis.
      *
-     * @param player The player.
-     * @param amount The amount to move.
+     * @param player        The player.
+     * @param amount        The amount to move.
      * @param durationTicks The duration.
      * @return The exact movement instance.
      */
@@ -64,9 +64,9 @@ public final class ExactMovement {
     /**
      * Creates a new {@link ExactMovement} for movement across both the x and y axis.
      *
-     * @param player The player.
-     * @param amountX The x amount to move.
-     * @param amountY The y amount to move.
+     * @param player        The player.
+     * @param amountX       The x amount to move.
+     * @param amountY       The y amount to move.
      * @param durationTicks The duration.
      * @return The exact movement instance.
      */
@@ -81,7 +81,7 @@ public final class ExactMovement {
     /**
      * Creates a new {@link ExactMovement} for movement across both the x and y axis.
      *
-     * @param player The player.
+     * @param player      The player.
      * @param destination The destination.
      * @return The exact movement instance.
      */
@@ -97,10 +97,10 @@ public final class ExactMovement {
      * Creates a new {@link ExactMovement}.
      *
      * @param startPosition The starting position.
-     * @param endPosition The destination position.
+     * @param endPosition   The destination position.
      * @param durationStart The start duration.
-     * @param durationEnd The movement duration.
-     * @param direction The face direction.
+     * @param durationEnd   The movement duration.
+     * @param direction     The face direction.
      */
     public ExactMovement(Position startPosition, Position endPosition, int durationStart, int durationEnd, Direction direction) {
         this.startPosition = startPosition;
@@ -112,8 +112,12 @@ public final class ExactMovement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ExactMovement)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ExactMovement)) {
+            return false;
+        }
         ExactMovement movement = (ExactMovement) o;
         return durationStart == movement.durationStart && durationEnd == movement.durationEnd && Objects.equal(startPosition, movement.startPosition) && Objects.equal(endPosition, movement.endPosition) && direction == movement.direction;
     }

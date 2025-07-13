@@ -4,14 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.luna.game.event.impl.WidgetItemClickEvent;
-import io.luna.net.msg.out.InventoryOverlayMessageWriter;
-import io.luna.net.msg.out.WidgetAnimationMessageWriter;
-import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
-import io.luna.net.msg.out.WidgetItemModelMessageWriter;
-import io.luna.net.msg.out.WidgetItemsMessageWriter;
-import io.luna.net.msg.out.WidgetMobModelMessageWriter;
-import io.luna.net.msg.out.WidgetTextMessageWriter;
-import io.luna.net.msg.out.WidgetVisibilityMessageWriter;
+import io.luna.net.msg.out.*;
 import world.player.QuestJournalInterface;
 
 import static java.util.Objects.requireNonNull;
@@ -174,17 +167,17 @@ public final class WidgetDefinition implements Definition {
     /**
      * Creates a new {@link WidgetDefinition}.
      *
-     * @param id The widget id.
-     * @param parentId The parent widget id.
-     * @param type The widget type.
-     * @param cs1opcodes The CS1 opcodes.
-     * @param children The widget children.
-     * @param inventory If this widget is an inventory.
-     * @param options The widget action click options.
-     * @param disabledText The disabled text on the widget
-     * @param enabledText The enabled text on the widget.
+     * @param id                The widget id.
+     * @param parentId          The parent widget id.
+     * @param type              The widget type.
+     * @param cs1opcodes        The CS1 opcodes.
+     * @param children          The widget children.
+     * @param inventory         If this widget is an inventory.
+     * @param options           The widget action click options.
+     * @param disabledText      The disabled text on the widget
+     * @param enabledText       The enabled text on the widget.
      * @param disabledAnimation The disabled animation on the widget.
-     * @param enabledAnimation The enabled animation on the widget.
+     * @param enabledAnimation  The enabled animation on the widget.
      */
     public WidgetDefinition(int id, int parentId, WidgetType type, int[][] cs1opcodes,
                             Integer[] children, boolean inventory, String[] options, String disabledText,

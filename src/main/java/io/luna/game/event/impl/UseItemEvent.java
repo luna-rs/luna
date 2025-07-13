@@ -38,12 +38,12 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link ItemOnItemEvent}.
          *
-         * @param player The player.
-         * @param usedId the used id
-         * @param targetItemId The target item identifier.
-         * @param usedIndex the used index
-         * @param targetItemIndex The target item index.
-         * @param usedInterfaceId the used interface id
+         * @param player              The player.
+         * @param usedId              the used id
+         * @param targetItemId        The target item identifier.
+         * @param usedIndex           the used index
+         * @param targetItemIndex     The target item index.
+         * @param usedInterfaceId     the used interface id
          * @param targetItemInterface The target interface identifier.
          */
         public ItemOnItemEvent(Player player, int usedId, int targetItemId, int usedIndex, int targetItemIndex,
@@ -97,11 +97,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link ItemOnNpcEvent}.
          *
-         * @param player The player.
-         * @param usedId The used item identifier.
-         * @param usedIndex The used item index.
+         * @param player          The player.
+         * @param usedId          The used item identifier.
+         * @param usedIndex       The used item index.
          * @param usedInterfaceId The used interface identifier.
-         * @param targetNpc The target npc.
+         * @param targetNpc       The target npc.
          */
         public ItemOnNpcEvent(Player player, int usedId, int usedIndex, int usedInterfaceId, Npc targetNpc) {
             super(player, usedId, usedIndex, usedInterfaceId);
@@ -136,11 +136,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link ItemOnObjectEvent}.
          *
-         * @param player The player.
-         * @param itemId The item identifier.
-         * @param itemIndex The item index.
+         * @param player          The player.
+         * @param itemId          The item identifier.
+         * @param itemIndex       The item index.
          * @param itemInterfaceId The item interface identifier.
-         * @param gameObject The object.
+         * @param gameObject      The object.
          */
         public ItemOnObjectEvent(Player player, int itemId, int itemIndex, int itemInterfaceId, GameObject gameObject) {
             super(player, itemId, itemIndex, itemInterfaceId);
@@ -182,11 +182,11 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link ItemOnPlayerEvent}.
          *
-         * @param player The player.
-         * @param usedId The used item identifier.
-         * @param usedIndex The used item index.
+         * @param player          The player.
+         * @param usedId          The used item identifier.
+         * @param usedIndex       The used item index.
          * @param usedInterfaceId The used interface identifier.
-         * @param targetPlr The target player.
+         * @param targetPlr       The target player.
          */
         public ItemOnPlayerEvent(Player player, int usedId, int usedIndex, int usedInterfaceId, Player targetPlr) {
             super(player, usedId, usedIndex, usedInterfaceId);
@@ -221,9 +221,9 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
         /**
          * Creates a new {@link ItemOnGroundItemEvent}.
          *
-         * @param player the player
-         * @param usedItemId The used item identifier.
-         * @param usedItemIndex The used item index.
+         * @param player            the player
+         * @param usedItemId        The used item identifier.
+         * @param usedItemIndex     The used item index.
          * @param usedItemInterface The used item interface identifier.
          */
         public ItemOnGroundItemEvent(Player player, int usedItemId, int usedItemIndex, int usedItemInterface, GroundItem groundItem) {
@@ -262,9 +262,9 @@ public class UseItemEvent extends PlayerEvent implements ControllableEvent {
     /**
      * Creates a new {@link UseItemEvent}.
      *
-     * @param player the player
-     * @param usedItemId The used item identifier.
-     * @param usedItemIndex The used item index.
+     * @param player            the player
+     * @param usedItemId        The used item identifier.
+     * @param usedItemIndex     The used item index.
      * @param usedItemInterface The used item interface identifier.
      */
     private UseItemEvent(Player player, int usedItemId, int usedItemIndex, int usedItemInterface) {

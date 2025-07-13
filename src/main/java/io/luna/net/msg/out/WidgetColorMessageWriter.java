@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * A {@link GameMessageWriter} implementation that changes the color of a widget.
@@ -28,7 +28,7 @@ public final class WidgetColorMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetColorMessageWriter}.
      *
-     * @param id The identifier for the text to change the color of.
+     * @param id    The identifier for the text to change the color of.
      * @param color The new color to change it to.
      */
     public WidgetColorMessageWriter(int id, Color color) {

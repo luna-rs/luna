@@ -1,11 +1,17 @@
 package world.player.skill.firemaking
 
-import api.predef.*
-import api.predef.ext.*
-import io.luna.game.model.*
-import io.luna.game.model.mob.*
-import io.luna.game.model.`object`.*
-import world.player.*
+import api.predef.ext.addItem
+import api.predef.ext.addObject
+import api.predef.ext.removeObject
+import api.predef.ext.scheduleOnce
+import api.predef.firemaking
+import api.predef.itemName
+import api.predef.rand
+import io.luna.game.model.Direction
+import io.luna.game.model.EntityType
+import io.luna.game.model.mob.Player
+import io.luna.game.model.`object`.ObjectType
+import world.player.Sounds
 
 /**
  * A [LightAction] implementation that enables lighting logs to create fires.
@@ -16,7 +22,8 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     /**
      * Directions in prioritized order to try to walk after lighting a log
      */
-    private val WALK_DIRECTIONS : List<Direction> = listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
+    private val WALK_DIRECTIONS: List<Direction> =
+        listOf(Direction.WEST, Direction.EAST, Direction.SOUTH, Direction.NORTH)
 
     override fun canLight(): Boolean {
 

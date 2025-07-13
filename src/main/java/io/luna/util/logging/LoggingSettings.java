@@ -180,7 +180,7 @@ public final class LoggingSettings {
      * @return The unmodifiable set of active file logs. Determines what will be logged to text files.
      */
     public Set<FileOutputType> activeFileLogs() {
-        if(activeFileLogs == null || activeFileLogs.isEmpty()) {
+        if (activeFileLogs == null || activeFileLogs.isEmpty()) {
             return Collections.unmodifiableSet(EnumSet.allOf(FileOutputType.class));
         }
         return Collections.unmodifiableSet(activeFileLogs);

@@ -126,7 +126,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
     /**
      * Sets the {@code RESPONSE_KEY} attribute to the argued response.
      *
-     * @param ctx The context containing the channel.
+     * @param ctx      The context containing the channel.
      * @param response The login response to set.
      */
     private void response(ChannelHandlerContext ctx, LoginResponse response) {

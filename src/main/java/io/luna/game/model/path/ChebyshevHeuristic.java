@@ -9,11 +9,11 @@ import io.luna.game.model.Position;
  */
 final class ChebyshevHeuristic extends Heuristic {
 
-	@Override
-	public int estimate(Position current, Position goal) {
-		int dx = Math.abs(current.getX() - goal.getX());
-		int dy = Math.abs(current.getX() - goal.getY());
-		return Math.max(dx, dy);
-	}
+    @Override
+    public int estimate(Position current, Position goal) {
+        int dx = Math.abs(current.getX() - goal.getX());
+        int dy = Math.abs(current.getX() - goal.getY());
+        return Math.max(dx, dy);
+    }
 
 }

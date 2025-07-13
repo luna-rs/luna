@@ -3,11 +3,7 @@ package io.luna.util;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Consumer;
-import java.util.function.IntPredicate;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
-import java.util.function.ToIntFunction;
+import java.util.function.*;
 
 /**
  * A static-utility class that contains functions for the Optional API. These functions are meant to be
@@ -21,19 +17,19 @@ public final class OptionalUtils {
      * Maps an {@link Optional} to an {@link OptionalInt}.
      *
      * @param optional The optional to map.
-     * @param mapper The mapper function.
-     * @param <T> The optional type.
+     * @param mapper   The mapper function.
+     * @param <T>      The optional type.
      * @return The {@link OptionalInt}.
      */
     public static <T> OptionalInt mapToInt(Optional<T> optional, ToIntFunction<T> mapper) {
         return optional.map(value -> OptionalInt.of(mapper.applyAsInt(value)))
-                       .orElseGet(OptionalInt::empty);
+                .orElseGet(OptionalInt::empty);
     }
 
     /**
      * Filters an {@link OptionalInt}.
      *
-     * @param optional The optional to filter.
+     * @param optional  The optional to filter.
      * @param predicate The predicate to filter with.
      * @return The optional if predicate passes, otherwise an empty optional.
      */
@@ -51,8 +47,8 @@ public final class OptionalUtils {
      * Determines if the optional's value is equal to {@code value}.
      *
      * @param optional The optional.
-     * @param value The value to compare.
-     * @param <T> The value type.
+     * @param value    The value to compare.
+     * @param <T>      The value type.
      * @return {@code true} if the two values are equal.
      */
     public static <T> boolean matches(Optional<T> optional, Object value) {
@@ -63,8 +59,8 @@ public final class OptionalUtils {
      * Determines if the optional's value is equal to the supplied {@code value}.
      *
      * @param optional The optional.
-     * @param value The value supplier.
-     * @param <T> The value type.
+     * @param value    The value supplier.
+     * @param <T>      The value type.
      * @return {@code true} if the two values are equal.
      */
     public static <T> boolean matches(Optional<T> optional, Supplier<T> value) {
@@ -80,7 +76,7 @@ public final class OptionalUtils {
      * Determines if the optional's value is equal to the supplied {@code value}.
      *
      * @param optional The optional.
-     * @param value The value supplier.
+     * @param value    The value supplier.
      * @return {@code true} if the two values are equal.
      */
     public static boolean matches(OptionalInt optional, IntSupplier value) {
@@ -91,7 +87,7 @@ public final class OptionalUtils {
      * Determines if the optional's value is equal to {@code value}.
      *
      * @param optional The optional.
-     * @param value The value to compare.
+     * @param value    The value to compare.
      * @return {@code true} if the two values are equal.
      */
     public static boolean matches(OptionalInt optional, int value) {
@@ -101,7 +97,7 @@ public final class OptionalUtils {
     /**
      * Determines if the optional's value passes {@code predicate}.
      *
-     * @param optional The optional.
+     * @param optional  The optional.
      * @param predicate The predicate to test against.
      * @return {@code true} if the predicate passes.
      */
@@ -114,7 +110,7 @@ public final class OptionalUtils {
      *
      * @param optional The optional.
      * @param consumer The consumer.
-     * @param <T> The value type.
+     * @param <T>      The value type.
      * @return {@code true} if the consumer was applied.
      */
     public static <T> boolean ifPresent(Optional<T> optional, Consumer<T> consumer) {

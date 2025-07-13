@@ -9,7 +9,7 @@ import java.util.OptionalInt;
 /**
  * An {@link InputInterface} implementation that opens an "Enter name" interface.
  *
- * @author lare96 
+ * @author lare96
  */
 public abstract class NameInputInterface extends InputInterface {
 
@@ -27,7 +27,7 @@ public abstract class NameInputInterface extends InputInterface {
      * A function invoked when the Player has entered a name.
      *
      * @param player The player.
-     * @param value The string entered.
+     * @param value  The string entered.
      */
     public abstract void onNameInput(Player player, String value);
 }

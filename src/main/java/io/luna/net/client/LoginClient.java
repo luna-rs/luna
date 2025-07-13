@@ -3,18 +3,18 @@ package io.luna.net.client;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.GameSettings.PasswordStrength;
+import io.luna.game.LoginService;
+import io.luna.game.LoginService.LoginRequest;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.LoginService;
-import io.luna.game.LoginService.LoginRequest;
 import io.luna.net.codec.game.GameMessageDecoder;
 import io.luna.net.codec.game.GameMessageEncoder;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.msg.login.LoginRequestMessage;
 import io.luna.net.msg.login.LoginResponse;
 import io.luna.net.msg.login.LoginResponseMessage;
-import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import org.mindrot.jbcrypt.BCrypt;
@@ -22,7 +22,7 @@ import org.mindrot.jbcrypt.BCrypt;
 /**
  * A {@link Client} implementation model representing login protocol I/O communications.
  *
- * @author lare96 
+ * @author lare96
  */
 public class LoginClient extends Client<LoginRequestMessage> {
 
@@ -49,7 +49,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
     /**
      * Creates a new {@link Client}.
      *
-     * @param channel The client's channel.
+     * @param channel           The client's channel.
      * @param messageRepository The message repository.
      */
     public LoginClient(Channel channel, LunaContext context, GameMessageRepository messageRepository) {
@@ -89,7 +89,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
     /**
      * Determines what the login response should be once the player's data is loaded.
      *
-     * @param data The loaded data.
+     * @param data            The loaded data.
      * @param enteredPassword The entered password.
      */
     public LoginResponse getLoginResponse(PlayerData data, String enteredPassword) {
@@ -108,8 +108,8 @@ public class LoginClient extends Client<LoginRequestMessage> {
     /**
      * Sends the final login response before the player is added to the world.
      *
-     * @param player The player.
-     * @param data The data to sync with the player.
+     * @param player  The player.
+     * @param data    The data to sync with the player.
      * @param message The login request message.
      * @return {@code true} if the final login response {@link LoginResponse#NORMAL}.
      */

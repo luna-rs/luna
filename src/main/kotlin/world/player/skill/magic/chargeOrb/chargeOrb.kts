@@ -1,6 +1,6 @@
 package world.player.skill.magic.chargeOrb
 
-import api.predef.*
+import api.predef.on
 import io.luna.game.event.impl.UseSpellEvent.MagicOnObjectEvent
 
 /* Interactions for all charge orb spells. */

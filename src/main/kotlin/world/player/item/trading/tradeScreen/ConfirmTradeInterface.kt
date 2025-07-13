@@ -1,7 +1,7 @@
 package world.player.item.trading.tradeScreen
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.get
+import api.predef.lazyVal
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface
 import world.player.item.trading.tradingWith
@@ -11,7 +11,7 @@ import java.util.*
 /**
  * An [InventoryOverlayInterface] implementation representing the confirmation trading screen.
  *
- * @author lare96 
+ * @author lare96
  */
 class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayInterface(3443, 3213) {
 
@@ -145,6 +145,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                     .append(')')
                     .toString()
             }
+
             amount >= 1_000_000 -> {
                 sb.append("@gre@")
                     .append(amount / 1_000_000)
@@ -154,6 +155,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                     .append(FORMATTER.format(amount))
                     .append(')').toString()
             }
+
             else -> sb.append(amount).toString()
         }
     }

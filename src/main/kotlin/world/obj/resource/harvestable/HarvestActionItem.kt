@@ -1,11 +1,12 @@
 package world.obj.resource.harvestable
 
-import api.predef.ext.*
-import io.luna.game.action.Action
+import api.predef.ext.addObject
+import api.predef.ext.removeObject
+import api.predef.ext.scheduleOnce
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 import io.luna.util.RandomUtils
 

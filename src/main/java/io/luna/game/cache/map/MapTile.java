@@ -68,15 +68,15 @@ public final class MapTile {
     /**
      * Creates a new {@link MapTile}.
      *
-     * @param offsetX The {@code x} offset of this tile from its {@link Region}.
-     * @param offsetY The {@code y} offset of this tile from its {@link Region}.
-     * @param plane The plane of this tile.
-     * @param height The tile height.
-     * @param overlay The tile overlay.
-     * @param overlayType The tile overlay type.
+     * @param offsetX            The {@code x} offset of this tile from its {@link Region}.
+     * @param offsetY            The {@code y} offset of this tile from its {@link Region}.
+     * @param plane              The plane of this tile.
+     * @param height             The tile height.
+     * @param overlay            The tile overlay.
+     * @param overlayType        The tile overlay type.
      * @param overlayOrientation The tile overlay direction.
-     * @param attributes The tile attributes.
-     * @param underlay The tile underlay.
+     * @param attributes         The tile attributes.
+     * @param underlay           The tile underlay.
      */
     public MapTile(int offsetX, int offsetY, int plane, int height, int overlay, int overlayType, int overlayOrientation, int attributes, int underlay) {
         this.offsetX = offsetX;

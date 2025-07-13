@@ -16,7 +16,7 @@ import io.luna.net.msg.GameMessageWriter;
  * @author lare96
  */
 public final class DynamicMapMessageWriter extends GameMessageWriter {
- // todo play around with the way data is sent
+    // todo play around with the way data is sent
     /**
      * The palette to send.
      */

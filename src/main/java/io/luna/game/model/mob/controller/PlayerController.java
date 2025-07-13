@@ -84,7 +84,7 @@ public abstract class PlayerController {
     /**
      * Called every 600ms by the {@link ControllerProcessTask}.
      *
-     * @param player The player.
+     * @param player         The player.
      * @param executionCount The execution count of the task.
      */
     public void process(Player player, int executionCount) {
@@ -112,7 +112,7 @@ public abstract class PlayerController {
      * </pre>
      *
      * @param player The player.
-     * @param event The event that can be transformed or terminated.
+     * @param event  The event that can be transformed or terminated.
      * @return {@code false} if the event should be terminated.
      */
     public boolean onPlayerEvent(Player player, ControllableEvent event) {

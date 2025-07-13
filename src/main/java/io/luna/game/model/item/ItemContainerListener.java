@@ -12,8 +12,8 @@ public interface ItemContainerListener {
     /**
      * Invoked when a standalone item has been updated.
      *
-     * @param index The updated index.
-     * @param items The container that fired the event.
+     * @param index   The updated index.
+     * @param items   The container that fired the event.
      * @param oldItem The old item.
      * @param newItem The new item.
      */
@@ -23,8 +23,8 @@ public interface ItemContainerListener {
     /**
      * Invoked when an item has been updated during a bulk update operation.
      *
-     * @param index The updated index.
-     * @param items The container that fired the event.
+     * @param index   The updated index.
+     * @param items   The container that fired the event.
      * @param oldItem The old item.
      * @param newItem The new item.
      */

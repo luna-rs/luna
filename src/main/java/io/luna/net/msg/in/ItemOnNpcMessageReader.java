@@ -34,7 +34,7 @@ public final class ItemOnNpcMessageReader extends GameMessageReader<ItemOnNpcEve
                 event.getTargetNpc() == null) {
             return false;
         }
-        if(event.getUsedItemInterface() == 3214) {
+        if (event.getUsedItemInterface() == 3214) {
             return player.getInventory().contains(event.getUsedItemIndex(), event.getUsedItemId());
         }
         return false;

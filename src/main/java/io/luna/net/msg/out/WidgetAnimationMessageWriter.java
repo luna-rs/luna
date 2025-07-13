@@ -9,7 +9,7 @@ import io.luna.net.msg.GameMessageWriter;
 /**
  * A {@link GameMessageWriter} implementation that animates a widget.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class WidgetAnimationMessageWriter extends GameMessageWriter {
 
@@ -26,7 +26,7 @@ public final class WidgetAnimationMessageWriter extends GameMessageWriter {
     /**
      * Creates a new {@link WidgetAnimationMessageWriter}.
      *
-     * @param widgetId The widget.
+     * @param widgetId    The widget.
      * @param animationId The animation.
      */
     public WidgetAnimationMessageWriter(int widgetId, int animationId) {
@@ -38,7 +38,7 @@ public final class WidgetAnimationMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(2);
         msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
-        msg.putShort(animationId,ValueType.ADD);
+        msg.putShort(animationId, ValueType.ADD);
         return msg;
     }
 }

@@ -16,7 +16,7 @@ public final class ScriptExecutionException extends RuntimeException {
      * Creates a new {@link ScriptExecutionException}.
      *
      * @param script The failed script.
-     * @param cause The cause of the failure.
+     * @param cause  The cause of the failure.
      */
     public ScriptExecutionException(Script script, Exception cause) {
         super(cause);

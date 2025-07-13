@@ -2,13 +2,14 @@ package world.player.item.banking.regularBank
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.mob.*
+import io.luna.game.model.mob.Npc
+import io.luna.game.model.mob.Player
 
 on(ServerLaunchEvent::class) {
     // Load all banking npcs and make them initialize dialogue
     Banking.loadBankingNpcs()
     for (id in Banking.bankingNpcs) {
-        npc1(id, {bankerDialogue(plr, id)})
+        npc1(id, { bankerDialogue(plr, id) })
     }
 
     // Load all banking objects, make them open the bank.
@@ -17,7 +18,7 @@ on(ServerLaunchEvent::class) {
         object1(id) {
             val npc: Npc? = plr.localNpcs.firstOrNull { npc ->
                 npc.position.isWithinDistance(gameObject.position, 1)
-                && Banking.bankingNpcs.contains(npc.id)
+                        && Banking.bankingNpcs.contains(npc.id)
             }
 
             if (npc != null) {
@@ -36,11 +37,11 @@ fun bankerDialogue(plr: Player, bankerId: Int) {
     plr.newDialogue()
         .npc(bankerId, "Good day, how may I help you?")
         .options("I'd like to access my bank account, please.", {
-                plr.newDialogue()
-                    .player("I'd like to access my bank account, please.")
-                    .then({ plr.bank.open() })
-                    .open()
-            },
+            plr.newDialogue()
+                .player("I'd like to access my bank account, please.")
+                .then({ plr.bank.open() })
+                .open()
+        },
             "What is this place?", {
                 plr.newDialogue()
                     .player("What is this place?")
@@ -48,12 +49,23 @@ fun bankerDialogue(plr: Player, bankerId: Int) {
                     .options("And what do you do?", {
                         plr.newDialogue()
                             .player("And what do you do?")
-                            .npc(bankerId, "We will look after your items and money for you.", "Leave your valuables with us if you want to keep them", "safe.")
+                            .npc(
+                                bankerId,
+                                "We will look after your items and money for you.",
+                                "Leave your valuables with us if you want to keep them",
+                                "safe."
+                            )
                             .open()
                     }, "Didn't you used to be called the bank of Varrock?", {
                         plr.newDialogue()
                             .player("Didn't you used to be called the bank of Varrock?")
-                            .npc(bankerId, "Yes we did, but people kept on coming into our", "branches outside of Varrock and telling us that our", "signs were wrong. They acted as if we didn't know", "what town we were in or something.")
+                            .npc(
+                                bankerId,
+                                "Yes we did, but people kept on coming into our",
+                                "branches outside of Varrock and telling us that our",
+                                "signs were wrong. They acted as if we didn't know",
+                                "what town we were in or something."
+                            )
                             .open()
                     })
                     .open()

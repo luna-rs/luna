@@ -1,12 +1,15 @@
 package world.player.command.searchItem
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.RIGHTS_DEV
+import api.predef.cmd
+import api.predef.ext.isOpen
+import api.predef.numF
+import api.predef.on
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
@@ -52,7 +55,8 @@ cmd("finddef", RIGHTS_DEV) {
     val search = getInputFrom(1).toLowerCase().trim()
     val matches = arrayListOf<Pair<Int, String>>()
     when (type) {
-        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
+        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream()
+            .filter { it.name.toLowerCase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
         "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }

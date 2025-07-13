@@ -67,8 +67,8 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     /**
      * Creates a new {@link GameMessageReader} using reflection.
      *
-     * @param opcode The opcode.
-     * @param size The size.
+     * @param opcode    The opcode.
+     * @param size      The size.
      * @param className The simple class name.
      * @return The message listener instance.
      */

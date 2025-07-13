@@ -34,10 +34,12 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             complete()
             return
         }
-        val removeItems = Magic.checkRequirements(mob, 33, listOf(
-            RuneRequirement(Rune.AIR, 1),
-            RuneRequirement(Rune.LAW, 1)
-        ))
+        val removeItems = Magic.checkRequirements(
+            mob, 33, listOf(
+                RuneRequirement(Rune.AIR, 1),
+                RuneRequirement(Rune.LAW, 1)
+            )
+        )
         if (removeItems == null) {
             complete()
             return

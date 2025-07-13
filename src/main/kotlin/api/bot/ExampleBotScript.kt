@@ -1,7 +1,6 @@
 package api.bot
 
 import api.bot.scripts.ExampleSubScript
-import api.predef.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.BotScript
 

@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * An enumerated type representing all possible authority levels a {@link Player} can hold. The position of the
  * elements have a significant importance as the lower an element is, the higher authority it holds. We use {@link #ordinal()}
  * so that we can use >, <, >=, and <= operators in Kotlin to compare types.
-* <p>
+ * <p>
  * <strong>Warning: Do not rearrange elements unless you know what you're doing!</strong>
  *
  * @author lare96

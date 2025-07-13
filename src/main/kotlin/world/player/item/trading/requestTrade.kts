@@ -1,6 +1,7 @@
 package world.player.item.trading
 
-import api.predef.*
+import api.predef.INTERACTION_TRADE
+import api.predef.on
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
 import world.player.item.trading.tradeScreen.OfferTradeInterface

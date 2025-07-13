@@ -3,9 +3,9 @@ package io.luna.net;
 import io.luna.LunaContext;
 import io.luna.net.client.Client;
 import io.luna.net.client.IdleClient;
+import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.msg.login.LoginDecoder;
 import io.luna.net.msg.login.LoginEncoder;
-import io.luna.net.msg.GameMessageRepository;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
@@ -16,7 +16,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
  * A {@link ChannelInitializer} implementation that will initialize {@link SocketChannel}s before they are
  * registered.
  *
- * @author lare96 
+ * @author lare96
  */
 @Sharable
 public final class LunaChannelInitializer extends ChannelInitializer<SocketChannel> {
@@ -49,7 +49,7 @@ public final class LunaChannelInitializer extends ChannelInitializer<SocketChann
     /**
      * Creates a new {@link LunaChannelInitializer}.
      *
-     * @param context The context instance.
+     * @param context       The context instance.
      * @param channelFilter A channel handler that will filter channels.
      * @param msgRepository The message repository.
      */

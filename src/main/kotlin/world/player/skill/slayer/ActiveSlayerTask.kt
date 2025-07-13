@@ -1,9 +1,5 @@
 package world.player.skill.slayer
 
-import io.luna.game.model.mob.Player
-import world.player.skill.slayer.Slayer.activeSlayerTask
-import world.player.skill.slayer.Slayer.completedSlayerTasks
-
 /**
  * A class representing an active slayer task.
  */

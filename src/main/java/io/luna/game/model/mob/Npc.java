@@ -54,8 +54,8 @@ public class Npc extends Mob {
     /**
      * Creates a new {@link Npc}.
      *
-     * @param context The context instance.
-     * @param id The identifier.
+     * @param context  The context instance.
+     * @param id       The identifier.
      * @param position The position.
      */
     public Npc(LunaContext context, int id, Position position) {

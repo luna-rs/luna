@@ -24,7 +24,7 @@ public final class MobFollowAction extends Action<Mob> {
     /**
      * Creates a new {@link MobFollowAction}.
      *
-     * @param mob The target mob.
+     * @param mob    The target mob.
      * @param target The last position of this mob.
      */
     public MobFollowAction(Mob mob, Mob target) {

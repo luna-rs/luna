@@ -35,11 +35,11 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     /**
      * Creates a new {@link WalkingEvent}.
      *
-     * @param player The player.
-     * @param path The path that the player will walk.
-     * @param running If the player is running.
+     * @param player   The player.
+     * @param path     The path that the player will walk.
+     * @param running  If the player is running.
      * @param pathSize The path size.
-     * @param opcode The opcode.
+     * @param opcode   The opcode.
      */
     public WalkingEvent(Player player, Deque<Step> path, boolean running, int pathSize, int opcode) {
         super(player);

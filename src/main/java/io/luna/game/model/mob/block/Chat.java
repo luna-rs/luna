@@ -29,8 +29,8 @@ public final class Chat {
      * Creates a new {@link Chat}.
      *
      * @param message The message.
-     * @param color The message color.
-     * @param effect The message effects.
+     * @param color   The message color.
+     * @param effect  The message effects.
      */
     public Chat(byte[] message, int color, int effect) {
         this.message = message;

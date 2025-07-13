@@ -1,8 +1,7 @@
 package world.player.skill.cooking.cookFood
 
 import api.attr.Attr
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.cooking
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -11,7 +10,7 @@ import world.player.skill.cooking.prepareFood.IncompleteFood
 /**
  * An [InventoryAction] implementation that makes wine.
  */
-class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true,1,  amount) {
+class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 1, amount) {
 
     companion object {
 

@@ -1,7 +1,6 @@
 package world.obj.resource.harvestable
 
-import api.predef.*
-import api.predef.ext.*
+import api.predef.object2
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

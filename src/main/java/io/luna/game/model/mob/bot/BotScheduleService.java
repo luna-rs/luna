@@ -10,11 +10,7 @@ import io.luna.game.persistence.GameSerializer;
 import io.luna.game.persistence.PlayerData;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -68,7 +64,7 @@ public final class BotScheduleService extends AbstractScheduledService {
 
     @Override
     protected void startUp() throws Exception {
-        if(Luna.settings().bots().idealCount() == 0) {
+        if (Luna.settings().bots().idealCount() == 0) {
             stopAsync();
         } else {
             GameSerializer serializer = world.getSerializerManager().getSerializer();

@@ -10,17 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A {@link GameSerializer} implementation that stores persistent player data in an {@code SQL} database.
@@ -178,7 +170,7 @@ public final class SqlGameSerializer extends GameSerializer {
     /**
      * Retrieves all {@link BotSchedule} types from the database and caches them within a map.
      *
-     * @param connection The database connection.
+     * @param connection  The database connection.
      * @param scheduleMap The map cache.
      * @throws SQLException If any errors occur.
      */
@@ -199,7 +191,7 @@ public final class SqlGameSerializer extends GameSerializer {
     /**
      * Builds {@link BotSchedule} types for any persistent {@link Bot} types that need it.
      *
-     * @param connection The database connection.
+     * @param connection  The database connection.
      * @param scheduleMap The map cache.
      * @throws SQLException If any errors occur.
      */
@@ -239,8 +231,8 @@ public final class SqlGameSerializer extends GameSerializer {
      * Saves a new player to the database.
      *
      * @param connection The connection.
-     * @param username The username.
-     * @param data The player's data.
+     * @param username   The username.
+     * @param data       The player's data.
      * @throws SQLException If any errors occur.
      */
     private void saveNewPlayer(Connection connection, String username, PlayerData data) throws SQLException {
@@ -300,7 +292,7 @@ public final class SqlGameSerializer extends GameSerializer {
      * Saves an existing player to the database.
      *
      * @param connection The connection.
-     * @param data The player's data.
+     * @param data       The player's data.
      * @throws SQLException If any errors occur.
      */
     private void saveExistingPlayer(Connection connection, PlayerData data) throws SQLException {
@@ -339,8 +331,8 @@ public final class SqlGameSerializer extends GameSerializer {
     /**
      * Prepares parameters for the SQL statements that loop through skills.
      *
-     * @param index The starting index.
-     * @param skills The skills.
+     * @param index     The starting index.
+     * @param skills    The skills.
      * @param statement The SQL statement instance.
      * @return The new index.
      * @throws SQLException If any errors occur.

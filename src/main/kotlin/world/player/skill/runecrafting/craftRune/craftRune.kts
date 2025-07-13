@@ -1,10 +1,12 @@
 package world.player.skill.runecrafting.craftRune
 
-import api.predef.*
+import api.predef.itemName
+import api.predef.object1
+import api.predef.runecrafting
 import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.Player
 import world.player.Sounds
 
 /**
@@ -73,7 +75,7 @@ fun craft(plr: Player, rune: CraftableRune) {
 /**
  * Intercept event and craft runes if object clicked was a Runecrafting altar.
  */
-for(entry in CraftableRune.ALTAR_TO_RUNE) {
+for (entry in CraftableRune.ALTAR_TO_RUNE) {
     object1(entry.key) {
         craft(plr, entry.value)
     }

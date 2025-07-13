@@ -23,7 +23,7 @@ public final class MapTileGrid {
     /**
      * Creates a new {@link MapTileGrid}.
      *
-     * @param region The region this grid of {@link MapTile} types is describing.
+     * @param region  The region this grid of {@link MapTile} types is describing.
      * @param newGrid The grid array.
      */
     public MapTileGrid(Region region, MapTile[][][] newGrid) {
@@ -41,8 +41,8 @@ public final class MapTileGrid {
     /**
      * Retrieves a {@link MapTile} on the grid, within the {@link #region}.
      *
-     * @param x The {@code x} offset from the region.
-     * @param y The {@code y} offset from the region.
+     * @param x     The {@code x} offset from the region.
+     * @param y     The {@code y} offset from the region.
      * @param plane The plane.
      * @return The tile, {@code null} if no data for the tile, or throws {@link ArrayIndexOutOfBoundsException}.
      */

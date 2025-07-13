@@ -1,4 +1,3 @@
-
 package world.player.skill.fishing
 
 import api.plugin.dsl.plugin

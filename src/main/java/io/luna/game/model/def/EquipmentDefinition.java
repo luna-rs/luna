@@ -146,16 +146,16 @@ public final class EquipmentDefinition implements Definition {
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
-     * @param id The identifier.
-     * @param index The equipment index.
-     * @param twoHanded If this item is two-handed.
-     * @param fullBody If this item covers the arms and torso.
-     * @param fullHelmet If this item covers the head and face.
+     * @param id           The identifier.
+     * @param index        The equipment index.
+     * @param twoHanded    If this item is two-handed.
+     * @param fullBody     If this item covers the arms and torso.
+     * @param fullHelmet   If this item covers the head and face.
      * @param requirements A list of equipment requirements.
-     * @param bonuses A list of equipment bonuses.
+     * @param bonuses      A list of equipment bonuses.
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                              Requirement[] requirements, int[] bonuses) {
+                               Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;

@@ -1,6 +1,6 @@
 package world.player.skill.cooking.cookFood
 
-import api.predef.*
+import api.predef.cooking
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.Player
 import io.luna.game.task.Task

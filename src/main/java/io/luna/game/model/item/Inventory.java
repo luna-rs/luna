@@ -7,7 +7,7 @@ import world.player.Messages;
 /**
  * An item container model representing a player's inventory.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class Inventory extends ItemContainer {
 

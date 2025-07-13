@@ -166,7 +166,7 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
     /**
      * Handle a death stage.
      *
-     * @param stage The stage of death.
+     * @param stage  The stage of death.
      * @param source The source of death.
      */
     public abstract void handleDeath(DeathStage stage, Mob source);

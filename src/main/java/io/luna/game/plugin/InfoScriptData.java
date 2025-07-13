@@ -32,10 +32,10 @@ public final class InfoScriptData {
     /**
      * Creates a new {@link InfoScriptData}.
      *
-     * @param name The name of the plugin.
+     * @param name        The name of the plugin.
      * @param description The plugin's description.
-     * @param version The plugin's version.
-     * @param authors The plugin's authors.
+     * @param version     The plugin's version.
+     * @param authors     The plugin's authors.
      */
     public InfoScriptData(String name, String description, String version, ImmutableList<String> authors) {
         this.name = name;

@@ -1,22 +1,24 @@
 package world.player.skill.cooking.cookFood
 
-import api.predef.*
-import io.luna.game.action.Action
+import api.predef.cooking
+import api.predef.rand
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
 
 /**
  * An [InventoryAction] that cooks food.
  */
-class CookFoodActionItem(plr: Player,
-                         private val cookObj: GameObject,
-                         val food: Food,
-                         val usingFire: Boolean,
-                         amount: Int) : InventoryAction(plr, true, 4, amount) {
+class CookFoodActionItem(
+    plr: Player,
+    private val cookObj: GameObject,
+    val food: Food,
+    val usingFire: Boolean,
+    amount: Int
+) : InventoryAction(plr, true, 4, amount) {
 
     companion object {
 

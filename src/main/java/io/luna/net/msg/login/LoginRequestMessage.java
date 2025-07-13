@@ -38,11 +38,11 @@ public final class LoginRequestMessage {
     /**
      * Creates a new {@link LoginRequestMessage}.
      *
-     * @param username The username.
-     * @param password The password.
+     * @param username  The username.
+     * @param password  The password.
      * @param encryptor The encryptor.
      * @param decryptor The decryptor.
-     * @param pipeline The channel pipeline.
+     * @param pipeline  The channel pipeline.
      */
     public LoginRequestMessage(String username, String password, IsaacCipher encryptor, IsaacCipher decryptor,
                                ChannelPipeline pipeline) {

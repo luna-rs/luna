@@ -67,8 +67,12 @@ public final class DynamicMapSpace implements Location {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DynamicMapSpace)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DynamicMapSpace)) {
+            return false;
+        }
         DynamicMapSpace space = (DynamicMapSpace) o;
         return Objects.equals(primary, space.primary);
     }

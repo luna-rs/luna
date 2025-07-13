@@ -21,7 +21,7 @@ public class GroundItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link PickupItemEvent}.
          *
-         * @param plr The player.
+         * @param plr        The player.
          * @param groundItem The ground item that was clicked.
          */
         public PickupItemEvent(Player plr, GroundItem groundItem) {
@@ -39,7 +39,7 @@ public class GroundItemClickEvent extends PlayerEvent implements ControllableEve
         /**
          * Creates a new {@link GroundItemSecondClickEvent}.
          *
-         * @param plr The player.
+         * @param plr        The player.
          * @param groundItem The ground item that was clicked.
          */
         public GroundItemSecondClickEvent(Player plr, GroundItem groundItem) {

@@ -172,9 +172,9 @@ public final class Bot extends Player {
     /**
      * Creates a new {@link Bot}.
      *
-     * @param context The context instance.
-     * @param username The username.
-     * @param password The password.
+     * @param context   The context instance.
+     * @param username  The username.
+     * @param password  The password.
      * @param temporary If this bot will be remembered by this server.
      */
     private Bot(LunaContext context, String username, String password, boolean temporary) {
