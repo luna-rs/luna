@@ -56,11 +56,11 @@ enum class Bow(val level: Int,
                 strung = 855),
     MAGIC_SHORTBOW(level = 80,
                    exp = 83.3,
-                   unstrung = 70,
+                   unstrung = 72,
                    strung = 861),
     MAGIC_LONGBOW(level = 85,
                   exp = 91.5,
-                  unstrung = 68,
+                  unstrung = 70,
                   strung = 859);
 
     companion object {
