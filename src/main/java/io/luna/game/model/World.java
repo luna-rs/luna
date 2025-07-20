@@ -289,7 +289,6 @@ public final class World {
                     Bot bot = (Bot) player;
                     bot.process();
                 }
-                player.getActions().process();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
