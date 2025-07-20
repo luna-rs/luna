@@ -253,7 +253,7 @@ public final class World {
      * Runs one iteration of the main game loop. This method should <strong>never</strong> be called by anything other
      * than the {@link GameService}.
      */
-    public void loop() {
+    public void loop() { // todo rename to process()
         // Add pending players that have just logged in.
         loginService.finishRequests();
 
@@ -344,7 +344,6 @@ public final class World {
             try {
                 player.resetFlags();
                 player.setCachedBlock(null);
-                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
