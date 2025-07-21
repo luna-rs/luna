@@ -1,6 +1,5 @@
 package io.luna.game.model.mob;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
@@ -12,6 +11,7 @@ import io.luna.game.model.path.AStarPathfindingAlgorithm;
 import io.luna.game.model.path.EuclideanHeuristic;
 import io.luna.game.model.path.PathfindingAlgorithm;
 import io.luna.game.model.path.SimplePathfindingAlgorithm;
+import io.luna.math.Vector2;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,89 +32,14 @@ public final class WalkingQueue {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A model representing a step in the walking queue.
-     */
-    public static final class Step {
-
-        /**
-         * The x coordinate.
-         */
-        private final int x;
-
-        /**
-         * The y coordinate.
-         */
-        private final int y;
-
-        /**
-         * Creates a new {@link Step}.
-         *
-         * @param x The x coordinate.
-         * @param y The y coordinate.
-         */
-        public Step(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        /**
-         * Creates a new {@link Step}.
-         *
-         * @param position The position.
-         */
-        public Step(Position position) {
-            this(position.getX(), position.getY());
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof Step) {
-                Step other = (Step) obj;
-                return x == other.x && y == other.y;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("x", x)
-                    .add("y", y)
-                    .toString();
-        }
-
-        /**
-         * @return The x coordinate.
-         */
-        public int getX() {
-            return x;
-        }
-
-        /**
-         * @return The y coordinate.
-         */
-        public int getY() {
-            return y;
-        }
-    }
-
-    /**
      * A deque of current steps.
      */
-    private final Deque<Step> current = new ArrayDeque<>();
+    private final Deque<Vector2> current = new ArrayDeque<>();
 
     /**
      * A deque of previous steps.
      */
-    private final Deque<Step> previous = new ArrayDeque<>();
+    private final Deque<Vector2> previous = new ArrayDeque<>();
 
     /**
      * The collision manager.
@@ -182,13 +107,13 @@ public final class WalkingQueue {
         if(mob instanceof Npc && mob.asNpc().isStationary()) {
             return;
         }
-        Step currentStep = new Step(mob.getPosition());
+        Vector2 currentStep = new Vector2(mob.getPosition());
 
         Direction walkingDirection = Direction.NONE;
         Direction runningDirection = Direction.NONE;
 
         boolean restoreEnergy = true;
-        Step nextStep = current.poll();
+        Vector2 nextStep = current.poll();
         if (nextStep != null) {
             walkingDirection = Direction.between(currentStep, nextStep);
             boolean blocked = false;// !collisionManager.traversable(mob.getPosition(), EntityType.NPC, walkingDirection);
@@ -254,7 +179,7 @@ public final class WalkingQueue {
      * @param target The destination target.
      */
     public void walkUntilReached(Entity target) {
-        Deque<Step> newPath = new ArrayDeque<>();
+        Deque<Vector2> newPath = new ArrayDeque<>();
         Deque<Position> path = pathfindingAlgorithm.find(mob.getPosition(), target.getPosition());
         Position lastPosition = mob.getPosition();
         for (; ; ) {
@@ -264,7 +189,7 @@ public final class WalkingQueue {
             if (nextPosition == null || reached) {
                 break;
             }
-            newPath.add(new Step(nextPosition));
+            newPath.add(new Vector2(nextPosition));
             lastPosition = nextPosition;
         }
         addPath(newPath);
@@ -280,7 +205,7 @@ public final class WalkingQueue {
             logger.warn("Existing lazy walk request in progress.");
             return;
         }
-        ListenableFuture<Deque<Step>> pathResult = mob.getService().submit(() -> findPath(destination));
+        ListenableFuture<Deque<Vector2>> pathResult = mob.getService().submit(() -> findPath(destination));
         pathResult.addListener(() -> {
             try {
                 addPath(pathResult.get());
@@ -360,14 +285,14 @@ public final class WalkingQueue {
      *
      * @param path The path to walk.
      */
-    public void addPath(Deque<Step> path) {
+    public void addPath(Deque<Vector2> path) {
         int size = path.size();
         if (size == 1) {
             addFirst(path.poll());
         } else if (size > 1) {
             addFirst(path.poll());
             for (; ; ) {
-                Step nextStep = path.poll();
+                Vector2 nextStep = path.poll();
                 if (nextStep == null) {
                     break;
                 }
@@ -389,11 +314,11 @@ public final class WalkingQueue {
      *
      * @param step The step to add.
      */
-    private void addFirst(Step step) {
+    private void addFirst(Vector2 step) {
         current.clear();
-        Queue<Step> backtrack = new ArrayDeque<>();
+        Deque<Vector2> backtrack = new ArrayDeque<>();
         for (; ; ) {
-            Step prev = previous.pollLast();
+            Vector2 prev = previous.pollLast();
             if (prev == null) {
                 break;
             }
@@ -413,10 +338,10 @@ public final class WalkingQueue {
      *
      * @param next The step to add.
      */
-    private void add(Step next) {
-        Step last = current.peekLast();
+    void add(Vector2 next) {
+        Vector2 last = current.peekLast();
         if (last == null) {
-            last = new Step(mob.getPosition());
+            last = new Vector2(mob.getPosition());
         }
 
         int nextX = next.getX();
@@ -438,7 +363,7 @@ public final class WalkingQueue {
             } else if (deltaY > 0) {
                 deltaY--;
             }
-            current.add(new Step(nextX - deltaX, nextY - deltaY));
+            current.add(new Vector2(nextX - deltaX, nextY - deltaY));
         }
     }
 
@@ -496,16 +421,16 @@ public final class WalkingQueue {
      * @param target The target.
      * @return The path.
      */
-    private Deque<Step> findPath(Position target) {
+    private Deque<Vector2> findPath(Position target) {
         Deque<Position> positionPath = pathfindingAlgorithm.find(mob.getPosition(), target);
-        Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
+        Deque<Vector2> stepPath = new ArrayDeque<>(positionPath.size());
         for (; ; ) {
             // TODO remove step class?
             Position next = positionPath.poll();
             if (next == null) {
                 break;
             }
-            stepPath.add(new Step(next));
+            stepPath.add(new Vector2(next));
         }
         return stepPath;
     }
