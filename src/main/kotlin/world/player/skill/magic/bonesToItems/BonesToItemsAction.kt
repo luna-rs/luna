@@ -34,7 +34,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
         if (removeItems != null) {
             val count = mob.inventory.computeAmountForId(BONES)
             if (count == 0) {
-                mob.sendMessage("You do not have any bones to convert.")
                 return
             }
             mob.lock()

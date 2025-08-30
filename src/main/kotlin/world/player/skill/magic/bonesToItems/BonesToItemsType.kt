@@ -1,5 +1,6 @@
 package world.player.skill.magic.bonesToItems
 
+import world.player.skill.magic.ItemRequirement
 import world.player.skill.magic.Rune
 import world.player.skill.magic.RuneRequirement
 import world.player.skill.magic.SpellRequirement
@@ -12,6 +13,7 @@ enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double, val req
             level = 15,
             xp = 25.0,
             requirements = listOf(
+                ItemRequirement(BonesToItemsAction.BONES, 1),
                 RuneRequirement(Rune.EARTH, 2),
                 RuneRequirement(Rune.WATER, 2),
                 RuneRequirement(Rune.NATURE, 1)
@@ -20,6 +22,7 @@ enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double, val req
             level = 60,
             xp = 35.5,
             requirements = listOf(
+                ItemRequirement(BonesToItemsAction.BONES, 1),
                 RuneRequirement(Rune.EARTH, 4),
                 RuneRequirement(Rune.WATER, 4),
                 RuneRequirement(Rune.NATURE, 1)
