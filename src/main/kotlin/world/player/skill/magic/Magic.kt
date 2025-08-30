@@ -9,6 +9,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
+import io.luna.util.StringUtils
 import world.player.Sounds
 import world.player.skill.magic.teleportSpells.TeleportAction
 import world.player.skill.magic.teleportSpells.TeleportStyle
@@ -37,7 +38,8 @@ object Magic {
             } else if (req is ItemRequirement) { // Determine if we have the correct items.
                 val item = Item(req.id, req.amount)
                 if (!plr.inventory.contains(item)) {
-                    plr.sendMessage("You do not have enough ${itemName(req.id)}s to cast this spell.")
+                    val pluralName = StringUtils.addPlural(itemName(req.id))
+                    plr.sendMessage("You do not have enough $pluralName to cast this spell.")
                     return null
                 }
                 removeItems += item
@@ -119,11 +121,13 @@ object Magic {
                 sound.display()
                 true
             }
+
             1 -> {
                 plr.animation(Animation(714))
                 plr.graphic(Graphic(111, 92))
                 true
             }
+
             2 -> true
             3 -> true
             4 -> {
@@ -131,6 +135,7 @@ object Magic {
                 plr.animation(Animation(715))
                 false
             }
+
             else -> false
         }
     }

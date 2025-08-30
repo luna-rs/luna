@@ -3,7 +3,7 @@ package world.player.skill.magic
 import api.plugin.dsl.plugin
 
 plugin {
-    name = "Magic"
+    name = "Non-combat magic"
     description =
         """
         A plugin that enables the non-combat portion of the Magic skill. This includes
