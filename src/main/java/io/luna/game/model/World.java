@@ -14,7 +14,6 @@ import io.luna.game.model.map.DynamicMapSpacePool;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.mob.bot.BotScheduleService;
@@ -251,9 +250,10 @@ public final class World {
 
     /**
      * Runs one iteration of the main game loop. This method should <strong>never</strong> be called by anything other
-     * than the {@link GameService}.
+     * than the {@link GameService}. This function and the functions invoked within follow a very specific order and
+     * should not be changed.
      */
-    public void loop() { // todo rename to process()
+    public void process() {
         // Add pending players that have just logged in.
         loginService.finishRequests();
 
@@ -277,24 +277,17 @@ public final class World {
      * Pre-synchronization part of the game loop, process all tick-dependant player logic.
      */
     private void preSynchronize() {
+
+        // First handle all client input from players.
         for (Player player : playerList) {
-            try {
-                if (player.getClient().isPendingLogout()) {
-                    player.cleanUp();
-                    continue;
-                }
-                player.getClient().handleDecodedMessages(player);
-                player.getWalking().process();
-                if (player.isBot()) {
-                    Bot bot = (Bot) player;
-                    bot.process();
-                }
-            } catch (Exception e) {
-                player.logout();
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
+            if (player.getClient().isPendingLogout()) {
+                player.cleanUp();
+                continue;
             }
+            player.getClient().handleDecodedMessages(player);
         }
 
+        // Then, pre-process NPC walking and action queues.
         for (Npc npc : npcList) {
             try {
                 npc.getWalking().process();
@@ -305,23 +298,24 @@ public final class World {
             }
         }
 
-        // Region update and action queue must be processed last.
+        /* Finally, pre-process player walking and action queues. Bot 'input'
+            and brain processing is also handled here. */
         for (Player player : playerList) {
-            if (player.getClient().isPendingLogout()) {
-                player.cleanUp();
-                continue;
-            }
             try {
-                Position oldPosition = player.getPosition();
-
-                player.sendRegionUpdate(oldPosition);
+                if (player.getClient().isPendingLogout()) {
+                    player.cleanUp();
+                    continue;
+                }
+                player.getWalking().process();
                 player.getActions().process();
+                if (player.isBot()) {
+                    player.asBot().process();
+                }
             } catch (Exception e) {
                 player.logout();
-                logger.warn(new ParameterizedMessage("Could not finalize pre-synchronization for {}.", player, e));
+                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
             }
         }
-
     }
 
     /**
@@ -330,15 +324,26 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
+            player.sendRegionUpdate(player.getPosition()); // Queue region updates before player updating.
             updatePool.execute(new PlayerSynchronizationTask(player));
         }
         synchronizer.arriveAndAwaitAdvance();
     }
 
     /**
-     * Post-synchronization part of the game loop, reset variables.
+     * Post-synchronization part of the game loop, reset update flags.
      */
     private void postSynchronize() {
+
+        // Reset data related to player and NPC updating.
+        for (Npc npc : npcList) {
+            try {
+                npc.resetFlags();
+            } catch (Exception e) {
+                npcList.remove(npc);
+                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
+            }
+        }
         for (Player player : playerList) {
             try {
                 player.resetFlags();
@@ -346,15 +351,6 @@ public final class World {
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
-            }
-        }
-
-        for (Npc npc : npcList) {
-            try {
-                npc.resetFlags();
-            } catch (Exception e) {
-                npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
             }
         }
     }

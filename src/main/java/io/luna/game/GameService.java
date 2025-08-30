@@ -148,7 +148,7 @@ public final class GameService extends AbstractScheduledService {
 
     @Override
     protected void runOneIteration() {
-        loop();
+        process();
     }
 
     @Override
@@ -168,13 +168,13 @@ public final class GameService extends AbstractScheduledService {
     /**
      * Runs the entire game loop including synchronization tasks.
      */
-    private void loop() {
+    private void process() {
         try {
             // Do stuff from other threads.
             runSynchronizationTasks();
 
             // Run the main game loop.
-            world.loop();
+            world.process();
         } catch (Exception e) {
             logger.catching(e);
         }
