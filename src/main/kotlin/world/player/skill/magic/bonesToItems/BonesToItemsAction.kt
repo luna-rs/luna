@@ -40,7 +40,6 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
             mob.lock()
             mob.playSound(Sounds.BONES_TO_ITEMS)
             world.scheduleOnce(1) {
-                val name = if (type == BonesToItemsType.BANANAS) "bananas" else "peaches"
                 mob.inventory.removeAll(removeItems)
                 mob.inventory.replaceAll(BONES, type.id)
                 mob.animation(Animations.BONES_TO_ITEMS)
