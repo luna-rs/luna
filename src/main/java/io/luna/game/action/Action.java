@@ -60,9 +60,10 @@ public abstract class Action<T extends Mob> {
     private int delay;
 
     /**
-     * The mutable counter. Used to time the {@link #delay}.
+     * The mutable counter, used to time the {@link #delay}. The initial value needs to be
+     * {@code -1} due to action processing happening after player input.
      */
-    private int counter;
+    private int counter = -1;
 
     /**
      * How many executions have occurred. An execution means {@link #run()} was called. This value will return {@code 0}
@@ -115,7 +116,7 @@ public abstract class Action<T extends Mob> {
         }
 
         // Run if enough time has passed.
-        if (counter++ >= delay) {
+        if (++counter >= delay) {
             try {
                 counter = 0;
                 return run();
