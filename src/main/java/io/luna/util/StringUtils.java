@@ -229,4 +229,17 @@ public final class StringUtils {
         }
         return last;
     }
+
+    /**
+     * Adds 's' to the end of {@code text} if there isn't already one.
+     *
+     * @param text The text to pluralize.
+     * @return The pluralized text.
+     */
+    public static String addPlural(String text) {
+        if (text.strip().charAt(text.length() - 1) != 's') {
+            return text + 's';
+        }
+        return text;
+    }
 }
