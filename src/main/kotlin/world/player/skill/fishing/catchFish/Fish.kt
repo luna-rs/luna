@@ -121,12 +121,7 @@ enum class Fish(val id: Int,
     /**
      * The formatted name.
      */
-    val formattedName = name.lowercase().replace('_', ' ')
-
-    /**
-     * The default catch message.
-     */
-    val catchMessage = "You manage to catch ${addArticle(formattedName)}."
+    val formattedName = itemName(id).replace("Raw ", "").lowercase().trim()
 
     /**
      * Retrieves the item instance from this fish.

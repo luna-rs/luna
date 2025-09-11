@@ -3,32 +3,18 @@ package world.player.skill.fishing.catchFish
 import api.predef.*
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.event.impl.NpcClickEvent
-import io.luna.game.model.def.*
+import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import world.player.Sounds
+import world.player.skill.Skills
 import world.player.skill.fishing.Tool
 
 /**
  * An [InventoryAction] implementation that will catch fish.
  */
-class CatchFishAction(private val msg: NpcClickEvent,
-                      private val tool: Tool
-) : InventoryAction(msg.plr, false, 1, rand(RANDOM_FAIL_RATE)) {
-
-
-    companion object {
-
-        /**
-         * Between 10 and 100 fishing actions for the 'random stop' effect.
-         */
-        val RANDOM_FAIL_RATE = 10..50
-
-        /**
-         * Ensures that fishing does not happen too fast. The minimum tick factor one can achieve with any tool.
-         */
-        const val MINIMUM_TICK_FACTOR = 5
-    }
+class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
+    InventoryAction(msg.plr, false, tool.speed, Int.MAX_VALUE) {
 
     /**
      * The messages to send on harvest.
@@ -50,39 +36,41 @@ class CatchFishAction(private val msg: NpcClickEvent,
 
             tool.bait != null && !mob.inventory.contains(tool.bait) -> {
                 // Check if we have required bait.
-                mob.sendMessage(onNoMaterials())
+                mob.newDialogue().empty(onNoMaterials()).open()
                 false
             }
 
             !mob.inventory.contains(tool.id) -> {
                 // Check if we have required tool.
                 val toolName = ItemDefinition.ALL.retrieve(tool.id).name
-                mob.sendMessage("You need ${addArticle(toolName)} to fish here.")
+                mob.newDialogue().empty("You need ${addArticle(toolName)} to bait these fish.").open()
                 false
             }
 
             else -> {
                 // Start fishing!
                 mob.animation(Animation(tool.animation))
-                mob.playSound(Sounds.FISH) // TODO https://github.com/luna-rs/luna/issues/357
                 if (start) {
-                    // TODO https://github.com/luna-rs/luna/issues/112
-                    mob.sendMessage("You begin to fish...")
-                    delay = getFishingDelay()
+                    mob.sendMessage(tool.message)
+                    if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
+                        mob.sendMessage("You attempt to catch a fish.")
+                    }
+                    playSound(Sounds.START_ROD_FISHING, Sounds.START_FISHING)
                 }
                 true
             }
         }
 
     override fun execute() {
-        messages.forEach(mob::sendMessage)
-        messages.clear()
-        mob.fishing.addExperience(exp)
-        exp = 0.0
-        delay = getFishingDelay()
+        if (currentAdd.isNotEmpty()) {
+            messages.removeAll { mob.sendMessage(it); true }
+            mob.fishing.addExperience(exp)
+            exp = 0.0
+            playSound(Sounds.CATCH_ROD_FISH, Sounds.CATCH_FISH)
+        }
     }
 
-    override fun add(): List<Item?> {
+    override fun add(): List<Item> {
         val amount = tool.catchAmount.random()
         val availableFish = tool.fish.filter { it.level <= mob.fishing.level }
         val addItems = ArrayList<Item>(amount)
@@ -91,10 +79,10 @@ class CatchFishAction(private val msg: NpcClickEvent,
         repeat(amount) {
             val fish = availableFish.random()
             val item = fish.toItem(this)
-            if (item != null) {
+            if (item != null && Skills.success(fish.chance, mob.fishing.level)) {
                 addItems += item
                 exp += fish.exp
-                messages += fish.catchMessage
+                messages += "You catch some ${fish.formattedName}."
             }
         }
         return addItems
@@ -108,22 +96,20 @@ class CatchFishAction(private val msg: NpcClickEvent,
         mob.animation(Animation.CANCEL)
     }
 
-    override fun onNoMaterials(): String {
-        return if (tool.bait != null) "You don't have ${itemName(tool.bait)} to fish here." else
+    override fun onNoMaterials(): String =
+        if (tool.bait != null) "You don't have enough ${itemName(tool.bait)} to fish here." else
             super.onNoMaterials()
-    }
 
     override fun onInventoryFull(): String = "Your inventory is too full to hold any more fish."
 
     /**
-     * Computes the next fishing delay.
+     * Plays one of the argued sounds based on the tool the player is fishing with.
      */
-    private fun getFishingDelay(): Int {
-        var ticksFactor = tool.catchRate
-        ticksFactor -= (mob.fishing.level - tool.level) / 3
-        if (ticksFactor < MINIMUM_TICK_FACTOR) {
-            ticksFactor = MINIMUM_TICK_FACTOR
+    private fun playSound(rodSound: Sounds, otherSound: Sounds) {
+        if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
+            mob.playSound(rodSound)
+        } else {
+            mob.playSound(otherSound)
         }
-        return rand(1, ticksFactor)
     }
 }

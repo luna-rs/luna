@@ -13,9 +13,6 @@ fun fish(msg: NpcClickEvent, tool: Tool) {
     msg.plr.submitAction(CatchFishAction(msg, tool))
 }
 
-// Spawn fishing spots.
-//world.addNpc(FishingSpot(-1, homepos, awaypos))
-
 // First click fishing spots.
 on(NpcFirstClickEvent::class)
     .match(233, 234, 235, 236)
