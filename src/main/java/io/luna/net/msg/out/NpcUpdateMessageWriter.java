@@ -46,6 +46,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             while (iterator.hasNext()) {
                 Npc other = iterator.next();
                 if (other.isViewableFrom(player) &&
+                        !other.isTeleporting() &&
                         other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);

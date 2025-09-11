@@ -75,6 +75,11 @@ public class Npc extends Mob {
     }
 
     @Override
+    public void onTeleport(Position newPosition) {
+        teleporting = true;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

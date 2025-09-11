@@ -259,11 +259,6 @@ public class Player extends Mob {
     private int privateMsgCounter = 1;
 
     /**
-     * If a teleportation is in progress.
-     */
-    private boolean teleporting;
-
-    /**
      * The friend list.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
@@ -430,7 +425,6 @@ public class Player extends Mob {
     @Override
     public void reset() {
         regionChanged = false;
-        teleporting = false;
         chat = Optional.empty();
         exactMovement = Optional.empty();
     }
@@ -751,7 +745,7 @@ public class Player extends Mob {
      *
      * @param oldPosition The player's old position before movement processing.
      */
-    public void sendRegionUpdate(Position oldPosition) {
+    public void sendRegionUpdate(Position oldPosition) { // todo rename
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
             fullRefresh = true;
@@ -1284,13 +1278,6 @@ public class Player extends Mob {
      */
     public Set<Long> getIgnores() {
         return ignores;
-    }
-
-    /**
-     * @return {@code true} if a teleportation is in progress.
-     */
-    public boolean isTeleporting() {
-        return teleporting;
     }
 
     /**

@@ -133,6 +133,11 @@ public abstract class Mob extends Entity {
     private boolean locked;
 
     /**
+     * If a teleportation is in progress.
+     */
+    protected boolean teleporting;
+
+    /**
      * Creates a new {@link Mob}.
      *
      * @param context The context instance.
@@ -488,6 +493,7 @@ public abstract class Mob extends Entity {
     public final void resetFlags() {
         Direction defaultDirection = this instanceof Npc ? asNpc().getDefaultDirection().orElse(null) : null;
         reset();
+        teleporting = false;
         animation = Optional.empty();
         forcedChat = Optional.empty();
         facePosition = defaultDirection == null ? Optional.empty() :
@@ -707,5 +713,12 @@ public abstract class Mob extends Entity {
      */
     public int getZ() {
         return position.getZ();
+    }
+
+    /**
+     * @return {@code true} if a teleportation is in progress.
+     */
+    public boolean isTeleporting() {
+        return teleporting;
     }
 }
