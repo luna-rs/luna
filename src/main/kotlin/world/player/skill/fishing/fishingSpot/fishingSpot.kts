@@ -1,8 +1,7 @@
-package world.player.skill.fishing.catchFish
+package world.player.skill.fishing.fishingSpot
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.Position
 
 // Begin processing for rotating fishing spots.
 on(ServerLaunchEvent::class) {

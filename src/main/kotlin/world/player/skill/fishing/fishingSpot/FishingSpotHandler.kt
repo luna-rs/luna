@@ -1,4 +1,4 @@
-package world.player.skill.fishing.catchFish
+package world.player.skill.fishing.fishingSpot
 
 import api.predef.*
 import api.predef.ext.*
