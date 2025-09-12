@@ -2,11 +2,17 @@ package world.player.skill.firemaking
 
 import api.predef.*
 import io.luna.game.model.mob.Player
+import world.player.skill.Skills
 
 /**
  * Holds constants and useful global functions related to Firemaking.
  */
 object Firemaking {
+
+    /**
+     * The maximum amount of ticks the player can wait before a log will be lit.
+     */
+    const val MAXIMUM_LIGHT_DURATION = 10
 
     /**
      * The tinderbox item ID.
@@ -24,29 +30,22 @@ object Firemaking {
     const val ASHES = 592
 
     /**
-     * How fast logs will be lit. Higher value = slower. Must be greater than or equal to 2.
-     */
-    const val BASE_LIGHT_RATE = 13
-
-    /**
      * Jagex have stated that log type does not have an effect on burn times, so we use a random time between 45s
      * and 2m.
      */
     val BURN_TIME = 75..200
 
     /**
-     * Computes the time it will take to light [log].
+     * Computes the amount of ticks required to light [log].
      */
     fun computeLightDelay(plr: Player, log: Log): Int {
-        var baseTime = rand(BASE_LIGHT_RATE / 2, BASE_LIGHT_RATE)
-        var levelFactor = plr.firemaking.level - log.level
-        if (levelFactor >= 2) {
-            levelFactor /= 2
-            baseTime -= levelFactor
+        var ticks = 1
+        repeat(MAXIMUM_LIGHT_DURATION) { // Loop until successful. User-defined maximum light duration.
+            if (Skills.success(log.chance, plr.firemaking.level)) {
+                return ticks
+            }
+            ticks++
         }
-        if (baseTime <= 1) {
-            return rand(1, 3)
-        }
-        return rand(2, baseTime)
+        return ticks
     }
 }
