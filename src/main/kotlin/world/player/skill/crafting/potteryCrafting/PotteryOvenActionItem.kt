@@ -12,7 +12,7 @@ import world.player.Sounds
  * An [InventoryAction] that fires [Unfired] pottery materials.
  */
 class PotteryOvenActionItem(val plr: Player, val unfired: Unfired, amount: Int) :
-    InventoryAction(plr, true, 4, amount) {
+    InventoryAction(plr, true, 3, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {
