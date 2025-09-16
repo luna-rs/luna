@@ -46,7 +46,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     /**
      * How many layers of chunks will be loaded when looking for viewable entities.
      */
-    public static final int VIEWABLE_RADIUS = 3;
+    public static final int VIEWABLE_RADIUS = 4;
 
     /**
      * A map of loaded chunks.
@@ -189,7 +189,7 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
         // Send out grouped entity updates for new chunks in view.
         for (ChunkRepository chunk : newChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
-            // Chunk is being cleared, so resend static updates like displaying registered objects and items.
+            // Chunk was cleared, so resend static updates like displaying registered objects and items.
             for (ChunkUpdatableRequest request : chunk.getPersistentUpdates()) {
                 ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
                 if (view.isViewableFor(player)) {

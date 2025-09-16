@@ -196,9 +196,22 @@ public final class ChunkRepository implements Iterable<Entity> {
         while (it.hasNext()) {
             var request = it.next();
             if (request.isPersistent()) {
-                persistentUpdates.put((StationaryEntity) request.getUpdatable(), request);
+                StationaryEntity entity = (StationaryEntity) request.getUpdatable();
+
+                // Discard requests with inactive entities instead of caching.
+                if (entity.getState() == EntityState.INACTIVE) {
+                    it.remove();
+                    continue;
+                }
+
+                /*
+                    Some requests must be persisted because the temporary list is cleared every tick.
+                    An example of this is an update request that displays an object. That must be resent
+                    whenever a chunk is cleared of entities.
+                 */
+                persistentUpdates.put(entity, request);
             }
-            if(request.getUpdatable() instanceof LocalEntity) {
+            if (request.getUpdatable() instanceof LocalEntity) {
                 // End life-cycle for local entities.
                 LocalEntity entity = (LocalEntity) request.getUpdatable();
                 entity.setState(EntityState.INACTIVE);
