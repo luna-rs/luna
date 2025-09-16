@@ -4,6 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Direction
 import io.luna.game.model.EntityType
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.ObjectType
 import world.player.Sounds
@@ -13,6 +14,11 @@ import world.player.Sounds
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {
+
+    /**
+     * The position that the log will be placed on.
+     */
+    private var logGroundItem: GroundItem? = null
 
     companion object {
 
@@ -39,7 +45,7 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
             else -> {
                 if (removeLog) {
                     if (mob.inventory.remove(log.id)) {
-                        world.addItem(log.id, 1, mob.position, mob)
+                        logGroundItem = world.addItem(log.id, 1, mob.position, mob)
                         mob.sendMessage("You light the ${itemName(log.id).lowercase()}...")
                         return true
                     }
@@ -63,7 +69,7 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
      * Attempts to light the fire if the log is still on the ground.
      */
     private fun light() {
-        if (world.items.removeFromPosition(mob.position) { it.id == log.id }) {
+        if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
             val firePosition = mob.position
             when {
                 originalDelayTicks < 2 -> mob.playSound(Sounds.BURN_LOG_QUICK)
