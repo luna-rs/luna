@@ -36,7 +36,7 @@ class CutGemActionItem(val plr: Player, val gem: Gem, amount: Int) : InventoryAc
      */
     private fun getCutGem(): Item {
         if (gem.isSemiPrecious()) {
-            // No longer get crushed gems after level 20ish
+            // No longer get crushed gems after level 25.
             val baseRoll = 75
             val finalRoll = baseRoll + plr.crafting.level
             return if (rand(1, 100) < finalRoll) gem.cutItem else gem.getCrushedItem()
