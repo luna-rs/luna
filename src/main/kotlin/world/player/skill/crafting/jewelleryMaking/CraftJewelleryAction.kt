@@ -16,7 +16,6 @@ import world.player.skill.smithing.BarType
 class CraftJewelleryAction(plr: Player, private val barType: BarType,
                            private val jewellery: JewelleryItem, times: Int) :
     InventoryAction(plr, true, 3, times) {
-    // todo https://github.com/luna-rs/luna/issues/361
 
     override fun executeIf(start: Boolean): Boolean =
         when {
@@ -33,7 +32,6 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
         mob.playSound(Sounds.SMELTING)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
-        mob.sendMessage("You create the ${jewellery.item.itemDef.name.toLowerCase()}.")
     }
 
     override fun add(): List<Item> = listOf(jewellery.item)
