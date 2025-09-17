@@ -1,7 +1,6 @@
 package world.player.skill.cooking.prepareFood
 
 import api.predef.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
@@ -10,8 +9,11 @@ import world.obj.resource.fillable.WaterResource
 /**
  * An [InventoryAction] that prepares an [IncompleteFood] type.
  */
-class PrepareFoodActionItem(plr: Player, val food: IncompleteFood, private val removeIds: MutableSet<Int>, amount: Int) :
-        InventoryAction(plr, true, 1, amount) {
+class PrepareFoodActionItem(plr: Player,
+                            val food: IncompleteFood,
+                            private val removeIds: MutableSet<Int>,
+                            amount: Int) :
+    InventoryAction(plr, true, 1, amount) {
 
     override fun executeIf(start: Boolean): Boolean =
         when {
@@ -27,8 +29,11 @@ class PrepareFoodActionItem(plr: Player, val food: IncompleteFood, private val r
         if (food.exp > 0.0) {
             mob.cooking.addExperience(food.exp)
         }
-        val str = if (food != IncompleteFood.PINEAPPLE_RING) "You make ${articleItemName(food.id)}." else
-            "You make some ${itemName(food.id)}s."
+        val name = food.name
+        val str =
+            if (name.endsWith("DOUGH")) "You make some ${itemName(food.id)}."
+            else if (food != IncompleteFood.PINEAPPLE_RING) "You make ${articleItemName(food.id)}."
+            else "You make some ${itemName(food.id)}s."
         mob.sendMessage(str)
     }
 
@@ -82,7 +87,7 @@ class PrepareFoodActionItem(plr: Player, val food: IncompleteFood, private val r
             return emptyId
         }
         return when (id) {
-            1933 -> 1932 // Pot of flour
+            1933 -> 1931 // Pot of flour
             1927 -> 1925 // Bucket of milk
             else -> null
         }
