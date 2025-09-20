@@ -15,41 +15,41 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model that contains key-value mappings for {@link Attribute} types.
+ * A container that manages dynamic and persistent {@link Attribute} values for mobs.
  *
  * @author lare96
  */
 public final class AttributeMap {
 
     /**
-     * A set of all persistent keys. Used to ensure there are no duplicates.
+     * Global registry of persistence keys used to prevent collisions.
      */
     public static final Map<String, Attribute<?>> persistentKeyMap = new ConcurrentHashMap<>();
 
     /**
-     * A map of persistent attributes waiting to be assigned.
+     * Attributes loaded from disk or deserialization that await activation.
      */
     private final Map<String, Object> loadedAttributes = new HashMap<>();
 
     /**
-     * A map that holds attribute key and value pairs.
+     * Live attribute values mapped by identity
      */
     private final Map<Attribute<?>, Object> attributes = new IdentityHashMap<>(12);
 
     /**
-     * The last accessed key.
+     * Last used key for fast access optimization.
      */
     private Attribute<?> lastKey;
 
     /**
-     * The last accessed value.
+     * Last used value for fast access optimization.
      */
     private Object lastValue;
 
     /**
-     * Loads attribute values from the loaded map.
+     * Loads attribute values from serialized data.
      *
-     * @param loadedAttributeMap The loaded attributes.
+     * @param loadedAttributeMap A list of objects representing persisted attributes.
      */
     public void load(List<Object> loadedAttributeMap) {
         AtomicBoolean processedBasic = new AtomicBoolean(false);
@@ -66,7 +66,8 @@ public final class AttributeMap {
                             "Duplicate persistent attribute key {%s}.", key);
                 });
                 processedBasic.set(true);
-            } else { // Then we process complex attribute maps.
+            } else {
+                // Then we process complex attribute maps.
                 var newKey = nextMap.entrySet().stream().findFirst().get();
                 String[] keyToken = newKey.getKey().split("@"); // Split the name and type.
                 String attrName = keyToken[0];
@@ -75,7 +76,7 @@ public final class AttributeMap {
                     // Get the type, and perform the necessary conversions to be able to add it.
                     Class<?> typeClass = Class.forName(attrType);
                     Object objValue = newKey.getValue();
-                    if(objValue == null || objValue.equals("null")) {
+                    if (objValue == null || objValue.equals("null")) {
                         // Value is nullable and was set to null. Don't load anything.
                         return;
                     }
@@ -95,9 +96,9 @@ public final class AttributeMap {
     }
 
     /**
-     * Creates a copy of this map for saving.
+     * Serializes this map's persistent attributes to a list format.
      *
-     * @return A copy of this map.
+     * @return A list ready for JSON serialization.
      */
     public List<Object> save() {
         List<Object> attrList = new ArrayList<>();
@@ -125,12 +126,12 @@ public final class AttributeMap {
     }
 
     /**
-     * Sets {@code attr} to {@code value}.
+     * Associates a value with an attribute.
      *
-     * @param attr The attribute to set.
-     * @param value The value to set it to.
-     * @param <T> The attribute type.
-     * @return The previous value, possibly null if there was no value.
+     * @param attr The attribute key.
+     * @param value The new value.
+     * @param <T> The value type.
+     * @return The old value, if any.
      */
     public <T> T set(Attribute<T> attr, T value) {
         var previousValue = attributes.put(attr, value);
@@ -145,12 +146,11 @@ public final class AttributeMap {
     }
 
     /**
-     * Retrieves the value of {@code attr}. If it doesn't exist it will be generated with saved player data, or a default
-     * value.
+     * Retrieves a value from the map or loads it using the initial or persisted value.
      *
-     * @param attr The attribute to retrieve.
-     * @param <T> The attribute type.
-     * @return The value of the attribute.
+     * @param attr The attribute key.
+     * @param <T> The value type.
+     * @return The resolved value.
      */
     public <T> T get(Attribute<T> attr) {
         // Attribute is equal to cached key, return last value.
@@ -178,10 +178,10 @@ public final class AttributeMap {
     }
 
     /**
-     * Determines if there is a value for {@code attr}.
+     * Checks if the map contains a value for a given attribute.
      *
-     * @param attr The attribute to check for.
-     * @return {@code true} if there is a value for {@code attr}.
+     * @param attr The attribute key.
+     * @return {@code true} if a value is present or loadable.
      */
     public boolean has(Attribute<?> attr) {
         if (!attributes.containsKey(attr)) {
@@ -189,5 +189,12 @@ public final class AttributeMap {
             return key != null && loadedAttributes.containsKey(key);
         }
         return true;
+    }
+
+    /**
+     * @return How many attributes are within this map.
+     */
+    public int size() {
+        return attributes.size() + loadedAttributes.size();
     }
 }

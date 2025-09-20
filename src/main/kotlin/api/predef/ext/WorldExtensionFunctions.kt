@@ -5,6 +5,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.World
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
@@ -125,6 +126,19 @@ fun World.addItem(id: Int,
     val item = GroundItem(ctx,
                           id,
                           amount,
+                          position,
+                          if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr))
+    return addItem(item)
+}
+
+/**
+ * Spawns a [GroundItem] for [plr].
+ */
+fun World.addItem(add: Item,
+                  position: Position,
+                  plr: Player? = null): GroundItem {
+    val item = GroundItem(ctx,
+                          add,
                           position,
                           if (plr == null) ChunkUpdatableView.globalView() else ChunkUpdatableView.localView(plr))
     return addItem(item)

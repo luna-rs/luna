@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  *
  * @author lare96
  */
-public final class Item {
+public class Item {
 
     /**
      * A set of search restricted items that don't show up in {@link #byName(String)} queries.
@@ -184,7 +184,25 @@ public final class Item {
      */
     public ItemDefinition getUnnotedItemDef() {
         ItemDefinition current = getItemDef();
-        return current.getUnnotedId().isPresent() ? ItemDefinition.ALL.retrieve(current.getUnnotedId().getAsInt()) : current;
+        return current.getUnnotedId().isPresent() ? ItemDefinition.ALL.retrieve(current.getUnnotedId().getAsInt())
+                : current;
+    }
+
+    /**
+     * Checks if this item is the {@link DynamicItem} type.
+     *
+     * @return {@code} if this item has attributes.
+     */
+    public boolean isDynamic() {
+        return this instanceof DynamicItem;
+    }
+
+    /**
+     * Casts this item to {@link DynamicItem} type. Check if this item is dynamic using
+     * {@link #isDynamic()} first.
+     */
+    public DynamicItem asDynamic() {
+        return (DynamicItem) this;
     }
 
     /**

@@ -20,7 +20,7 @@ import java.util.OptionalInt;
 /**
  * An item container model representing a player's bank.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class Bank extends ItemContainer {
 
@@ -178,18 +178,17 @@ public final class Bank extends ItemContainer {
         int id = item.getItemDef().getUnnotedId().orElse(item.getId());
         int existingAmount = inventory.computeAmountForId(item.getId());
         amount = Math.min(amount, existingAmount);
-        item = item.withAmount(amount);
+        item = item.withAmount(amount).withId(id);
 
         // Determine if enough space in bank.
-        Item depositItem = new Item(id, amount);
-        if (!hasSpaceFor(depositItem)) {
+        if (!hasSpaceFor(item)) {
             fireCapacityExceededEvent();
             return false;
         }
 
         // Deposit item.
         if (inventory.remove(item)) {
-            return add(depositItem);
+            return add(item);
         }
         return false;
     }
@@ -223,7 +222,7 @@ public final class Bank extends ItemContainer {
 
         if (player.getVarpManager().getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1) {
             OptionalInt noted = item.getItemDef().getNotedId();
-            if (noted.isPresent()) {
+            if (noted.isPresent() && !item.isDynamic()) {
                 id = noted.getAsInt();
             } else {
                 player.sendMessage("This item cannot be withdrawn as a note.");
@@ -239,8 +238,7 @@ public final class Bank extends ItemContainer {
         // Withdraw the item.
         item = item.withAmount(amount);
         if (remove(item)) {
-            Item withdrawItem = new Item(id, amount);
-            return inventory.add(withdrawItem);
+            return inventory.add(item.withId(id));
         }
         return false;
     }

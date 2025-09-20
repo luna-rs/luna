@@ -9,6 +9,7 @@ import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
+import kotlinx.coroutines.processNextEventInCurrentThread
 import world.minigame.partyRoom.dropParty.DropPartyOption.BalloonObject
 import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 
@@ -26,10 +27,10 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
         plr.sendMessage("Untradeable items cannot be deposited here.")
         return
     }
+    val invItem = plr.inventory[event.index] ?: return
     val invAmt = plr.inventory.computeAmountForId(event.itemId)
-    val finalAmt = if (newAmount > invAmt) invAmt else newAmount
 
-    val removeItem = Item(event.itemId, finalAmt)
+    val removeItem = invItem.withAmount(if (newAmount > invAmt) invAmt else newAmount)
     if(!plr.depositItems.hasSpaceFor(removeItem)) {
         plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
         return

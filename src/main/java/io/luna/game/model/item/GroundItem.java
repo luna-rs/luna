@@ -65,6 +65,13 @@ public class GroundItem extends StationaryEntity {
         this.amount = amount;
     }
 
+    public GroundItem(LunaContext context, Item item, Position position, ChunkUpdatableView view) {
+        this(context, item.getId(), item.getAmount(), position, view);
+        if (item.isDynamic()) {
+            setAttributes(item.asDynamic().attributes());
+        }
+    }
+
     @Override
     public final int hashCode() {
         return System.identityHashCode(this);
@@ -218,6 +225,6 @@ public class GroundItem extends StationaryEntity {
      * @return The item instance.
      */
     public final Item toItem() {
-        return new Item(id, amount);
+        return hasAttributes() ? new DynamicItem(id, attributes()) : new Item(id, amount);
     }
 }

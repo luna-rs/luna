@@ -180,7 +180,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 world.scheduleOnce(1) {
                     if (world.removeObject(this)) {
                         // animate(-1)
-                        world.addItem(item.id, item.amount, position, plr)
+                        world.addItem(item, position, plr)
                     }
                 }
             } else {

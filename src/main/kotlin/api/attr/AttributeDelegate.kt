@@ -1,12 +1,13 @@
 package api.attr
 
 import io.luna.game.model.Entity
-import io.luna.game.model.mob.Player
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.attr.Attributable
 import io.luna.game.model.mob.attr.Attribute
 import kotlin.reflect.KProperty
 
 /**
- * A delegate that forwards to the player's attribute map.
+ * A delegate that forwards to the attribute map.
  *
  * @author lare96
  */
@@ -15,14 +16,13 @@ class AttributeDelegate<T : Any?>(val attr: Attribute<T>) {
     /**
      * Retrieve the attribute value.
      */
-    operator fun getValue(entity: Entity, property: KProperty<*>): T =
-        entity.attributes[attr]
+    operator fun getValue(obj: Attributable, property: KProperty<*>): T = obj.attributes()[attr]
 
     /**
      * Set the attribute value.
      */
-    operator fun setValue(entity: Entity, property: KProperty<*>, value: T) {
-        entity.attributes[attr] = value
+    operator fun setValue(obj: Attributable, property: KProperty<*>, value: T) {
+        obj.attributes()[attr] = value
     }
 
     /**

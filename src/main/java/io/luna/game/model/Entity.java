@@ -2,15 +2,16 @@ package io.luna.game.model;
 
 import io.luna.Luna;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
 import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.attr.Attributable;
 import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.game.plugin.PluginManager;
-import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +25,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96
  */
-public abstract class Entity {
+public abstract class Entity implements Attributable {
 
     /**
      * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
@@ -150,6 +151,11 @@ public abstract class Entity {
      */
     @Override
     public abstract String toString();
+
+    @Override
+    public final AttributeMap attributes() {
+        return getAttributes();
+    }
 
     /**
      * Returns this entity's size.
@@ -322,11 +328,25 @@ public abstract class Entity {
      * @return The attribute map.
      */
     public final AttributeMap getAttributes() {
-        if(attributes == null) {
+        if (attributes == null) {
             // Lazy initialization is necessary, otherwise way too much memory will be used.
             attributes = new AttributeMap();
         }
         return attributes;
+    }
+
+    /**
+     * Sets the attribute map.
+     */
+    public void setAttributes(AttributeMap attributes) {
+        this.attributes = attributes;
+    }
+
+    /**
+     * Determines if this entity has attributes.
+     */
+    public boolean hasAttributes() {
+        return attributes != null && attributes.size() > 0;
     }
 
     /**

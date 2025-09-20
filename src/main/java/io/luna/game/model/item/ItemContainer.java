@@ -211,8 +211,9 @@ public class ItemContainer implements Iterable<Item> {
         checkArgument(preferredIndex >= -1, "Preferred index must be above or equal to -1.");
 
         // Determine best index to place on.
+        boolean stackable = isStackable(item) && !item.isDynamic();
         int addIndex = preferredIndex;
-        if (isStackable(item)) {
+        if (stackable) {
             addIndex = computeIndexForId(item.getId()).orElse(-1);
         } else if (addIndex != -1) {
             addIndex = occupied(addIndex) ? -1 : addIndex;
@@ -227,7 +228,7 @@ public class ItemContainer implements Iterable<Item> {
             return false;
         }
 
-        if (isStackable(item)) {
+        if (stackable) {
             // Add stackable item.
             Item current = get(addIndex);
             if (!occupied(addIndex)) {
@@ -324,7 +325,16 @@ public class ItemContainer implements Iterable<Item> {
 
         // Determine best index to remove from.
         int removeIndex = -1;
-        if (preferredIndex == -1 || !occupied(preferredIndex)) {
+        if (item.isDynamic()) {
+            // If item has attributes, try and match by reference.
+            for (int index = 0; index < capacity; index++) {
+                Item nextItem = get(index);
+                if (item.equals(nextItem)) {
+                    removeIndex = index;
+                    break;
+                }
+            }
+        } else if (preferredIndex == -1 || !occupied(preferredIndex)) {
             removeIndex = computeIndexForId(item.getId()).orElse(-1);
         } else if (item.getId() == get(preferredIndex).getId()) {
             removeIndex = preferredIndex;
@@ -334,8 +344,9 @@ public class ItemContainer implements Iterable<Item> {
         if (removeIndex == -1) {
             return false;
         }
-
-        if (isStackable(item)) {
+        if (item.isDynamic()) {
+            set(removeIndex, null);
+        } else if (isStackable(item)) {
             // Remove stackable item.
             Item current = get(removeIndex);
             if (item.contains(current)) {
@@ -821,7 +832,7 @@ public class ItemContainer implements Iterable<Item> {
      * @return The amount of space required.
      */
     public final int computeSpaceFor(Item item) {
-        if (isStackable(item)) {
+        if (isStackable(item) && !item.isDynamic()) {
             // See if there's an index for the item.
             int index = computeIndexForId(item.getId()).orElse(-1);
             if (index == -1) {

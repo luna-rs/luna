@@ -1,6 +1,7 @@
 package api.attr
 
 import api.attr.typeAdapters.ActiveSlayerTaskTypeAdapter
+import api.attr.typeAdapters.AttributeMapTypeAdapter
 import api.attr.typeAdapters.ItemContainerTypeAdapter
 import api.predef.*
 import com.google.gson.FieldNamingPolicy
@@ -9,6 +10,7 @@ import com.google.gson.stream.JsonReader
 import io.luna.game.action.TimeSource
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
+import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.util.TickTimer
 import world.player.skill.slayer.ActiveSlayerTask
 import kotlin.reflect.KClass
@@ -32,6 +34,7 @@ object Attr {
         // Register special types.
         Attribute.addSpecialType(builder, ItemContainer::class.java, ItemContainerTypeAdapter)
         Attribute.addSpecialType(builder, ActiveSlayerTask::class.java, ActiveSlayerTaskTypeAdapter)
+        Attribute.addSpecialType(builder, AttributeMap::class.java, AttributeMapTypeAdapter)
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())
@@ -102,6 +105,16 @@ object Attr {
     inline fun <reified E> list(vararg initialValues: E): AttributeDelegate<ArrayList<E>> {
         check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
         val values = initialValues.toCollection(ArrayList())
+        val attr = Attribute(values)
+        return AttributeDelegate(attr)
+    }
+
+    /**
+     * Creates a [HashSet] attribute with [initialValues].
+     */
+    inline fun <reified E> hashSet(vararg initialValues: E): AttributeDelegate<HashSet<E>> {
+        check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
+        val values = initialValues.toCollection(HashSet())
         val attr = Attribute(values)
         return AttributeDelegate(attr)
     }
