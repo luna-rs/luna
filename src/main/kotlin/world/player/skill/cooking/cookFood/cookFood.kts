@@ -7,7 +7,7 @@ import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.`object`.GameObject
-import world.player.skill.cooking.cookFood.MakeWineActionItem.Companion.fermentWineTask
+import world.player.skill.cooking.cookFood.MakeWineActionItem.Companion.wineFermentTask
 
 /**
  * The fire objects.
@@ -46,8 +46,8 @@ fun cook(plr: Player, amount: Int? = null) {
  * Check for unfermented wines on login.
  */
 on(LoginEvent::class) {
-    plr.fermentWineTask = FermentWineTask(plr)
-    world.schedule(plr.fermentWineTask)
+    plr.wineFermentTask = FermentWineTask(plr)
+    world.schedule(plr.wineFermentTask)
 }
 
 /**

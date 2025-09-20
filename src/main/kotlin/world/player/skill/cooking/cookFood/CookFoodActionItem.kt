@@ -1,13 +1,13 @@
 package world.player.skill.cooking.cookFood
 
 import api.predef.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
-import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
+import world.player.skill.Skills
 
 /**
  * An [InventoryAction] that cooks food.
@@ -65,7 +65,7 @@ class CookFoodActionItem(plr: Player,
     override fun remove() = listOf(food.rawItem)
 
     override fun add(): List<Item> =
-        if (computeIsBurnt()) {
+        if (computeFoodBurnt()) {
             experience = null
             listOf(food.burntItem)
         } else {
@@ -76,35 +76,44 @@ class CookFoodActionItem(plr: Player,
     /**
      * Determines if the food will be burnt this action cycle.
      */
-    private fun computeIsBurnt(): Boolean {
+    private fun computeFoodBurnt(): Boolean {
 
         // Cooking gauntlets decreases burn chance.
-        var baseBurnStopLevel = food.burnStopLvl
+        val level = mob.cooking.level
+        var burnLevel = food.burnStopLvl
         if (mob.equipment.contains(775)) {
-            when (food) {
-                Food.LOBSTER -> baseBurnStopLevel = 64
-                Food.SWORDFISH -> baseBurnStopLevel = 80
-                Food.MONKFISH -> baseBurnStopLevel = 86
-                Food.SHARK -> baseBurnStopLevel = 94
-                else -> {}
+            burnLevel = when (food) {
+                Food.LOBSTER -> 64
+                Food.SWORDFISH -> 80
+                Food.MONKFISH -> 86
+                Food.SHARK -> 94
+                else -> burnLevel
             }
         }
 
         // Using the Lumbridge range decreases burn chance.
         if (!usingFire && cookObj.position.equals(RANGE_O_MATIC_POSITION)) {
-            baseBurnStopLevel -= rand(3, 6)
+            burnLevel = when (food) {
+                Food.BREAD -> 34
+                Food.BEEF -> 31
+                Food.BEAR_MEAT -> 31
+                Food.CHICKEN -> 31
+                Food.RAT_MEAT -> 31
+                Food.SHRIMP -> 31
+                Food.ANCHOVIES -> 31
+                Food.SARDINE -> 34
+                Food.HERRING -> 38
+                Food.MACKEREL -> 41
+                Food.REDBERRY_PIE -> 42
+                Food.TROUT -> 45
+                Food.COD -> 46
+                Food.PIKE -> 49
+                Food.MEAT_PIE -> 49
+                Food.SALMON -> 55
+                else -> burnLevel
+            }
         }
-
-        if (mob.cooking.level >= baseBurnStopLevel) {
-            return false
-        } else {
-            val rangeBonus = if (usingFire) 0.0 else 5.0
-            val baseChance = 55.0 - rangeBonus
-            val burnLvlFactor = baseBurnStopLevel - food.lvl
-            val reqLvlFactor = mob.cooking.level - food.lvl
-            val burnChance = baseChance - (reqLvlFactor * (baseChance / burnLvlFactor))
-
-            return burnChance >= (rand().nextDouble() * 100.0)
-        }
+        return if (level >= burnLevel) false
+        else !Skills.success(chance = food.chance, level = level, modifier = { if (usingFire) it else it + 5.0 })
     }
 }
