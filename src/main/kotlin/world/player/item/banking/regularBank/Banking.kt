@@ -1,7 +1,7 @@
 package world.player.item.banking.regularBank
 
 import api.predef.*
-import io.luna.game.model.def.*
+import io.luna.game.model.def.NpcDefinition
 
 /**
  * Holds utility functions related to banking.
@@ -11,7 +11,7 @@ object Banking {
     /**
      * ID of the default banker npc.
      */
-    val DEFAULT_BANKER: Int = 494
+    const val DEFAULT_BANKER = 494
 
     /**
      * The mutable set of banking objects.
@@ -41,7 +41,8 @@ object Banking {
             val name = gameObj.definition.name
             val actions = gameObj.definition.actions
             if ((name.equals("Bank booth") || name.equals("Bank chest")) &&
-                (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))) {
+                (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))
+            ) {
                 loadObjects += gameObj.id
             }
         }
@@ -53,6 +54,6 @@ object Banking {
     internal fun loadBankingNpcs() {
         NpcDefinition.ALL
             .filter { npcDefinition -> npcDefinition?.name?.contains("Banker", ignoreCase = true) ?: false }
-            .forEach({ npcDefinition -> loadBankingNpcs.add(npcDefinition.id)})
+            .forEach { npcDefinition -> loadBankingNpcs.add(npcDefinition.id) }
     }
 }
