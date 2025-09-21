@@ -11,11 +11,9 @@ import java.util.*
 /**
  * An [InventoryOverlayInterface] implementation representing the confirmation trading screen.
  *
- * @author lare96 
+ * @author lare96
  */
 class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayInterface(3443, 3213) {
-
-    // TODO https://github.com/luna-rs/luna/issues/372
 
     companion object {
 
@@ -84,11 +82,12 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
 
         if (confirm.accepted) {
             completed = true
-            plr.inventory.updateAll(confirm.tradingItems, tradingItems)
-            plr.interfaces.close()
-
             confirm.completed = true
-            other.inventory.updateAll(tradingItems, confirm.tradingItems)
+
+            plr.inventory.addAll(confirm.tradingItems)
+            other.inventory.addAll(tradingItems)
+
+            plr.interfaces.close()
             other.interfaces.close()
         } else {
             accepted = true
@@ -145,6 +144,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                     .append(')')
                     .toString()
             }
+
             amount >= 1_000_000 -> {
                 sb.append("@gre@")
                     .append(amount / 1_000_000)
@@ -154,6 +154,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
                     .append(FORMATTER.format(amount))
                     .append(')').toString()
             }
+
             else -> sb.append(amount).toString()
         }
     }
