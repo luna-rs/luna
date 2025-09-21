@@ -1,4 +1,4 @@
-package world.player.logout.logoutButton
+package world.player.settings
 
 import api.predef.*
 
