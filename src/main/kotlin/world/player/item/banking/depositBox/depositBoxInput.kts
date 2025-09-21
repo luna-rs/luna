@@ -21,42 +21,41 @@ fun deposit(msg: WidgetItemClickEvent, amount: Int? = null) {
 /**
  * Determines if the deposit box interface is open.
  */
-fun isDepositBoxOpen(plr: Player) = plr.interfaces.isOpen(DepositBoxInterface::class)
-
+fun isOpen(plr: Player) = plr.interfaces.isOpen(DepositBoxInterface::class)
 
 /**
  * Deposit 1.
  */
 on(WidgetItemClickEvent.WidgetItemFirstClickEvent::class)
-    .filter { widgetId == 7423 && isDepositBoxOpen(plr) }
+    .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 1) }
 
 /**
  * Deposit 5.
  */
 on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class)
-    .filter { widgetId == 7423 && isDepositBoxOpen(plr) }
+    .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 5) }
 
 /**
  * Deposit 10.
  */
 on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class)
-    .filter { widgetId == 7423 && isDepositBoxOpen(plr) }
+    .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 10) }
 
 /**
  * Deposit all.
  */
 on(WidgetItemClickEvent.WidgetItemFourthClickEvent::class)
-    .filter { widgetId == 7423 && isDepositBoxOpen(plr) }
+    .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this) }
 
 /**
  * Deposit (x).
  */
 on(WidgetItemClickEvent.WidgetItemFifthClickEvent::class)
-    .filter { widgetId == 7423 && isDepositBoxOpen(plr) }
+    .filter { widgetId == 7423 && isOpen(plr) }
     .then {
         plr.interfaces.open(object : AmountInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = deposit(this@then, value)
