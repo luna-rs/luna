@@ -116,7 +116,7 @@ object PunishmentHandler {
         val loadFuture = world.persistenceService.transform(username) {
             it.unbanInstant = Instant.now().minus(1, ChronoUnit.DAYS)
         }
-        loadFuture.addListener(Runnable {
+        loadFuture.addListener({
             try {
                 loadFuture.get()
                 fileLogger.info("{} has been unbanned.", username)
