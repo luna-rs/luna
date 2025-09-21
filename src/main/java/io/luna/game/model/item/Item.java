@@ -179,6 +179,16 @@ public class Item {
     }
 
     /**
+     * Creates a new {@link IndexedItem} with the same id and amount.
+     *
+     * @param index The index.
+     * @return The indexed item.
+     */
+    public IndexedItem withIndex(int index) {
+        return new IndexedItem(index,id, amount);
+    }
+
+    /**
      * @return The unnoted item definition of this item. If this item definition is already unnoted, returns the same value as
      * {@link #getItemDef()}.
      */

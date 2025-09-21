@@ -14,13 +14,13 @@ import io.luna.game.model.mob.attr.AttributeMap
 object AttributeMapTypeAdapter : TypeAdapter<AttributeMap>() {
 
     override fun write(writer: JsonWriter, value: AttributeMap?) {
-        val attributeList = if (value != null) value.save() else emptyList()
-        writer.value(Attribute.getGsonInstance().toJson(attributeList))
+        val attributeList = if (value != null) value.save() else emptyMap()
+        writer.jsonValue(Attribute.getGsonInstance().toJson(attributeList))
     }
 
     override fun read(reader: JsonReader?): AttributeMap {
         val map = AttributeMap()
-        val readData = Attribute.getGsonInstance().fromJson<List<Any>>(reader, List::class.java)
+        val readData = Attribute.getGsonInstance().fromJson<Map<String, Any>>(reader, Map::class.java)
         map.load(readData)
         return map
     }

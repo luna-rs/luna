@@ -87,6 +87,14 @@ public final class DynamicItem extends Item implements Attributable {
     }
 
     /**
+     * Forwards to {@link Item#withIndex(int)} while retaining attributes.
+     */
+    @Override
+    public DynamicIndexedItem withIndex(int index) {
+        return new DynamicIndexedItem(super.withIndex(index), attributes);
+    }
+
+    /**
      * Throws an exception if the amount changes.
      */
     @Override

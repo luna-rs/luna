@@ -1,16 +1,10 @@
 package io.luna.game.model.mob.attr;
 
-import com.google.gson.JsonElement;
-import com.google.gson.internal.LinkedTreeMap;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -51,46 +45,27 @@ public final class AttributeMap {
      *
      * @param loadedAttributeMap A list of objects representing persisted attributes.
      */
-    public void load(List<Object> loadedAttributeMap) {
-        AtomicBoolean processedBasic = new AtomicBoolean(false);
-        loadedAttributeMap.forEach((Object value) -> {
-            // Because Google gson changes Map to LinkedTreeMap.
-            if (value instanceof LinkedTreeMap<?, ?>) {
-                value = new LinkedHashMap<>((LinkedTreeMap<?, ?>) value);
-            }
-
-            var nextMap = (LinkedHashMap<String, Object>) value;
-            if (!processedBasic.get()) { // First value is always the basic attribute map.
-                nextMap.forEach((String key, Object value2) -> {
-                    checkState(loadedAttributes.put(key, value2) == null,
-                            "Duplicate persistent attribute key {%s}.", key);
-                });
-                processedBasic.set(true);
-            } else {
-                // Then we process complex attribute maps.
-                var newKey = nextMap.entrySet().stream().findFirst().get();
-                String[] keyToken = newKey.getKey().split("@"); // Split the name and type.
-                String attrName = keyToken[0];
-                String attrType = keyToken[1];
-                try {
-                    // Get the type, and perform the necessary conversions to be able to add it.
-                    Class<?> typeClass = Class.forName(attrType);
-                    Object objValue = newKey.getValue();
-                    if (objValue == null || objValue.equals("null")) {
-                        // Value is nullable and was set to null. Don't load anything.
-                        return;
-                    }
-                    // Convert from Object -> JsonObject.
-                    JsonElement jsonValue = Attribute.getGsonInstance().toJsonTree(objValue).getAsJsonObject();
-
-                    // Then from JsonObject -> typeClass using type adapters.
-                    Object convertedValue = Attribute.getGsonInstance().fromJson(jsonValue, typeClass);
-                    checkState(loadedAttributes.put(attrName, convertedValue) == null,
-                            "Duplicate persistent attribute key {%s}.", newKey.getKey());
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+    public void load(Map<String, Object> loadedAttributeMap) {
+        loadedAttributeMap.forEach((String key, Object value) -> {
+            // First retrieve the runtime type.
+            String[] tokens = key.split("@");
+            String name = tokens[0];
+            String type = tokens[1];
+            try {
+                // Instantiate the type, and convert our loaded value.
+                Class<?> typeClass = Class.forName(type);
+                if (value == null || value.equals("null")) {
+                    // Value is nullable and was set to null. Don't load anything.
+                    return;
                 }
 
+                // Convert from JsonElement -> typeClass using type adapters.
+                Object convertedValue = Attribute.getGsonInstance().
+                        fromJson(Attribute.getGsonInstance().toJsonTree(value), typeClass);
+                checkState(loadedAttributes.put(name, convertedValue) == null,
+                        "Duplicate persistent attribute key {%s}.", key);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         });
     }
@@ -100,29 +75,16 @@ public final class AttributeMap {
      *
      * @return A list ready for JSON serialization.
      */
-    public List<Object> save() {
-        List<Object> attrList = new ArrayList<>();
-        List<Object> complexAttributes = new ArrayList<>();
-        Map<String, Object> basicAttributes = new HashMap<>();
+    public LinkedHashMap<String, Object> save() {
+        LinkedHashMap<String, Object> save = new LinkedHashMap<>();
         attributes.forEach((Attribute<?> key, Object value) -> {
             // Persist all necessary attributes.
             if (key.isPersistent()) {
                 Class<?> valueClass = key.getValueType();
-                if (Attribute.isSpecialType(valueClass)) {
-                    // Persist special types in their own map, save with type.
-                    Map<String, Object> specialAttribute = new HashMap<>();
-                    specialAttribute.put(key.getPersistenceKey() + "@" + valueClass.getName(), value == null ? "null" : value);
-                    complexAttributes.add(specialAttribute);
-                } else {
-                    // Persist basic attributes normally.
-                    basicAttributes.put(key.getPersistenceKey(), value);
-                }
+                save.put(key.getPersistenceKey() + "@" + valueClass.getName(), value == null ? "null" : value);
             }
         });
-        // Always save the basic attribute map first.
-        attrList.add(basicAttributes);
-        attrList.addAll(complexAttributes);
-        return attrList;
+        return save;
     }
 
     /**

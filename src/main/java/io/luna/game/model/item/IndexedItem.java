@@ -7,7 +7,7 @@ import java.util.Objects;
  *
  * @author lare96 
  */
-public final class IndexedItem {
+public class IndexedItem {
 
     /**
      * The index.

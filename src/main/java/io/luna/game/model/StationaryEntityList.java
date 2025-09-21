@@ -100,7 +100,6 @@ public abstract class StationaryEntityList<E extends StationaryEntity> implement
     public final boolean removeFromPosition(Position position, Predicate<E> test) {
 
         List<E> toRemove = findAll(position).
-                filter(entity -> position.equals(entity.position)).
                 filter(test).
                 collect(Collectors.toList());
         toRemove.forEach(this::unregister);

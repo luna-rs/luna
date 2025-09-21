@@ -4,9 +4,10 @@ import api.attr.Attr.readJsonMember
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import io.luna.game.model.item.Item
+import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.ItemContainer.StackPolicy
+import io.luna.game.model.mob.attr.Attribute
 
 /**
  * A type adapter that will enable [ItemContainer]s to be persisted as attributes.
@@ -14,17 +15,14 @@ import io.luna.game.model.item.ItemContainer.StackPolicy
  * @author lare96
  */
 object ItemContainerTypeAdapter : TypeAdapter<ItemContainer>() {
+
     override fun write(writer: JsonWriter, value: ItemContainer) {
         writer.beginObject().name("capacity").value(value.capacity())
         writer.name("stack_policy").value(value.policy.name)
         writer.name("widget_id").value(value.primaryRefresh)
         writer.name("items").beginArray()
         for (item in value.toList()) {
-            writer.beginObject()
-            writer.name("index").value(item.index)
-            writer.name("id").value(item.id)
-            writer.name("amount").value(item.amount)
-            writer.endObject()
+            writer.jsonValue(Attribute.getGsonInstance().toJson(item))
         }
         writer.endArray().endObject()
     }
@@ -38,12 +36,8 @@ object ItemContainerTypeAdapter : TypeAdapter<ItemContainer>() {
         reader.nextName()
         reader.beginArray()
         while (reader.hasNext()) {
-            reader.beginObject()
-            val index = readJsonMember(reader, "index") { it.nextInt() }
-            val id = readJsonMember(reader, "id") { it.nextInt() }
-            val amt = readJsonMember(reader, "amount") { it.nextInt() }
-            items.set(index, Item(id, amt))
-            reader.endObject()
+            val item: IndexedItem = Attribute.getGsonInstance().fromJson(reader, IndexedItem::class.java)
+            items.set(item.index, item.toItem())
         }
         reader.endArray()
         reader.endObject()

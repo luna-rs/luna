@@ -306,11 +306,11 @@ public final class World {
                     player.cleanUp();
                     continue;
                 }
-                player.getWalking().process();
-                player.getActions().process();
                 if (player.isBot()) {
                     player.asBot().process();
                 }
+                player.getWalking().process();
+                player.getActions().process();
             } catch (Exception e) {
                 player.logout();
                 logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
@@ -324,7 +324,12 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
-            player.sendRegionUpdate(player.getPosition()); // Queue region updates before player updating.
+            /*
+                Handle region changes before player updating to ensure no other packets
+                related to it are sent. Queued data will be sent after updating
+                completes, within the synchronization task.
+            */
+            player.sendRegionUpdate(player.getPosition());
             updatePool.execute(new PlayerSynchronizationTask(player));
         }
         synchronizer.arriveAndAwaitAdvance();

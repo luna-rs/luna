@@ -986,7 +986,7 @@ public class ItemContainer implements Iterable<Item> {
             if (item == null) {
                 continue;
             }
-            list.add(new IndexedItem(index, item));
+            list.add(item.withIndex(index));
         }
         return list;
     }

@@ -3,11 +3,7 @@ package io.luna.game.model.mob.attr;
 import com.google.common.base.CharMatcher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
 import io.luna.game.model.Entity;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -26,37 +22,9 @@ import static java.util.Objects.requireNonNull;
 public final class Attribute<T> {
 
     /**
-     * Registry for special types requiring custom (de)serialization.
-     */
-    private static final Map<Class<?>, TypeAdapter<?>> specialTypes = new ConcurrentHashMap<>();
-
-    /**
      * Global Gson instance used for (de)serialization.
      */
     private static volatile Gson serializer = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
-    /**
-     * Registers a special type with a custom {@link TypeAdapter}. These types are serialized separately.
-     *
-     * @param builder The GsonBuilder to register with.
-     * @param typeClass The class of the type.
-     * @param typeAdapter The adapter to use for serialization.
-     * @param <E> The type being registered.
-     */
-    public static <E> void addSpecialType(GsonBuilder builder, Class<E> typeClass, TypeAdapter<E> typeAdapter) {
-        specialTypes.put(typeClass, typeAdapter);
-        builder.registerTypeAdapter(typeClass, typeAdapter);
-    }
-
-    /**
-     * Checks if the specified type class has a registered custom adapter.
-     *
-     * @param typeClass The class to check.
-     * @return {@code true} if it's a registered special type.
-     */
-    public static boolean isSpecialType(Class<?> typeClass) {
-        return specialTypes.containsKey(typeClass);
-    }
 
     /**
      * Sets the new JSON serializer.

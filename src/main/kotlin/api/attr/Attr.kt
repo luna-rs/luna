@@ -2,12 +2,14 @@ package api.attr
 
 import api.attr.typeAdapters.ActiveSlayerTaskTypeAdapter
 import api.attr.typeAdapters.AttributeMapTypeAdapter
+import api.attr.typeAdapters.IndexedItemTypeAdapter
 import api.attr.typeAdapters.ItemContainerTypeAdapter
 import api.predef.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
 import io.luna.game.action.TimeSource
+import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
@@ -32,9 +34,10 @@ object Attr {
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
 
         // Register special types.
-        Attribute.addSpecialType(builder, ItemContainer::class.java, ItemContainerTypeAdapter)
-        Attribute.addSpecialType(builder, ActiveSlayerTask::class.java, ActiveSlayerTaskTypeAdapter)
-        Attribute.addSpecialType(builder, AttributeMap::class.java, AttributeMapTypeAdapter)
+        builder.registerTypeAdapter(ItemContainer::class.java, ItemContainerTypeAdapter)
+        builder.registerTypeAdapter(ActiveSlayerTask::class.java, ActiveSlayerTaskTypeAdapter)
+        builder.registerTypeAdapter(AttributeMap::class.java, AttributeMapTypeAdapter)
+        builder.registerTypeAdapter(IndexedItem::class.java, IndexedItemTypeAdapter)
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())

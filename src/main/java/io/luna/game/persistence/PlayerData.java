@@ -46,7 +46,7 @@ public final class PlayerData {
     public double runEnergy;
     public double weight;
     public Map<String, Integer> varps;
-    public List<Object> attributes;
+    public Map<String, Object> attributes;
 
     // Used by persistence classes to ignore temporary bots.
     transient volatile boolean temporaryBot;
