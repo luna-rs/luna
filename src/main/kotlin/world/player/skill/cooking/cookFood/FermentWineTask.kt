@@ -33,10 +33,7 @@ class FermentWineTask(val plr: Player) : Task(false, 1) {
             if (++item.wineFermentCounter >= 20) {
                 plr.cooking.addExperience(IncompleteFood.UNFERMENTED_WINE.exp)
                 item.wineFermentCounter = 0
-                game.sync {
-                    container[index] = null
-                    container.add(1993)
-                }
+                game.sync { container[index] = Item(1993) }
                 return false
             }
         }

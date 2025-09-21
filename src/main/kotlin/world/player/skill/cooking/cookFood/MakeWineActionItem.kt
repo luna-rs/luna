@@ -3,8 +3,10 @@ package world.player.skill.cooking.cookFood
 import api.attr.Attr
 import api.predef.*
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
+import io.luna.game.model.item.DynamicItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import io.luna.game.task.TaskState
 import world.player.skill.cooking.prepareFood.IncompleteFood
 
 /**
@@ -27,7 +29,7 @@ class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 
 
     override fun remove(): MutableList<Item> = arrayListOf(Item(1987), Item(1937))
 
-    override fun add(): MutableList<Item> = arrayListOf(Item(1995))
+    override fun add(): MutableList<Item> = arrayListOf(DynamicItem(1995))
 
     override fun executeIf(start: Boolean): Boolean = when {
         mob.cooking.level < WINE.lvl -> {
@@ -39,13 +41,16 @@ class MakeWineActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 
     }
 
     override fun execute() {
-        mob.wineFermentTask?.cancel()
         mob.sendMessage("You add the grapes to the jug of water.")
-    }
+        
+        when (mob.wineFermentTask?.state) {
+            TaskState.IDLE, TaskState.CANCELLED -> {
+                val task = FermentWineTask(mob)
+                mob.wineFermentTask = task
+                world.schedule(task)
+            }
 
-    override fun onFinished() {
-        val task = FermentWineTask(mob)
-        mob.wineFermentTask = task
-        world.schedule(task)
+            else -> {}
+        }
     }
 }
