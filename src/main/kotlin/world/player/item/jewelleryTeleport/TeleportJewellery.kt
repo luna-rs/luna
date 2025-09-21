@@ -1,49 +1,49 @@
 package world.player.item.jewelleryTeleport
 
-import com.google.common.collect.*
-import io.luna.game.model.*
+import com.google.common.collect.ImmutableList
+import io.luna.game.model.Position
 
 /**
  * An enum representing jewellery that can be used to teleport.
- *
- * @param itemIDs               ID of item used to teleport in order of descending charges
- * @param lastChargeMessage     chatbox message sent when the last charge is used
- * @param disappear             true if the item disappears on last charge use
  */
-enum class TeleportJewellery(val itemIDs: ImmutableList<Int>,
-                             val destinations: ImmutableList<Pair<Position, String>>,
-                             val rubMessage : String,
-                             val lastChargeMessage : String,
-                             val disappear: Boolean) {
+enum class TeleportJewellery(val items: ImmutableList<Int>,
+                             val destinations: ImmutableList<Pair<String, Position>>,
+                             val rub: String,
+                             val lastCharge: String,
+                             val crumbles: Boolean) {
 
-    GAMES_NECKLACE(
-        ImmutableList.of(3853, 3855, 3857, 3859, 3861, 3863, 3865, 3867),
-        ImmutableList.of(
-            Position(2897, 3554) to "Burthorpe.",
-            Position(2536, 3565) to "Barbarian Outpost."),
-        "You rub the necklace...",
-        "Your Games necklace crumbles to dust.",
-        true
-    ),
-    DUELING_RING(
-        ImmutableList.of(2552, 2554, 2556, 2558, 2560, 2562, 2564, 2566),
-        ImmutableList.of(
-            Position(3316, 3237) to "Al Kharid Duel Arena.",
-            Position(2441, 3088) to "Castle Wars Arena."),
-        "You rub the ring...",
-        "Your Ring of Dueling crumbles to dust.",
-        true
-    ),
-    AMULET_OF_GLORY(
-        ImmutableList.of(1712, 1710, 1708, 1706, 1704),
-        ImmutableList.of(
-            Position(3087, 3496) to "Edgeville.",
-            Position(2918, 3176) to "Karamja.",
-            Position(3105, 3251) to "Draynor Village.",
-            Position(3293, 3163) to "Al Kharid."),
-        "You rub the amulet...",
-        "Your Amulet of Glory needs to be recharged.",
-        false
-    ),
-    ;
+    GAMES_NECKLACE(items = ImmutableList.of(3853, 3855, 3857, 3859, 3861, 3863, 3865, 3867),
+                   destinations = ImmutableList.of(
+                       "Burthorpe" to Position(2897, 3554),
+                       "Barbarian Outpost" to Position(2536, 3565)
+                   ),
+                   rub = "You rub the necklace...",
+                   lastCharge = "Your Games necklace crumbles to dust.",
+                   crumbles = true),
+    DUELING_RING(items = ImmutableList.of(2552, 2554, 2556, 2558, 2560, 2562, 2564, 2566),
+                 ImmutableList.of(
+                     "Al Kharid Duel Arena" to Position(3316, 3237),
+                     "Castle Wars Arena" to Position(2441, 3088)
+                 ),
+                 rub = "You rub the ring...",
+                 lastCharge = "Your Ring of Dueling crumbles to dust.",
+                 crumbles = true),
+    AMULET_OF_GLORY(items = ImmutableList.of(1712, 1710, 1708, 1706, 1704),
+                    destinations = ImmutableList.of(
+                        "Edgeville" to Position(3087, 3496),
+                        "Karamja" to Position(2918, 3176),
+                        "Draynor Village" to Position(3105, 3251),
+                        "Al Kharid" to Position(3293, 3163)
+                    ),
+                    rub = "You rub the amulet...",
+                    lastCharge = "Your Amulet of Glory needs to be recharged.",
+                    crumbles = false);
+
+    companion object {
+
+        /**
+         * An immutable copy of all this enum's values.
+         */
+        val VALUES = ImmutableList.copyOf(values())
+    }
 }
