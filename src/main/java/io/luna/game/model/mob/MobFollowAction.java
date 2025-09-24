@@ -34,7 +34,6 @@ public final class MobFollowAction extends Action<Mob> {
 
     @Override
     public boolean run() {
-        // todo 'dancing'
         int distance = mob.getPosition().getEuclideanDistance(target.getPosition());
         if (distance >= 15) {
             return true;
@@ -45,7 +44,7 @@ public final class MobFollowAction extends Action<Mob> {
         }
         if (mob.getPosition() == target.getPosition()) {
             mob.walking.walkRandomDirection();
-        } else if (!mob.getPosition().isWithinDistance(target.getPosition(), 1)) {
+        } else {
             mob.walking.walkBehind(target);
             lastPosition = target.getPosition();
         }
