@@ -42,6 +42,7 @@ import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.DynamicMapMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
@@ -404,6 +405,7 @@ public class Player extends Mob {
     protected void onActive() {
         teleporting = true;
         flags.flag(UpdateFlag.APPEARANCE);
+        queue(new AssignmentMessageWriter(true));
         timeOnline.start();
         plugins.post(new LoginEvent(this));
     }
