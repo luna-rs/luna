@@ -1,10 +1,9 @@
 package io.luna.game.action.impl;
 
+import com.google.common.primitives.Ints;
 import io.luna.game.action.Action;
-import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.action.TimeSource;
-import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.task.Task;
 
@@ -44,43 +43,34 @@ public abstract class QueuedAction<T extends Mob> extends Action<T> {
         this.source = source;
     }
 
+    private void runAndWait() {
+        source.reset();
+        execute();
+        source.setWaiting(true);
+    }
+
     @Override
     public boolean run() {
-        if (source.getQueued() != null) {
-            // We have a queued action, only keep this action if they match.
-            return source.getQueued() != this;
-        }
-        if (source.isWaiting()) {
-            // We've received a throttled action, queue it.
-            source.setQueued(this);
-            source.setWaiting(false);
-            mob.getWalking().clear();
-            return false;
-        }
-
-        mob.getWalking().clear();
         if (source.ready(delay)) {
-            execute();
-            world.schedule(new Task(delay) {
-                @Override
-                protected void execute() {
-                    // Execute the queued action if the time source is signaled to.
-                    if (mob.getState() != EntityState.INACTIVE &&
-                            source.getQueued() != null &&
-                            source.getQueued().getState() == ActionState.PROCESSING) {
-                        source.getQueued().execute();
-                        source.reset();
+            // Run normally, time source is ready.
+            runAndWait();
+        } else if (source.isWaiting()) {
+            // We've received a throttled action, queue it.
+            source.setWaiting(false);
+            int remaining = Ints.saturatedCast(delay - source.getDurationTicks());
+            if (remaining < 1) {
+                // No remaining ticks, run right away.
+                runAndWait();
+            } else {
+                // Schedule for later.
+                world.schedule(new Task(false, remaining) {
+                    @Override
+                    protected void execute() {
+                        runAndWait();
+                        cancel();
                     }
-                    cancel();
-                }
-
-                @Override
-                protected void onCancel() {
-                    source.setQueued(null);
-                    source.setWaiting(false);
-                }
-            });
-            source.setWaiting(true);
+                });
+            }
         }
         return true;
     }

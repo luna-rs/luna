@@ -3,7 +3,7 @@ package io.luna.game.action;
 import io.luna.game.action.impl.QueuedAction;
 import io.luna.game.action.impl.ThrottledAction;
 import io.luna.game.model.World;
-import io.luna.util.TickTimer;
+import io.luna.game.TickTimer;
 
 /**
  * A {@link TickTimer} implementation that acts as a source of time for {@link ThrottledAction}s and {@link QueuedAction}s.
@@ -16,12 +16,7 @@ public final class TimeSource extends TickTimer {
      * If this time source was checked. This is necessary so the first {@link #ready(int)} check always returns
      * {@code true}.
      */
-    private boolean checked;
-
-    /**
-     * The queued action.
-     */
-    private QueuedAction<?> queued;
+    private boolean checked; // todo wont be needed once ticktimer supports pausing
 
     /**
      * If this time source is waiting to queue an action.
@@ -48,26 +43,10 @@ public final class TimeSource extends TickTimer {
     public boolean ready(int duration) {
         if (!checked || getDurationTicks() >= duration) {
             checked = true;
-            queued = null;
-            waiting = false;
             reset();
             return true;
         }
         return false;
-    }
-
-    /**
-     * @return The queued action.
-     */
-    public QueuedAction<?> getQueued() {
-        return queued;
-    }
-
-    /**
-     * Sets the queued action.
-     */
-    public void setQueued(QueuedAction<?> queued) {
-        this.queued = queued;
     }
 
     /**

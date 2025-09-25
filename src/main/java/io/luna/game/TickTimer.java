@@ -1,4 +1,4 @@
-package io.luna.util;
+package io.luna.game;
 
 import com.google.common.base.Stopwatch;
 import io.luna.game.model.World;
@@ -12,7 +12,7 @@ import java.time.Duration;
  * @author lare96
  */
 public class TickTimer implements Comparable<Long> {
-
+// todo pausing/resuming due to initial delay, if required for long time it may not have elapsed yet
     /**
      * The world.
      */
