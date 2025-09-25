@@ -55,12 +55,10 @@ fun dropItems(plr: Player, source: Mob?) {
         deathItems.addAll(stackableDeathItems)
 
         val sourcePlayer = if (source is Player) source else null
-        if (sourcePlayer != null) {
-            world.addItem(526, 1, plr.position, sourcePlayer)
-            while (true) {
-                val item = deathItems.poll() ?: break
-                world.addItem(item.id, item.amount, plr.position, sourcePlayer)
-            }
+        world.addItem(526, 1, plr.position, sourcePlayer)
+        while (true) {
+            val item = deathItems.poll() ?: break
+            world.addItem(item.id, item.amount, plr.position, sourcePlayer)
         }
     }
 }
