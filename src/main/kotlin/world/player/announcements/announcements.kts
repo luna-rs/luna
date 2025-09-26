@@ -16,7 +16,7 @@ val interval = Duration.ofMinutes(15)
 val messages = listOf(
         "Luna is a Runescape  server designed for the #377 protocol.",
         "Luna can be found on GitHub under luna-rs/luna",
-        "Change these messages in the 'Announcements' plugin.",
+        "Change these messages in the 'world.player.announcements' plugin.",
         "Any bugs found using Luna should be reported to the GitHub page.",
         "You should never use the RSA keys that come with Luna. Generate new ones!")
 
@@ -24,9 +24,7 @@ val messages = listOf(
  * Sends one global message, randomly selected from the list of messages.
  */
 fun sendMessages() {
-    world.players.stream()
-        .filter { it.rights < RIGHTS_ADMIN }
-        .forEach { it.sendMessage(messages.random()) }
+    world.players.forEach { it.sendMessage(messages.random()) }
 }
 
 /**
