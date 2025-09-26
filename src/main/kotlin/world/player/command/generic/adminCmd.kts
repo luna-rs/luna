@@ -1,6 +1,7 @@
 package world.player.command.generic
 
 import api.predef.*
+import com.google.common.primitives.Ints
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
@@ -19,6 +20,16 @@ cmd("master", RIGHTS_ADMIN) {
     plr.skills.forEach { it.experience = SkillSet.MAXIMUM_EXPERIENCE.toDouble() }
     plr.hitpoints.level = 99
     plr.sendMessage("You have set all your skills to level 99.")
+}
+
+/**
+ * A command that clears the inventory, bank, or equipment of a player.
+ */
+cmd("empty", RIGHTS_ADMIN) {
+    plr.newDialogue().options(
+        "Empty inventory.", { it.inventory.clear() },
+        "Empty bank.", { it.bank.clear() },
+        "Empty equipment.", { it.equipment.clear() }).open()
 }
 
 /**
@@ -52,15 +63,20 @@ cmd("moveto", RIGHTS_ADMIN) {
  */
 cmd("teleobj", RIGHTS_ADMIN) {
     val name = getInputFrom(0)
+    val id = Ints.tryParse(name)
     val it = world.objects.iterator()
     val list = ArrayList<Position>()
     while (it.hasNext()) {
         val obj = it.next()
-        if (obj.definition.name.equals(name, true)) {
+        if ((id != null && obj.id == id) || obj.definition.name.equals(name, true)) {
             list += obj.position
         }
     }
-    plr.move(list.random())
+    if(list.isNotEmpty()) {
+        plr.move(list.random())
+    } else {
+        plr.sendMessage("No object location found for [name:$name|id:$id].")
+    }
 }
 
 /**
@@ -119,31 +135,28 @@ cmd("down", RIGHTS_ADMIN) {
     plr.move(plr.position.translate(0, 0, -1))
 }
 
-fun showShutdownTimes(plr: Player) {
-    plr.newDialogue().options(
-            "1 Minute", { game.scheduleSystemUpdate(100) },
-            "5 Minutes", { game.scheduleSystemUpdate(500) },
-            "10 Minutes", { game.scheduleSystemUpdate(800) },
-            "<x> Minutes", {
-                plr.interfaces.close()
-                plr.interfaces.open(object : AmountInputInterface() {
-                    override fun onAmountInput(player: Player, value: Int) {
-                        if (value < 1 || value > 60) {
-                            plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
-                            return
-                        }
-                        game.scheduleSystemUpdate(value * 100)
-                        plr.interfaces.close()
-                    }
-                })
-            }).open()
-}
-
 /**
  * A command that shuts the server down after <x> seconds.
  */
 cmd("shutdown", RIGHTS_ADMIN) {
-    showShutdownTimes(plr)
+    plr.newDialogue().options(
+        "Now", { game.scheduleSystemUpdate(8) },
+        "1 Minute", { game.scheduleSystemUpdate(100) },
+        "5 Minutes", { game.scheduleSystemUpdate(500) },
+        "10 Minutes", { game.scheduleSystemUpdate(800) },
+        "<x> Minutes", {
+            plr.interfaces.close()
+            plr.interfaces.open(object : AmountInputInterface() {
+                override fun onAmountInput(player: Player, value: Int) {
+                    if (value < 1 || value > 60) {
+                        plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
+                        return
+                    }
+                    game.scheduleSystemUpdate(value * 100)
+                    plr.interfaces.close()
+                }
+            })
+        }).open()
 }
 
 /**

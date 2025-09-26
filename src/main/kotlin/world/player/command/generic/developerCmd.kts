@@ -2,6 +2,7 @@ package world.player.command.generic
 
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.model.Position
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -91,6 +92,9 @@ cmd("object", RIGHTS_DEV) {
                     plr = plr)
 }
 
+/**
+ * Simulates drops for whichever table is implemented.
+ */
 cmd("roll", RIGHTS_DEV) {
     val times = asInt(0)
     plr.interfaces.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest'") {
@@ -111,6 +115,11 @@ cmd("mypos", RIGHTS_DEV) {
     plr.sendMessage(plr.position)
     plr.sendMessage(plr.chunk)
     plr.sendMessage(plr.position.region)
+    val topleftx = plr.position.x - 52
+    val toplefty = plr.position.y - 52
+    plr.sendMessage("Local pos: ${
+        Position(plr.position.x - topleftx, plr.position.y - toplefty)
+    }")
 }
 
 /**
