@@ -49,7 +49,7 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
                 val sound = LocalSound(ctx, Sounds.TELEOTHER, source.position,
                                        ChunkUpdatableView.globalView())
                 sound.display()
-                source.animation(Animations.CAST_TELEPORT_OTHER)
+                source.animation(Animations.CAST_TELEOTHER)
                 source.graphic(Graphic(343, 50))
                 false
             }
@@ -57,7 +57,7 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
             1, 2 -> false
             3 -> {
                 target.graphic(Graphic(342))
-                target.animation(Animations.RECEIVE_TELEPORT_OTHER)
+                target.animation(Animations.RECEIVE_TELEOTHER)
                 false
             }
 
