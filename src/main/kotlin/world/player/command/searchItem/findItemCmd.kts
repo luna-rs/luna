@@ -4,9 +4,9 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
@@ -18,13 +18,7 @@ fun spawn(msg: WidgetItemClickEvent, amount: Int? = null) {
     val plr = msg.plr
     val id = msg.itemId
     val item = Item(id, amount ?: Int.MAX_VALUE)
-    if (!plr.inventory.hasSpaceFor(item)) {
-        plr.sendMessage("${item.itemDef.name}(x${numF(item.amount)}) Sent to your bank.")
-        plr.bank.add(item)
-    } else {
-        plr.sendMessage("${item.itemDef.name}(x${numF(item.amount)}) Sent to your inventory.")
-        plr.inventory.add(item)
-    }
+    plr.giveItem(item)
 }
 
 /**
@@ -52,7 +46,8 @@ cmd("finddef", RIGHTS_DEV) {
     val search = getInputFrom(1).toLowerCase().trim()
     val matches = arrayListOf<Pair<Int, String>>()
     when (type) {
-        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }
+        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream()
+            .filter { it.name.toLowerCase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
         "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.toLowerCase().contains(search) }

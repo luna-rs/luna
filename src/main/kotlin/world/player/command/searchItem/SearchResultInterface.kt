@@ -4,6 +4,7 @@ import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
+import java.util.*
 import kotlin.streams.toList
 
 /**
@@ -16,7 +17,7 @@ class SearchResultInterface(private val searchToken: String) :
         // Perform search here, filter items based on search token.
         val itemsFound = ItemDefinition.ALL
             .stream()
-            .filter { it.id > 0 && !it.isNoted && it.name.toLowerCase().contains(searchToken) }
+            .filter { it.id > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
             .map { Item(it.id, 1) }
             .toList()
 
