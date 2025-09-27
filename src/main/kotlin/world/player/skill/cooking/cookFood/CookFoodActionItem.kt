@@ -1,12 +1,14 @@
 package world.player.skill.cooking.cookFood
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
+import world.player.Animations
 import world.player.Sounds
 import world.player.skill.Skills
 
@@ -20,16 +22,6 @@ class CookFoodActionItem(plr: Player,
                          amount: Int) : InventoryAction(plr, true, 4, amount) {
 
     companion object {
-
-        /**
-         * The fire cooking animation.
-         */
-        private val FIRE_ANIMATION = Animation(897)
-
-        /**
-         * The range cooking animation.
-         */
-        private val RANGE_ANIMATION = Animation(896)
 
         /**
          * The position of the lumbridge range.
@@ -53,7 +45,7 @@ class CookFoodActionItem(plr: Player,
         }
 
     override fun execute() {
-        mob.animation(if (usingFire) FIRE_ANIMATION else RANGE_ANIMATION)
+        mob.animation(if (usingFire) Animations.FIRE_COOKING else Animations.RANGE_COOKING)
 
         if (experience != null) {
             mob.sendMessage("You successfully cook a ${food.formattedName}.")

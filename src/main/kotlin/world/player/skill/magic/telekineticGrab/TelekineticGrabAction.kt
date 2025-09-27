@@ -7,6 +7,7 @@ import io.luna.game.model.LocalGraphic
 import io.luna.game.model.LocalProjectile
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
+import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
@@ -59,9 +60,19 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             1 -> false
             2 -> {
                 // todo https://github.com/luna-rs/luna/issues/377
-                val projectile = LocalProjectile.followPath(ctx).setSourcePosition(mob.position)
+                val projectile = LocalProjectile.followPath(ctx)
+                    .setSourcePosition(mob.position)
+                    .setTargetPosition(groundItem.position)
+                    .setId(143) // Telegrab projectile
+                    .setStartHeight(35) // Slightly above ground
+                    .setEndHeight(31) // Ground level target
+                    .setTicksToStart(10)
+                    .setTicksToEnd(3)
+                    .setInitialSlope(16)// ~3 ticks duration
+                   // .setInitialSlope(0) Moderate slope
+                   .build() /*LocalProjectile.followPath(ctx).setSourcePosition(mob.position)
                     .setTargetPosition(groundItem.position).setDurationTicks(2).setStartHeight(35)
-                    .setId(143).build()
+                    .setId(143).build()*/
                 projectile.display()
                 false
             }

@@ -11,7 +11,4 @@ object Combat {
     fun Mob.inWilderness(): Boolean {
         return WildernessAreaController.inside(position)
     }
-    fun Mob.inCombatArea(): Boolean {
-        return inWilderness()
-    }
 }

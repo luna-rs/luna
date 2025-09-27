@@ -3,6 +3,7 @@ package world.player.item.trading
 import api.predef.*
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent
 import io.luna.game.model.mob.Player
+import world.player.Messages
 import world.player.item.trading.tradeScreen.OfferTradeInterface
 
 /**
@@ -13,8 +14,8 @@ fun sendTradeRequest(msg: PlayerFourthClickEvent) {
     val other = msg.targetPlr
 
     when {
-        plr.interfaces.isStandardOpen -> plr.sendMessage("You are busy.")
-        other.interfaces.isStandardOpen -> plr.sendMessage("That player is busy.")
+        plr.interfaces.isStandardOpen -> plr.sendMessage(Messages.BUSY)
+        other.interfaces.isStandardOpen -> plr.sendMessage(Messages.INTERACT_BUSY)
         else -> {
             if (plr.index == other.tradingWith) {
                 // They've both requested each other, open offer screen.
@@ -41,7 +42,7 @@ fun sendTradeRequest(msg: PlayerFourthClickEvent) {
 }
 
 /**
- *  Send request if the [Player] has the trade interaction option.
+ * Send request if the [Player] has the trade interaction option.
  */
 on(PlayerFourthClickEvent::class)
     .filter { plr.interactions.contains(INTERACTION_TRADE) }

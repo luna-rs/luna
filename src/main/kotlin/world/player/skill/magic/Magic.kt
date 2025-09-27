@@ -115,9 +115,7 @@ object Magic {
                 val sound = LocalSound(ctx,
                                        Sounds.TELEPORT,
                                        plr.position,
-                                       ChunkUpdatableView.globalView(),
-                                       Position.VIEWING_DISTANCE / 2,
-                                       100)
+                                       ChunkUpdatableView.globalView())
                 sound.display()
                 true
             }
@@ -170,7 +168,7 @@ object Magic {
     /**
      * An extension function that enables the underlying player to teleport somewhere.
      */
-    fun Player.teleport(destination: Position, style: TeleportStyle, onTeleport: () -> Unit = {}) {
+    fun Player.teleport(destination: Position, style: TeleportStyle = TeleportStyle.REGULAR, onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style = style) {
             override fun onTeleport() {
                 onTeleport()

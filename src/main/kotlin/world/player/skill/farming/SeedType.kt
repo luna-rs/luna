@@ -78,7 +78,5 @@ enum class SeedType(val seed: Int,
                crop = item("Watermelon"),
                plantXp = 48.5,
                harvestXp = 54.5,
-               patch = PatchType.ALLOTMENT),
-
-
+               patch = PatchType.ALLOTMENT)
 }
