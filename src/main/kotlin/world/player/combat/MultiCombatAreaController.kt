@@ -1,4 +1,4 @@
-package world.player
+package world.player.combat
 
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.area.Area
