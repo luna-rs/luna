@@ -6,7 +6,8 @@ package world.player
 enum class Sounds(val id: Int) {
     PICK_LOCK(37),
     TELEGRAB(200),
-    TELEPORT(202),
+    TELEPORT_REGULAR(202),
+    TELEPORT_ANCIENT(1048),
     SUPERHEAT(217),
     TELEOTHER(219),
     LOW_ALCHEMY(224),

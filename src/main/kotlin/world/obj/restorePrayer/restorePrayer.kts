@@ -1,13 +1,10 @@
 package world.obj.restorePrayer
 
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-
-/**
- * The restore prayer animation.
- */
-val prayerAnimation = Animation(645)
+import world.player.Animations
 
 /**
  * The altars used to restore prayer.
@@ -21,7 +18,7 @@ fun restore(plr: Player) {
     val prayer = plr.prayer
     if (prayer.level < prayer.staticLevel) {
         prayer.level = prayer.staticLevel
-        plr.animation(prayerAnimation)
+        plr.animation(Animations.PRAY)
         plr.sendMessage("You recharge your prayer points.")
     } else {
         plr.sendMessage("You already have full prayer points.")

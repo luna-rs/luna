@@ -1,3 +1,5 @@
+package world.obj.switchSpellbook
+
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.mob.Spellbook

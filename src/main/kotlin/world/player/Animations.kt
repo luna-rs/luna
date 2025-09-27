@@ -4,6 +4,7 @@ package world.player
  * A collection of animation constants.
  */
 enum class Animations(val id: Int) {
+    PRAY(645),
     LOW_ALCHEMY(712),
     HIGH_ALCHEMY(713),
     BONES_TO_ITEMS(722),
