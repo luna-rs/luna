@@ -16,7 +16,7 @@ import world.minigame.partyRoom.dropParty.DropPartyOption
 /**
  * An [Action] implementation that makes the party pete NPC dance and speak.
  */
-class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.SOFT, true, 3) {
+class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.NORMAL, true, 3) {
 
     companion object {
 
