@@ -176,10 +176,9 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 stompedBy = plr
                 plr.sendMessage("You stomp on the balloon.")
                 plr.animation(Animation(794))
-                animate()
                 world.scheduleOnce(1) {
+                    animate()
                     if (world.removeObject(this)) {
-                        // animate(-1)
                         world.addItem(item, position, plr)
                     }
                 }
@@ -218,7 +217,6 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      */
     val BALLOON_MULTIPLIER = 1.5
 
-
     /**
      * All possible junk items.
      */
@@ -238,7 +236,6 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
      * If the drop party hasn't ended after this time, balloons are skipped.
      */
     val PATIENCE_THRESHOLD = Duration.ofMinutes(30)
-
 
     /**
      * Items that a player has selected, but not yet confirmed to be deposited.
