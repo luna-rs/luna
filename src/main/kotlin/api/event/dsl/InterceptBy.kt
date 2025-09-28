@@ -19,7 +19,6 @@ class InterceptBy<E : Event>(private val eventType: KClass<E>) {
      */
     fun filter(cond: E.() -> Boolean) = InterceptFilter(eventType, cond, true)
 
-
     /**
      * Filtering function that executes the event listener if the condition is `false`. Forwards to
      * [InterceptFilter].

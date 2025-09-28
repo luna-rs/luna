@@ -138,13 +138,15 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
         scriptMatchers += matcherListener
     }
 
+    fun has(msg: E) = actions.containsKey(key(msg))
+
     /**
      * Adds an event listener for this matcher to the backing pipeline set.
      */
     private fun addListener() {
         val type = eventType.java
         val pipeline = pipelines.get(type)
-        pipeline.setMatcher(EventMatcher(this::match))
+        pipeline.setMatcher(EventMatcher(this::match, this::has))
     }
 
     /**
