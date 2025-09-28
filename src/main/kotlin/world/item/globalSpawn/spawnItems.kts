@@ -8,7 +8,8 @@ import io.luna.game.model.Position
 on(ServerLaunchEvent::class) {
     val parser = ItemSpawnFileParser()
     // Items can be added programmatically.
-    // Ie. 10,000 coins spawned at 3200,3200 that respawn 60 ticks after being picked up.
-    // parser.add(PersistentGroundItem(995, 10_000, Position(3222, 3222), 60))
+    // Ie. 10,000 coins spawned at 3200,3200 that respawns 60 ticks after being picked up.
+    // parser.add(PersistentGroundItem(995, 10_000, Position(3200, 3200), 60))
+    // can also do world.add, same thing
     taskPool.execute(parser)
 }
