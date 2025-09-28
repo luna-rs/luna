@@ -1,9 +1,8 @@
 package api.predef.ext
 
 import io.luna.game.model.def.MusicDefinition
-import io.luna.game.model.item.Inventory
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.PlayerMusicTab
+import io.luna.game.model.mob.MusicTab
 import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.WidgetColorMessageWriter
 import java.awt.Color
@@ -18,7 +17,7 @@ fun Player.sendMusic(def: MusicDefinition) {
         queue(MusicMessageWriter(id))
         queue(WidgetColorMessageWriter(def.lineId, Color.GREEN))
         sendText(def.name, 4439)
-        musicTab.unlocked.add(PlayerMusicTab.UnlockedSong(id, def.lineId))
+        musicTab.unlocked.add(MusicTab.UnlockedSong(id, def.lineId))
     }
 }
 
