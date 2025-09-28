@@ -26,11 +26,11 @@ class MergedDropTable(val tableList: List<DropTable>) : DropTable() {
         return Iterators.toString(iterator())
     }
 
+    /**
+     * An aggregation of [roll] for all inner tables.
+     */
     override fun roll(mob: Mob?, source: Entity?): MutableList<Item> {
         val itemList = ArrayList<Item>()
-        if (tableList.isEmpty()) {
-            return itemList
-        }
         for (table in tableList) {
             itemList += table.roll(mob, source)
         }
@@ -42,12 +42,15 @@ class MergedDropTable(val tableList: List<DropTable>) : DropTable() {
      */
     override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
         return DropTableHandler.createList {
-            for(table in tableList) {
+            for (table in tableList) {
                 items += table.computeTable(mob, source)
             }
         }
     }
 
+    /**
+     * An aggregation of [computePossibleItems] for all inner tables.
+     */
     override fun computePossibleItems(): DropTableItemList {
         return DropTableHandler.createList {
             for (drops in tableList) {

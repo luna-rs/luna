@@ -47,10 +47,10 @@ object DropTableHandler {
      * Handles NPC death by checking for a registered [MergedDropTable] via ID or type and applying the
      * resulting drops to the world, visible to the killer or globally.
      *
-     * @param killer The mob who dealt the final blow.
+     * @param killer The mob who dealt the most damage.
      * @param victim The NPC that died.
      */
-    fun <T : Npc> onDeath(killer: Mob, victim: T) {
+    fun <T : Npc> onDeath(killer: Mob?, victim: T) {
         val table = npcTypeMap.getOrDefault(victim.javaClass, npcIdMap[victim.id])
         if (table != null) {
             val dropItems = table.roll(killer, victim)
