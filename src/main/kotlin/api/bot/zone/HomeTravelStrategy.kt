@@ -16,10 +16,6 @@ object HomeTravelStrategy : TravelStrategy {
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
         bot.output.sendCommand("home")
         waitFor { HOME.inside(bot) }
-        if (HOME.inside(dest)) {
-            // We're already home.
-            return true
-        }
         // Continue walking from home area.
         return WalkingTravelStrategy.travel(bot, handler, dest)
     }
