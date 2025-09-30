@@ -76,12 +76,28 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * future unsuspends when the destroy interface closes.
      */
     fun clickDestroyItem(value: Boolean = true): SuspendableFuture {
-        val isOpen = { !bot.interfaces.isOpen(DestroyItemDialogueInterface::class) }
-        val suspendCond = SuspendableCondition(isOpen)
+        val suspendCond = SuspendableCondition({ !bot.interfaces.isOpen(DestroyItemDialogueInterface::class) })
         if (value) {
             bot.output.clickButton(14175)
         } else {
             bot.output.clickButton(14176)
+        }
+        return suspendCond.submit()
+    }
+
+    /**
+     * Clicks the widget to either start running or walking. The returned future unsuspends when the bot is either
+     * successfully walking or running.
+     */
+    fun clickRunning(enabled: Boolean): SuspendableFuture {
+        if(enabled == bot.isRunning) {
+            return SuspendableFuture().signal(true)
+        }
+        val suspendCond = SuspendableCondition({ bot.isRunning == enabled }, 5)
+        if (!enabled) {
+            bot.output.clickButton(152)
+        } else {
+            bot.output.clickButton(153)
         }
         return suspendCond.submit()
     }
