@@ -49,7 +49,7 @@ class JewelleryTravelStrategy(private val jewellery: TeleportJewellery,
                 if (handler.widgets.clickDialogueOption(option)) {
                     delay(600..1800)
                     waitFor { prev != bot.position }
-                    return if (dest.isViewable(dest)) true else WalkingTravelStrategy.travel(bot, handler, dest)
+                    return WalkingTravelStrategy.travel(bot, handler, dest)
                 }
             }
         }

@@ -48,7 +48,7 @@ class TeleportTravelStrategy(private val spell: TeleportSpell, private val walki
                 val prev = bot.position
                 bot.output.clickButton(spell.button)
                 waitFor { prev != bot.position }
-                return if (dest.isViewable(dest)) true else WalkingTravelStrategy.travel(bot, handler, dest)
+                return WalkingTravelStrategy.travel(bot, handler, dest)
             }
         }
         return false
