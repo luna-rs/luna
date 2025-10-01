@@ -1,6 +1,7 @@
 package api.bot.zone
 
 import api.attr.Attr
+import api.bot.Suspendable
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.waitFor
 import api.bot.action.BotActionHandler
@@ -47,7 +48,7 @@ class JewelleryTravelStrategy(private val jewellery: TeleportJewellery,
                 waitFor { bot.interfaces.isOpen(OptionDialogueInterface::class) }
                 val prev = bot.position
                 if (handler.widgets.clickDialogueOption(option)) {
-                    delay(600..1800)
+                    delay()
                     waitFor { prev != bot.position }
                     return WalkingTravelStrategy.travel(bot, handler, dest)
                 }

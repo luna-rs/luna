@@ -9,25 +9,36 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * A model that acts as a precursor to [SuspendableFuture]. It allows for the conditional suspension of coroutines
- * based on if [cond] has been satisfied. Once this type has been submitted, the [TaskManager] repeatedly checks the
- * condition and sends an unsuspend signal once satisfied.
+ * A utility used to asynchronously wait for a condition to become true within a coroutine.
+ *
+ * This class schedules a periodic task that evaluates a given [cond] function every tick.
+ * When the condition is met, or a timeout is reached, it signals a coroutine to resume via a [Channel].
+ *
+ * Typically used by bot scripts to wait for in-game events or state changes without blocking the game loop.
+ *
+ * @param cond The condition that must be satisfied to resume the coroutine.
+ * @param timeoutSeconds The number of seconds to wait before timing out and unsuspending with failure (default: 120s).
+ * @author lare96
  */
 class SuspendableCondition(private val cond: () -> Boolean, private val timeoutSeconds: Long = 120) {
 
     /**
-     * The channel that will be used to suspend the coroutine. Acts like a [Phaser] for coroutines.
+     * A one-shot channel used to resume the coroutine when the condition is met or the timeout occurs.
      */
     private val channel = Channel<Boolean>(1)
 
     /**
-     * Determines if this is active.
+     * Indicates whether the task has already been submitted.
      */
     private val active = AtomicBoolean()
 
     /**
-     * Submits a task to continually check if [cond] is satisfied; if it is, sends a signal in order for the channel to
-     * unsuspend the underlying [CoroutineBotScript]. Times out after [timeoutSeconds]. **Does not suspend the coroutine.**
+     * Starts monitoring the [cond] periodically and returns a [SuspendableFuture] that can be awaited.
+     *
+     * The coroutine will be resumed once [cond] is true or after [timeoutSeconds] has passed.
+     *
+     * @throws IllegalStateException if called more than once.
+     * @return A [SuspendableFuture] tied to this condition.
      */
     fun submit(): SuspendableFuture {
         checkState(!active.getAndSet(true), "'submit()' can only be called once.")

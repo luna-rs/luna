@@ -1,12 +1,11 @@
-package api.bot.scripts
+package api.bot.script
 
 import api.bot.BotScript
 import api.bot.Suspendable.delay
 import api.bot.Suspendable.maybe
 import api.bot.Suspendable.waitFor
-import api.bot.SuspendableCondition
-import api.bot.Zone
-import api.bot.scripts.IdleBotScript.InputData
+import api.bot.script.IdleBotScript.InputData
+import api.bot.zone.Zone
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
@@ -21,7 +20,6 @@ import io.luna.util.RandomUtils
 import io.luna.util.Rational
 import world.player.combat.Combat.inWilderness
 import world.player.settings.emote.Emote
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -84,14 +82,14 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         while (timer.elapsed().toMinutes() < data.durationMinutes) {
             delay(1.seconds, 3.seconds)
             if (bot.inWilderness()) {
-                bot.status("Inside wilderness, moving to safety.")
+                bot.log("Inside wilderness, moving to safety.")
                 handler.movement.leaveWilderness()
                 continue
             }
             handler.widgets.clickRunning(false)
             if (bot.inventory.isFull) {
-                bot.status("Banking items.")
-                handler.findBankAndDepositAll()
+                bot.log("Banking items.")
+                handler.travelToBankDepositAll()
                 continue
             }
             nextState()
@@ -108,7 +106,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
     }
 
     override fun speechContext(): BotSpeechContext =
-        when(data.state) {
+        when (data.state) {
             State.FOLLOW -> BotSpeechContext(BotSpeechType.BORED, Rational.VERY_COMMON)
             else -> BotSpeechContext(BotSpeechType.BORED, Rational.RARE)
         }
@@ -134,22 +132,23 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
     private suspend fun doStanding() {
         if (maybe(COMMON) {
                 // Make the bot more likely to speak soon.
+                bot.log("Might speak soon.")
                 intelligence.speechStack.poke()
-                bot.status("Might speak soon.")
             })
-        else randomActions()
+            return
+        randomActions()
         delay(1.seconds, 10.seconds)
     }
 
     private suspend fun doFollow() {
-        bot.status("Looking for someone to follow.")
+        bot.log("Looking for someone to follow.")
         var following = false
         for (player in bot.localPlayers) {
             if (!player.walking.isEmpty) {
-                bot.status("Trying to follow $player.")
+                bot.log("Trying to follow $player.")
                 // Search through local players, follow a random moving player.
                 if (handler.interactions.interact(3, player) && bot.actions.contains(MobFollowAction::class)) {
-                    bot.status("Following $player.")
+                    bot.log("Following $player.")
                     following = true
                     break
                 }
@@ -162,7 +161,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             val followTime = rand(5, 120)
             waitFor(followTime.minutes) { bot.inWilderness() || !bot.actions.contains(MobFollowAction::class) }
 
-            bot.status("No longer following anyone.")
+            bot.log("No longer following anyone.")
             delay(1.seconds, 3.seconds)
         }
     }
@@ -170,14 +169,13 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
     private suspend fun doWalking() {
         // Doesn't really matter if we reach or not.
         val zone = RandomUtils.random(Zone.SAFE_ZONES)
-        bot.status("Walking to $zone.")
         handler.movement.travelTo(zone)
         delay(1.seconds)
     }
 
     private suspend fun doTeleport() {
         // Teleport back to ::home and wait for next state.
-        bot.status("Teleporting home.")
+        bot.log("Teleporting home.")
         if (Zone.HOME.inside(bot)) {
             delay(5.seconds)
             return
@@ -195,10 +193,8 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
         // Maybe idle at bank.
         if (maybe(UNCOMMON) {
-                val bank = handler.banking.findNearestBank()
-                if (bank != null) {
-                    bot.status("I'm idling at the bank.")
-                    handler.interactions.interact(2, bank)
+                if (handler.travelToBankOpen()) {
+                    bot.log("I'm idling at the bank.")
                     delay(1.minutes, 10.minutes)
                 }
             })
@@ -206,7 +202,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
         // Otherwise, do some emotes.
         if (maybe(COMMON) {
-                bot.status("I'm performing emotes.")
+                bot.log("I'm performing emotes.")
                 val emote = RandomUtils.random(Emote.ALL)
                 bot.animation(Animation(emote.id))
                 delay(5.seconds, 15.seconds)
@@ -215,7 +211,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
         // Otherwise, maybe stand around and say something at ::home.
         if (maybe(VERY_UNCOMMON) {
-                bot.status("I'm definitely going to say something soon.")
+                bot.log("Going to say something soon.")
                 intelligence.speechStack.pop()
                 delay(10.seconds, 30.seconds)
             })

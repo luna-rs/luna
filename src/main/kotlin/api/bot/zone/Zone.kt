@@ -18,7 +18,8 @@ import world.player.skill.magic.teleportSpells.TeleportSpell
  */
 enum class Zone(val anchor: Position,
                 val regions: Set<Int>,
-                val travel: List<TravelStrategy>) {
+                val travel: List<TravelStrategy>,
+                val safe: Boolean = true) {
     HOME(anchor = Luna.settings().game().startingPosition(),
          regions = setOf(12338, 12339),
          travel = listOf(HomeTravelStrategy,
@@ -66,14 +67,15 @@ enum class Zone(val anchor: Position,
                                TeleportTravelStrategy(TeleportSpell.ANNAKARL),
                                TeleportTravelStrategy(TeleportSpell.GHORROCK),
                                HomeTravelStrategy,
-                               WalkingTravelStrategy));
+                               WalkingTravelStrategy),
+               safe = false);
 
     companion object {
 
         /**
          * A list of all safe zones.
          */
-        val SAFE_ZONES = ImmutableList.copyOf(values().filter { it != WILDERNESS })
+        val SAFE_ZONES = ImmutableList.copyOf(values().filter { it.safe })
     }
 
     /**
