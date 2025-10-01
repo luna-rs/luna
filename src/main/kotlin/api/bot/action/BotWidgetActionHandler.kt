@@ -52,6 +52,7 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
 
             else -> return false
         }
+        bot.log("Clicking dialogue option $option.")
         return true
     }
 
@@ -60,14 +61,16 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      */
     fun clickLogout() {
         bot.output.clickLogout()
+        bot.log("Clicking logout button.")
     }
 
     /**
      * Clicks the widget to close interfaces.
      */
     fun clickCloseInterface(): SuspendableFuture {
-        val suspendCond = SuspendableCondition({ !bot.interfaces.isStandardOpen && !bot.interfaces.isInputOpen })
+        val suspendCond = SuspendableCondition({ !bot.interfaces.isStandardOpen })
         bot.output.sendCloseInterface()
+        bot.log("Clicking close interface button.")
         return suspendCond.submit()
     }
 
@@ -90,13 +93,15 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
      * successfully walking or running.
      */
     fun clickRunning(enabled: Boolean): SuspendableFuture {
-        if(enabled == bot.isRunning) {
+        if (enabled == bot.isRunning) {
             return SuspendableFuture().signal(true)
         }
         val suspendCond = SuspendableCondition({ bot.isRunning == enabled }, 5)
         if (!enabled) {
+            bot.log("Clicking walking button.")
             bot.output.clickButton(152)
         } else {
+            bot.log("Clicking running button.")
             bot.output.clickButton(153)
         }
         return suspendCond.submit()

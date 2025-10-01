@@ -2,6 +2,7 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
+import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.shop.ShopInterface
 import io.luna.game.model.mob.bot.Bot
@@ -42,26 +43,29 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
     fun sell10(id: Int) = sell(id, 10)
 
     /**
-     * Attempts to purcase either 1, 5, or 10 of an item.
+     * Attempts to purchase either 1, 5, or 10 of an item.
      */
     private fun buy(id: Int, amount: Int): SuspendableFuture {
         // Check if a shop is open.
         val shopInterface = bot.interfaces.get(ShopInterface::class) ?: return SuspendableFuture().signal(false)
+
+        bot.log("Buying $amount of ${itemName(id)}.")
         val shopIndex = shopInterface.shop.container.computeIndexForId(id)
         if (shopIndex.isEmpty) {
             // Shop doesn't have the item.
+            bot.log("Shop doesn't have that item.")
             return SuspendableFuture().signal(false)
         }
 
         val amountBefore = bot.inventory.computeAmountForId(id)
+        val boughtItemCond = SuspendableCondition({ bot.inventory.computeAmountForId(id) > amountBefore }, 5)
         when (amount) {
             1 -> bot.output.sendItemWidgetClick(2, shopIndex.asInt, 3900, id)
             5 -> bot.output.sendItemWidgetClick(3, shopIndex.asInt, 3900, id)
             10 -> bot.output.sendItemWidgetClick(4, shopIndex.asInt, 3900, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
-        val boughtItemCondition = SuspendableCondition({ bot.inventory.computeAmountForId(id) > amountBefore }, 5)
-        return boughtItemCondition.submit() // Unsuspend when the inventory amount increases.
+        return boughtItemCond.submit() // Unsuspend when the inventory amount increases.
     }
 
     /**
@@ -72,9 +76,11 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             // No shop is currently open.
             return SuspendableFuture().signal(false)
         }
+        bot.log("Selling $amount of ${itemName(id)}.")
         val inventoryIndex = bot.inventory.computeIndexForId(id)
         if (inventoryIndex.isEmpty) {
             // Bot doesn't have the item.
+            bot.log("I don't have that item.")
             return SuspendableFuture().signal(false)
         }
 

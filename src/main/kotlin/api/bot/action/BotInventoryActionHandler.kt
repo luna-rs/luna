@@ -29,19 +29,17 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             val usedIndex = bot.inventory.computeIndexForId(usedId)
             if (usedIndex.isEmpty) {
                 // We don't have the item.
+                bot.log("I don't have ${itemName(usedId)}.")
                 return false
             }
-
-            bot.walking.walkUntilReached(target)
-            val walkingSuspendCond = SuspendableCondition({ bot.isViewableFrom(target) || bot.walking.isEmpty })
-            if (!bot.isViewableFrom(target)) {
-                if(!walkingSuspendCond.submit().await()) {
-                    return false
-                }
+            if (handler.movement.walkUntilReached(target).await()) {
+                val cond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
+                bot.log("Using ${itemName(usedId)} on $target.")
+                action(usedIndex.asInt)
+                return cond.submit().await()
             }
-            val interactSuspendCond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
-            action(usedIndex.asInt)
-            return interactSuspendCond.submit().await()
+            return false
+
         }
 
         /**
@@ -52,8 +50,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             val usedIndex = bot.inventory.computeIndexForId(usedId)
             val targetIndex = bot.inventory.computeIndexForId(targetId)
             if (usedIndex.isEmpty || targetIndex.isEmpty) {
+                bot.log("I don't have ${itemName(usedId)} or ${itemName(targetId)}.")
                 return false
             }
+            bot.log("Using ${itemName(usedId)} on ${itemName(targetId)}.")
             bot.output.useItemOnItem(targetIndex.asInt, usedIndex.asInt, targetId, usedId)
             return true
         }
@@ -87,20 +87,23 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
      * destroyed.
      */
     suspend fun dropItem(id: Int): SuspendableFuture {
+        bot.log("Dropping ${itemName(id)}.")
         val index = bot.inventory.computeIndexForId(id)
         if (index.isEmpty) {
             // We don't have the item.
+            bot.log("I don't have ${itemName(id)}.")
             return SuspendableFuture().signal(false)
         }
-        val suspendCond = SuspendableCondition({
-                                                   bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
-                                                       DestroyItemDialogueInterface::class)
-                                               })
+        val cond = SuspendableCondition({
+                                            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
+                                                DestroyItemDialogueInterface::class)
+                                        })
         bot.output.sendDropItem(index.asInt, id)
         if (itemDef(id).isTradeable) {
-            return suspendCond.submit()
+            return cond.submit()
         } else {
-            suspendCond.submit().await()
+            cond.submit().await()
+            bot.log("Destroying ${itemName(id)}.")
             return handler.widgets.clickDestroyItem()
         }
 
@@ -125,14 +128,15 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
     fun clickItem(option: Int, id: Int, index: Int = -1): Boolean {
         val clickIndex = if (index == -1) bot.inventory.computeIndexForId(id).orElse(-1) else index
         if (clickIndex == -1) {
-            logger.debug("No index found for id [$id].")
+            bot.log("Can't find ${itemName(id)}.")
             return false
         }
         val clickId = bot.inventory[clickIndex]?.id
         if (clickId != id) {
-            logger.debug("Item id [$clickId] on index [$clickIndex] does not match id [$id].")
+            bot.log("Can't find ${itemName(id)} on $clickIndex.")
             return false
         }
+        bot.log("Clicking item ${itemName(clickId)}, option $option.")
         bot.output.sendInventoryItemClick(option, clickIndex, clickId)
         return true
     }
