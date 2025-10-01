@@ -11,6 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
+import java.util.OptionalInt
 
 /**
  * A [BotActionHandler] implementation for inventory related actions.
@@ -20,22 +21,27 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
     /**
      * A builder for use-item interactions.
      */
-    inner class UseItemAction(private val usedId: Int) {
+    inner class UseItemAction(private val usedId: Int, private val usedIndex: Int) {
 
         /**
          * Use an item on a generic interactable entity.
          */
         private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): Boolean {
-            val usedIndex = bot.inventory.computeIndexForId(usedId)
-            if (usedIndex.isEmpty) {
+            val index = if(usedIndex == -1) bot.inventory.computeIndexForId(usedId) else OptionalInt.of(usedIndex)
+            if (index.isEmpty) {
                 // We don't have the item.
                 bot.log("I don't have ${itemName(usedId)}.")
+                return false
+            }
+            val id = bot.inventory[index.asInt]?.id
+            if (usedId != id) {
+                bot.log("Can't find ${itemName(usedId)} on index ${index.asInt}.")
                 return false
             }
             if (handler.movement.walkUntilReached(target).await()) {
                 val cond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
                 bot.log("Using ${itemName(usedId)} on $target.")
-                action(usedIndex.asInt)
+                action(index.asInt)
                 return cond.submit().await()
             }
             return false
@@ -80,7 +86,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
     /**
      * An action builder that forces a [Bot] to use an item in their inventory on a player, NPC, item, or object.
      */
-    fun useItem(usedInventoryIndex: Int): UseItemAction = UseItemAction(usedInventoryIndex)
+    fun useItem(id: Int, index: Int = -1): UseItemAction = UseItemAction(id, index)
 
     /**
      * An action that drops an item from the inventory of a [Bot]. Unsuspends when the item is dropped and/or
