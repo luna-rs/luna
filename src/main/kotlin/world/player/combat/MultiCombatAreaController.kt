@@ -2,7 +2,7 @@ package world.player.combat
 
 import com.google.common.collect.ImmutableSet
 import io.luna.game.model.area.Area
-import io.luna.game.model.Location
+import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.Region
 import io.luna.game.model.chunk.Chunk
@@ -27,7 +27,7 @@ object MultiCombatAreaController : PlayerLocationController() {
         return true
     }
 
-    override fun computeLocations(): ImmutableSet<Location> = ImmutableSet.of(
+    override fun computeLocations(): ImmutableSet<Locatable> = ImmutableSet.of(
             // Pest control arena
             Region(10536),
 

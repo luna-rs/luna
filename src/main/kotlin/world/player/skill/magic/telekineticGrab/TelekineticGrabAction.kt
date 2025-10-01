@@ -21,7 +21,7 @@ import world.player.skill.magic.RuneRequirement
  * A [RepeatingAction] implementation that handles the telegrab spell.
  */
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
-
+  // todo projectiles
     override fun onLock() {
         mob.face(groundItem.position)
         if (!world.collisionManager.raycast(mob.position, groundItem.position)) {

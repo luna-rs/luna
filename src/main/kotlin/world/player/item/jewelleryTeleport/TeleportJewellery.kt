@@ -2,6 +2,7 @@ package world.player.item.jewelleryTeleport
 
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.Position
+import io.luna.game.model.item.Item
 
 /**
  * An enum representing jewellery that can be used to teleport.
@@ -45,5 +46,6 @@ enum class TeleportJewellery(val items: ImmutableList<Int>,
          * An immutable copy of all this enum's values.
          */
         val VALUES = ImmutableList.copyOf(values())
+        val CHARGED_AMULETS_OF_GLORY = listOf(Item(1712), Item(1710), Item(1708), Item(1706))
     }
 }

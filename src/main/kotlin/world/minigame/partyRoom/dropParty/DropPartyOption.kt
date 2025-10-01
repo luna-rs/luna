@@ -132,7 +132,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
          * Builds a list of all the possible positions to spawn balloons on.
          */
         private fun buildSpawnPositions(list: ArrayList<Position>) {
-            BALLOON_LOCS.forEach { list.addAll(it.positionSet) }
+            BALLOON_LOCS.forEach { list.addAll(it.positions) }
             list.shuffle()
         }
     }

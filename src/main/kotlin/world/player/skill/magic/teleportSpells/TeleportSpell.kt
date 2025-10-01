@@ -1,6 +1,7 @@
 package world.player.skill.magic.teleportSpells
 
 import com.google.common.collect.ImmutableList
+import io.luna.Luna
 import io.luna.game.model.Position
 import world.player.skill.magic.ItemRequirement
 import world.player.skill.magic.Rune

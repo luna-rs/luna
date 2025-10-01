@@ -1,7 +1,6 @@
 package world.player.skill.herblore.makePotion
 
 import api.predef.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player

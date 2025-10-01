@@ -13,7 +13,7 @@ import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
-import io.luna.util.TickTimer
+import io.luna.game.TickTimer
 import world.player.skill.slayer.ActiveSlayerTask
 import kotlin.reflect.KClass
 

@@ -1,5 +1,6 @@
 package world.player.settings.emote
 
+import com.google.common.collect.ImmutableList
 import io.luna.game.model.mob.varp.Varbit
 
 /**
@@ -75,9 +76,14 @@ enum class Emote(val id: Int, val button: Int) {
     companion object {
 
         /**
+         * All emotes.
+         */
+        val ALL = ImmutableList.copyOf(values())
+
+        /**
          * Mapping of buttons to [Emote] instances.
          */
-        val BUTTON_TO_EMOTE = values().associateBy { it.button }
+        val BUTTON_TO_EMOTE = ALL.associateBy { it.button }
 
         /**
          * Set of varbits that unlock emotes in the settings tab.

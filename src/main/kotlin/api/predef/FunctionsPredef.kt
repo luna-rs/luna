@@ -3,10 +3,11 @@ package api.predef
 import com.google.common.collect.HashBasedTable
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Table
+import io.luna.game.model.Position
 import io.luna.game.model.def.EquipmentDefinition
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.def.NpcDefinition
-import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.item.Item
 import io.luna.util.StringUtils
 import java.text.NumberFormat
@@ -39,7 +40,11 @@ fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
 /**
  * Computes and returns the name for [item].
  */
-fun itemName(item: Item): String = itemName(item.id)
+fun name(any: Any): String =
+    when (any) {
+        is Item -> itemName(any.id)
+        else -> any.toString()
+    }
 
 /**
  * Computes and returns an [Item] instance matching `name` with `amount`.
@@ -103,6 +108,8 @@ fun rand(upperInclusive: Int): Int = rand().nextInt(upperInclusive + 1)
  * Generates a random integer within [range].
  */
 fun rand(range: IntRange) = range.random()
+
+fun pos(x: Int, y: Int, z: Int = 0) = Position(x, y, z)
 
 /**
  * Creates an empty mutable table of [entries].

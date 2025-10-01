@@ -3,11 +3,10 @@ package world.player.wilderness
 import api.attr.Attr
 import api.predef.*
 import com.google.common.collect.ImmutableSet
-import io.luna.game.model.Location
+import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.inter.WalkableInterface
@@ -47,7 +46,7 @@ object WildernessAreaController : PlayerLocationController() {
         return true
     }
 
-    override fun computeLocations(): ImmutableSet<Location> = ImmutableSet.of(
+    override fun computeLocations(): ImmutableSet<Locatable> = ImmutableSet.of(
         Area.of(2944, 3519, 3392, 3966)
     )
 

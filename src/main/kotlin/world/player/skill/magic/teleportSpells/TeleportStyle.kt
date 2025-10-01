@@ -1,11 +1,12 @@
 package world.player.skill.magic.teleportSpells
 
+import io.luna.game.model.mob.Spellbook
 import world.player.skill.magic.Magic
 
 /**
  * An enum representing the different teleport styles.
  */
-enum class TeleportStyle(val action: (TeleportAction) -> Boolean) {
-    REGULAR({ Magic.regularStyle(it) }),
-    ANCIENT({ Magic.ancientStyle(it) })
+enum class TeleportStyle(val spellbook: Spellbook, val action: (TeleportAction) -> Boolean) {
+    REGULAR(Spellbook.REGULAR, { Magic.regularStyle(it) }),
+    ANCIENT(Spellbook.ANCIENT, { Magic.ancientStyle(it) })
 }

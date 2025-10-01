@@ -21,7 +21,7 @@ on(ServerLaunchEvent::class) {
 
         // Add listeners for "Use"
         object1(id) {
-            val npc = plr.localNpcs.stream().filter { Banking.bankingNpcs.contains(it.id) }
+            val npc = plr.updateNpcs.stream().filter { Banking.bankingNpcs.contains(it.id) }
                 .filter { it.position.isWithinDistance(gameObject.position, 1) }.findFirst()
             if (npc.isPresent) {
                 openDialogue(plr, npc.get().id)
