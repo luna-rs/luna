@@ -7,25 +7,15 @@ import io.luna.game.model.mob.bot.brain.BotIntelligence
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
-import io.luna.game.model.mob.bot.speech.BotSpeechContext
-import io.luna.util.RandomUtils
-import io.luna.util.Rational
-import kotlinx.coroutines.Delay
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicReference
-import kotlin.time.Duration
 
 /**
  * A script type that uses Kotlin coroutines to run logic. Used as a script within a [BotBrain].
  *
  * @author lare96
  */
-abstract class BotScript<T>(protected val bot: Bot) {
+abstract class BotScript<T>(val bot: Bot) {
 
     /**
      * The bot intelligence.
@@ -50,19 +40,12 @@ abstract class BotScript<T>(protected val bot: Bot) {
     /**
      * The progress of this script.
      */
-    private val progress = AtomicReference<Job>()
+    private var progress: Job? = null
 
     /**
      * Runs the logic within a coroutine.
      */
     abstract suspend fun run()
-
-    /**
-     * Defines the context in which a bot speaks. Subsequent invocations do not have to return the same result.
-     *
-     * @return The speech context.
-     */
-    abstract fun speechContext(): BotSpeechContext
 
     /**
      * Builds a snapshot of this script to be saved to the character file of [bot]. This ensures persistence between
@@ -79,6 +62,22 @@ abstract class BotScript<T>(protected val bot: Bot) {
      * Starts this script.
      */
     fun start(): Boolean {
-        return progress.compareAndSet(null, GlobalScope.launch(Dispatchers.Unconfined) { run() })
+        if (progress == null) {
+            progress = GameCoroutineScope.launch { run() }
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Stops this script.
+     */
+    fun stop(): Boolean {
+        if (progress != null) {
+            progress!!.cancel()
+            progress = null
+            return true
+        }
+        return false
     }
 }
