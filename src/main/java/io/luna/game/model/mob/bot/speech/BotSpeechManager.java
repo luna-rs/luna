@@ -61,6 +61,7 @@ public final class BotSpeechManager {
      * @param event The event to broadcast.
      */
     public void handleInjectors(Event event) {
+        // TODO Only if any bots are actually online.
         for (BotSpeechContextInjector<?> injector : speechInjectors) {
             injector.onEvent(event);
         }
