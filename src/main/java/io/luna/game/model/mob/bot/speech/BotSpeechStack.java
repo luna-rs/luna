@@ -212,7 +212,7 @@ public final class BotSpeechStack {
     public void pushFiller() {
         if (!disableGeneral && !bot.getPersonality().isIntelligent()) {
             String phrase = speechManager.getGeneralSpeechPool().take(bot, GeneralSpeech.selectContextFor(bot));
-            push(new BotSpeech(phrase, ChatColor.YELLOW, ChatEffect.NONE));
+            push(new BotSpeech(phrase));
         }
     }
 

@@ -53,14 +53,23 @@ public final class BotSpeech {
     }
 
     /**
-     * Creates a new {@link BotSpeech} with a delay of {@code -1}.
+     * Creates a new {@link BotSpeech} with regular text and {@code delay}.
      *
      * @param text The text.
-     * @param color The color.
-     * @param effect The effect.
+     * @param delay The number of ticks before this message is executed. {@code -1} = auto-delay,
+     * {@code 0} = next tick.
      */
-    public BotSpeech(String text, ChatColor color, ChatEffect effect) {
-        this(text, color, effect, -1);
+    public BotSpeech(String text, int delay) {
+        this(text, ChatColor.YELLOW, ChatEffect.NONE, delay);
+    }
+
+    /**
+     * Creates a new {@link BotSpeech} with regular text and a {@code delay} of -1.
+     *
+     * @param text The text.
+     */
+    public BotSpeech(String text) {
+        this(text, -1);
     }
 
     /**
