@@ -1,83 +1,202 @@
 package io.luna.game.model.mob.bot.speech;
 
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.brain.BotPersonality;
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor;
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect;
 import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.GeneralSpeech;
+import io.luna.util.Rational;
 
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
+import java.util.concurrent.ThreadLocalRandom;
 
-public class BotSpeechStack {
+/**
+ * Manages a buffer of {@link BotSpeech} requests. This class facilitates when and how often bots will speak (but not
+ * what they say), and helps keeps messages synchronized by handling both contextual, general, and manually pushed speech
+ * requests in one place.
+ */
+public final class BotSpeechStack {
 
+    /**
+     * The maximum amount of time this stack will wait for a request before executing and moving onto the next.
+     */
+    private static final int MAX_DELAY_TICKS = 250;
+
+    /**
+     * Approximately how many general speech requests will be pushed per hour (assuming perfect conditions, 1.0 social). Increasing this number increases the chance
+     * of general speech requests being pushed when the conditions are right.
+     */
+    private static final int FILLER_PER_HOUR = 120;
+
+    /**
+     * Determines how many {@link BotSpeech} requests will be queued before throttling occurs. Lowering this
+     * value usually results in less messages from the {@link BotGeneralSpeechPool} being spoken, but a value too
+     * low will cause more important contextual messages to be throttled. Raising the value as more
+     * {@link BotSpeechContextInjector} types are registered is reccomended.
+     * <p>
+     * Reccomended minimum value: 5
+     * Minimum value: 1
+     */
+    private static final int MAX_LENGTH = 10;
+
+    /**
+     * The buffer of speech requests.
+     */
+    private final Deque<BotSpeech> buffer;
+
+    /**
+     * The last successful {@link #MAX_LENGTH} executed speech requests.
+     */
+    private final Deque<BotSpeech> previous;
+
+    /**
+     * The speech manager
+     */
+    private final BotSpeechManager speechManager;
+
+    /**
+     * The bot this speech stack is for.
+     */
     private final Bot bot;
+
+    private Rational fillerRatio;
+
+    /**
+     * If speech from the {@link BotGeneralSpeechPool} is disabled.
+     */
     private boolean disableGeneral;
+
+    /**
+     * If speech from {@link BotSpeechContextInjector} types is disabled.
+     */
     private boolean disableInjection;
-    private boolean disableAll;// stop talking completely
-    private final Queue<BotSpeech> buffer = new ArrayDeque<>(5);
 
-    // todo simply select a random phrase to say, can be set to periodically randomlly say stuff (a stack with a max of
-    // like 5 things queued) then you can force the stack to pop and say something right away otherwise regenerates stack
-    // at 0
+    /**
+     * If this bot should stop talking completely.
+     */
+    private boolean disableAll;
 
-    // context aware speech? figure out how to do that. like maybe have different phrase lists
-    // depending on active coordinator? ask chatgpt
-
-    // bored.txt, happy.txt, pking.txt, minigame.txt, skilling.txt maybe even break it down even further by skill and/or by
-    //feature for ease of access
-
-    // "i love woodcutting":WoodcuttingScript
-
-    // or if theres another way to do it thats easier
-
-    //https://chatgpt.com/c/68da05be-c7e4-8329-81d0-a4f07966c957
-
-    // maybe every script could return a SpeechContext that determines how and when the bot will talk
-    // can add messages to bots stack with push
-
-    // speech stack does not need to be persisted.
-    // speech stack cleared on script change
-    // if bot intelligence > 0.8, dont ever default to chat filler
-    // higher bot intelligence, less likely to talk from general pool. more contextual reponses
-    // higher kindness, more likely to say gz
-    // stack only evaluated one entry per tick like bot scripts
-    // by default, pushes to front, retrieves from tail. injector pushes to tail.
-    public void push(BotSpeech speech) { // difference between this and output.chat is that this is integrated within
-        // the bots automatic speaking pattern
-// and will ensure AI generated speech patterns won't interfere with player requests for a bot to speak
-        // regular push means bot will say it sometime in the future
-        // high priority push means bot will say it right away (goes to front of stack), always said on following tick (or whenever processing happens)
-        pushHead(speech);
+    /**
+     * Creates a new {@link BotSpeechStack}
+     *
+     * @param bot
+     */
+    public BotSpeechStack(Bot bot, BotSpeechManager speechManager) {
+        this.bot = bot;
+        this.speechManager = speechManager;
+        buffer = new ArrayDeque<>(MAX_LENGTH);
+        previous = new ArrayDeque<>(MAX_LENGTH);
+        fillerRatio = new Rational(FILLER_PER_HOUR, 6000);
     }
 
-    // if recently spoke too much ignore processing for tick
-    // push to front of stack (executed last)
-    public void pushHead(BotSpeech speech) {
-
+    public void process() {
+        BotSpeech speech = buffer.peek();
+        if (speech == null) {
+            // Only rebuild stack if players around.
+            rebuild();
+        } else if (speech.delay > 0) {
+            if (speech.delay > MAX_DELAY_TICKS) {
+                speech.delay = MAX_DELAY_TICKS;
+            }
+            speech.delay--;
+        } else if (speech.delay == 0) {
+            bot.getOutput().chat(speech.getText(), speech.getColor(), speech.getEffect());
+            if (previous.size() > MAX_LENGTH) {
+                previous.poll();
+            }
+            previous.add(buffer.poll());
+        }
     }
 
-    // push to tail of stack (executed next)
+    /**
+     * Forwards to {@link #pushTail(BotSpeech)}.
+     */
+    public void push(BotSpeech speech) {
+        pushTail(speech);
+    }
+
+    /**
+     * Pushes a {@link BotSpeech} request to the <strong>tail</strong> of the stack. The request will be processed
+     * <strong>after</strong> all existing requests in the stack. Use this for low-priority messages, like ones
+     * sent using {@link #pushGeneral()}.
+     *
+     * @param speech The speech request.
+     */
     public void pushTail(BotSpeech speech) {
-
+        if (buffer.size() < MAX_LENGTH) {
+            // If buffer is full drop low-priority requests.
+            buffer.add(delay(speech));
+        }
     }
 
-    public void pop() {
-
-    }
-speech.disableGeneral()     // disables generic chatter pool entirely
-        speech.disableInjector()    // disables contextual responses (gz, loot, death)
-        speech.disableProcessing()  // disables EVERYTHING (manual .chat only)
-
-    public void poke() {
-        // Urges this bot to type and say something. Won't always result in something being said right away.
-        // but increases the chance of something being said in the near future, basically queues a generic piece of
-        // speech to be said in the near future
-        // chance and what they say is based on social and intelligence score
-        // only if buffer isn't full already
-        boolean intelligent = true;
-        String phrase = generalSpeechPool.take(intelligent ? GeneralSpeech.RUNESCAPE_CULTURE :
-                GeneralSpeech.CHAT_FILLER);
+    /**
+     * Pushes a {@link BotSpeech} request to the <strong>head</strong> of the stack. The request will be processed
+     * <strong>before</strong> all existing requests in the stack. Use this for high-priority messages, like ones
+     * sent from {@link BotSpeechContextInjector} types.
+     *
+     * @param speech The speech request.
+     */
+    public void pushHead(BotSpeech speech) {
+        if (buffer.size() >= MAX_LENGTH) {
+            // If buffer is full drop last request in the stack to make room.
+            buffer.removeLast();
+        }
+        buffer.addFirst(delay(speech));
     }
 
+    public BotSpeech peek() {
+        return buffer.peek();
+    }
+
+    public void pushGeneral() {
+        if (!disableGeneral && !bot.getPersonality().isIntelligent()) {
+            String phrase = speechManager.getGeneralSpeechPool().take(bot, GeneralSpeech.selectContextFor(bot));
+            push(new BotSpeech(phrase, ChatColor.YELLOW, ChatEffect.NONE));
+        }
+    }
+
+    // speech stack cleared on script change
     public void clear() {
+        buffer.clear();
+    }
 
+    private void rebuild() {
+        // Only rebuild stack if real players are nearby.
+        BotPersonality personality = bot.getPersonality();
+        if (!bot.getLocalHumans().isEmpty() && personality.isIntelligent()) {
+            // Scale filler per hour to social score.
+            long fillerPerHour = (long) (FILLER_PER_HOUR * personality.getSocial());
+            fillerRatio = new Rational(fillerPerHour, fillerRatio.getDenominator());
+
+            // Scale initial stack requests to social score.
+            int maxLoops = (int) (MAX_LENGTH * personality.getSocial());
+            for (int loops = 0; loops < maxLoops; loops++) {
+                pushGeneral();
+            }
+        }
+    }
+
+    private BotSpeech delay(BotSpeech request) {
+        if (request.delay == -1) {
+            double social = bot.getPersonality().getSocial();
+            int min = 50;
+            int baseDelay = (int) (MAX_DELAY_TICKS - social * (MAX_DELAY_TICKS - min));
+            int jitter = ThreadLocalRandom.current().nextInt(20, 80);
+            request.delay = baseDelay + jitter;
+        }
+        return request;
+    }
+
+    public void setDisableGeneral(boolean disableGeneral) {
+        this.disableGeneral = disableGeneral;
+    }
+
+    public void setDisableInjection(boolean disableInjection) {
+        this.disableInjection = disableInjection;
+    }
+
+    public void setDisableAll(boolean disableAll) {
+        this.disableAll = disableAll;
     }
 }
