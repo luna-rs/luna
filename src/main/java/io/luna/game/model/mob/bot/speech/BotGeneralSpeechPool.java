@@ -1,16 +1,15 @@
 package io.luna.game.model.mob.bot.speech;
 
-import com.google.common.collect.ImmutableList;
-import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.BotGeneralSpeech;
+import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.GeneralSpeech;
 
 import java.nio.file.Paths;
 
 /**
- * A {@link BotSpeechPool} implementation that loads pools with the {@link BotGeneralSpeech} context.
+ * A {@link BotSpeechPool} implementation that loads pools with the {@link GeneralSpeech} context.
  *
  * @author lare96
  */
-public final class BotGeneralSpeechPool extends BotSpeechPool<BotGeneralSpeech> {
+public final class BotGeneralSpeechPool extends BotSpeechPool<GeneralSpeech> {
 
     /**
      * An enum representing the different types of general bot speech. All phrases within these types try their best to
@@ -18,7 +17,7 @@ public final class BotGeneralSpeechPool extends BotSpeechPool<BotGeneralSpeech> 
      *
      * @author lare96
      */
-    public enum BotGeneralSpeech {
+    public enum GeneralSpeech {
 
         /**
          * Random trolling, banter, or spam you may have came across in Falador square or Varrock bank circa-2005. Bots
@@ -40,18 +39,13 @@ public final class BotGeneralSpeechPool extends BotSpeechPool<BotGeneralSpeech> 
          * Inexperienced questions and thoughts from noobs (borderline trolling). Low level unintelligent bots should
          * pull from this pool.
          */
-        NOOB_QUESTIONS;
-
-        /**
-         * All the values.
-         */
-        public static final ImmutableList<BotGeneralSpeech> ALL = ImmutableList.copyOf(values());
+        NOOB_QUESTIONS
     }
 
     /**
      * Creates a new {@link BotGeneralSpeechPool}.
      */
     public BotGeneralSpeechPool() {
-        super(Paths.get("general.json"), BotGeneralSpeech.class);
+        super(Paths.get("general.json"), GeneralSpeech.class);
     }
 }
