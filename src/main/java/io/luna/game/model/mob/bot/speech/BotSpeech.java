@@ -4,7 +4,9 @@ import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect;
 
 /**
- * A model representing an entry of generated bot speech within a stack.
+ * A model representing a queued bot speech request within a {@link BotSpeechStack}.
+ * <p>
+ * Each instance holds the finalized chat message text, color, effect, and its tick delay before execution.
  *
  * @author lare96
  */
@@ -26,19 +28,22 @@ public final class BotSpeech {
     private final ChatEffect effect;
 
     /**
-     * How many ticks this should remain in the stack before being popped. -1 = set by
-     * {@link BotSpeechManager}, 0 = speaks on next tick.
+     * How many ticks this speech will remain in the stack before execution.
+     * <ul>
+     *     <li>{@code -1}, delay determined automatically by {@link BotSpeechStack}.</li>
+     *     <li>{@code 0}, executes on the next tick.</li>
+     * </ul>
      */
     int delay;
 
     /**
-     * Creates a new {@link BotSpeech} with {@code delay} ticks before leaving the stack.
+     * Creates a new {@link BotSpeech} with a specified delay.
      *
      * @param text The text.
      * @param color The color.
      * @param effect The effect.
-     * @param delay How many ticks this should remain in the stack before being popped. -1 = set by
-     * {@link BotSpeechManager}, 0 = speaks on next tick.
+     * @param delay The number of ticks before this message is executed. {@code -1} = auto-delay,
+     * {@code 0} = next tick.
      */
     public BotSpeech(String text, ChatColor color, ChatEffect effect, int delay) {
         this.text = text;
@@ -80,15 +85,7 @@ public final class BotSpeech {
     }
 
     /**
-     * Decrements the delay by {@code 1}.
-     */
-    void decrementDelay() {
-        delay--;
-    }
-
-    /**
-     * How many ticks this should remain in the stack before being popped. -1 = set by
-     * {@link BotSpeechManager}, 0 = speaks on next tick.
+     * @return How many ticks this speech remains queued before execution.
      */
     public int getDelay() {
         return delay;

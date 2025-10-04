@@ -8,11 +8,17 @@ import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Dynamically injects context into {@link Bot} speech where needed. Every injector has its own {@link BotSpeechPool}
- * of unique phrases to pick from, strictly compartmentalized by context. This provides smarter communication capabilities
- * for bots, allowing them to react to the world around them through speech.
+ * Base type for all bot speech injectors.
+ * <p>
+ * A {@link BotSpeechContextInjector} listens for global {@link Event}s and dynamically pushes
+ * context-aware speech to associated {@link Bot} instances. Each injector manages its own
+ * {@link BotSpeechPool} of phrases, strictly scoped to a single gameplay context
+ * (e.g. combat reactions, level-ups, trades, NPC interactions).
+ * <p>
+ * By compartmentalizing phrases and reacting to live world events, injectors allow bots to
+ * communicate intelligently and believably about their surroundings.
  *
- * @param <T> The enum that will compartmentalize phrases in the backing pool.
+ * @param <T> The enum type used to compartmentalize phrases in the backing pool.
  * @author lare96
  */
 public abstract class BotSpeechContextInjector<T extends Enum<T>> {
@@ -38,8 +44,10 @@ public abstract class BotSpeechContextInjector<T extends Enum<T>> {
     }
 
     /**
-     * Loads the backing {@link #speechPool} and any additional resources associated with this injector
-     * ({@link #load()}).
+     * Initializes this injector if it has not already been started.
+     * <p>
+     * Loads the backing {@link #speechPool} and then invokes {@link #load()} for any subclass-specific
+     * initialization or resource binding.
      */
     public final void start() {
         if(started.compareAndSet(false, true)) {
@@ -49,16 +57,21 @@ public abstract class BotSpeechContextInjector<T extends Enum<T>> {
     }
 
     /**
-     * Loads any additional resources associated with this injector.
+     * Called during {@link #start()} to load any additional resources associated with this injector.
+     * <p>
+     * Subclasses may override this to perform setup tasks such as event subscriptions or precomputations.
      */
     public void load() {
 
     }
 
     /**
-     * Listen for all world events after they were sent through an {@link EventListenerPipeline}.
+     * Handles an incoming {@link Event} routed from the global {@link EventListenerPipeline}.
+     * <p>
+     * Subclasses implement this method to detect relevant events and queue appropriate speech
+     * into the corresponding bot's {@link BotSpeechStack}.
      *
-     * @param msg The received event.
+     * @param event The event received from the world.
      */
-    public abstract void onEvent(Event msg);
+    public abstract void onEvent(Event event);
 }
