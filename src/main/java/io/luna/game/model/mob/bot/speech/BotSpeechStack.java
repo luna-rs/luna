@@ -5,6 +5,7 @@ import io.luna.game.model.mob.bot.brain.BotPersonality;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect;
 import io.luna.game.model.mob.bot.speech.BotGeneralSpeechPool.GeneralSpeech;
+import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
 import java.util.ArrayDeque;
@@ -87,10 +88,16 @@ public final class BotSpeechStack {
         this.speechManager = speechManager;
         buffer = new ArrayDeque<>(MAX_LENGTH);
         previous = new ArrayDeque<>(MAX_LENGTH);
-        fillerRatio = new Rational(FILLER_PER_HOUR, 6000);
     }
 
     public void process() {
+        if (disableAll) {
+            buffer.clear();
+            return;
+        }
+
+        maybePushFiller();
+
         BotSpeech speech = buffer.peek();
         if (speech == null) {
             // Only rebuild stack if players around.
@@ -119,7 +126,7 @@ public final class BotSpeechStack {
     /**
      * Pushes a {@link BotSpeech} request to the <strong>tail</strong> of the stack. The request will be processed
      * <strong>after</strong> all existing requests in the stack. Use this for low-priority messages, like ones
-     * sent using {@link #pushGeneral()}.
+     * sent using {@link #pushFiller()}.
      *
      * @param speech The speech request.
      */
@@ -149,7 +156,29 @@ public final class BotSpeechStack {
         return buffer.peek();
     }
 
-    public void pushGeneral() {
+    public void maybePushFiller() {
+        if (disableGeneral) {
+            return;
+        }
+
+        // Only attempt filler when near real players
+        if (bot.getLocalHumans().isEmpty() || !bot.getPersonality().isIntelligent()) {
+            return;
+        }
+
+        // Scale filler ratio to social score.
+        if(fillerRatio == null) {
+            long fillerPerHour = (long) (FILLER_PER_HOUR * bot.getPersonality().getSocial());
+            fillerRatio = new Rational(fillerPerHour, 6000);
+        }
+
+        // Roll chance based on fillerRatio.
+        if (RandomUtils.roll(fillerRatio)) {
+            pushFiller();
+        }
+    }
+
+    public void pushFiller() {
         if (!disableGeneral && !bot.getPersonality().isIntelligent()) {
             String phrase = speechManager.getGeneralSpeechPool().take(bot, GeneralSpeech.selectContextFor(bot));
             push(new BotSpeech(phrase, ChatColor.YELLOW, ChatEffect.NONE));
@@ -164,15 +193,11 @@ public final class BotSpeechStack {
     private void rebuild() {
         // Only rebuild stack if real players are nearby.
         BotPersonality personality = bot.getPersonality();
-        if (!bot.getLocalHumans().isEmpty() && personality.isIntelligent()) {
-            // Scale filler per hour to social score.
-            long fillerPerHour = (long) (FILLER_PER_HOUR * personality.getSocial());
-            fillerRatio = new Rational(fillerPerHour, fillerRatio.getDenominator());
-
+        if (!bot.getLocalHumans().isEmpty() && !personality.isIntelligent() && !disableGeneral) { // todo isdisabled? or these 3
             // Scale initial stack requests to social score.
-            int maxLoops = (int) (MAX_LENGTH * personality.getSocial());
+            int maxLoops = Math.max((int) (MAX_LENGTH * personality.getSocial()), 1);
             for (int loops = 0; loops < maxLoops; loops++) {
-                pushGeneral();
+                pushFiller();
             }
         }
     }
@@ -182,7 +207,7 @@ public final class BotSpeechStack {
             double social = bot.getPersonality().getSocial();
             int min = 50;
             int baseDelay = (int) (MAX_DELAY_TICKS - social * (MAX_DELAY_TICKS - min));
-            int jitter = ThreadLocalRandom.current().nextInt(20, 80);
+            int jitter = ThreadLocalRandom.current().nextInt(20, 80); //scale variance with social
             request.delay = baseDelay + jitter;
         }
         return request;
@@ -190,10 +215,6 @@ public final class BotSpeechStack {
 
     public void setDisableGeneral(boolean disableGeneral) {
         this.disableGeneral = disableGeneral;
-    }
-
-    public void setDisableInjection(boolean disableInjection) {
-        this.disableInjection = disableInjection;
     }
 
     public void setDisableAll(boolean disableAll) {
