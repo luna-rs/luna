@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
-import api.bot.coordinators.TrainingSkillsCoordinator;
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.bot.Bot;
 
 /**
@@ -8,8 +8,8 @@ import io.luna.game.model.mob.bot.Bot;
  * for the bot’s “behavioral mode,” controlling what kind of actions or sub-scripts the bot prioritizes at runtime.
  * <p>
  * Each activity type optionally defines a {@link BotCoordinator} responsible for orchestrating its internal logic
- * and sub-behaviors. New activity types can be added to expand the bot’s behavioral repertoire (e.g., “BOSSING” or
- * “QUESTING”), each linked to a dedicated coordinator implementation.
+ * and sub-behaviors. Every {@link Bot} has a certain affinity for each activity that will influence how often its
+ * coordinator is picked.
  *
  * @author lare96
  */
@@ -18,7 +18,7 @@ public enum BotActivity {
     /**
      * General non-combat skill training (e.g., Woodcutting, Mining, Fishing).
      */
-    TRAINING_SKILLS(TrainingSkillsCoordinator.INSTANCE),
+    TRAINING_SKILLS(null),
 
     /**
      * Combat training, such as fighting NPCs to improve Attack, Strength, or Defence.
@@ -54,6 +54,11 @@ public enum BotActivity {
      * Participation in structured mini-games or cooperative content.
      */
     MINIGAMES(null);
+
+    /**
+     * All {@link BotActivity} types in this enum.
+     */
+    public static final ImmutableList<BotActivity> ALL = ImmutableList.copyOf(values());
 
     /**
      * The coordinator that manages this activity, or null if unassigned.
