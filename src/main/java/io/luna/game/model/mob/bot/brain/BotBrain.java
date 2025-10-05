@@ -1,11 +1,13 @@
 package io.luna.game.model.mob.bot.brain;
 
+import api.bot.BotScript;
 import api.bot.coordinators.LogoutCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 /**
  * The high-level decision-making center for a {@link Bot}.
@@ -29,12 +31,25 @@ import java.util.concurrent.ThreadLocalRandom;
 public class BotBrain {
 
     /**
+     * A functional interface representing a high-level behavior controller for a {@link Bot}.
+     * <p>
+     * Each {@code BotCoordinator} encapsulates the logic required to manage a specific behavioral domain,
+     * such as training, combat, or social activities. Coordinators act as the “executive layer” between the
+     * {@link BotBrain} and the lower-level {@link BotScript} routines.
+     *
+     * @author lare96
+     * @see BotActivity
+     */
+    public interface BotCoordinator extends Consumer<Bot> {
+    }
+
+    /**
      * Processes the bot’s reasoning for this game tick.
      *
      * @param bot The bot.
      * @return A {@link BotCoordinator} to execute this tick, or {@code null} if no coordinator was chosen.
      */
-    public final BotCoordinator process(Bot bot) {
+    public BotCoordinator process(Bot bot) {
         if (bot.isLogoutScheduled()) {
             return LogoutCoordinator.INSTANCE;
         }

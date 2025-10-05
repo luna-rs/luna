@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.brain;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.brain.BotBrain.BotCoordinator;
 
 /**
  * Represents the high-level activity categories that a {@link Bot} can perform. This enum is the entry point
