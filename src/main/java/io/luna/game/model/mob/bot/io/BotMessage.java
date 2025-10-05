@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.bot;
+package io.luna.game.model.mob.bot.io;
 
 import io.luna.net.msg.GameMessageWriter;
 

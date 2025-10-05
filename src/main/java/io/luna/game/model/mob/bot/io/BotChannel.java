@@ -1,13 +1,13 @@
-package io.luna.game.model.mob.bot;
+package io.luna.game.model.mob.bot.io;
 
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.net.client.GameClient;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.AbstractChannel;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelConfig;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelMetadata;
-import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelProgressivePromise;
 import io.netty.channel.ChannelPromise;
@@ -19,17 +19,33 @@ import org.jetbrains.annotations.NotNull;
 import java.net.SocketAddress;
 
 /**
- * A dummy {@link Channel} implementation that does nothing but help facilitate the artificial networking protocol
- * for {@link Bot} types.
+ * A no-op (dummy) implementation of Netty’s {@link Channel} interface used exclusively for {@link Bot} clients.
+ * <p>
+ * This class exists solely to satisfy {@link GameClient}’s requirement for a backing {@link Channel}.
+ * Since bots do not communicate over real network sockets, this implementation provides inert stubs for all methods.
+ * Every method either returns {@code null}, {@code false}, or {@code 0}, and performs no network I/O.
+ * <p>
+ * In essence, this class acts as a placeholder network channel that allows bot sessions
+ * to reuse the same server I/O architecture as real players, without needing Netty to actually run.
+ * <p>
+ * The single shared instance {@link #CHANNEL} can be safely reused across all bots.
  *
  * @author lare96
  */
 public class BotChannel implements Channel {
 
     /**
-     * A global instance of this dummy channel.
+     * A shared, global instance of this dummy channel.
      */
     public static final Channel CHANNEL = new BotChannel();
+
+    /**
+     * Private constructor to prevent external instantiation.
+     * <p>
+     * The singleton instance {@link #CHANNEL} should be used instead.
+     */
+    private BotChannel() {
+    }
 
     @Override
     public ChannelId id() {
@@ -245,6 +261,4 @@ public class BotChannel implements Channel {
     public int compareTo(@NotNull Channel o) {
         return 0;
     }
-
-    private BotChannel(){}
 }

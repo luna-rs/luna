@@ -1,6 +1,7 @@
-package io.luna.game.model.mob.bot;
+package io.luna.game.model.mob.bot.io;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.client.GameClient;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageRepository;
@@ -11,60 +12,66 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * A {@link GameClient} implementation that enables {@link Bot} types to perform artificial networking. All
- * bot IO can be processed and interpreted; for instance, bots can retrieve messages sent by the server and send
- * messages as if they were actual clients.
+ * A specialized {@link GameClient} implementation that simulates network communication for {@link Bot}
+ * instances. Bot networking is entirely artificial and handled in-memory, making all I/O operations instantaneous.
  * <p>
- * As a result of networking being artificial, there is zero latency when sending/receiving messages.
+ * The {@link BotClient} architecture mirrors a real client session:
+ * <ul>
+ *     <li>{@link #queue(GameMessageWriter, Player)} simulates sending server messages to the bot.</li>
+ *     <li>{@link #flush()} delivers all queued server messages to the bot’s {@link BotInputMessageHandler}.</li>
+ *     <li>{@link #queueSimulated(GameMessage)} simulates incoming packets from the bot to the server.</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class BotClient extends GameClient {
 
     /**
-     * The input message handler.
+     * Handles incoming (server -> bot) messages.
      */
     private final BotInputMessageHandler input;
 
     /**
-     * The output message handler.
+     * Handles outgoing (bot -> server) messages.
      */
     private final BotOutputMessageHandler output;
 
     /**
-     * All pending write messages, completed when {@link #flush()} is called.
+     * All pending messages awaiting delivery to the bot, finalized when {@link #flush()} is called.
      */
     private final Queue<BotMessage<?>> pendingWriteMessages = new ConcurrentLinkedQueue<>();
 
     /**
-     * The bot instance.
+     * The bot.
      */
     private final Bot bot;
 
     /**
      * Creates a new {@link BotClient}.
      *
+     * @param bot The bot.
      * @param repository The message repository.
      */
     public BotClient(Bot bot, GameMessageRepository repository) {
         super(BotChannel.CHANNEL, repository);
         this.bot = bot;
-        input = new BotInputMessageHandler();
+        input = new BotInputMessageHandler(bot);
         output = new BotOutputMessageHandler(this);
     }
 
+    /**
+     * Should never be called, since bots don't receive packets through Netty.
+     */
     @Override
     public void onMessageReceived(GameMessage msg) {
-        /* Shouldn't ever be called. The equivalent to this method for a bot is "queue(GameMessageWriter, Player)" since
-        we're receiving all server messages sent (just not from Netty like here). */
         throw new IllegalStateException("Unexpected: " + bot.getUsername() + " calling onMessageReceived.");
     }
 
+    /**
+     * Simulates a server -> client send.
+     */
     @Override
     public void queue(GameMessageWriter msg, Player player) {
-        // The server is trying to send a message to the client, since we're a bot the 'client' doesn't exist.
-        // So we cache the messages, and they can be interpreted by scripts when needed.
-        // eg. if(msg instanceof GameChatboxMessageWriter && msg.getMessage().equals("Welcome to Luna!")) ...
         if (!player.isBot()) {
             throw new IllegalStateException("Unexpected: " + player.getUsername() + " not a bot, but using BotClient.");
         }
@@ -72,6 +79,9 @@ public final class BotClient extends GameClient {
         pendingWriteMessages.add(new BotMessage<>(msg, timestamp));
     }
 
+    /**
+     * Transfers queued messages from the server to the bot’s input buffer.
+     */
     @Override
     public void flush() {
         // Send messages to the client, which is our bot!
@@ -85,7 +95,8 @@ public final class BotClient extends GameClient {
     }
 
     /**
-     * Queues a {@link GameMessage} to be simulated in this server as an incoming packet from a client.
+     * Queues a {@link GameMessage} to be simulated as an incoming packet from the bot to the server. This mimics
+     * client-originated packets.
      *
      * @param msg The message to simulate.
      */
@@ -101,14 +112,14 @@ public final class BotClient extends GameClient {
     }
 
     /**
-     * @return The input message handler.
+     * @return Handles incoming (server -> bot) messages.
      */
     public BotInputMessageHandler getInput() {
         return input;
     }
 
     /**
-     * @return The output message handler.
+     * @return Handles outgoing (bot -> server) messages.
      */
     public BotOutputMessageHandler getOutput() {
         return output;
