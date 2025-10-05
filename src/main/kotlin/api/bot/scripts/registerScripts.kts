@@ -1,4 +1,4 @@
-package api.bot.script
+package api.bot.scripts
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent

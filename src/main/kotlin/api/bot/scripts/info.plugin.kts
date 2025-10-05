@@ -1,4 +1,4 @@
-package api.bot.script
+package api.bot.scripts
 
 import api.plugin.dsl.plugin
 

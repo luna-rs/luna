@@ -1,4 +1,4 @@
-package api.bot.script
+package api.bot.scripts
 
 import api.bot.BotScript
 import api.bot.Suspendable.delay
@@ -6,7 +6,7 @@ import api.bot.Suspendable.maybe
 import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
-import api.bot.script.IdleBotScript.InputData
+import api.bot.scripts.IdleBotScript.InputData
 import api.bot.zone.Zone
 import api.predef.*
 import api.predef.ext.*
@@ -85,7 +85,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
                 continue
             }
             handler.widgets.clickRunning(false)
-            naturalDelay()
+            bot.naturalDelay()
             if (bot.inventory.isFull) {
                 bot.log("Banking items.")
                 handler.travelToBankDepositAll()
@@ -101,7 +101,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
             }
             data.state = null
-            naturalDecisionDelay()
+            bot.naturalDecisionDelay()
         }
     }
 
@@ -171,7 +171,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             return
         }
         output.sendCommand("home")
-        naturalDecisionDelay()
+        bot.naturalDecisionDelay()
         randomActions()
     }
 
@@ -195,14 +195,14 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
                 bot.log("I'm performing emotes.")
                 val emote = RandomUtils.random(Emote.ALL)
                 bot.animation(Animation(emote.id))
-                naturalDecisionDelay()
+                bot.naturalDecisionDelay()
             })
             return
 
         // Otherwise, maybe stand around and say something at ::home.
         if (maybe(VERY_UNCOMMON) {
                 intelligence.speechStack.pushFiller()
-                naturalDecisionDelay()
+                bot.naturalDecisionDelay()
             })
             return
     }
