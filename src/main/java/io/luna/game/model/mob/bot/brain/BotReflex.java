@@ -69,7 +69,7 @@ public class BotReflex {
         // Automatically progress dialogue interfaces.
         if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
             bot.getOutput().sendContinueDialogue();
-            bot.log("Reflex triggeredX: continue dialogue.");
+            bot.log("Reflex triggered: continue dialogue.");
             return false;
         }
 
@@ -82,6 +82,10 @@ public class BotReflex {
             - Nearby allies or escape routes.
             - Bot personality and current mood.
             Potentially delegate this logic to a CombatReflex or CombatBotScript. */
+
+        /* TODO We technically shouldn't be starting scripts here, since the script stack isn't checked until
+                before the bot brain. Maybe combat shouldn't be a top level instinct? More mid-level like
+                logging out? We could always make an exception though.. */
 
         // Execute all additional registered instincts.
         for (BotInstinct instinct : instinctList) {
