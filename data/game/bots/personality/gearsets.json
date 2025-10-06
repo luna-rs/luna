@@ -1,0 +1,558 @@
+[
+  {
+    "name": "BRONZE_FULL",
+    "items": [
+      1075,
+      1117,
+      1155,
+      1189,
+      1321,
+      4119
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "IRON_FULL",
+    "items": [
+      1067,
+      1115,
+      1153,
+      1191,
+      1323,
+      4121
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "STEEL_FULL",
+    "items": [
+      1069,
+      1119,
+      1157,
+      1193,
+      1325,
+      4123
+    ],
+    "level": 5,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "BLACK_FULL",
+    "items": [
+      1077,
+      1125,
+      1165,
+      1195,
+      1327,
+      4125
+    ],
+    "level": 10,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "MITHRIL_FULL",
+    "items": [
+      1071,
+      1121,
+      1159,
+      1197,
+      1329,
+      4127
+    ],
+    "level": 20,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "ADAMANT_FULL",
+    "items": [
+      1073,
+      1123,
+      1161,
+      1199,
+      1331,
+      4129
+    ],
+    "level": 30,
+    "purposes": [
+      "TRAINING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "RUNE_FULL",
+    "items": [
+      1079,
+      1127,
+      1163,
+      1201,
+      1333,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MELEE",
+      "TRAINING"
+    ]
+  },
+  {
+    "name": "DRAGON_FULL",
+    "items": [
+      4087,
+      3140,
+      11335,
+      1187,
+      4587,
+      11732
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "OBSIDIAN_FULL",
+    "items": [
+      6568,
+      6528,
+      6524,
+      11128,
+      6570
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "SHOW_OFF",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "DHAROKS_SET",
+    "items": [
+      4716,
+      4718,
+      4720,
+      4722
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "VERACS_SET",
+    "items": [
+      4753,
+      4755,
+      4757,
+      4759
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "TORAGS_SET",
+    "items": [
+      4745,
+      4747,
+      4749,
+      4751
+    ],
+    "level": 70,
+    "purposes": [
+      "TRAINING",
+      "BOSSES"
+    ]
+  },
+  {
+    "name": "GUTHANS_SET",
+    "items": [
+      4724,
+      4726,
+      4728,
+      4730
+    ],
+    "level": 70,
+    "purposes": [
+      "TRAINING",
+      "SLAYER",
+      "MELEE"
+    ]
+  },
+  {
+    "name": "LEATHER_SET",
+    "items": [
+      1129,
+      1095,
+      1063,
+      1167,
+      841,
+      882
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "STUDDED_LEATHER_SET",
+    "items": [
+      1133,
+      1097,
+      1063,
+      1169,
+      849,
+      884
+    ],
+    "level": 20,
+    "purposes": [
+      "TRAINING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "GREEN_DHIDE_SET",
+    "items": [
+      1135,
+      1099,
+      1065,
+      1165,
+      861,
+      892
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "RANGE",
+      "TRAINING"
+    ]
+  },
+  {
+    "name": "BLUE_DHIDE_SET",
+    "items": [
+      2499,
+      2493,
+      2487,
+      2491,
+      861,
+      892
+    ],
+    "level": 50,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "RED_DHIDE_SET",
+    "items": [
+      2501,
+      2495,
+      2489,
+      2493,
+      861,
+      892
+    ],
+    "level": 60,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "BLACK_DHIDE_SET",
+    "items": [
+      2503,
+      2497,
+      2491,
+      2493,
+      861,
+      892
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "KARILS_SET",
+    "items": [
+      4732,
+      4734,
+      4736,
+      4738
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "RANGE"
+    ]
+  },
+  {
+    "name": "WIZARD_BLUE_SET",
+    "items": [
+      579,
+      577,
+      1011,
+      1381
+    ],
+    "level": 1,
+    "purposes": [
+      "TRAINING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "WIZARD_DARK_SET",
+    "items": [
+      4089,
+      4091,
+      4093,
+      1381
+    ],
+    "level": 10,
+    "purposes": [
+      "TRAINING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "MYSTIC_LIGHT_SET",
+    "items": [
+      4089,
+      4091,
+      4093,
+      4095,
+      4097,
+      4675
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "MYSTIC_DARK_SET",
+    "items": [
+      4101,
+      4103,
+      4105,
+      4107,
+      4109,
+      4675
+    ],
+    "level": 40,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "AHRIMS_SET",
+    "items": [
+      4708,
+      4710,
+      4712,
+      4714
+    ],
+    "level": 70,
+    "purposes": [
+      "PKING",
+      "MAGIC"
+    ]
+  },
+  {
+    "name": "BLACK_TRIMMED",
+    "items": [
+      "Black full helm (t)",
+      "Black platebody (t)",
+      "Black platelegs (t)",
+      "Black kiteshield (t)",
+      "Black boots"
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "BLACK_GOLD",
+    "items": [
+      "Black full helm (g)",
+      "Black platebody (g)",
+      "Black platelegs (g)",
+      "Black kiteshield (g)",
+      "Black boots"
+    ],
+    "level": 1,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "MITHRIL_TRIMMED",
+    "items": [
+      "Mithril full helm (t)",
+      "Mithril platebody (t)",
+      "Mithril platelegs (t)",
+      "Mithril kiteshield (t)",
+      "Mithril boots"
+    ],
+    "level": 20,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "MITHRIL_GOLD",
+    "items": [
+      "Mithril full helm (g)",
+      "Mithril platebody (g)",
+      "Mithril platelegs (g)",
+      "Mithril kiteshield (g)",
+      "Mithril boots"
+    ],
+    "level": 20,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_TRIMMED",
+    "items": [
+      "Adam full helm (t)",
+      "Adam platebody (t)",
+      "Adam platelegs (t)",
+      "Adam kiteshield (t)",
+      "Adamant boots"
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "ADAMANT_GOLD",
+    "items": [
+      "Adamant full helm (g)",
+      "Adamant platebody (g)",
+      "Adamant platelegs (g)",
+      "Adamant kiteshield (g)",
+      "Adamant boots"
+    ],
+    "level": 30,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_TRIMMED",
+    "items": [
+      2615,
+      2617,
+      2619,
+      2621,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GOLD",
+    "items": [
+      2623,
+      2625,
+      2627,
+      2629,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_SARADOMIN",
+    "items": [
+      2661,
+      2663,
+      2665,
+      2667,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_GUTHIX",
+    "items": [
+      2673,
+      2675,
+      2677,
+      2679,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "RUNE_ZAMORAK",
+    "items": [
+      2653,
+      2655,
+      2657,
+      2659,
+      4131
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  },
+  {
+    "name": "GILDED_RUNE",
+    "items": [
+      3481,
+      3483,
+      3485,
+      3486,
+      3488
+    ],
+    "level": 40,
+    "purposes": [
+      "SHOW_OFF"
+    ]
+  }
+]
+
