@@ -122,11 +122,11 @@ public final class BotPersonality {
          */
         public Builder template(PersonalityTemplateType from) {
             PersonalityTemplate template = bot.getManager().getPersonalityManager().getTemplate(from);
-            intelligence = template.getIntelligence();
-            kindness = template.getKindness();
-            confidence = template.getConfidence();
-            social = template.getSocial();
-            dexterity = template.getDexterity();
+            intelligence = template.intelligence;
+            kindness = template.kindness;
+            confidence = template.confidence;
+            social = template.social;
+            dexterity = template.dexterity;
             return this;
         }
 
@@ -139,14 +139,14 @@ public final class BotPersonality {
          * @param variance The maximum deviation for each trait.
          * @return This builder for chaining.
          */
-        public Builder randomizeTemplates(PersonalityTemplateType from, double variance) {
+        public Builder randomizeTemplate(PersonalityTemplateType from, double variance) {
             Supplier<Double> varianceSupplier = () -> ThreadLocalRandom.current().nextDouble(-variance, variance);
             PersonalityTemplate template = bot.getManager().getPersonalityManager().getTemplate(from);
-            intelligence = template.getIntelligence() + varianceSupplier.get();
-            kindness = template.getKindness() + varianceSupplier.get();
-            confidence = template.getConfidence() + varianceSupplier.get();
-            social = template.getSocial() + varianceSupplier.get();
-            dexterity = template.getDexterity() + varianceSupplier.get();
+            intelligence = template.intelligence + varianceSupplier.get();
+            kindness = template.kindness + varianceSupplier.get();
+            confidence = template.confidence + varianceSupplier.get();
+            social = template.social + varianceSupplier.get();
+            dexterity = template.dexterity + varianceSupplier.get();
             return this;
         }
 
@@ -171,7 +171,7 @@ public final class BotPersonality {
          * @return The new personality.
          */
         public BotPersonality build() {
-            return new BotPersonality(bot,
+            return new BotPersonality(
                     Math.max(intelligence, 1.0),
                     Math.max(kindness, 1.0),
                     Math.max(confidence, 1.0),
@@ -179,16 +179,6 @@ public final class BotPersonality {
                     Math.max(dexterity, 1.0));
         }
     }
-
-    /**
-     * The owning bot.
-     */
-    private final Bot bot;
-
-    /**
-     * The personality manager for this bot.
-     */
-    private final BotPersonalityManager personalityManager;
 
     /**
      * Core personality attributes.
@@ -202,21 +192,18 @@ public final class BotPersonality {
     /**
      * Creates a new personality instance.
      *
-     * @param bot The owning bot.
      * @param intelligence The bot’s intelligence value.
      * @param kindness The bot’s kindness value.
      * @param confidence The bot’s confidence value.
      * @param social The bot’s sociability value.
      * @param dexterity The bot’s dexterity value.
      */
-    private BotPersonality(Bot bot, double intelligence, double kindness, double confidence, double social, double dexterity) {
-        this.bot = bot;
+    private BotPersonality(double intelligence, double kindness, double confidence, double social, double dexterity) {
         this.intelligence = intelligence;
         this.kindness = kindness;
         this.confidence = confidence;
         this.social = social;
         this.dexterity = dexterity;
-        personalityManager = bot.getManager().getPersonalityManager();
     }
 
     /**
