@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 import io.luna.Luna;
 import io.luna.game.event.impl.SkillChangeEvent;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.plugin.PluginManager;
 
 import java.util.function.Function;
@@ -37,6 +38,11 @@ public final class Skill {
      * An immutable map of names to identifiers.
      */
     public static final ImmutableMap<String, Integer> NAME_TO_ID;
+
+    /**
+     * An immutable list of all identifiers.
+     */
+    public static final ImmutableList<Integer> IDS;
 
     /**
      * The Attack identifier.
@@ -177,6 +183,7 @@ public final class Skill {
         // Build and set [name -> identifier] cache.
         NAME_TO_ID = IntStream.range(0, NAMES.size()).boxed()
                 .collect(ImmutableMap.toImmutableMap(NAMES::get, Function.identity()));
+        IDS = ImmutableList.copyOf(NAME_TO_ID.values());
     }
 
     /**
@@ -244,8 +251,8 @@ public final class Skill {
      */
     public void addExperience(double amount) {
         checkArgument(amount > 0, "amount <= 0");
-        amount = amount * Luna.settings().game().experienceMultiplier();
-        setExperience(experience + amount);
+        double multiplier = set.getMob() instanceof Bot ? 1.0 : Luna.settings().game().experienceMultiplier();
+        setExperience(experience + (amount * multiplier));
     }
 
     /**
