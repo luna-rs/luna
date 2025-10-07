@@ -71,8 +71,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * A model representing a player-controlled mob.
  *
@@ -1453,7 +1451,10 @@ public class Player extends Mob {
      * @return The current spellbook.
      */
     public Spellbook getSpellbook() {
-        return requireNonNull(spellbook);
+        if(spellbook == null) {
+            spellbook = Spellbook.REGULAR;
+        }
+        return spellbook;
     }
 
     /**
@@ -1475,7 +1476,7 @@ public class Player extends Mob {
     /**
      * Updates the current spellbook and the magic tab.
      */
-    public void updateSpellbook(Spellbook newSpellbook) {
+    public void setSpellbook(Spellbook newSpellbook) {
         updateSpellbook(newSpellbook, true);
     }
 
