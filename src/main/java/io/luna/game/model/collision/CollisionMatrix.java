@@ -19,6 +19,7 @@ import java.util.OptionalInt;
  * A 2-dimensional adjacency matrix containing tile collision data.
  *
  * @author Major
+ * @author lare96
  */
 public final class CollisionMatrix {
 

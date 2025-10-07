@@ -1,7 +1,7 @@
 package io.luna.net.client;
 
 import com.google.common.base.MoreObjects;
-import io.luna.game.model.mob.bot.BotChannel;
+import io.luna.game.model.mob.bot.io.BotChannel;
 import io.luna.net.LunaChannelFilter;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

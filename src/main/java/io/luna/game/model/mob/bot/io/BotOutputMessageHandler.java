@@ -25,6 +25,7 @@ import io.luna.net.msg.in.ItemOnNpcMessageReader;
 import io.luna.net.msg.in.ItemOnObjectMessageReader;
 import io.luna.net.msg.in.ItemOnPlayerMessageReader;
 import io.luna.net.msg.in.NpcClickMessageReader;
+import io.luna.net.msg.in.ObjectClickMessageReader;
 import io.luna.net.msg.in.PlayerClickMessageReader;
 import io.luna.net.msg.in.WidgetItemClickMessageReader;
 import io.luna.util.StringUtils;
@@ -467,11 +468,54 @@ public final class BotOutputMessageHandler {
                 msg.putShort(index, ByteOrder.LITTLE);
                 opcode = 8;
                 break;
-            default:
-                bot.log("Unhandled NPC interaction option: " + option);
-                return false;
         }
 
+        client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
+        return true;
+    }
+
+    /**
+     * Sends one of the {@link ObjectClickMessageReader} packets.
+     *
+     * @param option The interaction option, between 1-5.
+     * @param localObject The target npc.
+     * @return {@code true} if successfully sent.
+     */
+    public boolean sendObjectInteraction(int option, GameObject localObject) {
+        if (localObject == null) {
+            bot.log("Cannot interact with null object.");
+            return false;
+        }
+        if (option < 1 || option > 3) {
+            bot.log("Invalid object interaction option: " + option);
+            return false;
+        }
+        int x = localObject.getPosition().getX();
+        int y = localObject.getPosition().getY();
+        int id = localObject.getId();
+
+        ByteMessage msg = ByteMessage.raw();
+        int opcode = -1;
+        switch (option) {
+            case 1:
+                msg.putShort(x, ValueType.ADD);
+                msg.putShort(y, ByteOrder.LITTLE);
+                msg.putShort(id, ByteOrder.LITTLE);
+                opcode = 181;
+                break;
+            case 2:
+                msg.putShort(id);
+                msg.putShort(x);
+                msg.putShort(y, ValueType.ADD);
+                opcode = 241;
+                break;
+            case 3:
+                msg.putShort(x, ByteOrder.LITTLE);
+                msg.putShort(y);
+                msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
+                opcode = 50;
+                break;
+        }
         client.queueSimulated(new GameMessage(opcode, MessageType.FIXED, msg));
         return true;
     }
