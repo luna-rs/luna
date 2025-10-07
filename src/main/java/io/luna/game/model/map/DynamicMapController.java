@@ -4,6 +4,14 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.controller.PlayerController;
 
+/**
+ * A controller specifically for managing player logic inside a {@link DynamicMap}.
+ *
+ * <p>Used to customize behaviors like entering or exiting the instance, or restricting movement. Automatically
+ * registered when a player joins the instance.</p>
+ *
+ * <p>Override {@link #enter(Player)} and {@link #exit(Player)} to implement custom logic for each instance type.</p>
+ */
 public abstract class DynamicMapController extends PlayerController {
     // TODO finish, test, need to think more about what could be added here
 
@@ -19,12 +27,10 @@ public abstract class DynamicMapController extends PlayerController {
 
     @Override
     public final boolean canMove(Player player, Position newPos) {
-        /*if(!player.getDynamicMap().getAssignedSpace().contains(newPos)) {
-            System.out.println(newPos.getRegion());
-            System.out.println(player.getDynamicMap().getAssignedSpace().getAllRegions());
-            player.getWalking().clear();
-            return false;
-        }*/
+        if(!player.getDynamicMap().getAssignedSpace().contains(newPos)) {
+            System.out.println("player left dynamic map space!!");
+            // todo debugging
+        }
         return true;
     }
 

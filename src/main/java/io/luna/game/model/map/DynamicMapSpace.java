@@ -1,24 +1,28 @@
 package io.luna.game.model.map;
 
-import io.luna.game.model.Location;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
-import io.luna.game.model.map.builder.DynamicMapPalette;
 
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represents a piece of empty map space that is reserved for {@link DynamicMap} instances.
- * </p>
- * These spaces are 128x128 in size and are made up of four 64x64 regions.
- * <li>One {@link #primary} region which will be used for rs2 world -> instance position calculations, to identify
- * the space, and serves as the base region for the palette.</li>
- * <li>Three padding regions which are generated from the primary region. They consist of one to the top of the primary
- * region, one to the right, and one to the top right. They ensure this space is large enough for an entire
- * {@link DynamicMapPalette} to be loaded within it.</li>
+ * Represents a 128x128 reserved world area for instancing, comprised of four 64x64 regions:
+ *
+ * <ul>
+ *     <li>1 primary region (anchor for palette mapping)</li>
+ *     <li>3 padding regions: top, right, and top-right</li>
+ * </ul>
+ *
+ * These extra regions ensure room for any 64x64 dynamic chunk layout and prevent conflicts
+ * between concurrently running instances.
+ *
+ * <p>All region math (e.g. {@link #contains(Position)}) automatically checks all four regions.</p>
  */
-public final class DynamicMapSpace implements Location {
+public final class DynamicMapSpace implements Locatable {
+
+    // TODO store mappings of all dynamic map chunks -> their real chunk?
 
     /**
      * The primary region.
@@ -84,6 +88,12 @@ public final class DynamicMapSpace implements Location {
                 paddingTop.contains(position) ||
                 paddingRight.contains(position) ||
                 paddingTopRight.contains(position);
+    }
+
+    @Override
+    public Position location() {
+        // todo change to spawn location?
+        return primary.getAbsPosition();
     }
 
     /**

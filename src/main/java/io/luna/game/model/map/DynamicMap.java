@@ -25,14 +25,15 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A dynamically constructed map; also known as an instance, somewhere in the rs2 world. These can be used for things
- * like minigames, private areas, random events, and player cutscenes.
- * <p>
- * Dynamic maps can be constructed simply by using specialized functions within {@link DynamicMapBuilder}, while
- * {@link DynamicMapPalette} allows for finer control over chunk placement in the palette.
- * <p>
- * All instances are assigned empty space somewhere in the world, which is reclaimed when the instance is no longer
- * needed. This ensures that instances are always isolated and that empty space is always available.
+ * Represents a dynamically instanced map (a.k.a. "private area") in the RS2 world.
+ *
+ * <p>This is the core class for all map-based instancing logic—used in minigames, random events, private
+ * encounters, and more. Each instance is constructed from a {@link DynamicMapPalette} of chunk layouts, mapped
+ * into isolated "empty" world space via {@link DynamicMapSpacePool}. Static world data such as objects and collision
+ * matrices are mirrored into the instance.</p>
+ *
+ * <p>To construct an instance, use {@link DynamicMapBuilder}. For direct control of palette mapping, see
+ * {@link DynamicMapPalette} and {@link DynamicMapChunk}.</p>
  *
  * @author lare96
  */
@@ -126,7 +127,7 @@ public final class DynamicMap {
         if (players.add(plr) && assignedSpace != null) {
             plr.lock();
             plr.setDynamicMap(this);
-            plr.move(assignedSpace.getPrimary().getAbsPosition());
+            plr.move(assignedSpace.getPrimary().getAbsPosition().translate(52, 52));
             plr.setLastRegion(null);
           //  plr.                queue(new DynamicMapMessageWriter(this, ));
 
@@ -217,8 +218,16 @@ public final class DynamicMap {
      * @return The instance position.
      */
     public Position getInstancePosition(Position actualPosition) {
+
         // TODO find chunk of actual, link it to the dynamic map chunk in the palette. then get the base chunk of the
         // instance coordinates with the same chunk.
+
+
+        assignedSpace.getPrimary().getAbsPosition(); // <- bottom left corner, anchor for palette mapping. (0,0) local coords.
+        assignedSpace.getPrimary().getAbsPosition().translate(52,52);// <---- inital spawn coordinates (center of map, palette)
+
+
+
 
         // Determine the deltas between a real arbitrary base position and the base display chunk. We can use
         // these deltas later to translate from our instance position the exact same way.

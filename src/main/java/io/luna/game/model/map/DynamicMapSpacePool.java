@@ -16,12 +16,16 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * The {@link DynamicMapSpacePool} assigns empty space to dynamic maps so that they can be isolated from the main game
- * world and other map instances. It also reclaims empty space when an instance is no longer using it. This rotating
- * pool of instances ensures that
- * <li>All instances are tracked</li>
- * <li>Instances are never visible to one another</li>
- * <li>Map space for instances is always available</li>
+ * A rotating pool that assigns {@link DynamicMapSpace} regions to instances of {@link DynamicMap}.
+ *
+ * <p>Pre-generates large sets of valid 128x128 areas in memory from world regions. Ensures isolation
+ * between instances, and reclaims space when they're deleted.</p>
+ *
+ * <ul>
+ *     <li>All active instances are tracked</li>
+ *     <li>Spaces are allocated to avoid overlap with other instances</li>
+ *     <li>Ensures the world always has space for more instancing</li>
+ * </ul>
  */
 public class DynamicMapSpacePool {
 
