@@ -50,6 +50,7 @@ public final class PlayerData {
     public double weight;
     public Spellbook spellbook;
     public Duration timePlayed;
+    public Instant createdAt;
     public Map<String, Integer> varps;
     public Map<String, Object> attributes;
     public List<BotScriptSnapshot<?>> scripts; // Will always be empty for real players. TODO Should bots have their
@@ -96,7 +97,7 @@ public final class PlayerData {
         player.setWeight(weight, false);
         player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
-        player.setSpellbook(spellbook, false);
+        player.updateSpellbook(spellbook, false);
         player.setTimePlayed(timePlayed);
         if (player.isBot()) {
             player.asBot().getScriptStack().load(scripts);
@@ -145,7 +146,7 @@ public final class PlayerData {
         attributes = player.getAttributes().save();
         varps = player.getVarpManager().toMap();
         spellbook = player.getSpellbook();
-        timePlayed = timePlayed.plus(player.getTimeOnline().elapsed());
+        timePlayed = player.getTimePlayed();
         if (player.isBot()) {
             scripts = player.asBot().getScriptStack().save();
         }

@@ -2,6 +2,7 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
@@ -30,6 +31,7 @@ import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
 import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.GameTabSet;
+import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
@@ -58,6 +60,7 @@ import org.apache.logging.log4j.Logger;
 import world.player.Messages;
 import world.player.Sounds;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -67,6 +70,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing a player-controlled mob.
@@ -147,12 +152,27 @@ public class Player extends Mob {
     /**
      * A set of local players. Should only be accessed from the updating threads.
      */
-    private final Set<Player> localPlayers = new LinkedHashSet<>(255);
+    private final Set<Player> updatePlayers = new LinkedHashSet<>(255);
 
     /**
      * A set of local npcs. Should only be accessed from the updating threads.
      */
-    private final Set<Npc> localNpcs = new LinkedHashSet<>(255);
+    private final Set<Npc> updateNpcs = new LinkedHashSet<>(255);
+
+    /**
+     * All players being updated around this player.
+     */
+    private final Set<Player> localPlayers = Sets.newConcurrentHashSet();
+
+    /**
+     * All {@link Bot} players only being updated around this player.
+     */
+    private final Set<Bot> localBots = Sets.newConcurrentHashSet();
+
+    /**
+     * All NPCs being updated around this player.
+     */
+    private final Set<Npc> localNpcs = Sets.newConcurrentHashSet();
 
     /**
      * The appearance.
@@ -197,7 +217,12 @@ public class Player extends Mob {
     /**
      * The music tab data.
      */
-    private PlayerMusicTab musicTab = new PlayerMusicTab();
+    private MusicTab musicTab = new MusicTab();
+
+    /**
+     * The spellbook.
+     */
+    private Spellbook spellbook = Spellbook.REGULAR;
 
     /**
      * The cached update block.
@@ -313,6 +338,16 @@ public class Player extends Mob {
      * The combined weight of the {@link #inventory} and {@link #equipment}.
      */
     private double weight;
+
+    /**
+     * When this account was first created on.
+     */
+    private Instant createdAt = Instant.now();
+
+    /**
+     * The total time played (total time logged in).
+     */
+    private Duration timePlayed = Duration.ZERO;
 
     /**
      * The controller manager.
@@ -534,18 +569,34 @@ public class Player extends Mob {
      * @param item The item to give the player.
      */
     public void giveItem(Item item) {
-        if (inventory.hasSpaceFor(item)) {
-            inventory.add(item);
-            return;
+        String name = item.getItemDef().getName();
+        int freeSlots = inventory.computeRemainingSize();
+        if (item.getItemDef().isStackable()) {
+            int amount = inventory.computeAmountForId(item.getId());
+            if ((amount == 0 && freeSlots > 0) || (amount + item.getAmount() > 0)) {
+                inventory.add(item);
+                sendMessage(name + "(x" + item.getAmount() + ")" + " has been added into your inventory.");
+                return;
+            }
+        } else {
+            int leftover = item.getAmount() - freeSlots;
+            if (leftover > 0) {
+                inventory.add(item.withAmount(freeSlots)); // Add what we can fit.
+                sendMessage(name + "(x" + item.getAmount() + ")" + " has been added into your inventory.");
+                item = item.withAmount(leftover); // Add the rest to the bank or on the ground.
+            } else {
+                inventory.add(item);
+                return;
+            }
         }
-        String name = item.getItemDef().getName() + "(x" + item.getAmount() + ")";
+
         if (bank.hasSpaceFor(item)) {
             bank.add(item);
-            sendMessage(name + " has been deposited into your bank.");
+            sendMessage(name + "(x" + item.getAmount() + ")" + " has been deposited into your bank.");
         } else {
             world.getItems().register(new GroundItem(context, item.getId(), item.getAmount(),
                     position, ChunkUpdatableView.localView(this)));
-            sendMessage(name + " has been dropped on the floor under you.");
+            sendMessage(name + "(x" + item.getAmount() + ")" + " has been dropped on the floor under you.");
         }
     }
 
@@ -1013,15 +1064,15 @@ public class Player extends Mob {
     /**
      * @return A set of local players. Should only be accessed from the updating threads.
      */
-    public Set<Player> getLocalPlayers() {
-        return localPlayers;
+    public Set<Player> getUpdatePlayers() {
+        return updatePlayers;
     }
 
     /**
      * @return A set of local npcs. Should only be accessed from the updating threads.
      */
-    public Set<Npc> getLocalNpcs() {
-        return localNpcs;
+    public Set<Npc> getUpdateNpcs() {
+        return updateNpcs;
     }
 
     /**
@@ -1029,14 +1080,14 @@ public class Player extends Mob {
      *
      * @param musicTab The new value.
      */
-    public void setMusicTab(PlayerMusicTab musicTab) {
+    public void setMusicTab(MusicTab musicTab) {
         this.musicTab = musicTab;
     }
 
     /**
      * @return The music tab data.
      */
-    public PlayerMusicTab getMusicTab() {
+    public MusicTab getMusicTab() {
         return musicTab;
     }
 
@@ -1396,5 +1447,91 @@ public class Player extends Mob {
      */
     public Map<Integer, Integer> getCachedVarps() {
         return cachedVarps;
+    }
+
+    /**
+     * @return The current spellbook.
+     */
+    public Spellbook getSpellbook() {
+        return requireNonNull(spellbook);
+    }
+
+    /**
+     * Updates the current spellbook and potentially the magic tab as well.
+     *
+     * @param newSpellbook The new spellbok.
+     * @param updateTab If the magic tab should be updated.
+     */
+    public void updateSpellbook(Spellbook newSpellbook, boolean updateTab) {
+        if (newSpellbook == null) {
+            newSpellbook = Spellbook.REGULAR;
+        }
+        spellbook = newSpellbook;
+        if (updateTab) {
+            tabs.reset(TabIndex.MAGIC);
+        }
+    }
+
+    /**
+     * Updates the current spellbook and the magic tab.
+     */
+    public void updateSpellbook(Spellbook newSpellbook) {
+        updateSpellbook(newSpellbook, true);
+    }
+
+    /**
+     * @return The local players.
+     */
+    public Set<Player> getLocalPlayers() {
+        return localPlayers;
+    }
+
+    /**
+     * @return The local bots.
+     */
+    public Set<Bot> getLocalBots() {
+        return localBots;
+    }
+
+    /**
+     * @return The local npcs.
+     */
+    public Set<Npc> getLocalNpcs() {
+        return localNpcs;
+    }
+
+    /**
+     * Sets when this account was first created on.
+     *
+     * @param createdAt The new value.
+     */
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    /**
+     * @return When this account was first created on.
+     */
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * @return The total amount of time played.
+     */
+    public Duration getTimePlayed() {
+        // Update on the fly.
+        timePlayed = timePlayed.plus(timeOnline.elapsed());
+        timeOnline.reset().start();
+        return timePlayed;
+    }
+
+    /**
+     * Sets the total time played (total time logged in).
+     *
+     * @param timePlayed The new value.
+     */
+    public void setTimePlayed(Duration timePlayed) {
+        this.timePlayed = timePlayed;
     }
 }
