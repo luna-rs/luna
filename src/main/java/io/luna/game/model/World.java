@@ -15,6 +15,7 @@ import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.BotCredentialsRepository;
+import io.luna.game.model.mob.bot.BotManager;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.mob.bot.BotScheduleService;
 import io.luna.game.model.mob.controller.ControllerProcessTask;
@@ -117,6 +118,11 @@ public final class World {
      * The bot schedule service.
      */
     private final BotScheduleService botService;
+
+    /**
+     * The bot manager.
+     */
+    private final BotManager botManager = new BotManager();
 
     /**
      * The login service.
@@ -223,6 +229,7 @@ public final class World {
         schedule(new ControllerProcessTask(this));
         dynamicMapSpacePool.buildEmptySpacePool();
         botCredentials.load();
+        botManager.load();
     }
 
     /**
@@ -520,5 +527,12 @@ public final class World {
      */
     public BotScheduleService getBotScheduleService() {
         return botService;
+    }
+
+    /**
+     * @return The bot manager.
+     */
+    public BotManager getBotManager() {
+        return botManager;
     }
 }
