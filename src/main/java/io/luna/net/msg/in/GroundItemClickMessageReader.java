@@ -14,6 +14,7 @@ import io.luna.net.msg.GameMessageReader;
 import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import world.player.Messages;
 import world.player.Sounds;
 
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -64,7 +65,7 @@ public final class GroundItemClickMessageReader extends GameMessageReader<Ground
         if (event instanceof PickupItemEvent) {
             Item pickupItem = event.getGroundItem().toItem();
             if (!player.getInventory().hasSpaceFor(pickupItem)) {
-                player.sendMessage("You do not have enough space in your inventory.");
+                player.sendMessage(Messages.INVENTORY_FULL);
                 return false;
             }
         }
