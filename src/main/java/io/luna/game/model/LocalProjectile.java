@@ -18,6 +18,7 @@ import java.util.OptionalInt;
  */
 public class LocalProjectile extends LocalEntity {
 // TODO https://github.com/luna-rs/luna/issues/377
+    // TODO Do more research on values
 
     /**
      * A builder for {@link LocalProjectile} types.
@@ -29,7 +30,7 @@ public class LocalProjectile extends LocalEntity {
         private int endHeight;
         private int ticksToStart;
         private int ticksToEnd;
-        private int initialSlope = 25 * 128 / 180; // to-do number between 0-64
+        private int initialSlope = 16; //25 * 128 / 180; // to-do number between 0-64
         private ChunkUpdatableView view = ChunkUpdatableView.globalView();
 
         public TargetBuilder setId(int id) {
@@ -47,16 +48,27 @@ public class LocalProjectile extends LocalEntity {
             return this;
         }
 
-        public TargetBuilder setDurationTicks(int durationTicks) {
-            int ticksToMs = durationTicks * 600;
-            int msToClientTicks = ticksToMs / 20;
-            ticksToStart = msToClientTicks;
-            ticksToEnd = ticksToStart + msToClientTicks;
+        public TargetBuilder setTicksToStart(int ticksToStart) {
+            this.ticksToStart = ticksToStart;
             return this;
         }
 
-        public void setInitialSlope(int initialSlope) {
-            this.initialSlope = initialSlope * 128 / 180;
+        public TargetBuilder setTicksToEnd(int ticksToEnd) {
+            this.ticksToEnd = ticksToEnd;
+            return this;
+        }
+
+        public TargetBuilder setDurationTicks(int durationTicks) {
+            // int ticksToMs = durationTicks * 600;
+            //  int msToClientTicks = ticksToMs / 20;
+            ticksToStart = 0;
+            ticksToEnd = durationTicks;// msToClientTicks;
+            return this;
+        }
+
+        public TargetBuilder setInitialSlope(int initialSlope) {
+            this.initialSlope = initialSlope; //* 128 / 180;
+            return this;
         }
 
         public void setView(ChunkUpdatableView view) {
@@ -111,9 +123,7 @@ public class LocalProjectile extends LocalEntity {
                 int targetIndex = 0;
                 Mob targetMob = (Mob) targetEntity;
                 if (targetMob.getType() == EntityType.PLAYER) {
-                    targetIndex = ((Player) targetEntity).getIndex() + 1;
-                    targetIndex = -targetIndex;
-
+                    targetIndex = -((Player) targetEntity).getIndex() - 1;
                 } else if (targetMob.getType() == EntityType.NPC) {
                     targetIndex = ((Npc) targetEntity).getIndex() + 1;
                 }
@@ -124,7 +134,7 @@ public class LocalProjectile extends LocalEntity {
 
         @Override
         public int distanceFromSource() {
-            return (sourceEntity.size() * 64) + (sourceDistanceOffset * 64); // startdistanceoffset?
+            return (sourceEntity.size() * 64);// + (sourceDistanceOffset * 64); // startdistanceoffset?
         }
 
         public EntityTargetBuilder setSourceEntity(Entity sourceEntity) {
@@ -204,7 +214,7 @@ public class LocalProjectile extends LocalEntity {
     /**
      * The destination position.
      */
-    private final Position destinationPosition;
+    private final Position destination;
 
     /**
      * The index of the target this projectile will track.
@@ -244,11 +254,11 @@ public class LocalProjectile extends LocalEntity {
      */
     private final int distanceFromSource;
 
-    private LocalProjectile(LunaContext context, int id, Position sourcePosition, Position destinationPosition,
+    private LocalProjectile(LunaContext context, int id, Position start, Position destination,
                             OptionalInt targetIndex, int startHeight, int endHeight, int ticksToStart, int delay,
                             int initialSlope, int distanceFromSource, ChunkUpdatableView view) {
-        super(context, id, EntityType.PROJECTILE, sourcePosition, view);
-        this.destinationPosition = destinationPosition;
+        super(context, id, EntityType.PROJECTILE, start, view);
+        this.destination = destination;
         this.targetIndex = targetIndex;
         this.startHeight = startHeight;
         this.endHeight = endHeight;
@@ -260,8 +270,8 @@ public class LocalProjectile extends LocalEntity {
 
     @Override
     public ChunkUpdatableMessage displayMessage(int offset) {
-        int deltaX = (position.getX() - destinationPosition.getX()) * -1;
-        int deltaY = (position.getY() - destinationPosition.getY()) * -1;
+        int deltaX = destination.getX() - position.getX();
+        int deltaY = destination.getY() - position.getY();
         return new AddProjectileMessageWriter(id, offset, deltaX, deltaY, targetIndex.orElse(0), startHeight,
                 endHeight, ticksToEnd, ticksToStart, initialSlope, distanceFromSource);
     }
@@ -271,7 +281,7 @@ public class LocalProjectile extends LocalEntity {
         return MoreObjects.toStringHelper(this)
                 .add("id", id)
                 .add("sourcePosition", position)
-                .add("destinationPosition", destinationPosition)
+                .add("destinationPosition", destination)
                 .add("targetIndex", targetIndex)
                 .add("startHeight", startHeight)
                 .add("endHeight", endHeight)
