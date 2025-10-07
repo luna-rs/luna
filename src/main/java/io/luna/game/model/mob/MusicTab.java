@@ -10,7 +10,7 @@ import java.util.Set;
  *
  * @author lare96
  */
-public final class PlayerMusicTab {
+public final class MusicTab {
 
     /**
      * Represents a single unlocked song.
@@ -89,8 +89,8 @@ public final class PlayerMusicTab {
     /**
      * Creates a new copy of this model.
      */
-    public PlayerMusicTab copy() {
-        var musicTab = new PlayerMusicTab();
+    public MusicTab copy() {
+        var musicTab = new MusicTab();
         musicTab.unlocked.addAll(unlocked);
         musicTab.lastPlayed = lastPlayed;
         musicTab.automaticMode = automaticMode;
