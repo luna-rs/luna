@@ -28,12 +28,25 @@ public final class RandomUtils {
      *
      * @return {@code true} if picked, {@code false} otherwise.
      */
-    public static boolean rollSuccess(Rational rational) {
+    public static boolean roll(Rational rational) {
         if (rational.getNumerator() <= 0) {
             return false;
         } else if (rational.getNumerator() >= rational.getDenominator()) {
             return true;
-        } else return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
+        } else// return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
+            return ThreadLocalRandom.current().nextDouble() < rational.doubleValue();
+    }
+
+    public static double nextDouble() {
+        return ThreadLocalRandom.current().nextDouble();
+    }
+
+    public static boolean rollPercent(int value) {
+        if (value < 0)
+            value = 0;
+        if (value > 100)
+            value = 100;
+        return ThreadLocalRandom.current().nextInt(100) < value;
     }
 
     /**
@@ -98,7 +111,25 @@ public final class RandomUtils {
      * @param array The array.
      * @return The random value.
      */
+    public static <T> T randomFrom(T... array) {
+        if (array.length == 1) {
+            return array[0];
+        }
+        return array[ThreadLocalRandom.current().nextInt(array.length)];
+    }
+
+    /**
+     * Pseudo-randomly retrieves an element from {@code array}.
+     *
+     * @param array The array.
+     * @return The random value.
+     */
     public static <T> T random(T[] array) {
+        if (array.length == 0) {
+            return null;
+        } else if (array.length == 1) {
+            return array[0];
+        }
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
@@ -189,6 +220,11 @@ public final class RandomUtils {
      * @return The random value.
      */
     public static <T> T random(List<T> list) {
+        if (list.isEmpty()) {
+            return null;
+        } else if (list.size() == 1) {
+            return list.iterator().next();
+        }
         return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
@@ -362,4 +398,5 @@ public final class RandomUtils {
      */
     private RandomUtils() {
     }
+
 }

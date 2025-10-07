@@ -6,7 +6,7 @@ import io.luna.game.model.Entity
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
-import io.luna.util.RandomUtils.rollSuccess
+import io.luna.util.RandomUtils.roll
 import io.luna.util.Rational
 
 /**
@@ -42,7 +42,7 @@ object GenericDropTables {
         }.table {
             object : DropTable() {
                 override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return rollSuccess(chance)
+                    return roll(chance)
                 }
 
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
@@ -54,7 +54,7 @@ object GenericDropTables {
 
                     // Increased drop rate for mega rare table if wearing RoW.
                     val megaRareChance = if (wearingRow) 1 of 65 else 1 of 128
-                    if (rollSuccess(megaRareChance)) {
+                    if (roll(megaRareChance)) {
                         table = megaRareDropTable().computeTable(mob, source)
                     }
 
@@ -99,7 +99,7 @@ object GenericDropTables {
         }.table {
             object : DropTable() {
                 override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return rollSuccess(chance)
+                    return roll(chance)
                 }
 
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
@@ -132,7 +132,7 @@ object GenericDropTables {
         }.table {
             object : DropTable() {
                 override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return rollSuccess(chance)
+                    return roll(chance)
                 }
 
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {

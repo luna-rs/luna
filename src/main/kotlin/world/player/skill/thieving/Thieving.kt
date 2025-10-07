@@ -68,7 +68,7 @@ object Thieving {
      * Attempts to roll for rogue equipment.
      */
     fun rollRogueEquipment(plr: Player, target: Entity, chance: Rational = ALWAYS) {
-        if (RandomUtils.rollSuccess(chance)) {
+        if (RandomUtils.roll(chance)) {
             val rogueLoot = ROGUE_EQUIPMENT_TABLE.roll(plr, target)
             for (item in rogueLoot) {
                 plr.giveItem(item)
@@ -91,6 +91,6 @@ object Thieving {
                 }
             }
         }
-        return RandomUtils.rollSuccess(Rational.fromDouble(chance))
+        return RandomUtils.roll(Rational.fromDouble(chance))
     }
 }
