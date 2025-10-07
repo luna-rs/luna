@@ -8,6 +8,7 @@ import world.player.wilderness.WildernessAreaController
 import world.player.wilderness.WildernessAreaController.wildernessLevel
 
 object Combat {
+    // TODO maxRange for combat -- or npc retreats!!https://osrs-docs.com/docs/mechanics/retreat/
 
     fun Mob.inMultiArea(): Boolean {
         return if(this is Npc) MultiCombatAreaController.inside(position) else
