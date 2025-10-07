@@ -40,9 +40,8 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
 
         try {
             msg.startBitAccess();
-            msg.putBits(8, player.getLocalNpcs().size());
-
-            Iterator<Npc> iterator = player.getLocalNpcs().iterator();
+            msg.putBits(8, player.getUpdateNpcs().size());
+            Iterator<Npc> iterator = player.getUpdateNpcs().iterator();
             while (iterator.hasNext()) {
                 Npc other = iterator.next();
                 if (other.isViewableFrom(player) &&
@@ -54,6 +53,7 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
                     msg.putBit(true);
                     msg.putBits(2, 3);
                     iterator.remove();
+                    player.getLocalNpcs().remove(other);
                 }
             }
 
@@ -61,12 +61,13 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
             int npcsAdded = 0;
 
             for (Npc other : chunks.findUpdateMobs(player, Npc.class)) {
-                if (npcsAdded == 15 || player.getLocalNpcs().size() >= 255) {
+                if (npcsAdded == 15 || player.getUpdateNpcs().size() >= 255) {
                     break;
                 }
                 if (other.isViewableFrom(player) &&
                         other.getState() == EntityState.ACTIVE &&
-                        player.getLocalNpcs().add(other)) {
+                        player.getUpdateNpcs().add(other)) {
+                    player.getLocalNpcs().add(other);
                     addNpc(player, other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);
                     npcsAdded++;
