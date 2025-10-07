@@ -14,6 +14,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * A model representing a non-player-controlled mob.
  *
@@ -50,6 +52,11 @@ public class Npc extends Mob {
      * If this NPC should respawn.
      */
     private boolean respawn;
+
+    /**
+     * The NPC wander radius.
+     */
+    private int wanderRadius; // TODO NPC wandering
 
     /**
      * Creates a new {@link Npc}.
@@ -299,6 +306,26 @@ public class Npc extends Mob {
      */
     public Npc setRespawning() {
         respawn = true;
+        return this;
+    }
+
+    /**
+     * Forces this NPC to start wandering. This will undo its current {@link #defaultDirection}. The radius must be
+     * 0 or above.
+     *
+     * @return This instance, for chaining.
+     */
+    public Npc setWandering(int radius) {
+        checkArgument(radius >= 0, "Radius must be 0 or above.");
+        if(wanderRadius != radius) { // only change if different from current
+            if(radius == 0) { // TODO wandering code
+                // cancel wander action
+            } else {
+                // start or modify "action"
+            }
+
+            setDefaultDirection(Optional.empty());
+        }
         return this;
     }
 }
