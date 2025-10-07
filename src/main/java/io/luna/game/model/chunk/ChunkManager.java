@@ -113,9 +113,9 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     public <T extends Mob> Set<T> findUpdateMobs(Player player, Class<T> type) {
         int count;
         if (type == Player.class) {
-            count = player.getLocalPlayers().size();
+            count = player.getUpdatePlayers().size();
         } else if (type == Npc.class) {
-            count = player.getLocalNpcs().size();
+            count = player.getUpdateNpcs().size();
         } else {
             throw new IllegalStateException("Invalid mob type.");
         }

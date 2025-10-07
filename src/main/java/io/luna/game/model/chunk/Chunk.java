@@ -1,7 +1,7 @@
 package io.luna.game.model.chunk;
 
 import com.google.common.base.MoreObjects;
-import io.luna.game.model.Location;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 
 import java.util.Objects;
@@ -9,11 +9,11 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link Location} made up of 8x8 tiles on the Runescape map.
+ * A {@link Locatable} made up of 8x8 tiles on the Runescape map.
  *
  * @author lare96
  */
-public final class Chunk implements Location {
+public final class Chunk implements Locatable {
 
     /**
      * The dimensions of a chunk.
@@ -75,6 +75,11 @@ public final class Chunk implements Location {
             return x == other.x && y == other.y;
         }
         return false;
+    }
+
+    @Override
+    public Position location() {
+        return getAbsPosition();
     }
 
     /**
