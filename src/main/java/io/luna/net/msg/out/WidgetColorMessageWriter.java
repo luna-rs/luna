@@ -2,11 +2,10 @@ package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
-import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * A {@link GameMessageWriter} implementation that changes the color of a widget.
@@ -38,13 +37,14 @@ public final class WidgetColorMessageWriter extends GameMessageWriter {
 
     @Override
     public ByteMessage write(Player player) {
+        // TODO This doesn't work correctly.
         int encodedColor = 0;
         encodedColor += (int) ((double) color.getRed() / 8 * Math.pow(2, 10));
         encodedColor += (int) ((double) color.getGreen() / 8 * Math.pow(2, 5));
         encodedColor += (int) ((double) color.getBlue() / 8 * Math.pow(2, 0));
-        ByteMessage msg = ByteMessage.message(122);
-        msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
-        msg.putShort(encodedColor, ByteOrder.LITTLE, ValueType.ADD);
+        ByteMessage msg = ByteMessage.message(218);
+        msg.putShort(id);
+        msg.putShort(encodedColor, ValueType.ADD);
         return msg;
     }
 }
