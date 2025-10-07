@@ -3,7 +3,6 @@ package api.bot
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState
-import io.luna.game.task.TaskManager
 import kotlinx.coroutines.channels.Channel
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,10 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Typically used by bot scripts to wait for in-game events or state changes without blocking the game loop.
  *
  * @param cond The condition that must be satisfied to resume the coroutine.
- * @param timeoutSeconds The number of seconds to wait before timing out and unsuspending with failure (default: 120s).
  * @author lare96
  */
-class SuspendableCondition(private val cond: () -> Boolean, private val timeoutSeconds: Long = 120) {
+class SuspendableCondition(private val cond: () -> Boolean) {
 
     /**
      * A one-shot channel used to resume the coroutine when the condition is met or the timeout occurs.
@@ -37,10 +35,11 @@ class SuspendableCondition(private val cond: () -> Boolean, private val timeoutS
      *
      * The coroutine will be resumed once [cond] is true or after [timeoutSeconds] has passed.
      *
+     * @param timeoutSeconds The number of seconds to wait before timing out and unsuspending with failure (default: 120s).
      * @throws IllegalStateException if called more than once.
      * @return A [SuspendableFuture] tied to this condition.
      */
-    fun submit(): SuspendableFuture {
+    fun submit(timeoutSeconds: Long = 120): SuspendableFuture {
         checkState(!active.getAndSet(true), "'submit()' can only be called once.")
         world.schedule(1) {
             // Schedule task to check if condition is satisfied.
