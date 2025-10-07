@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 import io.luna.game.model.collision.CollisionManager;
@@ -16,7 +17,12 @@ import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
 
 /**
  * A model representing an implementation of the walking queue.
@@ -179,7 +185,7 @@ public final class WalkingQueue {
     public void process() {
         // TODO clean up function, traversable checks don't work
         // TODO retest traversable checks, figure out a better way for runningPath to work thats less clunky
-        if(mob instanceof Npc && mob.asNpc().isStationary()) {
+        if (mob instanceof Npc && mob.asNpc().isStationary()) {
             return;
         }
         Step currentStep = new Step(mob.getPosition());
@@ -253,21 +259,28 @@ public final class WalkingQueue {
      *
      * @param target The destination target.
      */
-    public void walkUntilReached(Entity target) {
+    public boolean walkUntilReached(Locatable target) {
         Deque<Step> newPath = new ArrayDeque<>();
-        Deque<Position> path = pathfindingAlgorithm.find(mob.getPosition(), target.getPosition());
+        Deque<Position> path = pathfindingAlgorithm.find(mob.getPosition(), target.location());
         Position lastPosition = mob.getPosition();
+        boolean reached;
+        boolean isEntity = target instanceof Entity;
         for (; ; ) {
             Position nextPosition = path.poll();
-            boolean reached = lastPosition.isViewable(target.getPosition()) &&
-                    collisionManager.reached(mob, target, 1);
+            // TODO check for obstacles?
+            reached = isEntity ? collisionManager.reached(lastPosition, lastPosition, (Entity) target, 1) :
+                    target.location().isWithinDistance(lastPosition, 1);
             if (nextPosition == null || reached) {
                 break;
             }
             newPath.add(new Step(nextPosition));
             lastPosition = nextPosition;
         }
-        addPath(newPath);
+        if (reached) {
+            addPath(newPath);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -452,7 +465,7 @@ public final class WalkingQueue {
             return true;
         }
         Player player = (Player) mob;
-        if(player.getRunEnergy() <= 0.0) {
+        if (player.getRunEnergy() <= 0.0) {
             return false;
         }
         double totalWeight = player.getWeight();
