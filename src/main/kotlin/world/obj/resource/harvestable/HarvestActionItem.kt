@@ -1,7 +1,6 @@
 package world.obj.resource.harvestable
 
 import api.predef.ext.*
-import io.luna.game.action.Action
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.mob.block.Animation
@@ -23,7 +22,7 @@ class HarvestActionItem(plr: Player, val gameObject: GameObject, val resource: H
 
         mob.animation(Animation(827))
         val chance = resource.computeExhaustionChance()
-        if (RandomUtils.rollSuccess(chance)) {
+        if (RandomUtils.roll(chance)) {
             complete()
             world.removeObject(gameObject)
 
