@@ -33,7 +33,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     /**
      * The maximum duration that a player can stay in the logout queue for.
      */
-    private static final Duration FORCE_LOGOUT_THRESHOLD = Duration.ofHours(1);
+    private static final Duration FORCE_LOGOUT_THRESHOLD = Duration.ofMinutes(1);
 
     /**
      * The login request model.
@@ -110,6 +110,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
 
     @Override
     void finishRequest(String username, LogoutRequest request) {
+        request.player.createSaveData();
         world.getPlayers().remove(request.player);
         saves.put(username, startWorker(username, request.player));
         logger.info("{} has logged out.", username);

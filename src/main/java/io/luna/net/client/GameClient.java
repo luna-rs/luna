@@ -1,5 +1,7 @@
 package io.luna.net.client;
 
+import io.luna.game.LogoutService;
+import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -15,7 +17,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 /**
  * A {@link Client} implementation model representing post-login I/O communications.
  *
- * @author lare96 
+ * @author lare96
  */
 public class GameClient extends Client<GameMessage> {
 
@@ -35,7 +37,12 @@ public class GameClient extends Client<GameMessage> {
     protected final GameMessageRepository repository;
 
     /**
-     * If the client is awaiting logout.
+     * If the client is awaiting a logout request.
+     */
+    private volatile boolean needsLogout;
+
+    /**
+     * If this client is currently pending logout.
      */
     private volatile boolean pendingLogout;
 
@@ -52,11 +59,11 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onInactive() {
-        setPendingLogout(true);
+        needsLogout = true;
     }
 
     @Override
-   public  void onMessageReceived(GameMessage msg) {
+    public void onMessageReceived(GameMessage msg) {
         if (!pendingReadMessages.offer(msg)) {
             msg.getPayload().releaseAll();
         }
@@ -103,14 +110,32 @@ public class GameClient extends Client<GameMessage> {
     }
 
     /**
+     * Sends a logout request for this player to the {@link LogoutService}.
+     */
+    public void sendLogoutRequest(Player player) {
+        if (!pendingLogout) {
+            LogoutService logoutService = player.getWorld().getLogoutService();
+            logoutService.submit(player.getUsername(), new LogoutRequest(player));
+            pendingLogout = true;
+        }
+    }
+
+    /**
      * Sets if the client is awaiting logout.
      */
-    public void setPendingLogout(boolean pendingLogout) {
-        this.pendingLogout = pendingLogout;
+    public void setNeedsLogout(boolean needsLogout) {
+        this.needsLogout = needsLogout;
     }
 
     /**
      * @return {@code true} if the client is awaiting logout.
+     */
+    public boolean isNeedsLogout() {
+        return needsLogout;
+    }
+
+    /**
+     * @return {@code true} if this client is currently pending logout.
      */
     public boolean isPendingLogout() {
         return pendingLogout;

@@ -287,8 +287,9 @@ public final class World {
 
         // First handle all client input from players.
         for (Player player : playerList) {
-            if (player.getClient().isPendingLogout()) {
-                player.cleanUp();
+            if (player.getClient().isNeedsLogout()) {
+                // No input to handle, client should already appear logged out here.
+                player.getClient().sendLogoutRequest(player);
                 continue;
             }
             player.getClient().handleDecodedMessages(player);
@@ -309,10 +310,6 @@ public final class World {
             and brain processing is also handled here. */
         for (Player player : playerList) {
             try {
-                if (player.getClient().isPendingLogout()) {
-                    player.cleanUp();
-                    continue;
-                }
                 if (player.isBot()) {
                     player.asBot().process();
                 }
@@ -331,6 +328,10 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
+            if(player.getClient().isNeedsLogout()) {
+                // No point of sending updates to a client that can't see entities.
+                continue;
+            }
             /*
                 Handle region changes before player updating to ensure no other packets
                 related to it are sent. Queued data will be sent after updating

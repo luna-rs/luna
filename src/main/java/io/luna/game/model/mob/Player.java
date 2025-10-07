@@ -7,12 +7,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
-import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
-import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.chunk.ChunkUpdatableView;
@@ -521,17 +519,6 @@ public class Player extends Mob {
     }
 
     /**
-     * Prepares the player for logout.
-     */
-    public void cleanUp() {
-        if (getState() == EntityState.ACTIVE) {
-            setState(EntityState.INACTIVE);
-            createSaveData();
-            world.getLogoutService().submit(getUsername(), new LogoutRequest(this));
-        }
-    }
-
-    /**
      * Attempts to handle {@code event} once this player has reached {@code entity}.
      *
      * @param entity The entity to reach.
@@ -748,7 +735,7 @@ public class Player extends Mob {
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
-            client.setPendingLogout(true);
+            client.setNeedsLogout(true);
         }
     }
 
