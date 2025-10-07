@@ -46,6 +46,19 @@ public final class SkillChangeEvent extends MobEvent {
     }
 
     /**
+     * Determines if this event results in a level up.
+     *
+     * @return {@code true} if {@code mob} leveled up when this event was sent.
+     */
+    public boolean isLevelUp() {
+        if(oldStaticLvl < 99) {
+            int newStaticLevel = mob.getSkills().getSkill(id).getStaticLevel();
+            return newStaticLevel > oldStaticLvl;
+        }
+        return false;
+    }
+
+    /**
      * @return The old amount of experience.
      */
     public double getOldExp() {
