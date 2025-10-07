@@ -30,6 +30,7 @@ public class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
             msg.putBytes(blockMsg);
 
             // TODO We can probably cache update blocks in any phase. More research needed
+            // TODO more testing
             if (isCachingBlocks) {
                 player.setCachedBlock(blockMsg);
             }
