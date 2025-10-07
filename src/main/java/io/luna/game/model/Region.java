@@ -3,11 +3,11 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 
 /**
- * A {@link Location} made up of 64x64 tiles on the Runescape map.
+ * A {@link Locatable} made up of 64x64 tiles on the Runescape map.
  *
  * @author lare96
  */
-public final class Region implements Location {
+public final class Region implements Locatable {
 
     /**
      * The length and width.
@@ -87,7 +87,12 @@ public final class Region implements Location {
         }
         return false;
     }
-    
+
+    @Override
+    public Position location() {
+        return getAbsPosition();
+    }
+
     /**
      * Checks if {@code region} is within distance of {@code distance} (in regions).
      */
@@ -96,9 +101,21 @@ public final class Region implements Location {
         int deltaY = Math.abs(region.getY() - y);
         return deltaX <= distance && deltaY <= distance;
     }
-    
+// todo ne + 257, nw - 255
+    public Region getNorthRegion() {
+        return new Region(id + 1);
+    }
+    public Region getSouthRegion() {
+        return new Region(id - 1);
+    }
+    public Region getWestRegion() {
+        return new Region(id - 256);
+    }
+    public Region getEastRegion() {
+        return new Region(id + 256);
+    }
     /**
-     * Returns the base {@link Position} in this region.
+     * Returns the base bottom-left {@link Position} in this region.
      *
      * @return The base position.
      */

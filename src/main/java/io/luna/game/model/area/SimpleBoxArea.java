@@ -1,7 +1,7 @@
 package io.luna.game.model.area;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.Position;
 import io.luna.util.RandomUtils;
 
@@ -49,7 +49,6 @@ public class SimpleBoxArea extends Area {
         this.northEastY = northEastY;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -85,14 +84,19 @@ public class SimpleBoxArea extends Area {
     }
 
     @Override
-    public ImmutableSet<Position> computePositionSet() {
-        ImmutableSet.Builder<Position> set = ImmutableSet.builder();
+    public ImmutableList<Position> computePositions() {
+        ImmutableList.Builder<Position> list = ImmutableList.builder();
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
-                set.add(new Position(x, y));
+                list.add(new Position(x, y));
             }
         }
-        return set.build();
+        return list.build();
+    }
+
+    @Override
+    public Position location() {
+        return new Position(southWestX, southWestY);
     }
 
     /**

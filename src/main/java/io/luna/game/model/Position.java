@@ -11,11 +11,11 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A {@link Location} made up of a single tile on the Runescape map.
+ * A {@link Locatable} made up of a single tile on the Runescape map.
  *
  * @author lare96
  */
-public final class Position implements Location {
+public final class Position implements Locatable {
 
     /**
      * A {@link Comparator} that sorts {@link Position} types by closest to furthest distance from the base position.
@@ -122,6 +122,11 @@ public final class Position implements Location {
             return x == other.x && y == other.y && z == other.z;
         }
         return false;
+    }
+
+    @Override
+    public Position location() {
+        return this;
     }
 
     /**
