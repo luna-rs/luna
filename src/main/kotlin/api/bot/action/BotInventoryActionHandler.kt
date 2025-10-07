@@ -39,10 +39,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
             if (handler.movement.walkUntilReached(target).await()) {
-                val cond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
+                val cond = SuspendableCondition{ bot.isInteractingWith(target) }
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index.asInt)
-                return cond.submit().await()
+                return cond.submit(30).await()
             }
             return false
 
@@ -104,7 +104,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                                             bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
                                                 DestroyItemDialogueInterface::class)
                                         })
-        bot.output.sendDropItem(index.asInt, id)
+        bot.output.sendInventoryItemClick(5, index.asInt, id)
         if (itemDef(id).isTradeable) {
             return cond.submit()
         } else {

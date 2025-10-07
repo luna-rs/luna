@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
 import api.bot.BotScript;
-import api.bot.coordinators.LogoutCoordinator;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.RandomUtils;
 
@@ -50,15 +49,24 @@ public class BotBrain {
      * @return A {@link BotCoordinator} to execute this tick, or {@code null} if no coordinator was chosen.
      */
     public BotCoordinator process(Bot bot) {
-        if (bot.isLogoutScheduled()) {
-            return LogoutCoordinator.INSTANCE;
-        }
-        // TODO Eventually we need an ItemNeedsCoordinator.
-        BotActivity activity = selectActivity(bot.getPersonality().getActivities());
-        if (activity != null) {
-            return activity.getCoordinator();
-        }
-        return null;
+         /* TODO Logout desirability should be checked here, right before trivial decision making. If we're ready, make
+             logout a priority interrupt what we're doing. Once the current script stops, the logout script will run
+             and no other processes but instinctual actions can interrupt it. Something like
+             if(isLogoutReady()) {
+                if(!scriptStack.has(BotLogoutScript::class)) {
+                    // Push a logout script onto the stack if we don't already have one.
+                    scriptStack.softPushHead(new BotLogoutScript(bot))
+                }
+                // Decision making/regular activities won't be selected.
+                return null;
+             }
+           */
+
+        /* TODO We can do the same thing here for bot 'needs' or 'desires.' If a bot needs <x> item or something, run
+            'BotRequestScript' (bad name) and short-circuit here until completion. */
+
+        BotActivity activity = selectActivity(bot.getPreferences().getActivities());
+        return activity.getCoordinator();
     }
 
     /**

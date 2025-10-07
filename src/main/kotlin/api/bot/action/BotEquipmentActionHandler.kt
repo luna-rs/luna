@@ -29,7 +29,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             return SuspendableFuture().signal(false)
         }
         val suspendCond = SuspendableCondition({ bot.equipment[equipmentIndex.get()]?.id == id })
-        bot.output.sendEquipItem(index.asInt, id)
+        bot.output.sendInventoryItemClick(2, index.asInt, id)
         return suspendCond.submit()
     }
 
@@ -44,9 +44,9 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             bot.log("Nothing to unequip on index $index.")
             return SuspendableFuture().signal(false)
         }
-        val suspendableCond = SuspendableCondition({ bot.equipment[index] == null }, 3)
+        val suspendableCond = SuspendableCondition { bot.equipment[index] == null }
         bot.output.sendItemWidgetClick(1, index, 1688, itemId.asInt)
-        return suspendableCond.submit()
+        return suspendableCond.submit(3)
     }
 
     /**

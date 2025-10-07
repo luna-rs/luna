@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot.brain;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.GsonUtils;
@@ -54,7 +55,12 @@ public class BotPersonalityManager {
         GAMBLER,
         AFKER,
         SCHOLAR,
-        JOKER
+        JOKER;
+
+        /**
+         * An immutable cache of {@link #values()}.
+         */
+        public static final ImmutableList<PersonalityTemplateType> ALL = ImmutableList.copyOf(values());
     }
 
     /**
@@ -216,7 +222,7 @@ public class BotPersonalityManager {
     private static final Path GEAR_SET_PATH;
 
     static {
-        TEMPLATES_PATH = BASE_PATH.resolve("personality_templates.json");
+        TEMPLATES_PATH = BASE_PATH.resolve("templates.json");
         GEAR_SET_PATH = BASE_PATH.resolve("gearsets.json");
     }
 
@@ -269,7 +275,7 @@ public class BotPersonalityManager {
      * Templates are expected to be defined as an array of JSON objects, each with field matching those in
      * {@link PersonalityTemplate}.
      */
-    private void loadTemplates() {
+    public void loadTemplates() {
         try {
             PersonalityTemplate[] loadedTemplates = GsonUtils.readAsType(TEMPLATES_PATH, PersonalityTemplate[].class);
             for (PersonalityTemplate template : loadedTemplates) {

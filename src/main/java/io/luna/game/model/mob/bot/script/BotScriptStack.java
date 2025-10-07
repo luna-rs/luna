@@ -2,6 +2,9 @@ package io.luna.game.model.mob.bot.script;
 
 import api.bot.BotScript;
 import io.luna.game.model.mob.bot.Bot;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -39,6 +42,11 @@ import java.util.List;
 public final class BotScriptStack {
 
     /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
      * Once there are this many scripts queued, a warning message will be printed.
      */
     private static final int SCRIPT_WARNING_THRESHOLD = 10;
@@ -61,6 +69,11 @@ public final class BotScriptStack {
     private final Deque<BotScript<?>> buffer = new ArrayDeque<>();
 
     /**
+     * If this stack has been shutdown.
+     */
+    private boolean shutdown;
+
+    /**
      * Creates a new {@link BotScriptStack}.
      *
      * @param bot The bot.
@@ -79,8 +92,12 @@ public final class BotScriptStack {
     public void load(List<BotScriptSnapshot<?>> loadedBuffer) {
         BotScript<?>[] loadedScripts = new BotScript<?>[loadedBuffer.size()];
         for (BotScriptSnapshot<?> snapshot : loadedBuffer) {
-            loadedScripts[snapshot.getIndex()] =
-                    scriptManager.loadScript(snapshot.getScriptClass(), bot, snapshot.getData());
+            String scriptClass = snapshot.getScriptClass();
+            try {
+                loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, snapshot.getData());
+            } catch (Exception e) {
+                logger.error(new ParameterizedMessage("Error loading persisted script [{}]", scriptClass), e);
+            }
         }
         buffer.addAll(Arrays.asList(loadedScripts));
     }
@@ -103,24 +120,55 @@ public final class BotScriptStack {
     }
 
     /**
+     * Shuts down this stack by interrupting the current script and stopping processing.
+     */
+    public void shutdown() {
+        interrupt();
+        shutdown = true;
+    }
+
+    /**
+     * Interrupts the currently running script.
+     */
+    public void interrupt() {
+        BotScript<?> script = buffer.peek();
+        if (script != null) {
+            script.stop();
+        }
+    }
+
+    /**
      * Processes the current script at the head of the stack.
      * <p>
      * If the script has not yet started, it will be started. If the script has finished,
      * it will be removed and the next script (if present) will begin on the next tick.
      * <p>
      * This should be invoked once per game tick.
+     *
+     * @return {@code true} if there are no scripts left in the buffer and activity selection can
+     * proceed, {@code false} otherwise or if this stack is shut down.
      */
-    public void process() {
+    public boolean process() {
+        if (shutdown) {
+            return false;
+        }
         BotScript<?> current = buffer.peek();
         if (current != null) {
-            if (current.isIdle()) {
-                // Script is waiting to be started.
+            if (current.isIdle() || current.isInterrupted()) {
+                // Script is idle or interrupted, start it and don't proceed.
                 current.start();
-            } else if (!current.isRunning()) {
-                // Script is no longer running, move onto the next.
+                return false;
+            } else if (current.isRunning()) {
+                // Script is running, don't proceed.
+                return false;
+            } else if (current.isFinished()) {
+                // Script is done, if buffer is empty proceed, otherwise wait.
                 buffer.removeFirst();
+                return buffer.isEmpty();
             }
         }
+        // No scripts left in the buffer, we can proceed to coordinators.
+        return true;
     }
 
     /**
@@ -201,5 +249,16 @@ public final class BotScriptStack {
      */
     public BotScript<?> current() {
         return buffer.peek();
+    }
+
+    /**
+     * Clears all {@link BotScript}s from the buffer except the currently running one.
+     */
+    public void clear() {
+        BotScript<?> current = buffer.peek();
+        buffer.clear();
+        if (current != null && current.isRunning()) {
+            buffer.add(current);
+        }
     }
 }

@@ -2,7 +2,6 @@ package io.luna.game.model.mob.bot.brain;
 
 import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.inter.AbstractInterfaceSet;
 import io.luna.game.model.mob.inter.DialogueInterface;
 
 import java.util.ArrayList;
@@ -45,7 +44,11 @@ public class BotReflex {
     /**
      * The list of registered reflexes for this bot.
      */
-    private final List<BotInstinct> instinctList = new ArrayList<>();
+    private final List<BotInstinct> reflexes = new ArrayList<>();
+
+    {
+        addDefaultInstincts();
+    }
 
     /**
      * Executes all reflex checks for the given bot.
@@ -58,20 +61,6 @@ public class BotReflex {
      * its regular logic.
      */
     public boolean process(Bot bot) {
-        // Handle automatic character design if the interface is open.
-        AbstractInterfaceSet interfaces = bot.getInterfaces();
-        if (interfaces.standardTo(DesignPlayerInterface.class).isPresent()) {
-            bot.getOutput().sendCharacterDesignSelection();
-            bot.log("Reflex triggered: select appearance.");
-            return false;
-        }
-
-        // Automatically progress dialogue interfaces.
-        if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
-            bot.getOutput().sendContinueDialogue();
-            bot.log("Reflex triggered: continue dialogue.");
-            return false;
-        }
 
         /* TODO Handle how the bot should respond to combat here.
             This may include running away, fighting back, or switching targets maybe?
@@ -83,14 +72,23 @@ public class BotReflex {
             - Bot personality and current mood.
             Potentially delegate this logic to a CombatReflex or CombatBotScript. */
 
-        /* TODO We technically shouldn't be starting scripts here, since the script stack isn't checked until
-                before the bot brain. Maybe combat shouldn't be a top level instinct? More mid-level like
-                logging out? We could always make an exception though.. */
+        /* TODO After some more thought, I think responding to combat is such a vital thing that it should override
+              everything (even instantaneous reflexes). A simple check just needs to be made like
+              if(inCombat()) {
+                if(currentScript.getClass() != BotCombatScript.class) {
+                    scriptStack.pushHead(new BotCombatScript(bot));
+                }
+                return false;
+              }
+               The bot doesn't really need to think about anything else but combat while in combat. */
 
         // Execute all additional registered instincts.
-        for (BotInstinct instinct : instinctList) {
+        for (BotInstinct instinct : reflexes) {
             if (!instinct.apply(bot)) {
-                bot.log("Dynamic reflex [" + instinct.getClass().getName() + "] triggered.");
+                Class<?> type = instinct.getClass();
+                if (!type.isAnonymousClass()) {
+                    bot.log("Dynamic reflex [" + instinct.getClass().getName() + "] triggered.");
+                }
                 return false;
             }
         }
@@ -105,6 +103,31 @@ public class BotReflex {
      * @param instinct The instinct function to add.
      */
     public void addInstinct(BotInstinct instinct) {
-        instinctList.add(instinct);
+        reflexes.add(instinct);
+    }
+
+    /**
+     * Adds a few basic default instincts.
+     */
+    private void addDefaultInstincts() {
+        reflexes.add(bot -> {
+            // Handle automatic character design if the interface is open.
+            if (bot.getInterfaces().standardTo(DesignPlayerInterface.class).isPresent()) {
+                bot.getOutput().sendCharacterDesignSelection();
+                bot.log("Reflex triggered: select appearance.");
+                return false;
+            }
+            return true;
+        });
+
+        reflexes.add(bot -> {
+            // Automatically progress dialogue interfaces.
+            if (bot.getInterfaces().standardTo(DialogueInterface.class).isPresent()) {
+                bot.getOutput().sendContinueDialogue();
+                bot.log("Reflex triggered: continue dialogue.");
+                return false;
+            }
+            return true;
+        });
     }
 }

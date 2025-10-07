@@ -118,7 +118,7 @@ public final class BotLogManager {
         }
         return sj.toString();
     }
-    
+
     /**
      * Sets if the contents of this buffer are currently being streamed to a file.
      */

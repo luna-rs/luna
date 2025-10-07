@@ -1,6 +1,8 @@
 package api.bot.action
 
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.naturalDecisionDelay
+import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
@@ -28,9 +30,9 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
     fun walk(target: Position, radius: Int = 0): SuspendableFuture {
         // Assuming each square takes 5 seconds to walk just to be safe.
         val timeout = bot.position.computeLongestDistance(target) * 5L;
-        val cond = SuspendableCondition({ bot.isWithinDistance(target, radius) }, timeout)
+        val cond = SuspendableCondition{ bot.isWithinDistance(target, radius) }
         bot.walking.walk(target)
-        return cond.submit()
+        return cond.submit(timeout)
     }
 
     /**
@@ -43,9 +45,9 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
         bot.log("Walking until $target is reached.")
         val location = target.location()
         val timeout = bot.position.computeLongestDistance(location) * 5L;
-        val cond = SuspendableCondition({ bot.position.isViewable(target.location()) }, timeout)
+        val cond = SuspendableCondition { bot.position.isViewable(target.location()) }
         return if (bot.walking.walkUntilReached(target))
-            cond.submit() else SuspendableFuture().signal(false)
+            cond.submit(timeout) else SuspendableFuture().signal(false)
     }
 
     /**
@@ -62,7 +64,6 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
                 // TODO better way, what if player is at KBD, etc.
                 WalkingTravelStrategy.travel(bot, handler, Zone.EDGEVILLE.anchor)
                 waitFor { bot.wildernessLevel < 20 }
-                delay()
                 if (bot.wildernessLevel == 0) {
                     return true
                 }
@@ -94,7 +95,7 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
                     return it
                 }
                 bot.log("Bank $it inaccessible.")
-                delay()
+                bot.naturalDecisionDelay()
             }
         }
         // Travel home, then use home bank.

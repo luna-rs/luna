@@ -42,7 +42,6 @@ public final class BotPreference {
      * completely random preferences for testing.
      */
     public static final class Builder {
-        private final Bot bot;
         private final BotPersonality personality;
         private final BotPersonalityManager personalityManager;
         private final ImmutableMap.Builder<BotActivity, Double> activities = ImmutableMap.builder();
@@ -56,11 +55,10 @@ public final class BotPreference {
         private final double social;
         private final double dexterity;
 
-        public Builder(Bot bot) {
-            this.bot = bot;
-            personalityManager = bot.getManager().getPersonalityManager();
+        public Builder(BotPersonalityManager personalityManager, BotPersonality personality) {
+            this.personalityManager = personalityManager;
+            this.personality = personality;
 
-            personality = bot.getPersonality();
             intelligence = personality.getIntelligence();
             kindness = personality.getKindness();
             confidence = personality.getConfidence();
@@ -158,6 +156,22 @@ public final class BotPreference {
             }
             return this;
         }
+
+        /**
+         * Randomizes this bot’s preferences using a random template type and a dynamic variance value.
+         * <p>
+         * The variance is chosen randomly between {@code 5.0} and {@code 25.0}, introducing a natural spread of
+         * unique preferences without producing extreme outliers.
+         *
+         * @return This builder instance for chaining.
+         */
+        public Builder randomizeSmart() {
+            for (BotActivity activity : BotActivity.ALL) {
+                activities.put(activity, RandomUtils.nextDouble());
+            }
+            return this;
+        }
+
 
         /**
          * Generates a completely random distribution of activity preferences.

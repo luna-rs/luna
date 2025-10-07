@@ -58,14 +58,14 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         }
 
         val amountBefore = bot.inventory.computeAmountForId(id)
-        val boughtItemCond = SuspendableCondition({ bot.inventory.computeAmountForId(id) > amountBefore }, 5)
+        val boughtItemCond = SuspendableCondition{ bot.inventory.computeAmountForId(id) > amountBefore }
         when (amount) {
             1 -> bot.output.sendItemWidgetClick(2, shopIndex.asInt, 3900, id)
             5 -> bot.output.sendItemWidgetClick(3, shopIndex.asInt, 3900, id)
             10 -> bot.output.sendItemWidgetClick(4, shopIndex.asInt, 3900, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
-        return boughtItemCond.submit() // Unsuspend when the inventory amount increases.
+        return boughtItemCond.submit(5) // Unsuspend when the inventory amount increases.
     }
 
     /**
@@ -91,7 +91,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             10 -> bot.output.sendItemWidgetClick(4, inventoryIndex.asInt, 3823, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
-        val boughtItemCondition = SuspendableCondition({ bot.inventory.computeAmountForId(id) < amountBefore }, 5)
-        return boughtItemCondition.submit() // Unsuspend when the inventory amount decreases.
+        val boughtItemCondition = SuspendableCondition{ bot.inventory.computeAmountForId(id) < amountBefore }
+        return boughtItemCondition.submit(5) // Unsuspend when the inventory amount decreases.
     }
 }

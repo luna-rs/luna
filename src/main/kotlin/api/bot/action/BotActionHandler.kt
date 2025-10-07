@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.Suspendable.delay
+import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
 import api.predef.*
@@ -196,7 +197,7 @@ class BotActionHandler(val bot: Bot) {
         }
         val bank = movement.travelToBank()
         if (bank != null) {
-            delay()
+            bot.naturalDelay()
             bot.log("Opening bank.")
             interactions.interact(2, bank)
             return waitFor { bot.bank.isOpen }

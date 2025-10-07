@@ -46,6 +46,21 @@ public final class ActionQueue {
         action.onSubmit();
     }
 
+    public boolean contains(Class<? extends Action<?>> type) {
+        for(Action<?> action : processing.values()) {
+            if(action.getClass() == type) {
+                return true;
+            }
+        }
+
+        for(Action<?> action : executing) {
+            if(action.getClass() == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Processes the mob's action queue for this cycle.
      */
@@ -99,5 +114,9 @@ public final class ActionQueue {
      */
     public void interruptWeak() {
         processing.get(ActionType.WEAK).forEach(Action::interrupt);
+    }
+
+    public void interruptAll() {
+        processing.values().forEach(Action::interrupt);
     }
 }

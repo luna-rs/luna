@@ -33,7 +33,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
         if (handler.movement.walkUntilReached(target).await()) {
             bot.resetInteractingWith()
             bot.resetInteractionTask()
-            val cond = SuspendableCondition({ bot.isInteractingWith(target) }, 30)
+            val cond = SuspendableCondition { bot.isInteractingWith(target) }
             when (target) {
                 is Player -> bot.output.sendPlayerInteraction(option, target)
                 is Npc -> bot.output.sendNpcInteraction(option, target)
@@ -41,7 +41,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
                 is GroundItem -> bot.output.sendGroundItemInteraction(option, target)
                 else -> throw IllegalStateException("This entity cannot be interacted with.")
             }
-            return cond.submit().await()
+            return cond.submit(30).await()
         }
         return false
     }

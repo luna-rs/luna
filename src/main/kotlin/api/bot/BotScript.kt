@@ -2,7 +2,6 @@ package api.bot
 
 import api.bot.action.BotActionHandler
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotBrain
 import io.luna.game.model.mob.bot.brain.BotIntelligence
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
@@ -11,9 +10,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
- * A script type that uses Kotlin coroutines to run logic. Used as a script within a [BotBrain].
+ * A base script type using Kotlin coroutines to execute bot logic.
  *
- * @author lare96
+ * Every [BotScript] holds the bot instance and a snapshot of input data for persistence.
  */
 abstract class BotScript<T>(val bot: Bot) {
 
@@ -62,7 +61,8 @@ abstract class BotScript<T>(val bot: Bot) {
      * Starts this script.
      */
     fun start(): Boolean {
-        if (progress == null) {
+        if (progress == null || progress!!.isCancelled) {
+            bot.log("Running script {${javaClass.name}}.")
             progress = GameCoroutineScope.launch { run() }
             return true
         }
@@ -73,11 +73,39 @@ abstract class BotScript<T>(val bot: Bot) {
      * Stops this script.
      */
     fun stop(): Boolean {
-        if (progress != null) {
+        if (progress != null && !progress!!.isCompleted && !progress!!.isCancelled) {
+            bot.log("Stopping script {${javaClass.name}}.")
             progress!!.cancel()
-            progress = null
             return true
         }
         return false
+    }
+
+    /**
+     * Determines if this script has completed normally.
+     */
+    fun isFinished(): Boolean {
+        return progress != null && progress!!.isCompleted && !progress!!.isCancelled
+    }
+
+    /**
+     * Determines if this script is running.
+     */
+    fun isRunning(): Boolean {
+        return progress != null && progress!!.isActive
+    }
+
+    /**
+     * Determines if this script was interrupted.
+     */
+    fun isInterrupted(): Boolean {
+        return progress != null && progress!!.isCancelled
+    }
+
+    /**
+     * Determines if this script is waiting to be started.
+     */
+    fun isIdle(): Boolean {
+        return progress == null
     }
 }

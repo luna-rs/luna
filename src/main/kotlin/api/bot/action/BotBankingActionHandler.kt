@@ -65,14 +65,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             depositItem = depositItem.withAmount(existingAmount)
         }
         val amountCond =
-            SuspendableCondition({ bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent })
+            SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
         bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
             bot.log("Entering amount (${depositItem.amount}).")
             bot.output.enterAmount(depositItem.amount) // Enter amount.
             val depositCond =
-                SuspendableCondition({ bot.inventory.computeAmountForId(item.id) < existingAmount })
+                SuspendableCondition { bot.inventory.computeAmountForId(item.id) < existingAmount }
             // Unsuspend when the inventory amount changes.
             return depositCond.submit().await()
         }
@@ -131,7 +131,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             withdrawItem = withdrawItem.withAmount(existingAmount)
         }
         val amountCond =
-            SuspendableCondition({ bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent })
+            SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
         bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
         // Wait until amount input interface is open.
         if (amountCond.submit().await()) {
@@ -163,12 +163,12 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (noted == currentNoted()) {
             return SuspendableFuture().signal(true)
         }
-        val suspendCond = SuspendableCondition({ currentNoted() == noted }, 5)
+        val suspendCond = SuspendableCondition { currentNoted() == noted }
         if (!noted) {
             bot.output.clickButton(5387)
         } else {
             bot.output.clickButton(5386)
         }
-        return suspendCond.submit()
+        return suspendCond.submit(5)
     }
 }

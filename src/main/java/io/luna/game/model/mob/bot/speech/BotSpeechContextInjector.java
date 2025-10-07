@@ -2,7 +2,10 @@ package io.luna.game.model.mob.bot.speech;
 
 import io.luna.game.event.Event;
 import io.luna.game.event.EventListenerPipeline;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatColor;
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler.ChatEffect;
 
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> The enum type used to compartmentalize phrases in the backing pool.
  * @author lare96
  */
-public abstract class BotSpeechContextInjector<T extends Enum<T>> {
+public class BotSpeechContextInjector<T extends Enum<T>> {
 
     /**
      * The backing speech pool.
@@ -50,7 +53,7 @@ public abstract class BotSpeechContextInjector<T extends Enum<T>> {
      * initialization or resource binding.
      */
     public final void start() {
-        if(started.compareAndSet(false, true)) {
+        if (started.compareAndSet(false, true)) {
             speechPool.load();
             load();
         }
@@ -73,5 +76,20 @@ public abstract class BotSpeechContextInjector<T extends Enum<T>> {
      *
      * @param event The event received from the world.
      */
-    public abstract void onEvent(Event event);
+    public void onEvent(Event event) {
+
+    }
+
+    /**
+     * Handles a speech event triggered by a {@link Player}. This method allows injectors to know when nearby
+     * players speak, enabling conversational reactions and social chatter.
+     *
+     * @param player The player who sent the message.
+     * @param message The raw message text.
+     * @param color The color used in the chat message.
+     * @param effect The visual chat effect applied to the message.
+     */
+    public void onSpeech(Player player, String message, ChatColor color, ChatEffect effect) {
+
+    }
 }

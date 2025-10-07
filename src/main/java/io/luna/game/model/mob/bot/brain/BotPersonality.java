@@ -37,9 +37,9 @@ public final class BotPersonality {
     public static final class Builder {
 
         /**
-         * The owning bot.
+         * The bot personality manager.
          */
-        private final Bot bot;
+        private final BotPersonalityManager personalityManager;
 
         /**
          * Core personality traits. Defaulted to -1 to indicate unset state.
@@ -53,10 +53,10 @@ public final class BotPersonality {
         /**
          * Creates a new builder for the specified bot.
          *
-         * @param bot The bot this personality belongs to.
+         * @param personalityManager The bot personality manager.
          */
-        public Builder(Bot bot) {
-            this.bot = bot;
+        public Builder(BotPersonalityManager personalityManager) {
+            this.personalityManager = personalityManager;
         }
 
         /**
@@ -121,7 +121,7 @@ public final class BotPersonality {
          * @return This builder for chaining.
          */
         public Builder template(PersonalityTemplateType from) {
-            PersonalityTemplate template = bot.getManager().getPersonalityManager().getTemplate(from);
+            PersonalityTemplate template = personalityManager.getTemplate(from);
             intelligence = template.intelligence;
             kindness = template.kindness;
             confidence = template.confidence;
@@ -141,13 +141,26 @@ public final class BotPersonality {
          */
         public Builder randomizeTemplate(PersonalityTemplateType from, double variance) {
             Supplier<Double> varianceSupplier = () -> ThreadLocalRandom.current().nextDouble(-variance, variance);
-            PersonalityTemplate template = bot.getManager().getPersonalityManager().getTemplate(from);
+            PersonalityTemplate template = personalityManager.getTemplate(from);
             intelligence = template.intelligence + varianceSupplier.get();
             kindness = template.kindness + varianceSupplier.get();
             confidence = template.confidence + varianceSupplier.get();
             social = template.social + varianceSupplier.get();
             dexterity = template.dexterity + varianceSupplier.get();
             return this;
+        }
+
+        /**
+         * Randomizes this bot’s personality using a random template type and a dynamic variance value.
+         * <p>
+         * The variance is chosen randomly between {@code 5.0} and {@code 25.0}, introducing a natural spread of
+         * unique personalities without producing extreme outliers.
+         *
+         * @return This builder instance for chaining.
+         */
+        public Builder randomizeSmart() {
+            return randomizeTemplate(RandomUtils.random(PersonalityTemplateType.ALL),
+                    ThreadLocalRandom.current().nextDouble(5.0, 25.0));
         }
 
         /**
