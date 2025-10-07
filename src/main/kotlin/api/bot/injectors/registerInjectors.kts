@@ -1,4 +1,5 @@
-import api.bot.injectors.TrainingSpeechInjector
+package api.bot.injectors
+
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 
