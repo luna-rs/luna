@@ -129,7 +129,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder empty(String... text) {
+    public DialogueQueueBuilder empty(String... text) { // todo rename to 'text'
         checkLocked();
         dialogues.add(new TextDialogueInterface(text));
         return this;
