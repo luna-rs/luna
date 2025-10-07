@@ -1,14 +1,13 @@
 package io.luna.game.model.area;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.Position;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The polygonal implementation.
@@ -41,6 +40,11 @@ public class PolygonArea extends Area {
     private final Set<Point> vertices;
 
     /**
+     * The anchor location.
+     */
+    private Position anchorLocation;
+
+    /**
      * Creates a new {@link PolygonArea}.
      *
      * @param verticesList The set of vertices that make up this polygon.
@@ -61,6 +65,7 @@ public class PolygonArea extends Area {
         int[] x = new int[totalSize];
         int[] y = new int[totalSize];
         for (Point point : vertices) {
+
             x[index] = (int) point.getX();
             y[index] = (int) point.getY();
             index++;
@@ -154,37 +159,43 @@ public class PolygonArea extends Area {
 
     @Override
     public int size() {
-        return getPositionSet().size();
+        return getPositions().size();
     }
 
     @Override
-    public Position randomPosition() {
-        ImmutableSet<Position> positionSet = getPositionSet();
-        int counter = 0;
-        int n = ThreadLocalRandom.current().nextInt(0, positionSet.size());
-        for (Position position : positionSet) {
-            if (counter++ == n) {
-                return position;
-            }
-        }
-        throw new IllegalStateException("unexpected");
-    }
-
-    @Override
-    public ImmutableSet<Position> computePositionSet() {
+    public ImmutableList<Position> computePositions() {
 
         // Build it into a simple box area, get every position inside.
-        ImmutableSet<Position> outerPositionSet =
-                Area.of(southWestX, southWestY, northEastX, northEastY).getPositionSet();
+        ImmutableList<Position> outerPositions =
+                Area.of(southWestX, southWestY, northEastX, northEastY).getPositions();
 
         // Loop through the positions, save the ones contained within our actual polygon.
-        ImmutableSet.Builder<Position> innerPositionSet = ImmutableSet.builder();
-        for (Position outerPosition : outerPositionSet) {
+        ImmutableList.Builder<Position> innerPositions = ImmutableList.builder();
+        for (Position outerPosition : outerPositions) {
             if (contains(outerPosition)) {
-                innerPositionSet.add(outerPosition);
+                innerPositions.add(outerPosition);
             }
         }
-        return innerPositionSet.build();
+        return innerPositions.build();
+    }
+
+    @Override
+    public Position location() {
+        if (anchorLocation == null) {
+            anchorLocation = randomPosition();
+        }
+        return anchorLocation;
+    }
+
+    /**
+     * Sets the anchor location of this area. Must be a valid position within this area.
+     *
+     * @param position The anchor location.
+     */
+    public void setAnchorLocation(Position position) {
+        if(contains(position)) {
+            anchorLocation = position;
+        }
     }
 
     private void calculateBounds(int[] xpoints, int[] ypoints, int npoints) {
