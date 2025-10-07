@@ -1,5 +1,6 @@
 package io.luna.game;
 
+import api.bot.GameCoroutineScope;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -229,6 +230,9 @@ public final class GameService extends AbstractScheduledService {
         var world = context.getWorld();
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
+
+        // Stop all coroutines.
+        GameCoroutineScope.INSTANCE.shutdown();
 
         // Run last minute game tasks from other threads.
         runSynchronizationTasks();
