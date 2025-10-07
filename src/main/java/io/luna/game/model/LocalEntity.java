@@ -86,14 +86,17 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Displays this entity by sending an update request with {@link #displayMessage(int)}.
+     * Displays this entity by sending an update request with {@link #displayMessage(int)}. Does nothing if this
+     * function has already been called.
      */
     public final void display() {
-        Chunk chunk = position.getChunk();
-        ChunkUpdatableMessage msg = displayMessage(chunk.offset(position));
+        if (state != EntityState.ACTIVE) {
+            Chunk chunk = position.getChunk();
+            ChunkUpdatableMessage msg = displayMessage(chunk.offset(position));
 
-        setState(EntityState.ACTIVE);
-        chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
+            setState(EntityState.ACTIVE);
+            chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
+        }
     }
 
     /**
