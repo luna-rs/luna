@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.controller;
 
 import com.google.common.collect.ImmutableSet;
-import io.luna.game.model.Location;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 
@@ -13,9 +13,9 @@ import io.luna.game.model.mob.Player;
 public abstract class PlayerLocationController extends PlayerController {
 
     /**
-     * A set of locations tracked by this controller.
+     * A set of locatables tracked by this controller.
      */
-    private ImmutableSet<Location> locations;
+    private ImmutableSet<Locatable> locatables;
 
 
     @Override
@@ -29,7 +29,7 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Called when the player is about to enter any of {@link #locations}, and determines if the player can do so.
+     * Called when the player is about to enter any of {@link #locatables}, and determines if the player can do so.
      *
      * @param player The player.
      * @param newPos The position the player is about to move to (inside this area).
@@ -40,7 +40,7 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Called when the player is about to exit any of {@link #locations}, and determines if the player can do so.
+     * Called when the player is about to exit any of {@link #locatables}, and determines if the player can do so.
      *
      * @param player The player.
      * @param newPos The position the player is about to move to (outside of this area).
@@ -52,14 +52,14 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Determines if the player is moving inside any of {@link #locations}.
+     * Determines if the player is moving inside any of {@link #locatables}.
      *
      * @param position The position the player is moving to.
      * @return {@code true} if the player is within this controlled area.
      */
     public final boolean inside(Position position) {
-        for (Location location : getLocations()) {
-            if (location.contains(position)) {
+        for (Locatable locatable : getLocations()) {
+            if (locatable.contains(position)) {
                 return true;
             }
         }
@@ -67,21 +67,21 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Computes a set of locations that will be tracked by this controller, for caching.
+     * Computes a set of locatables that will be tracked by this controller, for caching.
      *
-     * @return The computed set of locations.
+     * @return The computed set of locatables.
      */
-    protected abstract ImmutableSet<Location> computeLocations();
+    public abstract ImmutableSet<Locatable> computeLocations();
 
     /**
-     * The cached set of locations tracked by this controller.
+     * The cached set of locatables tracked by this controller.
      *
-     * @return The cached set of locations.
+     * @return The cached set of locatables.
      */
-    protected ImmutableSet<Location> getLocations() {
-        if (locations == null) {
-            locations = computeLocations();
+    public ImmutableSet<Locatable> getLocations() {
+        if (locatables == null) {
+            locatables = computeLocations();
         }
-        return locations;
+        return locatables;
     }
 }
