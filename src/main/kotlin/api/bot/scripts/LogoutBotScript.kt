@@ -2,6 +2,7 @@ package api.bot.scripts
 
 import api.bot.BotScript
 import api.bot.Suspendable.naturalDecisionDelay
+import api.bot.Suspendable.naturalDelay
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 
@@ -14,9 +15,10 @@ class LogoutBotScript(bot: Bot, private var urgent: Boolean) : BotScript<Boolean
 
     override suspend fun run() {
         if (urgent) {
-            // Simulate a bot x-logging/turning off their PC lol (dumb bots).
+            // Faster by about a 1-2s. Almost like closing the window vs clicking the button.
             bot.client.isPendingLogout = true
         } else {
+            bot.naturalDelay()
             bot.output.clickLogout()
             bot.naturalDecisionDelay()
         }
