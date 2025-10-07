@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import api.item.dropTable.DropTableHandler;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.event.impl.DeathEvent;
@@ -11,10 +12,12 @@ import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
+import io.luna.net.msg.out.MusicMessageWriter;
 import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
+import world.player.Jingles;
 
 /**
  * A {@link Task} that handles the death process for a {@link Mob}.
@@ -42,6 +45,9 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                     mob.sendMessage("Oh dear, you are dead!");
                     mob.animation(new Animation(2304, AnimationPriority.HIGH));
                     mob.getInterfaces().close();
+
+                    int deathId = Jingles.DEATH_2.getId();
+                    mob.queue(new MusicMessageWriter(deathId));
                     break;
                 case DEATH:
                     mob.getPlugins().post(new DeathEvent(mob, source));
@@ -77,8 +83,10 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
                 case PRE_DEATH:
                     mob.getCombatDefinition().ifPresent(def ->
                             mob.animation(new Animation(def.getDeathAnimation(), AnimationPriority.HIGH)));
+                    mob.getActions().interruptAll();
                     break;
                 case DEATH:
+                    DropTableHandler.INSTANCE.onDeath(source, mob);
                     mob.getPlugins().post(new DeathEvent(mob, source));
                     world.getNpcs().remove(mob);
                     break;
@@ -183,17 +191,22 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
 
     @Override
     public final void execute() {
-        if (currentLoop == 0) {
-            handleDeath(DeathStage.PRE_DEATH, source);
-        } else if (currentLoop == 4) {
-            handleDeath(DeathStage.DEATH, source);
-        } else if (currentLoop == 5) {
-            handleDeath(DeathStage.POST_DEATH, source);
-            cancel();
-        } else if (currentLoop > 5) {
-            cancel();
+        try {
+            if (currentLoop == 0) {
+                handleDeath(DeathStage.PRE_DEATH, source);
+            } else if (currentLoop == 4) {
+                handleDeath(DeathStage.DEATH, source);
+            } else if (currentLoop == 5) {
+                handleDeath(DeathStage.POST_DEATH, source);
+                cancel();
+            } else if (currentLoop > 5) {
+                cancel();
+            }
+        } catch (Exception e) {
+            logger.catching(e);
+        } finally {
+            currentLoop++;
         }
-        currentLoop++;
     }
 
     @Override
