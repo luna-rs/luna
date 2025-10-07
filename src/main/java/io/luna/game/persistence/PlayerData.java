@@ -1,17 +1,20 @@
 package io.luna.game.persistence;
 
 import io.luna.Luna;
+import io.luna.game.GameService;
 import io.luna.game.GameSettings.PasswordStrength;
+import io.luna.game.LogoutService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
+import io.luna.game.model.mob.MusicTab;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerMusicTab;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
-import io.luna.game.GameService;
-import io.luna.game.LogoutService;
+import io.luna.game.model.mob.Spellbook;
+import io.luna.game.model.mob.bot.script.BotScriptSnapshot;
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +37,7 @@ public final class PlayerData {
     public String lastIp;
     public Instant logoutTime;
     public int[] appearance;
-    public PlayerMusicTab musicTab;
+    public MusicTab musicTab;
     public List<IndexedItem> inventory;
     public List<IndexedItem> bank;
     public List<IndexedItem> equipment;
@@ -45,8 +48,12 @@ public final class PlayerData {
     public Instant unmuteInstant;
     public double runEnergy;
     public double weight;
+    public Spellbook spellbook;
+    public Duration timePlayed;
     public Map<String, Integer> varps;
     public Map<String, Object> attributes;
+    public List<BotScriptSnapshot<?>> scripts; // Will always be empty for real players. TODO Should bots have their
+    // own saving? extend playerdata then override save method?
 
     // Used by persistence classes to ignore temporary bots.
     transient volatile boolean temporaryBot;
@@ -89,6 +96,11 @@ public final class PlayerData {
         player.setWeight(weight, false);
         player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
+        player.setSpellbook(spellbook, false);
+        player.setTimePlayed(timePlayed);
+        if (player.isBot()) {
+            player.asBot().getScriptStack().load(scripts);
+        }
     }
 
     /**
@@ -100,7 +112,7 @@ public final class PlayerData {
         if (hashedPw == null) {
             // No hashed password, we need to generate one.
             PasswordStrength passwordStrength = Luna.settings().game().passwordStrength();
-            if(passwordStrength != PasswordStrength.NONE) {
+            if (passwordStrength != PasswordStrength.NONE) {
                 String salt = BCrypt.gensalt(passwordStrength.getRounds());
                 password = BCrypt.hashpw(plainTextPw, salt);
             } else {
@@ -132,6 +144,11 @@ public final class PlayerData {
         weight = player.getWeight();
         attributes = player.getAttributes().save();
         varps = player.getVarpManager().toMap();
+        spellbook = player.getSpellbook();
+        timePlayed = timePlayed.plus(player.getTimeOnline().elapsed());
+        if (player.isBot()) {
+            scripts = player.asBot().getScriptStack().save();
+        }
         return this;
     }
 
