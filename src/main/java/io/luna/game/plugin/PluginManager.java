@@ -1,11 +1,14 @@
 package io.luna.game.plugin;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.luna.LunaContext;
 import io.luna.game.event.Event;
 import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.event.EventListenerPipelineSet;
+import io.luna.game.model.World;
+import io.luna.game.model.mob.bot.speech.BotSpeechManager;
+
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -22,9 +25,9 @@ public final class PluginManager {
     private final EventListenerPipelineSet pipelines = new EventListenerPipelineSet();
 
     /**
-     * The context instance.
+     * The world instance.
      */
-    private final LunaContext context;
+    private final World world;
 
     /**
      * A map that holds runtime information about all plugins and their scripts (package name -> Plugin).
@@ -37,7 +40,7 @@ public final class PluginManager {
      * @param context The context instance.
      */
     public PluginManager(LunaContext context) {
-        this.context = context;
+        world = context.getWorld();
     }
 
     /**
@@ -51,6 +54,10 @@ public final class PluginManager {
             return;
         }
         pipeline.post(msg);
+
+        // Handle speech injectors.
+        BotSpeechManager speechManager = world.getBotManager().getSpeechManager();
+        speechManager.handleInjectors(msg);
     }
 
     /**
@@ -59,10 +66,10 @@ public final class PluginManager {
      *
      * @param msg The event to post.
      */
-    public <E extends Event> ImmutableList<Runnable> lazyPost(E msg) {
+    public <E extends Event> List<Runnable> lazyPost(E msg) {
         EventListenerPipeline<E> pipeline = (EventListenerPipeline<E>) pipelines.get(msg.getClass());
         if (pipeline == null) {
-            return ImmutableList.of();
+            return List.of();
         }
         return pipeline.lazyPost(msg);
     }
@@ -93,13 +100,6 @@ public final class PluginManager {
      */
     void setPluginMap(ImmutableMap<String, Plugin> pluginMap) {
         this.pluginMap = requireNonNull(pluginMap);
-    }
-
-    /**
-     * @return The context instance.
-     */
-    public LunaContext getContext() {
-        return context;
     }
 
     /**
