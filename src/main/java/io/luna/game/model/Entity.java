@@ -3,6 +3,7 @@ package io.luna.game.model;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
+import io.luna.game.event.impl.RegionChangedEvent;
 import io.luna.game.model.Position.PositionDistanceComparator;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkRepository;
@@ -25,7 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author lare96
  */
-public abstract class Entity implements Attributable {
+public abstract class Entity implements Attributable, Locatable {
 
     /**
      * A {@link Comparator} that sorts {@link Entity} types by closest to furthest distance from the base entity.
@@ -155,6 +156,16 @@ public abstract class Entity implements Attributable {
     @Override
     public final AttributeMap attributes() {
         return getAttributes();
+    }
+
+    @Override
+    public final boolean contains(Position other) {
+        return position.equals(other);
+    }
+
+    @Override
+    public final Position location() {
+        return position;
     }
 
     /**
@@ -289,8 +300,14 @@ public abstract class Entity implements Attributable {
                     return;
                 }
             }
-
+            Region old = position == null ? null : position.getRegion();
             position = newPosition;
+            if(old != null) {
+                Region now = newPosition.getRegion();
+                if (!old.equals(now) && this instanceof Player) {
+                    plugins.post(new RegionChangedEvent((Player) this, old, now));
+                }
+            }
             if (state == EntityState.ACTIVE) {
                 setCurrentChunk();
             }
