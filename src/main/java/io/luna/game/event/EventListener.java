@@ -10,9 +10,9 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A listener that intercepts events.
+ * A listener that reacts to events of type {@code E}. Typically bound to plugin scripts.
  *
- * @param <E> The type of event being intercepted.
+ * @param <E> The event type this listener handles.
  * @author lare96
  */
 public final class EventListener<E extends Event> {
@@ -23,20 +23,20 @@ public final class EventListener<E extends Event> {
     private final Script script;
 
     /**
-     * The type of event being intercepted.
+     * The event class this listener is associated with.
      */
     private final Class<E> eventType;
 
     /**
-     * The listener function.
+     * The logic to run when the event is dispatched.
      */
     private final Consumer<E> listener;
 
     /**
      * Creates a new {@link EventListener}.
      *
-     * @param eventType The type of event being intercepted.
-     * @param listener The listener function.
+     * @param eventType The event class this listener is associated with.
+     * @param listener The logic to run when the event is dispatched.
      */
     public EventListener(Class<E> eventType, Consumer<E> listener) {
         this.eventType = eventType;
@@ -53,9 +53,9 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * Applies the wrapped function and handles exceptions.
+     * Executes the listener logic.
      *
-     * @param msg The event to apply the function with.
+     * @param msg The event to handle.
      */
     public void apply(E msg) {
         try {
@@ -83,14 +83,14 @@ public final class EventListener<E extends Event> {
     }
 
     /**
-     * @return The type of event being intercepted.
+     * @return The event class this listener is associated with.
      */
     public Class<E> getEventType() {
         return eventType;
     }
 
     /**
-     * @return The listener function.
+     * @return The logic to run when the event is dispatched.
      */
     public Consumer<E> getListener() {
         return listener;

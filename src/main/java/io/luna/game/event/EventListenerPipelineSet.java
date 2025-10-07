@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A set of pipelines mapped to their respective event traversal types.
+ * A container of pipelines, each responsible for dispatching a specific type of event.
  *
  * @author lare96
  */
@@ -20,9 +20,9 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     private final Map<String, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
-     * Adds a new event listener to a pipeline within this set.
+     * Adds a listener to the appropriate pipeline based on its event type.
      *
-     * @param listener The listener to add.
+     * @param listener The listener to register.
      */
     public <E extends Event> void add(EventListener<E> listener) {
         Class<E> eventType = listener.getEventType();
@@ -33,10 +33,10 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * Retrieves a pipeline from this set.
+     * Fetches or creates the pipeline for the specified event type.
      *
-     * @param eventType The event class to retrieve the pipeline of.
-     * @return The pipeline that accepts {@code eventType}.
+     * @param eventType The class of the event.
+     * @return The corresponding pipeline.
      */
     @SuppressWarnings("unchecked")
     public <E extends Event> EventListenerPipeline<E> get(Class<E> eventType) {
@@ -47,7 +47,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * Replaces all of the pipelines the backing map with {@code set}. Used for reloading plugins.
+     * Replaces all current pipelines with the ones in {@code set}. Used for hot reloading.
      *
      * @param set The new pipeline set.
      */
@@ -63,8 +63,6 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * Returns the amount of pipelines in this set.
-     *
      * @return The pipeline count.
      */
     public int size() {

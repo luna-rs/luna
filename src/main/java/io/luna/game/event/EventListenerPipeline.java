@@ -1,11 +1,8 @@
 package io.luna.game.event;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import io.github.classgraph.ClassInfo;
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A pipeline-like model of listeners contained within a pipeline set. It allows for the traversal of events through
- * it, in order to be intercepted by listeners.
+ * A dispatch pipeline that handles a specific type of event and routes it to appropriate listeners.
  *
- * @param <E> The type of event that will traverse this pipeline.
+ * @param <E> The type of event this pipeline handles.
  * @author lare96
  */
 public final class EventListenerPipeline<E extends Event> implements Iterable<EventListener<E>> {
@@ -60,9 +56,9 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     }
 
     /**
-     * Posts {@code msg} to this pipeline.
+     * Immediately dispatches the given event to this pipeline’s listeners.
      *
-     * @param msg The event instance to pass.
+     * @param msg The event instance.
      */
     public void post(E msg) {
         try {
@@ -84,17 +80,17 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     }
 
     /**
-     * Lazily posts an event by wrapping the logic for all listeners in a {@link Runnable} to be executed later on.
-     * Used to handle events like {@link ServerLaunchEvent} and {@link ServerShutdownEvent}.
-     * <br>
-     * <strong>Warning: By default, every single listener in the pipeline is included. Use the returned list in order
-     * to actually post the events.</strong>
+     * Wraps dispatch logic in {@link Runnable} tasks for deferred execution.
      *
-     * @param msg The message to post lazily.
-     * @return The list of wrapped post events, each {@link Runnable} is an event that needs to be handled.
+     * @param msg The event to dispatch.
+     * @return A list of dispatch tasks.
      */
-    public ImmutableList<Runnable> lazyPost(E msg) {
-        ImmutableList.Builder<Runnable> taskBuilder = ImmutableList.builder();
+    public List<Runnable> lazyPost(E msg) {
+        List<Runnable> taskBuilder = new ArrayList<>();
+        if (matcher.has(msg)) {
+            taskBuilder.add(() -> matcher.match(msg));
+            return taskBuilder;
+        }
         for (EventListener<E> eventListener : listeners) {
             taskBuilder.add(() -> {
                 try {
@@ -104,7 +100,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
                 }
             });
         }
-        return taskBuilder.build();
+        return taskBuilder;
     }
 
     /**
@@ -143,9 +139,7 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     }
 
     /**
-     * Returns the amount of listeners in this pipeline.
-     *
-     * @return The pipeline's size.
+     * @return The size of the pipeline.
      */
     public int size() {
         return listeners.size();

@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model that can be matched to an event to by an {@link EventMatcher}.
+ * A script-aware event handler used in conjunction with {@link EventMatcher}.
  *
- * @author lare96
+ * @param <E> The type of event handled.
  */
 public final class EventMatcherListener<E extends Event> {
 

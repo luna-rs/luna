@@ -138,6 +138,9 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
         scriptMatchers += matcherListener
     }
 
+    /**
+     * Determines if this matcher has a listener for [msg].
+     */
     fun has(msg: E) = actions.containsKey(key(msg))
 
     /**
