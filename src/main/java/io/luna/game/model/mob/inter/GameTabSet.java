@@ -158,7 +158,7 @@ public final class GameTabSet {
      * Clears the interfaces on all tabs.
      */
     public void clearAll() {
-        for (var tabIndex : TabIndex.values()) {
+        for (TabIndex tabIndex : TabIndex.ID_MAP.values()) {
             clear(tabIndex);
         }
     }
@@ -169,14 +169,18 @@ public final class GameTabSet {
      * @param index The tab to reset.
      */
     public void reset(TabIndex index) {
-        set(index, index.defaultTabId);
+        if (index == TabIndex.MAGIC) {
+            set(index, player.getSpellbook().getWidgetId());
+        } else {
+            set(index, index.defaultTabId);
+        }
     }
 
     /**
      * Resets the interfaces on all tabs back to their defaults.
      */
     public void resetAll() {
-        for (var taxIndex : TabIndex.values()) {
+        for (TabIndex taxIndex : TabIndex.ID_MAP.values()) {
             reset(taxIndex);
         }
     }
