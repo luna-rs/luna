@@ -125,7 +125,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
     private suspend fun doStanding() {
         if (maybe(COMMON) {
                 // Make the bot more likely to speak soon.
-                intelligence.speechStack.pushFiller()
+                bot.speechStack.pushFiller()
             })
             return
         randomActions()
@@ -147,7 +147,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             }
         }
         if (following) {
-            maybe(COMMON) { intelligence.speechStack.pushFiller() }
+            maybe(COMMON) { bot.speechStack.pushFiller() }
 
             // Follow them for a little or until you enter the wilderness.
             val followTime = rand(5, 120)
@@ -201,7 +201,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
         // Otherwise, maybe stand around and say something at ::home.
         if (maybe(VERY_UNCOMMON) {
-                intelligence.speechStack.pushFiller()
+                bot.speechStack.pushFiller()
                 bot.naturalDecisionDelay()
             })
             return
