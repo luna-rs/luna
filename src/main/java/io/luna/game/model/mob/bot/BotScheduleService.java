@@ -105,7 +105,7 @@ public final class BotScheduleService extends AbstractScheduledService {
             Bot onlineBot = Optional.of(world.getPlayerMap().get(username)).filter(Player::isBot).
                     map(Player::asBot).orElse(null);
             if (onlineBot != null && !Luna.settings().bots().keepOnline() &&
-                    !onlineBot.isLogoutScheduled() &&
+                    !onlineBot.isLogoutReady() &&
                     !onlineBot.getClient().isNeedsLogout() &&
                     onlineBot.getState() != EntityState.INACTIVE) {
                 Duration timeOnline = onlineBot.getTimeOnline().elapsed();
@@ -195,7 +195,7 @@ public final class BotScheduleService extends AbstractScheduledService {
                 removed++; // Already removed.
                 continue;
             }
-            bot.setLogoutScheduled(true);
+            bot.setLogoutReady(true);
             removed++;
         }
         logouts.clear();
