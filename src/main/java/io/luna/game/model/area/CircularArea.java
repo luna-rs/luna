@@ -1,49 +1,55 @@
 package io.luna.game.model.area;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.Position;
 
-import java.util.concurrent.ThreadLocalRandom;
+/**
+ * A model representing a circular {@link Area} within the game world. The area is defined by a
+ * {@link Position center} point and an integer {@link #radius}.
+ *
+ * @author notjuanortiz
+ */
+public final class CircularArea extends Area {
 
-public class CircularArea extends Area {
-    
+    /**
+     * The center position of this circular area.
+     */
     private final Position center;
+
+    /**
+     * The radius of this circular area. Must be at least 1.
+     */
     private final int radius;
 
+    /**
+     * Creates a new {@code CircularArea} instance with the specified center coordinates and radius.
+     *
+     * @param centerX The X-coordinate of the center.
+     * @param centerY The Y-coordinate of the center.
+     * @param radius  The radius of the circle. Must be > 1.
+     * @throws IllegalArgumentException If {@code radius} is less than 1.
+     */
     public CircularArea(int centerX, int centerY, int radius) {
-        this.center = new Position(centerX, centerY);
-
         if (radius < 1) {
             throw new IllegalArgumentException("Circular radius cannot be less than 1");
         }
-
         this.radius = radius;
-    }
+        center = new Position(centerX, centerY);
+        setAnchorPosition(center);
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(center.getX(), center.getY(), radius);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
+        if (!(o instanceof CircularArea)) return false;
+        CircularArea that = (CircularArea) o;
+        return radius == that.radius && Objects.equal(center, that.center);
+    }
 
-        if (this == o) { // shares same address in memory
-            return true;
-        }
-
-        if (!(o instanceof CircularArea)) {
-            return false;
-        }
-        CircularArea ca = (CircularArea) o;
-
-        return Objects.equal(center.getX(), ca.center.getX()) &&
-                Objects.equal(center.getY(), ca.center.getY()) &&
-                Objects.equal(radius, ca.radius);
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(center, radius);
     }
 
     @Override
@@ -57,15 +63,8 @@ public class CircularArea extends Area {
     }
 
     @Override
-    public Position randomPosition() {
-        ImmutableSet<Position> positions = computePositionSet();
-        int random = ThreadLocalRandom.current().nextInt(positions.size());
-        return positions.asList().get(random);
-    }
-
-    @Override
-    ImmutableSet<Position> computePositionSet() {
-        ImmutableSet.Builder<Position> set = ImmutableSet.builder();
+    ImmutableList<Position> computePositions() {
+        ImmutableList.Builder<Position> set = ImmutableList.builder();
         int radiusSquared = radius * radius;
 
         // Pythagorean theorem works for circles too

@@ -40,11 +40,6 @@ public class PolygonArea extends Area {
     private final Set<Point> vertices;
 
     /**
-     * The anchor location.
-     */
-    private Position anchorLocation;
-
-    /**
      * Creates a new {@link PolygonArea}.
      *
      * @param verticesList The set of vertices that make up this polygon.
@@ -177,25 +172,6 @@ public class PolygonArea extends Area {
             }
         }
         return innerPositions.build();
-    }
-
-    @Override
-    public Position location() {
-        if (anchorLocation == null) {
-            anchorLocation = randomPosition();
-        }
-        return anchorLocation;
-    }
-
-    /**
-     * Sets the anchor location of this area. Must be a valid position within this area.
-     *
-     * @param position The anchor location.
-     */
-    public void setAnchorLocation(Position position) {
-        if(contains(position)) {
-            anchorLocation = position;
-        }
     }
 
     private void calculateBounds(int[] xpoints, int[] ypoints, int npoints) {

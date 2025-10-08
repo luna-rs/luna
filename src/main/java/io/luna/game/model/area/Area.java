@@ -1,18 +1,19 @@
 package io.luna.game.model.area;
 
-import com.google.common.collect.ImmutableSet;
-import io.luna.game.model.Location;
+import com.google.common.collect.ImmutableList;
+import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
+import io.luna.util.RandomUtils;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.List;
 
 /**
- * A type of {@link Location} made up of vertices to form a polygon.
+ * A type of {@link Locatable} made up of vertices to form a polygon.
  *
  * @author lare96
  */
-public abstract class Area implements Location {
+public abstract class Area implements Locatable {
 
     /**
      * Creates a simple box-like {@link Area} requiring only the south-west and  north-east
@@ -52,16 +53,26 @@ public abstract class Area implements Location {
     /**
      * An immutable cache of every position contained by this area.
      */
-    private ImmutableSet<Position> positions;
+    private ImmutableList<Position> positions;
+
+    /**
+     * The anchor position used in {@link #location()}.
+     */
+    private Position anchorPosition;
+
+    @Override
+    public final Position location() {
+        if (anchorPosition == null) {
+            anchorPosition = randomPosition();
+        }
+        return anchorPosition;
+    }
 
     @Override
     public abstract int hashCode();
 
     @Override
     public abstract boolean equals(Object obj);
-
-    @Override
-    public abstract boolean contains(Position position);
 
     /**
      * The total number of {@link Position} coordinates within this area.
@@ -71,20 +82,33 @@ public abstract class Area implements Location {
     /**
      * Retrieves a random {@link Position} contained within this area.
      */
-    public abstract Position randomPosition();
+    public Position randomPosition() {
+        return RandomUtils.random(computePositions());
+    }
 
     /**
      * Computes every single possible {@link Position} contained within this area.
      */
-    abstract ImmutableSet<Position> computePositionSet();
+    abstract ImmutableList<Position> computePositions();
 
     /**
      * Retrieves every single possible {@link Position} contained within this area.
      */
-    public final ImmutableSet<Position> getPositionSet() {
+    public final ImmutableList<Position> getPositions() {
         if (positions == null) {
-            positions = computePositionSet();
+            positions = computePositions();
         }
         return positions;
+    }
+
+    /**
+     * Sets the anchor position of this area. Must be a valid position within this area.
+     *
+     * @param position The anchor location.
+     */
+    public void setAnchorPosition(Position position) {
+        if (contains(position)) {
+            anchorPosition = position;
+        }
     }
 }
