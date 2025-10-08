@@ -1,9 +1,8 @@
 package io.luna.game.model.mob.bot;
 
-import api.bot.ExampleBotScript;
-import api.bot.LogoutBotScript;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
@@ -12,10 +11,20 @@ import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerAppearance;
-import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.bot.brain.BotBrain;
+import io.luna.game.model.mob.bot.brain.BotEmotion;
+import io.luna.game.model.mob.bot.brain.BotIntelligence;
+import io.luna.game.model.mob.bot.brain.BotPersonality;
+import io.luna.game.model.mob.bot.brain.BotPreference;
+import io.luna.game.model.mob.bot.brain.BotReflex;
+import io.luna.game.model.mob.bot.io.BotClient;
+import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
+import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
+import io.luna.game.model.mob.bot.script.BotScriptStack;
+import io.luna.game.model.mob.bot.speech.BotSpeechStack;
 import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.LogoutMessageWriter;
@@ -25,31 +34,23 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
-import static java.util.Objects.requireNonNull;
 
 /**
- * A {@link Player} implementation representing an artificial player controlled and processed by the server. Bots take
- * up less networking resources than a typical player while using much more game processing resources due to having
- * to locally process script logic.
+ * A {@link Player} implementation that represents a fully autonomous artificial player (bot) managed and processed
+ * entirely by the server. Bots occupy minimal network resources but consume additional CPU resources for AI processing
+ * and local script execution.
  * <p>
- * All passwords for bots by default are randomized series of numbers and letters. Bots are seen as regular players
- * by the server, the only big differences really being persistence and the way networking is handled. For more info
- * see {@link BotRepository} (persistence) and {@link BotClient} (networking).
- * All logic processing is done through a {@link BotScript} which controls how the bot will function in the world, and
- * {@link BotClient} gives access to all bot IO. For bots that are persisted and automatically login when the server
- * starts, see {@link BotRepository} and {@link BotScheduleService}.
+ * Each bot is backed by a {@link BotClient} for IO handling and is controlled by a {@link BotIntelligence}
+ * instance, which orchestrates the bot’s {@link BotBrain}, {@link BotPersonality}, {@link BotReflex}, and other
+ * behavioral traits. The lifecycle and persistence of bots are managed by {@link BotRepository} and
+ * {@link BotScheduleService}.
  *
  * @author lare96
  */
 public final class Bot extends Player {
-
-    /**
-     * The default script generator function, uses {@link ExampleBotScript}.
-     */
-    private static final Function<Bot, BotScript> DEFAULT_SCRIPT_GENERATOR = ExampleBotScript::new;
 
     /**
      * The logger.
@@ -57,41 +58,31 @@ public final class Bot extends Player {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A builder class that creates {@link Bot} instances.
+     * A builder class for constructing {@link Bot} instances with optional customization.
      */
     public static final class Builder {
 
-        /**
-         * The context.
-         */
+        // todo make sure temporary bot code isnt hardcoded.
         private final LunaContext context;
-
-        /**
-         * If this bot will be remembered by the server.
-         */
         private boolean temporary = true;
-
-        /**
-         * The username of this bot. Sets {@link #temporary} to {@code false}.
-         */
         private String username;
-
-        /**
-         * The script generator.
-         */
-        private Function<Bot, BotScript> scriptGen = DEFAULT_SCRIPT_GENERATOR;
+        private BotIntelligence intelligence;
 
         /**
          * Creates a new {@link Builder}.
          *
-         * @param context The context.
+         * @param context The Luna context.
          */
         public Builder(LunaContext context) {
             this.context = context;
         }
 
         /**
-         * Sets the username of a persistent bot.
+         * Sets a custom username, marking this bot as persistent.
+         *
+         * @param username The bot’s username.
+         * @return This builder instance.
+         * @throws IllegalStateException If the username is already taken by another temporary bot.
          */
         public Builder setUsername(String username) throws IllegalArgumentException {
             BotRepository repository = context.getWorld().getBots();
@@ -104,15 +95,20 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets the script generator.
+         * Sets a custom {@link BotIntelligence} instance for this bot.
+         *
+         * @param intelligence The intelligence module to use.
+         * @return This builder instance.
          */
-        public Builder setScript(Function<Bot, BotScript> scriptFunc) {
-            this.scriptGen = requireNonNull(scriptFunc);
+        public Builder setIntelligence(BotIntelligence intelligence) {
+            this.intelligence = intelligence;
             return this;
         }
 
         /**
-         * Sets this bot as persistent.
+         * Marks this bot as persistent.
+         *
+         * @return This builder instance.
          */
         public Builder setPersistent() {
             temporary = false;
@@ -120,17 +116,51 @@ public final class Bot extends Player {
         }
 
         /**
-         * Builds the {@link Bot} instance, generating a random username if needed.
+         * Builds and returns a fully constructed {@link Bot} instance. A random username and password will be
+         * generated if not specified.
+         *
+         * @return A new {@link Bot} instance.
          */
         public Bot build() {
+            if (intelligence == null) {
+                intelligence = new BotIntelligence.Builder(context.getWorld().getBotManager()).build();
+            }
             if (username == null) {
                 username = BotCredentials.generateUsername(context.getWorld(), temporary);
             }
-            Bot bot = new Bot(context, username, BotCredentials.generatePassword(), temporary);
-            bot.defaultScript = scriptGen.apply(bot);
-            return bot;
+            return new Bot(context, username, BotCredentials.generatePassword(), intelligence, temporary);
         }
     }
+
+    /**
+     * The log manager.
+     */
+    private final BotLogManager logManager = new BotLogManager(this);
+
+    /**
+     * The global bot manager.
+     */
+    private final BotManager manager;
+
+    /**
+     * The AI intelligence system controlling this bot’s behavior.
+     */
+    private final BotIntelligence intelligence;
+
+    /**
+     * The script stack.
+     */
+    private final BotScriptStack scriptStack;
+
+    /**
+     * The speech stack.
+     */
+    private final BotSpeechStack speechStack;
+
+    /**
+     * A concurrent set of human players within the bot’s local viewport.
+     */
+    private final Set<Player> localHumans = Sets.newConcurrentHashSet();
 
     /**
      * The bot client.
@@ -138,36 +168,20 @@ public final class Bot extends Player {
     private final BotClient botClient;
 
     /**
-     * If this bot will be remembered by this server. Temporary bots are logged out whenever their script terminates,
-     * if no fallback script is present.
+     * Whether this bot is temporary and will be forgotten after logout.
      */
     private final boolean temporary;
 
     /**
-     * The total number of times {@link #process()} has been called. Acts as an internal time clock for a bot while
-     * the server is online. For persistence based timing operations, use attributes like a regular player.
+     * The number of processing cycles completed by this bot. This acts as an internal runtime counter used for
+     * timing operations.
      */
     private long cycles;
 
     /**
-     * The next cycle that {@link BotScript#process()} will be called on. Used for timing of scripts.
+     * Whether this bot is attempting to log out (e.g., due to a schedule trigger).
      */
-    private long nextExecution = -1;
-
-    /**
-     * The default script received from the builder.
-     */
-    private BotScript defaultScript;
-
-    /**
-     * The script that will control this bot.
-     */
-    private BotScript script;
-
-    /**
-     * If this bot is trying to logout due to its {@link BotSchedule}.
-     */
-    private boolean logoutScheduled;
+    private boolean logoutReady;
 
     /**
      * Creates a new {@link Bot}.
@@ -175,12 +189,18 @@ public final class Bot extends Player {
      * @param context The context instance.
      * @param username The username.
      * @param password The password.
-     * @param temporary If this bot will be remembered by this server.
+     * @param intelligence The AI intelligence system controlling this bot’s behavior.
+     * @param temporary Whether this bot is attempting to log out (e.g., due to a schedule trigger).
      */
-    private Bot(LunaContext context, String username, String password, boolean temporary) {
+    private Bot(LunaContext context, String username, String password, BotIntelligence intelligence, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
         this.temporary = temporary;
+        this.intelligence = intelligence;
+
         botClient = new BotClient(this, context.getServer().getMessageRepository());
+        manager = world.getBotManager();
+        scriptStack = new BotScriptStack(this, manager.getScriptManager());
+        speechStack = new BotSpeechStack(this, manager.getSpeechManager());
         setClient(botClient);
     }
 
@@ -193,14 +213,14 @@ public final class Bot extends Player {
     @Override
     public void logout() {
         queue(new LogoutMessageWriter());
-        botClient.setPendingLogout(true);
+        botClient.setNeedsLogout(true);
     }
 
     /**
-     * Attempts to asynchronously log in this bot. Will create a new account if the credentials don't exist, otherwise the existing
-     * account data for the bot will be grabbed.
+     * Attempts to asynchronously log in this bot. If the bot’s credentials do not exist, a new account will be created.
      *
-     * @return The result of the attempt, if failed the generated username will not be consumed.
+     * @return A {@link ListenableFuture} representing the async login operation. If the login fails, the generated
+     * username will not be consumed.
      */
     public ListenableFuture<PlayerData> login() {
         String username = getUsername();
@@ -222,13 +242,12 @@ public final class Bot extends Player {
             world.getBots().add(this);
             world.getPlayers().add(this);
             setState(EntityState.ACTIVE);
+            log("I'm alive!");
             logger.info("{} has logged in.", username);
             world.schedule(new Task(1) {
                 @Override
                 protected void execute() {
-                    if (script == null) {
-                        setScript(defaultScript);
-                    }
+                    intelligence.start();
                     cancel();
                 }
             });
@@ -237,49 +256,26 @@ public final class Bot extends Player {
     }
 
     /**
-     * Processes basic actions for bots before any script processing. This function essentially acts as a lizard
-     * brain performing tasks that nearly every script will have to implement.
+     * Processes one AI cycle for this bot. Invokes {@link BotIntelligence#process(Bot)} and increments the internal
+     * cycle counter.
      *
-     * @return {@code true} to proceed to the main script processing.
-     */
-    boolean processBasicActions() {
-        // Bot is a new account, select random appearance.
-        if (getInterfaces().standardTo(DesignPlayerInterface.class).isPresent()) {
-            botClient.getOutput().sendCharacterDesignSelection();
-            return false;
-        }
-        // TODO handle combat logic here
-
-        // Bot is scheduled for logout.
-        if (logoutScheduled) {
-            script.stop();
-            botClient.getOutput().clickLogout();
-            return true;
-        }
-        return true;
-    }
-
-    /**
-     * Called every tick before pre-synchronization, should only be used for script logic processing.
+     * @throws Exception If any error occurs during AI processing.
      */
     public void process() throws Exception {
         try {
-            getInput().process();
-            if (processBasicActions() && script != null && cycles > 1) {
-                if (nextExecution == -1 || cycles >= nextExecution) {
-                    int delay = script.process();
-                    script.addExecution();
-                    if (delay < 1) {
-                        // Delay below 1, terminate script and get possible fallback.
-                        terminateScript();
-                        return;
-                    }
-                    nextExecution = cycles + delay;
-                }
-            }
+            intelligence.process(this);
         } finally {
             cycles++;
         }
+    }
+
+    /**
+     * Writes a line to this bot’s internal log.
+     *
+     * @param text The text to log.
+     */
+    public void log(String text) {
+        logManager.log(text);
     }
 
     /**
@@ -292,7 +288,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the appearance of this bot.
+     * Randomizes the bot’s visual appearance.
      */
     public void randomizeAppearance() {
         getAppearance().setValues(PlayerAppearance.randomValues());
@@ -326,96 +322,130 @@ public final class Bot extends Player {
     }
 
     /**
-     * Terminates the current script, and attempts to run a fallback. If no fallback is available, the bot will either
-     * disconnect (temporary bot) or go idle (permanent bot).
-     */
-    void terminateScript() {
-        BotScript fallback = script.stop();
-        if (fallback != null || logoutScheduled) {
-            // Run fallback script when main script terminated.
-            setScript(logoutScheduled ? new LogoutBotScript(this) : fallback);
-        } else if (temporary) {
-            // Bot with no fallback script, disconnect.
-            logout();
-        } else {
-            // Permanent bot with no fallback script, enter idle mode.
-            script = null;
-            nextExecution = -1;
-            logger.warn("{} has entered IDLE mode.", getUsername());
-        }
-    }
-
-    /**
-     * @return If this bot will be remembered by this server. Temporary bots are logged out whenever their script
-     * terminates, if no fallback script is present.
+     * @return {@code true} if this bot is temporary (non-persistent).
      */
     public boolean isTemporary() {
         return temporary;
     }
 
     /**
-     * @return The script that will control this bot.
-     */
-    BotScript getScript() {
-        return script;
-    }
-
-    /**
-     * Sets the script that will control this bot.
-     *
-     * @param newScript The new script.
-     */
-    void setScript(BotScript newScript) {
-        script = newScript;
-        newScript.init();
-    }
-
-    /**
-     * Sets a script that will make this bot idle ({@code null}).
-     */
-    void setIdleScript() {
-        script = null;
-    }
-
-    /**
-     * @return The bot client.
+     * @return The {@link BotClient} instance managing this bot’s input/output.
      */
     public BotClient getBotClient() {
         return botClient;
     }
 
     /**
-     * @return The {@link #process()} execution counter.
+     * @return The total number of processing cycles completed by this bot.
      */
     public long getCycles() {
         return cycles;
     }
 
     /**
-     * @return {@code true} if this bot is trying to logout due to its {@link BotSchedule}.
+     * @return {@code true} if this bot has a scheduled logout pending.
      */
-    public boolean isLogoutScheduled() {
-        return logoutScheduled;
+    public boolean isLogoutReady() {
+        return logoutReady;
     }
 
     /**
-     * Sets if this bot is trying to logout due to its {@link BotSchedule}.
+     * Sets whether this bot should attempt to log out due to a schedule trigger.
+     *
+     * @param logoutReady {@code true} if this bot should begin logout.
      */
-    public void setLogoutScheduled(boolean logoutScheduled) {
-        this.logoutScheduled = logoutScheduled;
+    public void setLogoutReady(boolean logoutReady) {
+        this.logoutReady = logoutReady;
     }
 
     /**
-     * @return The input message handler.
+     * @return The input message handler for this bot.
      */
     public BotInputMessageHandler getInput() {
         return botClient.getInput();
     }
 
     /**
-     * @return The output message handler.
+     * @return The output message handler for this bot.
      */
     public BotOutputMessageHandler getOutput() {
         return botClient.getOutput();
+    }
+
+    /**
+     * @return A concurrent set of human players currently visible to this bot.
+     */
+    public Set<Player> getLocalHumans() {
+        return localHumans;
+    }
+
+    /**
+     * @return The log manager responsible for recording and debugging bot activity.
+     */
+    public BotLogManager getLogManager() {
+        return logManager;
+    }
+
+    /**
+     * @return The global {@link BotManager} overseeing all bots in the world.
+     */
+    public BotManager getManager() {
+        return manager;
+    }
+
+    /**
+     * @return The intelligence system controlling this bot’s overall decision-making.
+     */
+    public BotIntelligence getIntelligence() {
+        return intelligence;
+    }
+
+    /**
+     * @return The script stack that manages all active {@link api.bot.BotScript} instances for this bot.
+     */
+    public BotScriptStack getScriptStack() {
+        return scriptStack;
+    }
+
+    /**
+     * @return The speech stack managing spoken messages, chatter, and conversational output.
+     */
+    public BotSpeechStack getSpeechStack() {
+        return speechStack;
+    }
+
+    /**
+     * @return The reflex module responsible for reactive, low-level responses.
+     */
+    public BotReflex getReflex() {
+        return intelligence.getReflex();
+    }
+
+    /**
+     * @return The brain module controlling reasoning and goal-based decision-making.
+     */
+    public BotBrain getBrain() {
+        return intelligence.getBrain();
+    }
+
+    /**
+     * @return The personality module that defines behavioral traits and tendencies.
+     */
+    public BotPersonality getPersonality() {
+        return intelligence.getPersonality();
+    }
+
+    /**
+     * @return The emotion controller representing the bot’s current affective state.
+     */
+    public BotEmotion getEmotions() {
+        return intelligence.getEmotions();
+    }
+
+    /**
+     * @return The preference system that stores likes, dislikes, and behavioral biases.
+     */
+    public BotPreference getPreferences() {
+        return intelligence.getPreferences();
     }
 }
