@@ -27,7 +27,7 @@ public final class CircularArea extends Area {
      *
      * @param centerX The X-coordinate of the center.
      * @param centerY The Y-coordinate of the center.
-     * @param radius  The radius of the circle. Must be > 1.
+     * @param radius The radius of the circle. Must be > 1.
      * @throws IllegalArgumentException If {@code radius} is less than 1.
      */
     public CircularArea(int centerX, int centerY, int radius) {
@@ -72,7 +72,7 @@ public final class CircularArea extends Area {
             for (int y = center.getY() - radius; y < center.getY() + radius; y++) {
                 int dx = x - center.getX();
                 int dy = y - center.getY();
-                if (Math.pow(dx, 2) * Math.pow(dy, 2) <= radiusSquared) {
+                if (dx * dx + dy * dy <= radiusSquared) {
                     set.add(new Position(x, y));
                 }
             }
