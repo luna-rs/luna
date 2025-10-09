@@ -445,7 +445,6 @@ public class Player extends Mob {
     protected void onInactive() {
         interfaces.close();
         world.getTasks().forEachAttachment(this, Task::cancel);
-        world.getPlayerMap().remove(getUsername());
         plugins.post(new LogoutEvent(this));
     }
 
@@ -735,7 +734,6 @@ public class Player extends Mob {
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
-            client.setNeedsLogout(true);
         }
     }
 
@@ -770,12 +768,12 @@ public class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(GameMessageWriter, Player)}.
+     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
      *
      * @param msg The message to queue in the buffer.
      */
     public void queue(GameMessageWriter msg) {
-        client.queue(msg, this);
+        client.queue(msg);
     }
 
     /**
@@ -1438,7 +1436,7 @@ public class Player extends Mob {
      * @return The current spellbook.
      */
     public Spellbook getSpellbook() {
-        if(spellbook == null) {
+        if (spellbook == null) {
             spellbook = Spellbook.REGULAR;
         }
         return spellbook;
@@ -1508,6 +1506,9 @@ public class Player extends Mob {
      * @return The total amount of time played.
      */
     public Duration getTimePlayed() {
+        if(timePlayed == null) {
+            timePlayed = Duration.ZERO;
+        }
         // Update on the fly.
         timePlayed = timePlayed.plus(timeOnline.elapsed());
         timeOnline.reset().start();

@@ -1,6 +1,5 @@
 package io.luna.game.model.mob.bot.io;
 
-import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.client.GameClient;
 import io.luna.net.msg.GameMessage;
@@ -17,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * <p>
  * The {@link BotClient} architecture mirrors a real client session:
  * <ul>
- *     <li>{@link #queue(GameMessageWriter, Player)} simulates sending server messages to the bot.</li>
+ *     <li>{@link #queue(GameMessageWriter)} simulates sending server messages to the bot.</li>
  *     <li>{@link #flush()} delivers all queued server messages to the bot’s {@link BotInputMessageHandler}.</li>
  *     <li>{@link #queueSimulated(GameMessage)} simulates incoming packets from the bot to the server.</li>
  * </ul>
@@ -53,7 +52,7 @@ public final class BotClient extends GameClient {
      * @param repository The message repository.
      */
     public BotClient(Bot bot, GameMessageRepository repository) {
-        super(BotChannel.CHANNEL, repository);
+        super(BotChannel.CHANNEL, repository, bot);
         this.bot = bot;
         input = new BotInputMessageHandler(bot);
         output = new BotOutputMessageHandler(this);
@@ -71,10 +70,7 @@ public final class BotClient extends GameClient {
      * Simulates a server -> client send.
      */
     @Override
-    public void queue(GameMessageWriter msg, Player player) {
-        if (!player.isBot()) {
-            throw new IllegalStateException("Unexpected: " + player.getUsername() + " not a bot, but using BotClient.");
-        }
+    public void queue(GameMessageWriter msg) {
         Instant timestamp = Instant.now();
         pendingWriteMessages.add(new BotMessage<>(msg, timestamp));
     }

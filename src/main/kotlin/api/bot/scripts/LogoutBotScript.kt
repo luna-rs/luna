@@ -14,14 +14,10 @@ import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 class LogoutBotScript(bot: Bot, private var urgent: Boolean) : BotScript<Boolean>(bot) {
 
     override suspend fun run() {
-        if (urgent) {
-            // Faster by about a 1-2s. Almost like closing the window vs clicking the button.
-            bot.client.isNeedsLogout = true
-        } else {
-            bot.naturalDelay()
-            bot.output.clickLogout()
+        if (!urgent) {
             bot.naturalDecisionDelay()
         }
+        bot.output.clickLogout()
     }
 
     override fun snapshot(): Boolean = urgent

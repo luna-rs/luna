@@ -1,10 +1,10 @@
 package io.luna.game;
 
 import com.google.common.base.Stopwatch;
+import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.LogoutService.LogoutRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -103,8 +103,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     @Override
     boolean canFinishRequest(String username, LogoutRequest request) {
         Player player = request.player;
-
-        return (/* TODO No combat for 30 seconds && */ player.getControllers().checkLogout() && !player.isLocked()) ||
+        return (/* TODO No combat for 30 seconds && */player.getControllers().checkLogout() && !player.isLocked()) ||
                 request.isTimeout();
     }
 

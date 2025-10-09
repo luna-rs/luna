@@ -226,6 +226,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     public void remove(E mob) {
         checkArgument(mob.getIndex() != -1, "index == -1");
 
+        mob.setState(EntityState.INACTIVE);
         if (mob.getType() == EntityType.PLAYER) {
             world.removePlayer(mob.asPlr());
         }

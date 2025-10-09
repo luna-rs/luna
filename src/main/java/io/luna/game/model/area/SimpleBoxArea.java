@@ -94,11 +94,6 @@ public class SimpleBoxArea extends Area {
         return list.build();
     }
 
-    @Override
-    public Position location() {
-        return new Position(southWestX, southWestY);
-    }
-
     /**
      * Returns the length of this area.
      */

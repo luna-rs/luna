@@ -27,7 +27,6 @@ import io.luna.game.model.mob.bot.script.BotScriptStack;
 import io.luna.game.model.mob.bot.speech.BotSpeechStack;
 import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
-import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -212,8 +211,8 @@ public final class Bot extends Player {
 
     @Override
     public void logout() {
-        queue(new LogoutMessageWriter());
-        botClient.setNeedsLogout(true);
+        scriptStack.shutdown();
+        botClient.onInactive();
     }
 
     /**

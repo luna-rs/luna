@@ -274,6 +274,7 @@ public final class World {
         preSynchronize();
         synchronize();
         postSynchronize();
+
         chunks.resetUpdatedChunks();
 
         // Increment tick counter.
@@ -287,12 +288,11 @@ public final class World {
 
         // First handle all client input from players.
         for (Player player : playerList) {
-            if (player.getClient().isNeedsLogout()) {
+            if (player.getClient().isPendingLogout()) {
                 // No input to handle, client should already appear logged out here.
-                player.getClient().sendLogoutRequest(player);
                 continue;
             }
-            player.getClient().handleDecodedMessages(player);
+            player.getClient().handleDecodedMessages();
         }
 
         // Then, pre-process NPC walking and action queues.
@@ -328,8 +328,9 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
-            if(player.getClient().isNeedsLogout()) {
+            if (player.getClient().isPendingLogout()) {
                 // No point of sending updates to a client that can't see entities.
+                synchronizer.arriveAndDeregister();
                 continue;
             }
             /*

@@ -106,7 +106,7 @@ public final class BotScheduleService extends AbstractScheduledService {
                     map(Player::asBot).orElse(null);
             if (onlineBot != null && !Luna.settings().bots().keepOnline() &&
                     !onlineBot.isLogoutReady() &&
-                    !onlineBot.getClient().isNeedsLogout() &&
+                    !onlineBot.getClient().isPendingLogout() &&
                     onlineBot.getState() != EntityState.INACTIVE) {
                 Duration timeOnline = onlineBot.getTimeOnline().elapsed();
                 if (session.canLogout(timeOnline)) { // Queue bot for logout.

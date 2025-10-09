@@ -91,7 +91,7 @@ object Suspendable {
      *
      * Typical range:
      * - Minimum: 1200 ms
-     * - Maximum: 10 000 ms
+     * - Maximum: 6000 ms
      */
     suspend fun Bot.naturalDecisionDelay() {
         val dexterity = personality.dexterity.coerceIn(0.0, 1.0)
@@ -102,7 +102,7 @@ object Suspendable {
 
         // Always include jitter for realism
         val jitterFactor = 1.0 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1)
-        val totalDelay = (base * jitterFactor).coerceIn(1200.0, 10_000.0).toLong()
+        val totalDelay = (base * jitterFactor).coerceIn(1200.0, 6_000.0).toLong()
 
         delay(totalDelay.milliseconds)
     }
