@@ -105,10 +105,4 @@ public class OldPolygonArea extends Area {
         }
         return innerPositions.build();
     }
-
-    @Override
-    public Position location() {
-        // TODO move back to main codebase, do proper impl
-        return randomPosition();
-    }
 }
