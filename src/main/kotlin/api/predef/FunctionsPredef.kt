@@ -40,6 +40,11 @@ fun itemName(id: Int): String = ItemDefinition.ALL[id].map { it.name }
 /**
  * Computes and returns the name for [item].
  */
+fun itemName(item: Item): String = itemName(item.id)
+
+/**
+ * Computes and returns the name for [item].
+ */
 fun name(any: Any): String =
     when (any) {
         is Item -> itemName(any.id)

@@ -14,7 +14,25 @@ import java.util.concurrent.Future
  * @param channel The internal one-time signal channel used for suspension and resumption.
  * @author lare96
  */
-class SuspendableFuture(private val channel: Channel<Boolean>) {
+open class SuspendableFuture(private val channel: Channel<Boolean>) {
+
+    object SuspendableFutureFailed : SuspendableFuture() {
+        init {
+            signal(false)
+        }
+        override suspend fun await(): Boolean {
+            return false
+        }
+    }
+
+    object SuspendableFutureSuccess : SuspendableFuture() {
+        init {
+            signal(true)
+        }
+        override suspend fun await(): Boolean {
+            return true
+        }
+    }
 
     /**
      * Secondary constructor for creating an empty future that can be manually signaled.
@@ -37,7 +55,7 @@ class SuspendableFuture(private val channel: Channel<Boolean>) {
      *
      * @return `true` if the signal indicated success, `false` if it timed out, failed, or closed abnormally.
      */
-    suspend fun await(): Boolean {
+    open suspend fun await(): Boolean {
         val result = channel.receive()
         channel.close()
         return result

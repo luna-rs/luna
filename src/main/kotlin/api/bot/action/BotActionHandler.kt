@@ -1,11 +1,9 @@
 package api.bot.action
 
-import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableFuture
 import api.predef.*
-import api.predef.ext.*
 import io.luna.game.model.Entity
 import io.luna.game.model.Entity.EntityDistanceComparator
 import io.luna.game.model.EntityType
@@ -128,7 +126,10 @@ class BotActionHandler(val bot: Bot) {
                         continue
                     }
                 }
-                return if (equipment.unequip(it.equipDef.index).await()) it else null
+                return if (equipment.unequip(it.equipDef.index).await()) it else {
+                    bot.log("Could not unequip item.")
+                    continue
+                }
             }
         }
         // Then look at bank.
@@ -199,8 +200,12 @@ class BotActionHandler(val bot: Bot) {
         if (bank != null) {
             bot.naturalDelay()
             bot.log("Opening bank.")
-            interactions.interact(2, bank)
-            return waitFor { bot.bank.isOpen }
+            if (interactions.interact(2, bank)) {
+                return waitFor { bot.bank.isOpen }
+            } else {
+                bot.log("Could not interact with $bank.")
+                return false
+            }
         }
         return false
     }

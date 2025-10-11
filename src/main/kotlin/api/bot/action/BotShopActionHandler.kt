@@ -2,6 +2,7 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
+import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.item.shop.ShopInterface
@@ -47,18 +48,23 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     private fun buy(id: Int, amount: Int): SuspendableFuture {
         // Check if a shop is open.
-        val shopInterface = bot.interfaces.get(ShopInterface::class) ?: return SuspendableFuture().signal(false)
+        val shopInterface = bot.interfaces.get(ShopInterface::class) ?: return SuspendableFutureFailed
 
         bot.log("Buying $amount of ${itemName(id)}.")
         val shopIndex = shopInterface.shop.container.computeIndexForId(id)
         if (shopIndex.isEmpty) {
             // Shop doesn't have the item.
             bot.log("Shop doesn't have that item.")
-            return SuspendableFuture().signal(false)
+            return SuspendableFutureFailed
+        }
+        val shopItem = shopInterface.shop.container[shopIndex.asInt]
+        if (shopItem == null || !bot.inventory.hasSpaceFor(shopItem)) {
+            bot.log("Not enough inventory space to buy this item.")
+            return SuspendableFutureFailed
         }
 
         val amountBefore = bot.inventory.computeAmountForId(id)
-        val boughtItemCond = SuspendableCondition{ bot.inventory.computeAmountForId(id) > amountBefore }
+        val boughtItemCond = SuspendableCondition { bot.inventory.computeAmountForId(id) > amountBefore }
         when (amount) {
             1 -> bot.output.sendItemWidgetClick(2, shopIndex.asInt, 3900, id)
             5 -> bot.output.sendItemWidgetClick(3, shopIndex.asInt, 3900, id)
@@ -72,16 +78,19 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      * Attempts to sell either 1, 5, or 10 of an item.
      */
     private fun sell(id: Int, amount: Int): SuspendableFuture {
-        if(!bot.interfaces.isOpen(ShopInterface::class)) {
-            // No shop is currently open.
-            return SuspendableFuture().signal(false)
-        }
+        // Check if a shop is open.
+        val shopInterface = bot.interfaces.get(ShopInterface::class) ?: return SuspendableFutureFailed
+
         bot.log("Selling $amount of ${itemName(id)}.")
         val inventoryIndex = bot.inventory.computeIndexForId(id)
         if (inventoryIndex.isEmpty) {
             // Bot doesn't have the item.
             bot.log("I don't have that item.")
-            return SuspendableFuture().signal(false)
+            return SuspendableFutureFailed
+        }
+        if (!shopInterface.shop.computeCanSell(id)) {
+            bot.log("I cannot sell ${itemName(id)} item here.")
+            return SuspendableFutureFailed
         }
 
         val amountBefore = bot.inventory.computeAmountForId(id)
@@ -91,7 +100,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
             10 -> bot.output.sendItemWidgetClick(4, inventoryIndex.asInt, 3823, id)
             else -> throw IllegalStateException("Invalid amount.")
         }
-        val boughtItemCondition = SuspendableCondition{ bot.inventory.computeAmountForId(id) < amountBefore }
-        return boughtItemCondition.submit(5) // Unsuspend when the inventory amount decreases.
+        val soldItemCond = SuspendableCondition { bot.inventory.computeAmountForId(id) < amountBefore }
+        return soldItemCond.submit(5) // Unsuspend when the inventory amount decreases.
     }
 }

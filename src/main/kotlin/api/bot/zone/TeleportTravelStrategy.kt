@@ -27,7 +27,7 @@ class TeleportTravelStrategy(private val spell: TeleportSpell, private val walki
     }
 
     override fun canTravel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
-        if (bot.magic.staticLevel >= spell.level || bot.spellbook != spell.style.spellbook) {
+        if (bot.magic.staticLevel < spell.level || bot.spellbook != spell.style.spellbook) {
             return false
         }
         bot.teleportItems.clear()
@@ -43,14 +43,13 @@ class TeleportTravelStrategy(private val spell: TeleportSpell, private val walki
 
     override suspend fun travel(bot: Bot, handler: BotActionHandler, dest: Position): Boolean {
         val count = bot.teleportItems.size
-        if (count > 0) {
-            if (handler.retrieveAll(bot.teleportItems)) {
-                val prev = bot.position
-                bot.output.clickButton(spell.button)
-                waitFor { prev != bot.position }
-                return WalkingTravelStrategy.travel(bot, handler, dest)
-            }
+        if (count > 0 && !handler.retrieveAll(bot.teleportItems)) {
+            bot.log("Cannot teleport: missing requirements.")
+            return false
         }
-        return false
+        val prev = bot.position
+        bot.output.clickButton(spell.button)
+        waitFor { prev != bot.position }
+        return WalkingTravelStrategy.travel(bot, handler, dest)
     }
 }

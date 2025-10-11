@@ -1,17 +1,17 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
-import api.bot.SuspendableFuture
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Entity
+import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
-import java.util.OptionalInt
+import java.util.*
 
 /**
  * A [BotActionHandler] implementation for inventory related actions.
@@ -27,7 +27,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * Use an item on a generic interactable entity.
          */
         private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): Boolean {
-            val index = if(usedIndex == -1) bot.inventory.computeIndexForId(usedId) else OptionalInt.of(usedIndex)
+            val index = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else OptionalInt.of(usedIndex)
             if (index.isEmpty) {
                 // We don't have the item.
                 bot.log("I don't have ${itemName(usedId)}.")
@@ -39,7 +39,10 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 return false
             }
             if (handler.movement.walkUntilReached(target).await()) {
-                val cond = SuspendableCondition{ bot.isInteractingWith(target) }
+                val cond = SuspendableCondition {
+                    (target is GroundItem && bot.isWithinDistance(target, 1)) ||
+                            bot.isInteractingWith(target)
+                }
                 bot.log("Using ${itemName(usedId)} on $target.")
                 action(index.asInt)
                 return cond.submit(30).await()
@@ -92,27 +95,34 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
      * An action that drops an item from the inventory of a [Bot]. Unsuspends when the item is dropped and/or
      * destroyed.
      */
-    suspend fun dropItem(id: Int): SuspendableFuture {
+    suspend fun dropItem(id: Int): Boolean {
         bot.log("Dropping ${itemName(id)}.")
         val index = bot.inventory.computeIndexForId(id)
         if (index.isEmpty) {
             // We don't have the item.
             bot.log("I don't have ${itemName(id)}.")
-            return SuspendableFuture().signal(false)
+            return false
         }
-        val cond = SuspendableCondition({
-                                            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
-                                                DestroyItemDialogueInterface::class)
-                                        })
+        val cond = SuspendableCondition {
+            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
+                DestroyItemDialogueInterface::class)
+        }
         bot.output.sendInventoryItemClick(5, index.asInt, id)
-        if (itemDef(id).isTradeable) {
-            return cond.submit()
-        } else {
-            cond.submit().await()
+        if (cond.submit(5).await()) {
+            if (itemDef(id).isTradeable) {
+                return true
+            }
             bot.log("Destroying ${itemName(id)}.")
-            return handler.widgets.clickDestroyItem()
+            val clickDestroyCond = SuspendableCondition { !bot.interfaces.isOpen(DestroyItemDialogueInterface::class) }
+            bot.output.clickButton(14175)
+            if (!clickDestroyCond.submit().await()) {
+                bot.log("Could not click accept on DestroyItemDialogueInterface.")
+                return false
+            }
+            return true
         }
-
+        bot.log("Could not drop/destroy ${bot.inventory[index.asInt]}.")
+        return false
     }
 
     /**
@@ -120,8 +130,8 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
      */
     suspend fun dropAllItems(): Boolean {
         for (item in bot.inventory) {
-            if (item != null) {
-                dropItem(item.id).await()
+            if (item != null && !dropItem(item.id)) {
+                return false
             }
         }
         return bot.inventory.size() == 0
@@ -139,7 +149,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
         }
         val clickId = bot.inventory[clickIndex]?.id
         if (clickId != id) {
-            bot.log("Can't find ${itemName(id)} on $clickIndex.")
+            bot.log("Can't find ${itemName(id)} at index $clickIndex.")
             return false
         }
         bot.log("Clicking item ${itemName(clickId)}, option $option.")

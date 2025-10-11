@@ -3,6 +3,7 @@ package api.bot
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -39,9 +40,17 @@ class SuspendableCondition(private val cond: () -> Boolean) {
      * @throws IllegalStateException if called more than once.
      * @return A [SuspendableFuture] tied to this condition.
      */
-    fun submit(timeoutSeconds: Long = 120): SuspendableFuture {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun submit(timeoutSeconds: Long = 30): SuspendableFuture {
         checkState(!active.getAndSet(true), "'submit()' can only be called once.")
         world.schedule(1) {
+            // Channel is closed.
+            if(channel.isClosedForSend) {
+                it.cancel()
+                return@schedule
+            }
+            // TODO Couple with Job so when coroutine is cancelled, these are as well?
+
             // Schedule task to check if condition is satisfied.
             if (cond()) {
                 channel.offer(true) // Condition satisfied, send unsuspend signal.

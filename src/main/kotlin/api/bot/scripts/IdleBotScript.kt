@@ -79,28 +79,31 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         // Run script until our idle timer completes.
         timer.start()
         while (timer.elapsed().toMinutes() < data.durationMinutes) {
-            if (bot.inWilderness()) {
-                bot.log("Inside wilderness, moving to safety.")
-                handler.movement.leaveWilderness()
-                continue
-            }
-            handler.widgets.clickRunning(false)
-            bot.naturalDelay()
-            if (bot.inventory.isFull) {
-                bot.log("Banking items.")
-                handler.travelToBankDepositAll()
-                continue
-            }
-            nextState()
-            when (data.state) {
-                State.STANDING -> doStanding()
-                State.FOLLOW -> doFollow()
-                State.WALKING -> doWalking()
-                State.TELEPORT -> doTeleport()
-                else -> {} // Do nothing.
+            try {
+                if (bot.inWilderness()) {
+                    bot.log("Inside wilderness, moving to safety.")
+                    handler.movement.leaveWilderness()
+                    continue
+                }
+                handler.widgets.clickRunning(false)
+                bot.naturalDelay()
+                if (bot.inventory.isFull) {
+                    bot.log("Banking items.")
+                    handler.travelToBankDepositAll()
+                    continue
+                }
+                nextState()
+                when (data.state) {
+                    State.STANDING -> doStanding()
+                    State.FOLLOW -> doFollow()
+                    State.WALKING -> doWalking()
+                    State.TELEPORT -> doTeleport()
+                    else -> {} // Do nothing.
 
+                }
+            } finally {
+                data.state = null
             }
-            data.state = null
             bot.naturalDecisionDelay()
         }
     }
@@ -155,6 +158,9 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
             bot.log("No longer following anyone.")
         }
+        // Yes, two delays. He's thinking..
+        bot.naturalDecisionDelay()
+        bot.naturalDecisionDelay()
     }
 
     private suspend fun doWalking() {

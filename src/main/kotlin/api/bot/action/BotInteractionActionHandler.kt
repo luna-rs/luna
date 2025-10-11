@@ -31,9 +31,10 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      */
     suspend fun interact(option: Int, target: Entity): Boolean {
         if (handler.movement.walkUntilReached(target).await()) {
-            bot.resetInteractingWith()
-            bot.resetInteractionTask()
-            val cond = SuspendableCondition { bot.isInteractingWith(target) }
+            val cond = SuspendableCondition {
+                (target is GroundItem && bot.isWithinDistance(target, 1)) ||
+                        bot.isInteractingWith(target)
+            }
             when (target) {
                 is Player -> bot.output.sendPlayerInteraction(option, target)
                 is Npc -> bot.output.sendNpcInteraction(option, target)

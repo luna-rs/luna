@@ -529,8 +529,18 @@ public final class Shop {
      * @param item The item.
      * @return {@code true} if this item can be sold.
      */
-    private boolean computeCanSell(Item item) {
-        if (!Currency.IDENTIFIERS.contains(item.getId()) && item.getItemDef().isTradeable()) {
+    public boolean computeCanSell(Item item) {
+        return computeCanSell(item.getId());
+    }
+
+    /**
+     * Computes if {@code item} can be sold to this shop.
+     *
+     * @param item The item.
+     * @return {@code true} if this item can be sold.
+     */
+    public boolean computeCanSell(int id) {
+        if (!Currency.IDENTIFIERS.contains(id) && ItemDefinition.ALL.retrieve(id).isTradeable()) {
             switch (buyPolicy) {
                 case ALL:
                     // All trading items can be sold.
@@ -540,7 +550,7 @@ public final class Shop {
                     return false;
                 case EXISTING:
                     // Only existing items can be sold.
-                    return container.computeIndexForId(item.getId()).isPresent();
+                    return container.computeIndexForId(id).isPresent();
             }
         }
 

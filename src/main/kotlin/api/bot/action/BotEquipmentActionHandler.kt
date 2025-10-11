@@ -2,6 +2,8 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
+import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.SuspendableFuture.SuspendableFutureSuccess
 import api.predef.*
 import io.luna.game.model.def.EquipmentDefinition
 import io.luna.game.model.mob.bot.Bot
@@ -38,14 +40,17 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      * removed.
      */
     fun unequip(index: Int): SuspendableFuture {
-        val itemId = bot.equipment.computeIdForIndex(index)
-        bot.log("Trying to unequip ${itemName(itemId.asInt)}.")
-        if (!itemId.isPresent) {
-            bot.log("Nothing to unequip on index $index.")
-            return SuspendableFuture().signal(false)
+        val item = bot.equipment[index]
+        if (item == null) {
+            return SuspendableFutureSuccess
         }
+        if (!bot.inventory.hasSpaceFor(item)) {
+            bot.log("Not enough inventory space to unequip $item.")
+            return SuspendableFutureFailed
+        }
+        bot.log("Trying to unequip ${itemName(item)}.")
         val suspendableCond = SuspendableCondition { bot.equipment[index] == null }
-        bot.output.sendItemWidgetClick(1, index, 1688, itemId.asInt)
+        bot.output.sendItemWidgetClick(1, index, 1688, item.id)
         return suspendableCond.submit(3)
     }
 
@@ -55,18 +60,20 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
      * @return `true` if everything was unequipped.
      */
     suspend fun unequipAll(): Boolean {
+        if (!bot.inventory.hasSpaceForAll(bot.equipment)) {
+            bot.log("Not enough inventory space to unequip everything.")
+            return false
+        }
         bot.log("Trying unequip all items.")
-        var success = true
-        for (next in bot.equipment.withIndex()) {
-            if (bot.inventory.isFull) {
-                bot.log("Could not finish, inventory full.")
+        for ((index, item) in bot.equipment.withIndex()) {
+            if (item == null) {
+                continue
+            }
+            if (!unequip(index).await()) {
                 return false
             }
-            if(!unequip(next.index).await()) {
-                success = false
-            }
         }
-        return success
+        return true
     }
 
     /**

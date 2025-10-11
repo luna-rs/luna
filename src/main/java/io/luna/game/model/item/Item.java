@@ -1,6 +1,7 @@
 package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
@@ -96,9 +97,14 @@ public class Item {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("id", id).
-                add("amount", amount).toString();
+        ItemDefinition def = getItemDef();
+        ToStringHelper helper = MoreObjects.toStringHelper(this).
+                add("id", id);
+        if (def != null) {
+            helper.add("name", def.getName());
+        }
+        helper.add("amount", amount);
+        return helper.toString();
     }
 
     /**
@@ -185,7 +191,7 @@ public class Item {
      * @return The indexed item.
      */
     public IndexedItem withIndex(int index) {
-        return new IndexedItem(index,id, amount);
+        return new IndexedItem(index, id, amount);
     }
 
     /**

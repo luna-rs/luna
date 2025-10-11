@@ -50,7 +50,10 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
                     5 -> bot.output.clickButton(8225)
                 }
 
-            else -> return false
+            else -> {
+                bot.log("Unrecognized dialogue interface ${activeInterface.unsafeGetId()}.")
+                return false
+            }
         }
         bot.log("Clicking dialogue option $option.")
         return true
@@ -59,44 +62,34 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
     /**
      * Clicks the widget to logout the [Bot] how a regular player would do it.
      */
-    fun clickLogout() {
+    fun clickLogout(): Boolean {
         bot.output.clickLogout()
         bot.log("Clicking logout button.")
+        return true
     }
 
     /**
      * Clicks the widget to close interfaces.
      */
-    fun clickCloseInterface(): SuspendableFuture {
-        val suspendCond = SuspendableCondition({ !bot.interfaces.isStandardOpen })
-        bot.output.sendCloseInterface()
-        bot.log("Clicking close interface button.")
-        return suspendCond.submit()
-    }
-
-    /**
-     * Clicks the widget to destroy an item if `value` is true, otherwise the destroy will be cancelled. The returned
-     * future unsuspends when the destroy interface closes.
-     */
-    fun clickDestroyItem(value: Boolean = true): SuspendableFuture {
-        val suspendCond = SuspendableCondition({ !bot.interfaces.isOpen(DestroyItemDialogueInterface::class) })
-        if (value) {
-            bot.output.clickButton(14175)
-        } else {
-            bot.output.clickButton(14176)
+    suspend fun clickCloseInterface(): Boolean {
+        if (bot.interfaces.isStandardOpen) {
+            val suspendCond = SuspendableCondition { !bot.interfaces.isStandardOpen }
+            bot.output.sendCloseInterface()
+            bot.log("Clicking close interface button.")
+            return suspendCond.submit().await()
         }
-        return suspendCond.submit()
+        return true
     }
 
     /**
-     * Clicks the widget to either start running or walking. The returned future unsuspends when the bot is either
+     * Clicks the widget to either start running or walking. Unsuspends when the bot is either
      * successfully walking or running.
      */
-    fun clickRunning(enabled: Boolean): SuspendableFuture {
+    suspend fun clickRunning(enabled: Boolean): Boolean {
         if (enabled == bot.isRunning) {
-            return SuspendableFuture().signal(true)
+            return true
         }
-        val suspendCond = SuspendableCondition{ bot.isRunning == enabled }
+        val suspendCond = SuspendableCondition { bot.isRunning == enabled }
         if (!enabled) {
             bot.log("Clicking walking button.")
             bot.output.clickButton(152)
@@ -104,6 +97,6 @@ class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActio
             bot.log("Clicking running button.")
             bot.output.clickButton(153)
         }
-        return suspendCond.submit(5)
+        return suspendCond.submit(5).await()
     }
 }

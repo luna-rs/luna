@@ -2,6 +2,8 @@ package api.bot.action
 
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
+import api.bot.SuspendableFuture.SuspendableFutureFailed
+import api.bot.SuspendableFuture.SuspendableFutureSuccess
 import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
@@ -35,6 +37,9 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (homeBanks.isEmpty()) {
             world.objects.stream().filter { HOME_BANK_POSITIONS.contains(it.position) }
                 .forEach { homeBanks.add(it) }
+            if (homeBanks.isEmpty()) {
+                throw IllegalStateException("Could not generate home banks!")
+            }
         }
         return homeBanks.random()
     }
@@ -64,20 +69,36 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (depositItem.amount > existingAmount) {
             depositItem = depositItem.withAmount(existingAmount)
         }
-        val amountCond =
-            SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
-        bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
-        // Wait until amount input interface is open.
-        if (amountCond.submit().await()) {
-            bot.log("Entering amount (${depositItem.amount}).")
-            bot.output.enterAmount(depositItem.amount) // Enter amount.
-            val depositCond =
-                SuspendableCondition { bot.inventory.computeAmountForId(item.id) < existingAmount }
-            // Unsuspend when the inventory amount changes.
-            return depositCond.submit().await()
+        val amount = depositItem.amount
+        val clickWidget = when {
+            amount == 1 -> 1
+            amount == 5 -> 2
+            amount == 10 -> 3
+            item.amount > existingAmount -> 4
+            else -> 5
         }
-        bot.log("Could not open enter amount interface.")
-        return false
+        // Unsuspend when the inventory amount changes.
+        val depositCond =
+            SuspendableCondition { bot.inventory.computeAmountForId(item.id) < existingAmount }
+        if (clickWidget != 5) {
+            // Click deposit 1, 5, 10, or all.
+            bot.output.sendItemWidgetClick(clickWidget, inventoryIndex.asInt, 5064, depositItem.id)
+            bot.log("Clicking deposit option $clickWidget.")
+            return depositCond.submit().await()
+        } else {
+            // Click deposit x.
+            val amountCond =
+                SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
+            bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
+            // Wait until amount input interface is open.
+            if (amountCond.submit().await()) {
+                bot.log("Entering amount (${depositItem.amount}).")
+                bot.output.enterAmount(depositItem.amount) // Enter amount.
+                return depositCond.submit().await()
+            }
+            bot.log("Could not open enter amount interface.")
+            return false
+        }
     }
 
     /**
@@ -100,7 +121,10 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         bot.log("Trying to deposit all items.")
         for (item in bot.inventory) {
             if (item != null) {
-                depositAll(item.id)
+                if (!depositAll(item.id)) {
+                    bot.log("Could not deposit $item.")
+                    return false
+                }
             }
         }
         return bot.inventory.size() == 0
@@ -130,18 +154,33 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (withdrawItem.amount > existingAmount) {
             withdrawItem = withdrawItem.withAmount(existingAmount)
         }
-        val amountCond =
-            SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
-        bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
-        // Wait until amount input interface is open.
-        if (amountCond.submit().await()) {
-            bot.log("Entering amount (${withdrawItem.amount}).")
-            bot.output.enterAmount(withdrawItem.amount) // Enter amount.
-            val withdrawCond = SuspendableCondition({ bot.bank.computeAmountForId(item.id) < existingAmount })
-            return withdrawCond.submit().await()
+        val amount = withdrawItem.amount
+        val clickWidget = when {
+            amount == 1 -> 1
+            amount == 5 -> 2
+            amount == 10 -> 3
+            item.amount > existingAmount -> 4
+            else -> 5
         }
-        bot.log("Could not open enter amount interface.")
-        return false
+        val withdrawCond = SuspendableCondition { bot.bank.computeAmountForId(item.id) < existingAmount }
+        if (clickWidget != 5) {
+            // Withdraw 1, 5, 10, or all.
+            bot.log("Clicking withdraw option $clickWidget.")
+            bot.output.sendItemWidgetClick(clickWidget, bankIndex.asInt, 5382, withdrawItem.id)
+            return withdrawCond.submit().await()
+        } else {
+            val amountCond =
+                SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
+            bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
+            // Wait until amount input interface is open.
+            if (amountCond.submit().await()) {
+                bot.log("Entering amount (${withdrawItem.amount}).")
+                bot.output.enterAmount(withdrawItem.amount) // Enter amount.
+                return withdrawCond.submit().await()
+            }
+            bot.log("Could not open enter amount interface.")
+            return false
+        }
     }
 
     /**
@@ -159,9 +198,12 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      * matches `noted`.
      */
     fun clickBankingMode(noted: Boolean): SuspendableFuture {
+        if (!bot.bank.isOpen) {
+            return SuspendableFutureFailed
+        }
         val currentNoted = { bot.varpManager.getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1 }
         if (noted == currentNoted()) {
-            return SuspendableFuture().signal(true)
+            return SuspendableFutureSuccess
         }
         val suspendCond = SuspendableCondition { currentNoted() == noted }
         if (!noted) {

@@ -1,8 +1,6 @@
 package api.bot.action
 
-import api.bot.Suspendable.delay
 import api.bot.Suspendable.naturalDecisionDelay
-import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
@@ -30,7 +28,7 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
     fun walk(target: Position, radius: Int = 0): SuspendableFuture {
         // Assuming each square takes 5 seconds to walk just to be safe.
         val timeout = bot.position.computeLongestDistance(target) * 5L;
-        val cond = SuspendableCondition{ bot.isWithinDistance(target, radius) }
+        val cond = SuspendableCondition { bot.isWithinDistance(target, radius) }
         bot.walking.walk(target)
         return cond.submit(timeout)
     }
@@ -42,10 +40,12 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
      * @param target The target to walk to.
      */
     fun walkUntilReached(target: Locatable): SuspendableFuture {
+        bot.resetInteractingWith()
+        bot.resetInteractionTask()
         bot.log("Walking until $target is reached.")
         val location = target.location()
         val timeout = bot.position.computeLongestDistance(location) * 5L;
-        val cond = SuspendableCondition { bot.position.isViewable(target.location()) }
+        val cond = SuspendableCondition { bot.walking.isEmpty && bot.position.isViewable(target.location()) }
         return if (bot.walking.walkUntilReached(target))
             cond.submit(timeout) else SuspendableFuture().signal(false)
     }
@@ -87,7 +87,7 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
 
         bot.log("Looking nearby.")
         val banks = handler.findViewable(GameObject::class) { Banking.bankingObjects.contains(it.id) }
-        if (banks.size > 0) {
+        if (banks.isNotEmpty()) {
             // Try to travel to nearby banks.
             bot.log("Found ${banks.size}.")
             for (it in banks) {
@@ -131,13 +131,21 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
             }
         }
         val dest = zone.anchor
+        if(bot.isWithinDistance(dest, 64)) {
+            // Just try and run there before using all strategies.
+            if(WalkingTravelStrategy.travel(bot, handler, dest)) {
+               return true
+            }
+        }
         for (strategy in zone.travel) {
             bot.log("Attempting strategy ${strategy.javaClass.simpleName}.")
             if (strategy.canTravel(bot, handler, dest)) {
-                return strategy.travel(bot, handler, dest)
+                if (strategy.travel(bot, handler, dest)) {
+                    return true
+                }
             }
         }
-        bot.log("No strategies found.")
+        bot.log("No travel strategies were successful.")
         return false
     }
 }
