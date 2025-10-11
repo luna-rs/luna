@@ -76,6 +76,8 @@ public class BotBrain {
      * @return The selected activity, never {@code null}.
      */
     private BotActivity selectActivity(Map<BotActivity, Double> activities) {
+        /* TODO Add more bias: which activities have we not done? context signals? (do we have everything needed?)
+            Some sort of cooldown maybe on each activity or weight decay? */
         double totalWeight = activities.values().stream().mapToDouble(Double::doubleValue).sum();
         if (totalWeight <= 0.0) {
             return RandomUtils.random(BotActivity.ALL);
