@@ -4,6 +4,7 @@ import io.luna.game.action.impl.ClimbAction
 import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
+import io.luna.game.model.mob.ModelAnimation.ModelAnimationBuilder
 import io.luna.game.model.mob.block.ExactMovement
 import world.player.skill.agility.Agility.course
 import world.player.skill.agility.AgilityCourse.GNOME_STRONGHOLD
@@ -33,6 +34,9 @@ course(GNOME_STRONGHOLD) {
     obstacle(id = 2314,
              type = GNOME_TREE_BRANCH_2,
              action = { ClimbAction(this, Position(2486, 3419), Direction.NORTH, "You climb down the tree branch.") })
+    obstacle(id = 2315,
+             type = GNOME_TREE_BRANCH_2,
+             action = { ClimbAction(this, Position(2487, 3420), Direction.NORTH, "You climb down the tree branch.") })
     obstacle(id = 2286,
              type = GNOME_OBSTACLE_NET_2,
              action = {
@@ -43,7 +47,6 @@ course(GNOME_STRONGHOLD) {
              action = {
                  object : ExactMovementAction(this, ExactMovement.to(this, Position(2484, 3437, 0)), 844) {
                      override fun onMoveStart(movement: ExactMovement) {
-                         face(Direction.NORTH_WEST)
                          sendMessage("You climb through the obstacle pipe.")
                      }
                  }
@@ -53,7 +56,6 @@ course(GNOME_STRONGHOLD) {
              action = {
                  object : ExactMovementAction(this, ExactMovement.to(this, Position(2487, 3437, 0)), 844) {
                      override fun onMoveStart(movement: ExactMovement) {
-                         face(Direction.NORTH_WEST)
                          sendMessage("You climb through the obstacle pipe.")
                      }
                  }
