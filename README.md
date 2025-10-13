@@ -8,7 +8,7 @@ Some of the sweetness within Luna
 - fully featured
 
 # Getting started
-Luna is currently unstable and therefore not ready to be used in a production environment. The first stable pre-release will be [v0.5](https://github.com/luna-rs/luna/milestone/3), which is planned for sometime in July, 2024.
+Luna is currently unstable and therefore not ready to be used in a production environment. The first stable release will be [v1.0](https://github.com/luna-rs/luna/milestone/3), which is planned for sometime in January, 2026.
 
 An official client can be found [here](https://github.com/luna-rs/luna-client), and the cache can be found in the releases section on that page. To learn more about how to get started with Luna please visit the [wiki](https://github.com/luna-rs/luna/wiki).
 
