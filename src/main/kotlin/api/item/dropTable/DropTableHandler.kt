@@ -83,7 +83,7 @@ object DropTableHandler {
      * @return A simple drop table instance.
      */
     fun createSimple(chance: Rational = Rational.ALWAYS, action: DropTableItemReceiver.() -> Unit): SimpleDropTable {
-        return create(action).table { SimpleDropTable(items, chance) }
+        return create(action).table { SimpleDropTable(table, chance) }
     }
 
     /**

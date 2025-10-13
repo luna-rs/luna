@@ -3,6 +3,7 @@ package world.player.skill.mining
 import api.attr.Attr
 import api.item.dropTable.DropTable
 import api.item.dropTable.DropTableHandler
+import api.item.dropTable.DropTableItem
 import api.item.dropTable.DropTableItemList
 import api.predef.*
 import api.predef.ext.*
@@ -41,18 +42,19 @@ object Mining {
                     val hasChargedGlory = CHARGED_GLORY_IDS.contains(mob.equipment.amulet?.id ?: -1)
                     if (hasChargedGlory) {
                         // We have a charged amulet of glory equipped.
-                        items.clear() // Reset table.
-                        nothing(1 of 117)
-                        "Uncut sapphire" x 1 chance (1 of 257)
-                        "Uncut emerald" x 1 chance (1 of 514)
-                        "Uncut ruby" x 1 chance (1 of 1027)
-                        "Uncut diamond" x 1 chance (1 of 4108)
+                        return DropTableHandler.createList {
+                            nothing(1 of 117)
+                            "Uncut sapphire" x 1 chance (1 of 257)
+                            "Uncut emerald" x 1 chance (1 of 514)
+                            "Uncut ruby" x 1 chance (1 of 1027)
+                            "Uncut diamond" x 1 chance (1 of 4108)
+                        }
                     }
                 }
-                return items
+                return table
             }
 
-            override fun computePossibleItems(): DropTableItemList = items
+            override fun computePossibleItems(): DropTableItemList = table
         }
     }
 }

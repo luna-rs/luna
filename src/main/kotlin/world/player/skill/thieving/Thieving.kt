@@ -30,19 +30,11 @@ object Thieving {
         "Rogue boots" x 1 chance (1 of 2500)
     }.table {
         object : DropTable() {
-            override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
-                if (mob is Player) { // Remove from drop list if we already own a set.
-                    val it = items.iterator()
-                    while (it.hasNext()) {
-                        if (mob.hasItem(it.next().id)) {
-                            it.remove()
-                        }
-                    }
-                }
-                return items
-            }
+            // Remove from drop list if we already own a set.
+            override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList =
+                if (mob is Player) table.filterNot { mob.hasItem(it.id) } else table
 
-            override fun computePossibleItems(): DropTableItemList = items
+            override fun computePossibleItems(): DropTableItemList = table
         }
     }
 
@@ -86,7 +78,9 @@ object Thieving {
             if (plr.equipment.contains(item.equipDef.index, item.id)) {
                 if (chance >= 0.75) {  // We have all 5 pieces, 100% chance.
                     chance = 1.0
-                } else if (chance >= 0.0) { // Increase chance by 15% per piece until 75%.
+                    break
+                }
+                if (chance >= 0.0) { // Increase chance by 15% per piece until 75%.
                     chance += 0.15
                 }
             }

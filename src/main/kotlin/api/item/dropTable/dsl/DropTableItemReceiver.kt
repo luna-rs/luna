@@ -1,7 +1,6 @@
 package api.item.dropTable.dsl
 
 import api.item.dropTable.DropTableItem
-import io.luna.game.model.def.ItemDefinition
 import io.luna.util.Rational
 
 /**
@@ -12,12 +11,23 @@ import io.luna.util.Rational
 class DropTableItemReceiver(val items: ArrayList<DropTableItem>, private val noted: Boolean) {
 
     /**
+     * Represents the receiver for modifying already constructed drop tables.
+     */
+    class ImmutableDropTableItemReceiver(private val items: ArrayList<DropTableItem>) {
+
+        /**
+         * A public immutable view of [items].
+         */
+        val table: List<DropTableItem> = items
+    }
+
+    /**
      * Returns an instance of this receiver that works with noted items.
      */
     fun noted(action: DropTableItemReceiver.() -> Unit) = action(DropTableItemReceiver(items, true))
 
     /**
-     * Adds an additional chance to receive nothing as a drop.
+     * Adds a chance to receive nothing as a drop.
      */
     infix fun nothing(chance: Rational) {
         items += DropTableItem(-1, 0, chance)

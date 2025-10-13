@@ -46,7 +46,7 @@ object GenericDropTables {
                 }
 
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
-                    var table: DropTableItemList = items
+                    var table: DropTableItemList = table
                     var wearingRow = false
                     if ((mob is Player && mob.equipment.contains(2572)) || rowBonus) {
                         wearingRow = true
@@ -62,7 +62,7 @@ object GenericDropTables {
                     return if (wearingRow) table.filterNot { it.isNothing() } else table
                 }
 
-                override fun computePossibleItems(): DropTableItemList = items +
+                override fun computePossibleItems(): DropTableItemList = table +
                         megaRareDropTable().computePossibleItems()
             }
         }
@@ -107,11 +107,11 @@ object GenericDropTables {
                     return when {
                         roll < 3 -> megaRareDropTable(ALWAYS, rowBonus).computeTable(mob, source) // 1 of 8 chance
                         roll < 7 -> gemDropTable(ALWAYS, rowBonus).computeTable(mob, source) // 1 of 6 chance
-                        else -> items
+                        else -> table
                     }
                 }
 
-                override fun computePossibleItems(): DropTableItemList = items +
+                override fun computePossibleItems(): DropTableItemList = table +
                         gemDropTable().computePossibleItems() + megaRareDropTable().computePossibleItems()
             }
         }
@@ -138,12 +138,12 @@ object GenericDropTables {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
                     // Filter empty slots if needed and build the table.
                     if ((mob is Player && mob.equipment.contains(2572)) || rowBonus) {
-                        return items.filterNot { it.isNothing() }
+                        return table.filterNot { it.isNothing() }
                     }
-                    return items
+                    return table
                 }
 
-                override fun computePossibleItems(): DropTableItemList = items
+                override fun computePossibleItems(): DropTableItemList = table
             }
         }
     }
@@ -285,7 +285,7 @@ object GenericDropTables {
             "Lantadyme seed" x 1 chance (1 of 47)
             "Dwarf weed seed" x 1 chance (1 of 79)
             "Torstol seed" x 1 chance (1 of 119)
-        }.table { SimpleDropTable(items, chance) }
+        }.table { SimpleDropTable(table, chance) }
     }
 
     /**
@@ -308,7 +308,7 @@ object GenericDropTables {
             "Magic seed" x 1 chance (1 of 22)
             "Palm tree seed" x 1 chance (1 of 25)
             "Spirit seed" x 1 chance (1 of 62)
-        }.table { SimpleDropTable(items, chance) }
+        }.table { SimpleDropTable(table, chance) }
     }
 
     /**
