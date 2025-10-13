@@ -68,13 +68,13 @@ object Magic {
             }
             val combinationRune = CombinationRune.ID_TO_RUNE[item.id]
             if (combinationRune != null) {
+                var countNeeded = 0
                 for (rune in combinationRune.represents) {
-                    // Match combination runes with base runes.
-                    val previousCount = runesNeeded.remove(rune, item.amount)
-                    if (previousCount > 0) {
-                        removeItems += Item(combinationRune.id, previousCount.coerceAtMost(item.amount))
-                        break
-                    }
+                    val count = runesNeeded.remove(rune, item.amount)
+                    countNeeded = countNeeded.coerceAtLeast(count.coerceAtMost(item.amount))
+                }
+                if (countNeeded > 0) {
+                    removeItems += Item(combinationRune.id, countNeeded)
                 }
             }
         }
@@ -173,7 +173,9 @@ object Magic {
     /**
      * An extension function that enables the underlying player to teleport somewhere.
      */
-    fun Player.teleport(destination: Position, style: TeleportStyle = TeleportStyle.REGULAR, onTeleport: () -> Unit = {}) {
+    fun Player.teleport(destination: Position,
+                        style: TeleportStyle = TeleportStyle.REGULAR,
+                        onTeleport: () -> Unit = {}) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style = style) {
             override fun onTeleport() {
                 onTeleport()
