@@ -17,9 +17,9 @@ val activatedSet = EnumSet.noneOf(Obelisk::class.java)
  * Get nearby players, and determine which ones we will teleport.
  */
 fun selectNearbyPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
-    val players = world.chunks.findViewable(obelisk.teleportTo, Player::class)
+    val players = world.chunks.findViewable(obelisk.anchor, Player::class)
     for (nearby in players) {
-        if (obelisk.teleportFrom.contains(nearby)) {
+        if (obelisk.bounds.contains(nearby)) {
             nearby.lock()
             nearby.graphic(Graphic(342))
             nearby.animation(Animation(1816))
@@ -36,8 +36,8 @@ fun teleportPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
     val iterator = teleporting.iterator()
     while (iterator.hasNext()) {
         val nearby = iterator.next()
-        if (obelisk.teleportFrom.contains(nearby)) {
-            nearby.move(nextObelisk.teleportTo)
+        if (obelisk.bounds.contains(nearby)) {
+            nearby.move(nextObelisk.anchor)
             nearby.sendMessage("You have been teleported by ancient magic.")
         } else {
             nearby.unlock()
