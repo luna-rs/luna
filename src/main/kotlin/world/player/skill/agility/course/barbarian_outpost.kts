@@ -4,6 +4,8 @@ import io.luna.game.action.impl.ClimbAction
 import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.ExactMovement
 import world.player.skill.agility.Agility.course
 import world.player.skill.agility.AgilityCourse.BARBARIAN_OUTPOST
@@ -13,11 +15,20 @@ import world.player.skill.agility.AgilityObstacle.*
  * The barbarian outpost agility course.
  */
 course(BARBARIAN_OUTPOST) {
-
-    // TODO wrong animation, timing weird, how to make the rope swing??? think it starts out as one animation then changes to another
+    // TODO Ropeswing animation clunky, rope doesn't move. Can't find any object animations or varbits in the cache?
     obstacle(id = 2282,
              type = BARBARIAN_ROPESWING,
-             action = { movementAction(this, Position(2551, 3549), 3067, "You swing across the pit.") })
+             action = {
+                 object : ExactMovementAction(this, ExactMovement.to(this, Position(2551, 3549)), 3067) {
+                     override fun onStart() {
+                         mob.animation(Animation(751, Animation.AnimationPriority.HIGH))
+                     }
+
+                     override fun onMoveStart() {
+                         sendMessage("You swing across the pit.")
+                     }
+                 }
+             })
 
     obstacle(id = 2294,
              type = BARBARIAN_LOG_BALANCE,
@@ -30,30 +41,11 @@ course(BARBARIAN_OUTPOST) {
     obstacle(id = 2302,
              type = BARBARIAN_BALANCING_LEDGE,
              action = {
-                 val firstRoute = ExactMovement.to(this, Position(2532, 3547, 1))
-                 val secondRoute = ExactMovement.to(this, Position(2532, 3546, 1))
-
-                 val movementAction = object : ExactMovementAction(this) {
-                     override fun onStart() {
-                         walkingAnimationId = 756
-                     }
-
-                     override fun onMoveStart(movement: ExactMovement) {
-                         if (movement == firstRoute) {
-                             sendMessage("You walk across the balancing ledge.")
-                         }
-                     }
-
-                     override fun onMoveEnd(movement: ExactMovement) {
-                         if (movement == firstRoute) {
-                             face(Direction.SOUTH)
-                         }
+                 object : ExactMovementAction(this, ExactMovement.to(this, Position(2532, 3547, 1)), 756) {
+                     override fun onMoveStart() {
+                         sendMessage("You walk across the balancing ledge.")
                      }
                  }
-
-                 movementAction.addRoute(firstRoute)
-                 movementAction.addRoute(secondRoute)
-                 movementAction
              })
 
     obstacle(id = 3205,
@@ -66,5 +58,29 @@ course(BARBARIAN_OUTPOST) {
 
     obstacle(id = 1948,
              type = BARBARIAN_CRUMBLING_WALL,
-             action = { movementAction(this, position.translate(2, 0), 840, "You climb over the wall.") })
+             action = { climbRocks(this) })
+}
+
+/**
+ * Returns an action that starts the climbing over the last 3 rocks.
+ */
+fun climbRocks(plr: Player, loop: Int = 0): ExactMovementAction {
+    val x = if (loop == 2) 2 else 3 // Last climb doesn't move us as far.
+    return object : ExactMovementAction(plr, ExactMovement.to(plr, plr.position.translate(x, 0)), 840) {
+        override fun onStart() {
+            if (plr.position.x >= 2543) { // Climbed the last rock wall.
+                interrupt()
+                plr.unlock()
+            }
+        }
+
+        override fun onMoveStart() {
+            plr.sendMessage("You climb over the wall.")
+        }
+
+        override fun onMoveEnd() {
+            // Submit the same action again, up to 3 times for each rock wall.
+            mob.submitAction(climbRocks(plr, loop + 1))
+        }
+    }
 }
