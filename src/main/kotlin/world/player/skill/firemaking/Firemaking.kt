@@ -46,6 +46,6 @@ object Firemaking {
             }
             ticks++
         }
-        return ticks
+        return ticks.coerceAtMost(MAXIMUM_LIGHT_DURATION)
     }
 }
