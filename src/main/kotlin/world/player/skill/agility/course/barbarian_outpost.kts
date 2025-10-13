@@ -26,6 +26,7 @@ course(BARBARIAN_OUTPOST) {
                      }
 
                      override fun onMoveStart() {
+                         it.animate()
                          sendMessage("You swing across the pit.")
                      }
                  }

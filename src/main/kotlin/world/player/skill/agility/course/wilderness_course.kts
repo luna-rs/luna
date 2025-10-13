@@ -44,6 +44,7 @@ course(WILDERNESS) {
                      }
 
                      override fun onMoveStart() {
+                         it.animate()
                          sendMessage("You swing across the pit.")
                      }
                  }
