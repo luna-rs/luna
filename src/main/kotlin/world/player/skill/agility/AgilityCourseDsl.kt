@@ -21,7 +21,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                  type: AgilityObstacle,
                  action: Player.(GameObject) -> Action<Player>) {
         object1(id) {
-            if (type.startIf(plr) && Agility.checkLevel(plr, courseType.level)) {
+            if (Agility.checkLevel(plr, courseType.level) && type.startIf(plr)) {
                 plr.submitAction(action(plr, gameObject))
                 plr.completedObstacles.put(courseType, type)
                 plr.agility.addExperience(type.xp)
@@ -41,7 +41,7 @@ class AgilityCourseDsl(val courseType: AgilityCourse) {
                        walkingAnimationId: Int,
                        message: String): ExactMovementAction {
         return object : ExactMovementAction(plr, ExactMovement.to(plr, destination), walkingAnimationId) {
-            override fun onMoveStart(movement: ExactMovement) {
+            override fun onMoveStart() {
                 plr.sendMessage(message)
             }
         }
