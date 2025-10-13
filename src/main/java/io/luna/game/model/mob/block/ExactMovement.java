@@ -87,9 +87,20 @@ public final class ExactMovement {
      */
     public static ExactMovement to(Player player, Position destination) {
         Position position = player.getPosition();
-        int durationTicks = position.computeLongestDistance(destination) + 1;
+        int durationTicks = position.computeLongestDistance(destination);
         durationTicks = (durationTicks * 600) / 30;
+        return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
+    }
 
+    /**
+     * Creates a new {@link ExactMovement} for movement across both the x and y axis.
+     *
+     * @param player The player.
+     * @param destination The destination.
+     * @return The exact movement instance.
+     */
+    public static ExactMovement to(Player player, Position destination, int durationTicks) {
+        Position position = player.getPosition();
         return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
     }
 

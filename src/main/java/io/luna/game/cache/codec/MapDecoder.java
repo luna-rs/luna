@@ -281,7 +281,7 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                         int otherData = data.readUnsignedByte();
 
                         // TODO Figure out why plane value is 1 for gnome stronghold log? Cheapfix for now.
-                        if((id == 2294 || id == 2295 || id == 2311) && plane == 1) {
+                        if((id == 2294 || id == 2295 || id == 2311 || id == 2297) && plane == 1) {
                             plane = 0;
                         }
                         ObjectType type = ObjectType.ALL.get(otherData >> 2);

@@ -1,14 +1,10 @@
 package io.luna.game.action.impl;
 
-import io.luna.game.model.Position;
 import io.luna.game.model.mob.ModelAnimation;
 import io.luna.game.model.mob.ModelAnimation.ModelAnimationBuilder;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.ExactMovement;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-
-import java.util.ArrayDeque;
-import java.util.Queue;
 
 /**
  * A {@link LockedAction} that forces a player to walk the specified routes; Uses the {@link ExactMovement} update
@@ -21,7 +17,7 @@ public class ExactMovementAction extends LockedAction {
     /**
      * The routes to walk.
      */
-    private final Queue<ExactMovement> routes = new ArrayDeque<>();
+    protected final ExactMovement route;
 
     /**
      * The previous model animations.
@@ -34,11 +30,6 @@ public class ExactMovementAction extends LockedAction {
     private int walkingAnimationId = -1;
 
     /**
-     * The current movement route.
-     */
-    private ExactMovement currentRoute;
-
-    /**
      * The execution counter of the current route.
      */
     private int currentExecutions;
@@ -46,47 +37,31 @@ public class ExactMovementAction extends LockedAction {
     /**
      * The duration of the current route.
      */
-    private int currentDuration;
+    private final int duration;
 
     /**
      * Creates a new {@link ExactMovementAction}.
      *
      * @param player The player.
+     * @param route The route route.
      */
-    public ExactMovementAction(Player player) {
+    public ExactMovementAction(Player player, ExactMovement route) {
         super(player);
+        this.route = route;
+        duration = Math.max(1, route.getStartPosition().computeLongestDistance(route.getEndPosition()));
+
     }
 
     /**
-     * Creates a new {@link ExactMovementAction} with a single movement route.
+     * Creates a new {@link ExactMovementAction} with an initial walking animation.
      *
      * @param player The player.
-     * @param movement The movement route.
-     */
-    public ExactMovementAction(Player player, ExactMovement movement) {
-        this(player);
-        addRoute(movement);
-    }
-
-    /**
-     * Creates a new {@link ExactMovementAction} with a single movement route and an initial walking animation.
-     *
-     * @param player The player.
-     * @param movement The movement route.
+     * @param route The movement route.
      * @param walkingAnimationId The walking animation.
      */
-    public ExactMovementAction(Player player, ExactMovement movement, int walkingAnimationId) {
-        this(player, movement);
+    public ExactMovementAction(Player player, ExactMovement route, int walkingAnimationId) {
+        this(player, route);
         this.walkingAnimationId = walkingAnimationId;
-    }
-
-    /**
-     * Adds a new movement route to the backing queue.
-     *
-     * @param movement The movement route.
-     */
-    public final void addRoute(ExactMovement movement) {
-        routes.add(movement);
     }
 
     @Override
@@ -98,35 +73,27 @@ public class ExactMovementAction extends LockedAction {
 
     @Override
     public final boolean run() {
-        if (currentRoute == null) {
-            if (routes.isEmpty()) {
-                return true;
+        try {
+            if (currentExecutions == 1) {
+                if (walkingAnimationId != -1) {
+                    previousAnimation = mob.getModelAnimation();
+                    mob.setModelAnimation(new ModelAnimationBuilder().setStandingId(walkingAnimationId).
+                            setWalkingId(walkingAnimationId).build());
+                    mob.getFlags().flag(UpdateFlag.APPEARANCE);
+                }
+            } else if (currentExecutions == 2) {
+                mob.exactMove(route);
+                mob.move(route.getEndPosition());
+                onMoveStart();
+            } else if (currentExecutions >= duration) {
+                mob.setModelAnimation(previousAnimation);
+                mob.getFlags().flag(UpdateFlag.APPEARANCE);
+                onMoveEnd();
+                interrupt();
             }
-            currentRoute = routes.poll();
-
-            Position start = currentRoute.getStartPosition();
-            Position end = currentRoute.getEndPosition();
-            currentDuration = start.computeLongestDistance(end) + 1;
+        } finally {
+            currentExecutions++;
         }
-
-        if (currentExecutions == 1) {
-            if (walkingAnimationId != -1) {
-                previousAnimation = mob.getModelAnimation();
-                mob.setModelAnimation(new ModelAnimationBuilder().setStandingId(walkingAnimationId).
-                        setWalkingId(walkingAnimationId).build());
-            }
-        } else if (currentExecutions == 2) {
-            mob.exactMove(currentRoute);
-            mob.move(currentRoute.getEndPosition());
-            onMoveStart(currentRoute);
-        } else if (currentExecutions >= currentDuration) {
-            ExactMovement oldRoute = currentRoute;
-            currentRoute = null;
-            currentExecutions = 0;
-            currentDuration = 0;
-            onMoveEnd(oldRoute);
-        }
-        currentExecutions++;
         return false;
     }
 
@@ -145,20 +112,16 @@ public class ExactMovementAction extends LockedAction {
     }
 
     /**
-     * Invoked when the player starts walking the movement route.
-     *
-     * @param movement The movement route being walked.
+     * Invoked when the player starts walking the route.
      */
-    public void onMoveStart(ExactMovement movement) {
+    public void onMoveStart() {
 
     }
 
     /**
-     * Invoked when the player arrives at the current movement route's destination.
-     *
-     * @param movement The movement route that was just walked.
+     * Invoked when the player arrives at the route's destination.
      */
-    public void onMoveEnd(ExactMovement movement) {
+    public void onMoveEnd() {
 
     }
 
@@ -167,16 +130,5 @@ public class ExactMovementAction extends LockedAction {
      */
     public void onStop() {
 
-    }
-
-    /**
-     * Sets the current walking animation.
-     */
-    public final void setWalkingAnimationId(int walkingAnimationId) {
-        this.walkingAnimationId = walkingAnimationId;
-    }
-
-    public int getWalkingAnimationId() {
-        return walkingAnimationId;
     }
 }

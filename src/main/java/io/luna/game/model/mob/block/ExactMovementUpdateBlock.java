@@ -30,7 +30,7 @@ public final class ExactMovementUpdateBlock extends UpdateBlock {
         msg.put(movement.getEndPosition().getLocalY(lastRegion));
         msg.putShort(movement.getDurationStart());
         msg.putShort(movement.getDurationEnd(), ValueType.ADD);
-        msg.put(movement.getDirection().getId());
+        msg.put( movement.getDirection().toForcedMovementId());
     }
 
     @Override

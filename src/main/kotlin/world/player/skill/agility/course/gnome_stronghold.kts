@@ -5,6 +5,8 @@ import io.luna.game.action.impl.ExactMovementAction
 import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.ModelAnimation.ModelAnimationBuilder
+import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.ExactMovement
 import world.player.skill.agility.Agility.course
 import world.player.skill.agility.AgilityCourse.GNOME_STRONGHOLD
@@ -46,8 +48,14 @@ course(GNOME_STRONGHOLD) {
              type = GNOME_OBSTACLE_PIPE,
              action = {
                  object : ExactMovementAction(this, ExactMovement.to(this, Position(2484, 3437, 0)), 844) {
-                     override fun onMoveStart(movement: ExactMovement) {
+                     override fun onStart() {
+                         mob.animation(Animation(749, AnimationPriority.HIGH))
+                     }
+                     override fun onMoveStart() {
                          sendMessage("You climb through the obstacle pipe.")
+                     }
+                     override fun onMoveEnd() {
+                         mob.animation(Animation(748, AnimationPriority.HIGH))
                      }
                  }
              })
@@ -55,7 +63,7 @@ course(GNOME_STRONGHOLD) {
              type = GNOME_OBSTACLE_PIPE,
              action = {
                  object : ExactMovementAction(this, ExactMovement.to(this, Position(2487, 3437, 0)), 844) {
-                     override fun onMoveStart(movement: ExactMovement) {
+                     override fun onMoveStart() {
                          sendMessage("You climb through the obstacle pipe.")
                      }
                  }

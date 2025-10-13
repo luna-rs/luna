@@ -69,7 +69,30 @@ public enum Direction {
         this.id = id;
         this.translate = translate;
     }
+    /**
+     * Gets the direction as an integer as used orientation in the client maps (WNES as opposed to NESW).
+     *
+     * @return The direction as an integer.
+     */
+    public int toForcedMovementId() {
+        switch(this) {
+            case NORTH:
+            case NORTH_EAST:
+            case NORTH_WEST:
+                return 0;
+            case EAST:
+                return 1;
+            case SOUTH:
+            case SOUTH_EAST:
+            case SOUTH_WEST:
+                return 2;
+            case WEST:
+                return 3;
+            default:
+                throw new IllegalStateException("Only a valid direction can have an orientation value");
+        }
 
+    }
     public Step getTranslation() {
         return translate;
     }

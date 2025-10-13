@@ -6,6 +6,7 @@ import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
+import io.luna.game.model.mob.block.Animation.AnimationPriority
 import io.luna.game.model.mob.block.ExactMovement
 import world.player.skill.agility.Agility.course
 import world.player.skill.agility.AgilityCourse.BARBARIAN_OUTPOST
@@ -21,7 +22,7 @@ course(BARBARIAN_OUTPOST) {
              action = {
                  object : ExactMovementAction(this, ExactMovement.to(this, Position(2551, 3549)), 3067) {
                      override fun onStart() {
-                         mob.animation(Animation(751, Animation.AnimationPriority.HIGH))
+                         mob.animation(Animation(751, AnimationPriority.HIGH))
                      }
 
                      override fun onMoveStart() {
@@ -29,15 +30,12 @@ course(BARBARIAN_OUTPOST) {
                      }
                  }
              })
-
     obstacle(id = 2294,
              type = BARBARIAN_LOG_BALANCE,
              action = { movementAction(this, Position(2541, 3546), 762, "You walk across the log balance.") })
-
     obstacle(id = 2284,
              type = BARBARIAN_OBSTACLE_NET,
              action = { ClimbAction(this, Position(2537, 3545, 1), Direction.WEST, "You climb the obstacle net.") })
-
     obstacle(id = 2302,
              type = BARBARIAN_BALANCING_LEDGE,
              action = {
@@ -47,15 +45,12 @@ course(BARBARIAN_OUTPOST) {
                      }
                  }
              })
-
     obstacle(id = 3205,
              type = BARBARIAN_LADDER,
              action = { ClimbAction(this, Position(2532, 3546), Direction.SOUTH, "You climb down the ladder.") })
-
     obstacle(id = 1747,
              type = BARBARIAN_LADDER,
              action = { ClimbAction(this, Position(2532, 3546, 1), Direction.SOUTH, "You climb up the ladder.") })
-
     obstacle(id = 1948,
              type = BARBARIAN_CRUMBLING_WALL,
              action = { climbRocks(this) })
