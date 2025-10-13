@@ -106,7 +106,6 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
         for (guard in nearbyGuards) {
             if (!world.collisionManager.raycast(guard.position, mob.position) && guard.isInViewCone(mob)) {
                 // The guard can see the player.
-                // TODO https://github.com/luna-rs/luna/issues/359
                 guard.forceChat("Hey! Get your hands off there!")
                 guard.follow(mob)
                 break
