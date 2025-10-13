@@ -25,8 +25,6 @@ object WildernessAreaController : PlayerLocationController() {
     var Player.wildernessLevel by Attr.int()
 
     override fun canEnter(plr: Player, newPos: Position): Boolean {
-        println(plr.position)
-        println(newPos)
         setWildernessLevel(plr, newPos)
         plr.interfaces.open(WalkableInterface(197))
         plr.interactions.show(INTERACTION_ATTACK)
