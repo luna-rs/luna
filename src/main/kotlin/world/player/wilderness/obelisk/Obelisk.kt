@@ -18,7 +18,7 @@ enum class Obelisk(val id: Int, val teleportTo: Position, val teleportFrom: Area
              objectPositions = listOf(Position(3225, 3665), Position(3229, 3665), Position(3225, 3669), Position(3229, 3669))),
     LEVEL_27(id = 14827,
              teleportTo = Position(3035, 3732),
-             teleportFrom = Area.of(3033, 3730, 3037, 3733),
+             teleportFrom = Area.of(3033, 3730, 3037, 3734),
              objectPositions = listOf(Position(3033, 3730), Position(3037, 3730), Position(3033, 3734), Position(3037, 3734))),
     LEVEL_35(id = 14828,
              teleportTo = Position(3106, 3794),
