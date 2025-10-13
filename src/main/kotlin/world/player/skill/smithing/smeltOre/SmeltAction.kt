@@ -33,8 +33,8 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         mob.animation(Animations.SMELT)
         if (currentAdd.isNotEmpty()) { // Only add XP if we're getting a bar (for Iron ore).
             val oreRequired = barType.oreRequired
-            val baseOre = name(oreRequired.first).toLowerCase()
-            val secondOre = if(oreRequired.second == null) null else name(oreRequired.second!!).toLowerCase()
+            val baseOre = name(oreRequired.first).lowercase()
+            val secondOre = if(oreRequired.second == null) null else name(oreRequired.second!!).lowercase()
             val oreMessage = if (secondOre == null) baseOre else "$baseOre and $secondOre together"
             mob.smithing.addExperience(xp)
             mob.sendMessage("You smelt the $oreMessage in the furnace.")

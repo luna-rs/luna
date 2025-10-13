@@ -71,7 +71,7 @@ object Slayer {
     private fun addXp(plr: Player, npcId: Int) {
         val addXp = NpcCombatDefinition.ALL.get(npcId)
             .map { it.hitpoints * XP_MULTIPLIER }
-            .orElseThrow { IllegalStateException("No combat definition for [npcId=$npcId].") }
+            .orElse(0.0)
         if (addXp > 0.0) {
             plr.slayer.addExperience(addXp)
         }

@@ -19,14 +19,6 @@ class CutLogActionItem(plr: Player,
                        val bow: Bow,
                        makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
 
-    companion object {
-
-        /**
-         * The log cutting animation.
-         */
-        val ANIMATION = Animation(6782)
-    }
-
     override fun add(): List<Item> {
         val unstrungItem =
             when (bow) {
