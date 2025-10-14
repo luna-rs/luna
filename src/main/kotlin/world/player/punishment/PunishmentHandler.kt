@@ -15,6 +15,8 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 /**
@@ -27,7 +29,7 @@ object PunishmentHandler {
     /**
      * The date-time formatter.
      */
-    val FORMATTER = SimpleDateFormat("MMM d, yyyy @ hh:mm aaa")
+    val FORMATTER = DateTimeFormatter.ofPattern("MMM d, yyyy @ hh:mm a").withZone(ZoneId.of("UTC"))
 
     /**
      * The path to the IP ban database.
