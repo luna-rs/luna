@@ -130,7 +130,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             return
         }
 
-        if (other.inventory.computeRemainingSize() < items.size()) {
+        if (!other.inventory.hasSpaceForAll(items)) {
             plr.sendMessage("${other.username} does not have enough inventory space for your items.")
             return
         }
