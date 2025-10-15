@@ -6,6 +6,7 @@ import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
 import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.SkillUpdateMessageWriter
+import io.luna.net.msg.out.UpdatePrivacyOptionMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
 import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 import world.player.punishment.PunishmentHandler
@@ -46,6 +47,7 @@ fun init(plr: Player) {
     plr.equipment.refreshPrimary(plr)
 
     plr.queue(UpdateRunEnergyMessageWriter())
+    plr.queue(UpdatePrivacyOptionMessageWriter())
 
     plr.skills.forEach { plr.queue(SkillUpdateMessageWriter(it.id)) }
 
