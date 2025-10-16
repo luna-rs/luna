@@ -52,16 +52,11 @@ object PunishmentHandler {
     private val logger = LogManager.getLogger()
 
     /**
-     * A concurrent set of IP banned users.
-     */
-    private val ipBans = Sets.newConcurrentHashSet<String>()
-
-    /**
      * IP bans [target], and returns the result of saving it to the database.
      */
     fun ipBan(target: Player): ListenableFuture<Void> {
         // Add target to in-memory database and disconnect them.
-        if (ipBans.add(target.currentIp)) {
+        if (server.channelFilter.addToBlacklist(target.currentIp)) {
             fileLogger.log(PUNISHMENT, "{} has been IP banned.", target.username)
             target.logout()
 
