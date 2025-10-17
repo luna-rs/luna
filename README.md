@@ -17,4 +17,3 @@ For more help, inquiries, or just to discuss the state of the project please joi
 # Thanks
 - blakeman8192 
 - Graham
-D
