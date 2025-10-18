@@ -536,7 +536,7 @@ public final class Shop {
     /**
      * Computes if {@code item} can be sold to this shop.
      *
-     * @param item The item.
+     * @param id The item ID.
      * @return {@code true} if this item can be sold.
      */
     public boolean computeCanSell(int id) {
@@ -564,7 +564,7 @@ public final class Shop {
      * @param shopItems The items to include in this shop.
      */
     public void init(List<IndexedItem> shopItems) {
-        container.init(shopItems);
+        container.load(shopItems);
     }
 
     /**
