@@ -51,3 +51,13 @@ cmd("mute", RIGHTS_MOD) {
     val username = getInputFrom(0)
     punish(this) { PunishmentHandler.mute(plr, username, it) }
 }
+
+cmd("unmute", RIGHTS_MOD) {
+    val username = getInputFrom(0)
+    PunishmentHandler.unmute(plr, username)
+}
+
+cmd("unban", RIGHTS_MOD) {
+    val username = getInputFrom(0)
+    PunishmentHandler.unmute(plr, username)
+}
