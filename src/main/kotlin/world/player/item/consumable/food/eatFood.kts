@@ -5,6 +5,7 @@ import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import world.player.Sounds
 import world.player.item.consume.food.Food
 import world.player.item.consume.food.Food.Companion.lastEat
 
@@ -31,6 +32,7 @@ fun eat(plr: Player, eatItem: Item, food: Food, index: Int) {
                 val name = food.formattedName
                 plr.sendMessage(food.consumeMessage(name))
                 plr.animation(eatAnimation)
+                plr.playSound(Sounds.EAT)
                 food.effect(plr)
 
                 // Increase HP.
