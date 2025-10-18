@@ -6,6 +6,7 @@ import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.Player
+import world.player.Sounds
 import world.player.item.consume.potion.Potion
 
 /**
@@ -57,6 +58,7 @@ fun drink(plr: Player, drinkItem: Item, potion: Potion, index: Int) {
                 // Invoke effects.
                 plr.animation(drinkAnimation)
                 potion.effect(plr)
+                plr.playSound(Sounds.DRINK)
             }
         }
     })
