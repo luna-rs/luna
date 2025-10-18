@@ -92,7 +92,12 @@ public final class LoggingSettings {
         /**
          * Log all private messages to a text file.
          */
-        PRIVATE_MESSAGE("PrivateMessageLogger");
+        PRIVATE_MESSAGE("PrivateMessageLogger"),
+
+        /**
+         * Log all punishments to a text file.
+         */
+        PUNISHMENT("PunishmentLogger");
 
         /**
          * The logger's name.
