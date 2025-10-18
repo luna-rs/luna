@@ -34,16 +34,13 @@ fun sendTradeRequest(msg: PlayerFourthClickEvent) {
                 // Send trade request, wait for response.
                 plr.sendMessage("Sending trade request...")
                 plr.interact(other)
-                other.sendMessage(plr.username + ":tradereq:")
+                other.sendMessage("${plr.username}:tradereq:")
+                plr.tradingWith = other.index
             }
-            plr.tradingWith = other.index
         }
     }
 }
 
-/**
- * Send request if the [Player] has the trade interaction option.
- */
 on(PlayerFourthClickEvent::class)
     .filter { plr.interactions.contains(INTERACTION_TRADE) }
     .then { sendTradeRequest(this) }
