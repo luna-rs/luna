@@ -29,7 +29,7 @@ import java.time.Instant
  */
 object TrainingSpeechInjector :
     BotSpeechContextInjector<TrainingSpeech>("training.json", TrainingSpeech::class.java) {
-
+//todo make injectors general purpose, apart of intelligence, processed before scripts after refkex combat logout
     /**
      * The distinct types of training-related speech contexts.
      */
