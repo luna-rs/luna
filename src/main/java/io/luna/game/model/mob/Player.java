@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
@@ -57,6 +59,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import world.player.Messages;
 import world.player.Sounds;
+import world.player.item.consumable.potion.PotionCountdownTimer;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -209,6 +212,11 @@ public class Player extends Mob {
      * The text cache.
      */
     private final Map<Integer, String> textCache = new HashMap<>();
+
+    /**
+     * The privacy options.
+     */
+    private PlayerPrivacy privacyOptions = new PlayerPrivacy();
 
     /**
      * The music tab data.
@@ -498,7 +506,7 @@ public class Player extends Mob {
      * Prepares the save data to be serialized by a {@link LogoutService} worker.
      */
     public PlayerData createSaveData() {
-        saveData = new PlayerData(getUsername()).save(this);
+        saveData = new PlayerData(getUsername()).save(this); // todo not thread safe, why is savedata even volatile...?
         return saveData;
     }
 
@@ -738,6 +746,16 @@ public class Player extends Mob {
     }
 
     /**
+     * Logs out this player using the logout packet. The proper way to logout the player.
+     */
+    public void forceLogout() {// todo implement, maybe with a boolean isForcedLogout
+        var channel = client.getChannel();
+        if (channel.isActive()) {
+            queue(new LogoutMessageWriter());
+        }
+    }
+
+    /**
      * Disconnects this player's channel. Use this if an error occurs with the player.
      */
     public void disconnect() {
@@ -849,6 +867,26 @@ public class Player extends Mob {
     }
 
     /**
+     * Saves all active {@link PotionCountdownTimer} types to a {@link JsonArray}.
+     */
+    public JsonArray savePotionsToJson() {
+        JsonArray array = new JsonArray();
+        for (var timer : actions.getAll(PotionCountdownTimer.class)) {
+            array.add(timer.saveJson());
+        }
+        return array;
+    }
+
+    /**
+     * Loads all previously active {@link PotionCountdownTimer} types into this player.
+     */
+    public void loadPotionsFromJson(JsonArray array) {
+        for (JsonElement element : array) {
+            PotionCountdownTimer.Companion.loadJson(this, element.getAsJsonObject());
+        }
+    }
+
+    /**
      * Returns a new builder that will be used to create dialogues.
      *
      * @return The dialogue builder.
@@ -952,6 +990,7 @@ public class Player extends Mob {
      * @return {@code true} if the player is muted.
      */
     public boolean isMuted() {
+        System.out.println(unmuteInstant);
         return unmuteInstant != null && !Instant.now().isAfter(unmuteInstant);
     }
 
@@ -1506,7 +1545,7 @@ public class Player extends Mob {
      * @return The total amount of time played.
      */
     public Duration getTimePlayed() {
-        if(timePlayed == null) {
+        if (timePlayed == null) {
             timePlayed = Duration.ZERO;
         }
         // Update on the fly.
@@ -1522,5 +1561,22 @@ public class Player extends Mob {
      */
     public void setTimePlayed(Duration timePlayed) {
         this.timePlayed = timePlayed;
+    }
+
+    /**
+     * Sets the new privacy options.
+     */
+    public void setPrivacyOptions(PlayerPrivacy privacyOptions) {
+        this.privacyOptions = privacyOptions;
+    }
+
+    /**
+     * @return The privacy options.
+     */
+    public PlayerPrivacy getPrivacyOptions() {
+        if (privacyOptions == null) {
+            privacyOptions = new PlayerPrivacy();
+        }
+        return privacyOptions;
     }
 }
