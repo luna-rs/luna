@@ -69,7 +69,7 @@ public final class WidgetDefinition implements Definition {
          * Holds item models similar to {@link #ITEMS_WITH_ACTIONS}. Seems to only be used by the trading and
          * dueling interfaces.
          */
-        UNKNOWN(7),
+        UNKNOWN(7), // todo item list? find out more from interface editor
 
         /**
          * Holds a string of text on a fullscreen interface. Can be modified with {@link WidgetTextMessageWriter}.
