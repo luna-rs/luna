@@ -13,6 +13,8 @@ enum class Sounds(val id: Int) {
     LOW_ALCHEMY(224),
     BONES_TO_ITEMS(227),
     HIGH_ALCHEMY(223),
+    EAT(317),
+    DRINK(334),
     SMELTING(352),
     PICKUP_ITEM(356),
     COOK_FOOD(357),
