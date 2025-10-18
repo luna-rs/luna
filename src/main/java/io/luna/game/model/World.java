@@ -76,7 +76,7 @@ public final class World {
                     player.getClient().flush();
                 } catch (Exception e) {
                     logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
-                    player.logout();
+                    player.forceLogout();
                 } finally {
                     synchronizer.arriveAndDeregister();
                 }
@@ -137,7 +137,7 @@ public final class World {
     /**
      * The persistence service.
      */
-    private final PersistenceService persistenceService = new PersistenceService(this);
+    private final PersistenceService persistenceService;
 
     /**
      * The serializer manager.
@@ -213,6 +213,7 @@ public final class World {
         botRepository = new BotRepository(this);
         botCredentials = new BotCredentialsRepository(context);
         botService = new BotScheduleService(this);
+        persistenceService = new PersistenceService(this);
 
         // Initialize synchronization thread pool.
         ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
@@ -228,7 +229,6 @@ public final class World {
         collisionManager.build(false);
         schedule(new ControllerProcessTask(this));
         dynamicMapSpacePool.buildEmptySpacePool();
-        botCredentials.load();
         botManager.load();
     }
 
@@ -328,7 +328,7 @@ public final class World {
     private void synchronize() {
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
-            if (player.getClient().isPendingLogout()) {
+            if (player.getClient().isPendingLogout() || player.isBot()) {
                 // No point of sending updates to a client that can't see entities.
                 synchronizer.arriveAndDeregister();
                 continue;
@@ -386,7 +386,7 @@ public final class World {
      * @return The player, or no player.
      */
     public Optional<Player> getPlayer(String username) {
-        return playerList.findFirst(player -> player.getUsername().equalsIgnoreCase(username));
+        return Optional.ofNullable(playerMap.get(username));
     }
 
     /**
