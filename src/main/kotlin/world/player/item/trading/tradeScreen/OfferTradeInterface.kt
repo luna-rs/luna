@@ -76,6 +76,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
 
             plr.inventory.resetSecondaryRefresh()
             plr.inventory.addAll(items)
+            plr.sendMessage("The trade has been declined.")
 
             other.interfaces.close()
         }
