@@ -46,6 +46,10 @@ enum class TeleportJewellery(val items: ImmutableList<Int>,
          * An immutable copy of all this enum's values.
          */
         val VALUES = ImmutableList.copyOf(values())
+
+        /**
+         * An immutable list of all amulets of glory.
+         */
         val CHARGED_AMULETS_OF_GLORY = listOf(Item(1712), Item(1710), Item(1708), Item(1706))
     }
 }
