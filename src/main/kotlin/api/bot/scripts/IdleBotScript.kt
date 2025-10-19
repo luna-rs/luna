@@ -8,6 +8,7 @@ import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.scripts.IdleBotScript.InputData
 import api.bot.zone.Zone
+import api.controller.inWilderness
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
@@ -17,10 +18,8 @@ import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.util.RandomUtils
-import world.player.combat.Combat.inWilderness
 import world.player.settings.emote.Emote
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * A [BotScript] that makes a [Bot] idle for a random period based on [duration]. An idle bot will stand around,
@@ -171,11 +170,10 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
     private suspend fun doTeleport() {
         // Teleport back to ::home and wait for next state.
-        bot.log("Teleporting home.")
         if (Zone.HOME.inside(bot)) {
-            delay(5.seconds)
             return
         }
+        bot.log("Teleporting home.")
         output.sendCommand("home")
         bot.naturalDecisionDelay()
         randomActions()
