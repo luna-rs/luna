@@ -5,8 +5,9 @@ import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.ItemDefinition;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -17,6 +18,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public class Item {
+
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * A set of search restricted items that don't show up in {@link #byName(String)} queries.
@@ -31,11 +34,16 @@ public class Item {
      * @return The item.
      */
     public static Item byName(String name, int amount) {
+        // TODO Map every item definition by name to make this quicker, and factor in search restricted items.
+        // TODO use tonote for notes
         boolean noted = name.endsWith("(noted)");
         return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&
                         it.getName().equals(name) && it.isNoted() == noted).
                 map(it -> new Item(it.getId(), amount)).
-                orElseThrow(() -> new NoSuchElementException("Item (" + name + ") was not valid or found."));
+                orElseGet(() -> {
+                    logger.warn("Item ({}) was not valid or found.", name);
+                    return null;
+                });
     }
 
     /**
