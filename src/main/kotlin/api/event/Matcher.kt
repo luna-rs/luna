@@ -27,7 +27,7 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
+abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
 
     companion object {
 
@@ -40,7 +40,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
          * Retrieves a [Matcher] from the backing map that is matching on events with [E].
          */
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified E : Event, K> get(): Matcher<E, K> {
+        inline fun <reified E : Event, K : Any> get(): Matcher<E, K> {
             return get(E::class)
         }
 
@@ -48,7 +48,7 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
          * Retrieves a [Matcher] from the backing map that is matching on events with [eventType].
          */
         @Suppress("UNCHECKED_CAST")
-        fun <E : Event, K> get(eventType: KClass<E>): Matcher<E, K> {
+        fun <E : Event, K : Any> get(eventType: KClass<E>): Matcher<E, K> {
             val matcher = ALL[eventType]
             return when (matcher) {
                 null -> throw NoSuchElementException("Matcher for event type $eventType was not found.")
@@ -88,29 +88,13 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
 
             // Add all the matcher's listeners.
             ALL.values.forEach { it.addListener() }
-
-            // Small optimization, put all keys with only one listener into a different map.
-            on(ServerLaunchEvent::class) {
-                var singularCount = 0
-                var multiCount = 0
-                for (matcher in ALL.values) {
-                    val result = matcher.optimize()
-                    singularCount += result.first
-                    multiCount += result.second
-                }
-            }
         }
     }
 
     /**
      * The map of event keys to action function instances. Will be used to match arguments.
      */
-    private val actions = HashMap<K, EventMatcherListener<E>>(128)
-
-    /**
-     * The map of event keys to multiple action function instances. Will be used to match arguments.
-     */
-    private val multiActions = ArrayListMultimap.create<K, EventMatcherListener<E>>(128, 16)
+    private val actions = ArrayListMultimap.create<K, EventMatcherListener<E>>()
 
     /**
      * Computes a lookup key from the event instance.
@@ -121,20 +105,15 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * A set containing all keys in this matcher.
      */
     fun keys(): Set<K> {
-        val singular = actions.keys
-        val multi = multiActions.asMap().keys
-        val keys = HashSet<K>(singular.size + multi.size)
-        keys.addAll(singular)
-        keys.addAll(multi)
-        return keys
+        return HashSet(actions.keys())
     }
 
     /**
-     * Adds or replaces an optimized listener key -> value pair.
+     * Adds an optimized listener key -> value pair.
      */
     operator fun set(key: K, value: E.() -> Unit) {
         val matcherListener = EventMatcherListener(value)
-        multiActions.put(key, matcherListener)
+        actions.put(key, matcherListener)
         scriptMatchers += matcherListener
     }
 
@@ -156,38 +135,12 @@ abstract class Matcher<E : Event, K>(private val eventType: KClass<E>) {
      * Matches [msg] to an event listener within this matcher.
      */
     private fun match(msg: E): Boolean {
-        val actionKey = key(msg)
-
-        // Try a singular action.
-        val action = actions[actionKey]
-        if (action != null) {
-            action.apply(msg)
-            return true
-        } else {
-            // If not found, try multiple actions.
-            val multiAction = multiActions[actionKey]
-            if (multiAction.size > 0) {
-                multiAction.forEach { it.apply(msg) }
-                return true
-            }
+        val listeners = actions[key(msg)]
+        if (listeners.isEmpty()) {
             return false
         }
-    }
-
-    /**
-     * Optimizes this matcher by putting all keys with only one listener into a different map.
-     */
-    private fun optimize(): Pair<Int, Int> {
-        val iterator = multiActions.asMap().entries.iterator()
-        while (iterator.hasNext()) {
-            val next = iterator.next()
-            val actionList = next.value
-            if (actionList.size == 1) {
-                actions[next.key] = actionList.first()
-                iterator.remove()
-            }
-        }
-        return actions.size to multiActions.size()
+        for (it in listeners) { it.apply(msg) }
+        return true
     }
 
     /**
