@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 
 /**
  * A model that adds an event listener from the [InterceptBy.filter] function. If the event satisfies
- * [condition], an action will be ran and the event will be terminated.
+ * [condition], the action will run.
  *
  * @author lare96
  */

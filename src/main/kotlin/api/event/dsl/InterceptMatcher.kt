@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-class InterceptMatcher<E : Event, K>(private val eventType: KClass<E>, private val args: Iterable<K>) {
+class InterceptMatcher<E : Event, K : Any>(private val eventType: KClass<E>, private val args: Iterable<K>) {
 
     /**
      * If a matcher exists for [eventType], map [args] to [action].
