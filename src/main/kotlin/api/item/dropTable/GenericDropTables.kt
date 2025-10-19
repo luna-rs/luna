@@ -19,6 +19,72 @@ import io.luna.util.Rational
  */
 object GenericDropTables {
 
+    /** Tier 1 general seed drops: basic allotment seeds. */
+    val generalSeedDropList1 = DropTableHandler.createList {
+        "Potato seed" x 1..4 chance (1 of 2)
+        "Onion seed" x 1..3 chance (1 of 4)
+        "Cabbage seed" x 1..3 chance (1 of 8)
+        "Tomato seed" x 1..3 chance (1 of 16)
+        "Sweetcorn seed" x 1..2 chance (1 of 32)
+        "Strawberry seed" x 1 chance (1 of 64)
+        "Watermelon seed" x 1 chance (1 of 128)
+    }
+
+    /** Tier 2 general seed drops: early hops and niche crops. */
+    val generalSeedDropList2 = DropTableHandler.createList {
+        "Barley seed" x 1..4 chance (1 of 4)
+        "Hammerstone seed" x 1..3 chance (1 of 4)
+        "Asgarnian seed" x 1..3 chance (1 of 6)
+        "Jute seed" x 1..2 chance (1 of 6)
+        "Yanillian seed" x 1..2 chance (1 of 9)
+        "Krandorian seed" x 1..2 chance (1 of 17)
+        "Wildblood seed" x 1 chance (1 of 34)
+    }
+
+    /** Tier 3 general seed drops: low-level flower and herb seeds. */
+    val generalSeedDropList3 = DropTableHandler.createList {
+        "Marigold seed" x 1 chance (1 of 2)
+        "Nasturtium seed" x 1 chance (1 of 4)
+        "Rosemary seed" x 1 chance (1 of 6)
+        "Woad seed" x 1 chance (1 of 8)
+        "Limpwurt seed" x 1 chance (1 of 10)
+    }
+
+    /** Tier 4 general seed drops: common berry and bush seeds. */
+    val generalSeedDropList4 = DropTableHandler.createList {
+        "Redberry seed" x 1 chance (1 of 2)
+        "Cadavaberry seed" x 1 chance (1 of 3)
+        "Dwellberry seed" x 1 chance (1 of 5)
+        "Jangerberry seed" x 1 chance (1 of 12)
+        "Whiteberry seed" x 1 chance (1 of 34)
+        "Poison ivy seed" x 1 chance (1 of 90)
+    }
+
+    /** Tier 5 general seed drops: herb seeds from Guam to Torstol. */
+    val generalSeedDropList5 = DropTableHandler.createList {
+        "Guam seed" x 1 chance (1 of 3)
+        "Marrentill seed" x 1 chance (1 of 4)
+        "Tarromin seed" x 1 chance (1 of 6)
+        "Harralander seed" x 1 chance (1 of 9)
+        "Ranarr seed" x 1 chance (1 of 14)
+        "Toadflax seed" x 1 chance (1 of 21)
+        "Irit seed" x 1 chance (1 of 31)
+        "Avantoe seed" x 1 chance (1 of 45)
+        "Kwuarm seed" x 1 chance (1 of 66)
+        "Snapdragon seed" x 1 chance (1 of 100)
+        "Cadantine seed" x 1 chance (1 of 142)
+        "Lantadyme seed" x 1 chance (1 of 200)
+        "Dwarf weed seed" x 1 chance (1 of 333)
+        "Torstol seed" x 1 chance (1 of 500)
+    }
+
+    /** Tier 6 general seed drops: tree, cactus, and mushroom spores. */
+    val generalSeedDropList6 = DropTableHandler.createList {
+        "Mushroom spore" x 1 chance (1 of 2)
+        "Belladonna seed" x 1 chance (1 of 3)
+        "Cactus seed" x 1 chance (1 of 5)
+    }
+
     /**
      * The gem drop table. May optionally roll on [megaRareDropTable].
      * If [rowBonus] is enabled or the player wears a Ring of Wealth (ID 2572), empty slots are removed and
@@ -40,11 +106,7 @@ object GenericDropTables {
             985 x 1 chance (1 of 128) // Crystal key half.
             987 x 1 chance (1 of 128) // Crystal key half.
         }.table {
-            object : DropTable() {
-                override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return roll(chance)
-                }
-
+            object : DropTable(chance) {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
                     var table: DropTableItemList = table
                     var wearingRow = false
@@ -97,11 +159,7 @@ object GenericDropTables {
                 "Silver ore" x 100..200 chance (1 of 64)
             }
         }.table {
-            object : DropTable() {
-                override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return roll(chance)
-                }
-
+            object : DropTable(chance) {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
                     val roll = rand().nextInt(24)
                     return when {
@@ -130,11 +188,7 @@ object GenericDropTables {
             "Shield left half" x 1 chance (1 of 32)
             "Dragon spear" x 1 chance (1 of 42)
         }.table {
-            object : DropTable() {
-                override fun canRollOnTable(mob: Mob?, source: Entity?): Boolean {
-                    return roll(chance)
-                }
-
+            object : DropTable(chance) {
                 override fun computeTable(mob: Mob?, source: Entity?): DropTableItemList {
                     // Filter empty slots if needed and build the table.
                     if ((mob is Player && mob.equipment.contains(2572)) || rowBonus) {
@@ -172,97 +226,19 @@ object GenericDropTables {
                             rand().nextInt(1000)
                         }
                     return when {
-                        roll >= 995 -> generalSeedDropList6()
-                        roll in 947..995 -> generalSeedDropList5()
-                        roll in 850..947 -> generalSeedDropList4()
-                        roll in 728..850 -> generalSeedDropList3()
-                        roll in 485..728 -> generalSeedDropList2()
-                        else -> generalSeedDropList1()
+                        roll >= 995 -> generalSeedDropList6
+                        roll in 947..995 -> generalSeedDropList5
+                        roll in 850..947 -> generalSeedDropList4
+                        roll in 728..850 -> generalSeedDropList3
+                        roll in 485..728 -> generalSeedDropList2
+                        else -> generalSeedDropList1
                     }
                 }
 
-                override fun computePossibleItems(): DropTableItemList = generalSeedDropList1() +
-                        generalSeedDropList2() + generalSeedDropList3() + generalSeedDropList4() +
-                        generalSeedDropList5() + generalSeedDropList6()
+                override fun computePossibleItems(): DropTableItemList = generalSeedDropList1 +
+                        generalSeedDropList2 + generalSeedDropList3 + generalSeedDropList4 +
+                        generalSeedDropList5+ generalSeedDropList6
             }
-        }
-    }
-
-    /** Tier 1 general seed drops: basic allotment seeds. */
-    fun generalSeedDropList1(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Potato seed" x 1..4 chance (1 of 2)
-            "Onion seed" x 1..3 chance (1 of 4)
-            "Cabbage seed" x 1..3 chance (1 of 8)
-            "Tomato seed" x 1..3 chance (1 of 16)
-            "Sweetcorn seed" x 1..2 chance (1 of 32)
-            "Strawberry seed" x 1 chance (1 of 64)
-            "Watermelon seed" x 1 chance (1 of 128)
-        }
-    }
-
-    /** Tier 2 general seed drops: early hops and niche crops. */
-    fun generalSeedDropList2(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Barley seed" x 1..4 chance (1 of 4)
-            "Hammerstone seed" x 1..3 chance (1 of 4)
-            "Asgarnian seed" x 1..3 chance (1 of 6)
-            "Jute seed" x 1..2 chance (1 of 6)
-            "Yanillian seed" x 1..2 chance (1 of 9)
-            "Krandorian seed" x 1..2 chance (1 of 17)
-            "Wildblood seed" x 1 chance (1 of 34)
-        }
-    }
-
-    /** Tier 3 general seed drops: low-level flower and herb seeds. */
-    fun generalSeedDropList3(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Marigold seed" x 1 chance (1 of 2)
-            "Nasturtium seed" x 1 chance (1 of 4)
-            "Rosemary seed" x 1 chance (1 of 6)
-            "Woad seed" x 1 chance (1 of 8)
-            "Limpwurt seed" x 1 chance (1 of 10)
-        }
-    }
-
-    /** Tier 4 general seed drops: common berry and bush seeds. */
-    fun generalSeedDropList4(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Redberry seed" x 1 chance (1 of 2)
-            "Cadavaberry seed" x 1 chance (1 of 3)
-            "Dwellberry seed" x 1 chance (1 of 5)
-            "Jangerberry seed" x 1 chance (1 of 12)
-            "Whiteberry seed" x 1 chance (1 of 34)
-            "Poison ivy seed" x 1 chance (1 of 90)
-        }
-    }
-
-    /** Tier 5 general seed drops: herb seeds from Guam to Torstol. */
-    fun generalSeedDropList5(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Guam seed" x 1 chance (1 of 3)
-            "Marrentill seed" x 1 chance (1 of 4)
-            "Tarromin seed" x 1 chance (1 of 6)
-            "Harralander seed" x 1 chance (1 of 9)
-            "Ranarr seed" x 1 chance (1 of 14)
-            "Toadflax seed" x 1 chance (1 of 21)
-            "Irit seed" x 1 chance (1 of 31)
-            "Avantoe seed" x 1 chance (1 of 45)
-            "Kwuarm seed" x 1 chance (1 of 66)
-            "Snapdragon seed" x 1 chance (1 of 100)
-            "Cadantine seed" x 1 chance (1 of 142)
-            "Lantadyme seed" x 1 chance (1 of 200)
-            "Dwarf weed seed" x 1 chance (1 of 333)
-            "Torstol seed" x 1 chance (1 of 500)
-        }
-    }
-
-    /** Tier 6 general seed drops: tree, cactus, and mushroom spores. */
-    fun generalSeedDropList6(): DropTableItemList {
-        return DropTableHandler.createList {
-            "Mushroom spore" x 1 chance (1 of 2)
-            "Belladonna seed" x 1 chance (1 of 3)
-            "Cactus seed" x 1 chance (1 of 5)
         }
     }
 
@@ -272,7 +248,7 @@ object GenericDropTables {
      * @param chance Chance to roll on this table.
      */
     fun rareSeedDropTable(chance: Rational = ALWAYS): SimpleDropTable {
-        return DropTableHandler.create {
+        return DropTableHandler.createSimple(chance) {
             "Toadflax seed" x 1 chance (1 of 5)
             "Irit seed" x 1 chance (1 of 7)
             "Belladonna seed" x 1 chance (1 of 7)
@@ -285,7 +261,7 @@ object GenericDropTables {
             "Lantadyme seed" x 1 chance (1 of 47)
             "Dwarf weed seed" x 1 chance (1 of 79)
             "Torstol seed" x 1 chance (1 of 119)
-        }.table { SimpleDropTable(table, chance) }
+        }
     }
 
     /**
@@ -294,7 +270,7 @@ object GenericDropTables {
      * @param chance Chance to roll on this table.
      */
     fun treeHerbSeedDropTable(chance: Rational): SimpleDropTable {
-        return DropTableHandler.create {
+        return DropTableHandler.createSimple(chance) {
             "Ranarr seed" x 1 chance (1 of 8)
             "Snapdragon seed" x 1 chance (1 of 8)
             "Torstol seed" x 1 chance (1 of 11)
@@ -308,7 +284,7 @@ object GenericDropTables {
             "Magic seed" x 1 chance (1 of 22)
             "Palm tree seed" x 1 chance (1 of 25)
             "Spirit seed" x 1 chance (1 of 62)
-        }.table { SimpleDropTable(table, chance) }
+        }
     }
 
     /**
@@ -318,10 +294,10 @@ object GenericDropTables {
      */
     fun uncommonSeedDropTable(chance: Rational = ALWAYS): DropTable {
         return DropTableHandler.createSimple(chance) {
-            items += generalSeedDropList3()
-            items += generalSeedDropList4()
-            items += generalSeedDropList5()
-            items += generalSeedDropList6()
+            items += generalSeedDropList3
+            items += generalSeedDropList4
+            items += generalSeedDropList5
+            items += generalSeedDropList6
             items += rareSeedDropTable().computePossibleItems()
         }
     }
