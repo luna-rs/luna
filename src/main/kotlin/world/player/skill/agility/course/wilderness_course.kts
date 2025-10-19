@@ -16,7 +16,7 @@ import world.player.skill.agility.AgilityObstacle.*
  * The wilderness agility course.
  */
 course(WILDERNESS) {
-    // TODO Course needs to be accessible (doors not done), same ropeswing issue as barbarian outpost.
+    // TODO Same ropeswing issue as barbarian outpost.
     obstacle(id = 2288,
              type = WILDERNESS_OBSTACLE_PIPE,
              action = {

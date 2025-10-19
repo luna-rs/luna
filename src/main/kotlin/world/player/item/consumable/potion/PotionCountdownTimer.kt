@@ -44,10 +44,11 @@ class PotionCountdownTimer(val plr: Player, var potion: Potion, val effect: Poti
                 timerAction.remaining = start
             }
             if (timerAction.start < start) {
+                // Only change potion if total duration is greater.
                 timerAction.start = start
+                timerAction.potion = potion
             }
             timerAction.notified = false
-            timerAction.potion = potion
             interrupt()
         }
     }
@@ -55,7 +56,7 @@ class PotionCountdownTimer(val plr: Player, var potion: Potion, val effect: Poti
     override fun onCountdown() {
         if (!notified) {
             val percent = (remaining.toDouble() / start.toDouble())
-            if (percent <= 10.0) {
+            if (percent <= 0.10) {
                 plr.sendMessage("Your ${potion.formattedName} is about to expire.")
                 notified = true
             }
