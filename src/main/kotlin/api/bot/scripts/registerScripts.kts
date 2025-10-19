@@ -5,7 +5,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import world.player.skill.firemaking.Log
 
 /**
- * Register all speech injectors.
+ * Register all scripts.
  */
 on(ServerLaunchEvent::class) {
     val scriptManager = world.botManager.scriptManager

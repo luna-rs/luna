@@ -7,12 +7,13 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.naturalDelay
 import api.bot.Suspendable.waitFor
 import api.bot.scripts.IdleBotScript.InputData
-import api.bot.zone.Zone
 import api.controller.inWilderness
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
+import io.luna.Luna
+import io.luna.game.model.Position
 import io.luna.game.model.mob.MobFollowAction
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.bot.Bot
@@ -79,23 +80,12 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         timer.start()
         while (timer.elapsed().toMinutes() < data.durationMinutes) {
             try {
-                if (bot.inWilderness()) {
-                    bot.log("Inside wilderness, moving to safety.")
-                    handler.movement.leaveWilderness()
-                    continue
-                }
                 handler.widgets.clickRunning(false)
                 bot.naturalDelay()
-                if (bot.inventory.isFull) {
-                    bot.log("Banking items.")
-                    handler.travelToBankDepositAll()
-                    continue
-                }
                 nextState()
                 when (data.state) {
-                    State.STANDING -> doStanding()
+                    State.STANDING -> randomActions()
                     State.FOLLOW -> doFollow()
-                    State.WALKING -> doWalking()
                     State.TELEPORT -> doTeleport()
                     else -> {} // Do nothing.
 
@@ -119,23 +109,19 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         return if (remaining < 1) InputData(1, data.state) else InputData(remaining, data.state)
     }
 
+    /**
+     * Sets the next state.
+     */
     private fun nextState() {
         if (data.state == null) {
             data.state = RandomUtils.random(State.ALL)
         }
     }
 
-    private suspend fun doStanding() {
-        if (maybe(COMMON) {
-                // Make the bot more likely to speak soon.
-                bot.speechStack.pushFiller()
-            })
-            return
-        randomActions()
-    }
-
+    /**
+     * Makes the bot follow a random nearby player or bot.
+     */
     private suspend fun doFollow() {
-        // if another idle bot in social mode, follow each other (dance)
         bot.log("Looking for someone to follow.")
         var following = false
         for (player in bot.localPlayers) {
@@ -150,7 +136,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             }
         }
         if (following) {
-            maybe(COMMON) { bot.speechStack.pushFiller() }
+            maybe(COMMON) { bot.output.chat("Can I follow you around?") }
 
             // Follow them for a little or until you enter the wilderness.
             val followTime = rand(5, 120)
@@ -158,20 +144,15 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
 
             bot.log("No longer following anyone.")
         }
-        // Yes, two delays. He's thinking..
-        bot.naturalDecisionDelay()
         bot.naturalDecisionDelay()
     }
 
-    private suspend fun doWalking() {
-        // Doesn't really matter if we reach or not.
-        val zone = RandomUtils.random(Zone.SAFE_ZONES)
-        handler.movement.travelTo(zone)
-    }
-
+    /**
+     * Makes the bot teleport home and do [randomActions].
+     */
     private suspend fun doTeleport() {
         // Teleport back to ::home and wait for next state.
-        if (Zone.HOME.inside(bot)) {
+        if (bot.position.isWithinDistance(Luna.settings().game().startingPosition(), Position.VIEWING_DISTANCE)) {
             return
         }
         bot.log("Teleporting home.")
@@ -180,18 +161,15 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         randomActions()
     }
 
-
     /**
      * Make the bot perform one of many random idle actions.
      */
     private suspend fun randomActions() {
 
-        // Maybe idle at bank.
+        // Maybe idle.
         if (maybe(UNCOMMON) {
-                if (handler.travelToBankOpen()) {
-                    bot.log("I'm idling at the bank.")
-                    delay(1.minutes, 10.minutes)
-                }
+                bot.log("I'm idling.")
+                delay(1.minutes, 10.minutes)
             })
             return
 
@@ -204,9 +182,9 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             })
             return
 
-        // Otherwise, maybe stand around and say something at ::home.
+        // Otherwise, maybe stand around and say something.
         if (maybe(VERY_UNCOMMON) {
-                bot.speechStack.pushFiller()
+                bot.output.chat("I'm bored!")
                 bot.naturalDecisionDelay()
             })
             return

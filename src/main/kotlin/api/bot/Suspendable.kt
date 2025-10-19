@@ -57,54 +57,25 @@ object Suspendable {
     }
 
     /**
-     * Suspends the current coroutine for a short, natural reaction delay based on the bot’s
-     * dexterity and intelligence traits.
-     *
-     * Faster and smarter bots react more quickly, while slower or less intelligent bots
-     * take longer. A small random jitter is always applied to prevent mechanical timing.
+     * Suspends the current coroutine for a short, natural reaction delay.
      *
      * Typical range:
      * - Minimum: 600 ms
      * - Maximum: 3000 ms
      */
     suspend fun Bot.naturalDelay() {
-        val dexterity = personality.dexterity
-        val intelligence = personality.intelligence
-
-        // Compute weighted inverse delay (more dex/int → faster).
-        val base = 3000.0 - ((dexterity * 0.6 + intelligence * 0.4) * 2400.0)
-
-        // 10-15% jitter for natural variance.
-        val jitterFactor = 1.0 + ThreadLocalRandom.current().nextDouble(-0.15, 0.15)
-        val totalDelay = (base * jitterFactor).coerceIn(600.0, 3000.0).toLong()
-
-        delay(totalDelay.milliseconds)
+        return delay(600.milliseconds, 3.seconds)
     }
 
     /**
-     * Suspends the current coroutine for a longer, cognitive delay based on the bot’s
-     * intelligence and dexterity traits.
-     *
-     * Used for deliberate or strategic actions such as deciding dialogue, pathfinding,
-     * or reacting to complex stimuli. Smarter bots make decisions faster and with
-     * less variance, while less intelligent bots pause for longer.
+     * Suspends the current coroutine for a longer, cognitive delay.
      *
      * Typical range:
      * - Minimum: 1200 ms
      * - Maximum: 6000 ms
      */
     suspend fun Bot.naturalDecisionDelay() {
-        val dexterity = personality.dexterity.coerceIn(0.0, 1.0)
-        val intelligence = personality.intelligence.coerceIn(0.0, 1.0)
-
-        // Heavier weight on intelligence for decision latency
-        val base = 10_000.0 - ((intelligence * 0.7 + dexterity * 0.3) * 8800.0)
-
-        // Always include jitter for realism
-        val jitterFactor = 1.0 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1)
-        val totalDelay = (base * jitterFactor).coerceIn(1200.0, 6_000.0).toLong()
-
-        delay(totalDelay.milliseconds)
+        delay(1200.milliseconds, 6.seconds)
     }
 
     /**
@@ -129,6 +100,7 @@ object Suspendable {
             val iterator = messages.iterator()
             while (iterator.hasNext()) {
                 val msg = iterator.next()
+
                 @Suppress("UNCHECKED_CAST")
                 val typedMsg = msg.message as? T ?: continue
 
