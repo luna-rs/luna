@@ -1,5 +1,6 @@
 package io.luna.game.persistence;
 
+import com.google.gson.JsonArray;
 import io.luna.Luna;
 import io.luna.game.GameService;
 import io.luna.game.GameSettings.PasswordStrength;
@@ -8,6 +9,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.mob.MusicTab;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.Spellbook;
@@ -51,8 +53,10 @@ public final class PlayerData {
     public Spellbook spellbook;
     public Duration timePlayed;
     public Instant createdAt;
+    public PlayerPrivacy privacyOptions;
     public Map<String, Integer> varps;
     public Map<String, Object> attributes;
+    public JsonArray potions;
     public List<BotScriptSnapshot<?>> scripts; // Will always be empty for real players. TODO Should bots have their
     // own saving? extend playerdata then override save method?
 
@@ -78,6 +82,8 @@ public final class PlayerData {
      * Loads {@code player}'s data from this model.
      */
     public void load(Player player) {
+        // todo all these need to support reloading while online. Maybe make this dynamic?
+        // loader.add(() -> ...); add set/reload functions for efficiency? could just be a waste of time
         player.setDatabaseId(databaseId);
         player.setHashedPassword(password);
         player.setPosition(position);
@@ -85,9 +91,9 @@ public final class PlayerData {
         player.setLastIp(lastIp);
         player.getAppearance().setValues(appearance);
         player.setMusicTab(musicTab);
-        player.getInventory().init(inventory);
-        player.getBank().init(bank);
-        player.getEquipment().init(equipment);
+        player.getInventory().load(inventory);
+        player.getBank().load(bank);
+        player.getEquipment().load(equipment);
         player.getSkills().set(skills);
         player.getFriends().addAll(friends);
         player.getIgnores().addAll(ignores);
@@ -99,6 +105,9 @@ public final class PlayerData {
         player.getVarpManager().fromMap(varps);
         player.updateSpellbook(spellbook, false);
         player.setTimePlayed(timePlayed);
+        player.setCreatedAt(createdAt);
+        player.setPrivacyOptions(privacyOptions);
+        player.loadPotionsFromJson(potions);
         if (player.isBot()) {
             player.asBot().getScriptStack().load(scripts);
         }
@@ -147,6 +156,9 @@ public final class PlayerData {
         varps = player.getVarpManager().toMap();
         spellbook = player.getSpellbook();
         timePlayed = player.getTimePlayed();
+        createdAt = player.getCreatedAt();
+        privacyOptions = player.getPrivacyOptions();
+        potions = player.savePotionsToJson();
         if (player.isBot()) {
             scripts = player.asBot().getScriptStack().save();
         }
