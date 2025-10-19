@@ -9,7 +9,6 @@ import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.AmountInputInterface
-import kotlinx.coroutines.processNextEventInCurrentThread
 import world.minigame.partyRoom.dropParty.DropPartyOption.BalloonObject
 import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 
@@ -17,13 +16,17 @@ import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
  * Deposits an item into the party chest.
  */
 fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
+    if (DropPartyOption.chest.locked && plr.rights < RIGHTS_ADMIN) {
+        plr.sendMessage("Only staff members can deposit items right now.")
+        return
+    }
     val def = itemDef(event.itemId)
     var newAmount = amount
     if (amount > 8 && !def.isStackable) {
         newAmount = 8
     }
 
-    if(!def.isTradeable) {
+    if (!def.isTradeable) {
         plr.sendMessage("Untradeable items cannot be deposited here.")
         return
     }
@@ -31,7 +34,7 @@ fun deposit(plr: Player, event: WidgetItemClickEvent, amount: Int) {
     val invAmt = plr.inventory.computeAmountForId(event.itemId)
 
     val removeItem = invItem.withAmount(if (newAmount > invAmt) invAmt else newAmount)
-    if(!plr.depositItems.hasSpaceFor(removeItem)) {
+    if (!plr.depositItems.hasSpaceFor(removeItem)) {
         plr.sendMessage("The party room chest does not have enough space for you to deposit this.")
         return
     }
@@ -47,7 +50,7 @@ fun withdraw(plr: Player, event: WidgetItemClickEvent, amount: Int) {
     val chestAmt = plr.depositItems.computeAmountForId(event.itemId)
     val finalAmt = if (amount > chestAmt) chestAmt else amount
     val removeItem = Item(event.itemId, finalAmt)
-    if(!plr.inventory.hasSpaceFor(removeItem)) {
+    if (!plr.inventory.hasSpaceFor(removeItem)) {
         plr.sendMessage(Inventory.INVENTORY_FULL_MESSAGE)
         return
     }

@@ -18,7 +18,7 @@ fun lockLeverCmd(plr: Player) {
  */
 fun lockChestCmd(plr: Player) {
     DropPartyOption.chest.locked = !DropPartyOption.chest.locked
-    plr.newDialogue().empty("You have successfully ${if (PartyRoom.locked) "locked" else "unlocked"} the chest.")
+    plr.newDialogue().empty("You have successfully ${if (DropPartyOption.chest.locked) "locked" else "unlocked"} the chest.")
 }
 
 // All-in-one admin command for handling basic party room functions.

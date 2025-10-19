@@ -47,7 +47,7 @@ object PartyRoom {
      */
     fun pullLever(plr: Player, obj: GameObject?) {
         if (locked && plr.rights < RIGHTS_ADMIN) {
-            plr.sendMessage("The lever has been locked by an administrator.")
+            plr.sendMessage("Only staff members can pull the lever right now.")
             return
         }
         if (option != null) {

@@ -37,7 +37,7 @@ class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.NORMAL
         when (PartyRoom.option) {
             null -> {}
             DropPartyOption -> {
-                val secondsLeft = DropPartyOption.secondsLeft!!
+                val secondsLeft = DropPartyOption.secondsLeft ?: return false
                 npc.forceChat(when {
                                   secondsLeft == 0 -> "The drop party has started! Everyone come join!"
                                   secondsLeft < 60 -> "The drop party is starting in $secondsLeft seconds!"
