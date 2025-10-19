@@ -7,7 +7,7 @@ import api.predef.*
  */
 cmd("kick", RIGHTS_MOD) {
     getPlayer(this) {
-        it.logout()
+        it.forceLogout()
         plr.sendMessage("You have kicked ${it.username}.")
     }
 }
