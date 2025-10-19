@@ -30,7 +30,6 @@ object Agility {
         if(plr.agility.level >= level) {
             return true
         }
-        // TODO proper message https://github.com/luna-rs/luna/issues/384, may need msg parameter
         plr.sendMessage("You need an Agility level of $level to do this.")
         return false
     }
