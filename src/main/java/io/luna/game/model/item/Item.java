@@ -34,16 +34,11 @@ public class Item {
      * @return The item.
      */
     public static Item byName(String name, int amount) {
-        // TODO Map every item definition by name to make this quicker, and factor in search restricted items.
-        // TODO use tonote for notes
-        boolean noted = name.endsWith("(noted)");
-        return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&
-                        it.getName().equals(name) && it.isNoted() == noted).
-                map(it -> new Item(it.getId(), amount)).
-                orElseGet(() -> {
-                    logger.warn("Item ({}) was not valid or found.", name);
-                    return null;
-                });
+        Integer id = findId(name, false);
+        if(id == null) {
+            return null;
+        }
+        return new Item(id, amount);
     }
 
     /**
@@ -54,6 +49,35 @@ public class Item {
      */
     public static Item byName(String name) {
         return byName(name, 1);
+    }
+
+
+    /**
+     * Retrieves an item instance by name and with wn amount of 1.
+     *
+     * @param name The name.
+     * @return The item.
+     */
+    public static Item byNameNoted(String name, int amount) {
+        return byName(name, 1);
+    }
+
+    /**
+     * Retrieves an item instance by name and with wn amount of 1.
+     *
+     * @param name The name.
+     * @return The item.
+     */
+    public static Integer findId(String name, boolean noted) {
+        // TODO Map every item definition by name to make this quicker, and factor in search restricted items.
+        // TODO use tonote for notes
+        return ItemDefinition.ALL.lookup(it -> !SEARCH_RESTRICTED.contains(it.getId()) && it.isTradeable() &&
+                        it.getName().equals(name) && it.isNoted() == noted).
+                map(ItemDefinition::getId).
+                orElseGet(() -> {
+                    logger.warn("Item ({}) was not valid or found.", name);
+                    return null;
+                });
     }
 
     /**

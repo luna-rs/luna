@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot;
 
+import api.bot.action.BotActionHandler;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -27,6 +28,7 @@ import io.luna.game.model.mob.bot.script.BotScriptStack;
 import io.luna.game.model.mob.bot.speech.BotSpeechStack;
 import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.Task;
+import io.luna.net.msg.GameMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,6 +53,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class Bot extends Player {
 
+    // todo only process every tick when we're in combat. aka only reflex is processed every tick
     /**
      * The logger.
      */
@@ -167,6 +170,11 @@ public final class Bot extends Player {
     private final BotClient botClient;
 
     /**
+     * The bot action handler.
+     */
+    private final BotActionHandler actionHandler = new BotActionHandler(this);
+
+    /**
      * Whether this bot is temporary and will be forgotten after logout.
      */
     private final boolean temporary;
@@ -204,13 +212,18 @@ public final class Bot extends Player {
     }
 
     @Override
+    public void queue(GameMessageWriter msg) {
+        botClient.queue(msg);
+    }
+
+    @Override
     protected void onInactive() {
         world.getBots().remove(this);
         super.onInactive();
     }
 
     @Override
-    public void logout() {
+    public void forceLogout() {
         scriptStack.shutdown();
         botClient.onInactive();
     }
@@ -446,5 +459,12 @@ public final class Bot extends Player {
      */
     public BotPreference getPreferences() {
         return intelligence.getPreferences();
+    }
+
+    /**
+     * @return The bot action handler.
+     */
+    public BotActionHandler getActionHandler() {
+        return actionHandler;
     }
 }

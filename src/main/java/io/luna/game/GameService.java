@@ -63,6 +63,8 @@ public final class GameService extends AbstractScheduledService {
         public void running() {
             // Start the game world and run startup logic from Kotlin scripts.
             sync(() -> {
+                thread = Thread.currentThread();
+
                 world.start();
                 runKotlinTasks(ServerLaunchEvent::new, "Waiting for {} Kotlin startup task(s) to complete...");
 
@@ -132,6 +134,11 @@ public final class GameService extends AbstractScheduledService {
      * A thread pool for general purpose low-overhead tasks.
      */
     private final ListeningExecutorService fastPool;
+
+    /**
+     * An instance of this thread (the game thread).
+     */
+    private Thread thread;
 
     /**
      * Creates a new {@link GameService}.
@@ -367,5 +374,12 @@ public final class GameService extends AbstractScheduledService {
      */
     public CountDownLatch getSynchronizer() {
         return synchronizer;
+    }
+
+    /**
+     * @return An instance of this thread (game thread).
+     */
+    public Thread getThread() {
+        return thread;
     }
 }
