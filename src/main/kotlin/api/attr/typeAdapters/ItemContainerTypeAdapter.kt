@@ -1,6 +1,7 @@
 package api.attr.typeAdapters
 
 import api.attr.Attr.readJsonMember
+import com.google.gson.Gson
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
@@ -30,13 +31,14 @@ object ItemContainerTypeAdapter : TypeAdapter<ItemContainer>() {
     override fun read(reader: JsonReader): ItemContainer {
         reader.beginObject()
         val capacity = readJsonMember(reader, "capacity") { it.nextInt() }
-        val stackPolicy = readJsonMember(reader, "stack_policy") { StackPolicy.valueOf(reader.nextString()) }
+        val stackPolicy = readJsonMember(reader, "stack_policy") { StackPolicy.valueOf(it.nextString()) }
         val widgetId = readJsonMember(reader, "widget_id") { it.nextInt() }
         val items = ItemContainer(capacity, stackPolicy, widgetId)
         reader.nextName()
         reader.beginArray()
+        val gson = Attribute.getGsonInstance()
         while (reader.hasNext()) {
-            val item: IndexedItem = Attribute.getGsonInstance().fromJson(reader, IndexedItem::class.java)
+            val item: IndexedItem = gson.fromJson(reader, IndexedItem::class.java)
             items.set(item.index, item.toItem())
         }
         reader.endArray()
