@@ -11,6 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
+import world.player.item.banking.regularBank.Banking
 
 /**
  * A [BotActionHandler] implementation for banking related actions.
@@ -35,9 +36,15 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
      */
     fun homeBank(): GameObject {
         if (homeBanks.isEmpty()) {
-            world.objects.stream().filter { HOME_BANK_POSITIONS.contains(it.position) }
-                .forEach { homeBanks.add(it) }
+            for (position in HOME_BANK_POSITIONS) {
+                val gameObject = world.chunks.findOnPosition(position, GameObject::class.java)
+                { Banking.bankingObjects.contains(it.id) }
+                if (gameObject != null) {
+                    homeBanks += gameObject
+                }
+            }
             if (homeBanks.isEmpty()) {
+                // Should never happen unless no objects are loaded.
                 throw IllegalStateException("Could not generate home banks!")
             }
         }
