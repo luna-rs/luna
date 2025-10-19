@@ -38,6 +38,7 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
 
     override fun onCompleted(tokenObjects: ImmutableList<PersistentNpc>) {
         if (tokenObjects.isNotEmpty()) {
+            game.sync { tokenObjects.forEach { world.npcs.add(it) } }
             logger.debug("Loaded ${tokenObjects.size} global NPC spawns!")
         }
     }
