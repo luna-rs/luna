@@ -105,6 +105,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             }
             bot.naturalDecisionDelay()
         }
+        timer.reset()
     }
 
     override fun load(snapshot: BotScriptSnapshot<InputData>) {
