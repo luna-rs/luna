@@ -37,7 +37,10 @@ fun loadItems() {
 fun saveItems() {
     val chestItems = DropPartyOption.chest.items
     if (chestItems.size() > 0) {
-        Files.createFile(ITEMS_FILE)
+        if(!Files.exists(ITEMS_FILE)) {
+            // TODO Would be a good use of SQLLite?
+            Files.createFile(ITEMS_FILE)
+        }
         Files.writeString(ITEMS_FILE,
                           Attribute.getGsonInstance().toJson(chestItems))
     }

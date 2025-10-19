@@ -10,6 +10,7 @@ import io.luna.util.GsonUtils
 import io.luna.util.parser.JsonFileParser
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Loads the global item spawn JSON file.
@@ -19,7 +20,7 @@ internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) 
     /**
      * Additional non-stackable items to be added.
      */
-    private val items = Collections.synchronizedList(ArrayList<PersistentGroundItem>())
+    private val items = ConcurrentLinkedQueue<PersistentGroundItem>()
 
     companion object {
 
@@ -53,7 +54,7 @@ internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) 
         game.sync {
             world.scheduleOnce(1) {
                 tokenObjects.forEach { world.addItem(it) }
-                items.forEach { world.addItem(it) }
+                while(true) { world.addItem(items.poll() ?: break) }
             }
         }
     }
