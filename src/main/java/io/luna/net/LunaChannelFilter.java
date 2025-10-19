@@ -139,7 +139,7 @@ public final class LunaChannelFilter extends AbstractRemoteAddressFilter<InetSoc
      *
      * @param address The IP address.
      */
-    public void addToBlacklist(String address) {
-        blacklist.add(address);
+    public boolean addToBlacklist(String address) {
+        return blacklist.add(address);
     }
 }
