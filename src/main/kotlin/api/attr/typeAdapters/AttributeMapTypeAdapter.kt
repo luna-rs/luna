@@ -1,6 +1,7 @@
 package api.attr.typeAdapters
 
 import com.google.gson.TypeAdapter
+import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import io.luna.game.model.mob.attr.Attribute
@@ -20,7 +21,8 @@ object AttributeMapTypeAdapter : TypeAdapter<AttributeMap>() {
 
     override fun read(reader: JsonReader?): AttributeMap {
         val map = AttributeMap()
-        val readData = Attribute.getGsonInstance().fromJson<Map<String, Any>>(reader, Map::class.java)
+        val readData = Attribute.getGsonInstance().fromJson<Map<String, Any>>(reader, object :
+            TypeToken<Map<String, Any>>() {}.type)
         map.load(readData)
         return map
     }
