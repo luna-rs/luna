@@ -1,6 +1,6 @@
 package world.player.item.banking.regularBank
 
-import api.predef.*
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.NpcDefinition
 
 /**
@@ -37,13 +37,13 @@ object Banking {
      * Loads all banking objects based on definitions from the cache.
      */
     internal fun loadBankingObjects() {
-        for (gameObj in world.objects) {
-            val name = gameObj.definition.name
-            val actions = gameObj.definition.actions
+        for (definition in GameObjectDefinition.ALL) {
+            val name = definition.name
+            val actions = definition.actions
             if ((name.equals("Bank booth") || name.equals("Bank chest")) &&
                 (actions.contains("Open") || actions.contains("Use") || actions.contains("Use-quickly"))
             ) {
-                loadObjects += gameObj.id
+                loadObjects += definition.id
             }
         }
     }

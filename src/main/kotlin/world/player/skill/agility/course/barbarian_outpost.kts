@@ -16,7 +16,7 @@ import world.player.skill.agility.AgilityObstacle.*
  * The barbarian outpost agility course.
  */
 course(BARBARIAN_OUTPOST) {
-    // TODO Ropeswing animation clunky, rope doesn't move. Can't find any object animations or varbits in the cache?
+    // TODO Ropeswing animation clunky.
     obstacle(id = 2282,
              type = BARBARIAN_ROPESWING,
              action = {
