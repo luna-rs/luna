@@ -29,6 +29,7 @@ enum class Sounds(val id: Int) {
     MINING_COMPLETED(429),
     PROSPECT_ORE(431),
     MINE_ROCK(432),
+    RECHARGE_PRAYER(442),
     PICKPOCKET_FAILED(458),
     SMITHING(468),
     CUT_TREE_1(471),
