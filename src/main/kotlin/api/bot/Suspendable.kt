@@ -22,7 +22,7 @@ object Suspendable {
      * Suspends until [cond] is `true` or `duration` elapses. Returns `true` if [cond] was satisfied.
      */
     suspend fun waitFor(duration: Duration = 120.seconds, cond: () -> Boolean) =
-        SuspendableCondition(cond).submit(duration.inWholeSeconds).await()
+        SuspendableCondition(cond).submit(duration.inWholeSeconds.coerceAtLeast(1)).await()
 
     /**
      * Maybes runs [action] based on [prob]. Returns `true` if the action ran.
@@ -141,7 +141,7 @@ object Suspendable {
             }
             false
         }
-        if (condition.submit(timeoutSeconds).await()) {
+        if (!condition.submit(timeoutSeconds).await()) {
             bot.log("Timed out waiting for input message {${type.simpleName}}.")
             return false
         }

@@ -1,7 +1,11 @@
 package api.bot
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.Future
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.coroutines.coroutineContext
 
 /**
  * A coroutine-friendly future used to await the result of asynchronous bot logic in [BotScript]s.
@@ -20,6 +24,7 @@ open class SuspendableFuture(private val channel: Channel<Boolean>) {
         init {
             signal(false)
         }
+
         override suspend fun await(): Boolean {
             return false
         }
@@ -29,6 +34,7 @@ open class SuspendableFuture(private val channel: Channel<Boolean>) {
         init {
             signal(true)
         }
+
         override suspend fun await(): Boolean {
             return true
         }
@@ -55,9 +61,23 @@ open class SuspendableFuture(private val channel: Channel<Boolean>) {
      *
      * @return `true` if the signal indicated success, `false` if it timed out, failed, or closed abnormally.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     open suspend fun await(): Boolean {
-        val result = channel.receive()
-        channel.close()
-        return result
+        // Cancel scheduled task when coroutine is cancelled.
+        coroutineContext[Job]?.invokeOnCompletion {
+            if (!channel.isClosedForSend && !channel.isClosedForReceive) {
+                channel.close()
+            }
+        }
+
+        // Await signal, handle potentially errors.
+        return try {
+            val result = channel.receive()
+            channel.close()
+            result
+        } catch (e: CancellationException) {
+            channel.close()
+            false
+        }
     }
 }

@@ -13,7 +13,12 @@ import kotlin.coroutines.CoroutineContext
 object GameCoroutineDispatcher : CoroutineDispatcher() {
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
-        // Simply queue code back onto the game thread in-between suspends.
-        game.sync(block)
+        if (Thread.currentThread() == game.thread) {
+            // Already on game thread, run inline.
+            block.run()
+        } else {
+            // Dispatch back to the game thread to run safely.
+            game.sync(block)
+        }
     }
 }

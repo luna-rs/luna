@@ -34,7 +34,7 @@ abstract class BotScript<T>(val bot: Bot) {
     /**
      * The action handler.
      */
-    protected val handler: BotActionHandler = BotActionHandler(bot)
+    protected val handler: BotActionHandler = bot.actionHandler
 
     /**
      * The progress of this script.
@@ -76,6 +76,7 @@ abstract class BotScript<T>(val bot: Bot) {
         if (progress != null && !progress!!.isCompleted && !progress!!.isCancelled) {
             bot.log("Stopping script {${javaClass.name}}.")
             progress!!.cancel()
+            progress = null
             return true
         }
         return false

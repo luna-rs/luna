@@ -42,15 +42,14 @@ class SuspendableCondition(private val cond: () -> Boolean) {
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun submit(timeoutSeconds: Long = 30): SuspendableFuture {
+
         checkState(!active.getAndSet(true), "'submit()' can only be called once.")
         world.schedule(1) {
             // Channel is closed.
-            if(channel.isClosedForSend) {
+            if (channel.isClosedForSend || channel.isClosedForReceive) {
                 it.cancel()
                 return@schedule
             }
-            // TODO Couple with Job so when coroutine is cancelled, these are as well?
-
             // Schedule task to check if condition is satisfied.
             if (cond()) {
                 channel.offer(true) // Condition satisfied, send unsuspend signal.
