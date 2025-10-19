@@ -1,7 +1,6 @@
 package world.npc.globalSpawn
 
 import api.predef.*
-import api.predef.ext.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
 import io.luna.game.model.Position
@@ -9,7 +8,6 @@ import io.luna.game.model.def.NpcDefinition
 import io.luna.util.GsonUtils
 import io.luna.util.parser.JsonFileParser
 import java.nio.file.Paths
-import java.util.*
 
 /**
  * Loads the global item spawn JSON file.
@@ -27,7 +25,9 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
     override fun convert(token: JsonObject): PersistentNpc {
         val nameOrId = if (token.has("name")) token["name"].asString else token["id"].asInt
         val position = GsonUtils.getAsType(token["position"], Position::class.java)
-        val id = if (nameOrId is Int) nameOrId else NpcDefinition.ALL.find { it.name == nameOrId }?.id
+        val id = if (nameOrId is Int) nameOrId else NpcDefinition.ALL.find {
+            it.name.contentEquals(nameOrId as String, true)
+        }?.id
         val respawn = if (token.has("respawn_ticks")) token["respawn_ticks"].asInt else 50
         val wander = if (token.has("wander_radius")) token["wander_radius"].asInt else 0
         if (id == null) {

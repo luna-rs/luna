@@ -1,10 +1,9 @@
-package world.player.command.searchItem
+package world.player.command.findItem
 
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import java.util.*
 import kotlin.streams.toList
 
 /**

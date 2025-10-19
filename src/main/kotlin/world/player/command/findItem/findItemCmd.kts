@@ -1,4 +1,4 @@
-package world.player.command.searchItem
+package world.player.command.findItem
 
 import api.predef.*
 import api.predef.ext.*
