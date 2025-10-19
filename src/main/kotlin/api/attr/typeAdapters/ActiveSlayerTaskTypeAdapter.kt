@@ -24,12 +24,12 @@ object ActiveSlayerTaskTypeAdapter : TypeAdapter<ActiveSlayerTask?>() {
             writer.name("remaining").value(value.remaining)
             writer.endObject()
         } else {
-            writer.value("null")
+           writer.nullValue()
         }
     }
 
     override fun read(reader: JsonReader): ActiveSlayerTask? {
-        if (reader.peek() == JsonToken.STRING && reader.nextString().equals("null")) {
+        if (reader.peek() == JsonToken.NULL) {
             return null
         }
         reader.beginObject()
