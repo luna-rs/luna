@@ -4,6 +4,7 @@ import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -34,7 +35,26 @@ public final class RandomUtils {
         } else if (rational.getNumerator() >= rational.getDenominator()) {
             return true;
         } else// return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
-            return ThreadLocalRandom.current().nextDouble() < rational.doubleValue();
+            return nextDouble() < rational.doubleValue();
+    }
+
+    public static <T> T weightedRoll(Map<T, Double> weights) {
+        double total = 0.0;
+        for (double next : weights.values()) {
+            total += next;
+        }
+        if(total == 0.0) {
+            return null;
+        }
+        double roll = nextDouble() * total;
+        double current = 0.0;
+        for (var entry : weights.entrySet()) {
+            current += entry.getValue();
+            if(current <= roll) {
+                return entry.getKey();
+            }
+        }
+        return weights.keySet().iterator().next();
     }
 
     public static double nextDouble() {
@@ -47,6 +67,14 @@ public final class RandomUtils {
         if (value > 100)
             value = 100;
         return ThreadLocalRandom.current().nextInt(100) < value;
+    }
+
+    public static boolean rollPercent(double value) {
+        if (value < 0.0)
+            value = 0.0;
+        if (value > 1.0)
+            value = 1.0;
+        return ThreadLocalRandom.current().nextDouble() < value;
     }
 
     /**
