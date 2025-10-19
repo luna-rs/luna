@@ -6,7 +6,9 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * A model that handles registration and processing of actions.
@@ -47,18 +49,22 @@ public final class ActionQueue {
     }
 
     public boolean contains(Class<? extends Action<?>> type) {
-        for(Action<?> action : processing.values()) {
-            if(action.getClass() == type) {
+        for (Action<?> action : processing.values()) {
+            if (action.getClass() == type) {
                 return true;
             }
         }
 
-        for(Action<?> action : executing) {
-            if(action.getClass() == type) {
+        for (Action<?> action : executing) {
+            if (action.getClass() == type) {
                 return true;
             }
         }
         return false;
+    }
+
+    public <T extends Action<?>> List<T> getAll(Class<T> type) {
+        return (List<T>) processing.values().stream().filter(type::isInstance).collect(Collectors.toList());
     }
 
     /**
@@ -82,8 +88,7 @@ public final class ActionQueue {
         }
 
         // Close standard interface if strong or soft action present.
-        if (processing.containsKey(ActionType.STRONG) ||
-                processing.containsKey(ActionType.SOFT)) {
+        if (processing.containsKey(ActionType.STRONG)) {
             if (mob.getType() == EntityType.PLAYER) {
                 mob.asPlr().getInterfaces().close();
             }

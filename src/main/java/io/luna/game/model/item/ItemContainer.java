@@ -801,8 +801,10 @@ public class ItemContainer implements Iterable<Item> {
     public final boolean hasSpaceForAll(Iterable<? extends Item> items) {
         int count = 0;
         for (Item item : items) {
+            if(item == null) {
+                continue;
+            }
             count = IntMath.saturatedAdd(count, computeSpaceFor(item));
-
             if (count > computeRemainingSize()) {
                 // Can't fit, no point in checking other items.
                 return false;
@@ -820,6 +822,9 @@ public class ItemContainer implements Iterable<Item> {
     public final int computeSpaceForAll(Iterable<? extends Item> items) {
         int count = 0;
         for (Item item : items) {
+            if(item == null) {
+                continue;
+            }
             count = IntMath.saturatedAdd(count, computeSpaceFor(item));
         }
         return count;
@@ -955,9 +960,7 @@ public class ItemContainer implements Iterable<Item> {
      *
      * @param setItems The items to set.
      */
-    public final void init(List<IndexedItem> setItems) {
-        checkState(size == 0 && !initialized, "Containers can only be initialized once.");
-
+    public final void load(List<IndexedItem> setItems) {
         for (IndexedItem item : setItems) {
             items[item.getIndex()] = item.toItem();
             size++;
