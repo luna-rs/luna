@@ -2,14 +2,12 @@ package world.obj.restorePrayer
 
 import api.predef.*
 import api.predef.ext.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
+import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import world.player.Animations
-
-/**
- * The altars used to restore prayer.
- */
-val altars: Set<Int> = hashSetOf(409, 3243)
+import world.player.Sounds
 
 /**
  * Restores the player's prayer points.
@@ -19,6 +17,7 @@ fun restore(plr: Player) {
     if (prayer.level < prayer.staticLevel) {
         prayer.level = prayer.staticLevel
         plr.animation(Animations.PRAY)
+        plr.playSound(Sounds.RECHARGE_PRAYER)
         plr.sendMessage("You recharge your prayer points.")
     } else {
         plr.sendMessage("You already have full prayer points.")
@@ -26,6 +25,14 @@ fun restore(plr: Player) {
 }
 
 /* Match all altar objects.  */
-for (id in altars) {
-    object1(id) { restore(plr) }
+on(ServerLaunchEvent::class) {
+    for(def in GameObjectDefinition.ALL) {
+        if(def.id == 6552) {
+            // Ancient altar.
+            continue
+        }
+        if(def.actions.contains("Pray-at") && def.name.contentEquals("Altar")) {
+            object1(def.id) { restore(plr) }
+        }
+    }
 }
