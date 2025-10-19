@@ -22,13 +22,13 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
         if (index.isEmpty) {
             // We don't have the item, invalid item.
             bot.log("Don't have ${itemName(id)}.")
-            return SuspendableFuture().signal(false)
+            return SuspendableFutureFailed
         }
         val equipmentIndex = EquipmentDefinition.ALL.get(id).map { it.index }
         if (equipmentIndex.isEmpty) {
             // Invalid item.
             bot.log("${itemName(id)} cannot be equipped.")
-            return SuspendableFuture().signal(false)
+            return SuspendableFutureFailed
         }
         val suspendCond = SuspendableCondition({ bot.equipment[equipmentIndex.get()]?.id == id })
         bot.output.sendInventoryItemClick(2, index.asInt, id)

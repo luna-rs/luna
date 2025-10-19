@@ -4,6 +4,7 @@ import api.bot.Suspendable.naturalDecisionDelay
 import api.bot.Suspendable.waitFor
 import api.bot.SuspendableCondition
 import api.bot.SuspendableFuture
+import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.zone.WalkingTravelStrategy
 import api.bot.zone.Zone
 import io.luna.game.model.Locatable
@@ -47,7 +48,7 @@ class BotMovementActionHandler(private val bot: Bot, private val handler: BotAct
         val timeout = bot.position.computeLongestDistance(location) * 5L;
         val cond = SuspendableCondition { bot.walking.isEmpty && bot.position.isViewable(target.location()) }
         return if (bot.walking.walkUntilReached(target))
-            cond.submit(timeout) else SuspendableFuture().signal(false)
+            cond.submit(timeout) else SuspendableFutureFailed
     }
 
     /**

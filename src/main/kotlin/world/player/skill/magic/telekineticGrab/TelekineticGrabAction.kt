@@ -21,7 +21,7 @@ import world.player.skill.magic.RuneRequirement
  * A [RepeatingAction] implementation that handles the telegrab spell.
  */
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
-  // todo projectiles
+
     override fun onLock() {
         mob.face(groundItem.position)
         if (!world.collisionManager.raycast(mob.position, groundItem.position)) {
@@ -66,8 +66,8 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                     .setId(143) // Telegrab projectile
                     .setStartHeight(35) // Slightly above ground
                     .setEndHeight(31) // Ground level target
-                    .setTicksToStart(10)
-                    .setTicksToEnd(3)
+                    .setTicksToStart(3)
+                    .setTicksToEnd(0) // becomes faster with increase
                     .setInitialSlope(16)// ~3 ticks duration
                    // .setInitialSlope(0) Moderate slope
                    .build() /*LocalProjectile.followPath(ctx).setSourcePosition(mob.position)

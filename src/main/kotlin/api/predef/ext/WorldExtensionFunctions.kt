@@ -93,10 +93,8 @@ fun World.removeObject(pos: Position, filter: GameObject.() -> Boolean = { true 
  * Spawns a [GroundItem].
  */
 fun World.addItem(item: GroundItem): GroundItem {
-    return when {
-        items.register(item) -> item
-        else -> throw IllegalStateException("$item Could not be spawned!") // change to null
-    }
+    items.register(item)
+    return item
 }
 
 /**

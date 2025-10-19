@@ -18,25 +18,23 @@ import kotlin.coroutines.coroutineContext
  * @param channel The internal one-time signal channel used for suspension and resumption.
  * @author lare96
  */
-open class SuspendableFuture(private val channel: Channel<Boolean>) {
+open class SuspendableFuture(internal val channel: Channel<Boolean>) {
 
+    /**
+     * A singleton [SuspendableFuture] instance that immediately returns a successful result.
+     */
     object SuspendableFutureFailed : SuspendableFuture() {
         init {
             signal(false)
         }
-
-        override suspend fun await(): Boolean {
-            return false
-        }
     }
 
+    /**
+     * A singleton [SuspendableFuture] instance that immediately returns a failed result.
+     */
     object SuspendableFutureSuccess : SuspendableFuture() {
         init {
             signal(true)
-        }
-
-        override suspend fun await(): Boolean {
-            return true
         }
     }
 

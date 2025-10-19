@@ -54,9 +54,9 @@ object DropTableHandler {
         val table = npcTypeMap.getOrDefault(victim.javaClass, npcIdMap[victim.id])
         if (table != null) {
             val dropItems = table.roll(killer, victim)
+            val view = if (killer is Player) ChunkUpdatableView.localView(killer) else
+                ChunkUpdatableView.globalView()
             for (item in dropItems) {
-                val view = if (killer is Player) ChunkUpdatableView.localView(killer) else
-                    ChunkUpdatableView.globalView()
                 world.addItem(GroundItem(ctx, item.id, item.amount, victim.position, view))
             }
         }
