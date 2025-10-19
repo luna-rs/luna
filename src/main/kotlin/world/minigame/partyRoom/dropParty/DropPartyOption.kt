@@ -9,9 +9,9 @@ import com.google.common.collect.ImmutableList
 import com.google.common.math.IntMath
 import com.google.common.primitives.Ints
 import io.luna.Luna
-import io.luna.game.model.area.Area
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
+import io.luna.game.model.area.Area
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
@@ -24,6 +24,7 @@ import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
 import world.minigame.partyRoom.PartyRoom
 import world.minigame.partyRoom.PartyRoomOption
+import world.player.skill.cooking.cookFood.Food
 import java.time.Duration
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -36,14 +37,14 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Handles the countdown.
      */
-    class DropPartyCountdown : Task(true, 2) {
+    class DropPartyCountdown(val balloonItems: MutableList<Item>) : Task(true, 2) {
         private val secondsNeeded = Ints.saturatedCast(computeCountdownTime().toSeconds())
 
         override fun execute() {
             secondsLeft = secondsNeeded - executionCounter;
             if (executionCounter >= secondsNeeded) {
                 secondsLeft = 0
-                world.schedule(DropPartyTask())
+                world.schedule(DropPartyTask(balloonItems))
                 cancel()
             }
         }
@@ -52,24 +53,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Handles the dropping of balloons.
      */
-    class DropPartyTask : Task(true, BALLOON_DROP_FREQUENCY.toTicks()) {
-
-        /**
-         * Computes all the items that need to be dropped before the party can end, unless we're in impatient mode.
-         */
-        private val balloonItems = mutableListOf<Item>().apply {
-            var total = floor(chest.items.size() * BALLOON_MULTIPLIER).roundToInt()
-            total -= chest.items.size()
-            addAll(chest.items.filterNotNull())
-            repeat(total) {
-                if (rand().nextBoolean()) {
-                    val junkItem = Item(JUNK_ITEMS.random())
-                    add(junkItem)
-                } else {
-                    add(Item(592))
-                }
-            }
-        }
+    class DropPartyTask(val balloonItems: MutableList<Item>) : Task(true, BALLOON_DROP_FREQUENCY.toTicks()) {
 
         /**
          * Computes all the items that need to be dropped before the party can end. Unless we're in impatient mode.
@@ -122,7 +106,6 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 buildSpawnPositions(spawnPositions)
             }
             if (balloonItems.isEmpty()) {
-                chest.items.clear()
                 cancel()
                 PartyRoom.resetLeverOption()
             }
@@ -213,14 +196,19 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     val BALLOON_IDS = arrayListOf(115, 116, 117, 118, 119, 120)
 
     /**
-     * How many balloons will drop relative to items in the chest.
+     * The percentage of items that will be 'junk' relative to user-placed items. `1.0` = equal amount of junk items
+     * as there are user-placed items, `0.0` = no junk items at all.
      */
-    val BALLOON_MULTIPLIER = 1.5
+    val JUNK_MULTIPLIER = 0.5
 
     /**
      * All possible junk items.
      */
-    val JUNK_ITEMS = listOf(592, 526)
+    val JUNK_ITEMS = mutableListOf<Int>().apply {
+        add(526)
+        add(592)
+        Food.RAW_TO_FOOD.values.forEach { add(it.burnt) }
+    }
 
     /**
      * The max balloon spawns per cycle.
@@ -257,8 +245,8 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
         val isBetaMode = Luna.settings().game().betaMode()
         if (chest.items.size() < 8) {
             if (isBetaMode) {
-                ItemDefinition.ALL.filterNotNull().filter { it.value > 20_000 && !it.isStackable && it.isTradeable }
-                    .map { Item(it.id) }
+                ItemDefinition.ALL.filterNotNull().filter { (it.value > 20_000 || it.isStackable) && it.isTradeable }
+                    .map { if (it.isStackable) Item(it.id, rand(1..Int.MAX_VALUE)) else Item(it.id) }
                     .shuffled().forEach { chest.items.add(it) }
                 plr.sendMessage("[BETA] Filling chest with random items above 20,000 gold value.")
                 return true
@@ -273,7 +261,17 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     }
 
     override fun execute(plr: Player) {
-        world.schedule(DropPartyCountdown())
+        // Add all user-placed items.
+        val balloonItems = mutableListOf<Item>()
+        balloonItems.addAll(chest.items.filterNotNull())
+
+        // Add junk items.
+        val junkCount = floor(chest.items.size() * JUNK_MULTIPLIER).roundToInt()
+        repeat(junkCount) { balloonItems += Item(JUNK_ITEMS.random()) }
+
+        // Start countdown, clear chest.
+        chest.items.clear()
+        world.schedule(DropPartyCountdown(balloonItems))
     }
 
     /**
