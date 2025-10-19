@@ -6,6 +6,8 @@ import io.luna.game.model.Position
 
 /**
  * An enumerated type representing wilderness obelisks.
+ *
+ * @author lare96
  */
 enum class Obelisk(val id: Int, val anchor: Position, val bounds: Area, val objectPositions: List<Position>) {
     LEVEL_13(id = 14829,

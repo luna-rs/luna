@@ -2,6 +2,8 @@ package world.player.skill.woodcutting.cutTree
 
 /**
  * An enumerated type representing all trees that can be cut down.
+ *
+ * @author lare96
  */
 enum class Tree(val level: Int, val exp: Double, val logId: Int, val respawnTicks: Int, val maxHealth: IntRange) {
     NORMAL(level = 1,

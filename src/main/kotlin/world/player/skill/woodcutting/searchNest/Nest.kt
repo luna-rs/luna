@@ -4,6 +4,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enumerated type representing all nests that can be searched.
+ *
+ * @author lare96
  */
 enum class Nest(val id: Int, val items: List<Int>) {
     RED_EGG_NEST(id = 5070,

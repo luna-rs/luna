@@ -8,6 +8,8 @@ import world.player.skill.woodcutting.cutTree.Tree.*
 
 /**
  * An enumerated type representing all axes that can be used to cut [Tree]s.
+ *
+ * @author lre96
  */
 enum class Axe(val id: Int,
                val level: Int,
