@@ -1,5 +1,7 @@
 package world.obj.resource
 
+import api.predef.*
+import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import world.obj.resource.fillable.MilkResource
 import world.obj.resource.fillable.SandResource
 import world.obj.resource.fillable.WaterResource
@@ -27,4 +29,7 @@ val RESOURCES = listOf(
 )
 
 // Load all resources.
-RESOURCES.forEach { it.load() }
+on(ServerLaunchEvent::class) {
+    RESOURCES.forEach { it.load() }
+}
+
