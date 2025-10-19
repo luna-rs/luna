@@ -9,8 +9,10 @@ import world.player.Animations
 import world.player.Sounds
 
 /**
- * A [RepeatingAction] that allows a player to perform a generic firemaking based light action, where the end result
+ * An [Action] that allows a player to perform a generic firemaking based light action, where the end result
  * is determined by child classes.
+ *
+ * @author lare96
  */
 abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Player>(plr, ActionType.WEAK) {
 

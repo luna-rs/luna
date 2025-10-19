@@ -2,6 +2,8 @@ package world.player.skill.crafting.hideTanning
 
 /**
  * An enum representing all tannable hides.
+ *
+ * @author lare96
  */
 enum class Hide(val hide: Int, val tan: Int, val cost: Int, val displayName: String) {
     SOFT_LEATHER(hide = 1739,

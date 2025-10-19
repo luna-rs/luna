@@ -12,6 +12,8 @@ import world.minigame.partyRoom.dropParty.DropPartyOption
 
 /**
  * Manages functions and data for the party room minigame.
+ *
+ * @author lare96
  */
 object PartyRoom {
 

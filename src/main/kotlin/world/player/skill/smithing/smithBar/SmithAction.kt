@@ -11,6 +11,8 @@ import world.player.skill.smithing.Smithing
 
 /**
  * An [InventoryAction] implementation that handles the smithing action.
+ *
+ * @author lare96
  */
 class SmithAction(plr: Player, val table: SmithingTable, val makeItem: SmithingItem, times: Int) :
     InventoryAction(plr, true, 5, times) {

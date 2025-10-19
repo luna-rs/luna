@@ -26,11 +26,6 @@ import kotlin.reflect.KClass
  */
 object Attr {
 
-    /**
-     * A set of valid collection types.
-     */
-    val VALID_COLLECTION_TYPES = setOf(Int::class, Long::class, String::class, Double::class, Boolean::class) // todo check if we still need this limitation?
-
     init {
         val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -100,8 +95,8 @@ object Attr {
     /**
      * Creates a [TickTimer] attribute with [initialTicks] (default `0L`).
      */
-    fun timer(initialTicks: Long = 0L): AttributeDelegate<TickTimer> {
-        val attr = Attribute(TickTimer(world, initialTicks))
+    fun timer(): AttributeDelegate<TickTimer> {
+        val attr = Attribute(TickTimer(world))
         return AttributeDelegate(attr)
     }
 

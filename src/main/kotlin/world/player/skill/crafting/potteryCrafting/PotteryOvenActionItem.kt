@@ -9,6 +9,8 @@ import world.player.Sounds
 
 /**
  * An [InventoryAction] that fires [Unfired] pottery materials.
+ *
+ * @author lare96
  */
 class PotteryOvenActionItem(val plr: Player, val unfired: Unfired, amount: Int) :
     InventoryAction(plr, true, 3, amount) {

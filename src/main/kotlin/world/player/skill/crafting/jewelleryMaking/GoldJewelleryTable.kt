@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableMap
 
 /**
  * An enum representing the gold jewellery table.
+ *
+ * @author lare96
  */
 enum class GoldJewelleryTable(val baseName: String,
                               val buttonWidgetId: Int,

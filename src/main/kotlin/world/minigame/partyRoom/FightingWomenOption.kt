@@ -12,6 +12,8 @@ import io.luna.game.task.Task
 
 /**
  * Handles the lever option for the "Fighting Women" event.
+ *
+ * @author lare96
  */
 object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
 

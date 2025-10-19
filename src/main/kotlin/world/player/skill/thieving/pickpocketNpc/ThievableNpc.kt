@@ -1,14 +1,16 @@
 package world.player.skill.thieving.pickpocketNpc
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.GenericDropTables
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.GenericDropTables
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.collect.ImmutableMap
 
- /**
- * Represents an NPC that can be stolen from.
+/**
+ * Represents an [Npc] that can be stolen from.
+ *
+ * @author lare96
  */
 enum class ThievableNpc(val level: Int,
                         val xp: Double,

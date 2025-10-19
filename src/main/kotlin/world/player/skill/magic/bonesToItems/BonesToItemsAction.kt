@@ -12,6 +12,8 @@ import world.player.skill.magic.Magic
 
 /**
  * A [QueuedAction] that converts bones into either bananas or peaches.
+ *
+ * @author lare96
  */
 class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
     QueuedAction<Player>(plr, plr.bonesToItemsDelay, 3) {

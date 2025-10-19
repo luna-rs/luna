@@ -4,6 +4,8 @@ import io.luna.game.model.Position
 
 /**
  * An enum representing a Runecrafting altar.
+ *
+ * @author lare96
  */
 enum class Altar(val id: Int,
                  val talisman: Int,

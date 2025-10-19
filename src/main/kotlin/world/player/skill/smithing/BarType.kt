@@ -8,6 +8,8 @@ import world.player.skill.smithing.smeltOre.SmeltAction
 
 /**
  * An enum representing a metal bar that can be made from a [SmeltAction].
+ *
+ * @author lare96
  */
 enum class BarType(val id: Int, val level: Int, val xp: Double, val widget: Int, val oreRequired: Pair<Item, Item?>) {
     BRONZE(id = 2349,

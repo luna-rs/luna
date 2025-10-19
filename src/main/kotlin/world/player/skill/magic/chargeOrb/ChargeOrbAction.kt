@@ -13,6 +13,8 @@ import world.player.skill.magic.Magic
 
 /**
  * A [QueuedAction] handles charging orbs.
+ *
+ * @author lare96
  */
 class ChargeOrbAction(plr: Player, val type: ChargeOrbType) : QueuedAction<Player>(plr, plr.chargeOrbDelay, 5) {
 

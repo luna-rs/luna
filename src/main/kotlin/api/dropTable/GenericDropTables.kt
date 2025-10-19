@@ -1,4 +1,4 @@
-package api.item.dropTable
+package api.dropTable
 
 import api.predef.*
 import api.predef.ext.*
@@ -237,7 +237,7 @@ object GenericDropTables {
 
                 override fun computePossibleItems(): DropTableItemList = generalSeedDropList1 +
                         generalSeedDropList2 + generalSeedDropList3 + generalSeedDropList4 +
-                        generalSeedDropList5+ generalSeedDropList6
+                        generalSeedDropList5 + generalSeedDropList6
             }
         }
     }

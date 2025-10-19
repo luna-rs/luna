@@ -1,4 +1,4 @@
-package api.item.dropTable
+package api.dropTable
 
 import api.predef.*
 import com.google.common.base.MoreObjects

@@ -18,7 +18,9 @@ import world.player.skill.magic.Rune
 import world.player.skill.magic.RuneRequirement
 
 /**
- * A [RepeatingAction] implementation that handles the telegrab spell.
+ * A [LockedAction] implementation that handles the telegrab spell.
+ *
+ * @author lare96
  */
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
 

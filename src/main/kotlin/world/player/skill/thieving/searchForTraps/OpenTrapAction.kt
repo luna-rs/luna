@@ -13,6 +13,8 @@ import world.player.Animations
 
 /**
  * A [ThrottledAction] that handles opening trapped chests.
+ *
+ * @author lare96
  */
 class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievableChest) :
     ThrottledAction<Player>(plr, plr.openTrappedChest, 2) {

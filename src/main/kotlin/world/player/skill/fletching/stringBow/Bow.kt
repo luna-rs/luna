@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing an item cut from a [Log].
+ *
+ * @author lare96
  */
 enum class Bow(val level: Int,
                val exp: Double,

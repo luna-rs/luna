@@ -1,9 +1,9 @@
-package api.item.dropTable
+package api.dropTable
 
-import api.item.dropTable.dsl.DropTableItemChanceReceiver
-import api.item.dropTable.dsl.DropTableItemReceiver
-import api.item.dropTable.dsl.MergedDropTableReceiver
-import api.item.dropTable.dsl.SpecializedTableReceiver
+import api.dropTable.dsl.DropTableItemChanceReceiver
+import api.dropTable.dsl.DropTableItemReceiver
+import api.dropTable.dsl.MergedDropTableReceiver
+import api.dropTable.dsl.SpecializedTableReceiver
 import api.predef.*
 import api.predef.ext.*
 import com.google.common.base.Preconditions.checkState

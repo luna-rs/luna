@@ -1,9 +1,9 @@
 package world.player.crystalChest
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.DropTableItemList
-import api.item.dropTable.RationalTable
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.DropTableItemList
+import api.dropTable.RationalTable
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Entity

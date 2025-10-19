@@ -6,6 +6,8 @@ import world.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 
 /**
  * An interface representing the party room chest interface.
+ *
+ * @author lare96
  */
 class DropPartyInterface : InventoryOverlayInterface(2156, 5063) {
     override fun onOpen(plr: Player) {

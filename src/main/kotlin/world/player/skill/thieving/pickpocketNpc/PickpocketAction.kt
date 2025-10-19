@@ -19,6 +19,8 @@ import java.time.Duration
 
 /**
  * A [QueuedAction] implementation that enables pickpocketing [Npc] types.
+ *
+ * @author lare96
  */
 class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc) :
     QueuedAction<Player>(plr, plr.lastPickpocket, 2) {

@@ -3,6 +3,10 @@ package world.player.skill.farming
 import api.predef.*
 import io.luna.game.model.item.Item
 
+/**
+ *
+ * @author lare96
+ */
 enum class SeedType(val seed: Int,
                     val level: Int,
                     val flowerProtection: Set<String> = emptySet(),

@@ -7,6 +7,8 @@ import kotlin.math.floor
 
 /**
  * An enum representing a fish that can be caught using a [Tool].
+ *
+ * @author lare96
  */
 enum class Fish(val id: Int,
                 val level: Int,

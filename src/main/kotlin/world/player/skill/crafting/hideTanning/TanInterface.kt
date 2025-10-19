@@ -8,6 +8,8 @@ import world.player.skill.crafting.hideTanning.Hide.*
 
 /**
  * The interface opened when tanning hides.
+ *
+ * @author lare96
  */
 class TanInterface : StandardInterface(14670) {
 

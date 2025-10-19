@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing bones that can be buried.
+ *
+ * @author lare96
  */
 enum class Bone(val id: Int, val exp: Double) {
     BONES(id = 526,

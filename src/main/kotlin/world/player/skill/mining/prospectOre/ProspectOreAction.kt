@@ -8,6 +8,8 @@ import world.player.skill.mining.Ore
 
 /**
  * A [LockedAction] that performs ore prospecting for a player.
+ *
+ * @author lare96
  */
 class ProspectOreAction(plr: Player, private val ore: Ore?) : LockedAction(plr) {
 

@@ -16,6 +16,8 @@ import world.player.skill.magic.teleportSpells.TeleportStyle
 
 /**
  * A collection of utility functions related to the Magic skill.
+ *
+ * @author lare96
  */
 object Magic {
 

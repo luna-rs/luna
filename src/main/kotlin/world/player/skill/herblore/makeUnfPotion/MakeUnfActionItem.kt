@@ -9,6 +9,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will make unfinished potions.
+ *
+ * @author lare96
  */
 class MakeUnfActionItem(plr: Player,
                         val unfPotion: UnfPotion,

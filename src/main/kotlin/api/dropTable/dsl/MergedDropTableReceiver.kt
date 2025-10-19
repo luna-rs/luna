@@ -1,10 +1,10 @@
-package api.item.dropTable.dsl
+package api.dropTable.dsl
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.DropTableItem
-import api.item.dropTable.DropTableItemList
-import api.item.dropTable.SimpleDropTable
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.DropTableItem
+import api.dropTable.DropTableItemList
+import api.dropTable.SimpleDropTable
 import api.predef.*
 import io.luna.util.Rational
 

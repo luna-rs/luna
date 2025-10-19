@@ -6,6 +6,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An enum representing a specific type of slayer task.
+ *
+ * @author lare96
  */
 enum class SlayerTaskType(val level: Int = 1,
                           val plural: String,

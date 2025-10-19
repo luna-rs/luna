@@ -1,4 +1,4 @@
-package api.item.dropTable
+package api.dropTable
 
 import api.predef.*
 import io.luna.util.Rational

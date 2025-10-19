@@ -1,7 +1,7 @@
-package api.item.dropTable.dsl
+package api.dropTable.dsl
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.dsl.DropTableItemReceiver.ImmutableDropTableItemReceiver
+import api.dropTable.DropTable
+import api.dropTable.dsl.DropTableItemReceiver.ImmutableDropTableItemReceiver
 
 /**
  * Enables the transfer of items to a specialized [DropTable] type in our DSL.

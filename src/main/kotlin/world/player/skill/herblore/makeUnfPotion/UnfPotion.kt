@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing an unfinished potion.
+ *
+ * @author lare96
  */
 enum class UnfPotion(val id: Int, val herb: Int, val level: Int) {
     GUAM(id = 91,

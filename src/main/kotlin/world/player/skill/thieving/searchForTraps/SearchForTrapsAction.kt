@@ -14,7 +14,9 @@ import world.player.Sounds
 import world.player.skill.thieving.Thieving
 
 /**
- * A [RepeatingAction] that handles searching chests for traps.
+ * A [LockedAction] that handles searching chests for traps.
+ *
+ * @author lare96
  */
 class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: ThievableChest) :
     LockedAction(plr) {

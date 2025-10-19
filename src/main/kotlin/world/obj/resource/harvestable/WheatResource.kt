@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * A [HarvestableResource] representing wheat.
+ *
+ * @author lare96
  */
 object WheatResource : HarvestableResource() {
 

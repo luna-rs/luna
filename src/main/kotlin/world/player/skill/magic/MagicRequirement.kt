@@ -2,6 +2,8 @@ package world.player.skill.magic
 
 /**
  * An interface representing a generic spell requirement.
+ *
+ * @author lare96
  */
 interface SpellRequirement
 

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList
 
 /**
  * An enum representing an arrow made from two materials.
+ *
+ * @author lare96
  */
 enum class Arrow(val level: Int,
                  val exp: Double,

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableSet
 
 /**
  * An enum representing slayer masters and their tasks.
+ *
+ * @author lare96
  */
 enum class SlayerMaster(val id: Int,
                         val combatLevel: Int = 0,

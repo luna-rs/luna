@@ -5,6 +5,8 @@ import io.luna.game.model.mob.block.Animation
 
 /**
  * An enum representing uncut precious gems.
+ *
+ * @author lare96
  */
 enum class Gem(val uncut: Int,
                val cut: Int,

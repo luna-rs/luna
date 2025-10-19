@@ -8,6 +8,8 @@ import io.luna.game.model.item.GroundItem
 
 /**
  * A [GroundItem] implementation that never expires and respawns once it's picked up.
+ *
+ * @author lare96
  */
 class PersistentGroundItem(id: Int, amount: Int = 1, position: Position, val respawnTicks: Int = DEFAULT_RESPAWN_TICKS) :
     GroundItem(ctx, id, amount, position, ChunkUpdatableView.globalView()) {

@@ -8,6 +8,8 @@ import io.luna.game.task.Task
 
 /**
  * An object that tracks fishing spots and handles their random movement.
+ *
+ * @author lare96
  */
 object FishingSpotHandler : Task(false, 100) {
 

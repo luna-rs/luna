@@ -7,6 +7,8 @@ import world.player.skill.smithing.BarType
 
 /**
  * A [DialogueInterface] representing the smelting interface.
+ *
+ * @author lare96
  */
 class SmeltingInterface : DialogueInterface(2400) {
 

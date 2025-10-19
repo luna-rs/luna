@@ -8,6 +8,8 @@ import world.player.skill.woodcutting.cutTree.Tree
 
 /**
  * Contains utility functions related to the woodcutting skill.
+ *
+ * @author lare96
  */
 object Woodcutting {
 
@@ -23,7 +25,7 @@ object Woodcutting {
      * If `false`, uses the OSRS method: each tree has a [treeHealth] value that scales with its level, determining
      * when it becomes a stump.
      */
-    val USE_317_TREE_STUMPS = false
+    const val USE_317_TREE_STUMPS = false
 
     /**
      * The interval (in game ticks) between each attempt to cut a log while woodcutting.
@@ -31,7 +33,7 @@ object Woodcutting {
      * Lower values result in faster log collection, while higher values slow it down.
      * A value of `4` matches the timing behavior in both 317 and OSRS.
      */
-    val CUT_SPEED_TICKS = 4
+    const val CUT_SPEED_TICKS = 4
 
     /**
      * Simulate the result of woodcutting for [attempts] tries, and print the result.

@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing a drinkable potion.
+ *
+ * @author lare96
  */
 enum class FinishedPotion(val id: Int,
                           val unf: Int,

@@ -1,14 +1,16 @@
 package world.player.skill.thieving.stealFromStall
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.GenericDropTables
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.GenericDropTables
 import api.predef.ext.*
 import com.google.common.collect.ImmutableMap
 
 /**
  * Represents a stall that can be stolen from. The [globalRefresh] property determines if stalls become empty for all
  * players, or just the player stealing.
+ *
+ * @author lare96
  */
 enum class ThievableStall(val stalls: Set<Pair<Int, Int>>,
                           val level: Int,

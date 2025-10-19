@@ -7,6 +7,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that cuts precious gems.
+ *
+ * @author lare96
  */
 class CutGemActionItem(val plr: Player, val gem: Gem, amount: Int) : InventoryAction(plr, true, 3, amount) {
 

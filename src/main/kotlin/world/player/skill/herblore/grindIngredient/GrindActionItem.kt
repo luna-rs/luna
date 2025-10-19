@@ -7,6 +7,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will grind all ingredients in an inventory.
+ *
+ * @author lare96
  */
 class GrindActionItem(plr: Player,
                       val ingredient: Ingredient,

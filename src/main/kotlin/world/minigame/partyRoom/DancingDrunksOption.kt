@@ -12,6 +12,8 @@ import io.luna.game.model.mob.block.Animation
 
 /**
  * Handles the lever option for the "Dancing Drunks" event.
+ *
+ * @author lare96
  */
 object DancingDrunksOption : PartyRoomOption(100_000, "Dancing Drunks") {
 

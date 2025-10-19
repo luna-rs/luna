@@ -13,6 +13,8 @@ import world.obj.resource.harvestable.WheatResource
 
 /**
  * Represents a regenerative [GameObject] based resource that can be interacted with by the player.
+ *
+ * @author lare96
  */
 abstract class GameResource {
 

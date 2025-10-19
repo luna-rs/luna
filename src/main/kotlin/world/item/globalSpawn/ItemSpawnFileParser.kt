@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Loads the global item spawn JSON file.
+ *
+ * @author lare96
  */
 internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) {
 

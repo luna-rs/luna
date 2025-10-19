@@ -2,6 +2,8 @@ package world.player.skill.crafting.glassMaking
 
 /**
  * Represents a material that can be made on the [GlassBlowingInterface].
+ *
+ * @author lare96
  */
 enum class GlassMaterial(val id: Int, val make1Id: Int, val level: Int, val exp: Double) {
     BEER_GLASS(id = 1919,

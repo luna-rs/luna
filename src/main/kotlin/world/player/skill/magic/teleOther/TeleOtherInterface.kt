@@ -6,6 +6,8 @@ import io.luna.net.msg.out.WidgetTextMessageWriter
 
 /**
  * A [StandardInterface] representing the teleother confirmation screen.
+ *
+ * @author lare96
  */
 class TeleOtherInterface(val source: Player, val target: Player, val type: TeleOtherType) :
     StandardInterface(12468) {

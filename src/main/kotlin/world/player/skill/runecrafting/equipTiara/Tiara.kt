@@ -2,6 +2,8 @@ package world.player.skill.runecrafting.equipTiara
 
 /**
  * An enum representing headgear that can be used to enter an [Altar].
+ *
+ * @author lare96
  */
 enum class Tiara(val id: Int, val config: Int) {
     AIR_TIARA(id = 5527,

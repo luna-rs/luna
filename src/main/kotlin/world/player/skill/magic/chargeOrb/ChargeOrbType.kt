@@ -10,6 +10,8 @@ import world.player.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_OR
 
 /**
  * An enum representing all the different charge orb spells.
+ *
+ * @author lare96
  */
 enum class ChargeOrbType(val spellId: Int,
                          val level: Int,

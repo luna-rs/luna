@@ -9,6 +9,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that shapes soft clay into [Unfired] pottery materials.
+ *
+ * @author lare96
  */
 class PotteryWheelActionItem(val plr: Player, val unfired: Unfired, amount: Int) : InventoryAction(plr, true, 2, amount) {
 

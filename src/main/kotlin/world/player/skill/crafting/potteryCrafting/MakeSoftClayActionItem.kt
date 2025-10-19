@@ -8,6 +8,8 @@ import world.obj.resource.fillable.WaterResource
 
 /**
  * An [InventoryAction] implementation that makes soft clay.
+ *
+ * @author lare96
  */
 class MakeSoftClayActionItem(val plr: Player) : InventoryAction(plr, true, 1, 28) {
 

@@ -31,6 +31,8 @@ import kotlin.math.roundToInt
 
 /**
  * Handles the lever option for the "Drop Party" event.
+ *
+ * @author lare96
  */
 object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
 

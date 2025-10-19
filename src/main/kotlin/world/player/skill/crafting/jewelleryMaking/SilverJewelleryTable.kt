@@ -5,6 +5,8 @@ import world.player.skill.crafting.jewelleryMaking.GoldJewelleryTable.values
 
 /**
  * An enum representing the silver jewellery table.
+ *
+ * @author lare96
  */
 enum class SilverJewelleryTable(val mouldWidgetId: Int,
                                 val mouldId: Int,

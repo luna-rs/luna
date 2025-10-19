@@ -10,6 +10,8 @@ import io.luna.util.RandomUtils
 
 /**
  * An [InventoryAction] that harvests based on the [HarvestableResource] type.
+ *
+ * @author lare96
  */
 class HarvestActionItem(plr: Player, val gameObject: GameObject, val resource: HarvestableResource) :
     InventoryAction(plr, true, 2, Int.MAX_VALUE) {

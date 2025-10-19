@@ -10,6 +10,8 @@ import world.player.skill.magic.SpellRequirement
 
 /**
  * An enum representing every single teleport spell that can be cast.
+ *
+ * @author lare96
  */
 enum class TeleportSpell(val level: Int,
                          val xp: Double,

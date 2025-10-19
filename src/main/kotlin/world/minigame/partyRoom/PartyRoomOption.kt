@@ -4,6 +4,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * Represents a party room lever option that needs to be registered to [PartyRoom.LEVER_OPTIONS].
+ *
+ * @author lare96
  */
 abstract class PartyRoomOption(val cost: Int, val description: String) {
 

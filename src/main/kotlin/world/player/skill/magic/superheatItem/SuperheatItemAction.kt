@@ -17,6 +17,8 @@ import world.player.skill.smithing.BarType
 
 /**
  * A [QueuedAction] that handles the process of players doing low and high alchemy.
+ *
+ * @author lare96
  */
 class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Player>(plr, plr.superheatDelay, 5) {
 

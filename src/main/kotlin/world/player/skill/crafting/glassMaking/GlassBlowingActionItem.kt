@@ -9,6 +9,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that blows molten glass into a [GlassMaterial].
+ *
+ * @author lare96
  */
 class GlassBlowingActionItem(plr: Player, private val material: GlassMaterial, amount: Int) : InventoryAction(plr, true, 2, amount) {
 

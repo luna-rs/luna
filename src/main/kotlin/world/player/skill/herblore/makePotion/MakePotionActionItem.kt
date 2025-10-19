@@ -7,6 +7,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will make potions.
+ *
+ * @author lare96
  */
 class MakePotionActionItem(plr: Player,
                            val potion: FinishedPotion,

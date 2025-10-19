@@ -6,6 +6,8 @@ import world.player.skill.fletching.stringBow.Bow.*
 
 /**
  * An enum representing an item that can be cut into a [Bow].
+ *
+ * @author lare96
  */
 enum class Log(val id: Int, val bows: List<Bow>) {
     NORMAL(id = 1511,

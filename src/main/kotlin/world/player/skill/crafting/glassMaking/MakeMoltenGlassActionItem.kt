@@ -9,6 +9,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that combines soda ash and a bucket of sand to make molten glass.
+ *
+ * @author lare96
  */
 class MakeMoltenGlassActionItem(plr: Player, amount: Int) : InventoryAction(plr, true, 3, amount) {
 

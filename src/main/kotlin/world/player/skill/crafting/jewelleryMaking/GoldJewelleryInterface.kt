@@ -10,6 +10,8 @@ import io.luna.net.msg.out.WidgetTextMessageWriter
 
 /**
  * A [StandardInterface] implementation that opens up the gold jewellery interface.
+ *
+ * @author lare96
  */
 class GoldJewelleryInterface : StandardInterface(4161) {
 

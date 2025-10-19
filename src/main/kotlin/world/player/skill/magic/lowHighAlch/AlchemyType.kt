@@ -6,6 +6,8 @@ import world.player.skill.magic.SpellRequirement
 
 /**
  * Represents the two different alchemy types.
+ *
+ * @author lare96
  */
 enum class AlchemyType(val level: Int, val xp: Double, val requirements: List<SpellRequirement>) {
     LOW(level = 21,

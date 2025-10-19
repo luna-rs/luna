@@ -7,6 +7,8 @@ import world.player.skill.magic.SpellRequirement
 
 /**
  * An enum representing the two bones to items spells.
+ *
+ * @author lare96
  */
 enum class BonesToItemsType(val id: Int, val level: Int, val xp: Double, val requirements: List<SpellRequirement>) {
     BANANAS(id = 1963,

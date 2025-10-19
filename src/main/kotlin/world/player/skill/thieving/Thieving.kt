@@ -1,8 +1,8 @@
 package world.player.skill.thieving
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.DropTableItemList
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.DropTableItemList
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Entity
@@ -16,6 +16,8 @@ import world.player.skill.thieving.pickpocketNpc.ThievableNpc
 
 /**
  * Contains utility functions related to the thieving skill.
+ *
+ * @author lare96
  */
 object Thieving {
 

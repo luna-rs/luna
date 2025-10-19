@@ -10,6 +10,8 @@ import world.player.skill.magic.SpellRequirement
 
 /**
  * A [LockedAction] implementation that teleports a player to another destination.
+ *
+ * @author lare96
  */
 open class TeleportAction(plr: Player,
                           val level: Int = 1,

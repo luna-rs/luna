@@ -6,6 +6,8 @@ import io.luna.util.Rational
 
 /**
  * A [HarvestableResource] representing flax.
+ *
+ * @author lare96
  */
 object FlaxResource : HarvestableResource() {
 

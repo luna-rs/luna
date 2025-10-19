@@ -14,6 +14,8 @@ import world.player.skill.magic.Magic
 
 /**
  * A [QueuedAction] that handles the process of players doing low and high alchemy.
+ *
+ * @author lare96
  */
 class AlchemyAction(plr: Player, private val type: AlchemyType, private val inventoryIndex: Int) :
     QueuedAction<Player>(plr, plr.alchemyDelay, 5) {

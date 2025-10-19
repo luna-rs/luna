@@ -16,7 +16,6 @@ import world.player.skill.agility.AgilityObstacle.*
  * The barbarian outpost agility course.
  */
 course(BARBARIAN_OUTPOST) {
-    // TODO Ropeswing animation clunky.
     obstacle(id = 2282,
              type = BARBARIAN_ROPESWING,
              action = {

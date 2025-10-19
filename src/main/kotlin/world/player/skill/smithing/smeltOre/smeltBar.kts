@@ -10,6 +10,8 @@ import world.player.skill.smithing.Smithing
 
 /**
  * An enum representing all types of ores that can be used with a furnace.
+ *
+ * @author lare96
  */
 enum class SmeltOre(val barType: BarType, val useItem: Item) {
     TIN(barType = BarType.BRONZE,

@@ -1,5 +1,9 @@
 package world.player.skill.farming
 
+/**
+ *
+ * @author lare96
+ */
 enum class PatchType(val cycleMinutes: Int = 1) {
     ALLOTMENT(cycleMinutes = 10),
     FLOWER,

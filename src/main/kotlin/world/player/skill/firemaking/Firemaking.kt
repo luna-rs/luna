@@ -6,6 +6,8 @@ import world.player.skill.Skills
 
 /**
  * Holds constants and useful global functions related to Firemaking.
+ *
+ * @author lare96
  */
 object Firemaking {
 

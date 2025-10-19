@@ -6,6 +6,8 @@ import world.player.skill.slayer.Slayer.completedSlayerTasks
 
 /**
  * A class representing an active slayer task.
+ *
+ * @author lare96
  */
 class ActiveSlayerTask(val task: SlayerTaskType, val assignee: SlayerMaster, var remaining: Int) {
 

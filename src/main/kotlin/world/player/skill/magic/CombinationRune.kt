@@ -2,6 +2,8 @@ package world.player.skill.magic
 
 /**
  * An enum representing all combination runes that can represent [Rune] types.
+ *
+ * @author lare96
  */
 enum class CombinationRune(val id: Int, val represents: Set<Rune>) {
     MIST(id = 4695, represents = setOf(Rune.AIR, Rune.WATER)),

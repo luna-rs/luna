@@ -10,6 +10,8 @@ import world.player.Sounds
 
 /**
  * An [InventoryAction] implementation that strings bows.
+ *
+ * @author lare96
  */
 class StringBowActionItem(plr: Player,
                           val bow: Bow,

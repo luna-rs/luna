@@ -1,10 +1,10 @@
 package world.player.skill.mining
 
 import api.attr.Attr
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
-import api.item.dropTable.DropTableItem
-import api.item.dropTable.DropTableItemList
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
+import api.dropTable.DropTableItem
+import api.dropTable.DropTableItemList
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.Entity
@@ -14,6 +14,8 @@ import io.luna.game.model.`object`.GameObject
 
 /**
  * A class containing utility functions related to the Mining skill.
+ *
+ * @author lare96
  */
 object Mining {
 

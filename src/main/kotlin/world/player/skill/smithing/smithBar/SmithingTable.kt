@@ -7,6 +7,8 @@ import world.player.skill.smithing.BarType
 
 /**
  * Represents a table for every item that can be smithed using an anvil. Each table is split up by widget and index.
+ *
+ * @author lare96
  */
 enum class SmithingTable(val widgetId: Int, val slotId: Int, val bars: Int, val items: List<SmithingItem>) {
     DAGGER(widgetId = 1119,

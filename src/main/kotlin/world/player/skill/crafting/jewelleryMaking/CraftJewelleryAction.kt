@@ -12,6 +12,8 @@ import world.player.skill.smithing.BarType
 
 /**
  * An [InventoryAction] that enables crafting silver and gold jewellery for players.
+ *
+ * @author lare96
  */
 class CraftJewelleryAction(plr: Player, private val barType: BarType,
                            private val jewellery: JewelleryItem, times: Int) :

@@ -8,6 +8,8 @@ import world.obj.resource.GameResource
 
 /**
  * An abstraction model representing a resource within the Runescape world that fills items.
+ *
+ * @author lare96
  */
 abstract class FillableResource : GameResource() {
 

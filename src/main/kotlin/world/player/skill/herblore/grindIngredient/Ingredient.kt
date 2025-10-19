@@ -4,6 +4,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing an item used with a pestle and mortar.
+ *
+ * @author lare96
  */
 enum class Ingredient(val id: Int, val newId: Int) {
     CHOCOLATE_DUST(id = 1973,

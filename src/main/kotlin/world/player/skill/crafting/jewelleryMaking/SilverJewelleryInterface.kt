@@ -7,6 +7,8 @@ import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
 
 /**
  * A [StandardInterface] implementation that opens up the silver jewellery interface.
+ *
+ * @author lare96
  */
 class SilverJewelleryInterface : StandardInterface(13782) {
 

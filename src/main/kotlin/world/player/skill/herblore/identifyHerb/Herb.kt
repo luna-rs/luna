@@ -4,6 +4,8 @@ import io.luna.game.model.item.Item
 
 /**
  * An enum representing an unidentified herb.
+ *
+ * @author lare96
  */
 enum class Herb(val id: Int,
                 val identified: Int,

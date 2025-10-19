@@ -12,6 +12,8 @@ import world.player.skill.fishing.Tool
 
 /**
  * An [InventoryAction] implementation that will catch fish.
+ *
+ * @author lare96
  */
 class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
     InventoryAction(msg.plr, false, tool.speed, Int.MAX_VALUE) {

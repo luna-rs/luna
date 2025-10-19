@@ -2,6 +2,8 @@ package world.player.skill.crafting.potteryCrafting
 
 /**
  * An enum representing all unfired materials that can be shaped and fired with [PotteryWheelActionItem]/[PotteryOvenActionItem].
+ *
+ * @author lare96
  */
 enum class Unfired(val unfiredId: Int, val firedId: Int, val level: Int, val shapingExp: Double, val firingExp: Double) {
     POT(unfiredId = 1787,

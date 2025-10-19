@@ -8,6 +8,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] implementation that strings jewellery.
+ *
+ * @author lare96
  */
 class StringJewelleryAction(plr: Player, times: Int,
                             private val usedId: Int,

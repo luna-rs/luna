@@ -5,6 +5,8 @@ import io.luna.game.model.item.Item
 
 /**
  * Represents a craftable jewellery item.
+ *
+ * @author lare96
  */
 class JewelleryItem(name: String, val level: Int, val xp: Double, requiredName: String? = null) {
 

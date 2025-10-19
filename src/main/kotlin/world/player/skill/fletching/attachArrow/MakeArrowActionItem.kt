@@ -7,6 +7,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] that will attach arrowtips to headless arrows.
+ *
+ * @author lare96
  */
 class MakeArrowActionItem(plr: Player,
                           val arrow: Arrow,

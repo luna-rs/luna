@@ -4,6 +4,8 @@ import io.luna.game.model.item.Item
 
 /**
  * Represents a textile based material.
+ *
+ * @author lare96
  */
 enum class Textile(val rawItem: Item, val processedItem: Item, val level: Int, val exp: Double, val type: TextileType) {
     // Spinning wheel

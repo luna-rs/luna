@@ -12,6 +12,8 @@ import world.player.Messages
 
 /**
  * A [GameResource] that can be harvested by a player.
+ *
+ * @author lare96
  */
 abstract class HarvestableResource : GameResource() {
 

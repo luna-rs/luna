@@ -10,7 +10,9 @@ import io.luna.util.parser.JsonFileParser
 import java.nio.file.Paths
 
 /**
- * Loads the global item spawn JSON file.
+ * Loads the global [PersistentNpc] spawn JSON file.
+ *
+ * @author lare96
  */
 internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
 

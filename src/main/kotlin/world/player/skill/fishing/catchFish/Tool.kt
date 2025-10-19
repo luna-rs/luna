@@ -5,6 +5,8 @@ import world.player.skill.fishing.Fish.*
 
 /**
  * An enum representing tools used to catch [Fish].
+ *
+ * @author lare96
  */
 enum class Tool(val id: Int,
                 val level: Int,

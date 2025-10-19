@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList
 
 /**
  * An enum representing logs that can be burned.
+ *
+ * @author lare96
  */
 enum class Log(val id: Int, val level: Int, val exp: Double, val chance: Pair<Int, Int>) {
     NORMAL(id = 1511,

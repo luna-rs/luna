@@ -8,6 +8,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An [InventoryAction] implementation that makes textiles.
+ *
+ * @author lare96
  */
 class MakeTextileActionItem(val plr: Player, val textile: Textile, amount: Int) : InventoryAction(plr, true, 2, amount) {
 

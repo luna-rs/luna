@@ -4,6 +4,8 @@ import io.luna.game.model.def.GameObjectDefinition
 
 /**
  * Holds important constants and utility functions related to the Smithing skill.
+ *
+ * @author lare96
  */
 object Smithing {
 

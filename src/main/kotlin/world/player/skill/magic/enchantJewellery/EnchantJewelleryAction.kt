@@ -10,6 +10,8 @@ import world.player.skill.magic.Magic
 
 /**
  * A [QueuedAction] that handles enchanting rings, necklaces, and amulets.
+ *
+ * @author lare96
  */
 class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private val type: EnchantJewelleryType) :
     QueuedAction<Player>(plr, plr.enchantJewelleryDelay, 3) {
@@ -36,7 +38,7 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
             mob.magic.addExperience(type.xp)
             mob.animation(enchantItem.animation)
             mob.graphic(enchantItem.graphic)
-            mob.playSound(enchantItem.sound)
+            mob.playSound(type.sound)
             if (itemId == 1702) {
                 mob.sendMessage("You successfully enchant the dragonstone amulet.");
             } else {

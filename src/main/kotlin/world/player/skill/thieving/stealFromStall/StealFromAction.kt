@@ -16,6 +16,8 @@ import world.player.skill.thieving.Thieving
 
 /**
  * A [LockedAction] that handles players stealing from market stalls.
+ *
+ * @author lare96
  */
 class StealFromAction(plr: Player, val obj: GameObject, val thievable: ThievableStall) : LockedAction(plr) {
 

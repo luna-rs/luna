@@ -18,6 +18,8 @@ import world.player.skill.mining.Pickaxe
 
 /**
  * An [InventoryAction] that will enable the mining of rocks.
+ *
+ * @author lare96
  */
 class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: GameObject) :
     AnimatedInventoryAction(plr, 1, 4, Int.MAX_VALUE) {

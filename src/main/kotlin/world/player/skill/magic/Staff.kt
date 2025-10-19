@@ -5,6 +5,8 @@ import io.luna.game.model.mob.Player
 
 /**
  * An enum representing all staves that can represent [Rune] types.
+ *
+ * @author lare96
  */
 enum class Staff(val ids: Set<Int>, val represents: Set<Rune>) {
     WATER(ids = setOf(1383, 1395, 1403),

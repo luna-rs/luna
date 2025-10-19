@@ -7,6 +7,8 @@ import io.luna.game.model.mob.block.Animation
 
 /**
  * An enumerated type representing all pickaxes that can be used to mine [Ore]s.
+ *
+ * @author lare96
  */
 enum class Pickaxe(val level: Int,
                    val itemId: Int,

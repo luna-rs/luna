@@ -2,6 +2,8 @@ package world.player.skill.runecrafting.craftRune
 
 /**
  * An enum representing a rune that can be crafted at an [Altar].
+ *
+ * @author lare96
  */
 enum class CraftableRune(val id: Int,
                          val altar: Int,

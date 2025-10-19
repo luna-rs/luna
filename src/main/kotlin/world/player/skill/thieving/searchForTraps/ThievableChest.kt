@@ -1,11 +1,13 @@
 package world.player.skill.thieving.searchForTraps
 
-import api.item.dropTable.DropTable
-import api.item.dropTable.DropTableHandler
+import api.dropTable.DropTable
+import api.dropTable.DropTableHandler
 import api.predef.*
 
 /**
  * Represents a chest that can be stolen from.
+ *
+ * @author lare96
  */
 enum class ThievableChest(val id: Int,
                           val level: Int,

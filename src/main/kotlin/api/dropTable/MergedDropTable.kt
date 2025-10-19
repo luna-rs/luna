@@ -1,4 +1,4 @@
-package api.item.dropTable
+package api.dropTable
 
 import com.google.common.collect.Iterators
 import io.luna.game.model.Entity

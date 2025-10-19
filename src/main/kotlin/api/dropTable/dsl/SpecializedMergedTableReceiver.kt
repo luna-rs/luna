@@ -1,6 +1,6 @@
-package api.item.dropTable.dsl
+package api.dropTable.dsl
 
-import api.item.dropTable.DropTable
+import api.dropTable.DropTable
 
 /**
  * Enables the transfer of items to a specialized [DropTable] type in our DSL, within a merged drop table.

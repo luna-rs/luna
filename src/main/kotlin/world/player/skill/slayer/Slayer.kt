@@ -11,6 +11,8 @@ import io.luna.game.model.mob.dialogue.Expression
 
 /**
  * Holds important constants and utility functions related to the Slayer skill.
+ *
+ * @author lare96
  */
 object Slayer {
 

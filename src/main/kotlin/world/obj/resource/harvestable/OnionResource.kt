@@ -6,6 +6,8 @@ import io.luna.game.model.item.Item
 
 /**
  * A [HarvestableResource] representing onion.
+ *
+ * @author lare96
  */
 object OnionResource : HarvestableResource() {
 

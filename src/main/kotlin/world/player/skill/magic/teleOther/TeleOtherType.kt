@@ -8,6 +8,8 @@ import world.player.skill.magic.teleportSpells.TeleportSpell
 
 /**
  * Represents all the different teleother spell types.
+ *
+ * @author lare96
  */
 enum class TeleOtherType(val location: String,
                          val level: Int,

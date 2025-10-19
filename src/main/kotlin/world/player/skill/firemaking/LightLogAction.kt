@@ -11,6 +11,8 @@ import world.player.Sounds
 
 /**
  * A [LightAction] implementation that enables lighting logs to create fires.
+ *
+ * @author lare96
  */
 class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
     LightAction(plr, Firemaking.computeLightDelay(plr, log)) {

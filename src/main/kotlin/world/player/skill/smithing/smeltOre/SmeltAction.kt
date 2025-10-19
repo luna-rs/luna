@@ -12,6 +12,8 @@ import world.player.skill.smithing.BarType
 
 /**
  * An [InventoryAction] implementation that handles the smelting action.
+ *
+ * @author lare96
  */
 class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryAction(plr, true, 3, times) {
 

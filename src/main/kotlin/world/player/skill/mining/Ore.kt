@@ -4,6 +4,8 @@ import api.predef.*
 
 /**
  * An enumerated type representing all ores that can be mined with [Pickaxe]s.
+ *
+ * @author lare96
  */
 enum class Ore(val rocks: List<Pair<Int, Int>>,
                val level: Int,

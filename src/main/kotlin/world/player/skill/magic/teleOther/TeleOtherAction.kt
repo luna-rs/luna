@@ -14,7 +14,9 @@ import world.player.Sounds
 import world.player.skill.magic.Magic
 
 /**
- * A [RepeatingAction] that handles [source] teleporting [target] to another location based on [type].
+ * A [LockedAction] that handles [source] teleporting [target] to another location based on [type].
+ *
+ * @author lare96
  */
 class TeleOtherAction(private val source: Player, private val target: Player, private val type: TeleOtherType) :
     LockedAction(source) {

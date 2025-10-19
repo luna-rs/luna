@@ -13,6 +13,8 @@ import world.player.skill.fletching.stringBow.Bow
 
 /**
  * An [InventoryAction] implementation that cuts logs.
+ *
+ * @author lare96
  */
 class CutLogActionItem(plr: Player,
                        val log: Int,

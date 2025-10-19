@@ -2,6 +2,8 @@ package world.player.skill.magic
 
 /**
  * An enum class representing all standard runes.
+ *
+ * @author lare96
  */
 enum class Rune(val id: Int) {
     AIR(556),
