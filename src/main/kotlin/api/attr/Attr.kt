@@ -4,6 +4,7 @@ import api.attr.typeAdapters.ActiveSlayerTaskTypeAdapter
 import api.attr.typeAdapters.AttributeMapTypeAdapter
 import api.attr.typeAdapters.IndexedItemTypeAdapter
 import api.attr.typeAdapters.ItemContainerTypeAdapter
+import api.attr.typeAdapters.ItemTypeAdapter
 import api.predef.*
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
@@ -14,6 +15,7 @@ import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.mob.attr.Attribute
 import io.luna.game.model.mob.attr.AttributeMap
 import io.luna.game.TickTimer
+import io.luna.game.model.item.Item
 import world.player.skill.slayer.ActiveSlayerTask
 import kotlin.reflect.KClass
 
@@ -27,7 +29,7 @@ object Attr {
     /**
      * A set of valid collection types.
      */
-    val VALID_COLLECTION_TYPES = setOf(Int::class, Long::class, String::class, Double::class, Boolean::class)
+    val VALID_COLLECTION_TYPES = setOf(Int::class, Long::class, String::class, Double::class, Boolean::class) // todo check if we still need this limitation?
 
     init {
         val builder = GsonBuilder().disableHtmlEscaping().disableInnerClassSerialization().setPrettyPrinting()
@@ -38,6 +40,7 @@ object Attr {
         builder.registerTypeAdapter(ActiveSlayerTask::class.java, ActiveSlayerTaskTypeAdapter)
         builder.registerTypeAdapter(AttributeMap::class.java, AttributeMapTypeAdapter)
         builder.registerTypeAdapter(IndexedItem::class.java, IndexedItemTypeAdapter)
+        builder.registerTypeAdapter(Item::class.java, ItemTypeAdapter)
 
         // Set the serializer.
         Attribute.setGsonInstance(builder.create())
@@ -106,7 +109,6 @@ object Attr {
      * Creates an [ArrayList] attribute with [initialValues].
      */
     inline fun <reified E> list(vararg initialValues: E): AttributeDelegate<ArrayList<E>> {
-        check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
         val values = initialValues.toCollection(ArrayList())
         val attr = Attribute(values)
         return AttributeDelegate(attr)
@@ -116,7 +118,6 @@ object Attr {
      * Creates a [HashSet] attribute with [initialValues].
      */
     inline fun <reified E> hashSet(vararg initialValues: E): AttributeDelegate<HashSet<E>> {
-        check(VALID_COLLECTION_TYPES.contains(E::class)) { "Attribute collections can only hold Int, Long, Double, Boolean, or String types." }
         val values = initialValues.toCollection(HashSet())
         val attr = Attribute(values)
         return AttributeDelegate(attr)
@@ -126,9 +127,6 @@ object Attr {
      * Creates a [HashMap] attribute with [initialValues].
      */
     inline fun <reified K, reified V> map(vararg initialValues: Pair<K, V>): AttributeDelegate<HashMap<K, V>> {
-        check(VALID_COLLECTION_TYPES.contains(K::class) && VALID_COLLECTION_TYPES.contains(V::class)) {
-            "Attribute collections can only hold Int, Long, Double, Boolean, or String types."
-        }
         val map = HashMap<K, V>()
         for (next in initialValues) {
             map += next
