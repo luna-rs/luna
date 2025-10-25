@@ -6,7 +6,7 @@ plugin {
     name = "Engine listeners"
     description =
         """
-        A plugin that enables players to buy and sell, as well as check the price of shop items.
+        A plugin that contains all foundational system-layer event listeners.
         """
     version = "1.0"
     authors += "lare96"
