@@ -1,132 +1,36 @@
 package io.luna.game.model.mob;
 
-import api.item.dropTable.DropTableHandler;
-import io.luna.Luna;
-import io.luna.LunaContext;
-import io.luna.game.event.impl.DeathEvent;
+import api.combat.death.DeathHookHandler;
 import io.luna.game.model.EntityType;
-import io.luna.game.model.World;
-import io.luna.game.model.def.NpcCombatDefinition;
-import io.luna.game.model.mob.Player.SkullIcon;
-import io.luna.game.model.mob.block.Animation;
-import io.luna.game.model.mob.block.Animation.AnimationPriority;
-import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
-import io.luna.net.msg.out.MusicMessageWriter;
-import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
-import world.player.Jingles;
 
 /**
- * A {@link Task} that handles the death process for a {@link Mob}.
+ * A {@link Task} that handles the death process for a {@link Mob}. Forwards events to kotlin event listeners
  *
  * @author lare96
  */
-public abstract class MobDeathTask<T extends Mob> extends Task {
-
-    /**
-     * A death task implementation for {@link Player}s.
-     */
-    public static final class PlayerDeathTask extends MobDeathTask<Player> {
-
-        /**
-         * Creates a new {@link PlayerDeathTask}.
-         */
-        public PlayerDeathTask(Player player) {
-            super(player);
-        }
-
-        @Override
-        public void handleDeath(DeathStage stage, Mob source) {
-            switch (stage) {
-                case PRE_DEATH:
-                    mob.sendMessage("Oh dear, you are dead!");
-                    mob.animation(new Animation(2304, AnimationPriority.HIGH));
-                    mob.getInterfaces().close();
-
-                    int deathId = Jingles.DEATH_2.getId();
-                    mob.queue(new MusicMessageWriter(deathId));
-                    break;
-                case DEATH:
-                    mob.getPlugins().post(new DeathEvent(mob, source));
-                    break;
-                case POST_DEATH:
-                    mob.move(Luna.settings().game().startingPosition());
-                    mob.animation(new Animation(65535));
-                    mob.queue(new WalkableInterfaceMessageWriter(65535));
-                    mob.getSkills().resetAll();
-                    mob.setSkullIcon(SkullIcon.NONE);
-                    // TODO Reset all prayers. https://github.com/luna-rs/luna/issues/369
-                    mob.getFlags().flag(UpdateFlag.APPEARANCE);
-                    break;
-            }
-        }
-    }
-
-    /**
-     * A death task implementation for {@link Npc}s.
-     */
-    public static final class NpcDeathTask extends MobDeathTask<Npc> {
-
-        /**
-         * Creates a new {@link NpcDeathTask}.
-         */
-        public NpcDeathTask(Npc npc) {
-            super(npc);
-        }
-
-        @Override
-        public void handleDeath(DeathStage stage, Mob source) {
-            switch (stage) {
-                case PRE_DEATH:
-                    mob.getCombatDefinition().ifPresent(def ->
-                            mob.animation(new Animation(def.getDeathAnimation(), AnimationPriority.HIGH)));
-                    mob.getActions().interruptAll();
-                    break;
-                case DEATH:
-                    DropTableHandler.INSTANCE.onDeath(source, mob);
-                    mob.getPlugins().post(new DeathEvent(mob, source));
-                    world.getNpcs().remove(mob);
-                    break;
-                case POST_DEATH:
-                    if (mob.isRespawn()) {
-                        var defOptional = mob.getCombatDefinition().
-                                filter(def -> def.getRespawnTime() != -1).
-                                map(NpcCombatDefinition::getRespawnTime);
-                        defOptional.ifPresent(delay -> world.schedule(new Task(delay) {
-                            @Override
-                            protected void execute() {
-                                cancel();
-                                Npc respawn = new Npc(mob.getContext(), mob.getBaseId(),
-                                        mob.getBasePosition()).setRespawning();
-                                world.getNpcs().add(respawn);
-                            }
-                        }));
-                    }
-                    break;
-            }
-        }
-    }
+public final class MobDeathTask extends Task {
 
     /**
      * An enumerated type that represents the different death stages.
      */
-    private enum DeathStage {
+    public enum DeathStage {
 
         /**
-         * Pre-death, right after the mob's health is reduced to 0. The death source is computed at this point.
+         * The part of the death stage when the mob's health is reduced to 0.
          */
         PRE_DEATH,
 
         /**
-         * The main death stage where items are dropped for the death source.
+         * The main death stage where typically, items are dropped for the death source.
          */
         DEATH,
 
         /**
-         * Post-death, the last part of the death process where the mob is respawned.
+         * The last death stage where the mob is usually respawned.
          */
         POST_DEATH
     }
@@ -137,24 +41,9 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The context.
-     */
-    final LunaContext ctx;
-
-    /**
-     * The world.
-     */
-    final World world;
-
-    /**
      * The mob that died.
      */
-    final T mob;
-
-    /**
-     * The amount of times the task has executed.
-     */
-    private int currentLoop;
+    private final Mob victim;
 
     /**
      * The source of death.
@@ -162,48 +51,36 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
     private Mob source;
 
     /**
-     * Creates a new {@link MobDeathTask}.
+     * The amount of times the task has executed.
      */
-    public MobDeathTask(T mob) {
-        super(1);
-        this.mob = mob;
-        ctx = mob.getContext();
-        world = mob.getWorld();
-    }
+    private int currentLoop;
 
     /**
-     * Handle a death stage.
-     *
-     * @param stage The stage of death.
-     * @param source The source of death.
+     * Creates a new {@link MobDeathTask}.
      */
-    public abstract void handleDeath(DeathStage stage, Mob source);
+    public MobDeathTask(Mob victim, Mob source) {
+        super(true, 1);
+        this.victim = victim;
+        this.source = source;
+    }
 
     @Override
     protected boolean onSchedule() {
-        mob.skill(Skill.HITPOINTS).setLevel(0);
-        mob.getWalking().clear();
-        mob.getActions().interruptWeak();
-        // TODO Calculate the source of death.
-        // source = ???
+        victim.getWalking().clear();
         return true;
     }
 
     @Override
-    public final void execute() {
+    public void execute() {
         try {
             if (currentLoop == 0) {
-                handleDeath(DeathStage.PRE_DEATH, source);
+                DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.PRE_DEATH);
             } else if (currentLoop == 4) {
-                handleDeath(DeathStage.DEATH, source);
-            } else if (currentLoop == 5) {
-                handleDeath(DeathStage.POST_DEATH, source);
-                cancel();
-            } else if (currentLoop > 5) {
+                DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.DEATH);
+            } else if (currentLoop >= 5) {
+                DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.POST_DEATH);
                 cancel();
             }
-        } catch (Exception e) {
-            logger.catching(e);
         } finally {
             currentLoop++;
         }
@@ -212,12 +89,12 @@ public abstract class MobDeathTask<T extends Mob> extends Task {
     @Override
     public final void onException(Exception e) {
         // If any errors occur during death, remove mob.
-        var world = mob.getWorld();
-        if (mob.getType() == EntityType.PLAYER) {
-            mob.asPlr().getClient().disconnect();
-        } else if (mob.getType() == EntityType.NPC) {
-            world.getNpcs().remove(mob.asNpc());
+        var world = victim.getWorld();
+        if (victim.getType() == EntityType.PLAYER) {
+            victim.asPlr().forceLogout();
+        } else if (victim.getType() == EntityType.NPC) {
+            world.getNpcs().remove(victim.asNpc());
         }
-        logger.error(new ParameterizedMessage("Error while processing death for {}", mob), e);
+        logger.error(new ParameterizedMessage("Error while processing death for {}", victim), e);
     }
 }

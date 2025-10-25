@@ -57,6 +57,7 @@ public class Npc extends Mob {
      * The NPC wander radius.
      */
     private int wanderRadius; // TODO NPC wandering
+    private int respawnTicks = -1;
 
     /**
      * Creates a new {@link Npc}.
@@ -267,7 +268,7 @@ public class Npc extends Mob {
     /**
      * @return The combat definition.
      */
-    public Optional<NpcCombatDefinition> getCombatDefinition() {
+    public Optional<NpcCombatDefinition> getCombatDef() {
         return combatDefinition;
     }
 
@@ -309,6 +310,14 @@ public class Npc extends Mob {
         return this;
     }
 
+    public void setRespawnTicks(int respawnTicks) {
+        this.respawnTicks = respawnTicks;
+    }
+
+    public int getRespawnTicks() {
+        return respawnTicks;
+    }
+
     /**
      * Forces this NPC to start wandering. This will undo its current {@link #defaultDirection}. The radius must be
      * 0 or above.
@@ -317,8 +326,8 @@ public class Npc extends Mob {
      */
     public Npc setWandering(int radius) {
         checkArgument(radius >= 0, "Radius must be 0 or above.");
-        if(wanderRadius != radius) { // only change if different from current
-            if(radius == 0) { // TODO wandering code
+        if (wanderRadius != radius) { // only change if different from current
+            if (radius == 0) { // TODO wandering code
                 // cancel wander action
             } else {
                 // start or modify "action"

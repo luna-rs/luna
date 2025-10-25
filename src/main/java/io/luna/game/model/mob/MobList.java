@@ -219,7 +219,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
      * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
-     * logout packet or use {@link Player#disconnect()} to disconnect the player.</strong>
+     * logout packet or use {@link Player#forceLogout()} to forcibly and safely disconnect the player.</strong>
      *
      * @param mob The mob to remove.
      */
