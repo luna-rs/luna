@@ -16,7 +16,7 @@ public final class TimeSource extends TickTimer {
      * If this time source was checked. This is necessary so the first {@link #ready(int)} check always returns
      * {@code true}.
      */
-    private boolean checked; // todo wont be needed once ticktimer supports pausing
+    private boolean checked;
 
     /**
      * If this time source is waiting to queue an action.
@@ -29,7 +29,7 @@ public final class TimeSource extends TickTimer {
      * @param world The world.
      */
     public TimeSource(World world) {
-        super(world, 0);
+        super(world);
     }
 
     /**

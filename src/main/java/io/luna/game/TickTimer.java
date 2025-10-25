@@ -12,7 +12,7 @@ import java.time.Duration;
  * @author lare96
  */
 public class TickTimer implements Comparable<Long> {
-// todo pausing/resuming due to initial delay, if required for long time it may not have elapsed yet
+
     /**
      * The world.
      */
@@ -25,12 +25,12 @@ public class TickTimer implements Comparable<Long> {
 
     /**
      * Creates a new {@link TickTimer} with {@code initialDurationTicks}.
-     *  @param world The world.
-     * @param initialDurationTicks The initial duration, in ticks.
+     *
+     * @param world The world.
      */
-    public TickTimer(World world, long initialDurationTicks) {
+    public TickTimer(World world) {
         this.world = world;
-        snapshot = world.getCurrentTick() - initialDurationTicks;
+        reset();
     }
 
     @Override

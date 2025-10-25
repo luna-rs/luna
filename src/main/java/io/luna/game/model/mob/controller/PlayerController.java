@@ -5,7 +5,7 @@ import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import world.player.skill.magic.teleportSpells.TeleportAction;
+import game.skill.magic.teleportSpells.TeleportAction;
 
 /**
  * A model containing a set of listeners that can intercept and terminate basic {@link Player} actions before they
@@ -98,7 +98,7 @@ public abstract class PlayerController {
      * <pre>
      * {@code
      * @Override
-     * public boolean onPlayerEvent(Player player, ControllableEvent event) {
+     * public boolean onEvent(Player player, ControllableEvent event) {
      *    if(event instanceof CommandEvent) {
      *        String cmdName = ((CommandEvent) event).getName();
      *        if(!cmdName.equals("getscore")) {
@@ -115,7 +115,7 @@ public abstract class PlayerController {
      * @param event The event that can be transformed or terminated.
      * @return {@code false} if the event should be terminated.
      */
-    public boolean onPlayerEvent(Player player, ControllableEvent event) {
+    public boolean onEvent(Player player, ControllableEvent event) {
         return true;
     }
 }

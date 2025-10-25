@@ -34,12 +34,10 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
      */
     private final AbstractUpdateBlockSet<Player> blockSet = new PlayerUpdateBlockSet();
 
-
     @Override
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(90, MessageType.VAR_SHORT);
         ByteMessage blockMsg = ByteMessage.raw();
-
         try {
             msg.startBitAccess();
             handleMovement(player, msg, true);
@@ -57,7 +55,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                     msg.putBits(2, 3);
                     iterator.remove();
                     player.getLocalPlayers().remove(other);
-                    if(player.isBot() && !other.isBot()) {
+                    if (player.isBot() && !other.isBot()) {
                         player.asBot().getLocalHumans().remove(other);
                     }
                 }
@@ -76,7 +74,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                 if (other.getPosition().isViewable(player.getPosition()) && player.getUpdatePlayers().add(other)) {
                     playersAdded++;
                     player.getLocalPlayers().add(other);
-                    if(player.isBot() && !other.isBot()) {
+                    if (player.isBot() && !other.isBot()) {
                         player.asBot().getLocalHumans().add(other);
                     }
                     addPlayer(msg, player, other);
@@ -119,7 +117,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
      */
     private void handleMovement(Player player, ByteMessage msg, boolean updateTeleport) {
         boolean needsUpdate = !player.getFlags().isEmpty();
-        if(updateTeleport && player.getFlags().size() == 1 && player.getFlags().get(UpdateFlag.CHAT)) {
+        if (updateTeleport && player.getFlags().size() == 1 && player.getFlags().get(UpdateFlag.CHAT)) {
             // Needs update needs to be false if were only forcing chat
             needsUpdate = false;
         }
