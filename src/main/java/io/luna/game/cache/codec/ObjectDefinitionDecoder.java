@@ -78,6 +78,14 @@ public final class ObjectDefinitionDecoder extends CacheDecoder<GameObjectDefini
             int opcode = data.readUnsignedByte();
 
             if (opcode == 0) {
+                if (animationId == OptionalInt.empty()) {
+                    switch (id) { // Not in cache for some reason :/
+                        case 2282:
+                        case 2288:
+                            animationId = OptionalInt.of(497);
+                            break;
+                    }
+                }
                 return new GameObjectDefinition(id, name, description, width, length, direction, solid, impenetrable,
                         interactive, animationId, ImmutableList.copyOf(actions), obstructive, varpDef);
             } else if (opcode == 1) {
