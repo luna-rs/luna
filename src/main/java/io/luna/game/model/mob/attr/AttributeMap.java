@@ -46,6 +46,8 @@ public final class AttributeMap {
      * @param loadedAttributeMap A list of objects representing persisted attributes.
      */
     public void load(Map<String, Object> loadedAttributeMap) {
+        attributes.clear();
+        loadedAttributes.clear();
         loadedAttributeMap.forEach((String key, Object value) -> {
             // First retrieve the runtime type.
             String[] tokens = key.split("@");

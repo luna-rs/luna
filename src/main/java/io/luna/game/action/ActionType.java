@@ -28,7 +28,7 @@ public enum ActionType {
     NORMAL,
 
     /**
-     * Closes modal interface prior to executing.
+     * Always runs until {@link ActionQueue#interruptAll()} is called or the implementation decides to stop.
      */
     SOFT,
 }

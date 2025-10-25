@@ -86,3 +86,4 @@ gradle-app.setting
 /data/notes/
 /data/game/cache/
 /src/main/kotlin/engine/sandbox/
+/data/game/bots/logs/

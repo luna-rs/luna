@@ -34,7 +34,7 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     /**
      * The map of pending requests.
      */
-    private final ConcurrentHashMap<String, T> pending = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<String, T> pending = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link AuthenticationService}.
