@@ -57,9 +57,9 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import world.player.Messages;
-import world.player.Sounds;
-import world.player.item.consumable.potion.PotionCountdownTimer;
+import game.player.Messages;
+import game.player.Sounds;
+import game.item.consumable.potion.PotionCountdownTimer;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -748,7 +748,8 @@ public class Player extends Mob {
     /**
      * Logs out this player using the logout packet. The proper way to logout the player.
      */
-    public void forceLogout() {// todo implement, maybe with a boolean isForcedLogout
+    public void forceLogout() {
+        // todo implement, maybe with a boolean isForcedLogout
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
@@ -881,8 +882,10 @@ public class Player extends Mob {
      * Loads all previously active {@link PotionCountdownTimer} types into this player.
      */
     public void loadPotionsFromJson(JsonArray array) {
-        for (JsonElement element : array) {
-            PotionCountdownTimer.Companion.loadJson(this, element.getAsJsonObject());
+        if(array != null) {
+            for (JsonElement element : array) {
+                PotionCountdownTimer.Companion.loadJson(this, element.getAsJsonObject());
+            }
         }
     }
 

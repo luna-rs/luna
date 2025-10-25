@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.luna.LunaContext;
 import io.luna.game.LoginService;
 import io.luna.game.LogoutService;
 import io.luna.game.model.World;
@@ -17,7 +18,6 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -46,7 +46,7 @@ public final class PersistenceService extends AbstractIdleService {
      * The world.
      */
     private final World world;
-
+    private final LunaContext context;
     /**
      * The worker that will run all persistence tasks.
      */
@@ -59,6 +59,7 @@ public final class PersistenceService extends AbstractIdleService {
      */
     public PersistenceService(World world) {
         this.world = world;
+        this.context = world.getContext();
 
         ThreadFactory threadFactory = ExecutorUtils.threadFactory(PersistenceService.class);
         worker = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
@@ -85,29 +86,47 @@ public final class PersistenceService extends AbstractIdleService {
      * @return The future, describing the result of the task.
      */
     public ListenableFuture<Void> transform(String username, Consumer<PlayerData> action) {
-        if (world.getPlayerMap().containsKey(username)) {
-            Optional<Player> optionalPlayer = world.getPlayer(username);
-            if (optionalPlayer.isEmpty()) {
-                throw new IllegalStateException("Player exists in player map but not game map.");
+        Consumer<Player> playerOnline = player -> {
+            try {
+                PlayerData saveData = player.createSaveData(); // Create current save data.
+                action.accept(saveData); // Transform it.
+                saveData.load(player); // Load it into the player since they're online.
+                logger.debug("Finished transforming {}'s data while online.", username);
+            } catch (Exception e) {
+                logger.catching(e);
             }
-            Player player = optionalPlayer.get();
-            PlayerData saveData = player.createSaveData(); // Create current save data.
-            action.accept(saveData); // Transform it.
-            saveData.load(player); // Load it into the player since they're online.
-            return save(username, saveData); // Send a save request.
-        }
-
-        logger.trace("Sending data transformation request for {} to a worker...", username);
-        return worker.submit(() -> {
+        };
+        Runnable playerOffline = () -> {
             Stopwatch timer = Stopwatch.createStarted();
             GameSerializerManager serializerManager = world.getSerializerManager();
-            PlayerData data = serializerManager.getSerializer().loadPlayer(world, username);
-            if (data == null) {
-                throw new NoSuchElementException("No player data available for " + username);
+            try {
+                PlayerData data = serializerManager.getSerializer().loadPlayer(world, username);
+                if (data == null) {
+                    logger.warn("No player data available for {}.", username);
+                    return;
+                }
+                action.accept(data);
+                serializerManager.getSerializer().savePlayer(world, username, data);
+            } catch (Exception e) {
+                logger.catching(e);
+                return;
             }
-            action.accept(data);
-            serializerManager.getSerializer().savePlayer(world, username, data);
-            logger.debug("Finished transforming {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
+            logger.debug("Finished transforming {}'s data while offline (took {}ms).", username,
+                    box(timer.elapsed().toMillis()));
+        };
+        logger.trace("Sending data transformation request for {} to a worker...", username);
+        return worker.submit(() -> {
+            // Wait for any pending saves to finish.
+            world.getLogoutService().waitForSave(username);
+            Optional<Player> playerOptional = world.getPlayer(username);
+            if (playerOptional.isPresent()) {
+                // Player is online, do online transformation on game thread.
+                Player player = playerOptional.get();
+                context.getGame().sync(() -> playerOnline.accept(player));
+            } else {
+                // Otherwise do offline transformation.
+                playerOffline.run();
+            }
             return null;
         });
     }
@@ -121,7 +140,7 @@ public final class PersistenceService extends AbstractIdleService {
     public ListenableFuture<PlayerData> load(String username) {
         Player player = world.getPlayerMap().get(username);
         if (player != null) {
-            var data = new PlayerData(username).save(player);
+            PlayerData data = player.createSaveData();
             return Futures.immediateFuture(data);
         }
         logger.trace("Sending load request for {} to a worker...", username);
@@ -153,7 +172,7 @@ public final class PersistenceService extends AbstractIdleService {
      * @return A listenable future describing the result of the save.
      */
     public ListenableFuture<Void> save(String username, PlayerData data) {
-        if (world.getLogoutService().hasRequest(username)) {
+        if (world.getLogoutService().isSavePending(username)) {
             // The LogoutService will handle the saving.
             IllegalStateException ex = new IllegalStateException("This player is already being serviced by LogoutService.");
             return Futures.immediateFailedFuture(ex);
@@ -215,7 +234,8 @@ public final class PersistenceService extends AbstractIdleService {
      * @return A listenable future describing the result of the deletion.
      */
     public ListenableFuture<Boolean> delete(String username) {
-        if (world.getLogoutService().hasRequest(username) || world.getPlayerMap().containsKey(username)) {
+        // todo logout player that's logged in, wait for logout
+        if (world.getLogoutService().isSavePending(username) || world.getPlayerMap().containsKey(username)) {
             IllegalStateException exception =
                     new IllegalStateException("The player should be fully logged out before deleting its record, to prevent overwrites!");
             return Futures.immediateFailedFuture(exception);

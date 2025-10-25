@@ -23,7 +23,7 @@ public final class PersistentVarpManager {
     /**
      * The map of {@link PersistentVarp} types.
      */
-    private final EnumMap<PersistentVarp, Integer>  varps = new EnumMap<>(PersistentVarp.class);
+    private final EnumMap<PersistentVarp, Integer> varps = new EnumMap<>(PersistentVarp.class);
 
     /**
      * Creates a new {@link PersistentVarpManager}.
@@ -93,6 +93,7 @@ public final class PersistentVarpManager {
      */
     public void fromMap(Map<String, Integer> persistentVarps) {
         if (persistentVarps != null) {
+            varps.clear();
             for (var entry : persistentVarps.entrySet()) {
                 PersistentVarp persistentVarp = PersistentVarp.valueOf(entry.getKey());
                 varps.put(persistentVarp, entry.getValue());
