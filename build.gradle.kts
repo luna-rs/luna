@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -6,6 +5,7 @@ plugins {
 
     java
     application
+    idea
     id("org.jetbrains.kotlin.jvm") version kotlinVersion
 }
 
@@ -46,12 +46,24 @@ application {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+
+    sourceSets {
+        main {
+            java.srcDirs("src/main/java")
+        }
+    }
 }
 
-sourceSets {
-    main {
-        withConvention(KotlinSourceSet::class) {
-            kotlin.srcDirs("plugins")
+kotlin {
+    sourceSets {
+        main {
+            kotlin.setSrcDirs(emptyList<Any>())
+            kotlin.srcDirs(
+                "src/main/java",
+                "src/main/kotlin/api",
+                "src/main/kotlin/engine",
+                "src/main/kotlin/game"
+            )
         }
     }
 }

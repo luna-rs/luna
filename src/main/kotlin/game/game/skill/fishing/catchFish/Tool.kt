@@ -1,0 +1,95 @@
+package game.skill.fishing
+
+import com.google.common.collect.ImmutableList
+import game.skill.fishing.Fish.*
+
+/**
+ * An enum representing tools used to catch [Fish].
+ *
+ * @author lare96
+ */
+enum class Tool(val id: Int,
+                val level: Int,
+                val bait: Int? = null,
+                val catchAmount: IntRange = 1..1,
+                val speed: Int,
+                val animation: Int,
+                val fish: List<Fish>,
+                val message: String) {
+
+    SMALL_NET(id = 303,
+              level = 1,
+              speed = 5,
+              animation = 621,
+              fish = listOf(SHRIMP, ANCHOVY),
+              message = "You cast out your net..."),
+    KARAMBWANJI_SMALL_NET(id = 303,
+                          level = 5,
+                          speed = 3,
+                          animation = 621,
+                          fish = listOf(SHRIMP, KARAMBWANJI),
+                          message = "You cast out your line..."),
+    FISHING_ROD(id = 307,
+                level = 5,
+                bait = 313,
+                speed = 5,
+                animation = 622,
+                fish = listOf(SARDINE, HERRING, PIKE),
+                message = "You cast out your line..."),
+    BIG_NET(id = 305,
+            level = 16,
+            catchAmount = 1..3,
+            speed = 5,
+            animation = 620,
+            fish = listOf(MACKEREL,
+                          OYSTER,
+                          COD,
+                          BASS,
+                          CASKET,
+                          LEATHER_BOOTS,
+                          LEATHER_GLOVES,
+                          SEAWEED),
+            message = "You cast out your net..."),
+    FLY_FISHING_ROD(id = 309,
+                    level = 20,
+                    bait = 314,
+                    speed = 5,
+                    animation = 622,
+                    fish = listOf(TROUT, SALMON),
+                    message = "You cast out your line..."),
+    HARPOON(id = 311,
+            level = 35,
+            speed = 5,
+            animation = 618,
+            fish = listOf(TUNA, SWORDFISH),
+            message = "You start Harpooning fish."),
+    LOBSTER_POT(id = 301,
+                level = 40,
+                speed = 5,
+                animation = 619,
+                fish = listOf(LOBSTER),
+                message = "You attempt to catch a Lobster."),
+    MONKFISH_NET(id = 303,
+                 level = 62,
+                 speed = 5,
+                 animation = 621,
+                 fish = listOf(MONKFISH),
+                 message = "You cast out your net..."),
+    KARAMBWAN_VESSEL(id = 3157,
+                     level = 65,
+                     bait = 3150,
+                     speed = 5,
+                     animation = 519,
+                     fish = listOf(KARAMBWAN),
+                     message = "You cast out your vessel..."),
+    SHARK_HARPOON(id = 311,
+                  speed = 5,
+                  level = 76,
+                  animation = 618,
+                  fish = listOf(SHARK),
+                  message = "You start Harpooning fish.");
+
+    companion object {
+        val ALL: ImmutableList<Tool> = ImmutableList.copyOf(values())
+    }
+}

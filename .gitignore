@@ -5,7 +5,6 @@
 /target/
 /.settings/
 /luna.iml
-/src/main/kotlin/sandbox/
 /bin/
 /out/
 /data/game/minigames/party_room/items.json
@@ -86,3 +85,4 @@ gradle-app.setting
 *.rar
 /data/notes/
 /data/game/cache/
+/src/main/kotlin/engine/sandbox/
