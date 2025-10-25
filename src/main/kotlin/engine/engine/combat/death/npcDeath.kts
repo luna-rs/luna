@@ -11,7 +11,7 @@ import io.luna.game.model.mob.block.Animation.AnimationPriority
  */
 DeathHookHandler.setDefaultHook(Npc::class) {
     preDeath {
-        victim.combatDef.ifPresent { victim.animation(Animation(it.attackAnimation, AnimationPriority.HIGH)) }
+        victim.combatDef.ifPresent { victim.animation(Animation(it.deathAnimation, AnimationPriority.HIGH)) }
     }
 
     death {
