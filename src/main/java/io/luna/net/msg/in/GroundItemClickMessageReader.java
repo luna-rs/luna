@@ -1,5 +1,7 @@
 package io.luna.net.msg.in;
 
+import game.player.Messages;
+import game.player.Sounds;
 import io.luna.game.event.impl.GroundItemClickEvent;
 import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent;
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
@@ -14,8 +16,6 @@ import io.luna.net.msg.GameMessageReader;
 import io.luna.util.logging.LoggingSettings.FileOutputType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
-import world.player.Messages;
-import world.player.Sounds;
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -72,6 +72,7 @@ public final class GroundItemClickMessageReader extends GameMessageReader<Ground
         return true;
     }
 
+    // todo this should be an engine plugin
     @Override
     public void handle(Player player, GroundItemClickEvent event) {
         if (event instanceof PickupItemEvent) {

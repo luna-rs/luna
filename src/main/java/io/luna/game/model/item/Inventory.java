@@ -1,8 +1,8 @@
 package io.luna.game.model.item;
 
+import game.player.Messages;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
-import world.player.Messages;
 
 /**
  * An item container model representing a player's inventory.

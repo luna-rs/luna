@@ -110,7 +110,7 @@ public abstract class GameMessageReader<E extends Event> {
 
             // Disconnect on exception.
             logger.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
-            player.logout();
+            player.forceLogout();
         } finally {
 
             // Release pooled buffer.

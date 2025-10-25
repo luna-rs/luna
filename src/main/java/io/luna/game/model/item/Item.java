@@ -8,6 +8,7 @@ import io.luna.game.model.def.ItemDefinition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -21,6 +22,13 @@ public class Item {
 
     private static final Logger logger = LogManager.getLogger();
 
+
+    /**
+     * Comparator used to sort dropped items by their in-game value. The sorting is performed in descending order
+     * (high → low) using the unnoted item definition’s base value.
+     */
+    public static final Comparator<Item> VALUE_COMPARATOR = Comparator.<Item>comparingInt(it ->
+            it.getUnnotedItemDef().getValue()).reversed();
     /**
      * A set of search restricted items that don't show up in {@link #byName(String)} queries.
      */
@@ -35,7 +43,7 @@ public class Item {
      */
     public static Item byName(String name, int amount) {
         Integer id = findId(name, false);
-        if(id == null) {
+        if (id == null) {
             return null;
         }
         return new Item(id, amount);

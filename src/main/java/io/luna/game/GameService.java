@@ -138,7 +138,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * An instance of this thread (the game thread).
      */
-    private Thread thread;
+    private volatile Thread thread;
 
     /**
      * Creates a new {@link GameService}.

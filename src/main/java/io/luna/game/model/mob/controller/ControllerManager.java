@@ -1,15 +1,16 @@
 package io.luna.game.model.mob.controller;
 
 import com.google.common.collect.Iterators;
+import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import org.jetbrains.annotations.NotNull;
-import world.player.skill.magic.teleportSpells.TeleportAction;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A model that manages listeners for {@link PlayerController} types.
@@ -112,8 +113,8 @@ public final class ControllerManager implements Iterable<PlayerController> {
                 }
             }
         }
-        for(PlayerController controller : registered.values()) {
-            if(!controller.canMove(player, newPos)) {
+        for (PlayerController controller : registered.values()) {
+            if (!controller.canMove(player, newPos)) {
                 return false;
             }
         }
@@ -130,7 +131,7 @@ public final class ControllerManager implements Iterable<PlayerController> {
      */
     public boolean checkEvent(ControllableEvent event) {
         for (PlayerController controller : registered.values()) {
-            if (!controller.onPlayerEvent(player, event)) {
+            if (!controller.onEvent(player, event)) {
                 return false;
             }
         }
@@ -155,7 +156,6 @@ public final class ControllerManager implements Iterable<PlayerController> {
      * Determines if the player is able to teleport or not.
      *
      * @param action The teleport action.
-     *
      * @return {@code true} if the player is able to teleport.
      */
     public boolean checkTeleport(TeleportAction action) {
@@ -175,6 +175,10 @@ public final class ControllerManager implements Iterable<PlayerController> {
      */
     public boolean contains(ControllerKey<?> key) {
         return registered.containsKey(key);
+    }
+
+    public Set<ControllerKey<?>> keys() {
+        return registered.keySet();
     }
 
     /**

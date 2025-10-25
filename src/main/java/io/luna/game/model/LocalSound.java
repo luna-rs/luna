@@ -1,11 +1,11 @@
 package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
+import game.player.Sounds;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.net.msg.out.AddLocalSoundMessageWriter;
-import world.player.Sounds;
 
 import static com.google.common.base.Preconditions.checkState;
 
