@@ -49,4 +49,9 @@ public final class ItemOnObjectMessageReader extends GameMessageReader<ItemOnObj
         }
         return false;
     }
+
+    @Override
+    public void handle(Player player, ItemOnObjectEvent event) {
+        player.getInterfaces().close();
+    }
 }
