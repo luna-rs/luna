@@ -1,4 +1,4 @@
-package game.player.privateChat
+package engine.player.chat
 
 
 import api.predef.*

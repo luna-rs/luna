@@ -1,4 +1,4 @@
-package game.player.settings
+package engine.widget
 
 import api.predef.*
 

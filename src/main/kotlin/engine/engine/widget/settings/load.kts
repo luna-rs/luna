@@ -1,4 +1,4 @@
-package game.player.settings
+package engine.widget.settings
 
 import api.predef.*
 import io.luna.game.event.impl.LoginEvent

@@ -1,4 +1,4 @@
-package game.player.login.init
+package engine.player
 
 import api.predef.*
 import game.minigame.partyRoom.dropParty.DropPartyOption.depositItems

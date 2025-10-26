@@ -1,4 +1,4 @@
-package game.player.settings
+package engine.widget.settings
 
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.mob.varp.Varbit
