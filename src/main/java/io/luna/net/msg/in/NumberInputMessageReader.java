@@ -23,7 +23,6 @@ public final class NumberInputMessageReader extends GameMessageReader<NumberInpu
 
     @Override
     public boolean validate(Player player, NumberInputEvent event) {
-        // todo test validation here
         return player.getInterfaces().getCurrentInput().map(InputInterface::getClass).
                 filter(NumberInputInterface.class::isAssignableFrom).isPresent();
     }
