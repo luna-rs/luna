@@ -8,7 +8,7 @@ import api.predef.*
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 import engine.bank.Banking
@@ -95,7 +95,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         } else {
             // Click deposit x.
             val amountCond =
-                SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
+                SuspendableCondition { bot.interfaces.currentInput.filter { it is NumberInputInterface }.isPresent }
             bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {
@@ -177,7 +177,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             return withdrawCond.submit().await()
         } else {
             val amountCond =
-                SuspendableCondition { bot.interfaces.currentInput.filter { it is AmountInputInterface }.isPresent }
+                SuspendableCondition { bot.interfaces.currentInput.filter { it is NumberInputInterface }.isPresent }
             bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {
