@@ -759,7 +759,7 @@
   {
     "opcode": 176,
     "size": 3,
-    "payload": "PrivacyOptionMessageReader"
+    "payload": "PrivacyModeMessageReader"
   },
   {
     "opcode": 177,

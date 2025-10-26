@@ -3,24 +3,76 @@ package io.luna.game.event.impl;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.WalkingQueue.Step;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * An event sent when a player walks.
+ * A {@link PlayerEvent} implementation sent when a player clicks to walk somewhere.
  *
  * @author lare96
  */
 public final class WalkingEvent extends PlayerEvent implements ControllableEvent {
 
     /**
-     * The walking path.
+     * The source of the walking click.
      */
-    private final Deque<Step> path;
+    public enum WalkingOrigin {
+
+        /**
+         * A movement command where the source is a click on the main game screen. Represented by a yellow X.
+         */
+        MAIN_SCREEN,
+
+        /**
+         * A movement command where the source is an interaction click (player, npc, object, ground item, etc).
+         * Represented by a red X.
+         */
+        INTERACTION,
+
+        /**
+         * A movement command where the source is a minimap click. Represented by a red flag on the minimap.
+         */
+        MINIMAP;
+
+        /**
+         * Determines the correct {@link WalkingOrigin} based on the given {@code opcode}.
+         *
+         * @param opcode The opcode.
+         * @return The correct walking origin.
+         */
+        public static WalkingOrigin forOpcode(int opcode) {
+            switch (opcode) {
+                case 213:
+                    return MINIMAP;
+                case 28:
+                    return MAIN_SCREEN;
+                case 247:
+                    return INTERACTION;
+                default:
+                    throw new IllegalStateException("Invalid opcode [" + opcode + "]");
+            }
+        }
+    }
 
     /**
-     * If the player is running.
+     * The walking origin.
      */
-    private final boolean running;
+    private final WalkingOrigin origin;
+
+    /**
+     * The {@code x} coordinate of the first step.
+     */
+    private final int firstStepX;
+
+    /**
+     * The {@code y} coordinate of the first step.
+     */
+    private final int firstStepY;
+
+    /**
+     * The path.
+     */
+    private final int[][] path;
 
     /**
      * The path size.
@@ -28,39 +80,63 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     private final int pathSize;
 
     /**
-     * The opcode.
+     * If the player is running.
      */
-    private final int opcode;
+    private final boolean running;
+
+    /**
+     * The steps to be sent to the walking queue.
+     */
+    private Deque<Step> steps;
 
     /**
      * Creates a new {@link WalkingEvent}.
      *
      * @param player The player.
-     * @param path The path that the player will walk.
-     * @param running If the player is running.
+     * @param origin The walking origin.
+     * @param firstStepX The {@code x} coordinate of the first step.
+     * @param firstStepY The {@code y} coordinate of the first step.
+     * @param path The path.
      * @param pathSize The path size.
-     * @param opcode The opcode.
+     * @param running If the player is running.
      */
-    public WalkingEvent(Player player, Deque<Step> path, boolean running, int pathSize, int opcode) {
+    public WalkingEvent(Player player, WalkingOrigin origin, int firstStepX, int firstStepY, int[][] path,
+                        int pathSize, boolean running) {
         super(player);
+        this.origin = origin;
+        this.firstStepX = firstStepX;
+        this.firstStepY = firstStepY;
         this.path = path;
-        this.running = running;
         this.pathSize = pathSize;
-        this.opcode = opcode;
+        this.running = running;
     }
 
     /**
-     * @return The walking path.
+     * @return The walking origin.
      */
-    public Deque<Step> getPath() {
+    public WalkingOrigin getOrigin() {
+        return origin;
+    }
+
+    /**
+     * @return The {@code x} coordinate of the first step.
+     */
+    public int getFirstStepX() {
+        return firstStepX;
+    }
+
+    /**
+     * @return The {@code y} coordinate of the first step.
+     */
+    public int getFirstStepY() {
+        return firstStepY;
+    }
+
+    /**
+     * @return The path
+     */
+    public int[][] getPath() {
         return path;
-    }
-
-    /**
-     * @return If the player is running.
-     */
-    public boolean isRunning() {
-        return running;
     }
 
     /**
@@ -71,9 +147,23 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     }
 
     /**
-     * @return The opcode.
+     * @return If the player is running.
      */
-    public int getOpcode() {
-        return opcode;
+    public boolean isRunning() {
+        return running;
+    }
+
+    /**
+     * @return The walking path.
+     */
+    public Deque<Step> getSteps() {
+        if (steps == null) {
+            steps = new ArrayDeque<>(pathSize + 1);
+            steps.add(new Step(firstStepX, firstStepY));
+            for (int i = 0; i < pathSize; i++) {
+                steps.add(new Step(path[i][0] + firstStepX, path[i][1] + firstStepY));
+            }
+        }
+        return this.steps;
     }
 }
