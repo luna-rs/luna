@@ -1,4 +1,4 @@
-package engine.engine.bank
+package engine.bank
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.inter.InventoryOverlayInterface

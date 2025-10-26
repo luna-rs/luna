@@ -1,6 +1,7 @@
-package engine.engine.bank
+package engine.bank
 
 import api.predef.*
+import engine.bank.Banking
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 

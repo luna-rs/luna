@@ -1,4 +1,4 @@
-package engine.engine.trade
+package engine.trade
 
 import api.attr.Attr
 import io.luna.game.model.mob.Player

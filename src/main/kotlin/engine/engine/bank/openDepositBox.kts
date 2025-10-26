@@ -1,6 +1,7 @@
-package engine.engine.bank
+package engine.bank
 
 import api.predef.*
+import engine.bank.DepositBoxInterface
 import io.luna.game.event.impl.ObjectClickEvent.ObjectFirstClickEvent
 
 /**

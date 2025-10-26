@@ -1,4 +1,4 @@
-package engine.engine.spawn
+package engine.spawn
 
 import api.predef.*
 import com.google.common.collect.ImmutableList

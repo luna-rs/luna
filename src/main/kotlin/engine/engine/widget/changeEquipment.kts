@@ -1,4 +1,4 @@
-package engine.engine.widget
+package engine.widget
 
 import api.predef.*
 import io.luna.game.event.impl.EquipItemEvent

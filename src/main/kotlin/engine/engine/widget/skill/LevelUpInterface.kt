@@ -1,4 +1,4 @@
-package engine.engine.widget.skill
+package engine.widget.skill
 
 import api.predef.*
 import io.luna.game.model.mob.Player

@@ -1,4 +1,4 @@
-package engine.engine.widget.skill
+package engine.widget.skill
 
 /**
  * A model representing [LevelUpInterface] data.

@@ -1,4 +1,4 @@
-package engine.engine.widget.make
+package engine.widget.make
 
 /**
  * A model representing an item on a [MakeItemDialogueInterface] interface.

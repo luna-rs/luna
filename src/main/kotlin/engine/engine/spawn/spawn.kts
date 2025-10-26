@@ -1,4 +1,4 @@
-package engine.engine.spawn
+package engine.spawn
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent

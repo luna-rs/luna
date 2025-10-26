@@ -1,4 +1,4 @@
-package engine.engine.widget.shop
+package engine.widget.shop
 
 import api.predef.*
 import api.predef.ext.*

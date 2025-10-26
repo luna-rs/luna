@@ -1,4 +1,4 @@
-package engine.engine.trade
+package engine.trade
 
 import api.predef.*
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFourthClickEvent

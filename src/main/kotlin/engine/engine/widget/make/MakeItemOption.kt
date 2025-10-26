@@ -1,4 +1,4 @@
-package engine.engine.widget.make
+package engine.widget.make
 
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface

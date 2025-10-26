@@ -1,4 +1,4 @@
-package engine.engine.bank
+package engine.bank
 
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.def.NpcDefinition

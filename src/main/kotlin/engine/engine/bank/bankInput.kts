@@ -1,4 +1,4 @@
-package engine.engine.bank
+package engine.bank
 
 import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent
