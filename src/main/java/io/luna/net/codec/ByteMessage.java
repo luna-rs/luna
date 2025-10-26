@@ -75,7 +75,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
 
-
     /**
      * Creates a raw backing pooled {@link ByteBuf}.
      *
@@ -158,7 +157,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @see ByteMessage#release(int)
      */
     public boolean releaseAll() {
-        if(buf.refCnt() == 0) {
+        if (buf.refCnt() == 0) {
             return false;
         }
         return buf.release(buf.refCnt());
@@ -222,10 +221,10 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putBytes(byte[] from, ValueType type) {
-        if(type == ValueType.NORMAL) {
+        if (type == ValueType.NORMAL) {
             putBytes(from);
         } else {
-            for(byte b : from) {
+            for (byte b : from) {
                 put(b, type);
             }
         }
@@ -397,6 +396,34 @@ public final class ByteMessage extends DefaultByteBufHolder {
     public ByteMessage putShort(int value, ByteOrder order) {
         putShort(value, order, ValueType.NORMAL);
         return this;
+    }
+
+
+    public ByteMessage putMedium(int value, ByteOrder order, ValueType transform) {
+        switch (order) {
+            case BIG:
+                put(value >> 16);
+                put(value >> 8);
+                put(value, transform);
+                break;
+            case MIDDLE:
+                put(value >> 8);
+                put(value, transform);
+                put(value >> 16);
+                break;
+            case INVERSE_MIDDLE:
+                throw new UnsupportedOperationException("Inversed-middle-endian middle is impossible.");
+            case LITTLE:
+                put(value, transform);
+                put(value >> 8);
+                put(value >> 16);
+                break;
+        }
+        return this;
+    }
+
+    public ByteMessage putMedium(int value, ByteOrder order) {
+        return putMedium(value, order, ValueType.NORMAL);
     }
 
     /**

@@ -14,7 +14,6 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.NameInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.model.mob.varp.Varp
-import io.luna.net.msg.out.MusicMessageWriter
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
 import java.lang.Boolean.parseBoolean
@@ -120,14 +119,6 @@ cmd("mypos", RIGHTS_DEV) {
     plr.sendMessage("Local pos: ${
         Position(plr.position.x - topleftx, plr.position.y - toplefty)
     }")
-}
-
-/**
- * A command that will play music.
- */
-cmd("music", RIGHTS_DEV) {
-    val id = asInt(0)
-    plr.queue(MusicMessageWriter(id))
 }
 
 /**

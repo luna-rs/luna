@@ -8,8 +8,8 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} that opens an interface.  Use {@link StandardInterface} instead of using this
- * packet directly.
+ * A {@link GameMessageWriter} implementation that opens an interface.  Use {@link StandardInterface} instead of
+ * using this packet directly.
  *
  * @author lare96
  */

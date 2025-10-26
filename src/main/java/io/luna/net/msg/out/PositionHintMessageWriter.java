@@ -6,7 +6,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} that forces a hint icon above a {@link Position}.
+ * A {@link GameMessageWriter} implementation that forces a hint icon above a {@link Position}.
  *
  * @author lare96
  */

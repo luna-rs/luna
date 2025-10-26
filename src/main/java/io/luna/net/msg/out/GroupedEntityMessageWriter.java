@@ -12,7 +12,7 @@ import io.luna.net.msg.GameMessageWriter;
 import java.util.Collection;
 
 /**
- * A {@link GameMessageWriter} that adds collection of stationary entities to a chunk.
+ * A {@link GameMessageWriter} implementation that adds collection of stationary entities to a chunk.
  *
  * @author lare96
  */

@@ -6,16 +6,27 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
+/**
+ * A {@link GameMessageWriter} implementation that plays a jingle (short tune).
+ *
+ * @author lare96
+ */
 public class JingleMessageWriter extends GameMessageWriter {
 
     /**
-     * The jingle to play.
+     * The jingle.
      */
     private final Jingles jingle;
 
     /**
+     * The last played song.
+     */
+    private final int lastPlayed = -1; // TODO Last played song.
+
+    /**
+     * Creates a new {@link JingleMessageWriter}.
      *
-     * @param jingle
+     * @param jingle The jingle.
      */
     public JingleMessageWriter(Jingles jingle) {
         this.jingle = jingle;
@@ -25,9 +36,7 @@ public class JingleMessageWriter extends GameMessageWriter {
     public ByteMessage write(Player player) {
         ByteMessage msg = ByteMessage.message(249);
         msg.putShort(jingle.getId(), ByteOrder.LITTLE);
-        // todo need a putMedium
-        msg.put(-1);
-        msg.putShort(-1);
+        msg.putMedium(lastPlayed, ByteOrder.MIDDLE);
         return msg;
     }
 }

@@ -6,7 +6,7 @@ import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} that sends a game message.
+ * A {@link GameMessageWriter} implementation that sends a game message.
  *
  * @author lare96
  */

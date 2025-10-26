@@ -7,7 +7,7 @@ import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} that forces a certain tab to open.
+ * A {@link GameMessageWriter} implementation that forces a {@link TabIndex} to open.
  *
  * @author lare96
  */
