@@ -2,6 +2,7 @@ package io.luna.util;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
+import com.google.common.math.IntMath;
 
 import java.util.List;
 import java.util.Map;
@@ -51,9 +52,9 @@ public final class RandomUtils {
         }
         double roll = nextDouble() * total;
         double current = 0.0;
-        for (var entry : weights.entrySet()) {
+        for (Map.Entry<T, Double> entry : weights.entrySet()) {
             current += entry.getValue();
-            if (current <= roll) {
+            if (roll < current) {
                 return entry.getKey();
             }
         }
@@ -101,7 +102,7 @@ public final class RandomUtils {
      */
     public static int inclusive(int min, int max) {
         checkArgument(max >= min, "max < min");
-        return ThreadLocalRandom.current().nextInt(min, max + 1);
+        return ThreadLocalRandom.current().nextInt(min, IntMath.saturatedAdd(max, 1));
     }
 
     /**
