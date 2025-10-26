@@ -18,7 +18,6 @@ public final class NumberInputMessageReader extends GameMessageReader<NumberInpu
     @Override
     public NumberInputEvent decode(Player player, GameMessage msg) {
         int amount = msg.getPayload().getInt(false);
-        System.out.println(amount);
         return new NumberInputEvent(player, amount);
     }
 

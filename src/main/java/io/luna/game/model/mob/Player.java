@@ -982,7 +982,6 @@ public class Player extends Mob {
      * @return {@code true} if the player is muted.
      */
     public boolean isMuted() {
-        System.out.println(unmuteInstant);
         return unmuteInstant != null && !Instant.now().isAfter(unmuteInstant);
     }
 

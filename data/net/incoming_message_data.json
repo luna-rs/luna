@@ -532,7 +532,7 @@
   {
     "opcode": 123,
     "size": 7,
-    "payload": "ArrangeBankMessageReader"
+    "payload": "ArrangeItemMessageReader"
   },
   {
     "opcode": 124,
