@@ -25,5 +25,11 @@
   "bots": {
     "ideal_count": 0,
     "keep_online": false
+  },
+  "database": {
+    "host": "localhost",
+    "post": 3306,
+    "username": "luna_db",
+    "password": "guMQRNYf44fxERs4uHxLCWjCQ"
   }
 }

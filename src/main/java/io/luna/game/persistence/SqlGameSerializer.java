@@ -38,7 +38,7 @@ public final class SqlGameSerializer extends GameSerializer {
      * The connection pool.
      */
     private final SqlConnectionPool connectionPool = new SqlConnectionPool.Builder()
-            .poolName("PlayerDataPersistence")
+            .poolName("PlayerPersistencePool")
             .database("luna_players")
             .build();
 
