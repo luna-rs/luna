@@ -9,7 +9,6 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
-import io.luna.game.model.map.DynamicMapSpacePool;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -192,11 +191,6 @@ public final class World {
     private final CollisionManager collisionManager;
 
     /**
-     * A repository for instances created using the construct map region packet.
-     */
-    private final DynamicMapSpacePool dynamicMapSpacePool;
-
-    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -206,7 +200,6 @@ public final class World {
 
         playerMap = new ConcurrentHashMap<>();
         collisionManager = new CollisionManager(this);
-        dynamicMapSpacePool = new DynamicMapSpacePool(context);
         botRepository = new BotRepository(this);
         botCredentials = new BotCredentialsRepository(context);
         botService = new BotScheduleService(this);
@@ -224,7 +217,6 @@ public final class World {
         botRepository.load();
         collisionManager.build(false);
         schedule(new ControllerProcessTask(this));
-        dynamicMapSpacePool.buildEmptySpacePool();
         botManager.load();
     }
 
@@ -511,13 +503,6 @@ public final class World {
      */
     public BotCredentialsRepository getBotCredentials() {
         return botCredentials;
-    }
-
-    /**
-     * @return A repository for instances created using the construct map region packet.
-     */
-    public DynamicMapSpacePool getDynamicMapSpacePool() {
-        return dynamicMapSpacePool;
     }
 
     /**

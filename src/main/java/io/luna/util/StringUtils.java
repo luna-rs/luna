@@ -1,10 +1,7 @@
 package io.luna.util;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 import io.luna.net.codec.ByteMessage;
-
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,29 +44,14 @@ public final class StringUtils {
     /**
      * A table of characters ordered by frequency, used for RuneScape's text compression scheme.
      */
-    private static final char[] FREQUENCY_ORDERED_CHARS;
-
-    /**
-     * A precomputed lookup map linking each frequency-ordered character to its index position.
-     */
-    private static final Map<Character, Integer> FREQUENCY_ORDERDED_CHARS_MAP;
-
-    static {
-        FREQUENCY_ORDERED_CHARS = new char[]{
-                ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
-                'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
-                'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
-                '3', '4', '5', '6', '7', '8', '9', ' ', '!', '?',
-                '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
-                '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
-        };
-
-        ImmutableMap.Builder<Character, Integer> map = ImmutableMap.builder();
-        for (int index = 0; index < FREQUENCY_ORDERED_CHARS.length; index++) {
-            map.put(FREQUENCY_ORDERED_CHARS[index], index);
-        }
-        FREQUENCY_ORDERDED_CHARS_MAP = map.build();
-    }
+    private static final char[] FREQUENCY_ORDERED_CHARS = new char[]{
+            ' ', 'e', 't', 'a', 'o', 'i', 'h', 'n', 's', 'r',
+            'd', 'l', 'u', 'm', 'w', 'c', 'y', 'f', 'g', 'p',
+            'b', 'v', 'k', 'x', 'j', 'q', 'z', '0', '1', '2',
+            '3', '4', '5', '6', '7', '8', '9', ' ', '!', '?',
+            '.', ',', ':', ';', '(', ')', '-', '&', '*', '\\',
+            '\'', '@', '#', '+', '=', '\243', '$', '%', '"', '[', ']'
+    };
 
     /**
      * Private constructor to prevent instantiation.
@@ -121,7 +103,13 @@ public final class StringUtils {
         int carry = -1;
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            int index = FREQUENCY_ORDERDED_CHARS_MAP.get(c);
+            int index = 0;
+            for (int j = 0; j < FREQUENCY_ORDERED_CHARS.length; j++) {
+                if (c != FREQUENCY_ORDERED_CHARS[j])
+                    continue;
+                index = j;
+                break;
+            }
             if (index > 12)
                 index += 195;
             if (carry == -1) {

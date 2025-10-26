@@ -6,6 +6,9 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import game.item.consumable.potion.PotionCountdownTimer;
+import game.player.Messages;
+import game.player.Sounds;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
@@ -21,7 +24,6 @@ import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
-import io.luna.game.model.map.DynamicMap;
 import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.block.ExactMovement;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -45,7 +47,6 @@ import io.luna.net.client.GameClient;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
-import io.luna.net.msg.out.DynamicMapMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
 import io.luna.net.msg.out.LogoutMessageWriter;
 import io.luna.net.msg.out.RegionMessageWriter;
@@ -57,9 +58,6 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import game.player.Messages;
-import game.player.Sounds;
-import game.item.consumable.potion.PotionCountdownTimer;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -377,11 +375,6 @@ public class Player extends Mob {
      * The time online.
      */
     private final Stopwatch timeOnline = Stopwatch.createUnstarted();
-
-    /**
-     * The current dynamic map the player is in.
-     */
-    private DynamicMap dynamicMap;
 
     /**
      * The current interaction task.
@@ -806,11 +799,7 @@ public class Player extends Mob {
             fullRefresh = true;
             regionChanged = true;
             lastRegion = position;
-            if (isInDynamicMap()) { // TODO
-                queue(new DynamicMapMessageWriter(dynamicMap, position));
-            } else {
-                queue(new RegionMessageWriter(position));
-            }
+            queue(new RegionMessageWriter(position));
         }
         if (isTeleporting()) {
             fullRefresh = true;
@@ -882,7 +871,7 @@ public class Player extends Mob {
      * Loads all previously active {@link PotionCountdownTimer} types into this player.
      */
     public void loadPotionsFromJson(JsonArray array) {
-        if(array != null) {
+        if (array != null) {
             for (JsonElement element : array) {
                 PotionCountdownTimer.Companion.loadJson(this, element.getAsJsonObject());
             }
@@ -1430,27 +1419,6 @@ public class Player extends Mob {
      */
     public Stopwatch getTimeOnline() {
         return timeOnline;
-    }
-
-    /**
-     * Sets the current dynamic map the player is in.
-     */
-    public void setDynamicMap(DynamicMap dynamicMap) {
-        this.dynamicMap = dynamicMap;
-    }
-
-    /**
-     * @return The current dynamic map the player is in.
-     */
-    public DynamicMap getDynamicMap() {
-        return dynamicMap;
-    }
-
-    /**
-     * @return {@code true} If the player is in a dynamic map.
-     */
-    public boolean isInDynamicMap() {
-        return dynamicMap != null;
     }
 
     /**

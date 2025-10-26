@@ -1,5 +1,6 @@
 package io.luna.net.msg.out;
 
+import io.luna.game.model.LocalSound;
 import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -7,7 +8,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * Adds a position based sound to the world.
+ * A {@link GameMessageWriter} implementation that displays a {@link LocalSound}.
  *
  * @author lare96
  */

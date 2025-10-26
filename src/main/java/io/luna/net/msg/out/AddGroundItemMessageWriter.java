@@ -1,13 +1,14 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.chunk.ChunkUpdatableMessage;
+import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
 
 /**
- * A {@link GameMessageWriter} implementation that displays a ground item.
+ * A {@link GameMessageWriter} implementation that displays a {@link GroundItem}.
  *
  * @author lare96
  */
