@@ -9,6 +9,8 @@ import io.luna.game.model.def.VarBitDefinition;
 import io.luna.game.model.def.VarpDefinition;
 import io.luna.game.model.def.WidgetDefinition;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -64,12 +66,20 @@ public final class CacheDumpUtils {
      * @throws Exception If any errors occur.
      */
     public static void dump() throws Exception {
+        Path path = Paths.get("data", "dumps");
+        Files.createDirectories(path);
         for (Dump dump : DUMPS) {
             JsonArray array = new JsonArray();
             for (Object def : dump.elements) {
                 array.add(GsonUtils.toJsonTree(def));
             }
-            GsonUtils.writeJson(array, Paths.get("data", "dumps", dump.fileName));
+            GsonUtils.writeJson(array, path.resolve(dump.fileName));
         }
+    }
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private CacheDumpUtils() {
     }
 }
