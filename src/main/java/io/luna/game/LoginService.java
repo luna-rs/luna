@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
