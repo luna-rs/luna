@@ -13,7 +13,7 @@ import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
 import engine.interaction.follow.MobFollowAction
 import game.bot.script.IdleBotScript.InputData
-import game.player.settings.Emote
+import engine.widget.settings.Emote
 import io.luna.Luna
 import io.luna.game.model.Position
 import io.luna.game.model.mob.block.Animation

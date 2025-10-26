@@ -1,8 +1,9 @@
 package io.luna.game.cache;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.LunaContext;
 import io.luna.game.cache.map.MapIndexTable;
-import io.luna.util.AsyncExecutor;
+import io.luna.util.ExecutorUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -14,10 +15,10 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 
 /**
  * A resource representing the #377 cache.
@@ -60,7 +61,7 @@ public final class Cache implements Closeable {
     /**
      * The executor that will run the decoders. Will be shutdown once the task completes.
      */
-    private final AsyncExecutor decoderService = new AsyncExecutor(1, "CacheDecoderThread");
+    private final ListeningExecutorService decoderService = ExecutorUtils.threadPool("CacheDecoderThread", 1);
 
     /**
      * The data random access file.
@@ -110,7 +111,7 @@ public final class Cache implements Closeable {
      * @param cacheDecoders The decoders to run.
      */
     public void runDecoders(LunaContext ctx, CacheDecoder<?>... cacheDecoders) {
-        checkState(decoderService.isRunning(), "Cache decoder thread is no longer running.");
+        checkState(!decoderService.isShutdown(), "Cache decoder thread is no longer running.");
         checkState(dataFile != null && indexFiles != null, EXCEPTION_MESSAGE);
         for (CacheDecoder<?> decoder : cacheDecoders) {
             decoderService.execute(decoder.toTask(ctx, this));
@@ -120,8 +121,9 @@ public final class Cache implements Closeable {
     /**
      * Blocks the current thread until {@link #runDecoders(LunaContext, CacheDecoder[])} has finished.
      */
-    public void waitForDecoders() throws ExecutionException {
-        decoderService.await(true);
+    public void waitForDecoders() {
+        decoderService.shutdown();
+        awaitTerminationUninterruptibly(decoderService);
     }
 
     /**

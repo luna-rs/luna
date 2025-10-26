@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import game.player.punishment.PunishmentHandler;
+import engine.player.punishment.PunishmentHandler;
 import io.luna.game.event.impl.ChatEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Chat;

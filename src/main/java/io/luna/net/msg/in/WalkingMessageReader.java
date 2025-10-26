@@ -56,6 +56,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
     public boolean validate(Player player, WalkingEvent event) {
         return !player.getWalking().isLocked() && !player.isLocked();
     }
+// todo engine plugin
 
     @Override
     public void handle(Player player, WalkingEvent event) {

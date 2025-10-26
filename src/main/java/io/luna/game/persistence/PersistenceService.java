@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.luna.LunaContext;
 import io.luna.game.LoginService;
 import io.luna.game.LogoutService;
@@ -19,11 +18,9 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
-import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -60,9 +57,7 @@ public final class PersistenceService extends AbstractIdleService {
     public PersistenceService(World world) {
         this.world = world;
         this.context = world.getContext();
-
-        ThreadFactory threadFactory = ExecutorUtils.threadFactory(PersistenceService.class);
-        worker = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor(threadFactory));
+        worker = ExecutorUtils.threadPool("PersistenceServiceThread", 1);
     }
 
     @Override

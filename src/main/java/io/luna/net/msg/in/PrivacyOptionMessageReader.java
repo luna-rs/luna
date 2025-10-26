@@ -13,6 +13,7 @@ import io.luna.net.msg.GameMessageReader;
  * @author lare96
  */
 public final class PrivacyOptionMessageReader extends GameMessageReader<PrivacyModeChangedEvent> {
+// todo engine plugin
 
     @Override
     public PrivacyModeChangedEvent decode(Player player, GameMessage msg) {

@@ -15,24 +15,21 @@ import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
-import io.luna.util.AsyncExecutor;
 import io.luna.util.ExecutorUtils;
-import io.luna.util.ThreadUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static com.google.common.util.concurrent.Futures.getUnchecked;
-import static io.luna.util.ThreadUtils.awaitTerminationUninterruptibly;
+import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -213,17 +210,17 @@ public final class GameService extends AbstractScheduledService {
      * @param eventFunction Produces the event message to pass.
      * @param waitingMessage The message to log while waiting for tasks to complete.
      */
-    private <E extends Event> void runKotlinTasks(Function<AsyncExecutor, E> eventFunction, String waitingMessage) {
-        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
-        context.getPlugins().lazyPost(eventFunction.apply(executor)).forEach(Runnable::run);
-        try {
-            int count = executor.getTaskCount();
-            if (count > 0) {
-                logger.info(waitingMessage, box(count));
-                executor.await(true);
-            }
-        } catch (ExecutionException e) {
-            throw new CompletionException(e.getCause());
+    private <E extends Event> void runKotlinTasks(Function<ListeningExecutorService, E> eventFunction,
+                                                  String waitingMessage) {
+        ListeningExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
+        List<Runnable> tasks = context.getPlugins().lazyPost(eventFunction.apply(pool));
+
+        int count = tasks.size();
+        if (count > 0) {
+            tasks.forEach(Runnable::run);
+            pool.shutdown();
+            logger.info(waitingMessage, box(count));
+            awaitTerminationUninterruptibly(pool);
         }
     }
 

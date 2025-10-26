@@ -18,6 +18,7 @@ import java.util.OptionalInt;
  * @author lare96
  */
 public final class NameInputMessageReader extends GameMessageReader<NullEvent> {
+// todo engine plugin
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {

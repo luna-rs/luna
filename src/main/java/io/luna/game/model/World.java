@@ -1,7 +1,6 @@
 package io.luna.game.model;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.LoginService;
@@ -26,7 +25,7 @@ import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
-import io.luna.util.ThreadUtils;
+import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
@@ -36,9 +35,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -216,8 +213,7 @@ public final class World {
         persistenceService = new PersistenceService(this);
 
         // Initialize synchronization thread pool.
-        ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("WorldSynchronizationThread").build();
-        updatePool = Executors.newFixedThreadPool(ThreadUtils.cpuCount(), tf);
+        updatePool = ExecutorUtils.threadPool("WorldSynchronizationThread");
     }
 
     /**

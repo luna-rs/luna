@@ -68,7 +68,7 @@ public final class OptionalUtils {
      * @return {@code true} if the two values are equal.
      */
     public static <T> boolean matches(Optional<T> optional, Supplier<T> value) {
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             return false;
         }
         Object optionalValue = optional.get();

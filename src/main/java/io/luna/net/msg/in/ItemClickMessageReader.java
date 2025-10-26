@@ -75,6 +75,6 @@ public final class ItemClickMessageReader extends GameMessageReader<ItemClickEve
 
     @Override
     public void handle(Player player, ItemClickEvent event){
-        player.getInterfaces().close();
+        player.getInterfaces().close(); // todo needed?
     }
 }

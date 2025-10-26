@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdatePrivacyOptionMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
-import game.player.punishment.PunishmentHandler
+import engine.player.punishment.PunishmentHandler
 
 /**
  * Final initialization of the player before gameplay.

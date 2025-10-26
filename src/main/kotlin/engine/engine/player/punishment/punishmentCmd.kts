@@ -1,4 +1,4 @@
-package game.player.punishment
+package engine.player.punishment
 
 import api.predef.*
 import io.luna.game.event.impl.CommandEvent

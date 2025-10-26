@@ -37,7 +37,7 @@ fun loadItems() {
 fun saveItems() {
     val chestItems = DropPartyOption.chest.items
     if (chestItems.size() > 0) {
-        if(!Files.exists(ITEMS_FILE)) {
+        if (!Files.exists(ITEMS_FILE)) {
             Files.createFile(ITEMS_FILE)
         }
         Files.writeString(ITEMS_FILE,
@@ -46,10 +46,7 @@ fun saveItems() {
 }
 
 // Create directories if needed.
-val ITEMS_FILE_DIR = ITEMS_FILE.parent
-if (Files.notExists(ITEMS_FILE_DIR)) {
-    Files.createDirectories(ITEMS_FILE_DIR)
-}
+Files.createDirectories(ITEMS_FILE.parent)
 
 // Asynchronously do the work on startup and shutdown.
 on(ServerLaunchEvent::class) {

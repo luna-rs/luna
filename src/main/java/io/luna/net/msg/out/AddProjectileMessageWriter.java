@@ -62,12 +62,12 @@ public final class AddProjectileMessageWriter extends GameMessageWriter implemen
     /**
      * The initial slope.
      */
-    private final int initialSlope;
+    private final int startSlope;
 
     /**
      * The distance from the source.
      */
-    private final int distanceFromSource;
+    private final int startDistance;
 
     /**
      * Creates a new {@link LocalProjectile}.
@@ -81,11 +81,11 @@ public final class AddProjectileMessageWriter extends GameMessageWriter implemen
      * @param endHeight The end height.
      * @param delay The delay.
      * @param speed The speed.
-     * @param initialSlope The initial slope.
-     * @param distanceFromSource The distance from the source.
+     * @param startSlope The initial slope.
+     * @param startDistance The distance from the source.
      */
     public AddProjectileMessageWriter(int id, int offset, int deltaX, int deltaY, int targetIndex, int startHeight,
-                                      int endHeight, int delay, int speed, int initialSlope, int distanceFromSource) {
+                                      int endHeight, int delay, int speed, int startSlope, int startDistance) {
         this.id = id;
         this.offset = offset;
         this.deltaX = deltaX;
@@ -95,8 +95,8 @@ public final class AddProjectileMessageWriter extends GameMessageWriter implemen
         this.endHeight = endHeight;
         this.delay = delay;
         this.speed = speed;
-        this.initialSlope = initialSlope;
-        this.distanceFromSource = distanceFromSource;
+        this.startSlope = startSlope;
+        this.startDistance = startDistance;
     }
 
     @Override
@@ -111,8 +111,8 @@ public final class AddProjectileMessageWriter extends GameMessageWriter implemen
         msg.put(endHeight);
         msg.putShort(delay);
         msg.putShort(speed);
-        msg.put(initialSlope);
-        msg.put(distanceFromSource);
+        msg.put(startSlope);
+        msg.put(startDistance);
         return msg;
     }
 }

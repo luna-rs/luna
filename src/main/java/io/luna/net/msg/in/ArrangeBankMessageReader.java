@@ -14,6 +14,7 @@ import io.luna.net.msg.GameMessageReader;
  * @author lare96
  */
 public final class ArrangeBankMessageReader extends GameMessageReader<NullEvent> {
+// todo engine plugin
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {

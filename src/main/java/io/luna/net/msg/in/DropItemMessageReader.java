@@ -25,6 +25,7 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * @author lare96
  */
 public final class DropItemMessageReader extends GameMessageReader<DropItemEvent> {
+// todo engine plugin
 
     /**
      * An asynchronous logger that will handle item drop logs.

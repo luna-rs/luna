@@ -1,6 +1,7 @@
 package io.luna;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import io.luna.game.cache.Cache;
@@ -16,11 +17,9 @@ import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
-import io.luna.util.AsyncExecutor;
-import io.luna.util.ThreadUtils;
+import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
-import io.luna.util.parser.impl.MusicDefinitionFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
@@ -30,11 +29,11 @@ import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
@@ -158,22 +157,20 @@ public final class LunaServer {
      * Initializes misc. startup tasks.
      **/
     private void initLaunchTasks() {
-        AsyncExecutor executor = new AsyncExecutor(ThreadUtils.cpuCount(), "BackgroundLoaderThread");
-        executor.execute(new MessageRepositoryFileParser(messageRepository));
-        executor.execute(new EquipmentDefinitionFileParser());
-        executor.execute(new MusicDefinitionFileParser());
-        executor.execute(new NpcCombatDefinitionFileParser());
+        List<Runnable> taskList = new ArrayList<>();
+        taskList.add(new MessageRepositoryFileParser(messageRepository));
+        taskList.add(new EquipmentDefinitionFileParser());
+        taskList.add(new NpcCombatDefinitionFileParser());
 
-        try {
-            int count = executor.getTaskCount();
-            if (count > 0) {
-                logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
-                executor.await(true);
-                context.getCache().waitForDecoders();
-            }
-        } catch (ExecutionException e) {
-            throw new CompletionException(e.getCause());
+        ListeningExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
+        for (Runnable task : taskList) {
+            pool.execute(task);
         }
+        int count = taskList.size();
+        logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
+        pool.shutdown();
+        awaitTerminationUninterruptibly(pool);
+        context.getCache().waitForDecoders();
     }
 
     /**

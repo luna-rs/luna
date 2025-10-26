@@ -14,6 +14,7 @@ import java.util.Optional;
  * @author lare96 
  */
 public final class ContinueDialogueMessageReader extends GameMessageReader<NullEvent> {
+// todo engine plugin
 
     @Override
     public NullEvent decode(Player player, GameMessage msg) {
