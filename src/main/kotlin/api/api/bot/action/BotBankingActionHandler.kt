@@ -11,7 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.inter.AmountInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
-import engine.engine.bank.Banking
+import engine.bank.Banking
 
 /**
  * A [BotActionHandler] implementation for banking related actions.

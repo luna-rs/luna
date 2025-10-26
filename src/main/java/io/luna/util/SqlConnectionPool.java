@@ -235,7 +235,6 @@ public final class SqlConnectionPool {
             config.setUsername(username);
             config.setPassword(password);
             config.setPoolName(poolName);
-
             return new SqlConnectionPool(new HikariDataSource(config));
         }
     }

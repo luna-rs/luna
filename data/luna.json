@@ -28,7 +28,7 @@
   },
   "database": {
     "host": "localhost",
-    "post": 3306,
+    "port": 3306,
     "username": "luna_db",
     "password": "guMQRNYf44fxERs4uHxLCWjCQ"
   }
