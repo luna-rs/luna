@@ -114,7 +114,7 @@ public final class Rational extends Number implements Comparable<Rational> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(doubleValue());
+        return Objects.hash(numerator, denominator);
     }
 
     @Override
@@ -125,7 +125,7 @@ public final class Rational extends Number implements Comparable<Rational> {
 
         if (obj instanceof Rational) {
             Rational other = (Rational) obj;
-            return doubleValue() == other.doubleValue();
+            return numerator == other.numerator && denominator == other.denominator;
         }
 
         return false;
