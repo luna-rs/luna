@@ -3,7 +3,7 @@ package game.skill.crafting.glassMaking
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 
 /**
  * Starts an action if the [GlassBlowingInterface] is open.
@@ -23,7 +23,7 @@ GlassMaterial.values().forEach {
     button(it.make5Id) { addAction(plr, it, 5) }
     button(it.make10Id) { addAction(plr, it, 10) }
     button(it.makeXId) {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player?, value: Int) {
                 addAction(plr, it, value)
             }

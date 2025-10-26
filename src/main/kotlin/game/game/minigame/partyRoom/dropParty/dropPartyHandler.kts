@@ -10,7 +10,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 
 /**
  * Deposits an item into the party chest.
@@ -109,7 +109,7 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) {
                 var count = plr.inventory.computeAmountForId(itemId)
                 count = if (value > count) count else value
@@ -138,7 +138,7 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) {
                 var count = plr.depositItems.computeAmountForId(itemId)
                 count = if (value > count) count else value

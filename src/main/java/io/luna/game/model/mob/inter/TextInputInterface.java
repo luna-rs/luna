@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.inter;
 
 import io.luna.game.model.mob.Player;
-import io.luna.net.msg.out.NameInputMessageWriter;
+import io.luna.net.msg.out.TextInputMessageWriter;
 
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -11,11 +11,11 @@ import java.util.OptionalInt;
  *
  * @author lare96 
  */
-public abstract class NameInputInterface extends InputInterface {
+public abstract class TextInputInterface extends InputInterface {
 
     @Override
     public final void open(Player player) {
-        player.queue(new NameInputMessageWriter());
+        player.queue(new TextInputMessageWriter());
     }
 
     @Override

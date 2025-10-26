@@ -5,7 +5,7 @@ import api.predef.ext.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import io.luna.game.model.`object`.GameObject
 import game.skill.cooking.cookFood.MakeWineActionItem.Companion.wineFermentTask
 
@@ -68,7 +68,7 @@ button(13720) { cook(plr, 1) }
 button(13719) { cook(plr, 5) }
 button(13717) { cook(plr) }
 button(13718) {
-    plr.interfaces.open(object : AmountInputInterface() {
+    plr.interfaces.open(object : NumberInputInterface() {
         override fun onAmountInput(player: Player, value: Int) = cook(plr, value)
     })
 }

@@ -3,8 +3,9 @@ package engine.bank
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent
+import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 
 /**
  * Deposit an item.
@@ -26,38 +27,38 @@ fun isOpen(plr: Player) = plr.interfaces.isOpen(DepositBoxInterface::class)
 /**
  * Deposit 1.
  */
-on(WidgetItemClickEvent.WidgetItemFirstClickEvent::class)
+on(WidgetItemFirstClickEvent::class)
     .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 1) }
 
 /**
  * Deposit 5.
  */
-on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class)
+on(WidgetItemSecondClickEvent::class)
     .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 5) }
 
 /**
  * Deposit 10.
  */
-on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class)
+on(WidgetItemThirdClickEvent::class)
     .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this, 10) }
 
 /**
  * Deposit all.
  */
-on(WidgetItemClickEvent.WidgetItemFourthClickEvent::class)
+on(WidgetItemFourthClickEvent::class)
     .filter { widgetId == 7423 && isOpen(plr) }
     .then { deposit(this) }
 
 /**
  * Deposit (x).
  */
-on(WidgetItemClickEvent.WidgetItemFifthClickEvent::class)
+on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 7423 && isOpen(plr) }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = deposit(this@then, value)
         })
     }

@@ -5,7 +5,7 @@ import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 
 /**
  * Represents either an 'add' or 'remove' modification.
@@ -88,7 +88,7 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 3322 }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Add)
         })
     }
@@ -96,7 +96,7 @@ on(WidgetItemFifthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 3415 }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Remove)
         })
     }

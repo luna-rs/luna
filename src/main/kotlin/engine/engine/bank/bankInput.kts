@@ -4,7 +4,7 @@ import api.predef.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
 
 /**
@@ -99,7 +99,7 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 5064 && plr.bank.isOpen }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = deposit(this@then, value)
         })
     }
@@ -107,7 +107,7 @@ on(WidgetItemFifthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 5382 && plr.bank.isOpen }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = withdraw(this@then, value)
         })
     }

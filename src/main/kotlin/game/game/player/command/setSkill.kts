@@ -7,14 +7,14 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
 import io.luna.game.model.mob.inter.AbstractInterfaceSet
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 
 /**
- * An [AmountInputInterface] used to enter the desired level.
+ * An [NumberInputInterface] used to enter the desired level.
  */
-class SetLevelInput(private val skillId: Int) : AmountInputInterface() {
+class SetLevelInput(private val skillId: Int) : NumberInputInterface() {
 
     override fun onAmountInput(plr: Player, level: Int) {
         if (level < 1 || level > 99) {

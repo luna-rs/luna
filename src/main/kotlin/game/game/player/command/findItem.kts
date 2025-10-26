@@ -10,7 +10,7 @@ import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import kotlin.streams.toList
 
 /**
@@ -127,7 +127,7 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 5382 && isInterfaceOpen(plr) }
     .then {
-        plr.interfaces.open(object : AmountInputInterface() {
+        plr.interfaces.open(object : NumberInputInterface() {
             override fun onAmountInput(player: Player, value: Int) = spawn(this@then, value)
         })
     }

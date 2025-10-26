@@ -7,7 +7,7 @@ import io.luna.Luna
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
-import io.luna.game.model.mob.inter.NameInputInterface
+import io.luna.game.model.mob.inter.TextInputInterface
 import game.player.QuestJournalInterface
 import game.skill.magic.Magic.teleport
 import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
@@ -17,7 +17,7 @@ import game.skill.magic.teleportSpells.TeleportStyle
  * A command that changes the password of a player.
  */
 cmd("changepass") {
-    plr.interfaces.open(object : NameInputInterface() {
+    plr.interfaces.open(object : TextInputInterface() {
         override fun onNameInput(player: Player?, value: String?) {
             plr.password = value
             plr.sendMessage("Your password has been changed to $value.")

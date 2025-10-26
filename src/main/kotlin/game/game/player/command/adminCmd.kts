@@ -11,7 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 
 /**
  * A command that makes all stats 99.
@@ -146,7 +146,7 @@ cmd("shutdown", RIGHTS_ADMIN) {
         "10 Minutes", { gameThread.scheduleSystemUpdate(800) },
         "<x> Minutes", {
             plr.interfaces.close()
-            plr.interfaces.open(object : AmountInputInterface() {
+            plr.interfaces.open(object : NumberInputInterface() {
                 override fun onAmountInput(player: Player, value: Int) {
                     if (value < 1 || value > 60) {
                         plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()

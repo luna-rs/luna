@@ -11,7 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.inter.NameInputInterface
+import io.luna.game.model.mob.inter.TextInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SoundMessageWriter
@@ -56,7 +56,7 @@ cmd("bots", RIGHTS_DEV) {
  * Deletes a saved record of a player.
  */
 cmd("delete", RIGHTS_DEV) {
-    plr.interfaces.open(object : NameInputInterface() {
+    plr.interfaces.open(object : TextInputInterface() {
         override fun onNameInput(player: Player?, value: String?) {
             plr.newDialogue().empty("Are you sure you wish to delete all records for '$value' ?")
                 .options("Yes",

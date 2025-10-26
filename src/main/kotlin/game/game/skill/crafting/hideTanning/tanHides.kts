@@ -6,7 +6,7 @@ import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AmountInputInterface
+import io.luna.game.model.mob.inter.NumberInputInterface
 import kotlin.collections.set
 
 /**
@@ -17,7 +17,7 @@ data class TanButton(val hide: Hide, val amount: TanAmount) {
         when (amount) {
             TanAmount.TAN_1 -> action(1)
             TanAmount.TAN_5 -> action(5)
-            TanAmount.TAN_X -> plr.interfaces.open(object : AmountInputInterface() {
+            TanAmount.TAN_X -> plr.interfaces.open(object : NumberInputInterface() {
                 override fun onAmountInput(player: Player?, value: Int) = action(value)
             })
 
