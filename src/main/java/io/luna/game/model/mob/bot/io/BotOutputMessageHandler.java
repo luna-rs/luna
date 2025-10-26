@@ -11,7 +11,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
-import io.luna.net.msg.in.AmountInputMessageReader;
+import io.luna.net.msg.in.NumberInputMessageReader;
 import io.luna.net.msg.in.ButtonClickMessageReader;
 import io.luna.net.msg.in.ChatMessageReader;
 import io.luna.net.msg.in.CloseInterfaceMessageReader;
@@ -584,7 +584,7 @@ public final class BotOutputMessageHandler {
     }
 
     /**
-     * Sends the {@link AmountInputMessageReader} packet.
+     * Sends the {@link NumberInputMessageReader} packet.
      *
      * @param amount The amount.
      * @return {@code true} if successfully queued.
