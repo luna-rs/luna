@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.CloseInterfaceEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -11,12 +11,10 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96 
  */
-public final class CloseInterfaceMessageReader extends GameMessageReader<NullEvent> {
-// todo engine plugin
+public final class CloseInterfaceMessageReader extends GameMessageReader<CloseInterfaceEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
-        player.getInterfaces().close();
-        return NullEvent.INSTANCE;
+    public CloseInterfaceEvent decode(Player player, GameMessage msg) {
+        return new CloseInterfaceEvent(player);
     }
 }
