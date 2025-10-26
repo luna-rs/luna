@@ -5,85 +5,99 @@ import com.google.common.collect.Range;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+
 /**
- * A static-utility class that provides additional functionality for generating pseudo-random numbers. All functions
- * in this class are backed by {@link ThreadLocalRandom} rather than the more commonly used {@link Random}. It is
- * generally preferred to use this over {@code Random} because although {@code Random} is thread safe; the same seed
- * is shared concurrently, which leads to contention between multiple threads and overhead as a result. Surprisingly
- * because of the way that {@code ThreadLocalRandom} works, even in completely single-threaded situations it runs up
- * to three times faster than {@code Random}.
+ * A static utility class that provides additional functionality for generating pseudo-random numbers. All functions
+ * in this class are backed by {@link ThreadLocalRandom} rather than {@link java.util.Random}.
  *
  * @author lare96
- * @see <a href= "http://java-performance.info/java-util-random-java-util-concurrent-threadlocalrandom-multithreaded-environments/"
- * >java.util.Random and java.util.concurrent.ThreadLocalRandom in multithreaded environments</a>
+ * @see <a href="http://java-performance.info/java-util-random-java-util-concurrent-threadlocalrandom-multithreaded-environments/">
+ * Java performance article comparing Random and ThreadLocalRandom</a>
  */
 public final class RandomUtils {
 
     /**
-     * Determines if {@code rational} will be picked based on its rarity.
+     * Rolls a pseudo-random chance based on a {@link Rational} probability.
      *
-     * @return {@code true} if picked, {@code false} otherwise.
+     * @param rational The chance, where numerator/denominator represents the probability.
+     * @return {@code true} if the roll succeeds, {@code false} otherwise.
      */
     public static boolean roll(Rational rational) {
         if (rational.getNumerator() <= 0) {
             return false;
         } else if (rational.getNumerator() >= rational.getDenominator()) {
             return true;
-        } else// return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
-            return nextDouble() < rational.doubleValue();
+        } else return ThreadLocalRandom.current().nextLong(0, rational.getDenominator()) < rational.getNumerator();
     }
 
+    /**
+     * Performs a weighted random selection from a map of elements to their respective weights.
+     *
+     * @param weights A map containing elements and their associated weight values.
+     * @param <T> The element type.
+     * @return A randomly chosen element based on its weight, or {@code null} if all weights are zero.
+     */
     public static <T> T weightedRoll(Map<T, Double> weights) {
         double total = 0.0;
         for (double next : weights.values()) {
             total += next;
         }
-        if(total == 0.0) {
+        if (total == 0.0) {
             return null;
         }
         double roll = nextDouble() * total;
         double current = 0.0;
         for (var entry : weights.entrySet()) {
             current += entry.getValue();
-            if(current <= roll) {
+            if (current <= roll) {
                 return entry.getKey();
             }
         }
         return weights.keySet().iterator().next();
     }
 
+    /**
+     * Generates a random double between {@code 0.0} (inclusive) and {@code 1.0} (exclusive).
+     *
+     * @return The generated random double.
+     */
     public static double nextDouble() {
         return ThreadLocalRandom.current().nextDouble();
     }
 
+    /**
+     * Rolls a pseudo-random percent chance using an integer between {@code 0} and {@code 100}.
+     *
+     * @param value The percent chance to succeed (0–100).
+     * @return {@code true} if successful, {@code false} otherwise.
+     */
     public static boolean rollPercent(int value) {
-        if (value < 0)
-            value = 0;
-        if (value > 100)
-            value = 100;
+        value = Math.max(0, Math.min(value, 100));
         return ThreadLocalRandom.current().nextInt(100) < value;
     }
 
+    /**
+     * Rolls a pseudo-random chance using a double between {@code 0.0} and {@code 1.0}.
+     *
+     * @param value The chance to succeed (0.0–1.0).
+     * @return {@code true} if successful, {@code false} otherwise.
+     */
     public static boolean rollPercent(double value) {
-        if (value < 0.0)
-            value = 0.0;
-        if (value > 1.0)
-            value = 1.0;
+        value = Math.max(0.0, Math.min(value, 1.0));
         return ThreadLocalRandom.current().nextDouble() < value;
     }
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code min} and inclusive {@code max}.
+     * Returns a random integer between two inclusive bounds.
      *
-     * @param min The lower bound.
-     * @param max The upper bound.
-     * @return The generated number.
-     * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
+     * @param min The minimum bound (inclusive).
+     * @param max The maximum bound (inclusive).
+     * @return The generated random integer.
+     * @throws IllegalArgumentException If {@code max < min}.
      */
     public static int inclusive(int min, int max) {
         checkArgument(max >= min, "max < min");
@@ -91,198 +105,133 @@ public final class RandomUtils {
     }
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code 0} and inclusive {@code range}.
+     * Returns a random integer between {@code 0} (inclusive) and {@code range} (inclusive).
      *
-     * @param range The upper bound.
-     * @return The generated number.
-     * @throws IllegalArgumentException If {@code max - min + 1} is less than {@code 0}.
+     * @param range The upper bound (inclusive).
+     * @return The generated random integer.
      */
     public static int inclusive(int range) {
         return inclusive(0, range);
     }
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code min} and exclusive {@code max}.
+     * Returns a random integer between two bounds, where the upper bound is exclusive.
      *
-     * @param min The lower bound.
-     * @param max The exclusive upper bound.
-     * @return The generated number.
-     * @throws IllegalArgumentException If {@code max - min + 1} is equal to or less than {@code 0}.
+     * @param min The lower bound (inclusive).
+     * @param max The upper bound (exclusive).
+     * @return The generated random integer.
      */
     public static int exclusive(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);
     }
 
     /**
-     * Returns a pseudo-random {@code int} value between inclusive {@code 0} and exclusive {@code range}.
+     * Returns a random integer between {@code 0} (inclusive) and {@code range} (exclusive).
      *
-     * @param range The exclusive upper bound.
-     * @return The generated number.
-     * @throws IllegalArgumentException If {@code range} is less than {@code 1}.
+     * @param range The upper bound (exclusive).
+     * @return The generated random integer.
      */
     public static int exclusive(int range) {
         return exclusive(0, range);
     }
 
     /**
-     * Returns a pseudo-random {@code boolean} value.
+     * Returns a random boolean value.
      *
-     * @return The generated boolean.
+     * @return {@code true} or {@code false}, chosen at random.
      */
     public static boolean randomBoolean() {
         return ThreadLocalRandom.current().nextBoolean();
     }
 
     /**
-     * Pseudo-randomly retrieves an element from {@code array}.
+     * Returns a random element from the specified array.
      *
-     * @param array The array.
-     * @return The random value.
+     * @param array The array to select from.
+     * @param <T> The element type.
+     * @return A random element from the array.
      */
+    @SafeVarargs
     public static <T> T randomFrom(T... array) {
-        if (array.length == 1) {
-            return array[0];
-        }
-        return array[ThreadLocalRandom.current().nextInt(array.length)];
+        return array.length == 1 ? array[0] : array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
-     * Pseudo-randomly retrieves an element from {@code array}.
+     * Returns a random element from a given array.
      *
-     * @param array The array.
-     * @return The random value.
+     * @param array The array to select from.
+     * @param <T> The element type.
+     * @return A random element, or {@code null} if the array is empty.
      */
     public static <T> T random(T[] array) {
-        if (array.length == 0) {
-            return null;
-        } else if (array.length == 1) {
-            return array[0];
-        }
+        if (array.length == 0) return null;
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code int} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
+    /* Random element overloads for all primitive types. */
     public static int random(int[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code long} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static long random(long[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code double} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static double random(double[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code short} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static short random(short[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code byte} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static byte random(byte[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code float} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static float random(float[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code boolean} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static boolean random(boolean[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
-    /**
-     * Pseudo-randomly retrieves a {@code char} from {@code array}.
-     *
-     * @param array The array.
-     * @return The random value.
-     */
     public static char random(char[] array) {
         return array[ThreadLocalRandom.current().nextInt(array.length)];
     }
 
     /**
-     * Pseudo-randomly retrieves a element from {@code list}.
+     * Returns a random element from a {@link List}.
      *
-     * @param list The list.
-     * @return The random value.
+     * @param list The list to select from.
+     * @param <T> The element type.
+     * @return A random element, or {@code null} if the list is empty.
      */
     public static <T> T random(List<T> list) {
-        if (list.isEmpty()) {
-            return null;
-        } else if (list.size() == 1) {
-            return list.iterator().next();
-        }
+        if (list.isEmpty()) return null;
         return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
     /**
-     * Retrieves a random value from an {@code int} range.
+     * Returns a random integer within a specified {@link Range}.
      *
-     * @param range The range.
-     * @return The random value.
+     * @param range The range to select from.
+     * @return A random integer within the range.
      */
     public static int random(Range<Integer> range) {
         int low = range.hasLowerBound() ? range.lowerEndpoint() : Integer.MIN_VALUE;
         int high = range.hasUpperBound() ? range.upperEndpoint() : Integer.MAX_VALUE;
-        if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.CLOSED) {
+        if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.CLOSED)
             return inclusive(low, high - 1);
-        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN) {
+        if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN)
             return inclusive(low + 1, high);
-        } else if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN) {
+        if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.OPEN)
             return inclusive(low + 1, high - 1);
-        } else if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.CLOSED) {
-            return inclusive(low, high);
-        }
-        throw new Error("impossible");
+        return inclusive(low, high);
     }
 
-    /**
-     * Shuffles the elements of a {@code Object} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
+    /* Shuffle overloads for all supported types. */
     public static <T> T[] shuffle(T[] array) {
         for (int i = array.length - 1; i > 0; i--) {
             int index = ThreadLocalRandom.current().nextInt(i + 1);
@@ -293,138 +242,55 @@ public final class RandomUtils {
         return array;
     }
 
-    /**
-     * Shuffles the elements of a {@code int} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static int[] shuffle(int[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            int a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code long} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static long[] shuffle(long[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            long a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code double} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static double[] shuffle(double[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            double a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code short} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static short[] shuffle(short[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            short a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code byte} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static byte[] shuffle(byte[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            byte a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code float} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static float[] shuffle(float[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            float a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code boolean} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.
-     */
     public static boolean[] shuffle(boolean[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
-            int index = ThreadLocalRandom.current().nextInt(i + 1);
-            boolean a = array[index];
-            array[index] = array[i];
-            array[i] = a;
-        }
-        return array;
+        return shuffleArray(array);
     }
 
-    /**
-     * Shuffles the elements of a {@code char} array.
-     *
-     * @param array The array to shuffle.
-     * @return The shuffled array.x
-     */
     public static char[] shuffle(char[] array) {
-        for (int i = array.length - 1; i > 0; i--) {
+        return shuffleArray(array);
+    }
+
+    /**
+     * A generic helper method used by all primitive shuffle methods.
+     */
+    private static <A> A shuffleArray(A array) {
+        int length = java.lang.reflect.Array.getLength(array);
+        for (int i = length - 1; i > 0; i--) {
             int index = ThreadLocalRandom.current().nextInt(i + 1);
-            char a = array[index];
-            array[index] = array[i];
-            array[i] = a;
+            Object a = java.lang.reflect.Array.get(array, index);
+            java.lang.reflect.Array.set(array, index, java.lang.reflect.Array.get(array, i));
+            java.lang.reflect.Array.set(array, i, a);
         }
         return array;
     }
 
     /**
-     * A private constructor to discourage external instantiation.
+     * Private constructor to prevent external instantiation.
      */
     private RandomUtils() {
     }
-
 }
