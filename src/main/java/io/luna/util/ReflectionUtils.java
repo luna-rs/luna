@@ -39,23 +39,6 @@ public final class ReflectionUtils {
     }
 
     /**
-     * Reflectively retrieves an instanced field within {@code instance}.
-     *
-     * @param instance The Object instance to retrieve the field of.
-     * @param name The name of the field to retrieve.
-     * @param fieldType The type of the field to retrieve.
-     */
-    public static <T> T getField(Object instance, String name, Class<T> fieldType) throws ReflectionException {
-        try {
-            Field field = instance.getClass().getDeclaredField(name);
-            field.setAccessible(true);
-            return fieldType.cast(field.get(instance));
-        } catch (IllegalAccessException | NoSuchFieldException e) {
-            throw new ReflectionException(e);
-        }
-    }
-
-    /**
      * Reflectively sets an instanced field within {@code instance}.
      *
      * @param instance The Object instance to set the field of.
