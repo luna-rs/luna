@@ -51,7 +51,7 @@ enum class Emote(val id: Int, val button: Int) {
            button = 13369),
     SHRUG(id = 2113,
           button = 13370),
-    BLOW_KISS(id = 1702,
+    BLOW_KISS(id = 1368,
               button = 11100),
     GLASS_BOX(id = 1131,
               button = 667),
