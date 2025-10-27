@@ -12,8 +12,7 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class PrivacyOptionMessageReader extends GameMessageReader<PrivacyModeChangedEvent> {
-// todo engine plugin
+public final class PrivacyModeMessageReader extends GameMessageReader<PrivacyModeChangedEvent> {
 
     @Override
     public PrivacyModeChangedEvent decode(Player player, GameMessage msg) {
@@ -22,10 +21,5 @@ public final class PrivacyOptionMessageReader extends GameMessageReader<PrivacyM
         PrivacyMode tradeMode = PrivacyMode.fromId(msg.getPayload().get());
         PlayerPrivacy newPrivacy = new PlayerPrivacy(publicChatMode, privateChatMode, tradeMode);
         return new PrivacyModeChangedEvent(player, player.getPrivacyOptions(), newPrivacy);
-    }
-
-    @Override
-    public void handle(Player player, PrivacyModeChangedEvent event) {
-        player.setPrivacyOptions(event.getNewPrivacy());
     }
 }

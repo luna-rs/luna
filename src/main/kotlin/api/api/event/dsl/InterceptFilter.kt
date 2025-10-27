@@ -3,6 +3,7 @@ package api.event.dsl
 import api.predef.*
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
+import io.luna.game.event.EventPriority
 import kotlin.reflect.KClass
 
 /**
@@ -24,6 +25,6 @@ class InterceptFilter<E : Event>(private val eventType: KClass<E>,
                 action(it)
             }
         }
-        scriptListeners += EventListener(eventType.java, wrappedAction)
+        scriptListeners += EventListener(eventType.java, wrappedAction, EventPriority.NORMAL)
     }
 }

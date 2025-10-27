@@ -1,23 +1,15 @@
 package io.luna.net.msg.in;
 
-import game.player.Messages;
-import game.player.Sounds;
 import io.luna.game.event.impl.GroundItemClickEvent;
 import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent;
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
-import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
-import io.luna.util.logging.LoggingSettings.FileOutputType;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link GameMessageReader} implementation that intercepts data sent on ground item clicks.
@@ -25,16 +17,6 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * @author lare96
  */
 public final class GroundItemClickMessageReader extends GameMessageReader<GroundItemClickEvent> {
-
-    /**
-     * An asynchronous logger that will handle item pickup logs.
-     */
-    private static final Logger logger = FileOutputType.ITEM_PICKUP.getLogger();
-
-    /**
-     * The {@code ITEM_PICKUP} logging level.
-     */
-    private static final Level ITEM_PICKUP = FileOutputType.ITEM_PICKUP.getLevel();
 
     @Override
     public GroundItemClickEvent decode(Player player, GameMessage msg) {
@@ -59,32 +41,7 @@ public final class GroundItemClickMessageReader extends GameMessageReader<Ground
 
     @Override
     public boolean validate(Player player, GroundItemClickEvent event) {
-        if (event.getGroundItem() == null) {
-            return false;
-        }
-        if (event instanceof PickupItemEvent) {
-            Item pickupItem = event.getGroundItem().toItem();
-            if (!player.getInventory().hasSpaceFor(pickupItem)) {
-                player.sendMessage(Messages.INVENTORY_FULL);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // todo this should be an engine plugin
-    @Override
-    public void handle(Player player, GroundItemClickEvent event) {
-        if (event instanceof PickupItemEvent) {
-            GroundItem groundItem = event.getGroundItem();
-            Item pickupItem = groundItem.toItem();
-
-            player.getWorld().getItems().unregister(groundItem);
-            player.playSound(Sounds.PICKUP_ITEM);
-            player.getInventory().add(pickupItem);
-            logger.log(ITEM_PICKUP, "{}: {}(x{})", player.getUsername(), groundItem.def().getName(),
-                    box(groundItem.getAmount()));
-        }
+        return event.getGroundItem() != null;
     }
 
     /**

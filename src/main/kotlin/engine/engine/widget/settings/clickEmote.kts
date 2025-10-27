@@ -1,6 +1,7 @@
 package engine.widget.settings
 
 import api.predef.*
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.mob.block.Animation
 
@@ -10,7 +11,7 @@ for (entry in Emote.BUTTON_TO_EMOTE.entries) {
 }
 
 // Unlock all emotes.
-on(LoginEvent::class) {
+on(LoginEvent::class, EventPriority.NORMAL) {
     plr.sendVarbits(313, Emote.UNLOCK_EMOTE_VARBITS)
     plr.sendVarbit(Emote.UNLOCK_GOBLIN_EMOTE_VARBIT)
 }

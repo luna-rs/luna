@@ -5,6 +5,7 @@ import api.event.dsl.InterceptBy
 import api.event.dsl.InterceptUseItem
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.event.impl.GroundItemClickEvent.GroundItemSecondClickEvent
@@ -13,8 +14,6 @@ import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
-import io.luna.game.model.Position
-import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import java.util.*
@@ -45,8 +44,8 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
 /**
  * The main event interception function. Runs the action without any forwarding.
  */
-fun <E : Event> on(eventClass: KClass<E>, action: EventAction<E>) {
-    scriptListeners += EventListener(eventClass.java, action)
+fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriority.LOW, action: EventAction<E>) {
+    scriptListeners += EventListener(eventClass.java, action, priority)
 }
 
 /**

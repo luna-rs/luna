@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.PlayerTimeoutEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -11,16 +11,10 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class PlayerTimeoutMessageReader extends GameMessageReader<NullEvent> {
-// todo engine plugin
+public final class PlayerTimeoutMessageReader extends GameMessageReader<PlayerTimeoutEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
-        if (!player.getTimeout().isRunning()) {
-            player.getTimeout().start();
-        } else if(player.getTimeout().elapsed().toMinutes() >= 5) {
-            player.logout();
-        }
-        return NullEvent.INSTANCE;
+    public PlayerTimeoutEvent decode(Player player, GameMessage msg) {
+        return new PlayerTimeoutEvent(player);
     }
 }

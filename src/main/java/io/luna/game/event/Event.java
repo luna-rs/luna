@@ -5,8 +5,7 @@ package io.luna.game.event;
  * immutable to avoid unintended side effects during processing. The pipeline reference is an
  * exception to allow internal routing.
  *
- * <p><strong>Note:</strong> The pipeline reference is only non-null during dispatch. For
- * {@link EventListenerPipeline#lazyPost(Event)} events, it remains {@code null}.</p>
+ * <p><strong>Note:</strong> The pipeline reference is only non-null during dispatch.</p>
  *
  * @author lare96
  */

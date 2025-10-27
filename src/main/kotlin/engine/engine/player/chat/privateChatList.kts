@@ -2,6 +2,7 @@ package engine.player.chat
 
 
 import api.predef.*
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.LogoutEvent
 import io.luna.game.event.impl.PrivacyListChangeEvent.*
@@ -77,7 +78,7 @@ fun updateIgnoreListForSelf(plr: Player) {
 /**
  * Adds [name] to [plr]'s friend list and syncs visibility changes.
  */
-fun addFriend(plr: Player, name: Long) {
+on(AddFriendEvent::class, EventPriority.HIGH) {
     when {
         plr.friends.size >= 200 -> plr.sendMessage("Your friends list is full.")
         plr.friends.add(name) -> {
@@ -100,7 +101,7 @@ fun addFriend(plr: Player, name: Long) {
 /**
  * Removes [name] from [plr]'s friends list and updates visibility accordingly.
  */
-fun removeFriend(plr: Player, name: Long) {
+on(RemoveFriendEvent::class, EventPriority.HIGH) {
     if (plr.friends.remove(name)) {
         world.getPlayer(name).ifPresent { updateFriendOnlineStatus(it, plr) }
     } else {
@@ -111,7 +112,7 @@ fun removeFriend(plr: Player, name: Long) {
 /**
  * Adds [name] to [plr]'s ignore list, updating both lists as needed.
  */
-fun addIgnore(plr: Player, name: Long) {
+on(AddIgnoreEvent::class, EventPriority.HIGH) {
     when {
         plr.ignores.size >= 100 -> plr.sendMessage("Your ignore list is full.")
         plr.ignores.add(name) -> {
@@ -128,29 +129,13 @@ fun addIgnore(plr: Player, name: Long) {
 /**
  * Removes [name] from [plr]'s ignore list, updating visibility appropriately.
  */
-fun removeIgnore(plr: Player, name: Long) {
+on(RemoveIgnoreEvent::class, EventPriority.HIGH) {
     if (plr.ignores.remove(name)) {
         updateIgnoreListForSelf(plr)
         world.getPlayer(name).ifPresent { updateFriendOnlineStatus(it, plr) }
     } else {
         plr.sendMessage("They are not on your ignore list.")
     }
-}
-
-on(AddFriendEvent::class) {
-    addFriend(plr, name)
-}
-
-on(RemoveFriendEvent::class) {
-    removeFriend(plr, name)
-}
-
-on(AddIgnoreEvent::class) {
-    addIgnore(plr, name)
-}
-
-on(RemoveIgnoreEvent::class) {
-    removeIgnore(plr, name)
 }
 
 on(LogoutEvent::class) {

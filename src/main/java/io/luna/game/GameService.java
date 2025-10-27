@@ -19,7 +19,6 @@ import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -30,7 +29,6 @@ import java.util.function.Function;
 
 import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -63,7 +61,7 @@ public final class GameService extends AbstractScheduledService {
                 thread = Thread.currentThread();
 
                 world.start();
-                runKotlinTasks(ServerLaunchEvent::new, "Waiting for {} Kotlin startup task(s) to complete...");
+                runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
                 // Synchronizes with the lock in LunaServer. Players won't be able to login until the startup
                 // tasks are complete, so it's fine to block the game thread.
@@ -213,15 +211,11 @@ public final class GameService extends AbstractScheduledService {
     private <E extends Event> void runKotlinTasks(Function<ListeningExecutorService, E> eventFunction,
                                                   String waitingMessage) {
         ListeningExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
-        List<Runnable> tasks = context.getPlugins().lazyPost(eventFunction.apply(pool));
-
-        int count = tasks.size();
-        if (count > 0) {
-            tasks.forEach(Runnable::run);
-            pool.shutdown();
-            logger.info(waitingMessage, box(count));
-            awaitTerminationUninterruptibly(pool);
-        }
+        E msg = eventFunction.apply(pool);
+        context.getPlugins().post(msg);
+        pool.shutdown();
+        logger.info(waitingMessage);
+        awaitTerminationUninterruptibly(pool);
     }
 
     /**
@@ -242,7 +236,7 @@ public final class GameService extends AbstractScheduledService {
         runSynchronizationTasks();
 
         // Run shutdown code from Kotlin scripts, and wait for the asynchronous portions to complete.
-        runKotlinTasks(ServerShutdownEvent::new, "Waiting for {} Kotlin shutdown task(s) to complete...");
+        runKotlinTasks(ServerShutdownEvent::new, "Waiting for Kotlin shutdown tasks to complete...");
 
         // Will stop any current and future logins.
         loginService.stopAsync().awaitTerminated();

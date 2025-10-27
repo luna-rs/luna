@@ -25,7 +25,7 @@ final class EventListenerTest {
 
     @BeforeEach
     void initEventListener() {
-        eventListener = new EventListener<>(null, null);
+        eventListener = new EventListener<>(null, null, null);
     }
 
     @Test

@@ -367,11 +367,6 @@ public class Player extends Mob {
     private final Map<Integer, Integer> cachedVarps = new HashMap<>();
 
     /**
-     * The timeout timer.
-     */
-    private final Stopwatch timeout = Stopwatch.createUnstarted();
-
-    /**
      * The time online.
      */
     private final Stopwatch timeOnline = Stopwatch.createUnstarted();
@@ -1404,13 +1399,6 @@ public class Player extends Mob {
      */
     public PersistentVarpManager getVarpManager() {
         return varpManager;
-    }
-
-    /**
-     * @return The timeout timer.
-     */
-    public Stopwatch getTimeout() {
-        return timeout;
     }
 
     /**

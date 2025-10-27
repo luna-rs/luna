@@ -84,8 +84,6 @@ public abstract class GameMessageReader<E extends Event> {
      */
     public final void submitMessage(Player player, GameMessage msg) {
         try {
-            player.getTimeout().reset();
-
             // Decode event object from raw client data.
             E event = decode(player, msg);
 

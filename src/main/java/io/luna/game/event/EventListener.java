@@ -33,14 +33,21 @@ public final class EventListener<E extends Event> {
     private final Consumer<E> listener;
 
     /**
+     * The priority of this event listener.
+     */
+    private final EventPriority priority;
+
+    /**
      * Creates a new {@link EventListener}.
      *
      * @param eventType The event class this listener is associated with.
      * @param listener The logic to run when the event is dispatched.
+     * @param priority The priority of this event listener.
      */
-    public EventListener(Class<E> eventType, Consumer<E> listener) {
+    public EventListener(Class<E> eventType, Consumer<E> listener, EventPriority priority) {
         this.eventType = eventType;
         this.listener = listener;
+        this.priority = priority;
 
         // Value injected with reflection.
         script = null;
@@ -94,5 +101,12 @@ public final class EventListener<E extends Event> {
      */
     public Consumer<E> getListener() {
         return listener;
+    }
+
+    /**
+     * @return The priority of this event listener.
+     */
+    public EventPriority getPriority() {
+        return priority;
     }
 }

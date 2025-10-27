@@ -1,14 +1,14 @@
 package engine.widget
 
 import api.predef.*
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.EquipItemEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
-import io.luna.game.model.mob.Player
 
 /**
  * Equips the item.
  */
-fun equip(plr: Player, index: Int) {
+on(EquipItemEvent::class, EventPriority.HIGH) {
     plr.resetInteractingWith()
     plr.interfaces.close()
     plr.equipment.equip(index)
@@ -17,16 +17,6 @@ fun equip(plr: Player, index: Int) {
 /**
  * Unequips the item.
  */
-fun unequip(plr: Player, index: Int) = plr.equipment.unequip(index)
-
-/**
- * Listen for equip events.
- */
-on(EquipItemEvent::class) { equip(plr, index) }
-
-/**
- * Listen for unequip events.
- */
 on(WidgetItemFirstClickEvent::class)
     .filter { widgetId == 1688 }
-    .then { unequip(plr, index) }
+    .then { plr.equipment.unequip(index) }

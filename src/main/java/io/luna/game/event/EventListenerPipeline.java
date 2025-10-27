@@ -31,9 +31,20 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     private final Class<E> eventType;
 
     /**
-     * The pipeline of listeners.
+     * The priority listener with a priority of {@link EventPriority#HIGH}. Will always be run first.
+     */
+    private EventListener<E> priorityListener;
+
+    /**
+     * The regular listeners with a priority of {@link EventPriority#NORMAL}. Will be run before the matchers and
+     * after the {@link #priorityListener}.
      */
     private final List<EventListener<E>> listeners = new ArrayList<>();
+
+    /**
+     * The lazy listeners with a priority of {@link EventPriority#LOW}. Will always be run last.
+     */
+    private final List<EventListener<E>> lazyListeners = new ArrayList<>();
 
     /**
      * The Kotlin match listener. Serves as an optimization for key-based events.
@@ -55,6 +66,26 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
         return Iterators.unmodifiableIterator(listeners.iterator());
     }
 
+    private void internalPost(E msg) {
+        // Priority listener always runs first.
+        if (priorityListener != null) {
+            priorityListener.getListener().accept(msg);
+        }
+
+        // Then NORMAL listeners.
+        for (EventListener<E> listener : listeners) {
+            listener.apply(msg);
+        }
+
+        // Then matchers.
+        matcher.match(msg);
+
+        // Then lazy listeners.
+        for (EventListener<E> listener : lazyListeners) {
+            listener.apply(msg);
+        }
+    }
+
     /**
      * Immediately dispatches the given event to this pipeline’s listeners.
      *
@@ -63,44 +94,12 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
     public void post(E msg) {
         try {
             msg.setPipeline(this);
-
-            // Attempt to match the event to a listener.
-            if (!matcher.match(msg)) {
-
-                // Event was not matched, post to other listeners.
-                for (EventListener<E> listener : listeners) {
-                    listener.apply(msg);
-                }
-            }
+            internalPost(msg);
         } catch (ScriptExecutionException e) {
-            handleException(e, false);
+            handleException(e);
         } finally {
             msg.setPipeline(null);
         }
-    }
-
-    /**
-     * Wraps dispatch logic in {@link Runnable} tasks for deferred execution.
-     *
-     * @param msg The event to dispatch.
-     * @return A list of dispatch tasks.
-     */
-    public List<Runnable> lazyPost(E msg) {
-        List<Runnable> taskBuilder = new ArrayList<>();
-        if (matcher.has(msg)) {
-            taskBuilder.add(() -> matcher.match(msg));
-            return taskBuilder;
-        }
-        for (EventListener<E> eventListener : listeners) {
-            taskBuilder.add(() -> {
-                try {
-                    eventListener.apply(msg);
-                } catch (ScriptExecutionException e) {
-                    handleException(e, true);
-                }
-            });
-        }
-        return taskBuilder;
     }
 
     /**
@@ -108,12 +107,11 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      *
      * @param e The exception to handle.
      */
-    private void handleException(ScriptExecutionException e, boolean lazy) {
+    private void handleException(ScriptExecutionException e) {
         Script script = e.getScript();
         if (script != null) {
-            String s = lazy ? "lazy-run" : "run";
             ClassInfo info = script.getInfo();
-            logger.warn(new ParameterizedMessage("Failed to {} a listener from script '{}' in package '{}'", s,
+            logger.warn(new ParameterizedMessage("Failed to run a listener from script '{}' in package '{}'",
                     info.getSimpleName(), info.getPackageName()), e);
         } else {
             logger.catching(e);
@@ -126,7 +124,21 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
      * @param listener The listener.
      */
     public void add(EventListener<E> listener) {
-        listeners.add(listener);
+        switch (listener.getPriority()) {
+            case LOW:
+                lazyListeners.add(listener);
+                break;
+            case NORMAL:
+                listeners.add(listener);
+                break;
+            case HIGH:
+                if (priorityListener != null) {
+                    throw new IllegalStateException("Only one high priority event listener {" +
+                            listener.getEventType().getSimpleName() + "} can exist per event type!");
+                }
+                priorityListener = listener;
+                break;
+        }
     }
 
     /**

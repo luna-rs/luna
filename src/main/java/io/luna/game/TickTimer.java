@@ -21,7 +21,7 @@ public class TickTimer implements Comparable<Long> {
     /**
      * A snapshot of the world's tick at a certain point in time.
      */
-    private long snapshot;
+    private long snapshot = -1;
 
     /**
      * Creates a new {@link TickTimer} with {@code initialDurationTicks}.
@@ -30,7 +30,6 @@ public class TickTimer implements Comparable<Long> {
      */
     public TickTimer(World world) {
         this.world = world;
-        reset();
     }
 
     @Override
@@ -48,6 +47,9 @@ public class TickTimer implements Comparable<Long> {
      * time unit.
      */
     public final long getDurationTicks() {
+        if (snapshot == -1) {
+            throw new IllegalStateException("This timer has not been started!");
+        }
         return world.getCurrentTick() - snapshot;
     }
 
@@ -64,7 +66,17 @@ public class TickTimer implements Comparable<Long> {
     /**
      * Resets the current duration ({@link #getDurationTicks()}) to 0 ticks.
      */
-    public final void reset() {
+    public TickTimer reset() {
+        snapshot = -1;
+        return this;
+    }
+
+    public TickTimer start() {
         snapshot = world.getCurrentTick();
+        return this;
+    }
+
+    public boolean isRunning() {
+        return snapshot != -1;
     }
 }

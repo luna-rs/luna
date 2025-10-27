@@ -2,6 +2,7 @@ package engine.widget.skill
 
 import api.predef.*
 import game.player.Jingles.*
+import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.SkillChangeEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
@@ -132,7 +133,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
 }
 
 // Check if they've advanced a level on skill change.
-on(SkillChangeEvent::class) {
+on(SkillChangeEvent::class, EventPriority.HIGH) {
     val plr = mob as? Player
     if (plr != null) {
         plr.queue(SkillUpdateMessageWriter(id))

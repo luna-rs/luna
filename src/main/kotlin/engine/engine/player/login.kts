@@ -10,11 +10,12 @@ import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdatePrivacyOptionMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
 import engine.player.punishment.PunishmentHandler
+import io.luna.game.event.EventPriority
 
 /**
  * Final initialization of the player before gameplay.
  */
-fun init(plr: Player) {
+on(LoginEvent::class, EventPriority.HIGH) {
     plr.tabs.resetAll()
 
     plr.interactions.show(INTERACTION_FOLLOW)
@@ -36,5 +37,3 @@ fun init(plr: Player) {
         plr.sendMessage("Server currently running in ${Luna.settings().game().runtimeMode()} mode.")
     }
 }
-
-on(LoginEvent::class) { init(plr) }
