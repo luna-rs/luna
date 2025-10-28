@@ -8,7 +8,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.persistence.PlayerData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -153,7 +152,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
                 world.getSerializerManager().getSerializer().savePlayer(world, username, saveData);
                 logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             } catch (Exception e) {
-                logger.error(new ParameterizedMessage("Issue servicing {}'s logout request!", username), e);
+                logger.error("Issue servicing {}'s logout request!", username, e);
             } finally {
                 saves.remove(username);
                 request.complete();

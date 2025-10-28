@@ -12,7 +12,6 @@ import io.luna.net.msg.login.LoginRequestMessage;
 import io.luna.net.msg.login.LoginResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -164,7 +163,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
                     return false;
                 }
             } catch (Exception e) {
-                logger.error(new ParameterizedMessage("Issue servicing {}'s login request!", username), e);
+                logger.error("Issue servicing {}'s login request!", username, e);
                 client.disconnect();
             }
             return false;

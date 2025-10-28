@@ -8,7 +8,6 @@ import io.luna.game.model.mob.bot.BotSchedule;
 import io.luna.util.SqlConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -62,7 +61,7 @@ public final class SqlGameSerializer extends GameSerializer {
                 }
             }
         } catch (Exception e) {
-            logger.warn(new ParameterizedMessage("{}'s data could not be loaded.", username), e);
+            logger.warn("{}'s data could not be loaded.", username, e);
         }
         return data;
     }
@@ -81,7 +80,7 @@ public final class SqlGameSerializer extends GameSerializer {
                 connection.setAutoCommit(true);
             }
         } catch (Exception e) {
-            logger.warn(new ParameterizedMessage("{}'s data could not be saved.", username), e);
+            logger.warn("{}'s data could not be saved.", username, e);
         }
     }
 
@@ -120,7 +119,7 @@ public final class SqlGameSerializer extends GameSerializer {
                 connection.setAutoCommit(true);
             }
         } catch (Exception e) {
-            logger.warn(new ParameterizedMessage("Could not delete record for {}.", username), e);
+            logger.warn("Could not delete record for {}.", username, e);
             return false;
         }
         return true;

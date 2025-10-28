@@ -13,7 +13,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,7 +212,7 @@ public final class PersistenceService extends AbstractIdleService {
                     world.getSerializerManager().getSerializer().savePlayer(world, username, data);
                     logger.trace("Saved {}'s data.", username);
                 } catch (Exception e) {
-                    logger.error(new ParameterizedMessage("Issue saving {}'s data during mass save.", username), e);
+                    logger.error("Issue saving {}'s data during mass save.", username, e);
                 }
             }
             logger.info("Mass save complete (took {}ms).", box(timer.elapsed().toMillis()));

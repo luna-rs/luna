@@ -7,7 +7,6 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.ReflectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.function.Supplier;
 
@@ -67,7 +66,7 @@ public class GameSerializerManager {
                 }
             });
         } catch (ClassCastException e) {
-            logger.fatal(new ParameterizedMessage("{} not an instance of GameSerializer, using PassiveGameSerializer instead.", name), e);
+            logger.fatal("{} not an instance of GameSerializer, using PassiveGameSerializer instead.", name, e);
             return DEFAULT.get();
         }
     }

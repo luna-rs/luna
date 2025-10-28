@@ -7,7 +7,6 @@ import io.luna.game.plugin.Script;
 import io.luna.game.plugin.ScriptExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -111,8 +110,8 @@ public final class EventListenerPipeline<E extends Event> implements Iterable<Ev
         Script script = e.getScript();
         if (script != null) {
             ClassInfo info = script.getInfo();
-            logger.warn(new ParameterizedMessage("Failed to run a listener from script '{}' in package '{}'",
-                    info.getSimpleName(), info.getPackageName()), e);
+            logger.warn("Failed to run a listener from script '{}' in package '{}'",
+                    info.getSimpleName(), info.getPackageName(), e);
         } else {
             logger.catching(e);
         }

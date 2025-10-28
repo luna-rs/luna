@@ -5,112 +5,123 @@ import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 
+import java.nio.charset.StandardCharsets;
+
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link ByteBuf} wrapper tailored to the specifications of the Runescape protocol.
+ * A {@code ByteMessage} is a wrapper around a Netty {@link io.netty.buffer.ByteBuf} tailored for the RuneScape protocol.
+ * <p>
+ * It provides methods for reading and writing various primitive types, handling RuneScape-specific
+ * transformations, bit-level operations, and different byte orders used in the protocol.
+ * <p>
+ * The class supports both message creation (e.g., encoding packets to send to clients) and
+ * message parsing (e.g., decoding incoming packets). It also provides pooled buffer allocation
+ * to reduce garbage generation.
  *
  * @author lare96
+ * @see ByteOrder
+ * @see ValueType
+ * @see MessageType
  */
 public final class ByteMessage extends DefaultByteBufHolder {
 
     /**
-     * The default initial buffer size.
+     * The default initial buffer size in bytes for pooled allocations.
      */
     private static final int DEFAULT_SIZE = 128;
 
     /**
-     * An array of bit masks.
+     * Precomputed bit masks from 0 to 31 used for bit-level encoding.
      */
     private static final int[] BIT_MASK = new int[32];
 
     /**
-     * Creates a {@link ByteMessage} used to read and encode raw messages.
+     * Creates a raw message with a specified initial size.
      *
-     * @param size The initial size.
-     * @return A new buffer.
+     * @param size The initial buffer size.
+     * @return A new {@code ByteMessage}.
      */
     public static ByteMessage raw(int size) {
         return new ByteMessage(pooledBuffer(size), -1, MessageType.RAW);
     }
 
     /**
-     * Creates a {@link ByteMessage} used to read and encode raw messages.
+     * Creates a raw message with the default buffer size.
      *
-     * @return A new buffer.
+     * @return A new {@code ByteMessage}.
      */
     public static ByteMessage raw() {
         return raw(128);
     }
 
     /**
-     * Creates a {@link ByteMessage} used to read and encode game messages.
+     * Creates a game message with a specified opcode and message type.
      *
-     * @param opcode The opcode.
-     * @param type The message type.
-     * @return A new buffer.
+     * @param opcode The packet opcode.
+     * @param type The header type.
+     * @return A new {@code ByteMessage}.
      */
     public static ByteMessage message(int opcode, MessageType type) {
         return new ByteMessage(pooledBuffer(), opcode, type);
     }
 
     /**
-     * Creates a fixed type {@link ByteMessage} used to read and encode game messages.
+     * Creates a fixed-length game message with the given opcode.
      *
-     * @param opcode The opcode.
-     * @return A new buffer.
+     * @param opcode The packet opcode.
+     * @return A new {@code ByteMessage}.
      */
     public static ByteMessage message(int opcode) {
         return message(opcode, MessageType.FIXED);
     }
 
     /**
-     * Creates a raw {@link ByteMessage} wrapped around the specified {@link ByteBuf}.
+     * Wraps an existing {@link ByteBuf} inside a {@code ByteMessage}.
      *
      * @param buf The buffer to wrap.
-     * @return A new buffer.
+     * @return A new {@code ByteMessage}.
      */
     public static ByteMessage wrap(ByteBuf buf) {
         return new ByteMessage(buf, -1, MessageType.RAW);
     }
 
-
     /**
-     * Creates a raw backing pooled {@link ByteBuf}.
+     * Allocates a pooled buffer with the given size.
      *
-     * @param size The initial size.
-     * @return A new buffer.
+     * @param size Initial size in bytes.
+     * @return A new pooled {@link ByteBuf}.
      */
     public static ByteBuf pooledBuffer(int size) {
         return PooledByteBufAllocator.DEFAULT.buffer(size);
     }
 
     /**
-     * Creates a raw backing pooled {@link ByteBuf}.
+     * Allocates a pooled buffer with the default size.
      *
-     * @return A new buffer.
+     * @return A new pooled {@link ByteBuf}.
      */
     public static ByteBuf pooledBuffer() {
         return pooledBuffer(DEFAULT_SIZE);
     }
 
     /**
-     * The backing buffer.
+     * The underlying Netty buffer backing this {@code ByteMessage}.
      */
     private final ByteBuf buf;
 
     /**
-     * The opcode.
+     * The packet opcode, or {@code -1} if this is a raw message.
      */
     private final int opcode;
 
     /**
-     * The header type.
+     * The type of message header (fixed, variable, etc.).
      */
     private final MessageType type;
 
     /**
-     * The current bit index.
+     * The current bit index used during bit access mode, or {@code -1} if not in bit mode.
      */
     private int bitIndex = -1;
 
@@ -122,11 +133,11 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Creates a new {@link ByteMessage}.
+     * Creates a new {@code ByteMessage}.
      *
-     * @param buf The backing buffer.
-     * @param opcode The opcode.
-     * @param type The header type.
+     * @param buf The backing Netty buffer.
+     * @param opcode The opcode for this message.
+     * @param type The message header type.
      */
     private ByteMessage(ByteBuf buf, int opcode, MessageType type) {
         super(buf);
@@ -164,7 +175,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Prepares the buffer for writing bits.
+     * Switches the buffer into bit-access mode, allowing bit-level writing.
+     *
+     * @throws IllegalStateException If already in bit access mode.
      */
     public void startBitAccess() {
         checkState(bitIndex == -1, "This ByteMessage instance is already in bit access mode.");
@@ -173,13 +186,71 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * Prepares the buffer for writing bytes.
+     * Ends bit-access mode and realigns the writer index to the next byte boundary.
+     *
+     * @throws IllegalStateException If not currently in bit access mode.
      */
     public void endBitAccess() {
         checkState(bitIndex != -1, "This ByteMessage instance is not in bit access mode.");
 
         buf.writerIndex((bitIndex + 7) >> 3);
         bitIndex = -1;
+    }
+
+    /**
+     * Writes a specified number of bits to the buffer.
+     *
+     * @param amount Number of bits (1–32).
+     * @param value The value to encode.
+     * @return This buffer instance for chaining.
+     * @throws IllegalArgumentException If amount is outside valid range.
+     */
+    public ByteMessage putBits(int amount, int value) {
+        checkState(amount >= 1 && amount <= 32, "Number of bits must be between 1 and 32 inclusive.");
+
+        int bytePos = bitIndex >> 3;
+        int bitOffset = 8 - (bitIndex & 7);
+
+        bitIndex = bitIndex + amount;
+
+        int requiredSpace = bytePos - buf.writerIndex() + 1;
+        requiredSpace += (amount + 7) / 8;
+
+        if (buf.writableBytes() < requiredSpace) {
+            buf.capacity(buf.capacity() + requiredSpace);
+        }
+
+        for (; amount > bitOffset; bitOffset = 8) {
+            byte tmp = buf.getByte(bytePos);
+            tmp &= (byte) ~BIT_MASK[bitOffset];
+            tmp |= (byte) ((value >> (amount - bitOffset)) & BIT_MASK[bitOffset]);
+            buf.setByte(bytePos++, tmp);
+            amount -= bitOffset;
+        }
+
+        if (amount == bitOffset) {
+            byte tmp = buf.getByte(bytePos);
+            tmp &= (byte) ~BIT_MASK[bitOffset];
+            tmp |= (byte) (value & BIT_MASK[bitOffset]);
+            buf.setByte(bytePos, tmp);
+        } else {
+            byte tmp = buf.getByte(bytePos);
+            tmp &= (byte) ~(BIT_MASK[amount] << (bitOffset - amount));
+            tmp |= (byte) ((value & BIT_MASK[amount]) << (bitOffset - amount));
+            buf.setByte(bytePos, tmp);
+        }
+        return this;
+    }
+
+    /**
+     * Writes a single bit (boolean) to the buffer.
+     *
+     * @param flag The boolean value.
+     * @return This buffer instance for chaining.
+     */
+    public ByteMessage putBit(boolean flag) {
+        putBits(1, flag ? 1 : 0);
+        return this;
     }
 
     /**
@@ -241,62 +312,6 @@ public final class ByteMessage extends DefaultByteBufHolder {
         for (int i = from.length - 1; i >= 0; i--) {
             put(from[i]);
         }
-        return this;
-    }
-
-    /**
-     * Writes the value as a variable amount of bits.
-     *
-     * @param amount The bit amount.
-     * @param value The value.
-     * @return This buffer instance.
-     * @throws IllegalArgumentException If {@code amount} is not between {@code 1} and {@code 32} inclusive.
-     */
-    public ByteMessage putBits(int amount, int value) {
-        checkState(amount >= 1 && amount <= 32, "Number of bits must be between 1 and 32 inclusive.");
-
-        int bytePos = bitIndex >> 3;
-        int bitOffset = 8 - (bitIndex & 7);
-
-        bitIndex = bitIndex + amount;
-
-        int requiredSpace = bytePos - buf.writerIndex() + 1;
-        requiredSpace += (amount + 7) / 8;
-
-        if (buf.writableBytes() < requiredSpace) {
-            buf.capacity(buf.capacity() + requiredSpace);
-        }
-
-        for (; amount > bitOffset; bitOffset = 8) {
-            byte tmp = buf.getByte(bytePos);
-            tmp &= (byte) ~BIT_MASK[bitOffset];
-            tmp |= (byte) ((value >> (amount - bitOffset)) & BIT_MASK[bitOffset]);
-            buf.setByte(bytePos++, tmp);
-            amount -= bitOffset;
-        }
-
-        if (amount == bitOffset) {
-            byte tmp = buf.getByte(bytePos);
-            tmp &= (byte) ~BIT_MASK[bitOffset];
-            tmp |= (byte) (value & BIT_MASK[bitOffset]);
-            buf.setByte(bytePos, tmp);
-        } else {
-            byte tmp = buf.getByte(bytePos);
-            tmp &= (byte) ~(BIT_MASK[amount] << (bitOffset - amount));
-            tmp |= (byte) ((value & BIT_MASK[amount]) << (bitOffset - amount));
-            buf.setByte(bytePos, tmp);
-        }
-        return this;
-    }
-
-    /**
-     * Writes a boolean bit.
-     *
-     * @param flag The flag value.
-     * @return This buffer instance.
-     */
-    public ByteMessage putBit(boolean flag) {
-        putBits(1, flag ? 1 : 0);
         return this;
     }
 
@@ -398,7 +413,14 @@ public final class ByteMessage extends DefaultByteBufHolder {
         return this;
     }
 
-
+    /**
+     * Writes a value as a {@code medium}.
+     *
+     * @param value The value.
+     * @param order The byte order.
+     * @param transform The transformation type.
+     * @return This buffer instance.
+     */
     public ByteMessage putMedium(int value, ByteOrder order, ValueType transform) {
         switch (order) {
             case BIG:
@@ -422,6 +444,13 @@ public final class ByteMessage extends DefaultByteBufHolder {
         return this;
     }
 
+    /**
+     * Writes a value as a {@code medium}.
+     *
+     * @param value The value.
+     * @param order The byte order.
+     * @return This buffer instance.
+     */
     public ByteMessage putMedium(int value, ByteOrder order) {
         return putMedium(value, order, ValueType.NORMAL);
     }
@@ -580,7 +609,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @return This buffer instance.
      */
     public ByteMessage putString(String value) {
-        for (byte charValue : value.getBytes()) {
+        for (byte charValue : value.getBytes(StandardCharsets.ISO_8859_1)) {
             put(charValue);
         }
         put(10);
@@ -989,18 +1018,27 @@ public final class ByteMessage extends DefaultByteBufHolder {
         return data;
     }
 
+    /**
+     * Returns the current bit index or -1 if not in bit access mode.
+     *
+     * @return The current bit index.
+     */
     public int getBitIndex() {
         return bitIndex;
     }
 
     /**
-     * @return The backing buffer.
+     * Returns the underlying Netty buffer.
+     *
+     * @return The backing {@link ByteBuf}.
      */
     public ByteBuf getBuffer() {
         return buf;
     }
 
     /**
+     * Returns the packet opcode.
+     *
      * @return The opcode.
      */
     public int getOpcode() {
@@ -1008,7 +1046,9 @@ public final class ByteMessage extends DefaultByteBufHolder {
     }
 
     /**
-     * @return The header type.
+     * Returns the message header type.
+     *
+     * @return The header {@link MessageType}.
      */
     public MessageType getType() {
         return type;

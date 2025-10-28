@@ -5,7 +5,6 @@ import io.luna.game.model.EntityType;
 import io.luna.game.task.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 /**
  * A {@link Task} that handles the death process for a {@link Mob}. Forwards events to kotlin event listeners
@@ -95,6 +94,6 @@ public final class MobDeathTask extends Task {
         } else if (victim.getType() == EntityType.NPC) {
             world.getNpcs().remove(victim.asNpc());
         }
-        logger.error(new ParameterizedMessage("Error while processing death for {}", victim), e);
+        logger.error("Error while processing death for {}", victim, e);
     }
 }

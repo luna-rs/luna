@@ -27,7 +27,6 @@ import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ExecutorUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +70,7 @@ public final class World {
                     player.queue(new NpcUpdateMessageWriter());
                     player.getClient().flush();
                 } catch (Exception e) {
-                    logger.warn(new ParameterizedMessage("{} could not complete synchronization.", player, e));
+                    logger.warn("{} could not complete synchronization.", player, e);
                     player.forceLogout();
                 } finally {
                     synchronizer.arriveAndDeregister();
@@ -290,7 +289,7 @@ public final class World {
                 npc.getActions().process();
             } catch (Exception e) {
                 npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", npc, e));
+                logger.warn("{} could not complete pre-synchronization.", npc, e);
             }
         }
 
@@ -305,7 +304,7 @@ public final class World {
                 player.getActions().process();
             } catch (Exception e) {
                 player.logout();
-                logger.warn(new ParameterizedMessage("{} could not complete pre-synchronization.", player, e));
+                logger.warn("{} could not complete pre-synchronization.", player, e);
             }
         }
     }
@@ -343,7 +342,7 @@ public final class World {
                 npc.resetFlags();
             } catch (Exception e) {
                 npcList.remove(npc);
-                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", npc), e);
+                logger.warn("{} could not complete post-synchronization.", npc, e);
             }
         }
         for (Player player : playerList) {
@@ -352,7 +351,7 @@ public final class World {
                 player.setCachedBlock(null);
             } catch (Exception e) {
                 player.logout();
-                logger.warn(new ParameterizedMessage("{} could not complete post-synchronization.", player), e);
+                logger.warn("{} could not complete post-synchronization.", player, e);
             }
         }
     }

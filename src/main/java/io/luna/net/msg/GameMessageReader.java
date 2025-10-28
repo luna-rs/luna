@@ -10,7 +10,6 @@ import io.luna.net.client.Client;
 import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import static org.apache.logging.log4j.util.Unbox.box;
 
@@ -107,7 +106,7 @@ public abstract class GameMessageReader<E extends Event> {
         } catch (Exception e) {
 
             // Disconnect on exception.
-            logger.error(new ParameterizedMessage("{} failed in reading game message.", player, e));
+            logger.error("{} failed in reading game message.", player, e);
             player.forceLogout();
         } finally {
 
