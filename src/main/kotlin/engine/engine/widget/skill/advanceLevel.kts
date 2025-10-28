@@ -45,7 +45,7 @@ val levelUpTable = listOf(
 /**
  * Milestone jingle levels.
  */
-val MILESTONE_LEVELS = setOf(25, 50, 75, 99)
+val MILESTONE_LEVELS = setOf(15, 25, 50, 60, 70, 75, 80, 85, 90, 92, 95, 99)
 
 /**
  * Music sent when the player reaches one of [MILESTONE_LEVELS]. In real RS, sent when the player has
