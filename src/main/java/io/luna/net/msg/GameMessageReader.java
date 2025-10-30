@@ -7,11 +7,8 @@ import io.luna.game.event.impl.NullEvent;
 import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 import io.luna.net.client.Client;
-import io.luna.net.codec.ByteMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An abstraction model that decodes, validates, and handles incoming messages from the {@link Client}.
@@ -108,18 +105,6 @@ public abstract class GameMessageReader<E extends Event> {
             // Disconnect on exception.
             logger.error("{} failed in reading game message.", player, e);
             player.forceLogout();
-        } finally {
-
-            // Release pooled buffer.
-            ByteMessage payload = msg.getPayload();
-            if (!payload.release()) {
-                // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
-                // section of the code means that a buffer was not released (or retained) when it was supposed to
-                // be, so we log a warning.
-                logger.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
-                        box(msg.getOpcode()), box(payload.refCnt()));
-                payload.releaseAll();
-            }
         }
     }
 

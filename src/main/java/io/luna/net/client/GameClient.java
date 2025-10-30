@@ -81,12 +81,16 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            GameMessageReader<?> reader = repository.get(msg.getOpcode());
-            if (reader == null) {
-                logger.warn("No assigned reader for opcode {}, size {}", msg.getOpcode(), msg.getSize());
-                continue;
+            try {
+                GameMessageReader<?> reader = repository.get(msg.getOpcode());
+                if (reader == null) {
+                    logger.warn("No assigned reader for opcode {}, size {}", msg.getOpcode(), msg.getSize());
+                    continue;
+                }
+                reader.submitMessage(player, msg);
+            } finally {
+                msg.release();
             }
-            reader.submitMessage(player, msg);
         }
     }
 
