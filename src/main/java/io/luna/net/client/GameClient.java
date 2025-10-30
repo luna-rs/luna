@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -23,6 +23,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GameClient extends Client<GameMessage> {
 
     /**
+     * The maximum amount of messages that will be read per cycle.
+     */
+    private static final int MAX_READ_MESSAGES = 100;
+
+    /**
      * The logger.
      */
     private static final Logger logger = LogManager.getLogger();
@@ -30,7 +35,7 @@ public class GameClient extends Client<GameMessage> {
     /**
      * The decoded packets.
      */
-    protected final Queue<GameMessage> pendingReadMessages = new ArrayBlockingQueue<>(15);
+    protected final Queue<GameMessage> pendingReadMessages = new ConcurrentLinkedQueue<>();
 
     /**
      * The message repository.
@@ -67,18 +72,17 @@ public class GameClient extends Client<GameMessage> {
 
     @Override
     public void onMessageReceived(GameMessage msg) {
-        if (!pendingReadMessages.offer(msg)) {
-            msg.getPayload().releaseAll();
-        }
+        pendingReadMessages.add(msg);
     }
 
     /**
      * Handles decoded game packets and posts their created events to all applicable plugin listeners.
      */
     public void handleDecodedMessages() {
+        int processed = 0;
         for (; ; ) {
             GameMessage msg = pendingReadMessages.poll();
-            if (msg == null) {
+            if (msg == null || processed >= MAX_READ_MESSAGES) {
                 break;
             }
             try {
@@ -90,6 +94,7 @@ public class GameClient extends Client<GameMessage> {
                 reader.submitMessage(player, msg);
             } finally {
                 msg.release();
+                processed++;
             }
         }
     }
