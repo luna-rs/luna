@@ -40,7 +40,6 @@ import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
@@ -440,7 +439,6 @@ public class Player extends Mob {
     @Override
     protected void onInactive() {
         interfaces.close();
-        world.getTasks().forEachAttachment(this, Task::cancel);
         plugins.post(new LogoutEvent(this));
     }
 

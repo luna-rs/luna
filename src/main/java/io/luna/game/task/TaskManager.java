@@ -95,15 +95,15 @@ public final class TaskManager {
     }
 
     /**
-     * Applies {@code action} to every task that has {@code attachment} as an attachment.
+     * Applies {@code action} to every task that has {@code key} as an attachment key.
      *
-     * @param attachment The attachment.
+     * @param key The attachment.
      * @param action The action.
      */
-    public void forEachAttachment(Object attachment, Consumer<Task> action) {
+    public void forEach(Object key, Consumer<Task> action) {
         for (Task task : pending) {
-            Object taskAttachment = task.getAttachment().orElse(null);
-            if (Objects.equals(taskAttachment, attachment)) {
+            Object foundKey = task.getKey().orElse(null);
+            if (Objects.equals(foundKey, key)) {
                 action.accept(task);
             }
         }

@@ -256,7 +256,7 @@ public abstract class Task {
     /**
      * @return An optional attachment.
      */
-    public Optional<Object> getAttachment() {
+    public Optional<Object> getKey() {
         return key;
     }
 }
