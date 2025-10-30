@@ -22,23 +22,6 @@ import java.util.function.Consumer;
  * The task system is designed to be run on the game thread and provides a way to schedule delayed
  * or periodic actions without blocking the main game loop. Each game tick (typically 600ms),
  * the {@link #runTaskIteration()} method is called to process all pending tasks.
- * <p>
- * Example usage:
- * <pre>
- * // Create a TaskManager
- * TaskManager taskManager = new TaskManager();
- *
- * // Create and schedule a task
- * Task myTask = new Task(5) {
- *     protected void execute() {
- *         // Task logic here
- *     }
- * };
- * taskManager.schedule(myTask);
- *
- * // Process tasks each game tick
- * taskManager.runTaskIteration();
- * </pre>
  *
  * @author lare96
  */
@@ -61,7 +44,7 @@ public final class TaskManager {
      */
     public void schedule(Task task) {
         if (task.getState() == TaskState.IDLE) {
-            if(!task.onSchedule()) {
+            if (!task.onSchedule()) {
                 task.cancel();
                 return;
             }
@@ -89,13 +72,9 @@ public final class TaskManager {
                 continue;
             }
 
-
-            /* If it's ready to execute, add to execution queue. We pass tasks to a different collection
-            to avoid a ConcurrentModificationException if tasks are scheduled within tasks.  */
-            task.onProcess();
-            if (task.isReady()) {
-                executing.add(task);
-            }
+            /* We pass tasks to a different collection to avoid a ConcurrentModificationException if tasks
+            are scheduled within tasks. */
+            executing.add(task);
         }
 
         // Poll execution queue and run all tasks.
@@ -104,7 +83,14 @@ public final class TaskManager {
             if (task == null) {
                 break;
             }
-            task.runTask();
+            try {
+                task.onProcess();
+                if (task.isReady()) {
+                    task.runTask();
+                }
+            } catch (Exception e) {
+                task.onException(e);
+            }
         }
     }
 

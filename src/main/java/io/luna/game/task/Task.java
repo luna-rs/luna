@@ -1,10 +1,8 @@
 package io.luna.game.task;
 
-import io.luna.game.GameService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ConcurrentModificationException;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -23,25 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
  *   <li>Execution - Task's {@link #execute()} method is called when its delay counter reaches the specified delay</li>
  *   <li>Cancellation - Task can be cancelled at any time, transitioning to {@link TaskState#CANCELLED}</li>
  * </ul>
- * <p>
- * Example usage:
- * <pre>
- * // Create a task that runs every 5 ticks
- * Task myTask = new Task(5) {
- *     protected void execute() {
- *         // Do something here
- *     }
- * };
- *
- * // Schedule the task with a TaskManager
- * taskManager.schedule(myTask);
- *
- * // Optionally attach data to the task
- * myTask.setKey(someObject);
- *
- * // Cancel the task when no longer needed
- * myTask.cancel();
- * </pre>
  *
  * @author lare96
  */
@@ -96,7 +75,7 @@ public abstract class Task {
      * Creates a new {@link Task}.
      *
      * @param instant If execution happens instantly.
-     * @param delay   The cyclic delay.
+     * @param delay The cyclic delay.
      * @throws IllegalArgumentException If the delay is not positive.
      */
     public Task(boolean instant, int delay) {
@@ -151,8 +130,6 @@ public abstract class Task {
     final void runTask() {
         try {
             execute();
-        } catch (Exception e) {
-            onException(e);
         } finally {
             executionCounter++;
         }
@@ -179,13 +156,8 @@ public abstract class Task {
      * This method is called by the {@link TaskManager} on each game tick before checking
      * if the task is ready to execute. It can be used for continuous processing that needs
      * to happen regardless of the task's execution cycle.
-     * <p>
-     * <strong>Tasks should not be scheduled within this method or a {@link ConcurrentModificationException} will be
-     * thrown.</strong> To get around this, use {@link GameService#sync(Runnable)}.
-     *
-     * @throws ConcurrentModificationException If a task is scheduled within this function.
      */
-    protected void onProcess() throws ConcurrentModificationException {
+    protected void onProcess() {
 
     }
 

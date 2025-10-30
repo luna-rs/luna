@@ -49,7 +49,7 @@ public class Script {
     /**
      * @return The {@link Plugin} that this script belongs to.
      */
-    public Plugin computePlugin() {
+    public Plugin getPlugin() {
         return context.getPlugins().getPluginMap().get(packageName);
     }
 
