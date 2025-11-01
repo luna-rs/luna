@@ -247,11 +247,11 @@ public final class WalkingQueue {
      */
     public void walk(Position destination) {
         int distance = destination.computeLongestDistance(mob.getPosition());
-        if (distance > Region.SIZE) {
-            lazyWalk(destination);
-        } else {
+      //  if (distance > Region.SIZE) {
+      //      lazyWalk(destination);
+     //   } else {
             addPath(findPath(destination));
-        }
+      //  }
     }
 
     /**
