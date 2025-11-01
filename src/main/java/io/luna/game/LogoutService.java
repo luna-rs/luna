@@ -1,7 +1,6 @@
 package io.luna.game;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.luna.game.LogoutService.LogoutRequest;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
@@ -13,7 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -53,7 +52,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         /**
          * The synchronization object.
          */
-        private final CountDownLatch latch = new CountDownLatch(1);
+        private final CompletableFuture<Void> syncFuture = new CompletableFuture<>();
 
         /**
          * Creates a new {@link LoginService.LoginRequest}.
@@ -79,11 +78,11 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
         }
 
         public void complete() {
-            latch.countDown();
+            syncFuture.complete(null);
         }
 
         public void waitForCompletion() {
-            Uninterruptibles.awaitUninterruptibly(latch);
+            syncFuture.join();
         }
     }
 
@@ -124,8 +123,12 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     void finishRequest(String username, LogoutRequest request) {
         PlayerData saveData = request.player.createSaveData();
         world.getPlayers().remove(request.player);
-        saves.put(username, request);
-        startWorker(username, request, saveData);
+        if(saveData != null) {
+            saves.put(username, request);
+            startWorker(username, request, saveData);
+        } else  {
+            request.complete();
+        }
         logger.info("{} has logged out.", username);
     }
 

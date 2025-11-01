@@ -140,10 +140,10 @@ cmd("down", RIGHTS_ADMIN) {
  */
 cmd("shutdown", RIGHTS_ADMIN) {
     plr.newDialogue().options(
-        "Now", { gameThread.scheduleSystemUpdate(8) },
-        "1 Minute", { gameThread.scheduleSystemUpdate(100) },
-        "5 Minutes", { gameThread.scheduleSystemUpdate(500) },
-        "10 Minutes", { gameThread.scheduleSystemUpdate(800) },
+        "Now", { gameService.scheduleSystemUpdate(8) },
+        "1 Minute", { gameService.scheduleSystemUpdate(100) },
+        "5 Minutes", { gameService.scheduleSystemUpdate(500) },
+        "10 Minutes", { gameService.scheduleSystemUpdate(800) },
         "<x> Minutes", {
             plr.interfaces.close()
             plr.interfaces.open(object : NumberInputInterface() {
@@ -152,7 +152,7 @@ cmd("shutdown", RIGHTS_ADMIN) {
                         plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
                         return
                     }
-                    gameThread.scheduleSystemUpdate(value * 100)
+                    gameService.scheduleSystemUpdate(value * 100)
                     plr.interfaces.close()
                 }
             })

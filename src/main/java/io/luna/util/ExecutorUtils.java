@@ -1,10 +1,9 @@
 package io.luna.util;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
@@ -24,12 +23,12 @@ public final class ExecutorUtils {
      * @param threads The amount of workers in the pool.
      * @return The thread pool.
      */
-    public static ListeningExecutorService threadPool(String name, int threads) {
+    public static ExecutorService threadPool(String name, int threads) {
         var threadPool = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         var threadFactory = new ThreadFactoryBuilder().setNameFormat(name).build();
         threadPool.setThreadFactory(threadFactory);
         threadPool.setRejectedExecutionHandler(new CallerRunsPolicy());
-        return MoreExecutors.listeningDecorator(threadPool);
+        return threadPool;
     }
 
     /**
@@ -38,7 +37,7 @@ public final class ExecutorUtils {
      * @param name The naming scheme for the workers in the pool.
      * @return The new cached thread pool.
      */
-    public static ListeningExecutorService threadPool(String name) {
+    public static ExecutorService threadPool(String name) {
         return threadPool(name, Runtime.getRuntime().availableProcessors());
     }
 

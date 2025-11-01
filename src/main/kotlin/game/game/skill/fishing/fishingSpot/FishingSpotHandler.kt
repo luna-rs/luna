@@ -82,13 +82,13 @@ object FishingSpotHandler : Task(false, 100) {
             home == null -> throw IllegalStateException("Home position must be set.")
             away.isEmpty() -> throw IllegalStateException("At least one away position must be added.")
         }
-        val npc = computeSpotNpc(id!!, home!!, spawn)
+        val npc = computeSpotNpc(id, home, spawn)
         when {
             npc == null -> throw IllegalStateException("No fishing spot matching $id found on $home.")
             fishingSpots.containsKey(npc) ->
                 throw IllegalStateException("This fishing spot has already been registered.")
         }
-        fishingSpots[npc!!] = FishingSpot(id, home, away)
+        fishingSpots[npc] = FishingSpot(id, home, away)
     }
 
     /**
@@ -99,7 +99,7 @@ object FishingSpotHandler : Task(false, 100) {
         if (spawn) {
             val npc = Npc(ctx, id, home)
             // 'add' might be called from script loading thread. So sync it with game thread just in case.
-            gameThread.sync { world.addNpc(npc) }
+            gameService.sync { world.addNpc(npc) }
             return npc
         } else {
             return world.npcs.find { it.position == home && it.id == id && it.definition.name == "Fishing spot" }

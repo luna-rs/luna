@@ -3,7 +3,6 @@ package io.luna.game.model.mob;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import game.item.consumable.potion.PotionCountdownTimer;
@@ -68,6 +67,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * A model representing a player-controlled mob.
@@ -321,11 +321,6 @@ public class Player extends Mob {
     private Instant unmuteInstant;
 
     /**
-     * The prepared save data.
-     */
-    private volatile PlayerData saveData;
-
-    /**
      * The SQL database ID.
      */
     private int databaseId = -1;
@@ -484,7 +479,7 @@ public class Player extends Mob {
      *
      * @return The result of the save task.
      */
-    public ListenableFuture<Void> save() {
+    public CompletableFuture<Void> save() {
         return world.getPersistenceService().save(this);
     }
 
@@ -492,8 +487,7 @@ public class Player extends Mob {
      * Prepares the save data to be serialized by a {@link LogoutService} worker.
      */
     public PlayerData createSaveData() {
-        saveData = new PlayerData(getUsername()).save(this); // todo not thread safe, why is savedata even volatile...?
-        return saveData;
+        return new PlayerData(getUsername()).save(this);
     }
 
     /**
@@ -976,16 +970,6 @@ public class Player extends Mob {
      */
     public boolean isMuted() {
         return unmuteInstant != null && !Instant.now().isAfter(unmuteInstant);
-    }
-
-    /**
-     * @return The prepared save data.
-     */
-    public PlayerData getSaveData() {
-        if (saveData == null) {
-            throw new NullPointerException("No data has been prepared yet.");
-        }
-        return saveData;
     }
 
     /**

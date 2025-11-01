@@ -1,6 +1,5 @@
 package io.luna.game.event.impl;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.game.event.Event;
 
 import java.util.concurrent.ExecutorService;
@@ -25,7 +24,7 @@ public class ServerStateChangedEvent extends Event {
          *
          * @param taskPool The executor to handle tasks.
          */
-        public ServerLaunchEvent(ListeningExecutorService taskPool) {
+        public ServerLaunchEvent(ExecutorService taskPool) {
             super(taskPool);
         }
     }
@@ -44,7 +43,7 @@ public class ServerStateChangedEvent extends Event {
          *
          * @param taskPool The executor to handle tasks.
          */
-        public ServerShutdownEvent(ListeningExecutorService taskPool) {
+        public ServerShutdownEvent(ExecutorService taskPool) {
             super(taskPool);
         }
     }
@@ -52,21 +51,21 @@ public class ServerStateChangedEvent extends Event {
     /**
      * The executor to handle tasks.
      */
-    private final ListeningExecutorService taskPool;
+    private final ExecutorService taskPool;
 
     /**
      * Creates a new {@link ServerStateChangedEvent}.
      *
      * @param taskPool The executor to handle tasks.
      */
-    public ServerStateChangedEvent(ListeningExecutorService taskPool) {
+    public ServerStateChangedEvent(ExecutorService taskPool) {
         this.taskPool = taskPool;
     }
 
     /**
      * The executor to handle tasks.
      */
-    public ListeningExecutorService getTaskPool() {
+    public ExecutorService getTaskPool() {
         return taskPool;
     }
 }

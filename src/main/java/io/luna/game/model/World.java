@@ -1,6 +1,5 @@
 package io.luna.game.model;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
 import io.luna.game.GameService;
 import io.luna.game.LoginService;
@@ -30,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -137,7 +137,7 @@ public final class World {
     /**
      * The serializer manager.
      */
-    private final GameSerializerManager serializerManager = new GameSerializerManager(this);
+    private final GameSerializerManager serializerManager = new GameSerializerManager();
 
     /**
      * The chunk manager.
@@ -381,7 +381,7 @@ public final class World {
      *
      * @return The result of the mass save.
      */
-    public ListenableFuture<Void> saveAll() {
+    public CompletableFuture<Void> saveAll() {
         return persistenceService.saveAll();
     }
 

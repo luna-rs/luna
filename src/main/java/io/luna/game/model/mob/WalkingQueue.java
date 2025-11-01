@@ -1,7 +1,6 @@
 package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -23,6 +22,7 @@ import java.util.Deque;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * A model representing an implementation of the walking queue.
@@ -146,7 +146,7 @@ public final class WalkingQueue {
     /**
      * The current lazy walking task result.
      */
-    private ListenableFuture<?> lazyWalkResult;
+    private CompletableFuture<?> lazyWalkResult;
 
     /**
      * Create a new {@link WalkingQueue}.
@@ -293,15 +293,14 @@ public final class WalkingQueue {
             logger.warn("Existing lazy walk request in progress.");
             return;
         }
-        ListenableFuture<Deque<Step>> pathResult = mob.getService().submit(() -> findPath(destination));
-        pathResult.addListener(() -> {
-            try {
-                addPath(pathResult.get());
-            } catch (Exception e) {
-                logger.catching(e);
-            }
-        }, mob.getService().getExecutor());
-        lazyWalkResult = pathResult;
+        lazyWalkResult = mob.getService().submit(() -> findPath(destination)).
+                thenAcceptAsync(path -> {
+                    try {
+                        addPath(path);
+                    } catch (Exception e) {
+                        logger.catching(e);
+                    }
+                }, mob.getService().getGameExecutor());
     }
 
     /**

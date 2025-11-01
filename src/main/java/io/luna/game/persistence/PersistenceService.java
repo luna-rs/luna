@@ -2,9 +2,6 @@ package io.luna.game.persistence;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.LunaContext;
 import io.luna.game.LoginService;
 import io.luna.game.LogoutService;
@@ -17,17 +14,28 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * An {@link AbstractIdleService} responsible for arbitrary loads and saves. This service exists to take any potential
- * load off of the {@link LoginService} and {@link LogoutService}.
+ * A background service responsible for loading, saving, and transforming player data asynchronously.
  * <p>
- * It's backed by a single thread, so requests are considered low priority and are not guaranteed to execute right
- * away. Functions within this class are all thread safe.
+ * The {@code PersistenceService} is intended to offload work from the {@link LoginService} and
+ * {@link LogoutService} to keep the main game thread responsive. All I/O operations and heavy data processing
+ * are handled in a dedicated single-threaded executor.
+ * <p>
+ * Threading model:
+ * <ul>
+ *     <li>All database and filesystem work runs on the persistence worker thread.</li>
+ *     <li>Any in-game state changes are synchronized back onto the main game thread using
+ *         {@code context.getGame().sync(...)} for thread safety.</li>
+ * </ul>
+ * <p>
+ * Methods in this class are fully thread-safe.
  *
  * @author lare96
  */
@@ -39,14 +47,19 @@ public final class PersistenceService extends AbstractIdleService {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The world.
+     * The active game world.
      */
     private final World world;
-    private final LunaContext context;
+
     /**
-     * The worker that will run all persistence tasks.
+     * The Luna context.
      */
-    private final ListeningExecutorService worker;
+    private final LunaContext context;
+
+    /**
+     * The single-threaded worker that executes all persistence operations.
+     */
+    private final ExecutorService worker;
 
     /**
      * Creates a new {@link PersistenceService}.
@@ -61,7 +74,7 @@ public final class PersistenceService extends AbstractIdleService {
 
     @Override
     protected void startUp() throws Exception {
-
+        logger.trace("Starting the persistence service.");
     }
 
     @Override
@@ -73,22 +86,29 @@ public final class PersistenceService extends AbstractIdleService {
     }
 
     /**
-     * Asynchronously loads a player's data, applies {@code action} to it, and then saves the modified data.
+     * Loads a player’s data, applies a transformation to it, and then saves the modified result.
+     * <p>
+     * If the player is currently online, their data is updated directly on the game thread.
+     * Otherwise, the transformation runs on a worker thread using an offline save file.
      *
-     * @param username The username of the player.
-     * @param action The action to apply.
-     * @return The future, describing the result of the task.
+     * @param username The target username.
+     * @param action The transformation to apply to the player’s data.
+     * @return A future that completes when the operation finishes.
      */
-    public ListenableFuture<Void> transform(String username, Consumer<PlayerData> action) {
+    public CompletableFuture<Void> transform(String username, Consumer<PlayerData> action) {
         Consumer<Player> playerOnline = player -> {
             try {
                 PlayerData saveData = player.createSaveData(); // Create current save data.
+                if (saveData == null) {
+                    return;
+                }
                 action.accept(saveData); // Transform it.
                 saveData.load(player); // Load it into the player since they're online.
-                logger.debug("Finished transforming {}'s data while online.", username);
             } catch (Exception e) {
                 logger.catching(e);
+                return;
             }
+            logger.debug("Finished transforming {}'s data while online.", username);
         };
         Runnable playerOffline = () -> {
             Stopwatch timer = Stopwatch.createStarted();
@@ -109,52 +129,53 @@ public final class PersistenceService extends AbstractIdleService {
                     box(timer.elapsed().toMillis()));
         };
         logger.trace("Sending data transformation request for {} to a worker...", username);
-        return worker.submit(() -> {
+        return CompletableFuture.runAsync(() -> {
             // Wait for any pending saves to finish.
             world.getLogoutService().waitForSave(username);
             Optional<Player> playerOptional = world.getPlayer(username);
             if (playerOptional.isPresent()) {
                 // Player is online, do online transformation on game thread.
                 Player player = playerOptional.get();
-                context.getGame().sync(() -> playerOnline.accept(player));
+                context.getGame().sync(() -> playerOnline.accept(player)).join();
             } else {
                 // Otherwise do offline transformation.
                 playerOffline.run();
             }
-            return null;
-        });
+        }, worker);
     }
 
     /**
-     * Asynchronously loads a player's data.
+     * Asynchronously loads a player’s data from either memory (if online) or persistent storage (if offline).
      *
-     * @param username The username of the player.
-     * @return The future, describing the result of the task.
+     * @param username The username to load.
+     * @return A future completing with the player’s data.
      */
-    public ListenableFuture<PlayerData> load(String username) {
+    public CompletableFuture<PlayerData> load(String username) {
         Player player = world.getPlayerMap().get(username);
         if (player != null) {
-            PlayerData data = player.createSaveData();
-            return Futures.immediateFuture(data);
+            return context.getGame().sync(player::createSaveData);
         }
         logger.trace("Sending load request for {} to a worker...", username);
-        return worker.submit(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             var timer = Stopwatch.createStarted();
             var data = world.getSerializerManager().getSerializer().loadPlayer(world, username);
             logger.debug("Finished loading {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
             return data;
-        });
+        }, worker);
     }
 
     /**
-     * Asynchronously saves {@code player}'s data. The task will fail if the player is being serviced by the
-     * {@link LogoutService}.
+     * Saves the given player’s data asynchronously.
+     * <p>
+     * If the player is currently being processed by the {@link LogoutService}, this request will fail to
+     * avoid duplicate save operations.
      *
      * @param player The player to save.
-     * @return The future, describing the result of the task.
+     * @return A future that completes when the save finishes.
      */
-    public ListenableFuture<Void> save(Player player) {
-        return save(player.getUsername(), player.createSaveData());
+    public CompletableFuture<Void> save(Player player) {
+        return context.getGame().sync(player::createSaveData).
+                thenAccept(data -> save(player.getUsername(), data));
     }
 
     /**
@@ -165,42 +186,49 @@ public final class PersistenceService extends AbstractIdleService {
      * @param data The data to save.
      * @return A listenable future describing the result of the save.
      */
-    public ListenableFuture<Void> save(String username, PlayerData data) {
+    public CompletableFuture<Void> save(String username, PlayerData data) {
         if (world.getLogoutService().isSavePending(username)) {
             // The LogoutService will handle the saving.
-            IllegalStateException ex = new IllegalStateException("This player is already being serviced by LogoutService.");
-            return Futures.immediateFailedFuture(ex);
+            return CompletableFuture.
+                    failedFuture(new IllegalStateException("This player is already being serviced by LogoutService."));
         }
         logger.trace("Sending save request for {} to a worker...", username);
-        return worker.submit(() -> {
+        return CompletableFuture.runAsync(() -> {
             var timer = Stopwatch.createStarted();
             world.getSerializerManager().getSerializer().savePlayer(world, username, data);
-            logger.debug("Finished saving {}'s data (took {}ms).", username, box(timer.elapsed().toMillis()));
-            return null;
-        });
+
+            long ms = timer.elapsed().toMillis();
+            logger.debug("Finished saving {}'s data (took {}ms).", username, box(ms));
+        }, worker);
     }
 
     /**
-     * Saves all players that are currently online. Note that this may take longer than expected to complete since it saves
-     * every player in one task.
+     * Saves all online players currently in the world.
      * <p>
-     * <strong>Caution: Overuse of this method can put significant stress on the backing worker. Invocations should not exceed
-     * more than a 1-2 times per minute.</strong>
+     * This is a heavy operation and should only be used occasionally (e.g. world backups, shutdowns).
+     * Running it too frequently can cause performance degradation, since it serializes every online player in one task.
      *
-     * @return A listenable future describing the result of the mass save.
+     * @return A future that completes when the mass save finishes.
      */
-    public ListenableFuture<Void> saveAll() {
+    public CompletableFuture<Void> saveAll() {
         logger.trace("Sending mass save request to a worker...");
-        List<PlayerData> saveList = new ArrayList<>(world.getPlayers().size());
-        for (Player player : world.getPlayers()) {
-            String username = player.getUsername();
-            if (world.getLogoutService().hasRequest(username)) {
-                // The LogoutService will handle the saving.
-                continue;
+        return context.getGame().sync(() -> {
+            // Build list of player data on game thread.
+            List<PlayerData> saveList = new ArrayList<>(world.getPlayers().size());
+            for (Player player : world.getPlayers()) {
+                String username = player.getUsername();
+                if (world.getLogoutService().hasRequest(username)) {
+                    // The LogoutService will handle the saving.
+                    continue;
+                }
+                PlayerData data = player.createSaveData();
+                if (data != null) {
+                    saveList.add(data);
+                }
             }
-            saveList.add(player.createSaveData());
-        }
-        return worker.submit(() -> {
+            return saveList;
+        }).thenAcceptAsync(saveList -> {
+            // Send all requests to a worker.
             var timer = Stopwatch.createStarted();
             for (PlayerData data : saveList) {
                 String username = data.getUsername();
@@ -216,25 +244,33 @@ public final class PersistenceService extends AbstractIdleService {
                 }
             }
             logger.info("Mass save complete (took {}ms).", box(timer.elapsed().toMillis()));
-            return null;
-        });
+        }, worker);
     }
 
+
     /**
-     * Deletes the record of save data for {@code username}. The player should be logged out when using this
-     * to prevent re-saving of the deleted data.
+     * Deletes all saved data associated with the given username.
+     * <p>
+     * If the player is online, they will be forcefully logged out first to prevent data corruption.
+     * The deletion will only proceed once the player is fully logged out and any pending saves are complete.
      *
-     * @param username The username of the player to delete.
-     * @return A listenable future describing the result of the deletion.
+     * @param username The username whose data should be deleted.
+     * @return A future completing with {@code true} if the record was deleted successfully, or {@code false} if not found.
      */
-    public ListenableFuture<Boolean> delete(String username) {
-        // todo logout player that's logged in, wait for logout
-        if (world.getLogoutService().isSavePending(username) || world.getPlayerMap().containsKey(username)) {
-            IllegalStateException exception =
-                    new IllegalStateException("The player should be fully logged out before deleting its record, to prevent overwrites!");
-            return Futures.immediateFailedFuture(exception);
-        }
-        return worker.submit(() -> {
+    public CompletableFuture<Boolean> delete(String username) {
+        Player player = world.getPlayerMap().get(username);
+        CompletableFuture<Void> logout = player != null ?
+                context.getGame().sync(player::forceLogout) : null;
+        return CompletableFuture.supplyAsync(() -> {
+            if (logout != null) {
+                logout.join();
+            }
+            if (world.getPlayerMap().containsKey(username)) {
+                throw new RuntimeException("The player should be fully logged out before deleting!");
+            }
+            if (world.getLogoutService().isSavePending(username)) {
+                world.getLogoutService().waitForSave(username);
+            }
             Stopwatch timer = Stopwatch.createStarted();
             boolean successful = world.getSerializerManager().getSerializer().deletePlayer(world, username);
             if (successful) {
@@ -243,6 +279,6 @@ public final class PersistenceService extends AbstractIdleService {
                 logger.warn("Could not find record to delete for {}.", username);
             }
             return successful;
-        });
+        }, worker);
     }
 }

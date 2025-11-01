@@ -1,7 +1,6 @@
 package io.luna.game.persistence;
 
 import io.luna.Luna;
-import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.util.ReflectionUtils;
@@ -16,7 +15,7 @@ import java.util.function.Supplier;
  *
  * @author lare96
  */
-public class GameSerializerManager {
+public final class GameSerializerManager {
 
     /**
      * The logger.
@@ -29,22 +28,14 @@ public class GameSerializerManager {
     private static final Supplier<GameSerializer> DEFAULT = PassiveGameSerializer::new;
 
     /**
-     * The world instance.
-     */
-    private final World world;
-
-    /**
      * The computed serializer.
      */
     private final GameSerializer serializer;
 
     /**
      * Creates a new {@link GameSerializerManager}.
-     *
-     * @param world The world instance.
      */
-    public GameSerializerManager(World world) {
-        this.world = world;
+    public GameSerializerManager() {
         serializer = computeSerializer();
     }
 
@@ -71,6 +62,9 @@ public class GameSerializerManager {
         }
     }
 
+    /**
+     * @return The computed serializer.
+     */
     public GameSerializer getSerializer() {
         if(serializer == null) {
             throw new NullPointerException("Serializer was not properly computed!");

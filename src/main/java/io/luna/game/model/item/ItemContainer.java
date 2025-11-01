@@ -961,6 +961,7 @@ public class ItemContainer implements Iterable<Item> {
      * @param setItems The items to set.
      */
     public final void load(List<IndexedItem> setItems) {
+        clear();
         for (IndexedItem item : setItems) {
             items[item.getIndex()] = item.toItem();
             size++;

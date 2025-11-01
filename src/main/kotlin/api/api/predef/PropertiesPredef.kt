@@ -3,7 +3,6 @@ package api.predef
 import io.luna.LunaServer
 import io.luna.game.event.EventListener
 import io.luna.game.event.EventMatcherListener
-import io.luna.game.model.EntityType
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
@@ -15,7 +14,6 @@ import io.luna.game.plugin.KotlinBindings
 import io.luna.game.plugin.PluginBootstrap
 import io.luna.util.Rational
 import io.luna.util.ReflectionUtils
-import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -74,7 +72,7 @@ val world = ctx.world!!
 /**
  * The [GameService] instance.
  */
-val gameThread = ctx.game!!
+val gameService = ctx.game!!
 
 
 /* Player rights properties. */

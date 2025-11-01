@@ -11,8 +11,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.inter.TextInputInterface
 import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.inter.TextInputInterface
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
@@ -33,7 +33,8 @@ cmd("config", RIGHTS_DEV) {
  * A command that re-dumps cache definitions.
  */
 cmd("dumpcache", RIGHTS_DEV) {
-    gameThread.submit { CacheDumpUtils.dump() }.addListener({ plr.sendMessage("Cache dump complete.") }, gameThread.executor)
+    gameService.submit { CacheDumpUtils.dump() }
+        .thenRunAsync({ plr.sendMessage("Cache dump complete.") }, gameService.gameExecutor)
     plr.sendMessage("Dumping cache data...")
 }
 
@@ -62,8 +63,8 @@ cmd("delete", RIGHTS_DEV) {
                 .options("Yes",
                          {
                              world.persistenceService.delete(value)
-                                 .addListener({ plr.sendMessage("Done, deleted $value") },
-                                              gameThread.executor); plr.interfaces.close()
+                                 .thenRunAsync({ plr.sendMessage("Done, deleted $value") }, gameService.gameExecutor)
+                             plr.interfaces.close()
                          },
                          "No",
                          { plr.interfaces.close() }).open()

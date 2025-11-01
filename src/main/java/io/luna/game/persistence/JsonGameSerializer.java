@@ -2,14 +2,9 @@ package io.luna.game.persistence;
 
 import io.luna.game.model.World;
 import io.luna.game.model.mob.attr.Attribute;
-import io.luna.game.model.mob.bot.BotSchedule;
-import io.luna.util.GsonUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,102 +17,105 @@ import java.util.stream.Stream;
 public final class JsonGameSerializer extends GameSerializer {
 
     /**
-     * The path to the local files.
+     * The parent path to the local files.
      */
-    private static final Path DIR = Path.of("data", "game");
+    private static final Path DIR;
+
+    /**
+     * The path to saved player files.
+     */
+    private static final Path PLAYER_DIR;
+
+    /**
+     * The path to saved bot files.
+     */
+    private static final Path BOT_DIR;
 
     static {
         try {
             // Initialize directory if it doesn't exist.
+            DIR = Path.of("data", "game");
             Files.createDirectories(DIR);
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
+        PLAYER_DIR = DIR.resolve("saved_players");
+        BOT_DIR = DIR.resolve("bots").resolve("saved_bots");
+
     }
 
     @Override
-    public PlayerData loadPlayer(World world, String username) throws Exception {
-        Path dir = getDir(world, username);
-        Path filePath;
-        if (Files.exists(dir)) {
-            filePath = dir;
-        } else {
+    public PlayerData loadPlayer(World world, String username) {
+        Path parentDir = getParentDir(world, username);
+        Path dir = parentDir.resolve(username + ".json");
+        if (!Files.exists(dir)) {
             return null;
         }
-        String fileContents = Files.readString(filePath);
-        return Attribute.getGsonInstance().fromJson(fileContents, PlayerData.class);
-    }
-
-    @Override
-    public void savePlayer(World world, String username, PlayerData data) throws Exception {
-        Files.writeString(getDir(world, username), Attribute.getGsonInstance().toJson(data, PlayerData.class));
-    }
-
-    @Override
-    public boolean deletePlayer(World world, String username) throws Exception {
-        return Files.deleteIfExists(getDir(world, username));
-    }
-
-    @Override
-    public Set<String> loadBotUsernames(World world) throws Exception {
-        Path parentDir = DIR.resolve("bots").resolve("saved_bots");
-        if (!Files.exists(parentDir)) {
-            Files.createDirectory(parentDir);
-            return Set.of();
+        try {
+            return Attribute.getGsonInstance().fromJson(Files.readString(dir), parentDir == PLAYER_DIR ?
+                    PlayerData.class : BotData.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        try (Stream<Path> pathStream = Files.walk(parentDir)) {
+    }
+
+    @Override
+    public void savePlayer(World world, String username, PlayerData data) {
+        try {
+            Files.writeString(getDir(world, username), Attribute.getGsonInstance().toJson(data));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean deletePlayer(World world, String username) {
+        try {
+            return Files.deleteIfExists(getDir(world, username));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Set<String> loadBotUsernames(World world) {
+        if (!Files.exists(BOT_DIR)) {
+            try {
+                Files.createDirectory(BOT_DIR);
+                return Set.of();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try (Stream<Path> pathStream = Files.walk(BOT_DIR)) {
             return pathStream.filter(it -> !Files.isDirectory(it)).
                     map(Path::getFileName).
                     map(Path::toString).
                     map(it -> it.replace(".json", "")).
                     collect(Collectors.toSet());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public Map<String, BotSchedule> synchronizeBotSchedules(World world) throws Exception {
-        Path parentPath = DIR.resolve("bots").resolve("sessions");
-        Map<String, BotSchedule> scheduleMap = new HashMap<>();
-        try (Stream<Path> pathStream = Files.walk(parentPath)) { // Cache existing schedules.
-            for (Iterator<Path> it = pathStream.iterator(); it.hasNext(); ) {
-                BotSchedule loadSchedule = GsonUtils.readAsType(it.next(), BotSchedule.class);
-                scheduleMap.put(loadSchedule.getUsername(), loadSchedule);
-            }
-        }
-
-        for (Iterator<String> it = world.getBots().persistentIterator(); it.hasNext(); ) { // Build new ones where needed.
-            String username = it.next();
-            if (scheduleMap.containsKey(username)) {
-                continue;
-            }
-            Path schedulePath = parentPath.resolve(username + ".json");
-            BotSchedule newSchedule = BotSchedule.createRandomSchedule(username);
-
-            GsonUtils.writeJson(GsonUtils.toJsonTree(newSchedule), schedulePath);
-            scheduleMap.put(username, newSchedule);
-        }
-        return scheduleMap;
-    }
-
-    // todo test bot schedule serialization for json
-    @Override
-    public boolean saveBotSchedule(World world, BotSchedule schedule) throws Exception {
-        Path parentDir = DIR.resolve("bots").resolve("sessions");
-        Files.writeString(parentDir.resolve(schedule.getUsername() + ".json"),
-                Attribute.getGsonInstance().toJson(schedule, BotSchedule.class));
-        return true;
     }
 
     /**
-     * Returns a direct path to this player's persistent data.
+     * Returns a direct path to this player's persistent data file.
      *
      * @param username The username of the player.
      * @return The direct path.
      */
     private Path getDir(World world, String username) {
-        Path parentDir = world.getBots().containsPersistent(username) ?
-                DIR.resolve("bots").resolve("saved_bots") : DIR.resolve("saved_players");
-        String resolveWith = username + ".json";
-        return parentDir.resolve(resolveWith);
+        Path parentDir = getParentDir(world, username);
+        return parentDir.resolve(username + ".json");
+    }
+
+    /**
+     * Returns a direct path to the folder of persistent data.
+     *
+     * @param username The username of the player.
+     * @return The direct path.
+     */
+    private Path getParentDir(World world, String username) {
+        return world.getBots().containsPersistent(username) ? BOT_DIR : PLAYER_DIR;
     }
 }

@@ -1,7 +1,6 @@
 package io.luna;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import io.luna.game.cache.Cache;
@@ -31,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
@@ -136,7 +136,7 @@ public final class LunaServer {
         logger.info("All services are now running.");
 
         // Wait for last minute Kotlin tasks before we let players login.
-        gameService.getSynchronizer().await();
+        gameService.getKotlinSync().join();
     }
 
     /**
@@ -162,7 +162,7 @@ public final class LunaServer {
         taskList.add(new EquipmentDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
 
-        ListeningExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
+        ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {
             pool.execute(task);
         }

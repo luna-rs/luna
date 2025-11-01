@@ -52,7 +52,7 @@ internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) 
 
     override fun onCompleted(tokenObjects: ImmutableList<PersistentGroundItem>) {
         logger.debug("Loaded ${tokenObjects.size} global item spawns!")
-        gameThread.sync {
+        gameService.sync {
             world.scheduleOnce(1) {
                 tokenObjects.forEach { world.addItem(it) }
                 while(true) { world.addItem(items.poll() ?: break) }

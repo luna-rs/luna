@@ -13,12 +13,7 @@ import kotlin.coroutines.CoroutineContext
 object GameCoroutineDispatcher : CoroutineDispatcher() {
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
-        if (Thread.currentThread() == gameThread.thread) {
-            // Already on game thread, run inline.
-            block.run()
-        } else {
-            // Dispatch back to the game thread to run safely.
-            gameThread.sync(block)
-        }
+        // Dispatch back to the game thread to run safely.
+        gameService.gameExecutor.execute(block)
     }
 }

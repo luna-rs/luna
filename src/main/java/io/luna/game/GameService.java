@@ -2,12 +2,9 @@ package io.luna.game;
 
 import api.bot.GameCoroutineScope;
 import com.google.common.util.concurrent.AbstractScheduledService;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Service;
 import io.luna.LunaContext;
-import io.luna.LunaServer;
 import io.luna.game.event.Event;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
@@ -20,12 +17,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
@@ -45,7 +43,11 @@ public final class GameService extends AbstractScheduledService {
 
         @Override
         public void execute(Runnable command) {
-            sync(command);
+            if (Thread.currentThread() == thread) {
+                command.run();
+            } else {
+                syncTasks.add(command);
+            }
         }
     }
 
@@ -58,14 +60,14 @@ public final class GameService extends AbstractScheduledService {
         public void running() {
             // Start the game world and run startup logic from Kotlin scripts.
             sync(() -> {
-                thread = Thread.currentThread();
-
                 world.start();
+
+                // Players won't be able to login until startup tasks are complete, so it's fine to block the
+                // game thread.
                 runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
-                // Synchronizes with the lock in LunaServer. Players won't be able to login until the startup
-                // tasks are complete, so it's fine to block the game thread.
-                synchronizer.countDown();
+                // Release the lock in LunaServer.
+                kotlinSync.complete(null);
             });
         }
 
@@ -108,7 +110,7 @@ public final class GameService extends AbstractScheduledService {
     /**
      * The synchronizer for the Kotlin startup tasks.
      */
-    private final CountDownLatch synchronizer = new CountDownLatch(1);
+    private final CompletableFuture<Void> kotlinSync = new CompletableFuture<>();
 
     /**
      * The context instance.
@@ -121,14 +123,9 @@ public final class GameService extends AbstractScheduledService {
     private final World world;
 
     /**
-     * The server instance.
-     */
-    private final LunaServer server;
-
-    /**
      * A thread pool for general purpose low-overhead tasks.
      */
-    private final ListeningExecutorService fastPool;
+    private final ExecutorService pool;
 
     /**
      * An instance of this thread (the game thread).
@@ -143,8 +140,7 @@ public final class GameService extends AbstractScheduledService {
     public GameService(LunaContext context) {
         this.context = context;
         world = context.getWorld();
-        server = context.getServer();
-        fastPool = ExecutorUtils.threadPool(serviceName() + "Worker");
+        pool = ExecutorUtils.threadPool(serviceName() + "Worker");
         gameExecutor = new GameServiceExecutor();
         addListener(new GameServiceListener(), MoreExecutors.directExecutor());
     }
@@ -157,6 +153,11 @@ public final class GameService extends AbstractScheduledService {
     @Override
     protected Scheduler scheduler() {
         return Scheduler.newFixedRateSchedule(600, 600, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    protected void startUp() {
+        thread = Thread.currentThread();
     }
 
     @Override
@@ -208,9 +209,8 @@ public final class GameService extends AbstractScheduledService {
      * @param eventFunction Produces the event message to pass.
      * @param waitingMessage The message to log while waiting for tasks to complete.
      */
-    private <E extends Event> void runKotlinTasks(Function<ListeningExecutorService, E> eventFunction,
-                                                  String waitingMessage) {
-        ListeningExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
+    private <E extends Event> void runKotlinTasks(Function<ExecutorService, E> eventFunction, String waitingMessage) {
+        ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         E msg = eventFunction.apply(pool);
         context.getPlugins().post(msg);
         pool.shutdown();
@@ -245,20 +245,18 @@ public final class GameService extends AbstractScheduledService {
         getUnchecked(world.getPersistenceService().saveAll());
 
         // Synchronously disconnect all players.
-        world.getPlayers().forEach(player -> {
-            var disconnectFuture = player.getClient().disconnect();
-            disconnectFuture.awaitUninterruptibly();
-        });
-
-        // Wait for the disconnected players to be saved.
-        logoutService.stopAsync().awaitTerminated();
+        world.getPlayers().forEach(Player::forceLogout);
 
         // Close cache resource.
         context.getCache().close();
 
+        // Close logout resources.
+        logoutService.stopAsync().awaitTerminated();
+        ;
+
         // Wait for general-purpose tasks to complete.
-        fastPool.shutdown();
-        awaitTerminationUninterruptibly(fastPool);
+        pool.shutdown();
+        awaitTerminationUninterruptibly(pool);
     }
 
     /**
@@ -284,6 +282,14 @@ public final class GameService extends AbstractScheduledService {
         });
     }
 
+
+    public CompletableFuture<Void> sync(Runnable t) {
+        return sync(() -> {
+            t.run();
+            return null;
+        });
+    }
+
     /**
      * Queues a task to be run on the game thread at the start of the next tick. This is useful when you are performing
      * work on another thread, but a portion still needs to be run on the game thread. For example
@@ -306,17 +312,30 @@ public final class GameService extends AbstractScheduledService {
      *          });
      *      } else {
      *          // This as well.
-     *          service.sync(() -> player.sendMessage("You didn't qualify. Bummer."));
+     *          var future =  service.sync(() -> player.sendMessage("You didn't qualify. Bummer."));
+     *
+     *          // Can even wait for the sync task to complete!
+     *          future.join();
+     *          logger.info("Player was notified that they didn't qualify!");
      *      }
      * });
      * }
      * </pre>
-     * The same code can also be expressed more succinctly using {@link ListenableFuture} and {@link #gameExecutor}.
+     * The same code can also be run without synchronization overhead (from {@link CompletableFuture}) via
+     * {@link #gameExecutor}.
      *
-     * @param t The task to run.
+     * @param s The task to run.
      */
-    public void sync(Runnable t) {
-        syncTasks.add(t);
+    public <T> CompletableFuture<T> sync(Supplier<T> s) {
+        CompletableFuture<T> result = new CompletableFuture<>();
+        gameExecutor.execute(() -> {
+            try {
+                result.complete(s.get());
+            } catch (Exception e) {
+                result.completeExceptionally(e);
+            }
+        });
+        return result;
     }
 
     /**
@@ -327,23 +346,20 @@ public final class GameService extends AbstractScheduledService {
      * @param t The task to run.
      * @return The result of {@code t}.
      */
-    public <T> ListenableFuture<T> submit(Callable<T> t) {
-        return fastPool.submit(t);
+    public <T> CompletableFuture<T> submit(Supplier<T> t) {
+        return CompletableFuture.supplyAsync(t, pool);
     }
 
     /**
      * Runs a listening asynchronous task.  <strong>Warning: Tasks may not be ran right away, as there is a limit to
      * how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you require a faster
-     * pool for higher priority tasks, consider using a dedicated pool from {@link ExecutorUtils}.
+     * pool for higher priority tasks, consider using a dedicated pool.
      *
      * @param t The task to run.
      * @return The result of {@code t}.
      */
-    public ListenableFuture<Void> submit(Runnable t) {
-        return submit(() -> {
-            t.run();
-            return null;
-        });
+    public CompletableFuture<Void> submit(Runnable t) {
+        return CompletableFuture.runAsync(t, pool);
     }
 
     /**
@@ -356,15 +372,15 @@ public final class GameService extends AbstractScheduledService {
     /**
      * @return The game executor. Any code passed through it will run on the game thread.
      */
-    public Executor getExecutor() {
+    public Executor getGameExecutor() {
         return gameExecutor;
     }
 
     /**
      * @return The synchronizer for the Kotlin startup tasks.
      */
-    public CountDownLatch getSynchronizer() {
-        return synchronizer;
+    public CompletableFuture<Void> getKotlinSync() {
+        return kotlinSync;
     }
 
     /**

@@ -1,7 +1,7 @@
 package io.luna.game;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.util.concurrent.Futures;
+import com.google.common.base.Supplier;
 import io.luna.game.LoginService.LoginRequest;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.World;
@@ -14,10 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -76,7 +74,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
     /**
      * A map containing the results of all load requests.
      */
-    private final Map<String, Future<Boolean>> loadMap = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<Boolean>> loadMap = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link LoginService}.
@@ -89,37 +87,31 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
     @Override
     boolean addRequest(String username, LoginRequest request) {
-        if(world.getPlayerMap().containsKey(username) ||
+        if (world.getPlayerMap().containsKey(username) ||
                 world.getLogoutService().isSavePending(username)) {
             // Short-circuit here, faster and prevents wasting resources.
             request.client.sendLoginResponse(request.player, LoginResponse.ACCOUNT_ONLINE);
             return false;
         }
         logger.trace("Sending {}'s login request to a worker...", username);
-        Callable<Boolean> loadTask = startWorker(username, request);
-        loadMap.putIfAbsent(username, workers.submit(loadTask));
+        Supplier<Boolean> loadTask = startWorker(username, request);
+        loadMap.putIfAbsent(username, CompletableFuture.supplyAsync(loadTask, workers));
         return true;
     }
 
     @Override
     boolean canFinishRequest(String username, LoginRequest request) {
-        Future<Boolean> result = loadMap.get(username);
+        CompletableFuture<Boolean> result = loadMap.get(username);
         return result != null && result.isDone();
     }
 
     @Override
     void finishRequest(String username, LoginRequest request) {
-        try {
-            Future<Boolean> result = loadMap.remove(username);
-            if (!Futures.getDone(result)) {
-                // Load failed, don't send final login response.
-                return;
-            }
-        } catch (ExecutionException e) {
-            logger.error("Failed to get result from the login persistence worker.", e);
-            return; // Load failed for some other reason.
+        Boolean result = loadMap.remove(username).join();
+        if (Boolean.FALSE.equals(result)) {
+            // Load failed, don't send final login response.
+            return;
         }
-
         logger.trace("Sending {}'s final login response.", username);
         var player = request.player;
         var client = request.client;
@@ -131,7 +123,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
     }
 
     @Override
-    protected void shutDown() throws Exception {
+    protected void shutDown() {
         logger.trace("A shutdown of the login service has been requested.");
         workers.shutdownNow();
         awaitTerminationUninterruptibly(workers);
@@ -145,7 +137,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
      * @param request The request to handle.
      * @return The result of the load ({@code true} if the login response was normal).
      */
-    private Callable<Boolean> startWorker(String username, LoginRequest request) {
+    private Supplier<Boolean> startWorker(String username, LoginRequest request) {
         return () -> {
             var client = request.client;
             try {

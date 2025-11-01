@@ -1,11 +1,11 @@
 package io.luna.game;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.game.model.World;
 import io.luna.util.ExecutorUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * An {@link AbstractIdleService} implementation that manages threads for persistence based services, required for logging in
@@ -29,7 +29,7 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     /**
      * The workers that will service requests.
      */
-    final ListeningExecutorService workers;
+    final ExecutorService workers;
 
     /**
      * The map of pending requests.

@@ -2,6 +2,8 @@ package engine.player.punishment
 
 import api.predef.*
 import com.google.common.util.concurrent.ListenableFuture
+import engine.player.punishment.PunishmentHandler.IP_BANS
+import engine.player.punishment.PunishmentHandler.futureDate
 import io.luna.game.model.mob.Player
 import io.luna.game.persistence.PersistenceService
 import io.luna.game.persistence.PlayerData
@@ -13,6 +15,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.CompletableFuture
 
 /**
  * A global singleton that handles all player punishments such as bans, mutes, and IP blacklisting.
@@ -52,7 +55,7 @@ object PunishmentHandler {
      * @param transform A lambda to transform the player’s [PlayerData] object.
      * @return A [ListenableFuture] that completes once persistence is updated.
      */
-    private fun loadData(username: String, transform: PlayerData.() -> Unit): ListenableFuture<Void> {
+    private fun loadData(username: String, transform: PlayerData.() -> Unit): CompletableFuture<Void> {
         return world.persistenceService.transform(username) { transform(it) }
     }
 
@@ -63,9 +66,9 @@ object PunishmentHandler {
      * @param username The username to IP ban.
      * @return A [ListenableFuture] representing completion of the async write operation.
      */
-    fun ipBan(punisher: Player, username: String): ListenableFuture<Void> {
+    fun ipBan(punisher: Player, username: String): CompletableFuture<Void> {
         val dataFuture = world.persistenceService.load(username)
-        return gameThread.submit {
+        return gameService.submit {
             val data = dataFuture.get() ?: throw IllegalStateException("Player data not found for $username.")
 
             val ip = data.lastIp ?: throw IllegalStateException("No IP address recorded for $username.")
@@ -83,11 +86,11 @@ object PunishmentHandler {
                 throw IllegalStateException("Player $username has already been IP banned.")
             }
 
-            gameThread.sync {
+            gameService.sync {
                 world.getPlayer(username).ifPresent { it.forceLogout() }
                 punisher.sendMessage("You have IP banned $username.")
                 logger.log(PUNISHMENT, "Staff member {} has IP banned {}.", punisher.username, username)
-            }
+            }.join()
         }
     }
 
@@ -103,16 +106,13 @@ object PunishmentHandler {
             "permanently banned $username"
         else
             "banned $username until ${FORMATTER.format(until)}"
-
-        val onComplete = {
-            world.getPlayer(username).ifPresent { it.forceLogout() }
-            punisher.sendMessage("You have $formatted.")
-            logger.log(PUNISHMENT, "Staff member {} has {}.", punisher.username, formatted)
-        }
-
         loadData(username) {
             unbanInstant = until
-        }.addListener(onComplete, gameThread.executor)
+        }.thenRunAsync({
+                           world.getPlayer(username).ifPresent { it.forceLogout() }
+                           punisher.sendMessage("You have $formatted.")
+                           logger.log(PUNISHMENT, "Staff member {} has {}.", punisher.username, formatted)
+                       }, gameService.gameExecutor)
     }
 
     /**
@@ -140,10 +140,10 @@ object PunishmentHandler {
     fun unban(punisher: Player, username: String) {
         loadData(username) {
             unbanInstant = pastDate()
-        }.addListener({
-                          punisher.sendMessage("You have unbanned $username.")
-                          logger.log(PUNISHMENT, "Staff member {} has unbanned {}.", punisher.username, username)
-                      }, gameThread.executor)
+        }.thenRunAsync({
+                           punisher.sendMessage("You have unbanned $username.")
+                           logger.log(PUNISHMENT, "Staff member {} has unbanned {}.", punisher.username, username)
+                       }, gameService.gameExecutor)
     }
 
     /**
@@ -155,15 +155,13 @@ object PunishmentHandler {
         else
             "muted $username until ${FORMATTER.format(until)}"
 
-        val onComplete = {
-            punisher.sendMessage("You have $formatted.")
-            world.getPlayer(username).ifPresent { it.sendMessage("You have been muted.") }
-            logger.log(PUNISHMENT, "Staff member {} has {}.", punisher.username, formatted)
-        }
-
         loadData(username) {
             unmuteInstant = until
-        }.addListener(onComplete, gameThread.executor)
+        }.thenRunAsync({
+                           punisher.sendMessage("You have $formatted.")
+                           world.getPlayer(username).ifPresent { it.sendMessage("You have been muted.") }
+                           logger.log(PUNISHMENT, "Staff member {} has {}.", punisher.username, formatted)
+                       }, gameService.gameExecutor)
     }
 
     /**
@@ -191,11 +189,11 @@ object PunishmentHandler {
     fun unmute(punisher: Player, username: String) {
         loadData(username) {
             unmuteInstant = pastDate()
-        }.addListener({
-                          punisher.sendMessage("You have unmuted $username.")
-                          world.getPlayer(username).ifPresent { it.sendMessage("You have been unmuted.") }
-                          logger.log(PUNISHMENT, "Staff member {} has unmuted {}.", punisher.username, username)
-                      }, gameThread.executor)
+        }.thenRunAsync({
+                           punisher.sendMessage("You have unmuted $username.")
+                           world.getPlayer(username).ifPresent { it.sendMessage("You have been unmuted.") }
+                           logger.log(PUNISHMENT, "Staff member {} has unmuted {}.", punisher.username, username)
+                       }, gameService.gameExecutor)
     }
 
     /**

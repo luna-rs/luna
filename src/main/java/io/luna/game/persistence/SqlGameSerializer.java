@@ -3,22 +3,15 @@ package io.luna.game.persistence;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.Attribute;
-import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.BotSchedule;
 import io.luna.util.SqlConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,11 +20,6 @@ import java.util.Set;
  * @author lare96
  */
 public final class SqlGameSerializer extends GameSerializer {
-
-    /**
-     * The logger instance.
-     */
-    private static final Logger logger = LogManager.getLogger();
 
     /**
      * The connection pool.
@@ -48,26 +36,27 @@ public final class SqlGameSerializer extends GameSerializer {
     }
 
     @Override
-    public PlayerData loadPlayer(World world, String username) throws Exception {
+    public PlayerData loadPlayer(World world, String username) {
         PlayerData data = null;
         try (var connection = connectionPool.take();
-             var loadData = connection.prepareStatement("SELECT json_data FROM main_data WHERE username = ?;")) {
+             var loadData = connection.prepareStatement("SELECT bot, json_data FROM main_data WHERE username = ?;")) {
             loadData.setString(1, username);
 
             try (var results = loadData.executeQuery()) {
                 if (results.next()) {
+                    boolean isBot = results.getBoolean("bot");
                     String jsonData = results.getString("json_data");
-                    data = Attribute.getGsonInstance().fromJson(jsonData, PlayerData.class);
+                    data = Attribute.getGsonInstance().fromJson(jsonData, isBot ? BotData.class : PlayerData.class);
                 }
             }
         } catch (Exception e) {
-            logger.warn("{}'s data could not be loaded.", username, e);
+            throw new RuntimeException(username + "'s data could not be loaded.", e);
         }
         return data;
     }
 
     @Override
-    public void savePlayer(World world, String username, PlayerData data) throws Exception {
+    public void savePlayer(World world, String username, PlayerData data) {
         try (var connection = connectionPool.take()) {
             connection.setAutoCommit(false);
             try {
@@ -80,12 +69,12 @@ public final class SqlGameSerializer extends GameSerializer {
                 connection.setAutoCommit(true);
             }
         } catch (Exception e) {
-            logger.warn("{}'s data could not be saved.", username, e);
+            throw new RuntimeException(username + "'s data could not be saved.", e);
         }
     }
 
     @Override
-    public boolean deletePlayer(World world, String username) throws Exception {
+    public boolean deletePlayer(World world, String username) {
         try (Connection connection = connectionPool.take();
              PreparedStatement databaseId = connection.prepareStatement("SELECT id FROM main_data WHERE username = ?;");
              PreparedStatement mainData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;");
@@ -119,14 +108,13 @@ public final class SqlGameSerializer extends GameSerializer {
                 connection.setAutoCommit(true);
             }
         } catch (Exception e) {
-            logger.warn("Could not delete record for {}.", username, e);
-            return false;
+            throw new RuntimeException("Could not delete record for " + username + ".", e);
         }
         return true;
     }
 
     @Override
-    public Set<String> loadBotUsernames(World world) throws Exception {
+    public Set<String> loadBotUsernames(World world) {
         Set<String> names = new HashSet<>();
         try (Connection connection = connectionPool.take();
              PreparedStatement loadData = connection.prepareStatement("SELECT username FROM main_data WHERE bot = 1;")) {
@@ -136,102 +124,9 @@ public final class SqlGameSerializer extends GameSerializer {
                 }
             }
         } catch (Exception e) {
-            logger.warn("Persistent bot data could not be loaded.", e);
+            throw new RuntimeException("Persistent bot data could not be loaded.", e);
         }
         return names;
-    }
-
-    @Override
-    public Map<String, BotSchedule> synchronizeBotSchedules(World world) throws Exception {
-        Map<String, BotSchedule> scheduleMap = new HashMap<>();
-        try (Connection connection = connectionPool.take()) {
-            connection.setAutoCommit(false);
-            try {
-                findBotSchedules(connection, scheduleMap);
-                buildBotSchedules(world, connection, scheduleMap);
-                return scheduleMap;
-            } finally {
-                connection.setAutoCommit(true);
-            }
-        } catch (Exception e) {
-            logger.warn("Bot session could not be saved.", e);
-        }
-        return scheduleMap;
-    }
-
-    @Override
-    public boolean saveBotSchedule(World world, BotSchedule schedule) throws Exception {
-        try (Connection connection = connectionPool.take();
-             PreparedStatement saveData = connection.prepareStatement("INSERT INTO bot_session_data (username, logoutFor, playFor) VALUES (?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE logoutFor = ?, playFor = ?;")) {
-            saveData.setString(1, schedule.getUsername());
-            saveData.setLong(2, schedule.getLogoutFor().toMillis());
-            saveData.setLong(3, schedule.getLoginFor().toMillis());
-            return saveData.executeUpdate() > 0;
-        } catch (Exception e) {
-            logger.warn("Bot session could not be saved.", e);
-            return false;
-        }
-    }
-
-    /**
-     * Retrieves all {@link BotSchedule} types from the database and caches them within a map.
-     *
-     * @param connection The database connection.
-     * @param scheduleMap The map cache.
-     * @throws SQLException If any errors occur.
-     */
-    private void findBotSchedules(Connection connection, Map<String, BotSchedule> scheduleMap) throws SQLException {
-        try (PreparedStatement selectSchedules = connection.prepareStatement("SELECT username, logoutFor, playFor FROM bot_session_data;");
-             ResultSet results = selectSchedules.executeQuery()) {
-            while (results.next()) {
-                String username = results.getString(1);
-                long logoutFor = results.getLong(2);
-                long loginFor = results.getLong(3);
-                BotSchedule schedule = new BotSchedule(username, Duration.ofMillis(logoutFor),
-                        Duration.ofMillis(loginFor));
-                scheduleMap.put(username, schedule);
-            }
-        }
-    }
-
-    /**
-     * Builds {@link BotSchedule} types for any persistent {@link Bot} types that need it.
-     *
-     * @param connection The database connection.
-     * @param scheduleMap The map cache.
-     * @throws SQLException If any errors occur.
-     */
-    private void buildBotSchedules(World world, Connection connection, Map<String, BotSchedule> scheduleMap) throws SQLException {
-        try (PreparedStatement updateSchedules = connection.prepareStatement("INSERT INTO bot_session_data (username, logoutFor, playFor) VALUES (?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE logoutFor = ?, playFor = ?;")) {
-            int added = 0;
-            Map<String, BotSchedule> scheduleMapCopy = new HashMap<>();
-            for (Iterator<String> it = world.getBots().persistentIterator(); it.hasNext(); ) {
-                String username = it.next();
-                if (scheduleMap.containsKey(username)) {
-                    continue;
-                }
-
-                BotSchedule newSchedule = BotSchedule.createRandomSchedule(username);
-                long logoutFor = newSchedule.getLogoutFor().toMillis();
-                long loginFor = newSchedule.getLoginFor().toMillis();
-
-                updateSchedules.setString(1, username);
-                updateSchedules.setLong(2, logoutFor);
-                updateSchedules.setLong(3, loginFor);
-                updateSchedules.setLong(4, logoutFor);
-                updateSchedules.setLong(5, loginFor);
-                updateSchedules.addBatch();
-                scheduleMapCopy.put(username, newSchedule);
-                added++;
-            }
-            if (updateSchedules.executeBatch().length != added) {
-                connection.rollback();
-                return;
-            }
-            scheduleMap.putAll(scheduleMapCopy);
-        }
     }
 
     /**
@@ -253,7 +148,7 @@ public final class SqlGameSerializer extends GameSerializer {
             // Insert player data to the main table.
             insertPlayer.setString(1, username);
             insertPlayer.setString(2, data.password);
-            insertPlayer.setBoolean(3, data.bot);
+            insertPlayer.setBoolean(3, data instanceof BotData);
             insertPlayer.setString(4, data.rights.name());
             insertPlayer.setString(5, "[]");
             insertPlayer.executeUpdate();
