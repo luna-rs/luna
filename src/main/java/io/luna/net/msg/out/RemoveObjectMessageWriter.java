@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that removes an object.
@@ -42,8 +43,8 @@ public final class RemoveObjectMessageWriter extends GameMessageWriter  implemen
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(88);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(88, buffer);
         msg.put(offset, ValueType.SUBTRACT);
         msg.put((type << 2) + (direction & 3), ValueType.SUBTRACT);
         return msg;

@@ -6,6 +6,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that sends a message containing the current region.
@@ -29,8 +30,8 @@ public final class RegionMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(222);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(222, buffer);
         msg.putShort(position.getChunkY());
         msg.putShort(position.getChunkX(), ByteOrder.LITTLE, ValueType.ADD);
         return msg;

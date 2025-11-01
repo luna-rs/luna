@@ -5,6 +5,7 @@ import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that forces a {@link TabIndex} to open.
@@ -28,8 +29,8 @@ public final class ForceTabMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(252);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(252, buffer);
         msg.put(tab.getIndex(), ValueType.NEGATE);
         return msg;
     }

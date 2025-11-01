@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,8 +59,8 @@ public final class WidgetIndexedItemsMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(134, MessageType.VAR_SHORT);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(134, MessageType.VAR_SHORT, buffer);
         msg.putShort(id);
 
         for (IndexedItem item : items) {

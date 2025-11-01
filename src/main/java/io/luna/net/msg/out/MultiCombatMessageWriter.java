@@ -3,6 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays or removes the multi-combat sign.
@@ -26,8 +27,8 @@ public final class MultiCombatMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(233);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(233, buffer);
         msg.put(display ? 1 : 0);
         return msg;
     }

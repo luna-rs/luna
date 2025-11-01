@@ -5,6 +5,7 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays a {@link LocalGraphic}.
@@ -49,8 +50,8 @@ public final class AddGraphicMessageWriter extends GameMessageWriter implements 
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(59);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(59, buffer);
         msg.put(offset);
         msg.putShort(id);
         msg.put(height);

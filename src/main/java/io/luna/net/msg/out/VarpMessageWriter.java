@@ -6,6 +6,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that sets the default and current value of a varP (variable player) in
@@ -30,15 +31,15 @@ public final class VarpMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
+    public ByteMessage write(Player player, ByteBuf buffer) {
         boolean isLargeVarp = varp.getValue() > Byte.MAX_VALUE;
         ByteMessage msg;
         if(isLargeVarp) {
-            msg = ByteMessage.message(115);
+            msg = ByteMessage.message(115, buffer);
             msg.putInt(varp.getValue(), ByteOrder.INVERSE_MIDDLE);
             msg.putShort(varp.getId(), ByteOrder.LITTLE);
         } else {
-            msg = ByteMessage.message(182);
+            msg = ByteMessage.message(182, buffer);
             msg.putShort(varp.getId(), ValueType.ADD);
             msg.put(varp.getValue(), ValueType.SUBTRACT);
         }

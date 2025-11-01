@@ -6,6 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that marks a chunk.
@@ -36,8 +37,8 @@ public final class ChunkPlacementMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(75);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(75, buffer);
         msg.put(placementPosition.getLocalX(basePosition), ValueType.NEGATE);
         msg.put(placementPosition.getLocalY(basePosition), ValueType.ADD);
         return msg;

@@ -11,6 +11,7 @@ import io.luna.game.model.mob.block.UpdateState;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,8 +35,8 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
     private final AbstractUpdateBlockSet<Npc> blockSet = new NpcUpdateBlockSet();
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(71, MessageType.VAR_SHORT);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(71, MessageType.VAR_SHORT, buffer);
         ByteMessage blockMsg = ByteMessage.raw();
 
         try {

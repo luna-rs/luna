@@ -1,6 +1,5 @@
 package io.luna.game.cache;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
 import io.luna.LunaContext;
 import io.luna.game.cache.map.MapIndexTable;
 import io.luna.util.ExecutorUtils;
@@ -15,6 +14,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -61,7 +61,7 @@ public final class Cache implements Closeable {
     /**
      * The executor that will run the decoders. Will be shutdown once the task completes.
      */
-    private final ListeningExecutorService decoderService = ExecutorUtils.threadPool("CacheDecoderThread", 1);
+    private final ExecutorService decoderService = ExecutorUtils.threadPool("CacheDecoderThread", 1);
 
     /**
      * The data random access file.

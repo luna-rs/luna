@@ -5,6 +5,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that sends a full screen interface.
@@ -35,8 +36,8 @@ public final class FullScreenInterfaceMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(253);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(253, buffer);
         msg.putShort(primaryId, ByteOrder.LITTLE);
         msg.put(secondaryId, ValueType.ADD);
         return msg;

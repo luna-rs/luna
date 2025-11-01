@@ -6,6 +6,7 @@ import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that animates a {@link GameObject}.
@@ -50,8 +51,8 @@ public final class AnimateGameObjectMessageWriter extends GameMessageWriter impl
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(142);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(142, buffer);
         msg.putShort(id);
         msg.put((type << 2) + (direction & 3), ValueType.ADD);
         msg.put(offset);

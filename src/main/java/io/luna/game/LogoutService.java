@@ -122,6 +122,7 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     @Override
     void finishRequest(String username, LogoutRequest request) {
         PlayerData saveData = request.player.createSaveData();
+        request.player.getClient().releasePendingWrites();
         world.getPlayers().remove(request.player);
         if(saveData != null) {
             saves.put(username, request);

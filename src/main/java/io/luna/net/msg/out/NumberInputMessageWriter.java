@@ -4,6 +4,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.inter.NumberInputInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that opens an "Enter amount" input dialogue. Use
@@ -14,7 +15,7 @@ import io.luna.net.msg.GameMessageWriter;
 public final class NumberInputMessageWriter extends GameMessageWriter {
 
     @Override
-    public ByteMessage write(Player player) {
-        return ByteMessage.message(58);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        return ByteMessage.message(58, buffer);
     }
 }

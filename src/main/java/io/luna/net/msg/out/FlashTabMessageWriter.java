@@ -5,6 +5,7 @@ import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that makes a {@link TabIndex} flash. The tab must be open for this
@@ -29,8 +30,8 @@ public final class FlashTabMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(24);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(24, buffer);
         msg.put(tab.getIndex(), ValueType.SUBTRACT);
         return msg;
     }

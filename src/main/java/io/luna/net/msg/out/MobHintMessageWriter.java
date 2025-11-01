@@ -4,6 +4,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} that forces a hint icon above a {@link Mob}.
@@ -27,8 +28,8 @@ public final class MobHintMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(199);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(199, buffer);
         msg.put(target instanceof Player ? 10 : 1);
         msg.putShort(target.getIndex());
 

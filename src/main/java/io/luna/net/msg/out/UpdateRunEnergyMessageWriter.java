@@ -3,6 +3,7 @@ package io.luna.net.msg.out;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 import java.util.OptionalInt;
 
@@ -35,9 +36,9 @@ public final class UpdateRunEnergyMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
+    public ByteMessage write(Player player, ByteBuf buffer) {
         int runEnergy = energy.orElse((int) player.getRunEnergy());
-        ByteMessage msg = ByteMessage.message(125);
+        ByteMessage msg = ByteMessage.message(125, buffer);
         msg.put(runEnergy);
         return msg;
     }

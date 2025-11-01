@@ -5,6 +5,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 import java.util.OptionalInt;
 
@@ -47,14 +48,14 @@ public final class WidgetMobModelMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
+    public ByteMessage write(Player player, ByteBuf buffer) {
         ByteMessage msg;
         if (npcId.isPresent()) {
-            msg = ByteMessage.message(162);
+            msg = ByteMessage.message(162, buffer);
             msg.putShort(npcId.getAsInt(), ValueType.ADD);
             msg.putShort(widgetId, ByteOrder.LITTLE);
         } else {
-            msg = ByteMessage.message(255);
+            msg = ByteMessage.message(255, buffer);
             msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
         }
         return msg;

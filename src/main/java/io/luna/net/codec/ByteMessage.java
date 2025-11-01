@@ -62,8 +62,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param type The header type.
      * @return A new {@code ByteMessage}.
      */
-    public static ByteMessage message(int opcode, MessageType type) {
-        return new ByteMessage(pooledBuffer(), opcode, type);
+    public static ByteMessage message(int opcode, MessageType type, ByteBuf buf) {
+        return new ByteMessage(buf, opcode, type);
     }
 
     /**
@@ -72,8 +72,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
      * @param opcode The packet opcode.
      * @return A new {@code ByteMessage}.
      */
-    public static ByteMessage message(int opcode) {
-        return message(opcode, MessageType.FIXED);
+    public static ByteMessage message(int opcode, ByteBuf buf) {
+        return message(opcode, MessageType.FIXED, buf);
     }
 
     /**

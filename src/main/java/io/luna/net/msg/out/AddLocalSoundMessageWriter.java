@@ -6,6 +6,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays a {@link LocalSound}.
@@ -50,8 +51,8 @@ public final class AddLocalSoundMessageWriter extends GameMessageWriter implemen
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(41);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(41, buffer);
         msg.put(offset);
         msg.putShort(soundId, ByteOrder.BIG);
         msg.put((radius << 4) + (volume & 7));

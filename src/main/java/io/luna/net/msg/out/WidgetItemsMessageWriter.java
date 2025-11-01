@@ -7,6 +7,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,8 +51,8 @@ public final class WidgetItemsMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(206, MessageType.VAR_SHORT);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(206, MessageType.VAR_SHORT, buffer);
         msg.putShort(id);
         msg.putShort(items.size());
 

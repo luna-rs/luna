@@ -8,6 +8,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
 
@@ -47,18 +48,19 @@ public final class GroupedEntityMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage mainMsg = ByteMessage.message(183, MessageType.VAR_SHORT);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage mainMsg = ByteMessage.message(183, MessageType.VAR_SHORT, buffer);
         mainMsg.put(placementPosition.getLocalX(basePosition));
         mainMsg.put(placementPosition.getLocalY(basePosition), ValueType.ADD);
         for (ChunkUpdatableMessage updatableMessage : messages) {
             GameMessageWriter subMsg = (GameMessageWriter) updatableMessage;
-            ByteMessage buf = subMsg.write(player);
+            ByteBuf pooledBuf = ByteMessage.pooledBuffer();
             try {
+                ByteMessage buf = subMsg.write(player, pooledBuf);
                 mainMsg.put(buf.getOpcode());
                 mainMsg.putBytes(buf);
             } finally {
-                buf.release();
+                pooledBuf.release(pooledBuf.refCnt());
             }
         }
         return mainMsg;

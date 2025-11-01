@@ -5,6 +5,7 @@ import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays an interface on a sidebar tab.
@@ -35,8 +36,8 @@ public final class TabInterfaceMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(10);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(10, buffer);
         msg.put(tab.getIndex(), ValueType.SUBTRACT);
         msg.putShort(id, ValueType.ADD);
         return msg;

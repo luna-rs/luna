@@ -4,6 +4,7 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that updates an item's amount.
@@ -48,8 +49,8 @@ public final class UpdateGroundItemMessageWriter extends GameMessageWriter imple
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(121);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(121, buffer);
         msg.put(offset);
         msg.putShort(id);
         msg.putShort(previousAmount);

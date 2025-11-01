@@ -5,6 +5,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that removes a ground item.
@@ -35,8 +36,8 @@ public final class RemoveGroundItemMessageWriter extends GameMessageWriter imple
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(208);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(208, buffer);
         msg.putShort(id, ValueType.ADD);
         msg.put(offset, ValueType.ADD);
         return msg;

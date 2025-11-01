@@ -6,6 +6,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that opens an interface.  Use {@link StandardInterface} instead of
@@ -30,8 +31,8 @@ public final class InterfaceMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(159);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(159, buffer);
         msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
         return msg;
     }

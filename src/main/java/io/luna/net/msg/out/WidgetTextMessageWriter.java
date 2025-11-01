@@ -6,6 +6,7 @@ import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.MessageType;
 import io.luna.net.codec.ValueType;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays text on a widget.
@@ -36,8 +37,8 @@ public final class WidgetTextMessageWriter extends GameMessageWriter {
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        ByteMessage msg = ByteMessage.message(232, MessageType.VAR_SHORT);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(232, MessageType.VAR_SHORT, buffer);
         msg.putShort(id, ByteOrder.LITTLE, ValueType.ADD);
         msg.putString(text.toString());
         return msg;

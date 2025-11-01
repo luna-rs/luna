@@ -6,6 +6,7 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A {@link GameMessageWriter} implementation that displays a {@link LocalProjectile}.
@@ -100,8 +101,8 @@ public final class AddProjectileMessageWriter extends GameMessageWriter implemen
     }
 
     @Override
-    public ByteMessage write(Player player) {
-        var msg = ByteMessage.message(181);
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        var msg = ByteMessage.message(181, buffer);
         msg.put(offset);
         msg.put(deltaX);
         msg.put(deltaY);
