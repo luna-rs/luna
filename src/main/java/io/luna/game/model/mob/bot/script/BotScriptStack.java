@@ -4,7 +4,6 @@ import api.bot.BotScript;
 import io.luna.game.model.mob.bot.Bot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.ParameterizedMessage;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -90,13 +89,14 @@ public final class BotScriptStack {
      * @param loadedBuffer The serialized script snapshots to restore.
      */
     public void load(List<BotScriptSnapshot<?>> loadedBuffer) {
+        buffer.clear();
         BotScript<?>[] loadedScripts = new BotScript<?>[loadedBuffer.size()];
         for (BotScriptSnapshot<?> snapshot : loadedBuffer) {
             String scriptClass = snapshot.getScriptClass();
             try {
                 loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, snapshot.getData());
             } catch (Exception e) {
-                logger.error(new ParameterizedMessage("Error loading persisted script [{}]", scriptClass), e);
+                logger.error("Error loading persisted script [{}]", scriptClass, e);
             }
         }
         buffer.addAll(Arrays.asList(loadedScripts));
