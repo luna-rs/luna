@@ -169,7 +169,9 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            msg.release();
+            if(msg.getPayload().refCnt() > 0) {
+                msg.release();
+            }
         }
     }
 
