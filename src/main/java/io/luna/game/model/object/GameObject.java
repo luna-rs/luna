@@ -88,7 +88,8 @@ public class GameObject extends StationaryEntity {
      * @param view Who this object is viewable to.
      * @param dynamic If this object is dynamic.
      */
-    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction, ChunkUpdatableView view, boolean dynamic) {
+    public GameObject(LunaContext context, int id, Position position, ObjectType objectType, ObjectDirection direction,
+                      ChunkUpdatableView view, boolean dynamic) {
         super(context, position, EntityType.OBJECT, view);
         this.id = id;
         this.objectType = objectType;
@@ -118,16 +119,25 @@ public class GameObject extends StationaryEntity {
 
     @Override
     public final int size() {
+        if(definition == null) {
+            return 1;
+        }
         return definition.getSize();
     }
 
     @Override
     public final int sizeX() {
+        if(definition == null) {
+            return 1;
+        }
         return definition.getSizeX();
     }
 
     @Override
     public final int sizeY() {
+        if(definition == null) {
+            return 1;
+        }
         return definition.getSizeY();
     }
 
@@ -145,7 +155,7 @@ public class GameObject extends StationaryEntity {
      * Animates this object.
      */
     public void animate() {
-        if (!isHidden()) {
+        if (definition != null && !isHidden()) {
             int animationId = definition.getAnimationId().orElseThrow(() ->
                     new IllegalStateException("Object [" + id + "] does not have an animation!"));
             if (animationId > 0) {
