@@ -2,17 +2,16 @@ package engine.widget
 
 import api.predef.*
 import api.predef.ext.*
-import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
+import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 
 /**
  * Destroys the item if the dialogue is open.
  */
 button(14175) {
-    val inter = plr.interfaces.get(DestroyItemDialogueInterface::class)
-    inter?.destroyItem(plr)
+    plr.overlays[DestroyItemDialogue::class]?.destroyItem(plr)
 }
 
 /**
  * Closes the interface.
  */
-button(14176) { plr.interfaces.close() }
+button(14176) { plr.overlays.closeWindows() }

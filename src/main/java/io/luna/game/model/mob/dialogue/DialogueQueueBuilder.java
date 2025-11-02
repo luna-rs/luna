@@ -2,7 +2,7 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -366,7 +366,7 @@ public final class DialogueQueueBuilder {
     public void open() {
         if (dialogues.size() == 1) {
             // Optimization for single-entry dialogues.
-            player.getInterfaces().open(dialogues.peekFirst());
+            player.getOverlays().open(dialogues.peekFirst());
         } else {
             DialogueQueue queue = new DialogueQueue(player, dialogues);
             queue.advance();

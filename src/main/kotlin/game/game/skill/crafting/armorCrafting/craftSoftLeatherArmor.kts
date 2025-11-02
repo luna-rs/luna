@@ -19,7 +19,7 @@ val armorList = listOf(HideArmor.LEATHER_BODY,
  * Called when a button on the [SoftLeatherInterface] is clicked.
  */
 fun craftArmor(plr: Player, armor: HideArmor, amount: Int) {
-    if (plr.interfaces.isOpen(SoftLeatherInterface::class)) {
+    if (SoftLeatherInterface::class in plr.overlays) {
         plr.submitAction(CraftArmorActionItem(plr, armor, amount))
     }
 }

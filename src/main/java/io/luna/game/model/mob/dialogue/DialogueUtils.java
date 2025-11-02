@@ -197,7 +197,7 @@ public final class DialogueUtils {
      * @param player The player.
      */
     public static void close(Player player) {
-        player.getInterfaces().close();
+        player.getOverlays().closeWindows();
     }
 
     /**

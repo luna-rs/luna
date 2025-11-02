@@ -111,7 +111,7 @@ fun advanceLevel(plr: Player, skillId: Int, oldLevel: Int) {
 
         // Open level up widget.
         val levelUpData = levelUpTable[skillId]
-        plr.interfaces.open(LevelUpInterface(skillId, newLevel, levelUpData))
+        plr.overlays.open(LevelUpInterface(skillId, newLevel, levelUpData))
 
         // Play jingle.
         val jingle = if (MILESTONE_LEVELS.contains(newLevel))

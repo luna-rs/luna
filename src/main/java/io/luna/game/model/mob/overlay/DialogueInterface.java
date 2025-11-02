@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.inter;
+package io.luna.game.model.mob.overlay;
 
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.DialogueInterfaceMessageWriter;
@@ -6,19 +6,23 @@ import io.luna.net.msg.out.DialogueInterfaceMessageWriter;
 import java.util.function.Consumer;
 
 /**
- * An {@link AbstractInterface} implementation that opens a dialogue interface.
+ * An {@link AbstractOverlay} that displays a dialogue interface over the chatbox area.
+ * <p>
+ * Implementations send the appropriate client packet from {@link #open(Player)}. Optional lifecycle hooks are
+ * exposed via {@link #setOpenAction(Consumer)} and {@link #setCloseAction(Consumer)} to configure server-side behavior
+ * when the dialogue is shown or hidden.
  *
  * @author lare96
  */
 public class DialogueInterface extends StandardInterface {
 
     /**
-     * The consumer to apply when this dialogue opens.
+     * Optional callback invoked after the dialogue is opened (post-packet).
      */
     private Consumer<Player> openAction;
 
     /**
-     * The consumer to apply when this dialogue closes.
+     * Optional callback invoked when the dialogue is closed.
      */
     private Consumer<Player> closeAction;
 
@@ -35,13 +39,12 @@ public class DialogueInterface extends StandardInterface {
     public final void open(Player player) {
         boolean shouldOpen = init(player);
         if (shouldOpen) {
-            int id = unsafeGetId();
             player.queue(new DialogueInterfaceMessageWriter(id));
             if (openAction != null) {
                 openAction.accept(player);
             }
         } else {
-            player.getInterfaces().close();
+            player.getOverlays().closeWindows();
         }
     }
 
@@ -53,15 +56,18 @@ public class DialogueInterface extends StandardInterface {
     }
 
     /**
-     * Initializes this dialogue. Things like placing text and models on widgets can be done here. Returns
-     * {@code false} if this dialogue shouldn't be opened.
+     * Initializes this dialogue before it is displayed to the player.
+     * <p>
+     * This method is invoked immediately prior to opening the dialogue interface. Subclasses can override it to
+     * perform setup work.
      *
-     * @param player The player.
-     * @return {@code true} if this dialogue should open.
+     * @param player The player for whom this dialogue is being initialized.
+     * @return {@code true} if the dialogue should be opened; {@code false} to abort.
      */
     public boolean init(Player player) {
         return true;
     }
+
 
     /**
      * Sets the open action consumer.
@@ -79,9 +85,5 @@ public class DialogueInterface extends StandardInterface {
      */
     public void setCloseAction(Consumer<Player> closeAction) {
         this.closeAction = closeAction;
-    }
-
-    public boolean hasCloseAction() {
-        return closeAction != null;
     }
 }

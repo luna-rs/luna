@@ -4,7 +4,7 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * Spawn crystal chest object at home area.
@@ -34,8 +34,8 @@ useItem(989).onObject(172) {
  * Open the make item dialogue when crystal key halves are used on each other.
  */
 useItem(985).onItem(987) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(989) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(989) {
+        override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
             plr.submitAction(MakeCrystalKeyActionItem(player, forAmount))
         }
     })

@@ -11,5 +11,5 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag
 on(DesignPlayerEvent::class, EventPriority.HIGH) {
     plr.appearance.setValues(values)
     plr.flags.flag(UpdateFlag.APPEARANCE)
-    plr.interfaces.close()
+    plr.overlays.closeWindows()
 }

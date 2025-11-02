@@ -90,7 +90,7 @@ public final class ActionQueue {
         // Close standard interface if strong or soft action present.
         if (processing.containsKey(ActionType.STRONG)) {
             if (mob.getType() == EntityType.PLAYER) {
-                mob.asPlr().getInterfaces().close();
+                mob.asPlr().getOverlays().closeWindows();
             }
         }
 
@@ -103,7 +103,7 @@ public final class ActionQueue {
             // Normal actions are skipped during execution if interface is open.
             if ((action.actionType == ActionType.NORMAL &&
                     mob.getType() == EntityType.PLAYER &&
-                    mob.asPlr().getInterfaces().isStandardOpen()) ||
+                    mob.asPlr().getOverlays().hasWindow()) ||
                     action.getState() != ActionState.PROCESSING) {
                 continue;
             }

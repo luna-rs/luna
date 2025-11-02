@@ -10,7 +10,7 @@ import io.luna.game.model.EntityState
 import io.luna.game.model.item.Inventory
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 
 /**
  * Deposits an item into the party chest.
@@ -71,14 +71,14 @@ DropPartyOption.BALLOON_IDS.forEach {
 
 // Confirm items
 button(2246) {
-    if (plr.interfaces.isOpen(DropPartyInterface::class)) {
+    if (DropPartyInterface::class in plr.overlays) {
         if (plr.depositItems.size() == 0) {
             plr.sendMessage("You do not have any items to deposit.")
         } else {
             DropPartyOption.chest.items.addAll(plr.depositItems)
             plr.depositItems.clear()
             for (otherPlr in world.players) {
-                if (otherPlr.interfaces.isOpen(DropPartyInterface::class)) {
+                if (DropPartyInterface::class in otherPlr.overlays) {
                     DropPartyOption.chest.items.refreshPrimary(otherPlr)
                 }
             }
@@ -87,30 +87,30 @@ button(2246) {
 }
 
 // Open the drop party chest interface.
-object1(2417) { plr.interfaces.open(DropPartyInterface()) }
+object1(2417) { plr.overlays.open(DropPartyInterface()) }
 
 // Deposit
 on(WidgetItemFirstClickEvent::class)
-    .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 5064 && DropPartyInterface::class in plr.overlays }
     .then { deposit(plr, this, 1) }
 
 on(WidgetItemSecondClickEvent::class)
-    .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 5064 && DropPartyInterface::class in plr.overlays }
     .then { deposit(plr, this, 5) }
 
 on(WidgetItemThirdClickEvent::class)
-    .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 5064 && DropPartyInterface::class in plr.overlays }
     .then { deposit(plr, this, 10) }
 
 on(WidgetItemFourthClickEvent::class)
-    .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 5064 && DropPartyInterface::class in plr.overlays }
     .then { deposit(plr, this, plr.inventory.computeAmountForId(itemId)) }
 
 on(WidgetItemFifthClickEvent::class)
-    .filter { widgetId == 5064 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 5064 && DropPartyInterface::class in plr.overlays }
     .then {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) {
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) {
                 var count = plr.inventory.computeAmountForId(itemId)
                 count = if (value > count) count else value
                 deposit(plr, this@then, count)
@@ -120,26 +120,26 @@ on(WidgetItemFifthClickEvent::class)
 
 // Withdraw
 on(WidgetItemFirstClickEvent::class)
-    .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 2274 && DropPartyInterface::class in plr.overlays }
     .then { withdraw(plr, this, 1) }
 
 on(WidgetItemSecondClickEvent::class)
-    .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 2274 && DropPartyInterface::class in plr.overlays }
     .then { withdraw(plr, this, 5) }
 
 on(WidgetItemThirdClickEvent::class)
-    .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 2274 && DropPartyInterface::class in plr.overlays }
     .then { withdraw(plr, this, 10) }
 
 on(WidgetItemFourthClickEvent::class)
-    .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 2274 && DropPartyInterface::class in plr.overlays }
     .then { withdraw(plr, this, plr.depositItems.computeAmountForId(itemId)) }
 
 on(WidgetItemFifthClickEvent::class)
-    .filter { widgetId == 2274 && plr.interfaces.isOpen(DropPartyInterface::class) }
+    .filter { widgetId == 2274 && DropPartyInterface::class in plr.overlays }
     .then {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) {
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) {
                 var count = plr.depositItems.computeAmountForId(itemId)
                 count = if (value > count) count else value
                 withdraw(plr, this@then, count)

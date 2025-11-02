@@ -1,7 +1,7 @@
 package engine.bank
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.InventoryOverlayInterface
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 
 /**
  * An [InventoryOverlayInterface] implementation representing the deposit box interface.

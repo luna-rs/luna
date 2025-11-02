@@ -4,7 +4,7 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
@@ -16,7 +16,7 @@ import java.util.OptionalInt;
  *
  * @author lare96 
  */
-public final class DestroyItemDialogueInterface extends DialogueInterface {
+public final class DestroyItemDialogue extends DialogueInterface {
 
     /**
      * The inventory index.
@@ -29,23 +29,23 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
     private final int itemId;
 
     /**
-     * Creates a new {@link DestroyItemDialogueInterface}.
+     * Creates a new {@link DestroyItemDialogue}.
      *
      * @param index The inventory index.
      * @param itemId The item identifier.
      */
-    public DestroyItemDialogueInterface(int index, int itemId) {
+    public DestroyItemDialogue(int index, int itemId) {
         super(14170);
         this.index = index == -1 ? OptionalInt.empty() : OptionalInt.of(index);
         this.itemId = itemId;
     }
 
     /**
-     * Creates a new {@link DestroyItemDialogueInterface}.
+     * Creates a new {@link DestroyItemDialogue}.
      *
      * @param itemId The item identifier.
      */
-    public DestroyItemDialogueInterface(int itemId) {
+    public DestroyItemDialogue(int itemId) {
         this(-1, itemId);
     }
 
@@ -75,13 +75,13 @@ public final class DestroyItemDialogueInterface extends DialogueInterface {
 
         int destroyIndex = index.orElse(inventory.computeIndexForId(itemId).orElse(-1));
         if (destroyIndex == -1 || inventory.get(destroyIndex).getId() != itemId) {
-            player.getInterfaces().close();
+            player.getOverlays().closeWindows();
             return;
         }
 
         inventory.remove(destroyIndex, inventory.get(destroyIndex));
         player.sendMessage("You destroy the " + getDestroyItemName() + ".");
-        player.getInterfaces().close();
+        player.getOverlays().closeWindows();
     }
 
     /**

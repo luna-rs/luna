@@ -1,8 +1,8 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.AbstractInterfaceSet;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.AbstractOverlaySet;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 
 import java.util.Queue;
 
@@ -41,12 +41,12 @@ public final class DialogueQueue {
     public void advance() {
         DialogueInterface nextDialogue = dialogues.poll();
         if (nextDialogue != null) {
-            player.getInterfaces().open(nextDialogue);
+            player.getOverlays().open(nextDialogue);
         } else {
-            AbstractInterfaceSet interfaces = player.getInterfaces();
+            AbstractOverlaySet overlays = player.getOverlays();
             player.resetDialogues();
-            if (interfaces.standardTo(DialogueInterface.class).isPresent()) {
-                interfaces.close();
+            if (overlays.contains(DialogueInterface.class)) {
+                overlays.closeWindows();
             }
         }
     }

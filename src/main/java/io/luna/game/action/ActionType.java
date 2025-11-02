@@ -1,6 +1,6 @@
 package io.luna.game.action;
 
-import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.overlay.StandardInterface;
 
 /**
  * An enum representing the different action types that can be associated with an {@link Action}. These types determine

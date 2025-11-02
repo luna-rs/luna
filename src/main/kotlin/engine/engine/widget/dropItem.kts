@@ -6,7 +6,7 @@ import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.DropItemEvent
 import io.luna.game.model.chunk.ChunkUpdatableView
 import io.luna.game.model.item.GroundItem
-import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
+import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.util.logging.LoggingSettings.FileOutputType
 import org.apache.logging.log4j.util.Unbox.box
 
@@ -31,12 +31,12 @@ on(DropItemEvent::class, EventPriority.HIGH) {
         if (world.items.register(drop)) {
             plr.inventory[index] = null
             plr.playSound(Sounds.DROP_ITEM)
-            plr.interfaces.close()
+            plr.overlays.closeWindows()
         } else {
             plr.sendMessage("You cannot drop this here.")
         }
     } else {
-        plr.interfaces.open(DestroyItemDialogueInterface(index, item.id))
+        plr.overlays.open(DestroyItemDialogue(index, item.id))
     }
     logger.log(itemDrop, "{}: {}(x{})", plr.username, itemDef.name, box(item.amount))
 }
