@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.varp;
 
 import io.luna.game.model.mob.Player;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,6 +16,11 @@ import java.util.Map;
  * @author lare96
  */
 public final class PersistentVarpManager {
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * The player.
@@ -95,8 +102,12 @@ public final class PersistentVarpManager {
         if (persistentVarps != null) {
             varps.clear();
             for (var entry : persistentVarps.entrySet()) {
-                PersistentVarp persistentVarp = PersistentVarp.valueOf(entry.getKey());
-                varps.put(persistentVarp, entry.getValue());
+                try {
+                    PersistentVarp persistentVarp = PersistentVarp.valueOf(entry.getKey());
+                    varps.put(persistentVarp, entry.getValue());
+                } catch (IllegalArgumentException e) {
+                    logger.error("{} does not exist in PersistentVarp enum.", entry.getKey(), e);
+                }
             }
         }
     }

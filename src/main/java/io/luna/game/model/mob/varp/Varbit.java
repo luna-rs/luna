@@ -47,7 +47,7 @@ public final class Varbit {
         int lsb = def.getLeastSignificantBit();
         int max = (1 << (1 + (msb - lsb))) - 1;
         int clearedValue = parentValue & ~(max << lsb);
-        return clearedValue | value << lsb;
+        return clearedValue | (value & max) << lsb;
     }
 
     /**
