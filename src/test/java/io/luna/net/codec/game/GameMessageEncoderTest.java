@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Unit tests for {@link GameMessageEncoder}.
  *
- * @author lare96 
+ * @author lare96
  */
 final class GameMessageEncoderTest {
 
@@ -40,7 +40,7 @@ final class GameMessageEncoderTest {
         // Has to be done in one test since there's no support for ordering yet.
 
         // Fixed length test.
-        var msg = ByteMessage.message(54, MessageType.FIXED);
+        var msg = ByteMessage.message(54, MessageType.FIXED, Unpooled.buffer());
         msg.putBytes(payload);
         encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
@@ -53,7 +53,7 @@ final class GameMessageEncoderTest {
 
 
         // Variable length test.
-        msg = ByteMessage.message(54, MessageType.VAR);
+        msg = ByteMessage.message(54, MessageType.VAR, Unpooled.buffer());
         msg.putBytes(payload);
         encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
@@ -66,7 +66,7 @@ final class GameMessageEncoderTest {
         buffer.clear();
 
         // Variable short length test.
-        msg = ByteMessage.message(54, MessageType.VAR_SHORT);
+        msg = ByteMessage.message(54, MessageType.VAR_SHORT, Unpooled.buffer());
         msg.putBytes(payload);
         encoder.encode(ctx, new GameMessage(msg.getOpcode(), msg.getType(), msg), buffer);
 
