@@ -13,7 +13,7 @@ public final class EventMatcher<E extends Event> {
      * Returns a matcher that never short-circuits, always returning {@code false}.
      */
     public static <E extends Event> EventMatcher<E> defaultMatcher() {
-        return new EventMatcher<>(msg -> false, msg -> false);
+        return new EventMatcher<>(msg -> false, msg -> false, 0);
     }
 
     /* 'match' and 'has' from Kotlin. */
@@ -21,11 +21,17 @@ public final class EventMatcher<E extends Event> {
     private final Function<E, Boolean> hasFunc;
 
     /**
+     * The total amount of matcher listeners.
+     */
+    private final int count;
+
+    /**
      * Creates a new {@link EventMatcher}.
      */
-    public EventMatcher(Function<E, Boolean> matchFunc, Function<E, Boolean> hasFunc) {
+    public EventMatcher(Function<E, Boolean> matchFunc, Function<E, Boolean> hasFunc, int count) {
         this.matchFunc = matchFunc;
         this.hasFunc = hasFunc;
+        this.count = count;
     }
 
     /**
@@ -46,5 +52,12 @@ public final class EventMatcher<E extends Event> {
      */
     public boolean has(E msg) {
         return hasFunc.apply(msg);
+    }
+
+    /**
+     * @return The total amount of matcher listeners.
+     */
+    public int getCount() {
+        return count;
     }
 }

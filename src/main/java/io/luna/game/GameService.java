@@ -10,6 +10,7 @@ import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent;
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerShutdownEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
+import io.luna.game.plugin.PluginBootstrap;
 import io.luna.game.task.Task;
 import io.luna.net.msg.out.SystemUpdateMessageWriter;
 import io.luna.util.ExecutorUtils;
@@ -27,6 +28,7 @@ import java.util.function.Supplier;
 
 import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminationUninterruptibly;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
@@ -60,6 +62,7 @@ public final class GameService extends AbstractScheduledService {
         public void running() {
             // Start the game world and run startup logic from Kotlin scripts.
             sync(() -> {
+                loadPlugins();
                 world.start();
 
                 // Players won't be able to login until startup tasks are complete, so it's fine to block the
@@ -88,7 +91,24 @@ public final class GameService extends AbstractScheduledService {
         public void failed(State from, Throwable failure) {
             // An exception was thrown on the game thread.
             logger.fatal("Luna has been terminated because of an uncaught exception!", failure);
-            System.exit(0);
+            System.exit(1);
+        }
+
+        /**
+         * Initializes the {@link PluginBootstrap} which loads all Kotlin scripts and prepares event listeners.
+         */
+        private void loadPlugins() {
+            try {
+                PluginBootstrap bootstrap = new PluginBootstrap(context);
+                bootstrap.start();
+
+                int pluginCount = context.getPlugins().getPluginCount();
+                int scriptCount = context.getPlugins().getScriptCount();
+                logger.info("{} Kotlin plugins containing {} scripts have been loaded.", box(pluginCount), box(scriptCount));
+            } catch (Exception e) {
+                logger.fatal("Error loading plugins!", e);
+                System.exit(1);
+            }
         }
     }
 

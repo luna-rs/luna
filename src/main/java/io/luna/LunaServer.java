@@ -12,7 +12,6 @@ import io.luna.game.cache.codec.VarBitDefinitionDecoder;
 import io.luna.game.cache.codec.VarpDefinitionDecoder;
 import io.luna.game.cache.codec.WidgetDefinitionDecoder;
 import io.luna.game.model.World;
-import io.luna.game.plugin.PluginBootstrap;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
@@ -80,7 +79,6 @@ public final class LunaServer {
 
         initCache();
         initLaunchTasks();
-        initPlugins();
         initServices();
 
         initNetwork();
@@ -137,20 +135,6 @@ public final class LunaServer {
 
         // Wait for last minute Kotlin tasks before we let players login.
         gameService.getKotlinSync().join();
-    }
-
-    /**
-     * Initializes the {@link PluginBootstrap}.
-     *
-     * @throws ReflectiveOperationException If an error occurs while instancing plugins.
-     */
-    private void initPlugins() throws ReflectiveOperationException {
-        PluginBootstrap bootstrap = new PluginBootstrap(context);
-        bootstrap.start();
-
-        int pluginCount = context.getPlugins().getPluginCount();
-        int scriptCount = context.getPlugins().getScriptCount();
-        logger.info("{} Kotlin plugins containing {} scripts have been loaded.", box(pluginCount), box(scriptCount));
     }
 
     /**

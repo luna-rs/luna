@@ -24,7 +24,7 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
         }
 
         // Only close if we still have the same interface open.
-        if (plr.dialogues.isEmpty && inter.isOpen && !plr.overlays.containsType(OverlayType.INPUT)) {
+        if (plr.dialogues == null && inter.isOpen && !plr.overlays.containsType(OverlayType.INPUT)) {
             plr.overlays.closeWindows()
         }
     }

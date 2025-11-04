@@ -8,8 +8,8 @@ import io.luna.game.event.impl.ContinueDialogueEvent
  * Advances the current dialogue or closes the current interface.
  */
 on(ContinueDialogueEvent::class, EventPriority.HIGH) {
-    if (plr.dialogues.isPresent) {
-        plr.dialogues.get().advance()
+    if (plr.dialogues != null) {
+        plr.dialogues.advance()
     } else {
         plr.overlays.closeWindows()
     }
