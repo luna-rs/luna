@@ -80,7 +80,7 @@ public final class NpcDialogueInterface extends DialogueInterface {
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId, npcId)); // Display NPC head model.
         if (expression != null) {
-            player.queue(expression.buildMsgWriter(modelWidgetId)); // Predefined expression animation identifier
+            player.queue(expression.buildAnimationMessage(modelWidgetId)); // Predefined expression animation identifier
         } else {
             player.queue(new WidgetAnimationMessageWriter(modelWidgetId, expressionAnimationId)); // Unique expression animation identifier
         }

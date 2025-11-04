@@ -31,7 +31,7 @@ public class OptionDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      */
-    public void firstOption(Player player) {
+    public void first(Player player) {
 
     }
 
@@ -40,7 +40,7 @@ public class OptionDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      */
-    public void secondOption(Player player) {
+    public void second(Player player) {
 
     }
 
@@ -49,7 +49,7 @@ public class OptionDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      */
-    public void thirdOption(Player player) {
+    public void third(Player player) {
 
     }
 
@@ -58,7 +58,7 @@ public class OptionDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      */
-    public void fourthOption(Player player) {
+    public void fourth(Player player) {
 
     }
 
@@ -67,7 +67,7 @@ public class OptionDialogueInterface extends DialogueInterface {
      *
      * @param player The player.
      */
-    public void fifthOption(Player player) {
+    public void fifth(Player player) {
 
     }
 

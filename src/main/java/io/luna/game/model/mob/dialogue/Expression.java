@@ -78,7 +78,7 @@ public enum Expression {
      * @param widgetId The widget to build the message for.
      * @return The message.
      */
-    public WidgetAnimationMessageWriter buildMsgWriter(int widgetId) {
+    public WidgetAnimationMessageWriter buildAnimationMessage(int widgetId) {
         int animationId = RandomUtils.random(ids);
         return new WidgetAnimationMessageWriter(widgetId, animationId);
     }

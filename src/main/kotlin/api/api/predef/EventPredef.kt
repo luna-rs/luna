@@ -45,6 +45,7 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
  * The main event interception function. Runs the action without any forwarding.
  */
 fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriority.LOW, action: EventAction<E>) {
+    println("???")
     scriptListeners += EventListener(eventClass.java, action, priority)
 }
 

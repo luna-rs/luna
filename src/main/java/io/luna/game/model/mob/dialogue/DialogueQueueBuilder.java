@@ -129,7 +129,7 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder empty(String... text) { // todo rename to 'text'
+    public DialogueQueueBuilder text(String... text) {
         checkLocked();
         dialogues.add(new TextDialogueInterface(text));
         return this;
@@ -180,12 +180,12 @@ public final class DialogueQueueBuilder {
         checkLocked();
         dialogues.add(new OptionDialogueInterface(option0, option1) {
             @Override
-            public void firstOption(Player player) {
+            public void first(Player player) {
                 action0.accept(player);
             }
 
             @Override
-            public void secondOption(Player player) {
+            public void second(Player player) {
                 action1.accept(player);
             }
         });
@@ -203,17 +203,17 @@ public final class DialogueQueueBuilder {
         checkLocked();
         dialogues.add(new OptionDialogueInterface(option0, option1, option2) {
             @Override
-            public void firstOption(Player player) {
+            public void first(Player player) {
                 action0.accept(player);
             }
 
             @Override
-            public void secondOption(Player player) {
+            public void second(Player player) {
                 action1.accept(player);
             }
 
             @Override
-            public void thirdOption(Player player) {
+            public void third(Player player) {
                 action2.accept(player);
             }
         });
@@ -232,22 +232,22 @@ public final class DialogueQueueBuilder {
         checkLocked();
         dialogues.add(new OptionDialogueInterface(option0, option1, option2, option3) {
             @Override
-            public void firstOption(Player player) {
+            public void first(Player player) {
                 action0.accept(player);
             }
 
             @Override
-            public void secondOption(Player player) {
+            public void second(Player player) {
                 action1.accept(player);
             }
 
             @Override
-            public void thirdOption(Player player) {
+            public void third(Player player) {
                 action2.accept(player);
             }
 
             @Override
-            public void fourthOption(Player player) {
+            public void fourth(Player player) {
                 action3.accept(player);
             }
         });
@@ -267,27 +267,27 @@ public final class DialogueQueueBuilder {
         checkLocked();
         dialogues.add(new OptionDialogueInterface(option0, option1, option2, option3, option4) {
             @Override
-            public void firstOption(Player player) {
+            public void first(Player player) {
                 action0.accept(player);
             }
 
             @Override
-            public void secondOption(Player player) {
+            public void second(Player player) {
                 action1.accept(player);
             }
 
             @Override
-            public void thirdOption(Player player) {
+            public void third(Player player) {
                 action2.accept(player);
             }
 
             @Override
-            public void fourthOption(Player player) {
+            public void fourth(Player player) {
                 action3.accept(player);
             }
 
             @Override
-            public void fifthOption(Player player) {
+            public void fifth(Player player) {
                 action4.accept(player);
             }
         });
@@ -366,12 +366,13 @@ public final class DialogueQueueBuilder {
     public void open() {
         if (dialogues.size() == 1) {
             // Optimization for single-entry dialogues.
-            player.getOverlays().open(dialogues.peekFirst());
+            DialogueInterface dialogue = dialogues.peekFirst();
+            if(dialogue != null) {
+                player.getOverlays().open(dialogue);
+            }
         } else {
-            DialogueQueue queue = new DialogueQueue(player, dialogues);
-            queue.advance();
-
-            player.setDialogues(queue);
+            player.setDialogues(new DialogueQueue(player, dialogues));
+            player.getDialogues().advance();
         }
 
         // Lock so that this builder's reference to 'dialogues' is immutable.

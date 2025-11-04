@@ -149,7 +149,7 @@ cmd("shutdown", RIGHTS_ADMIN) {
             plr.overlays.open(object : NumberInput() {
                 override fun input(player: Player, value: Int) {
                     if (value < 1 || value > 60) {
-                        plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
+                        plr.newDialogue().text("1-60 Minutes are the acceptable values. Please try again.").open()
                         return
                     }
                     gameService.scheduleSystemUpdate(value * 100)

@@ -40,7 +40,7 @@ public final class PlayerDialogueInterface extends DialogueInterface {
         int modelWidgetId = textWidgetId - 1;
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId)); // Display player head model.
-        player.queue(expression.buildMsgWriter(modelWidgetId)); // Display expression of head model.
+        player.queue(expression.buildAnimationMessage(modelWidgetId)); // Display expression of head model.
         player.queue(new WidgetTextMessageWriter(player.getUsername(), textWidgetId++)); // Display player name.
 
         // Display the supplied text on the dialogue.

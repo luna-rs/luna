@@ -15,11 +15,11 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
 
     if (inter != null) {
         when (option) {
-            1 -> inter.firstOption(plr)
-            2 -> inter.secondOption(plr)
-            3 -> inter.thirdOption(plr)
-            4 -> inter.fourthOption(plr)
-            5 -> inter.fifthOption(plr)
+            1 -> inter.first(plr)
+            2 -> inter.second(plr)
+            3 -> inter.third(plr)
+            4 -> inter.fourth(plr)
+            5 -> inter.fifth(plr)
             else -> throw IllegalArgumentException("'option' must be between 1-5 inclusive.")
         }
 

@@ -75,7 +75,7 @@ object PartyRoom {
     private fun setLeverOption(plr: Player, newOption: PartyRoomOption, obj: GameObject?) {
         val costItem = Item(995, newOption.cost)
         if (plr.rights <= RIGHTS_MOD && !plr.inventory.remove(costItem)) {
-            plr.newDialogue().empty("You do not have enough coins to pull this lever.").open()
+            plr.newDialogue().text("You do not have enough coins to pull this lever.").open()
         } else if (newOption.canExecute(plr)) {
             if (obj != null) {
                 plr.animation(Animation(2140))

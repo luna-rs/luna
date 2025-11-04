@@ -163,7 +163,7 @@ public abstract class ItemContainerAction extends Action<Player> {
         currentRemove = remove();
         if (getState() != ActionState.PROCESSING || !container.containsAll(currentRemove)) {
             if (getExecutions() == 0) {
-                mob.newDialogue().empty(onNoMaterials());
+                mob.newDialogue().text(onNoMaterials());
             }
             return true;
         }

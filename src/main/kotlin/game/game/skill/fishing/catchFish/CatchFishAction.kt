@@ -38,14 +38,14 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
 
             tool.bait != null && !mob.inventory.contains(tool.bait) -> {
                 // Check if we have required bait.
-                mob.newDialogue().empty(onNoMaterials()).open()
+                mob.newDialogue().text(onNoMaterials()).open()
                 false
             }
 
             !mob.inventory.contains(tool.id) -> {
                 // Check if we have required tool.
                 val toolName = ItemDefinition.ALL.retrieve(tool.id).name
-                mob.newDialogue().empty("You need ${addArticle(toolName)} to bait these fish.").open()
+                mob.newDialogue().text("You need ${addArticle(toolName)} to bait these fish.").open()
                 false
             }
 

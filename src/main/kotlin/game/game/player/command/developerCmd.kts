@@ -59,7 +59,7 @@ cmd("bots", RIGHTS_DEV) {
 cmd("delete", RIGHTS_DEV) {
     plr.overlays.open(object : TextInput() {
         override fun input(player: Player, value: String) {
-            plr.newDialogue().empty("Are you sure you wish to delete all records for '$value' ?")
+            plr.newDialogue().text("Are you sure you wish to delete all records for '$value' ?")
                 .options("Yes",
                          {
                              world.persistenceService.delete(value)

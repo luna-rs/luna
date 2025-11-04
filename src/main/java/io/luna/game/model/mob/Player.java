@@ -278,7 +278,7 @@ public class Player extends Mob {
     /**
      * The dialogue queue.
      */
-    private Optional<DialogueQueue> dialogues = Optional.empty();
+    private DialogueQueue dialogues;
 
     /**
      * The private message counter.
@@ -1291,13 +1291,13 @@ public class Player extends Mob {
      * @param dialogues The new value.
      */
     public void setDialogues(DialogueQueue dialogues) {
-        this.dialogues = Optional.ofNullable(dialogues);
+        this.dialogues = dialogues;
     }
 
     /**
      * @return The dialogue queue.
      */
-    public Optional<DialogueQueue> getDialogues() {
+    public DialogueQueue getDialogues() {
         return dialogues;
     }
 
