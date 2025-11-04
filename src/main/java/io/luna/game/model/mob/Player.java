@@ -30,9 +30,9 @@ import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
-import io.luna.game.model.mob.inter.AbstractInterfaceSet;
-import io.luna.game.model.mob.inter.GameTabSet;
-import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
+import io.luna.game.model.mob.overlay.AbstractOverlaySet;
+import io.luna.game.model.mob.overlay.GameTabSet;
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
@@ -198,7 +198,7 @@ public class Player extends Mob {
     /**
      * The interface set.
      */
-    private final AbstractInterfaceSet interfaces = new AbstractInterfaceSet(this);
+    private final AbstractOverlaySet overlays = new AbstractOverlaySet(this);
 
     /**
      * The game tab set.
@@ -433,14 +433,14 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
-        interfaces.close();
+        overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
     }
 
     @Override
     public void onTeleport(Position position) {
         teleporting = true;
-        interfaces.close();
+        overlays.closeWindows();
     }
 
     @Override
@@ -657,6 +657,7 @@ public class Player extends Mob {
             return;
         } else if (varbits.size() == 1) {
             sendVarbit(varbits.iterator().next());
+            return;
         }
         int parentValue = cachedVarps.getOrDefault(parentId, 0);
         int value = 0;
@@ -1266,8 +1267,8 @@ public class Player extends Mob {
     /**
      * @return The interface set.
      */
-    public AbstractInterfaceSet getInterfaces() {
-        return interfaces;
+    public AbstractOverlaySet getOverlays() {
+        return overlays;
     }
 
     /**

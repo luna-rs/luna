@@ -5,7 +5,7 @@ import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.AbstractInterface;
+import io.luna.game.model.mob.overlay.AbstractOverlay;
 import io.luna.net.msg.out.WidgetItemsMessageWriter;
 
 import java.util.ArrayDeque;
@@ -35,7 +35,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A model representing a traversable group of items that adhere to a strict set of rules. These rules dictate how
- * items are stored and displayed on {@link AbstractInterface} types.
+ * items are stored and displayed on {@link AbstractOverlay} types.
  *
  * @author lare96
  */

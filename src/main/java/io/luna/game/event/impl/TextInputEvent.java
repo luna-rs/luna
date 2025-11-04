@@ -1,10 +1,10 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.TextInputInterface;
+import io.luna.game.model.mob.overlay.TextInput;
 
 /**
- * A {@link PlayerEvent} implementation sent when a player enters text on a {@link TextInputInterface}.
+ * A {@link PlayerEvent} implementation sent when a player enters text on a {@link TextInput}.
  *
  * @author lare96
  */

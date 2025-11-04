@@ -1,7 +1,8 @@
 package io.luna.game.model.mob.bot;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Represents a single log entry from a {@link Bot}.
@@ -13,12 +14,13 @@ public class BotLogEntry {
     /**
      * The formatter.
      */
-    private static final SimpleDateFormat FORMATTER = new SimpleDateFormat("MMM d | hh:mm aaa");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("MMM d, hh:mm:s a").
+            withZone(ZoneId.of("UTC"));
 
     /**
      * The timestamp.
      */
-    private final long timestamp;
+    private final Instant timestamp;
 
     /**
      * The log message.
@@ -31,7 +33,7 @@ public class BotLogEntry {
      * @param timestamp The timestamp.
      * @param text The log message.
      */
-    public BotLogEntry(long timestamp, String text) {
+    public BotLogEntry(Instant timestamp, String text) {
         this.timestamp = timestamp;
         this.text = text;
     }
@@ -40,13 +42,18 @@ public class BotLogEntry {
      * @return The formatted message that will be presented.
      */
     public String getFormattedMessage() {
-        return "[" + FORMATTER.format(Instant.ofEpochMilli(timestamp) + "] " + text);
+        try {
+            return "[" + FORMATTER.format(timestamp) + "] " + text + "\n";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "null\n";
+        }
     }
 
     /**
      * @return The timestamp.
      */
-    public long getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 

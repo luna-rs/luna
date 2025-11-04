@@ -1,7 +1,7 @@
 package io.luna.game.model.item;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.overlay.StandardInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 
 import java.util.ArrayList;

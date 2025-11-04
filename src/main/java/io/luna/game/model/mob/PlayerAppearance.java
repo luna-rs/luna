@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Range;
 import com.google.common.collect.Table;
-import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.overlay.StandardInterface;
 import io.luna.util.RandomUtils;
 
 import java.util.Arrays;

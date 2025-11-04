@@ -2,12 +2,12 @@ package game.skill.crafting.jewelleryMaking
 
 import api.predef.*
 import api.predef.ext.*
+import game.skill.smithing.BarType
+import game.skill.smithing.Smithing
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import game.skill.smithing.BarType
-import game.skill.smithing.Smithing
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * The symbol.
@@ -66,9 +66,9 @@ fun makeSilverJewellery(plr: Player, itemId: Int, times: Int) {
  * Opens the gold jewellery interface.
  */
 fun openGold(plr: Player): Boolean {
-    val hasMould = plr.inventory.any { it!= null && GoldJewelleryTable.MOULDS.contains(it.id) }
+    val hasMould = plr.inventory.any { it != null && GoldJewelleryTable.MOULDS.contains(it.id) }
     if (hasMould) {
-        plr.interfaces.open(GoldJewelleryInterface())
+        plr.overlays.open(GoldJewelleryInterface())
         return true
     }
     return false
@@ -80,7 +80,7 @@ fun openGold(plr: Player): Boolean {
 fun openSilver(plr: Player): Boolean {
     val hasMould = plr.inventory.any { it != null && SilverJewelleryTable.MOULDS.contains(it.id) }
     if (hasMould) {
-        plr.interfaces.open(SilverJewelleryInterface())
+        plr.overlays.open(SilverJewelleryInterface())
         return true
     }
     return false
@@ -98,8 +98,8 @@ fun stringJewellery(plr: Player, usedId: Int, targetId: Int) {
         return@run STRING[targetId]
     }
     if (newId != null) {
-        plr.interfaces.open(object : MakeItemDialogueInterface(newId) {
-            override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) {
+        plr.overlays.open(object : MakeItemDialogue(newId) {
+            override fun make(player: Player?, id: Int, index: Int, forAmount: Int) {
                 plr.submitAction(StringJewelleryAction(plr, forAmount, usedId, targetId, newId))
             }
         })
@@ -129,23 +129,23 @@ for (furnaceId in Smithing.FURNACE_OBJECTS) {
 }
 
 /* Interactions for gold jewelery. */
-on(WidgetItemFirstClickEvent::class).filter { plr.interfaces.isOpen(GoldJewelleryInterface::class) }
+on(WidgetItemFirstClickEvent::class).filter { GoldJewelleryInterface::class in plr.overlays }
     .then { makeGoldJewellery(plr, itemId, 1) }
 
-on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class).filter { plr.interfaces.isOpen(GoldJewelleryInterface::class) }
+on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class).filter { GoldJewelleryInterface::class in plr.overlays }
     .then { makeGoldJewellery(plr, itemId, 5) }
 
-on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class).filter { plr.interfaces.isOpen(GoldJewelleryInterface::class) }
+on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class).filter { GoldJewelleryInterface::class in plr.overlays }
     .then { makeGoldJewellery(plr, itemId, 10) }
 
 /* Interactions for silver jewelery. */
-on(WidgetItemFirstClickEvent::class).filter { plr.interfaces.isOpen(SilverJewelleryInterface::class) }
+on(WidgetItemFirstClickEvent::class).filter { SilverJewelleryInterface::class in plr.overlays }
     .then { makeSilverJewellery(plr, itemId, 1) }
 
-on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class).filter { plr.interfaces.isOpen(SilverJewelleryInterface::class) }
+on(WidgetItemClickEvent.WidgetItemSecondClickEvent::class).filter { SilverJewelleryInterface::class in plr.overlays }
     .then { makeSilverJewellery(plr, itemId, 5) }
 
-on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class).filter { plr.interfaces.isOpen(SilverJewelleryInterface::class) }
+on(WidgetItemClickEvent.WidgetItemThirdClickEvent::class).filter { SilverJewelleryInterface::class in plr.overlays }
     .then { makeSilverJewellery(plr, itemId, 10) }
 
 /* String symbols, emblems, and amulets. */

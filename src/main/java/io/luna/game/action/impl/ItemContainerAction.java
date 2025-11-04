@@ -180,7 +180,7 @@ public abstract class ItemContainerAction extends Action<Player> {
             return true;
         }
         if (getExecutions() == 0) {
-            mob.getInterfaces().close(false);
+            mob.getOverlays().closeWindows(false);
         }
         container.removeAll(currentRemove);
         container.addAll(currentAdd);

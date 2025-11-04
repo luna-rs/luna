@@ -40,7 +40,7 @@ public final class SimplePathfindingAlgorithm extends PathfindingAlgorithm {
 		return addHorizontal(origin, target, positions);
 	}
 
-	/**
+ 	/**
 	 * Finds a valid path from the origin {@link Position} to the target one.
 	 *
 	 * @param origin The origin Position.

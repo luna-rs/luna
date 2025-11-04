@@ -70,7 +70,7 @@ val PARTY_ROOM_SPAWN = Position(2734, 3476, 0)
  * Teleports a player to the party room.
  */
 fun teleport(plr: Player) {
-    plr.interfaces.close()
+    plr.overlays.closeWindows()
     plr.move(PartyRoom.TELEPORT_POSITIONS.random())
     plr.sendMessage("You are teleported to the party room.")
 }
@@ -88,7 +88,7 @@ fun talk(plr: Player, npc: Npc) {
                  if (PartyRoom.option == null) "Hello mister! Is there anything I can do for you?"
                  else "Yay! The ${PartyRoom.option!!.description} event is under way!")
             .options("Can you take me to the party room?", { talkAboutTeleporting(plr) },
-                     "No thanks.", { plr.interfaces.close() }).open()
+                     "No thanks.", { plr.overlays.closeWindows() }).open()
     }
 }
 

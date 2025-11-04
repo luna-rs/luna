@@ -4,13 +4,14 @@ import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.dialogue.OptionDialogueInterface
+import io.luna.game.model.mob.overlay.OverlayType
 
 /**
  * Invoked when the player clicks an option on an option dialogue.
  */
 fun clickOption(msg: ButtonClickEvent, option: Int) {
     val plr = msg.plr
-    val inter = plr.interfaces.get(OptionDialogueInterface::class)
+    val inter = plr.overlays.get(OptionDialogueInterface::class)
 
     if (inter != null) {
         when (option) {
@@ -23,8 +24,8 @@ fun clickOption(msg: ButtonClickEvent, option: Int) {
         }
 
         // Only close if we still have the same interface open.
-        if (plr.dialogues.isEmpty && inter.isOpen && !plr.interfaces.isInputOpen) {
-            plr.interfaces.close()
+        if (plr.dialogues.isEmpty && inter.isOpen && !plr.overlays.containsType(OverlayType.INPUT)) {
+            plr.overlays.closeWindows()
         }
     }
 }

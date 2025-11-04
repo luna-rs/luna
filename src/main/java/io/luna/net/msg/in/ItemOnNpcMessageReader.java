@@ -42,6 +42,6 @@ public final class ItemOnNpcMessageReader extends GameMessageReader<ItemOnNpcEve
 
     @Override
     public void handle(Player player, ItemOnNpcEvent event) {
-        player.getInterfaces().close();
+        player.getOverlays().closeWindows();
     }
 }

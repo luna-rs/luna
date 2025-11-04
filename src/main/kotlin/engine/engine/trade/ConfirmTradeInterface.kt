@@ -3,7 +3,7 @@ package engine.trade
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.InventoryOverlayInterface
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 import java.text.NumberFormat
 import java.util.*
 
@@ -37,7 +37,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
      * the constructor).
      */
     private val confirm by lazyVal {
-        other.interfaces.get(ConfirmTradeInterface::class)!!
+        other.overlays.get(ConfirmTradeInterface::class)!!
     }
 
     /**
@@ -86,8 +86,8 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
             plr.inventory.addAll(confirm.tradingItems)
             other.inventory.addAll(tradingItems)
 
-            plr.interfaces.close()
-            other.interfaces.close()
+            plr.overlays.closeWindows()
+            other.overlays.closeWindows()
         } else {
             accepted = true
             plr.sendText("Waiting for other player...", 3535)

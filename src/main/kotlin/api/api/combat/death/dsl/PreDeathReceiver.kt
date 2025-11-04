@@ -26,8 +26,7 @@ class PreDeathReceiver(val receiver: DeathHookReceiver<*>) {
         val victim = receiver.victim
         if (victim is Player) {
             victim.hitpoints.level = 0
-            victim.actions.interruptWeak()
-            victim.interfaces.close()
+            victim.overlays.closeWindows()
         } else if (victim is Npc) {
             victim.actions.interruptWeak()
         }

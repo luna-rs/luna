@@ -3,7 +3,7 @@ package engine.widget.make
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * A list of button ids and the indexes that they correspond to.
@@ -33,7 +33,7 @@ val buttonMap = buttonList.flatMap { it.options() }.toMap()
 /**
  * Runs the [MakeItemOption] after checking the item length.
  */
-fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogueInterface, action: MakeItemOption) {
+fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogue, action: MakeItemOption) {
 
     // Because 1 and 3 use the same interface, but different indexes.
     fun checkLength() {
@@ -50,14 +50,16 @@ fun makeItem(msg: ButtonClickEvent, inter: MakeItemDialogueInterface, action: Ma
 }
 
 /**
- * Listens for button clicks on the [MakeItemDialogueInterface].
+ * Listens for button clicks on the [MakeItemDialogue].
  */
 on(ButtonClickEvent::class)
-    .filter { plr.interfaces.isOpen(MakeItemDialogueInterface::class) }
+    .filter { MakeItemDialogue::class in plr.overlays }
     .then {
         val action = buttonMap[id]
         if (action != null) {
-            val inter = plr.interfaces.get(MakeItemDialogueInterface::class)!!
-            makeItem(this, inter, action)
+            val dialogue = plr.overlays[MakeItemDialogue::class]
+            if(dialogue != null) {
+                makeItem(this, dialogue, action)
+            }
         }
     }

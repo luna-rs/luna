@@ -1,7 +1,7 @@
 package game.skill.smithing.smeltOre
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.DialogueInterface
+import io.luna.game.model.mob.overlay.DialogueInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
 import game.skill.smithing.BarType
 

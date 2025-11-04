@@ -6,7 +6,6 @@ import io.luna.game.event.Event;
 import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.model.World;
-import io.luna.game.model.mob.bot.speech.BotSpeechManager;
 
 import static java.util.Objects.requireNonNull;
 
@@ -54,8 +53,9 @@ public final class PluginManager {
         pipeline.post(msg);
 
         // Handle speech injectors.
-        BotSpeechManager speechManager = world.getBotManager().getSpeechManager();
-        speechManager.handleInjectors(msg);
+     //   BotSpeechManager speechManager = world.getBotManager().getSpeechManager();
+       // speechManager.handleInjectors(msg);
+    // TODO context injectors
     }
 
     /**

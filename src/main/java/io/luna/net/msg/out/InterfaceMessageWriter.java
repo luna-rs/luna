@@ -1,7 +1,7 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.overlay.StandardInterface;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 import io.luna.net.codec.ValueType;

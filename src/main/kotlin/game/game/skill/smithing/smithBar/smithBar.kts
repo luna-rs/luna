@@ -37,15 +37,15 @@ fun smith(plr: Player, id: Int, amount: Int) {
 
 /* Intercept widget clicks to start smithing actions. */
 on(WidgetItemFirstClickEvent::class)
-    .filter { plr.interfaces.isOpen(SmithingInterface::class) }
+    .filter { SmithingInterface::class in plr.overlays }
     .then { smith(plr, itemId, 1) }
 
 on(WidgetItemSecondClickEvent::class)
-    .filter { plr.interfaces.isOpen(SmithingInterface::class) }
+    .filter { SmithingInterface::class in plr.overlays }
     .then { smith(plr, itemId, 5) }
 
 on(WidgetItemThirdClickEvent::class)
-    .filter { plr.interfaces.isOpen(SmithingInterface::class) }
+    .filter { SmithingInterface::class in plr.overlays }
     .then { smith(plr, itemId, 10) }
 
 /* Intercept events to use hammer and bars on anvils. */
@@ -53,10 +53,10 @@ for (anvil in Smithing.ANVIL_OBJECTS) {
     useItem(Smithing.HAMMER).onObject(anvil) {
         val bar = lookupBar(plr)
         if (bar != null) {
-            plr.interfaces.open(SmithingInterface(bar))
+            plr.overlays.open(SmithingInterface(bar))
         }
     }
     for (bar in BarType.VALUES) {
-        useItem(bar.id).onObject(anvil) { plr.interfaces.open(SmithingInterface(bar)) }
+        useItem(bar.id).onObject(anvil) { plr.overlays.open(SmithingInterface(bar)) }
     }
 }

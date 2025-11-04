@@ -41,7 +41,7 @@ val equipmentStarter = listOf(
 fun firstLogin(plr: Player) {
     plr.inventory.addAll(inventoryStarter)
     plr.equipment.addAll(equipmentStarter)
-    plr.interfaces.open(DesignPlayerInterface())
+    plr.overlays.open(DesignPlayerInterface())
     plr.firstLogin = false
 }
 

@@ -11,7 +11,7 @@ import io.luna.game.model.mob.Player
  * Returns the currently open shop.
  */
 fun currentShop(plr: Player): Shop? {
-    val inter = plr.interfaces.get(ShopInterface::class)
+    val inter = plr.overlays.get(ShopInterface::class)
     return inter?.shop
 }
 

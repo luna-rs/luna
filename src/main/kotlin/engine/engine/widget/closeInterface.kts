@@ -8,5 +8,5 @@ import io.luna.game.event.impl.CloseInterfaceEvent
  * Closes the currently open interface.
  */
 on(CloseInterfaceEvent::class, EventPriority.HIGH) {
-    plr.interfaces.close()
+    plr.overlays.closeWindows()
 }

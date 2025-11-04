@@ -1,7 +1,7 @@
 package game.skill.magic.teleOther
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.WidgetTextMessageWriter
 
 /**
@@ -14,6 +14,6 @@ class TeleOtherInterface(val source: Player, val target: Player, val type: TeleO
 
     override fun onOpen(player: Player) {
         player.queue(WidgetTextMessageWriter(source.username, 12558))
-        player.queue(WidgetTextMessageWriter(type.name, 12560))
+        player.queue(WidgetTextMessageWriter(type.location, 12560))
     }
 }

@@ -2,7 +2,7 @@ package game.skill.crafting.potteryCrafting
 
 import api.predef.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * A list of pottery wheel object IDs.
@@ -18,8 +18,8 @@ val potteryOvenObjects = listOf(2643, 4308, 11601)
  * Opens the pottery wheel interface for all materials.
  */
 fun openPottersWheel(plr: Player) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(*Unfired.UNFIRED_ID_ARRAY) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(*Unfired.UNFIRED_ID_ARRAY) {
+        override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
             val unfired = Unfired.UNFIRED_ID_MAP[id]
             if (unfired != null) {
                 plr.submitAction(PotteryWheelActionItem(player, unfired, forAmount))
@@ -32,8 +32,8 @@ fun openPottersWheel(plr: Player) {
  * Opens the pottery oven interface for all materials.
  */
 fun openPotteryOven(plr: Player) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(*Unfired.FIRED_ID_ARRAY) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(*Unfired.FIRED_ID_ARRAY) {
+        override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
             val unfired = Unfired.FIRED_ID_MAP[id]
             if (unfired != null) {
                 plr.submitAction(PotteryOvenActionItem(player, unfired, forAmount))
@@ -46,8 +46,8 @@ fun openPotteryOven(plr: Player) {
  * Opens the pottery oven interface for just a single material.
  */
 fun openSpecializedPotteryOven(plr: Player, unfired: Unfired) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(unfired.firedId) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(unfired.firedId) {
+        override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
             plr.submitAction(PotteryOvenActionItem(player, unfired, forAmount))
         }
     })

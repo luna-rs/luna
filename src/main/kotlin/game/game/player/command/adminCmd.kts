@@ -11,7 +11,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 
 /**
  * A command that makes all stats 99.
@@ -42,7 +42,7 @@ cmd("viewbank", RIGHTS_ADMIN) {
         override fun buildDisplayItems(player: Player?): MutableList<Item> =
             viewingPlr.bank.filterNotNull().toMutableList()
     }
-    plr.interfaces.open(bankInterface)
+    plr.overlays.open(bankInterface)
 }
 
 /**
@@ -145,15 +145,15 @@ cmd("shutdown", RIGHTS_ADMIN) {
         "5 Minutes", { gameService.scheduleSystemUpdate(500) },
         "10 Minutes", { gameService.scheduleSystemUpdate(800) },
         "<x> Minutes", {
-            plr.interfaces.close()
-            plr.interfaces.open(object : NumberInputInterface() {
-                override fun onAmountInput(player: Player, value: Int) {
+            plr.overlays.closeWindows()
+            plr.overlays.open(object : NumberInput() {
+                override fun input(player: Player, value: Int) {
                     if (value < 1 || value > 60) {
                         plr.newDialogue().empty("1-60 Minutes are the acceptable values. Please try again.").open()
                         return
                     }
                     gameService.scheduleSystemUpdate(value * 100)
-                    plr.interfaces.close()
+                    plr.overlays.closeWindows()
                 }
             })
         }).open()

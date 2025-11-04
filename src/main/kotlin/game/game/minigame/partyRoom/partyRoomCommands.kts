@@ -27,6 +27,6 @@ cmd("party_room", RIGHTS_ADMIN) {
         if (PartyRoom.locked) "Unlock lever" else "Lock lever", { lockLeverCmd(it) },
         if (DropPartyOption.chest.locked) "Lock chest" else "Unlock chest", { lockChestCmd(it) },
         "Pull lever", { PartyRoom.pullLever(it, null) },
-        "Open chest", { plr.interfaces.open(DropPartyInterface()) }
+        "Open chest", { plr.overlays.open(DropPartyInterface()) }
     ).open()
 }

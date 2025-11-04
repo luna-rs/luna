@@ -8,7 +8,7 @@ import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.dialogue.DestroyItemDialogueInterface
+import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
 import java.util.*
@@ -103,20 +103,18 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             bot.log("I don't have ${itemName(id)}.")
             return false
         }
-        val cond = SuspendableCondition {
-            bot.inventory[index.asInt] == null || bot.interfaces.isOpen(
-                DestroyItemDialogueInterface::class)
-        }
+        val openDestroyCond =
+            SuspendableCondition { bot.inventory[index.asInt] == null || DestroyItemDialogue::class in bot.overlays }
         bot.output.sendInventoryItemClick(5, index.asInt, id)
-        if (cond.submit(5).await()) {
+        if (openDestroyCond.submit(5).await()) {
             if (itemDef(id).isTradeable) {
                 return true
             }
             bot.log("Destroying ${itemName(id)}.")
-            val clickDestroyCond = SuspendableCondition { !bot.interfaces.isOpen(DestroyItemDialogueInterface::class) }
+            val clickDestroyCond = SuspendableCondition { DestroyItemDialogue::class !in bot.overlays }
             bot.output.clickButton(14175)
             if (!clickDestroyCond.submit().await()) {
-                bot.log("Could not click accept on DestroyItemDialogueInterface.")
+                bot.log("Could not click accept on DestroyItemDialogue.")
                 return false
             }
             return true

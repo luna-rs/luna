@@ -3,7 +3,7 @@ package io.luna.game.model.mob.dialogue;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
 import io.luna.util.StringUtils;
 

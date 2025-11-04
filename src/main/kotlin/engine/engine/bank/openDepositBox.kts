@@ -8,5 +8,5 @@ import api.predef.*
 val depositBoxObjects: Set<Int> = hashSetOf(9398)
 
 for (id in depositBoxObjects) {
-    object1(id) { plr.interfaces.open(DepositBoxInterface()) }
+    object1(id) { plr.overlays.open(DepositBoxInterface()) }
 }

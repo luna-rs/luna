@@ -1,22 +1,22 @@
 package game.player.command.setSkill
 
 import api.predef.*
-import api.predef.ext.*
+import api.predef.ext.contains
 import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.SkillSet
-import io.luna.game.model.mob.inter.AbstractInterfaceSet
-import io.luna.game.model.mob.inter.NumberInputInterface
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.AbstractOverlaySet
+import io.luna.game.model.mob.overlay.NumberInput
+import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 
 /**
  * An [NumberInputInterface] used to enter the desired level.
  */
-class SetLevelInput(private val skillId: Int) : NumberInputInterface() {
+class SetLevelInput(private val skillId: Int) : NumberInput() {
 
-    override fun onAmountInput(plr: Player, level: Int) {
+    override fun input(plr: Player, level: Int) {
         if (level < 1 || level > 99) {
             plr.sendMessage("Level must be above or equal to 1 and below or equal to 99.")
         } else {
@@ -83,13 +83,13 @@ val buttonToSkill = mapOf(
 /**
  * Opens the input interface for choosing what level to set to, or closes the interface.
  */
-fun buttonClick(id: Int, interfaces: AbstractInterfaceSet) {
+fun buttonClick(id: Int, overlays: AbstractOverlaySet) {
     when (id) {
-        2831 -> interfaces.close()
+        2831 -> overlays.closeWindows()
         else -> {
             val skill = buttonToSkill[id]
             if (skill != null) {
-                interfaces.open(SetLevelInput(skill))
+                overlays.open(SetLevelInput(skill))
             }
         }
     }
@@ -98,11 +98,11 @@ fun buttonClick(id: Int, interfaces: AbstractInterfaceSet) {
 /**
  * A command that sets skill levels.
  */
-cmd("set_skill", RIGHTS_DEV) { plr.interfaces.open(SetLevelInterface()) }
+cmd("set_skill", RIGHTS_DEV) { plr.overlays.open(SetLevelInterface()) }
 
 /**
  * Listens for button clicks on the [SetLevelInterface].
  */
 on(ButtonClickEvent::class)
-    .filter { plr.rights >= RIGHTS_DEV && plr.interfaces.isOpen(SetLevelInterface::class) }
-    .then { buttonClick(id, plr.interfaces) }
+    .filter { plr.rights >= RIGHTS_DEV && SetLevelInterface::class in plr.overlays }
+    .then { buttonClick(id, plr.overlays) }

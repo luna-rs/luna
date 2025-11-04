@@ -7,8 +7,8 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.item.ItemContainer
 import io.luna.game.model.item.RefreshListener
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.AbstractInterface
-import io.luna.game.model.mob.inter.InventoryOverlayInterface
+import io.luna.game.model.mob.overlay.AbstractOverlay
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
 import io.luna.net.msg.out.WidgetItemsMessageWriter
 
@@ -41,7 +41,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      * The trading player's offer instance (load lazily so its not initialized in the constructor).
      */
     val otherOffer by lazyVal {
-        other.interfaces.get(OfferTradeInterface::class)!!
+        other.overlays.get(OfferTradeInterface::class)!!
     }
 
     /**
@@ -79,11 +79,11 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             plr.inventory.addAll(items)
             plr.sendMessage("The trade has been declined.")
 
-            other.interfaces.close()
+            other.overlays.closeWindows()
         }
     }
 
-    override fun onReplace(plr: Player, replace: AbstractInterface) {
+    override fun onReplace(plr: Player, replace: AbstractOverlay) {
         // If replacing interface isn't the confirm screen, decline.
         if (replace::class != ConfirmTradeInterface::class) {
             completed = false
@@ -142,8 +142,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
             otherOffer.completed = true
             val confirm = ConfirmTradeInterface(this)
             val otherConfirm = ConfirmTradeInterface(otherOffer)
-            plr.interfaces.open(confirm)
-            other.interfaces.open(otherConfirm)
+            plr.overlays.open(confirm)
+            other.overlays.open(otherConfirm)
         } else {
             accepted = true
             plr.sendText("Waiting for other player...", 3431)

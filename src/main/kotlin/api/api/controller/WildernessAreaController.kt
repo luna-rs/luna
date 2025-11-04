@@ -9,7 +9,7 @@ import io.luna.game.model.area.Area
 import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerLocationController
-import io.luna.game.model.mob.inter.WalkableInterface
+import io.luna.game.model.mob.overlay.WalkableInterface
 import game.skill.magic.teleportSpells.TeleportAction
 
 /**
@@ -26,14 +26,14 @@ object WildernessAreaController : PlayerLocationController() {
 
     override fun canEnter(plr: Player, newPos: Position): Boolean {
         setWildernessLevel(plr, newPos)
-        plr.interfaces.open(WalkableInterface(197))
+        plr.overlays.open(WalkableInterface(197))
         plr.interactions.show(INTERACTION_ATTACK)
         return true
     }
 
     override fun canExit(plr: Player, newPos: Position): Boolean {
         plr.interactions.hide(INTERACTION_ATTACK)
-        plr.interfaces.closeWalkable()
+        plr.overlays.closeWalkable()
         plr.wildernessLevel = 0
         plr.clearText(199)
         return true

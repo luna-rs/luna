@@ -1,4 +1,4 @@
-package game.player.command.findItem
+package game.player.command
 
 import api.predef.*
 import api.predef.ext.*
@@ -10,7 +10,7 @@ import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 import kotlin.streams.toList
 
 /**
@@ -24,15 +24,14 @@ class SearchResultInterface(private val searchToken: String) :
         val itemsFound = ItemDefinition.ALL
             .stream()
             .filter { it.id > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
-            .map { Item(it.id, 1) }
-            .toList()
+            .map { Item(it.id, 1) }.toList()
 
         val resultCount = itemsFound.size
         val maxResults = plr.bank.capacity()
         if (resultCount > maxResults) {
             // Truncate results.
             plr.sendMessage("Too many results ($resultCount) for search term '$searchToken'! The search has been truncated.")
-            return  itemsFound.dropLast(resultCount - maxResults)
+            return itemsFound.dropLast(resultCount - maxResults)
         } else {
             // Display as usual.
             plr.sendMessage("Found $resultCount results for search term '$searchToken'.")
@@ -52,17 +51,12 @@ fun spawn(msg: WidgetItemClickEvent, amount: Int? = null) {
 }
 
 /**
- * Determines if the search interface is open.
- */
-fun isInterfaceOpen(plr: Player) = plr.interfaces.isOpen(SearchResultInterface::class)
-
-/**
  * A command that displays items on the banking interface, for easier item spawning.
  */
 cmd("finditem", RIGHTS_DEV) {
     val search = getInputFrom(0)
     if (search.length > 1) {
-        plr.interfaces.open(SearchResultInterface(search))
+        plr.overlays.open(SearchResultInterface(search))
     } else {
         plr.sendMessage("Search term must be more than 1 character.")
     }
@@ -97,37 +91,37 @@ cmd("finddef", RIGHTS_DEV) {
  * Spawn 1.
  */
 on(WidgetItemFirstClickEvent::class)
-    .filter { widgetId == 5382 && isInterfaceOpen(plr) }
+    .filter { widgetId == 5382 && SearchResultInterface::class in plr.overlays }
     .then { spawn(this, 1) }
 
 /**
  * Spawn 5.
  */
 on(WidgetItemSecondClickEvent::class)
-    .filter { widgetId == 5382 && isInterfaceOpen(plr) }
+    .filter { widgetId == 5382 && SearchResultInterface::class in plr.overlays }
     .then { spawn(this, 5) }
 
 /**
  * Spawn 10.
  */
 on(WidgetItemThirdClickEvent::class)
-    .filter { widgetId == 5382 && isInterfaceOpen(plr) }
+    .filter { widgetId == 5382 && SearchResultInterface::class in plr.overlays }
     .then { spawn(this, 10) }
 
 /**
  * Spawn all.
  */
 on(WidgetItemFourthClickEvent::class)
-    .filter { widgetId == 5382 && isInterfaceOpen(plr) }
+    .filter { widgetId == 5382 && SearchResultInterface::class in plr.overlays }
     .then { spawn(this) }
 
 /**
  * Spawn (x).
  */
 on(WidgetItemFifthClickEvent::class)
-    .filter { widgetId == 5382 && isInterfaceOpen(plr) }
+    .filter { widgetId == 5382 && SearchResultInterface::class in plr.overlays }
     .then {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) = spawn(this@then, value)
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) = spawn(this@then, value)
         })
     }

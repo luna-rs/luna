@@ -2,7 +2,6 @@ package api.bot
 
 import api.bot.action.BotActionHandler
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.brain.BotIntelligence
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler
 import io.luna.game.model.mob.bot.script.BotScriptSnapshot
@@ -15,11 +14,6 @@ import kotlinx.coroutines.launch
  * Every [BotScript] holds the bot instance and a snapshot of input data for persistence.
  */
 abstract class BotScript<T>(val bot: Bot) {
-
-    /**
-     * The bot intelligence.
-     */
-    protected val intelligence: BotIntelligence = bot.intelligence
 
     /**
      * The bot input handler.
@@ -89,7 +83,7 @@ abstract class BotScript<T>(val bot: Bot) {
         return progress != null && progress!!.isCompleted && !progress!!.isCancelled
     }
 
-    /**
+     /**
      * Determines if this script is running.
      */
     fun isRunning(): Boolean {

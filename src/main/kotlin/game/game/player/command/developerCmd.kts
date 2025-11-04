@@ -11,8 +11,8 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.inter.StandardInterface
-import io.luna.game.model.mob.inter.TextInputInterface
+import io.luna.game.model.mob.overlay.StandardInterface
+import io.luna.game.model.mob.overlay.TextInput
 import io.luna.game.model.mob.varp.Varp
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
@@ -57,17 +57,17 @@ cmd("bots", RIGHTS_DEV) {
  * Deletes a saved record of a player.
  */
 cmd("delete", RIGHTS_DEV) {
-    plr.interfaces.open(object : TextInputInterface() {
-        override fun onNameInput(player: Player?, value: String?) {
+    plr.overlays.open(object : TextInput() {
+        override fun input(player: Player, value: String) {
             plr.newDialogue().empty("Are you sure you wish to delete all records for '$value' ?")
                 .options("Yes",
                          {
                              world.persistenceService.delete(value)
                                  .thenRunAsync({ plr.sendMessage("Done, deleted $value") }, gameService.gameExecutor)
-                             plr.interfaces.close()
+                             plr.overlays.closeWindows()
                          },
                          "No",
-                         { plr.interfaces.close() }).open()
+                         { plr.overlays.closeWindows() }).open()
         }
     })
 }
@@ -97,7 +97,7 @@ cmd("object", RIGHTS_DEV) {
  */
 cmd("roll", RIGHTS_DEV) {
     val times = asInt(0)
-    plr.interfaces.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest'") {
+    plr.overlays.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest'") {
         override fun buildDisplayItems(player: Player?): MutableList<Item> {
             val items = arrayListOf<Item>()
             repeat(times) {
@@ -127,7 +127,7 @@ cmd("mypos", RIGHTS_DEV) {
  */
 cmd("interface", RIGHTS_DEV) {
     val id = asInt(0)
-    plr.interfaces.open(StandardInterface(id))
+    plr.overlays.open(StandardInterface(id))
 }
 
 /**

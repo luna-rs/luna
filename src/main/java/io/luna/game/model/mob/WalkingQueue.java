@@ -247,11 +247,11 @@ public final class WalkingQueue {
      */
     public void walk(Position destination) {
         int distance = destination.computeLongestDistance(mob.getPosition());
-      //  if (distance > Region.SIZE) {
-      //      lazyWalk(destination);
-     //   } else {
-            addPath(findPath(destination));
-      //  }
+        //  if (distance > Region.SIZE) {
+        //      lazyWalk(destination);
+        //   } else {
+        addPath(findPath(destination));
+        //  }
     }
 
     /**
@@ -511,10 +511,12 @@ public final class WalkingQueue {
     private Deque<Step> findPath(Position target) {
         Deque<Position> positionPath = pathfindingAlgorithm.find(mob.getPosition(), target);
         Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
+        Position last = mob.getPosition();
         for (; ; ) {
             // TODO remove step class?
             Position next = positionPath.poll();
-            if (next == null) {
+            if (next == null || !collisionManager.traversable(last, mob.getType(), Direction.between(last, next))) {
+                System.out.println(next);
                 break;
             }
             stepPath.add(new Step(next));

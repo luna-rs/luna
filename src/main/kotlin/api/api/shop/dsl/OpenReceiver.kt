@@ -27,7 +27,7 @@ class OpenReceiver {
      * Maps all properties to their respective event listeners.
      */
     fun addListeners(shop: Shop) {
-        val open: PlayerEvent.() -> Unit = { plr.interfaces.open(ShopInterface(shop)) }
+        val open: PlayerEvent.() -> Unit = { plr.overlays.open(ShopInterface(shop)) }
         button.forEach { button(it, open) }
         npc1.forEach { npc1(it, open) }
         npc2.forEach { npc2(it, open) }

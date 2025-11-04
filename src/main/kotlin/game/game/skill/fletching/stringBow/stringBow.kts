@@ -3,15 +3,15 @@ package game.skill.fletching.stringBow
 import api.predef.*
 import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * Opens a [MakeItemDialogueInterface] for stringing bows.
  */
 fun openInterface(msg: ItemOnItemEvent, bow: Bow) {
-    val interfaces = msg.plr.interfaces
-    interfaces.open(object : MakeItemDialogueInterface(bow.strung) {
-        override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
+    val interfaces = msg.plr.overlays
+    interfaces.open(object : MakeItemDialogue(bow.strung) {
+        override fun make(plr: Player, id: Int, index: Int, forAmount: Int) =
             plr.submitAction(StringBowActionItem(plr, bow, forAmount))
     })
 }

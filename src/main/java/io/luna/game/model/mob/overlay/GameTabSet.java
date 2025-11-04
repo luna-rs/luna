@@ -1,4 +1,4 @@
-package io.luna.game.model.mob.inter;
+package io.luna.game.model.mob.overlay;
 
 import com.google.common.collect.ImmutableMap;
 import io.luna.game.model.mob.Player;
@@ -10,14 +10,18 @@ import java.util.Map;
 import java.util.OptionalInt;
 
 /**
- * A model representing a collection of sidebar tabs on a player's game screen.
+ * Manages the sidebar tabs and their associated interfaces for a single {@link Player}.
+ * <p>
+ * Each {@link TabIndex} represents a client sidebar slot (e.g., Inventory, Magic). This class tracks the
+ * currently assigned interface id per tab, emits the appropriate packets when setting/clearing tabs, and
+ * supports restoring defaults (including dynamic spellbook handling for the Magic tab).
  *
  * @author lare96
  */
 public final class GameTabSet {
 
     /**
-     * An enumerated type representing the sidebar tab indexes.
+     * Enumerates client sidebar tab indices and their default interface ids for the 317/377 protocol.
      */
     public enum TabIndex {
         COMBAT(0, 2423),
@@ -105,11 +109,11 @@ public final class GameTabSet {
     }
 
     /**
-     * Sets the tab interface at {@code index}.
+     * Assigns an interface to the specified tab, emitting a {@link TabInterfaceMessageWriter} if the id changed.
      *
-     * @param index The tab to set the interface at.
-     * @param id The identifier of the interface to set.
-     * @return {@code true} if the interface was set.
+     * @param index The tab to modify.
+     * @param id The interface id to assign (use {@code -1} to clear).
+     * @return {@code true} if a packet was sent and the mapping updated; {@code false} if unchanged.
      */
     public boolean set(TabIndex index, int id) {
         OptionalInt currentId = get(index);
@@ -122,10 +126,10 @@ public final class GameTabSet {
     }
 
     /**
-     * Retrieves the tab interface at {@code index}.
+     * Returns the interface id currently assigned to {@code index}, if any.
      *
-     * @param index The tab to retrieve the interface on.
-     * @return The interface on {@code index}, wrapped in an optional.
+     * @param index The tab to query.
+     * @return An {@link OptionalInt} containing the interface id, or empty if unset.
      */
     public OptionalInt get(TabIndex index) {
         Integer current = tabs.get(index);
@@ -136,7 +140,7 @@ public final class GameTabSet {
     }
 
     /**
-     * Clears the interface on {@code index}.
+     * Clears the interface assigned to {@code index} (sends {@link TabInterfaceMessageWriter} with {@code -1}).
      *
      * @param index The tab to clear.
      */
@@ -146,16 +150,16 @@ public final class GameTabSet {
     }
 
     /**
-     * Forces the client to show tab {@code index}.
+     * Forces the client to display the specified tab (does not alter assigned interface ids).
      *
-     * @param index The tab to force.
+     * @param index The tab to show.
      */
     public void show(TabIndex index) {
         player.queue(new ForceTabMessageWriter(index));
     }
 
     /**
-     * Clears the interfaces on all tabs.
+     * Clears all tabs (emits clear packets for each tab currently tracked).
      */
     public void clearAll() {
         for (TabIndex tabIndex : TabIndex.ID_MAP.values()) {
@@ -164,7 +168,9 @@ public final class GameTabSet {
     }
 
     /**
-     * Resets the interface on {@code index} to its default.
+     * Restores the interface on {@code index} to its default.
+     * <p>
+     * The Magic tab is dynamic and uses the player's current spellbook widget id.
      *
      * @param index The tab to reset.
      */
@@ -177,7 +183,7 @@ public final class GameTabSet {
     }
 
     /**
-     * Resets the interfaces on all tabs back to their defaults.
+     * Restores all tabs to their default interfaces.
      */
     public void resetAll() {
         for (TabIndex taxIndex : TabIndex.ID_MAP.values()) {

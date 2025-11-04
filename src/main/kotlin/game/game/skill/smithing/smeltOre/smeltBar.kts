@@ -4,7 +4,7 @@ import api.predef.*
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 import game.skill.smithing.BarType
 import game.skill.smithing.Smithing
 
@@ -55,8 +55,8 @@ fun smeltButtons(make1: Int, make5: Int, make10: Int, makeX: Int, barType: BarTy
     button(make5) { smelt(plr, barType, 5) }
     button(make10) { smelt(plr, barType, 10) }
     button(makeX) {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player?, value: Int) {
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player?, value: Int) {
                 smelt(plr, barType, value)
             }
         })
@@ -83,7 +83,7 @@ for (furnaceId in Smithing.FURNACE_OBJECTS) {
 
     object2(furnaceId) {
         if (hasAnyOres(plr)) {
-            plr.interfaces.open(SmeltingInterface())
+            plr.overlays.open(SmeltingInterface())
         }
     }
 }

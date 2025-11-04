@@ -5,13 +5,14 @@ import api.bot.SuspendableFuture
 import api.bot.SuspendableFuture.SuspendableFutureFailed
 import api.bot.SuspendableFuture.SuspendableFutureSuccess
 import api.predef.*
+import api.predef.ext.*
+import engine.bank.Banking
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.inter.NumberInputInterface
 import io.luna.game.model.mob.varp.PersistentVarp
+import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.`object`.GameObject
-import engine.bank.Banking
 
 /**
  * A [BotActionHandler] implementation for banking related actions.
@@ -95,7 +96,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         } else {
             // Click deposit x.
             val amountCond =
-                SuspendableCondition { bot.interfaces.currentInput.filter { it is NumberInputInterface }.isPresent }
+                SuspendableCondition { NumberInput::class in bot.overlays }
             bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {
@@ -176,8 +177,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             bot.output.sendItemWidgetClick(clickWidget, bankIndex.asInt, 5382, withdrawItem.id)
             return withdrawCond.submit().await()
         } else {
-            val amountCond =
-                SuspendableCondition { bot.interfaces.currentInput.filter { it is NumberInputInterface }.isPresent }
+            val amountCond = SuspendableCondition { NumberInput::class in bot.overlays }
             bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {

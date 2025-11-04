@@ -2,7 +2,7 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
@@ -11,7 +11,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
  *
  * @author lare96 
  */
-public class MakeItemDialogueInterface extends DialogueInterface {
+public class MakeItemDialogue extends DialogueInterface {
 
     /**
      * The items.
@@ -19,24 +19,24 @@ public class MakeItemDialogueInterface extends DialogueInterface {
     private final int[] items;
 
     /**
-     * Creates a new {@link MakeItemDialogueInterface}.
+     * Creates a new {@link MakeItemDialogue}.
      *
      * @param items The items.
      */
-    public MakeItemDialogueInterface(int... items) {
+    public MakeItemDialogue(int... items) {
         super(DialogueUtils.makeItemDialogue(items.length));
         this.items = items;
     }
 
     /**
-     * Applies {@link #makeItem(Player, int, int, int)} for {@code index}.
+     * Applies {@link #make(Player, int, int, int)} for {@code index}.
      *
      * @param player The player.
      * @param index The index.
      * @param forAmount The amount.
      */
-    public final void makeItemIndex(Player player, int index, int forAmount) {
-        makeItem(player, items[index], index, forAmount);
+    public final void makeIndex(Player player, int index, int forAmount) {
+        make(player, items[index], index, forAmount);
     }
 
     /**
@@ -47,7 +47,7 @@ public class MakeItemDialogueInterface extends DialogueInterface {
      * @param index The item index.
      * @param forAmount The amount clicked.
      */
-    public void makeItem(Player player, int id, int index, int forAmount) {
+    public void make(Player player, int id, int index, int forAmount) {
 
     }
 

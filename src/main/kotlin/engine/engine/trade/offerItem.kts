@@ -5,7 +5,7 @@ import api.predef.ext.*
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 
 /**
  * Represents either an 'add' or 'remove' modification.
@@ -27,7 +27,7 @@ object Remove : Mod()
  */
 fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.interfaces.get(OfferTradeInterface::class)
+    val inter = plr.overlays.get(OfferTradeInterface::class)
     if (inter != null) {
         val container = if(mod == Add) plr.inventory else if(mod == Remove) inter.items else throw IllegalArgumentException("Invalid mod value.")
         val newAmount = if (amount == -1) container.computeAmountForId(msg.itemId) else amount
@@ -88,15 +88,15 @@ on(WidgetItemFourthClickEvent::class)
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 3322 }
     .then {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Add)
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) = trade(this@then, value, Add)
         })
     }
 
 on(WidgetItemFifthClickEvent::class)
     .filter { widgetId == 3415 }
     .then {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) = trade(this@then, value, Remove)
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) = trade(this@then, value, Remove)
         })
     }

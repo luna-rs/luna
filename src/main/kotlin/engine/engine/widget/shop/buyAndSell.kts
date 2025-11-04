@@ -26,7 +26,7 @@ object Sell : Mod()
  */
 fun modify(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.interfaces.get(ShopInterface::class)
+    val inter = plr.overlays.get(ShopInterface::class)
     if (inter != null) {
         when (mod) {
             Buy -> inter.shop.buy(plr, msg.index, amount)

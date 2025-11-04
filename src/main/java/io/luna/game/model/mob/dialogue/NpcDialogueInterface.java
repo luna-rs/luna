@@ -2,7 +2,7 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetAnimationMessageWriter;
 import io.luna.net.msg.out.WidgetMobModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
@@ -75,7 +75,7 @@ public final class NpcDialogueInterface extends DialogueInterface {
     @Override
     public boolean init(Player player) {
         String npcName = NpcDefinition.ALL.retrieve(npcId).getName();
-        int textWidgetId = unsafeGetId() + 2;
+        int textWidgetId = getId() + 2;
         int modelWidgetId = textWidgetId - 1;
 
         player.queue(new WidgetMobModelMessageWriter(modelWidgetId, npcId)); // Display NPC head model.

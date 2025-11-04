@@ -4,7 +4,7 @@ import io.luna.game.model.World;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.ItemContainer;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.InventoryOverlayInterface;
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -12,12 +12,12 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * An {@link InventoryOverlayInterface} implementation that opens a shop.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ShopInterface extends InventoryOverlayInterface {
 
     /**
-     * The shop.
+     * The cached shop instance.
      */
     private final Shop shop;
 

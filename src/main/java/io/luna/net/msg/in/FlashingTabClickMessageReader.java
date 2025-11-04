@@ -2,7 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.FlashingTabClickEvent;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 

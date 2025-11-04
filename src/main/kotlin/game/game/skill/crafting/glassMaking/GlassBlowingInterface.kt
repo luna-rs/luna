@@ -1,6 +1,6 @@
 package game.skill.crafting.glassMaking;
 
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 
 /**
  * A [StandardInterface] implementation representing the glass blowing interface.

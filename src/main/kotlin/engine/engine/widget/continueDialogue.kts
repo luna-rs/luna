@@ -11,6 +11,6 @@ on(ContinueDialogueEvent::class, EventPriority.HIGH) {
     if (plr.dialogues.isPresent) {
         plr.dialogues.get().advance()
     } else {
-        plr.interfaces.close()
+        plr.overlays.closeWindows()
     }
 }

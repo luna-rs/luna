@@ -50,6 +50,6 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
     @Override
     public void handle(Player player, WalkingEvent event) {
-        player.getInterfaces().close();
+        player.getOverlays().closeWindows();
     }
 }

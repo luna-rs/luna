@@ -1,7 +1,7 @@
 package game.skill.crafting.hideTanning
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter
 import game.skill.crafting.hideTanning.Hide.*

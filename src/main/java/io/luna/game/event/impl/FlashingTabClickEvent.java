@@ -1,7 +1,7 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.GameTabSet.TabIndex;
+import io.luna.game.model.mob.overlay.GameTabSet.TabIndex;
 
 /**
  * An event sent when a player clicks a flashing tab.

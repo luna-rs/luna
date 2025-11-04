@@ -2,14 +2,14 @@ package game.skill.herblore.makePotion
 
 import api.predef.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * Opens a [MakeItemDialogueInterface] to make finished potions.
  */
 fun makePotion(plr: Player, potion: FinishedPotion) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(potion.id) {
-        override fun makeItem(plr: Player, id: Int, index: Int, forAmount: Int) =
+    plr.overlays.open(object : MakeItemDialogue(potion.id) {
+        override fun make(plr: Player, id: Int, index: Int, forAmount: Int) =
             plr.submitAction(MakePotionActionItem(plr, potion, forAmount))
     })
 }

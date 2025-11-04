@@ -3,7 +3,7 @@ package game.skill.crafting.glassMaking
 import api.predef.*
 import io.luna.game.model.def.GameObjectDefinition
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import kotlin.streams.toList
 
 /**
@@ -16,8 +16,8 @@ val furnaces = GameObjectDefinition.ALL.stream().filter { it.name.equals("Furnac
  * Opens the molten glass interface.
  */
 fun openMoltenGlassInterface(plr: Player) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(1775) {
-        override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(1775) {
+        override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
             plr.submitAction(MakeMoltenGlassActionItem(player, forAmount))
         }
     })

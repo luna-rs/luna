@@ -6,7 +6,7 @@ import io.luna.game.event.impl.ButtonClickEvent
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 import kotlin.collections.set
 
 /**
@@ -17,8 +17,8 @@ data class TanButton(val hide: Hide, val amount: TanAmount) {
         when (amount) {
             TanAmount.TAN_1 -> action(1)
             TanAmount.TAN_5 -> action(5)
-            TanAmount.TAN_X -> plr.interfaces.open(object : NumberInputInterface() {
-                override fun onAmountInput(player: Player?, value: Int) = action(value)
+            TanAmount.TAN_X -> plr.overlays.open(object : NumberInput() {
+                override fun input(player: Player?, value: Int) = action(value)
             })
 
             TanAmount.TAN_ALL -> action(plr.inventory.computeAmountForId(hide.hide))
@@ -70,7 +70,7 @@ fun tan(plr: Player, hide: Hide, selectedAmount: Int) {
 /**
  * Opens the tanning interface.
  */
-fun open(plr: Player) = plr.interfaces.open(TanInterface())
+fun open(plr: Player) = plr.overlays.open(TanInterface())
 
 // Prepare tanning buttons and spawn tanner NPC.
 on(ServerLaunchEvent::class) {
@@ -92,7 +92,7 @@ on(ServerLaunchEvent::class) {
 
 // Tanning button actions (1, 5, 10, X).
 on(ButtonClickEvent::class)
-    .filter { plr.interfaces.isOpen(TanInterface::class) }
+    .filter { TanInterface::class in plr.overlays }
     .then {
         val tan = buttonToTan[id]
         tan?.forAmount(plr) { tan(plr, tan.hide, it) }
@@ -103,7 +103,7 @@ npc1(804) {
     plr.newDialogue()
         .npc(targetNpc.id, "Would you like me to tan some hides?")
         .options("Yes", { open(it) },
-                 "No", { it.interfaces.close() })
+                 "No", { it.overlays.closeWindows() })
         .open()
 }
 

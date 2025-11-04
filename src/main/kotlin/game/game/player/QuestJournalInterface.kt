@@ -1,7 +1,7 @@
 package game.player
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 import java.util.*
 
 /**

@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 /**
@@ -28,7 +28,7 @@ public final class TextDialogueInterface extends DialogueInterface {
 
     @Override
     public boolean init(Player player) {
-        int textWidgetId = unsafeGetId() + 1;
+        int textWidgetId = getId() + 1;
         for (String line : text) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }

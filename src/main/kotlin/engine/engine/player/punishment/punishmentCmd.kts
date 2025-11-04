@@ -3,7 +3,7 @@ package engine.player.punishment
 import api.predef.*
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalUnit
@@ -13,10 +13,10 @@ import java.time.temporal.TemporalUnit
  */
 fun punish(msg: CommandEvent, listener: (Instant) -> Unit) {
     fun openInput(plr: Player, unit: TemporalUnit) {
-        plr.interfaces.open(object : NumberInputInterface() {
-            override fun onAmountInput(player: Player, value: Int) {
+        plr.overlays.open(object : NumberInput() {
+            override fun input(player: Player, value: Int) {
                 listener(Instant.now().plus(value.toLong(), unit))
-                plr.interfaces.close()
+                plr.overlays.closeWindows()
             }
         })
     }

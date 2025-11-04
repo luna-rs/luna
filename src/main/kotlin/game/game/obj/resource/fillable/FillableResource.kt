@@ -3,7 +3,7 @@ package game.obj.resource.fillable
 import game.obj.resource.GameResource
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -31,8 +31,8 @@ abstract class FillableResource : GameResource() {
     fun fill(plr: Player, emptyId: Int, resourceObject: GameObject) {
         val filled = getFilled(emptyId)
         if (filled != null) {
-            plr.interfaces.open(object : MakeItemDialogueInterface(filled) {
-                override fun makeItem(player: Player, id: Int, index: Int, forAmount: Int) {
+            plr.overlays.open(object : MakeItemDialogue(filled) {
+                override fun make(player: Player, id: Int, index: Int, forAmount: Int) {
                     val emptyItem = Item(emptyId)
                     val filledItem = Item(filled)
                     plr.submitAction(FillActionItem(plr, emptyItem, filledItem, this@FillableResource, forAmount))

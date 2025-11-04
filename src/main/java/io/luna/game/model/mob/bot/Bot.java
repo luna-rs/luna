@@ -4,7 +4,6 @@ import api.bot.action.BotActionHandler;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
@@ -15,19 +14,13 @@ import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
-import io.luna.game.model.mob.bot.brain.BotBrain;
-import io.luna.game.model.mob.bot.brain.BotEmotion;
-import io.luna.game.model.mob.bot.brain.BotIntelligence;
-import io.luna.game.model.mob.bot.brain.BotPersonality;
-import io.luna.game.model.mob.bot.brain.BotPreference;
-import io.luna.game.model.mob.bot.brain.BotReflex;
 import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
+import io.luna.game.model.mob.bot.movement.BotMovementStack;
 import io.luna.game.model.mob.bot.script.BotScriptStack;
-import io.luna.game.model.mob.bot.speech.BotSpeechStack;
+import io.luna.game.persistence.BotData;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.task.Task;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,24 +29,17 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
-
 
 /**
  * A {@link Player} implementation that represents a fully autonomous artificial player (bot) managed and processed
- * entirely by the server. Bots occupy minimal network resources but consume additional CPU resources for AI processing
- * and local script execution.
- * <p>
- * Each bot is backed by a {@link BotClient} for IO handling and is controlled by a {@link BotIntelligence}
- * instance, which orchestrates the bot’s {@link BotBrain}, {@link BotPersonality}, {@link BotReflex}, and other
- * behavioral traits. The lifecycle and persistence of bots are managed by {@link BotRepository} and
- * {@link BotScheduleService}.
+ * entirely by the server. Bots occupy minimal network resources but consume additional CPU resources for processing.
  *
  * @author lare96
  */
 public final class Bot extends Player {
 
-    // todo only process every tick when we're in combat. aka only reflex is processed every tick
     /**
      * The logger.
      */
@@ -64,11 +50,9 @@ public final class Bot extends Player {
      */
     public static final class Builder {
 
-        // todo make sure temporary bot code isnt hardcoded.
         private final LunaContext context;
         private boolean temporary = true;
         private String username;
-        private BotIntelligence intelligence;
 
         /**
          * Creates a new {@link Builder}.
@@ -97,17 +81,6 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets a custom {@link BotIntelligence} instance for this bot.
-         *
-         * @param intelligence The intelligence module to use.
-         * @return This builder instance.
-         */
-        public Builder setIntelligence(BotIntelligence intelligence) {
-            this.intelligence = intelligence;
-            return this;
-        }
-
-        /**
          * Marks this bot as persistent.
          *
          * @return This builder instance.
@@ -118,19 +91,15 @@ public final class Bot extends Player {
         }
 
         /**
-         * Builds and returns a fully constructed {@link Bot} instance. A random username and password will be
-         * generated if not specified.
+         * Builds and returns a fully constructed {@link Bot} instance. A random password will be generated.
          *
          * @return A new {@link Bot} instance.
          */
         public Bot build() {
-            if (intelligence == null) {
-                intelligence = new BotIntelligence.Builder(context.getWorld().getBotManager()).build();
-            }
             if (username == null) {
-                username = BotCredentials.generateUsername(context.getWorld(), temporary);
+                throw new IllegalStateException("Username was not configured.");
             }
-            return new Bot(context, username, BotCredentials.generatePassword(), intelligence, temporary);
+            return new Bot(context, username, BotCredentials.generatePassword(), temporary);
         }
     }
 
@@ -145,19 +114,14 @@ public final class Bot extends Player {
     private final BotManager manager;
 
     /**
-     * The AI intelligence system controlling this bot’s behavior.
-     */
-    private final BotIntelligence intelligence;
-
-    /**
      * The script stack.
      */
     private final BotScriptStack scriptStack;
 
     /**
-     * The speech stack.
+     * The movement stack.
      */
-    private final BotSpeechStack speechStack;
+    private final BotMovementStack movementStack;
 
     /**
      * A concurrent set of human players within the bot’s local viewport.
@@ -196,18 +160,16 @@ public final class Bot extends Player {
      * @param context The context instance.
      * @param username The username.
      * @param password The password.
-     * @param intelligence The AI intelligence system controlling this bot’s behavior.
      * @param temporary Whether this bot is attempting to log out (e.g., due to a schedule trigger).
      */
-    private Bot(LunaContext context, String username, String password, BotIntelligence intelligence, boolean temporary) {
+    private Bot(LunaContext context, String username, String password, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
         this.temporary = temporary;
-        this.intelligence = intelligence;
 
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
-        speechStack = new BotSpeechStack(this, manager.getSpeechManager());
+        movementStack = new BotMovementStack();
         setClient(botClient);
     }
 
@@ -228,54 +190,54 @@ public final class Bot extends Player {
         botClient.onInactive();
     }
 
+    @Override
+    public PlayerData createSaveData() {
+        return new BotData(getUsername());
+    }
+
     /**
      * Attempts to asynchronously log in this bot. If the bot’s credentials do not exist, a new account will be created.
      *
      * @return A {@link ListenableFuture} representing the async login operation. If the login fails, the generated
      * username will not be consumed.
      */
-    public ListenableFuture<PlayerData> login() {
+    public CompletableFuture<PlayerData> login() {
+        CompletableFuture<PlayerData> future = new CompletableFuture<>();
         String username = getUsername();
         if (world.getPlayerMap().containsKey(username)) {
-            return Futures.immediateFailedFuture(new IllegalStateException("Bot is already logged in!"));
+            future.completeExceptionally(new IllegalStateException("Bot is already logged in!"));
+            return future;
         }
         if (world.getLogoutService().isSavePending(username)) {
-            return Futures.immediateFailedFuture(new IllegalStateException("Bot data is still being saved!"));
+            future.completeExceptionally(new IllegalStateException("Bot data is still being saved!"));
+            return future;
         }
 
         // Load data for bot based on username.
-        ListenableFuture<PlayerData> result = world.getPersistenceService().load(username);
-        result.addListener(() -> {
-            PlayerData data = Futures.getUnchecked(result);
-            if (data != null && temporary) {
-                data = null;
-            }
-            loadData(data);
-            world.getBots().add(this);
-            world.getPlayers().add(this);
-            setState(EntityState.ACTIVE);
-            log("I'm alive!");
-            logger.info("{} has logged in.", username);
-            world.schedule(new Task(1) {
-                @Override
-                protected void execute() {
-                    intelligence.start();
-                    cancel();
-                }
-            });
-        }, service.getExecutor());
-        return result;
+        return world.getPersistenceService().load(username).
+                thenApplyAsync(data -> {
+                    if (data != null && temporary) {
+                        data = null;
+                    }
+                    loadData(data);
+                    world.getBots().add(this);
+                    world.getPlayers().add(this);
+                    setState(EntityState.ACTIVE);
+                    log("I'm alive!");
+                    logger.info("{} has logged in.", username);
+                    return data;
+                }, service.getGameExecutor());
     }
 
     /**
-     * Processes one AI cycle for this bot. Invokes {@link BotIntelligence#process(Bot)} and increments the internal
-     * cycle counter.
+     * Processes one cycle for this bot. Increments the internal cycle counter.
      *
-     * @throws Exception If any error occurs during AI processing.
+     * @throws Exception If any error occurs during processing.
      */
     public void process() throws Exception {
         try {
-            intelligence.process(this);
+            // todo context injectors
+            scriptStack.process();
         } finally {
             cycles++;
         }
@@ -406,59 +368,10 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return The intelligence system controlling this bot’s overall decision-making.
-     */
-    public BotIntelligence getIntelligence() {
-        return intelligence;
-    }
-
-    /**
      * @return The script stack that manages all active {@link api.bot.BotScript} instances for this bot.
      */
     public BotScriptStack getScriptStack() {
         return scriptStack;
-    }
-
-    /**
-     * @return The speech stack managing spoken messages, chatter, and conversational output.
-     */
-    public BotSpeechStack getSpeechStack() {
-        return speechStack;
-    }
-
-    /**
-     * @return The reflex module responsible for reactive, low-level responses.
-     */
-    public BotReflex getReflex() {
-        return intelligence.getReflex();
-    }
-
-    /**
-     * @return The brain module controlling reasoning and goal-based decision-making.
-     */
-    public BotBrain getBrain() {
-        return intelligence.getBrain();
-    }
-
-    /**
-     * @return The personality module that defines behavioral traits and tendencies.
-     */
-    public BotPersonality getPersonality() {
-        return intelligence.getPersonality();
-    }
-
-    /**
-     * @return The emotion controller representing the bot’s current affective state.
-     */
-    public BotEmotion getEmotions() {
-        return intelligence.getEmotions();
-    }
-
-    /**
-     * @return The preference system that stores likes, dislikes, and behavioral biases.
-     */
-    public BotPreference getPreferences() {
-        return intelligence.getPreferences();
     }
 
     /**

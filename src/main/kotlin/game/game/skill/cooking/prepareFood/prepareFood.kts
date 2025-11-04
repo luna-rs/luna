@@ -2,15 +2,15 @@ package game.skill.cooking.prepareFood
 
 import api.predef.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
 import game.skill.cooking.cookFood.MakeWineActionItem
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
 
 /**
  * Opens the interface for making dough.
  */
 fun openDough(plr: Player, removeIds: MutableSet<Int>) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(*IncompleteFood.DOUGH.keys.toIntArray()) {
-        override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(*IncompleteFood.DOUGH.keys.toIntArray()) {
+        override fun make(player: Player?, id: Int, index: Int, forAmount: Int) {
             val dough = IncompleteFood.DOUGH[id]
             if (dough != null) {
                 plr.submitAction(PrepareFoodActionItem(plr, dough, removeIds, forAmount))
@@ -23,8 +23,8 @@ fun openDough(plr: Player, removeIds: MutableSet<Int>) {
  * Opens the interface for making other [IncompleteFood] types.
  */
 fun openOther(plr: Player, food: IncompleteFood, removeIds: MutableSet<Int>) {
-    plr.interfaces.open(object : MakeItemDialogueInterface(food.id) {
-        override fun makeItem(player: Player?, id: Int, index: Int, forAmount: Int) {
+    plr.overlays.open(object : MakeItemDialogue(food.id) {
+        override fun make(player: Player?, id: Int, index: Int, forAmount: Int) {
             if (food == IncompleteFood.UNFERMENTED_WINE) {
                 plr.submitAction(MakeWineActionItem(plr, forAmount))
             } else {

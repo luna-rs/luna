@@ -145,8 +145,7 @@ public final class BotScriptStack {
      * <p>
      * This should be invoked once per game tick.
      *
-     * @return {@code true} if there are no scripts left in the buffer and activity selection can
-     * proceed, {@code false} otherwise or if this stack is shut down.
+     * @return {@code true} if there are no scripts left in the buffer, {@code false} otherwise or if this stack is shut down.
      */
     public boolean process() {
         if (shutdown) {

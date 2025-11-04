@@ -7,8 +7,8 @@ import com.google.common.collect.Multiset.Entry;
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.InventoryOverlayInterface;
-import io.luna.game.model.mob.inter.StandardInterface;
+import io.luna.game.model.mob.overlay.InventoryOverlayInterface;
+import io.luna.game.model.mob.overlay.StandardInterface;
 import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.net.msg.out.WidgetItemsMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
@@ -152,7 +152,7 @@ public final class Bank extends ItemContainer {
                 refreshPrimary(player); // Refresh bank.
 
                 // Open interface.
-                player.getInterfaces().open(bankInterface);
+                player.getOverlays().open(bankInterface);
             } finally {
                 enableEvents();
             }

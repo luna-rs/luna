@@ -5,7 +5,7 @@ import api.predef.ext.*
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.overlay.NumberInput
 import io.luna.game.model.`object`.GameObject
 import game.skill.cooking.cookFood.MakeWineActionItem.Companion.wineFermentTask
 
@@ -24,7 +24,7 @@ val ranges = setOf(114, 2728, 4172, 8750, 2728, 2729, 2730, 2731, 2859, 3039)
  */
 fun open(msg: ItemOnObjectEvent, obj: GameObject, food: Food?, usingFire: Boolean) {
     if (food != null) {
-        val interfaces = msg.plr.interfaces
+        val interfaces = msg.plr.overlays
         interfaces.open(CookingInterface(food, usingFire, obj))
     }
 }
@@ -33,7 +33,7 @@ fun open(msg: ItemOnObjectEvent, obj: GameObject, food: Food?, usingFire: Boolea
  * Starts the [CookFoodActionItem] if [CookingInterface] is open.
  */
 fun cook(plr: Player, amount: Int? = null) {
-    val inter = plr.interfaces.get(CookingInterface::class)
+    val inter = plr.overlays.get(CookingInterface::class)
     if (inter != null) {
         val food = inter.food
         val usingFire = inter.usingFire
@@ -68,7 +68,7 @@ button(13720) { cook(plr, 1) }
 button(13719) { cook(plr, 5) }
 button(13717) { cook(plr) }
 button(13718) {
-    plr.interfaces.open(object : NumberInputInterface() {
-        override fun onAmountInput(player: Player, value: Int) = cook(plr, value)
+    plr.overlays.open(object : NumberInput() {
+        override fun input(player: Player, value: Int) = cook(plr, value)
     })
 }

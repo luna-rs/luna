@@ -1,8 +1,8 @@
 package engine.widget.make
 
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.dialogue.MakeItemDialogueInterface
-import io.luna.game.model.mob.inter.NumberInputInterface
+import io.luna.game.model.mob.dialogue.MakeItemDialogue
+import io.luna.game.model.mob.overlay.NumberInput
 
 /**
  * A model that runs the action based on the item's index and amount.
@@ -10,19 +10,19 @@ import io.luna.game.model.mob.inter.NumberInputInterface
  * @author lare96
  */
 class MakeItemOption(val amount: Int, var index: Int) {
-    fun run(plr: Player, inter: MakeItemDialogueInterface) {
+    fun run(plr: Player, inter: MakeItemDialogue) {
         if (amount == -1) {
             // Make <x> option.
-            plr.interfaces.open(object : NumberInputInterface() {
-                override fun onAmountInput(player: Player, value: Int) {
-                    plr.interfaces.close()
-                    inter.makeItemIndex(plr, index, value)
+            plr.overlays.open(object : NumberInput() {
+                override fun input(player: Player, value: Int) {
+                    plr.overlays.closeWindows()
+                    inter.makeIndex(plr, index, value)
                 }
             })
         } else {
             // Make specific amount option.
-            plr.interfaces.close()
-            inter.makeItemIndex(plr, index, amount)
+            plr.overlays.closeWindows()
+            inter.makeIndex(plr, index, amount)
         }
     }
 }

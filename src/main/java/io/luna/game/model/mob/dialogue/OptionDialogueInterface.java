@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.DialogueInterface;
+import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 /**
@@ -73,7 +73,7 @@ public class OptionDialogueInterface extends DialogueInterface {
 
     @Override
     public final boolean init(Player player) {
-        int textWidgetId = unsafeGetId() + 2;
+        int textWidgetId = getId() + 2;
         for (String line : options) {
             player.queue(new WidgetTextMessageWriter(line, textWidgetId++));
         }

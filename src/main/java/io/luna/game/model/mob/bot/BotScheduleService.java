@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.bot;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import io.luna.Luna;
@@ -72,7 +73,7 @@ public final class BotScheduleService extends AbstractScheduledService {
             stopAsync();
         } else {
             GameSerializer serializer = world.getSerializerManager().getSerializer();
-            Map<String, BotSchedule> loadedSchedules = serializer.synchronizeBotSchedules(world);
+            Map<String, BotSchedule> loadedSchedules = ImmutableMap.of();// serializer.synchronizeBotSchedules(world);
             if (loadedSchedules.size() != world.getBots().getPersistentCount()) {
                 throw new IllegalStateException("Bot sessions and persistent bot count are not synchronized.");
             }
@@ -208,8 +209,8 @@ public final class BotScheduleService extends AbstractScheduledService {
      */
     public void updateSchedule(BotSchedule schedule) throws Exception {
         GameSerializer serializer = world.getSerializerManager().getSerializer();
-        if (serializer.saveBotSchedule(world, schedule)) {
+        //if (serializer.saveBotSchedule(world, schedule)) {
             scheduleMap.put(schedule.getUsername(), schedule);
-        }
+        //}
     }
 }

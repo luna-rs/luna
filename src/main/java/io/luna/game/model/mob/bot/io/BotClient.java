@@ -5,6 +5,8 @@ import io.luna.net.client.GameClient;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.net.msg.GameMessageWriter;
+import io.luna.net.msg.out.NpcUpdateMessageWriter;
+import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 
 import java.time.Instant;
 import java.util.Queue;
@@ -72,6 +74,11 @@ public final class BotClient extends GameClient {
     @Override
     public void queue(GameMessageWriter msg) {
         Instant timestamp = Instant.now();
+        if(msg.getClass() == PlayerUpdateMessageWriter.class || msg.getClass()== NpcUpdateMessageWriter.class) {
+           // msg.write(bot).releaseAll();
+            // todo workaround for updating getlocalbots() getlocalhumans() but we need to DISABLE
+              //updating for bots and do this through REAL HUMANS (check if "other" is bot)
+        }
         pendingWriteMessages.add(new BotMessage<>(msg, timestamp));
     }
 
@@ -85,6 +92,7 @@ public final class BotClient extends GameClient {
             BotMessage<?> writer = pendingWriteMessages.poll();
             if (writer == null) {
                 break;
+
             }
             input.add(writer);
         }

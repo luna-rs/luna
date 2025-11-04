@@ -1,10 +1,10 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.inter.NumberInputInterface;
+import io.luna.game.model.mob.overlay.NumberInput;
 
 /**
- * A {@link PlayerEvent} implementation sent when a player enters a number on the {@link NumberInputInterface}.
+ * A {@link PlayerEvent} implementation sent when a player enters a number on the {@link NumberInput}.
  *
  * @author lare96
  */

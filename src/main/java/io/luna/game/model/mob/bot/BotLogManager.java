@@ -1,7 +1,5 @@
 package io.luna.game.model.mob.bot;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,10 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Manages a ring buffer of {@link BotLogEntry} types for logging and debugging purposes.
@@ -59,7 +58,7 @@ public final class BotLogManager {
      */
     public BotLogManager(Bot bot) {
         this.bot = bot;
-        path = Paths.get("data", "game", "bots", "logs", bot.getUsername() + ".txt");
+        path = Paths.get("data", "game", "bots", "logs", bot.getUsername().toLowerCase() + ".txt");
         buffer = new ArrayDeque<>(BUFFER_CAPACITY);
     }
 
@@ -72,7 +71,7 @@ public final class BotLogManager {
         if (buffer.size() >= BUFFER_CAPACITY) {
             buffer.poll();
         }
-        BotLogEntry status = new BotLogEntry(TimeUnit.NANOSECONDS.toMillis(System.nanoTime()), text);
+        BotLogEntry status = new BotLogEntry(Instant.now(), text);
         buffer.add(status);
         if (streaming) {
             bot.getService().submit(() -> {
@@ -92,7 +91,7 @@ public final class BotLogManager {
      *
      * @return A listenable future describing the result.
      */
-    public ListenableFuture<Boolean> writeBuffer() {
+    public CompletableFuture<Boolean> writeBuffer() {
         if (!streaming) {
             return bot.getService().submit(() -> {
                 try {
@@ -105,7 +104,7 @@ public final class BotLogManager {
                 return true;
             });
         }
-        return Futures.immediateFuture(false);
+        return CompletableFuture.completedFuture(false);
     }
 
     /**

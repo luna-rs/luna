@@ -1,6 +1,6 @@
 package game.skill.crafting.armorCrafting
 
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 
 /**
  * A [StandardInterface] that gives options for soft leather crafting.

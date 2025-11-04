@@ -12,8 +12,8 @@ npc1(599) {
     plr.newDialogue()
             .npc(targetNpc.id, "Would you like to change your appearance?")
             .options(
-                    "Yes", {plr.interfaces.open(PlayerAppearance.DesignPlayerInterface()) },
-                    "No", { plr.interfaces.close() }).open()
+                "Yes", {plr.overlays.open(PlayerAppearance.DesignPlayerInterface()) },
+                "No", { plr.overlays.closeWindows() }).open()
 }
 
 /**

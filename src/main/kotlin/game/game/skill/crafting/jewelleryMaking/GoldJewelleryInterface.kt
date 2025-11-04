@@ -2,7 +2,7 @@ package game.skill.crafting.jewelleryMaking
 
 import io.luna.game.model.item.IndexedItem
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.inter.StandardInterface
+import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.net.msg.out.ClearWidgetItemsMessageWriter
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter
 import io.luna.net.msg.out.WidgetItemModelMessageWriter

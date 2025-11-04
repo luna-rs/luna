@@ -12,16 +12,16 @@ on(PlayerFourthClickEvent::class)
     .filter { plr.interactions.contains(INTERACTION_TRADE) }
     .then {
         when {
-            plr.interfaces.isStandardOpen -> plr.sendMessage(Messages.BUSY)
-            targetPlr.interfaces.isStandardOpen -> plr.sendMessage(Messages.INTERACT_BUSY)
+            plr.overlays.hasWindow() -> plr.sendMessage(Messages.BUSY)
+            targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.INTERACT_BUSY)
             else -> {
                 if (plr.index == targetPlr.tradingWith) {
                     // They've both requested each other, open offer screen.
                     plr.walking.clear()
                     targetPlr.walking.clear()
 
-                    plr.interfaces.open(OfferTradeInterface(targetPlr))
-                    targetPlr.interfaces.open(OfferTradeInterface(plr))
+                    plr.overlays.open(OfferTradeInterface(targetPlr))
+                    targetPlr.overlays.open(OfferTradeInterface(plr))
 
                     plr.interact(targetPlr)
                     targetPlr.interact(plr)

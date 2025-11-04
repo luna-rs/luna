@@ -74,14 +74,18 @@ public final class BotCredentialsRepository {
      * @return {@code true} if saved successfully.
      * @throws IOException If any errors occur.
      */
-    public boolean save() throws IOException {
+    public boolean save() {
         StringBuilder sb = new StringBuilder();
         for (String username : usernameSet) {
             sb.append(username).append('\n');
         }
         sb.setLength(sb.length() - 1);
-        Files.writeString(USERNAME_CACHE, sb);
-        return true;
+        try {
+            Files.writeString(USERNAME_CACHE, sb);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
