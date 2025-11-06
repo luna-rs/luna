@@ -2,7 +2,6 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetAnimationMessageWriter;
 import io.luna.net.msg.out.WidgetMobModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
@@ -12,7 +11,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
  *
  * @author lare96 
  */
-public final class NpcDialogueInterface extends DialogueInterface {
+public final class NpcDialogue extends DialogueInterface {
 
     /**
      * The NPC identifier.
@@ -35,36 +34,36 @@ public final class NpcDialogueInterface extends DialogueInterface {
     private final String[] text;
 
     /**
-     * Creates a new {@link NpcDialogueInterface}.
+     * Creates a new {@link NpcDialogue}.
      *
      * @param npcId The NPC identifier.
      * @param expression The expression.
      * @param text The text.
      */
-    public NpcDialogueInterface(int npcId, Expression expression, String... text) {
+    public NpcDialogue(int npcId, Expression expression, String... text) {
         this(npcId, expression, 0, text);
     }
 
     /**
-     * Creates a new {@link NpcDialogueInterface}.
+     * Creates a new {@link NpcDialogue}.
      *
      * @param npcId The NPC identifier.
      * @param expressionAnimationId The expression animation id
      * @param text The text.
      */
-    public NpcDialogueInterface(int npcId, int expressionAnimationId, String... text) {
+    public NpcDialogue(int npcId, int expressionAnimationId, String... text) {
         this(npcId, null, expressionAnimationId, text);
     }
 
     /**
-     * Creates a new {@link NpcDialogueInterface}.
+     * Creates a new {@link NpcDialogue}.
      *
      * @param npcId The NPC identifier.
      * @param expression The expression.
      * @param expressionAnimationId The expression animation id
      * @param text The text.
      */
-    private NpcDialogueInterface(int npcId, Expression expression, int expressionAnimationId, String... text) {
+    private NpcDialogue(int npcId, Expression expression, int expressionAnimationId, String... text) {
         super(DialogueUtils.npcDialogue(text.length));
         this.npcId = npcId;
         this.expression = expression;

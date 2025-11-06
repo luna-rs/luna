@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetMobModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
@@ -10,7 +9,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
  *
  * @author lare96 
  */
-public final class PlayerDialogueInterface extends DialogueInterface {
+public final class PlayerDialogue extends DialogueInterface {
 
     /**
      * The expression.
@@ -28,7 +27,7 @@ public final class PlayerDialogueInterface extends DialogueInterface {
      * @param expression The expression.
      * @param text The text.
      */
-    public PlayerDialogueInterface(Expression expression, String... text) {
+    public PlayerDialogue(Expression expression, String... text) {
         super(DialogueUtils.playerDialogue(text.length));
         this.expression = expression;
         this.text = text;

@@ -3,7 +3,6 @@ package io.luna.game.plugin;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ScanResult;
 import io.luna.LunaContext;
@@ -84,31 +83,29 @@ public final class PluginBootstrap {
      */
     private void loadPlugins() throws ReflectiveOperationException {
         // Search classpath for all scripts.
-        try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
-            Map<String, ClassInfo> infoScripts = new HashMap<>();
-            ArrayListMultimap<String, ClassInfo> pluginScripts = ArrayListMultimap.create();
+        Map<String, ClassInfo> infoScripts = new HashMap<>();
+        ArrayListMultimap<String, ClassInfo> pluginScripts = ArrayListMultimap.create();
 
-            // Load all runtime information about scripts.
-            loadScripts(result, infoScripts, pluginScripts);
+        // Load all runtime information about scripts.
+        loadScripts(infoScripts, pluginScripts);
 
-            // Ensure that all plugin scripts have an assigned info script.
-            validatePlugins(infoScripts, pluginScripts);
+        // Ensure that all plugin scripts have an assigned info script.
+        validatePlugins(infoScripts, pluginScripts);
 
-            // Load all build scripts and generate the plugin map.
-            ImmutableMap<String, Plugin> pluginMap = buildPluginMap(infoScripts, pluginScripts);
-            context.getPlugins().setPluginMap(pluginMap);
-        }
+        // Load all build scripts and generate the plugin map.
+        ImmutableMap<String, Plugin> pluginMap = buildPluginMap(infoScripts, pluginScripts);
+        context.getPlugins().setPluginMap(pluginMap);
     }
 
     /**
      * Loads runtime information about all compiled scripts.
      *
-     * @param result The scan result.
      * @param infoScripts The info script map.
      * @param pluginScripts The plugin script map.
      */
-    private void loadScripts(ScanResult result, Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
-        for (ClassInfo scriptInfo : result.getSubclasses("kotlin.script.templates.standard.ScriptTemplateWithArgs")) {
+    private void loadScripts(Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) {
+        ScanResult classpath = context.getServer().getClasspath();
+        for (ClassInfo scriptInfo : classpath.getSubclasses("kotlin.script.templates.standard.ScriptTemplateWithArgs")) {
             String packageName = scriptInfo.getPackageName();
             if (scriptInfo.getSimpleName().equals("Info_plugin")) {
                 // Resolve an info script.

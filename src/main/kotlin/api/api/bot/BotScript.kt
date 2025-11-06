@@ -9,9 +9,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
- * A base script type using Kotlin coroutines to execute bot logic.
+ * A base script type using Kotlin coroutines to execute bot logic. All corooutine logic is executed on the game thread
+ * through [GameCoroutineDispatcher]. The status of the current script is checked every tick to determine if its completed or not,
+ * these scripts are also submitted to botscriptstacks. they can be saved and loaded through [BotScriptSnapshot]s.
  *
  * Every [BotScript] holds the bot instance and a snapshot of input data for persistence.
+ *
+ * @author lare96
  */
 abstract class BotScript<T>(val bot: Bot) {
 
@@ -83,7 +87,7 @@ abstract class BotScript<T>(val bot: Bot) {
         return progress != null && progress!!.isCompleted && !progress!!.isCancelled
     }
 
-     /**
+    /**
      * Determines if this script is running.
      */
     fun isRunning(): Boolean {

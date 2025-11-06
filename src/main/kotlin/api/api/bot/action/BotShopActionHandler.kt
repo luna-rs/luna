@@ -48,7 +48,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     private fun buy(id: Int, amount: Int): SuspendableFuture {
         // Check if a shop is open.
-        val shopInterface = bot.overlays.get(ShopInterface::class) ?: return SuspendableFutureFailed
+        val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
 
         bot.log("Buying $amount of ${itemName(id)}.")
         val shopIndex = shopInterface.shop.container.computeIndexForId(id)
@@ -79,7 +79,7 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
      */
     private fun sell(id: Int, amount: Int): SuspendableFuture {
         // Check if a shop is open.
-        val shopInterface = bot.overlays.get(ShopInterface::class) ?: return SuspendableFutureFailed
+        val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
 
         bot.log("Selling $amount of ${itemName(id)}.")
         val inventoryIndex = bot.inventory.computeIndexForId(id)

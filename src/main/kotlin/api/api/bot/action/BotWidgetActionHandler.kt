@@ -3,7 +3,7 @@ package api.bot.action
 import api.bot.SuspendableCondition
 import api.predef.ext.*
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.dialogue.OptionDialogueInterface
+import io.luna.game.model.mob.dialogue.OptionDialogue
 
 /**
  * A [BotActionHandler] implementation for widget related actions.
@@ -11,15 +11,15 @@ import io.luna.game.model.mob.dialogue.OptionDialogueInterface
 class BotWidgetActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
 
     /**
-     * An action that forces a [Bot] to click one of the options on a [OptionDialogueInterface].
+     * An action that forces a [Bot] to click one of the options on a [OptionDialogue].
      *
      * @param option The option to click, between 1 and 5.
      */
     fun clickDialogueOption(option: Int): Boolean {
-        if(OptionDialogueInterface::class in bot.overlays) {
+        if(OptionDialogue::class in bot.overlays) {
 
         }
-        val activeInterface = bot.overlays[OptionDialogueInterface::class] ?: return false
+        val activeInterface = bot.overlays[OptionDialogue::class] ?: return false
         when (activeInterface.id) {
             14443 ->
                 when (option) {

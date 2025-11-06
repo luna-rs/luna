@@ -1,6 +1,8 @@
-package io.luna.game.model.mob.overlay;
+package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.overlay.AbstractOverlay;
+import io.luna.game.model.mob.overlay.StandardInterface;
 import io.luna.net.msg.out.DialogueInterfaceMessageWriter;
 
 import java.util.function.Consumer;
@@ -39,6 +41,7 @@ public class DialogueInterface extends StandardInterface {
     public final void open(Player player) {
         boolean shouldOpen = init(player);
         if (shouldOpen) {
+            int id = getId();
             player.queue(new DialogueInterfaceMessageWriter(id));
             if (openAction != null) {
                 openAction.accept(player);

@@ -2,7 +2,6 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 

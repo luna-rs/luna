@@ -2,7 +2,7 @@ package game.skill.cooking.cookFood
 
 import api.predef.*
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.overlay.DialogueInterface
+import io.luna.game.model.mob.dialogue.DialogueInterface
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.out.WidgetItemModelMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter

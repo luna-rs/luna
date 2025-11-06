@@ -3,7 +3,6 @@ package io.luna.game.model.mob.dialogue;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetItemModelMessageWriter;
 import io.luna.util.StringUtils;
 
@@ -12,7 +11,7 @@ import io.luna.util.StringUtils;
  *
  * @author lare96 
  */
-public final class GiveItemDialogueInterface extends DialogueInterface {
+public final class GiveItemDialogue extends DialogueInterface {
 
     /**
      * The item to give.
@@ -25,23 +24,23 @@ public final class GiveItemDialogueInterface extends DialogueInterface {
     private final String displayText;
 
     /**
-     * Creates a new {@link GiveItemDialogueInterface}.
+     * Creates a new {@link GiveItemDialogue}.
      *
      * @param item The item to give.
      * @param displayText The text to display when giving the item.
      */
-    public GiveItemDialogueInterface(Item item, String displayText) {
+    public GiveItemDialogue(Item item, String displayText) {
         super(306);
         this.item = item;
         this.displayText = displayText;
     }
 
     /**
-     * Creates a new {@link GiveItemDialogueInterface} with the default display text.
+     * Creates a new {@link GiveItemDialogue} with the default display text.
      *
      * @param item The item to give.
      */
-    public GiveItemDialogueInterface(Item item) {
+    public GiveItemDialogue(Item item) {
         super(306);
         this.item = item;
         displayText = computeDisplayText();

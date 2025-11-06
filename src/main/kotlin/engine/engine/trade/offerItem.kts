@@ -27,7 +27,7 @@ object Remove : Mod()
  */
 fun trade(msg: WidgetItemClickEvent, amount: Int, mod: Mod) {
     val plr = msg.plr
-    val inter = plr.overlays.get(OfferTradeInterface::class)
+    val inter = plr.overlays[OfferTradeInterface::class]
     if (inter != null) {
         val container = if(mod == Add) plr.inventory else if(mod == Remove) inter.items else throw IllegalArgumentException("Invalid mod value.")
         val newAmount = if (amount == -1) container.computeAmountForId(msg.itemId) else amount

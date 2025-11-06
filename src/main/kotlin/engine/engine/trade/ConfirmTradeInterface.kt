@@ -37,7 +37,7 @@ class ConfirmTradeInterface(val offer: OfferTradeInterface) : InventoryOverlayIn
      * the constructor).
      */
     private val confirm by lazyVal {
-        other.overlays.get(ConfirmTradeInterface::class)!!
+        other.overlays[ConfirmTradeInterface::class]!!
     }
 
     /**

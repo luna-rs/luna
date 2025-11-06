@@ -3,6 +3,8 @@ package io.luna;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.codec.ItemDefinitionDecoder;
 import io.luna.game.cache.codec.MapDecoder;
@@ -63,6 +65,11 @@ public final class LunaServer {
     private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
+     * The result of scanning the classpath.
+     */
+    private volatile ScanResult classpath;
+
+    /**
      * A package-private constructor.
      */
     LunaServer(LunaContext context) {
@@ -75,16 +82,21 @@ public final class LunaServer {
      * @throws Exception If an error occurs.
      */
     public void init() throws Exception {
-        Stopwatch launchTimer = Stopwatch.createStarted();
+        try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
+            classpath = result;
+            Stopwatch launchTimer = Stopwatch.createStarted();
 
-        initCache();
-        initLaunchTasks();
-        initServices();
+            initCache();
+            initLaunchTasks();
+            initServices();
 
-        initNetwork();
+            initNetwork();
 
-        long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-        logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().game().port()), box(elapsedTime));
+            long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
+            logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().game().port()), box(elapsedTime));
+        } finally {
+            classpath = null;
+        }
     }
 
     /**
@@ -135,6 +147,7 @@ public final class LunaServer {
 
         // Wait for last minute Kotlin tasks before we let players login.
         gameService.getKotlinSync().join();
+        System.out.println("here");
     }
 
     /**
@@ -169,5 +182,15 @@ public final class LunaServer {
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
+    }
+
+    /**
+     * @return The result of scanning the classpath. Only non-null while the server is initializing.
+     */
+    public ScanResult getClasspath() {
+        if (classpath == null) {
+            throw new NullPointerException("Only accessible when the server is initializing!");
+        }
+        return classpath;
     }
 }

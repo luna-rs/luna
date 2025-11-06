@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 /**
@@ -9,7 +8,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
  *
  * @author lare96 
  */
-public final class TextDialogueInterface extends DialogueInterface {
+public final class TextDialogue extends DialogueInterface {
 
     /**
      * The text.
@@ -17,11 +16,11 @@ public final class TextDialogueInterface extends DialogueInterface {
     private final String[] text;
 
     /**
-     * Creates a new {@link TextDialogueInterface}.
+     * Creates a new {@link TextDialogue}.
      *
      * @param text The text.
      */
-    public TextDialogueInterface(String... text) {
+    public TextDialogue(String... text) {
         super(DialogueUtils.textDialogue(text.length));
         this.text = text;
     }

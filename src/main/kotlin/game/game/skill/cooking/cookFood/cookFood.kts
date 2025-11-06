@@ -33,7 +33,7 @@ fun open(msg: ItemOnObjectEvent, obj: GameObject, food: Food?, usingFire: Boolea
  * Starts the [CookFoodActionItem] if [CookingInterface] is open.
  */
 fun cook(plr: Player, amount: Int? = null) {
-    val inter = plr.overlays.get(CookingInterface::class)
+    val inter = plr.overlays[CookingInterface::class]
     if (inter != null) {
         val food = inter.food
         val usingFire = inter.usingFire

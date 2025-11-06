@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
 /**
@@ -9,7 +8,7 @@ import io.luna.net.msg.out.WidgetTextMessageWriter;
  *
  * @author lare96 
  */
-public class OptionDialogueInterface extends DialogueInterface {
+public class OptionDialogue extends DialogueInterface {
 
     /**
      * The options.
@@ -17,11 +16,11 @@ public class OptionDialogueInterface extends DialogueInterface {
     private final String[] options;
 
     /**
-     * Creates a new {@link OptionDialogueInterface}.
+     * Creates a new {@link OptionDialogue}.
      *
      * @param options The options.
      */
-    public OptionDialogueInterface(String... options) {
+    public OptionDialogue(String... options) {
         super(DialogueUtils.optionDialogue(options.length));
         this.options = options;
     }

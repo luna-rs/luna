@@ -45,7 +45,7 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
  * Attempts to teleport [target] to the destination when accept is clicked.
  */
 fun clickAccept(target: Player) {
-    val openInterface = target.overlays.get(TeleOtherInterface::class)
+    val openInterface = target.overlays[TeleOtherInterface::class]
     if (openInterface != null) {
         target.overlays.closeWindows()
 

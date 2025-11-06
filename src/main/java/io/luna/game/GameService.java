@@ -65,7 +65,7 @@ public final class GameService extends AbstractScheduledService {
                 loadPlugins();
                 world.start();
 
-                // Players won't be able to login until startup tasks are complete, so it's fine to block the
+                // Players won't be able to log in until startup tasks are complete, so it's fine to block the
                 // game thread.
                 runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 

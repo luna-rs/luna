@@ -4,7 +4,6 @@ import io.luna.game.model.def.ItemDefinition;
 import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 

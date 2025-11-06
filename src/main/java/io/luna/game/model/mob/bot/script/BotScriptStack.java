@@ -24,7 +24,8 @@ import java.util.List;
  * <h3>Lifecycle</h3>
  * <ul>
  *     <li>Scripts are queued into the stack via {@link #pushHead(BotScript)} or {@link #pushTail(BotScript)}.</li>
- *     <li>Each game tick, {@link #process()} updates the currently active script.</li>
+ *     <li>Each game tick, {@link #process()} checks the status of the currently active script (we need to do this
+ *     because scripts use coroutines).</li>
  *     <li>When the active script finishes, it is removed and the next script in the queue starts automatically.</li>
  * </ul>
  *
@@ -144,30 +145,22 @@ public final class BotScriptStack {
      * it will be removed and the next script (if present) will begin on the next tick.
      * <p>
      * This should be invoked once per game tick.
-     *
-     * @return {@code true} if there are no scripts left in the buffer, {@code false} otherwise or if this stack is shut down.
      */
-    public boolean process() {
+    public void process() {
         if (shutdown) {
-            return false;
+            return;
         }
         BotScript<?> current = buffer.peek();
         if (current != null) {
             if (current.isIdle() || current.isInterrupted()) {
                 // Script is idle or interrupted, start it and don't proceed.
                 current.start();
-                return false;
-            } else if (current.isRunning()) {
-                // Script is running, don't proceed.
-                return false;
-            } else if (current.isFinished()) {
+            }
+            if (current.isFinished()) {
                 // Script is done, if buffer is empty proceed, otherwise wait.
                 buffer.removeFirst();
-                return buffer.isEmpty();
             }
         }
-        // No scripts left in the buffer, we can proceed to coordinators.
-        return true;
     }
 
     /**
@@ -180,8 +173,8 @@ public final class BotScriptStack {
     }
 
     /**
-     * Pushes a {@link BotScript} to the <strong>head</strong> of the stack,
-     * immediately interrupting the current script.
+     * Pushes a {@link BotScript} to the <strong>head</strong> of the stack, immediately interrupting the current
+     * script.
      * <p>
      * The interrupted script is paused (not removed) and will resume once the new script completes. High-priority
      * scripts should use this method.

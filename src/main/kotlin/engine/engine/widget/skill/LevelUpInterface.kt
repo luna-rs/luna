@@ -3,7 +3,7 @@ package engine.widget.skill
 import api.predef.*
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
-import io.luna.game.model.mob.overlay.DialogueInterface
+import io.luna.game.model.mob.dialogue.DialogueInterface
 import io.luna.net.msg.out.WidgetAnimationMessageWriter
 import io.luna.net.msg.out.WidgetTextMessageWriter
 

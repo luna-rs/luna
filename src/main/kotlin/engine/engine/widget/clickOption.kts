@@ -3,7 +3,7 @@ package engine.widget
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ButtonClickEvent
-import io.luna.game.model.mob.dialogue.OptionDialogueInterface
+import io.luna.game.model.mob.dialogue.OptionDialogue
 import io.luna.game.model.mob.overlay.OverlayType
 
 /**
@@ -11,7 +11,7 @@ import io.luna.game.model.mob.overlay.OverlayType
  */
 fun clickOption(msg: ButtonClickEvent, option: Int) {
     val plr = msg.plr
-    val inter = plr.overlays.get(OptionDialogueInterface::class)
+    val inter = plr.overlays[OptionDialogue::class]
 
     if (inter != null) {
         when (option) {

@@ -41,7 +41,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
      * The trading player's offer instance (load lazily so its not initialized in the constructor).
      */
     val otherOffer by lazyVal {
-        other.overlays.get(OfferTradeInterface::class)!!
+        other.overlays[OfferTradeInterface::class]!!
     }
 
     /**

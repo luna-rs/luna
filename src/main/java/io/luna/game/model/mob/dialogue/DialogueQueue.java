@@ -2,7 +2,6 @@ package io.luna.game.model.mob.dialogue;
 
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.overlay.AbstractOverlaySet;
-import io.luna.game.model.mob.overlay.DialogueInterface;
 
 import java.util.Queue;
 
