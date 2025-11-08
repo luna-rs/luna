@@ -40,7 +40,7 @@ class BotActionHandler(val bot: Bot) {
     /**
      * The movement action handler.
      */
-    val movement = BotMovementActionHandler(bot, this)
+    val movement = BotMovementActionHandler(bot)
 
     /**
      * The equipment action handler.

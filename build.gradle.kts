@@ -27,6 +27,7 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation(kotlin("scripting-common"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.4.2")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.mockito:mockito-core:5.14.2")
     implementation("mysql:mysql-connector-java:8.0.33")

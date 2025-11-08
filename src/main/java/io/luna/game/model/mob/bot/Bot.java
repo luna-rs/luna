@@ -169,7 +169,7 @@ public final class Bot extends Player {
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
-        movementStack = new BotMovementStack();
+        movementStack = new BotMovementStack(this, manager.getMovementManager());
         setClient(botClient);
     }
 
@@ -231,10 +231,8 @@ public final class Bot extends Player {
 
     /**
      * Processes one cycle for this bot. Increments the internal cycle counter.
-     *
-     * @throws Exception If any error occurs during processing.
      */
-    public void process() throws Exception {
+    public void process() {
         try {
             // todo context injectors
             scriptStack.process();
@@ -372,6 +370,13 @@ public final class Bot extends Player {
      */
     public BotScriptStack getScriptStack() {
         return scriptStack;
+    }
+
+    /**
+     * @return The movement stack.
+     */
+    public BotMovementStack getMovementStack() {
+        return movementStack;
     }
 
     /**

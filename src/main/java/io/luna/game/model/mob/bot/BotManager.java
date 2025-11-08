@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.BotScript;
+import io.luna.game.model.mob.bot.movement.BotMovementManager;
+import io.luna.game.model.mob.bot.movement.BotMovementStack;
 import io.luna.game.model.mob.bot.script.BotScriptManager;
 
 /**
@@ -19,6 +21,11 @@ public final class BotManager {
     private final BotScriptManager scriptManager = new BotScriptManager();
 
     /**
+     * Manages the {@link BotMovementStack} for bots.
+     */
+    private final BotMovementManager movementManager = new BotMovementManager();
+
+    /**
      * Initializes bot subsystems and loads reusable data sets.
      */
     public void load() {
@@ -29,5 +36,12 @@ public final class BotManager {
      */
     public BotScriptManager getScriptManager() {
         return scriptManager;
+    }
+
+    /**
+     * @return The movement manager.
+     */
+    public BotMovementManager getMovementManager() {
+        return movementManager;
     }
 }
