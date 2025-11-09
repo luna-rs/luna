@@ -9,6 +9,8 @@ import io.luna.LunaContext;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.event.EventMatcherListener;
+import io.luna.game.model.mob.bot.BotManager;
+import io.luna.game.model.mob.bot.injection.BotContextInjector;
 import kotlin.script.templates.standard.ScriptTemplateWithArgs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,6 +72,7 @@ public final class PluginBootstrap {
         var gameService = context.getGame();
 
         loadPlugins();
+        loadInjectors();
 
         EventListenerPipelineSet oldPipelines = pluginManager.getPipelines();
         EventListenerPipelineSet newPipelines = bindings.getPipelines();
@@ -159,9 +162,9 @@ public final class PluginBootstrap {
      * @param pluginScripts The plugin script map.
      * @return The plugin map.
      */
-    private ImmutableMap<String, Plugin> buildPluginMap
-    (Map<String, ClassInfo> infoScripts, ArrayListMultimap<String, ClassInfo> pluginScripts) throws
-            ReflectiveOperationException {
+    private ImmutableMap<String, Plugin> buildPluginMap(Map<String, ClassInfo> infoScripts,
+                                                        ArrayListMultimap<String, ClassInfo> pluginScripts)
+            throws ReflectiveOperationException {
         ImmutableMap.Builder<String, Plugin> pluginMap = ImmutableMap.builder();
         for (ClassInfo infoScriptClass : infoScripts.values()) {
             String packageName = infoScriptClass.getPackageName();
@@ -214,5 +217,19 @@ public final class PluginBootstrap {
         Class<ScriptTemplateWithArgs> scriptClass = scriptInfo.loadClass(ScriptTemplateWithArgs.class);
         ScriptTemplateWithArgs scriptDef = scriptClass.getConstructor(String[].class).newInstance((Object) scriptArgs);
         return new Script(context, packageName, scriptInfo, scriptDef);
+    }
+
+    /**
+     * Loads all {@link BotContextInjector} listeners.
+     */
+    private void loadInjectors() {
+        // Register all bot context injector listeners.
+        BotManager botManager = context.getWorld().getBotManager();
+        ImmutableList.Builder<BotContextInjector> injectorsBuilder = ImmutableList.builder();
+        for (BotContextInjector injector : bindings.getInjectors()) {
+            injectorsBuilder.add(injector);
+        }
+        botManager.getInjectorManager().setInjectors(injectorsBuilder.build());
+        bindings.getInjectors().clear();
     }
 }

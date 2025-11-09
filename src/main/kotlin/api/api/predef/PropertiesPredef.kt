@@ -9,6 +9,7 @@ import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.PlayerInteraction
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
+import io.luna.game.model.mob.bot.injection.BotContextInjector
 import io.luna.game.plugin.InfoScriptData
 import io.luna.game.plugin.KotlinBindings
 import io.luna.game.plugin.PluginBootstrap
@@ -43,6 +44,8 @@ val scriptListeners: MutableList<EventListener<*>> = bindings.listeners!!
  * The script event listeners.
  */
 val scriptMatchers: MutableList<EventMatcherListener<*>> = bindings.matchers!!
+
+val scriptInjectors: MutableList<BotContextInjector> = bindings.injectors!!
 
 /**
  * The info for the current build script being evaluated.

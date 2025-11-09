@@ -2,6 +2,7 @@ package io.luna.game.model.collision;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -254,26 +255,30 @@ public final class CollisionMatrix {
      * @return {@code true} iff the tile at the specified coordinate pair is not traversable.
      */
     public boolean untraversable(int x, int y, EntityType entity, Direction direction) {
-        CollisionFlag[] flags = CollisionFlag.forType(entity);
+        ImmutableList<CollisionFlag> flags = CollisionFlag.forType(entity);
         int northwest = 0, north = 1, northeast = 2, west = 3, east = 4, southwest = 5, south = 6, southeast = 7;
 
         switch (direction) {
             case NORTH_WEST:
-                return flagged(x, y, flags[southeast]) || flagged(x, y, flags[south]) || flagged(x, y, flags[east]);
+                return flagged(x, y, flags.get(southeast)) || flagged(x, y, flags.get(south)) ||
+                        flagged(x, y, flags.get(east));
             case NORTH:
-                return flagged(x, y, flags[south]);
+                return flagged(x, y, flags.get(south));
             case NORTH_EAST:
-                return flagged(x, y, flags[southwest]) || flagged(x, y, flags[south]) || flagged(x, y, flags[west]);
+                return flagged(x, y, flags.get(southwest)) || flagged(x, y, flags.get(south)) ||
+                        flagged(x, y, flags.get(west));
             case EAST:
-                return flagged(x, y, flags[west]);
+                return flagged(x, y, flags.get(west));
             case SOUTH_EAST:
-                return flagged(x, y, flags[northwest]) || flagged(x, y, flags[north]) || flagged(x, y, flags[west]);
+                return flagged(x, y, flags.get(northwest)) || flagged(x, y, flags.get(north)) ||
+                        flagged(x, y, flags.get(west));
             case SOUTH:
-                return flagged(x, y, flags[north]);
+                return flagged(x, y, flags.get(north));
             case SOUTH_WEST:
-                return flagged(x, y, flags[northeast]) || flagged(x, y, flags[north]) || flagged(x, y, flags[east]);
+                return flagged(x, y, flags.get(northeast)) || flagged(x, y, flags.get(north)) ||
+                        flagged(x, y, flags.get(east));
             case WEST:
-                return flagged(x, y, flags[east]);
+                return flagged(x, y, flags.get(east));
             default:
                 throw new IllegalArgumentException("Unrecognised direction " + direction + ".");
         }

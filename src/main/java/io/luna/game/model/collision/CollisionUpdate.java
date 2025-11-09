@@ -1,6 +1,7 @@
 package io.luna.game.model.collision;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
@@ -11,7 +12,6 @@ import io.luna.game.model.object.GameObject;
 import io.luna.game.model.object.ObjectType;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static io.luna.game.model.object.ObjectType.*;
 
@@ -160,12 +160,12 @@ public final class CollisionUpdate {
          * @param position The world position of the tile.
          * @param directions The directions that are untraversable from this tile.
          */
-        public void tile(Position position, boolean impenetrable, Direction... directions) {
-            if (directions.length == 0) {
+        public void tile(Position position, boolean impenetrable, ImmutableList<Direction> directions) {
+            if (directions.isEmpty()) {
                 return;
             }
 
-            Stream.of(directions).forEach(direction -> flags.put(position, new DirectionFlag(impenetrable, direction)));
+            directions.forEach(direction -> flags.put(position, new DirectionFlag(impenetrable, direction)));
         }
 
         /**
@@ -178,8 +178,8 @@ public final class CollisionUpdate {
          * @param orientation The facing direction of this wall.
          */
         public void wall(Position position, boolean impenetrable, Direction orientation) {
-            tile(position, impenetrable, orientation);
-            tile(position.translate(1, orientation), impenetrable, orientation.opposite());
+            tile(position, impenetrable, ImmutableList.of(orientation));
+            tile(position.translate(1, orientation), impenetrable, ImmutableList.of(orientation.opposite()));
         }
 
         /**
@@ -196,11 +196,11 @@ public final class CollisionUpdate {
          * @param orientation The direction of this corner wall
          */
         public void largeCornerWall(Position position, boolean impenetrable, Direction orientation) {
-            Direction[] directions = Direction.diagonalComponents(orientation);
+            ImmutableList<Direction> directions = Direction.diagonalComponents(orientation);
             tile(position, impenetrable, directions);
 
             for (Direction direction : directions) {
-                tile(position.translate(1, direction), impenetrable, direction.opposite());
+                tile(position.translate(1, direction), impenetrable, ImmutableList.of(direction.opposite()));
             }
         }
 
@@ -233,11 +233,11 @@ public final class CollisionUpdate {
                     }
                 }
             } else if (type == STRAIGHT_WALL.getId()) {
-                wall(position, impenetrable, Direction.WNES[orientation]);
+                wall(position, impenetrable, Direction.WNES.get(orientation));
             } else if (type == DIAGONAL_CORNER_WALL.getId() || type == RECTANGLE_CORNER.getId()) {
-                wall(position, impenetrable, Direction.WNES_DIAGONAL[orientation]);
+                wall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
             } else if (type == WALL_CORNER.getId()) {
-                largeCornerWall(position, impenetrable, Direction.WNES_DIAGONAL[orientation]);
+                largeCornerWall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
             }
         }
 

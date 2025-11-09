@@ -3,16 +3,11 @@ package io.luna.game.persistence;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.attr.Attribute;
-import io.luna.util.SqlConnectionPool;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * A {@link GameSerializer} implementation that stores persistent player data in an {@code SQL} database.
@@ -20,14 +15,6 @@ import java.util.Set;
  * @author lare96
  */
 public final class SqlGameSerializer extends GameSerializer {
-
-    /**
-     * The connection pool.
-     */
-    private final SqlConnectionPool connectionPool = new SqlConnectionPool.Builder()
-            .poolName("PlayerPersistencePool")
-            .database("luna_players")
-            .build();
 
     /**
      * Creates a new {@link SqlGameSerializer}.
@@ -38,7 +25,7 @@ public final class SqlGameSerializer extends GameSerializer {
     @Override
     public PlayerData loadPlayer(World world, String username) {
         PlayerData data = null;
-        try (var connection = connectionPool.take();
+        try (var connection = world.getConnectionPool().take();
              var loadData = connection.prepareStatement("SELECT bot, json_data FROM main_data WHERE username = ?;")) {
             loadData.setString(1, username);
 
@@ -57,7 +44,7 @@ public final class SqlGameSerializer extends GameSerializer {
 
     @Override
     public void savePlayer(World world, String username, PlayerData data) {
-        try (var connection = connectionPool.take()) {
+        try (var connection = world.getConnectionPool().take()) {
             connection.setAutoCommit(false);
             try {
                 if (data.databaseId == -1) {
@@ -75,7 +62,7 @@ public final class SqlGameSerializer extends GameSerializer {
 
     @Override
     public boolean deletePlayer(World world, String username) {
-        try (Connection connection = connectionPool.take();
+        try (Connection connection = world.getConnectionPool().take();
              PreparedStatement databaseId = connection.prepareStatement("SELECT id FROM main_data WHERE username = ?;");
              PreparedStatement mainData = connection.prepareStatement("DELETE FROM main_data WHERE username = ?;");
              PreparedStatement skillsData = connection.prepareStatement("DELETE FROM skills_data WHERE id = ?;")) {
@@ -111,22 +98,6 @@ public final class SqlGameSerializer extends GameSerializer {
             throw new RuntimeException("Could not delete record for " + username + ".", e);
         }
         return true;
-    }
-
-    @Override
-    public Set<String> loadBotUsernames(World world) {
-        Set<String> names = new HashSet<>();
-        try (Connection connection = connectionPool.take();
-             PreparedStatement loadData = connection.prepareStatement("SELECT username FROM main_data WHERE bot = 1;")) {
-            try (var results = loadData.executeQuery()) {
-                while (results.next()) {
-                    names.add(results.getString("username"));
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Persistent bot data could not be loaded.", e);
-        }
-        return names;
     }
 
     /**

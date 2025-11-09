@@ -11,6 +11,12 @@
     "connection_limit": 2,
     "password_strength": "DEFAULT"
   },
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "username": "luna_db",
+    "password": "guMQRNYf44fxERs4uHxLCWjCQ"
+  },
   "logging": {
     "root_level": "DEBUG",
     "format_type": "VERBOSE",
@@ -21,15 +27,5 @@
       "COMMANDS",
       "PRIVATE_MESSAGE"
     ]
-  },
-  "bots": {
-    "ideal_count": 0,
-    "keep_online": false
-  },
-  "database": {
-    "host": "localhost",
-    "port": 3306,
-    "username": "luna_db",
-    "password": "guMQRNYf44fxERs4uHxLCWjCQ"
   }
 }

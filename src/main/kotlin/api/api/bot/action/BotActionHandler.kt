@@ -38,11 +38,6 @@ class BotActionHandler(val bot: Bot) {
     val shop = BotShopActionHandler(bot, this)
 
     /**
-     * The movement action handler.
-     */
-    val movement = BotMovementActionHandler(bot)
-
-    /**
      * The equipment action handler.
      */
     val equipment = BotEquipmentActionHandler(bot, this)
@@ -55,7 +50,7 @@ class BotActionHandler(val bot: Bot) {
     /**
      * The interactions action handler.
      */
-    val interactions = BotInteractionActionHandler(bot, this)
+    val interactions = BotInteractionActionHandler(bot)
 
     /**
      * The widgets action handler.

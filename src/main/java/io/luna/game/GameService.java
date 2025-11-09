@@ -70,7 +70,7 @@ public final class GameService extends AbstractScheduledService {
                 runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
                 // Release the lock in LunaServer.
-                kotlinSync.complete(null);
+                onlineLock.complete(null);
             });
         }
 
@@ -128,9 +128,10 @@ public final class GameService extends AbstractScheduledService {
     private final GameServiceExecutor gameExecutor;
 
     /**
-     * The synchronizer for the Kotlin startup tasks.
+     * The synchronizer for the online status. Locks connections from being accepted until the server is completely
+     * online.
      */
-    private final CompletableFuture<Void> kotlinSync = new CompletableFuture<>();
+    private final CompletableFuture<Void> onlineLock = new CompletableFuture<>();
 
     /**
      * The context instance.
@@ -397,10 +398,10 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * @return The synchronizer for the Kotlin startup tasks.
+     * @return The synchronizer for the online status.
      */
-    public CompletableFuture<Void> getKotlinSync() {
-        return kotlinSync;
+    public CompletableFuture<Void> getOnlineLock() {
+        return onlineLock;
     }
 
     /**

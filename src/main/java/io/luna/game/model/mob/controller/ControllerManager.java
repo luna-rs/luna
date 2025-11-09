@@ -39,6 +39,15 @@ public final class ControllerManager implements Iterable<PlayerController> {
     }
 
     /**
+     * Processes controllers for this player.
+     */
+    public void process() {
+        for(PlayerController controller : registered.values()) {
+            controller.process(player);
+        }
+    }
+
+    /**
      * Registers a new {@link PlayerController} so that its listeners will be tracked.
      *
      * @param key The key of the controller to register.
@@ -177,6 +186,9 @@ public final class ControllerManager implements Iterable<PlayerController> {
         return registered.containsKey(key);
     }
 
+    /**
+     * @return A set of {@link ControllerKey}s registered to the player.
+     */
     public Set<ControllerKey<?>> keys() {
         return registered.keySet();
     }

@@ -1,7 +1,6 @@
 package io.luna;
 
 import io.luna.game.GameSettings;
-import io.luna.game.model.mob.bot.BotSettings;
 import io.luna.util.SqlConnectionPool.DatabaseSettings;
 import io.luna.util.logging.LoggingSettings;
 
@@ -13,9 +12,8 @@ import io.luna.util.logging.LoggingSettings;
 public final class LunaSettings {
 
     private final GameSettings game;
-    private final LoggingSettings logging;
-    private final BotSettings bots;
     private final DatabaseSettings database;
+    private final LoggingSettings logging;
 
     /**
      * The game settings.
@@ -25,31 +23,23 @@ public final class LunaSettings {
     }
 
     /**
-     * The logging settings.
-     */
-    public LoggingSettings logging() {
-        return logging;
-    }
-
-    /**
-     * The bot settings.
-     */
-    public BotSettings bots() {
-        return bots;
-    }
-
-    /**
      * The database settings.
      */
     public DatabaseSettings database() {
         return database;
     }
 
+    /**
+     * The logging settings.
+     */
+    public LoggingSettings logging() {
+        return logging;
+    }
+
     // Never called
-    private LunaSettings(GameSettings game, LoggingSettings logging, BotSettings bots, DatabaseSettings database) {
+    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging) {
         this.game = game;
-        this.logging = logging;
-        this.bots = bots;
         this.database = database;
+        this.logging = logging;
     }
 }

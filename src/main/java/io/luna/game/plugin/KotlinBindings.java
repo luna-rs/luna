@@ -4,6 +4,7 @@ import io.luna.LunaContext;
 import io.luna.game.event.EventListener;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.event.EventMatcherListener;
+import io.luna.game.model.mob.bot.injection.BotContextInjector;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,6 +38,11 @@ public final class KotlinBindings {
      * A list of event matcher listeners.
      */
     private final List<EventMatcherListener<?>> matchers = new ArrayList<>();
+
+    /**
+     * A list of event injectors.
+     */
+    private final List<BotContextInjector> injectors = new ArrayList<>();
 
     /**
      * The pipeline set.
@@ -83,6 +89,13 @@ public final class KotlinBindings {
      */
     public List<EventMatcherListener<?>> getMatchers() {
         return matchers;
+    }
+
+    /**
+     * @return A list of event injectors.
+     */
+    public List<BotContextInjector> getInjectors() {
+        return injectors;
     }
 
     /**

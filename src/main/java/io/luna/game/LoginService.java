@@ -87,6 +87,11 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
     @Override
     boolean addRequest(String username, LoginRequest request) {
+        if(world.getBots().exists(username)) {
+            // Regular player trying to log in as a bot.
+            request.client.sendLoginResponse(request.player, LoginResponse.COULD_NOT_COMPLETE_LOGIN);
+            return false;
+        }
         if (world.getPlayerMap().containsKey(username) ||
                 world.getLogoutService().isSavePending(username)) {
             // Short-circuit here, faster and prevents wasting resources.

@@ -69,25 +69,11 @@ public abstract class PlayerController {
     }
 
     /**
-     * Called when {@code player} attempts to attack {@code target}.
+     * Called every 600ms before player updating .
      *
      * @param player The player.
-     * @param target The target.
-     * @return {@code true} if the player can attack, {@code false} otherwise.
      */
-    public boolean canAttack(Player player, Mob target) {
-        // todo add to packet verification, verify NPC options
-        //  return player.getInteractions().contains(PlayerInteraction.ATTACK) && target instanceof Player || target instanceof Npc;
-        return true;
-    }
-
-    /**
-     * Called every 600ms by the {@link ControllerProcessTask}.
-     *
-     * @param player The player.
-     * @param executionCount The execution count of the task.
-     */
-    public void process(Player player, int executionCount) {
+    public void process(Player player) {
 
     }
 

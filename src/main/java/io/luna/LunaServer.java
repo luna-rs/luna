@@ -5,6 +5,7 @@ import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
+import io.luna.game.GameService;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.codec.ItemDefinitionDecoder;
 import io.luna.game.cache.codec.MapDecoder;
@@ -90,6 +91,11 @@ public final class LunaServer {
             initLaunchTasks();
             initServices();
 
+            // Wait for the above to finish before bringing the network online.
+            GameService game = context.getGame();
+            game.getOnlineLock().join();
+
+            // We're ready to accept logins!
             initNetwork();
 
             long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
@@ -134,9 +140,6 @@ public final class LunaServer {
     private void initServices() throws InterruptedException {
         World world = context.getWorld();
 
-        // Independent services not linked to the core game.
-        world.getBotScheduleService().startAsync();
-
         // Core game services.
         var gameService = context.getGame();
         var loginService = world.getLoginService();
@@ -144,10 +147,6 @@ public final class LunaServer {
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
         logger.info("All services are now running.");
-
-        // Wait for last minute Kotlin tasks before we let players login.
-        gameService.getKotlinSync().join();
-        System.out.println("here");
     }
 
     /**
@@ -158,6 +157,7 @@ public final class LunaServer {
         taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new EquipmentDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
+        taskList.add(() -> context.getWorld().getBots().loadNames());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
         for (Runnable task : taskList) {
@@ -189,7 +189,7 @@ public final class LunaServer {
      */
     public ScanResult getClasspath() {
         if (classpath == null) {
-            throw new NullPointerException("Only accessible when the server is initializing!");
+            throw new NullPointerException("Only accessible while the server is initializing!");
         }
         return classpath;
     }

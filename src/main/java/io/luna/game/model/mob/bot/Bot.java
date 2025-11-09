@@ -2,9 +2,7 @@ package io.luna.game.model.mob.bot;
 
 import api.bot.action.BotActionHandler;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.def.EquipmentDefinition;
@@ -23,18 +21,23 @@ import io.luna.game.persistence.BotData;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.util.RandomUtils;
+import io.luna.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A {@link Player} implementation that represents a fully autonomous artificial player (bot) managed and processed
- * entirely by the server. Bots occupy minimal network resources but consume additional CPU resources for processing.
+ * Represents a fully autonomous {@link Player} controlled entirely by the Luna server.
+ * <p>
+ * Bots simulate human players without consuming network bandwidth, allowing them to participate in the world
+ * economy, combat, and skilling systems. Each bot executes its own script logic stack, maintains an internal log for
+ * debugging, and may interact with real players or other bots through shared systems such as speech and trading.
+ * <p>
+ * All bot logic is processed server-side on the game thread to ensure consistent world state. Asynchronous operations
+ * (such as login or data saving) are dispatched through the game’s various thread pools.
  *
  * @author lare96
  */
@@ -46,113 +49,128 @@ public final class Bot extends Player {
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A builder class for constructing {@link Bot} instances with optional customization.
+     * A builder for constructing {@link Bot} instances with optional configuration.
      */
     public static final class Builder {
 
+        /**
+         * Generates a random, non-secure password for bot credentials. Used exclusively for programmatic bot creation.
+         *
+         * @return The generated password.
+         */
+        private static String generatePassword() {
+            int minLength = 6;
+            int maxLength = 8;
+            int length = ThreadLocalRandom.current().nextInt(minLength, maxLength);
+            StringBuilder sb = new StringBuilder(length);
+            for (int count = 0; count < length; count++) {
+                char next = RandomUtils.random(StringUtils.VALID_CHARACTERS);
+                if (ThreadLocalRandom.current().nextBoolean()) {
+                    sb.append(Character.toUpperCase(next));
+                } else {
+                    sb.append(next);
+                }
+            }
+            return sb.toString();
+        }
+
         private final LunaContext context;
-        private boolean temporary = true;
+        private boolean temporary;
         private String username;
 
         /**
          * Creates a new {@link Builder}.
          *
-         * @param context The Luna context.
+         * @param context The game context.
          */
         public Builder(LunaContext context) {
             this.context = context;
         }
 
         /**
-         * Sets a custom username, marking this bot as persistent.
+         * Sets a username, marking this bot as persistent.
          *
-         * @param username The bot’s username.
+         * @param username The desired username.
          * @return This builder instance.
-         * @throws IllegalStateException If the username is already taken by another temporary bot.
+         * @throws IllegalStateException If another bot with this username is already online.
          */
-        public Builder setUsername(String username) throws IllegalArgumentException {
+        public Builder setUsername(String username) {
             BotRepository repository = context.getWorld().getBots();
-            if (repository.containsTemporary(username)) {
-                throw new IllegalStateException("Username is already in use by a temporary bot.");
+            if (repository.isOnline(username)) {
+                throw new IllegalStateException("Bot is already logged in.");
             }
             this.username = username;
-            temporary = false;
             return this;
         }
 
         /**
-         * Marks this bot as persistent.
+         * Marks this bot as temporary (non-persistent).
          *
          * @return This builder instance.
          */
-        public Builder setPersistent() {
-            temporary = false;
+        public Builder setTemporary() {
+            temporary = true;
             return this;
         }
 
         /**
-         * Builds and returns a fully constructed {@link Bot} instance. A random password will be generated.
+         * Constructs a fully initialized {@link Bot} instance with generated credentials.
          *
-         * @return A new {@link Bot} instance.
+         * @return The new {@link Bot}.
+         * @throws IllegalStateException If no username was set.
          */
         public Bot build() {
             if (username == null) {
-                throw new IllegalStateException("Username was not configured.");
+                throw new IllegalStateException("Username was not set.");
             }
-            return new Bot(context, username, BotCredentials.generatePassword(), temporary);
+            return new Bot(context, username, generatePassword(), temporary);
         }
     }
 
     /**
-     * The log manager.
+     * The log manager responsible for recording and exporting debug messages.
      */
     private final BotLogManager logManager = new BotLogManager(this);
 
     /**
-     * The global bot manager.
+     * The global bot manager coordinating all active bots.
      */
     private final BotManager manager;
 
     /**
-     * The script stack.
+     * The script execution stack.
      */
     private final BotScriptStack scriptStack;
 
     /**
-     * The movement stack.
+     * The movement queue and pathing controller.
      */
     private final BotMovementStack movementStack;
 
     /**
-     * A concurrent set of human players within the bot’s local viewport.
+     * The set of visible human players currently within this bot’s viewport.
      */
     private final Set<Player> localHumans = Sets.newConcurrentHashSet();
 
     /**
-     * The bot client.
+     * The simulated client connection for this bot.
      */
     private final BotClient botClient;
 
     /**
-     * The bot action handler.
+     * The handler for direct actions and command execution.
      */
     private final BotActionHandler actionHandler = new BotActionHandler(this);
 
     /**
-     * Whether this bot is temporary and will be forgotten after logout.
+     * Whether this bot is temporary (non-persistent).
      */
-    private final boolean temporary;
+    private boolean temporary;
 
     /**
-     * The number of processing cycles completed by this bot. This acts as an internal runtime counter used for
-     * timing operations.
+     * Internal runtime counter for number of processed game cycles.
      */
     private long cycles;
-
-    /**
-     * Whether this bot is attempting to log out (e.g., due to a schedule trigger).
-     */
-    private boolean logoutReady;
 
     /**
      * Creates a new {@link Bot}.
@@ -160,7 +178,7 @@ public final class Bot extends Player {
      * @param context The context instance.
      * @param username The username.
      * @param password The password.
-     * @param temporary Whether this bot is attempting to log out (e.g., due to a schedule trigger).
+     * @param temporary Whether this bot is temporary (non-persistent).
      */
     private Bot(LunaContext context, String username, String password, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
@@ -180,7 +198,6 @@ public final class Bot extends Player {
 
     @Override
     protected void onInactive() {
-        world.getBots().remove(this);
         super.onInactive();
     }
 
@@ -196,10 +213,10 @@ public final class Bot extends Player {
     }
 
     /**
-     * Attempts to asynchronously log in this bot. If the bot’s credentials do not exist, a new account will be created.
+     * Asynchronously attempts to log in this bot, creating a new record if it does not exist.
      *
-     * @return A {@link ListenableFuture} representing the async login operation. If the login fails, the generated
-     * username will not be consumed.
+     * @return A {@link CompletableFuture} resolving to the loaded {@link PlayerData}, or completing exceptionally
+     * if the login fails.
      */
     public CompletableFuture<PlayerData> login() {
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
@@ -216,8 +233,8 @@ public final class Bot extends Player {
         // Load data for bot based on username.
         return world.getPersistenceService().load(username).
                 thenApplyAsync(data -> {
-                    if (data != null && temporary) {
-                        data = null;
+                    if (data != null) {
+                        temporary = false;
                     }
                     loadData(data);
                     world.getBots().add(this);
@@ -230,28 +247,33 @@ public final class Bot extends Player {
     }
 
     /**
-     * Processes one cycle for this bot. Increments the internal cycle counter.
+     * Executes one processing cycle for this bot.
+     * <p>
+     * This method advances the bot’s script stack, processes contextual injections, and increments the internal
+     * cycle counter.
      */
     public void process() {
         try {
-            // todo context injectors
             scriptStack.process();
+            manager.getInjectorManager().injectEvents(this);
         } finally {
             cycles++;
         }
     }
 
     /**
-     * Writes a line to this bot’s internal log.
+     * Appends a message to this bot’s internal log buffer.
      *
-     * @param text The text to log.
+     * @param text The message text.
      */
     public void log(String text) {
         logManager.log(text);
     }
 
     /**
-     * Randomizes the appearance, skills, and equipment of this bot.
+     * Randomizes the bot’s appearance, skills, and equipped items.
+     * <p>
+     * Primarily used for debugging, testing, or filler bot generation.
      */
     public void randomize() {
         randomizeAppearance();
@@ -260,7 +282,7 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the bot’s visual appearance.
+     * Randomizes the bot’s visible appearance.
      */
     public void randomizeAppearance() {
         getAppearance().setValues(PlayerAppearance.randomValues());
@@ -268,28 +290,30 @@ public final class Bot extends Player {
     }
 
     /**
-     * Randomizes the skills of this bot.
+     * Randomizes the bot’s skill levels.
      */
     public void randomizeSkills() {
         for (Skill skill : skills) {
-            int level = ThreadLocalRandom.current().nextBoolean() ?
-                    ThreadLocalRandom.current().nextInt(1, 100) :
-                    ThreadLocalRandom.current().nextInt(50, 100);
+            int level = ThreadLocalRandom.current().nextBoolean()
+                    ? ThreadLocalRandom.current().nextInt(1, 100)
+                    : ThreadLocalRandom.current().nextInt(50, 100);
             skill.setStaticLevel(level);
         }
     }
 
     /**
-     * Randomizes the equipment this bot is wearing.
+     * Randomizes the bot’s currently equipped items.
      */
     public void randomizeEquipment() {
-        Multimap<Integer, EquipmentDefinition> sorted = ArrayListMultimap.create();
-        EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this)).forEach(def -> sorted.put(def.getIndex(), def));
-        for (var entry : sorted.asMap().entrySet()) {
-            int index = entry.getKey();
-            List<EquipmentDefinition> equipmentList = new ArrayList<>(entry.getValue());
+        ArrayListMultimap<Integer, EquipmentDefinition> eligible = ArrayListMultimap.create();
+        EquipmentDefinition.ALL.lookupAll(def -> def.meetsAllRequirements(this))
+                .forEach(def -> eligible.put(def.getIndex(), def));
 
-            getEquipment().set(index, new Item(RandomUtils.random(equipmentList).getId()));
+        for (int index = 0; index < getEquipment().capacity(); index++) {
+            EquipmentDefinition def = RandomUtils.random(eligible.get(index));
+            if (def != null) {
+                getEquipment().set(index, new Item(def.getId()));
+            }
         }
     }
 
@@ -301,44 +325,28 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return The {@link BotClient} instance managing this bot’s input/output.
+     * @return The {@link BotClient} simulating this bot’s network connection.
      */
     public BotClient getBotClient() {
         return botClient;
     }
 
     /**
-     * @return The total number of processing cycles completed by this bot.
+     * @return The total number of cycles this bot has processed.
      */
     public long getCycles() {
         return cycles;
     }
 
     /**
-     * @return {@code true} if this bot has a scheduled logout pending.
-     */
-    public boolean isLogoutReady() {
-        return logoutReady;
-    }
-
-    /**
-     * Sets whether this bot should attempt to log out due to a schedule trigger.
-     *
-     * @param logoutReady {@code true} if this bot should begin logout.
-     */
-    public void setLogoutReady(boolean logoutReady) {
-        this.logoutReady = logoutReady;
-    }
-
-    /**
-     * @return The input message handler for this bot.
+     * @return The input message handler for simulated client packets.
      */
     public BotInputMessageHandler getInput() {
         return botClient.getInput();
     }
 
     /**
-     * @return The output message handler for this bot.
+     * @return The output message handler for simulated server packets.
      */
     public BotOutputMessageHandler getOutput() {
         return botClient.getOutput();
@@ -352,35 +360,35 @@ public final class Bot extends Player {
     }
 
     /**
-     * @return The log manager responsible for recording and debugging bot activity.
+     * @return The log manager responsible for tracking bot activity.
      */
     public BotLogManager getLogManager() {
         return logManager;
     }
 
     /**
-     * @return The global {@link BotManager} overseeing all bots in the world.
+     * @return The global {@link BotManager} that oversees all bots.
      */
     public BotManager getManager() {
         return manager;
     }
 
     /**
-     * @return The script stack that manages all active {@link api.bot.BotScript} instances for this bot.
+     * @return The active {@link BotScriptStack} managing this bot’s behavior scripts.
      */
     public BotScriptStack getScriptStack() {
         return scriptStack;
     }
 
     /**
-     * @return The movement stack.
+     * @return The {@link BotMovementStack} controlling this bot’s pathfinding and movement.
      */
     public BotMovementStack getMovementStack() {
         return movementStack;
     }
 
     /**
-     * @return The bot action handler.
+     * @return The {@link BotActionHandler} for direct action processing.
      */
     public BotActionHandler getActionHandler() {
         return actionHandler;

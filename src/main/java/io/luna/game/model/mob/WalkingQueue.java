@@ -17,12 +17,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * A model representing an implementation of the walking queue.
@@ -126,7 +124,7 @@ public final class WalkingQueue {
      * The collision manager.
      */
     private final CollisionManager collisionManager;
-    private final PathfindingAlgorithm pathfindingAlgorithm;
+    private final PathfindingAlgorithm pathfinding;
 
     /**
      * The mob.
@@ -143,10 +141,7 @@ public final class WalkingQueue {
      */
     private boolean runningPath;
 
-    /**
-     * The current lazy walking task result.
-     */
-    private CompletableFuture<?> lazyWalkResult;
+    private final Direction[] shuffledDirections = RandomUtils.shuffle(Direction.NESW.toArray(Direction[]::new));
 
     /**
      * Create a new {@link WalkingQueue}.
@@ -157,9 +152,9 @@ public final class WalkingQueue {
         this.mob = mob;
         collisionManager = mob.getWorld().getCollisionManager();
         if (mob instanceof Player) {
-            this.pathfindingAlgorithm = new AStarPathfindingAlgorithm(collisionManager, new EuclideanHeuristic());
+            this.pathfinding = new AStarPathfindingAlgorithm(collisionManager, new EuclideanHeuristic());
         } else {
-            this.pathfindingAlgorithm = new SimplePathfindingAlgorithm(collisionManager);
+            this.pathfinding = new SimplePathfindingAlgorithm(collisionManager);
         }
     }
 
@@ -168,9 +163,9 @@ public final class WalkingQueue {
      * traversable, the mob will not move.
      */
     public void walkRandomDirection() {
+        RandomUtils.shuffle(shuffledDirections);
         CollisionManager collision = mob.getWorld().getCollisionManager();
-        Direction[] directions = RandomUtils.shuffle(Arrays.copyOf(Direction.NESW, Direction.NESW.length));
-        for (Direction dir : directions) {
+        for (Direction dir : shuffledDirections) {
             if (collision.traversable(mob.getPosition(), EntityType.NPC, dir)) {
                 walk(mob.getPosition().translate(1, dir));
                 break;
@@ -246,12 +241,7 @@ public final class WalkingQueue {
      * @param destination The destination position.
      */
     public void walk(Position destination) {
-        int distance = destination.computeLongestDistance(mob.getPosition());
-        //  if (distance > Region.SIZE) {
-        //      lazyWalk(destination);
-        //   } else {
-        addPath(findPath(destination));
-        //  }
+        addPath(findPath(destination, false));
     }
 
     /**
@@ -261,7 +251,7 @@ public final class WalkingQueue {
      */
     public boolean walkUntilReached(Locatable target) {
         Deque<Step> newPath = new ArrayDeque<>();
-        Deque<Position> path = pathfindingAlgorithm.find(mob.getPosition(), target.location());
+        Deque<Position> path = pathfinding.find(mob.getPosition(), target.location());
         Position lastPosition = mob.getPosition();
         boolean reached;
         boolean isEntity = target instanceof Entity;
@@ -281,26 +271,6 @@ public final class WalkingQueue {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Will asynchronously build a path to {@code destination} and only move the mob once the path is available.
-     *
-     * @param destination The destination position.
-     */
-    public void lazyWalk(Position destination) {
-        if (lazyWalkResult != null && !lazyWalkResult.isDone()) {
-            logger.warn("Existing lazy walk request in progress.");
-            return;
-        }
-        lazyWalkResult = mob.getService().submit(() -> findPath(destination)).
-                thenAcceptAsync(path -> {
-                    try {
-                        addPath(path);
-                    } catch (Exception e) {
-                        logger.catching(e);
-                    }
-                }, mob.getService().getGameExecutor());
     }
 
     /**
@@ -502,24 +472,23 @@ public final class WalkingQueue {
         player.setRunEnergy(newValue, true);
     }
 
-    /**
-     * Determines the optimal pathfinder to use and finds a path to {@code target}.
-     *
-     * @param target The target.
-     * @return The path.
-     */
-    private Deque<Step> findPath(Position target) {
-        Deque<Position> positionPath = pathfindingAlgorithm.find(mob.getPosition(), target);
+
+    public Deque<Step> findPath(Locatable target, boolean safe) {
+        Position start = mob.getPosition();
+        Deque<Position> positionPath = pathfinding.find(start, target.location());
         Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
-        Position last = mob.getPosition();
+        Position last = start;
         for (; ; ) {
-            // TODO remove step class?
             Position next = positionPath.poll();
-            if (next == null || !collisionManager.traversable(last, mob.getType(), Direction.between(last, next))) {
-                System.out.println(next);
+            if (next == null) {
+                break;
+            }
+            Direction between = Direction.between(last, next);
+            if (!collisionManager.traversable(last, mob.getType(), between, safe)) {
                 break;
             }
             stepPath.add(new Step(next));
+            last = next;
         }
         return stepPath;
     }
@@ -568,5 +537,9 @@ public final class WalkingQueue {
             clear();
         }
         this.locked = locked;
+    }
+
+    public PathfindingAlgorithm getPathfinding() {
+        return pathfinding;
     }
 }

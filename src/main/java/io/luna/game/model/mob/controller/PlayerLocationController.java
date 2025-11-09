@@ -17,7 +17,6 @@ public abstract class PlayerLocationController extends PlayerController {
      */
     private ImmutableSet<Locatable> locatables;
 
-
     @Override
     public final void onRegister(Player player) {
         // Will never be called.
@@ -52,10 +51,10 @@ public abstract class PlayerLocationController extends PlayerController {
     }
 
     /**
-     * Determines if the player is moving inside any of {@link #locatables}.
+     * Determines if {@code position} is located inside any of {@link #locatables}.
      *
-     * @param position The position the player is moving to.
-     * @return {@code true} if the player is within this controlled area.
+     * @param position The position to check.
+     * @return {@code true} if {@code position} is located within this controller's bounds.
      */
     public final boolean inside(Position position) {
         for (Locatable locatable : getLocations()) {

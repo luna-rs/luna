@@ -5,9 +5,6 @@ import io.luna.game.model.mob.attr.Attribute;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A {@link GameSerializer} implementation that stores persistent player data in local {@code JSON} files.
@@ -24,12 +21,12 @@ public final class JsonGameSerializer extends GameSerializer {
     /**
      * The path to saved player files.
      */
-    private static final Path PLAYER_DIR;
+    public static final Path PLAYER_DIR;
 
     /**
      * The path to saved bot files.
      */
-    private static final Path BOT_DIR;
+    public static final Path BOT_DIR;
 
     static {
         try {
@@ -77,27 +74,6 @@ public final class JsonGameSerializer extends GameSerializer {
         }
     }
 
-    @Override
-    public Set<String> loadBotUsernames(World world) {
-        if (!Files.exists(BOT_DIR)) {
-            try {
-                Files.createDirectory(BOT_DIR);
-                return Set.of();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try (Stream<Path> pathStream = Files.walk(BOT_DIR)) {
-            return pathStream.filter(it -> !Files.isDirectory(it)).
-                    map(Path::getFileName).
-                    map(Path::toString).
-                    map(it -> it.replace(".json", "")).
-                    collect(Collectors.toSet());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * Returns a direct path to this player's persistent data file.
      *
@@ -116,6 +92,6 @@ public final class JsonGameSerializer extends GameSerializer {
      * @return The direct path.
      */
     private Path getParentDir(World world, String username) {
-        return world.getBots().containsPersistent(username) ? BOT_DIR : PLAYER_DIR;
+        return world.getBots().exists(username) ? BOT_DIR : PLAYER_DIR;
     }
 }

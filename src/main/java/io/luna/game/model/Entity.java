@@ -309,7 +309,13 @@ public abstract class Entity implements Attributable, Locatable {
                 }
             }
             if (state == EntityState.ACTIVE) {
+                if(type == EntityType.NPC) {
+                    chunkRepository.updateCollisionMap(this, true);
+                }
                 setCurrentChunk();
+                if(type == EntityType.NPC) {
+                    chunkRepository.updateCollisionMap(this, false);
+                }
             }
         }
     }

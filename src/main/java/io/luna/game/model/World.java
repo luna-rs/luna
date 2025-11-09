@@ -11,11 +11,8 @@ import io.luna.game.model.item.shop.ShopManager;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.bot.BotCredentialsRepository;
 import io.luna.game.model.mob.bot.BotManager;
 import io.luna.game.model.mob.bot.BotRepository;
-import io.luna.game.model.mob.bot.BotScheduleService;
-import io.luna.game.model.mob.controller.ControllerProcessTask;
 import io.luna.game.model.object.GameObjectList;
 import io.luna.game.persistence.GameSerializerManager;
 import io.luna.game.persistence.PersistenceService;
@@ -24,6 +21,7 @@ import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
 import io.luna.net.msg.out.PlayerUpdateMessageWriter;
 import io.luna.util.ExecutorUtils;
+import io.luna.util.SqlConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -105,16 +103,6 @@ public final class World {
     private final BotRepository botRepository;
 
     /**
-     * The bot credentials repository.
-     */
-    private final BotCredentialsRepository botCredentials;
-
-    /**
-     * The bot schedule service.
-     */
-    private final BotScheduleService botService;
-
-    /**
      * The bot manager.
      */
     private final BotManager botManager = new BotManager();
@@ -190,6 +178,11 @@ public final class World {
     private final CollisionManager collisionManager;
 
     /**
+     * The connection pool.
+     */
+    private final SqlConnectionPool connectionPool;
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -200,9 +193,18 @@ public final class World {
         playerMap = new ConcurrentHashMap<>();
         collisionManager = new CollisionManager(this);
         botRepository = new BotRepository(this);
-        botCredentials = new BotCredentialsRepository(context);
-        botService = new BotScheduleService(this);
         persistenceService = new PersistenceService(this);
+
+        // Initialize the connection pool.
+        try {
+            connectionPool = new SqlConnectionPool.Builder()
+                    .poolName("LunaSqlPool")
+                    .database("luna_players")
+                    .build();
+        } catch (Exception e) {
+            logger.fatal("Fatal error creating SQL pool!", e);
+            throw new RuntimeException(e);
+        }
 
         // Initialize synchronization thread pool.
         updatePool = ExecutorUtils.threadPool("WorldSynchronizationThread");
@@ -213,9 +215,7 @@ public final class World {
      */
     public void start() {
         items.startExpirationTask();
-        botRepository.load();
         collisionManager.build(false);
-        schedule(new ControllerProcessTask(this));
         botManager.load();
     }
 
@@ -263,6 +263,7 @@ public final class World {
         postSynchronize();
 
         chunks.resetUpdatedChunks();
+        botManager.getInjectorManager().clearEvents();
 
         // Increment tick counter.
         currentTick.incrementAndGet();
@@ -297,11 +298,12 @@ public final class World {
             and brain processing is also handled here. */
         for (Player player : playerList) {
             try {
+                player.getControllers().process();
+                player.getWalking().process();
+                player.getActions().process();
                 if (player.isBot()) {
                     player.asBot().process();
                 }
-                player.getWalking().process();
-                player.getActions().process();
             } catch (Exception e) {
                 player.logout();
                 logger.warn("{} could not complete pre-synchronization.", player, e);
@@ -498,23 +500,16 @@ public final class World {
     }
 
     /**
-     * @return The bot credentials repository.
-     */
-    public BotCredentialsRepository getBotCredentials() {
-        return botCredentials;
-    }
-
-    /**
-     * @return The bot schedule service.
-     */
-    public BotScheduleService getBotScheduleService() {
-        return botService;
-    }
-
-    /**
      * @return The bot manager.
      */
     public BotManager getBotManager() {
         return botManager;
+    }
+
+    /**
+     * @return The connection pool.
+     */
+    public SqlConnectionPool getConnectionPool() {
+        return connectionPool;
     }
 }

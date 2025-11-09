@@ -1,6 +1,8 @@
 package io.luna.game.model.mob.bot;
 
 import api.bot.BotScript;
+import io.luna.game.model.mob.bot.injection.BotContextInjector;
+import io.luna.game.model.mob.bot.injection.BotContextInjectorManager;
 import io.luna.game.model.mob.bot.movement.BotMovementManager;
 import io.luna.game.model.mob.bot.movement.BotMovementStack;
 import io.luna.game.model.mob.bot.script.BotScriptManager;
@@ -26,6 +28,11 @@ public final class BotManager {
     private final BotMovementManager movementManager = new BotMovementManager();
 
     /**
+     * Manages the {@link BotContextInjector} listeners for bots.
+     */
+    private final BotContextInjectorManager injectorManager = new BotContextInjectorManager();
+
+    /**
      * Initializes bot subsystems and loads reusable data sets.
      */
     public void load() {
@@ -43,5 +50,12 @@ public final class BotManager {
      */
     public BotMovementManager getMovementManager() {
         return movementManager;
+    }
+
+    /**
+     * @return Manages the {@link BotContextInjector} listeners for bots.
+     */
+    public BotContextInjectorManager getInjectorManager() {
+        return injectorManager;
     }
 }

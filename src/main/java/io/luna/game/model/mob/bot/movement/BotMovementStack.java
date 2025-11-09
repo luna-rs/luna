@@ -2,7 +2,6 @@ package io.luna.game.model.mob.bot.movement;
 
 import io.luna.game.GameService;
 import io.luna.game.model.Locatable;
-import io.luna.game.model.Position;
 import io.luna.game.model.mob.WalkingQueue;
 import io.luna.game.model.mob.bot.Bot;
 import org.apache.logging.log4j.LogManager;
@@ -117,9 +116,8 @@ public final class BotMovementStack {
             bot.log("Cancelling existing movement " + request.target + ".");
         }
         // Generate async path and apply it when ready.
-        Position position = bot.getPosition();
         request = new BotMovementRequest(
-                CompletableFuture.supplyAsync(() -> walking.findPath(position, target), manager.getPool()).
+                CompletableFuture.supplyAsync(() -> walking.findPath(target, true), manager.getPool()).
                         thenAcceptAsync(path -> {
                             walking.addPath(path);
                             bot.log("Path generated, now walking" + target + ".");
@@ -133,5 +131,12 @@ public final class BotMovementStack {
                 target);
         bot.log("Generating new movement path " + target + ".");
         return request.result;
+    }
+
+    /**
+     * @return The bot.
+     */
+    public Bot getBot() {
+        return bot;
     }
 }

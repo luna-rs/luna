@@ -15,6 +15,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.object.GameObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -71,6 +72,11 @@ public final class ChunkRepository implements Iterable<Entity> {
             SIZE, SIZE);
 
     /**
+     * The thread-safe snapshot of {@link #matrices}.
+     */
+    private volatile CollisionMatrix[] snapshot;
+
+    /**
      * Creates a new {@link ChunkRepository}.
      *
      * @param chunk The chunk this repository is holding entities for.
@@ -115,8 +121,8 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @param direction The direction.
      * @return {@code true} if traversable.
      */
-    public boolean traversable(Position next, EntityType type, Direction direction) {
-        CollisionMatrix matrix = matrices[next.getZ()];
+    public boolean traversable(Position next, EntityType type, Direction direction, boolean safe) {
+        CollisionMatrix matrix = safe ? snapshot[next.getZ()] : matrices[next.getZ()];
         int x = next.getX(), y = next.getY();
 
         return !matrix.untraversable(x % SIZE, y % SIZE, type, direction);
@@ -129,8 +135,8 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @param removal If the entity is being removed.
      */
     public void updateCollisionMap(Entity entity, boolean removal) {
-        if (entity.getType() != EntityType.OBJECT) {
-            return; // todo https://github.com/luna-rs/luna/issues/379
+        if(entity.getType() == EntityType.PLAYER) {
+            return;
         }
 
         CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
@@ -139,8 +145,19 @@ public final class ChunkRepository implements Iterable<Entity> {
         } else {
             builder.type(CollisionUpdateType.REMOVING);
         }
-        builder.object((GameObject) entity);
-        world.getCollisionManager().apply(builder.build());
+        if(entity.getType() == EntityType.OBJECT) {
+            builder.object((GameObject) entity);
+        } else if(entity.getType() == EntityType.NPC) {
+            builder.tile(entity.getPosition(), false, Direction.NESW);
+        }
+        world.getCollisionManager().apply(builder.build(), false);
+    }
+
+    /**
+     * Creates a thread-safe copy of the backing {@link #matrices}.
+     */
+    public void snapshotCollisionMap() {
+        snapshot = Arrays.copyOf(matrices, matrices.length);
     }
 
     /**

@@ -1,13 +1,16 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Locatable;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 /**
  * An event sent when a mob's skills change.
  *
  * @author lare96
  */
-public final class SkillChangeEvent extends MobEvent {
+public final class SkillChangeEvent extends MobEvent implements InjectableEvent {
 
     /**
      * The old amount of experience.
@@ -43,6 +46,11 @@ public final class SkillChangeEvent extends MobEvent {
         this.oldStaticLvl = oldStaticLvl;
         this.oldLvl = oldLvl;
         this.id = id;
+    }
+
+    @Override
+    public Locatable contextLocatable(Bot bot) {
+        return mob;
     }
 
     /**

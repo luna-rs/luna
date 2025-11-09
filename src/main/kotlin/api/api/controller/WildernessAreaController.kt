@@ -52,7 +52,7 @@ object WildernessAreaController : PlayerLocationController() {
         return canTeleport(player)
     }
 
-    override fun canAttack(player: Player, target: Mob): Boolean {
+    /*override fun canAttack(player: Player, target: Mob): Boolean {
         if(target is Player) {
             val combatLevel = player.combatLevel
             val wildernessLevel = player.wildernessLevel
@@ -66,7 +66,7 @@ object WildernessAreaController : PlayerLocationController() {
             return true
         }
         return true
-    }
+    }*/
 
     /**
      * Sets and displays the wilderness level for [plr].

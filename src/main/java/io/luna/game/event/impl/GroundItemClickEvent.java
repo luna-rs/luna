@@ -1,8 +1,12 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.model.Entity;
+import io.luna.game.model.Locatable;
+import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 /**
  * A {@link PlayerEvent} sent when a player clicks one of the options of an item on the ground.
@@ -16,7 +20,7 @@ public class GroundItemClickEvent extends PlayerEvent implements ControllableEve
      *
      * @author lare96
      */
-    public static final class PickupItemEvent extends GroundItemClickEvent {
+    public static final class PickupItemEvent extends GroundItemClickEvent implements InjectableEvent {
 
         /**
          * Creates a new {@link PickupItemEvent}.
@@ -26,6 +30,16 @@ public class GroundItemClickEvent extends PlayerEvent implements ControllableEve
          */
         public PickupItemEvent(Player plr, GroundItem groundItem) {
             super(plr, groundItem);
+        }
+
+        @Override
+        public Locatable contextLocatable(Bot bot) {
+            return plr;
+        }
+
+        @Override
+        public int contextRadius(Bot bot) {
+            return groundItem.getView().isViewableFor(bot) ? Position.VIEWING_DISTANCE : -1;
         }
     }
 
@@ -50,7 +64,7 @@ public class GroundItemClickEvent extends PlayerEvent implements ControllableEve
     /**
      * The ground item that was clicked.
      */
-    private final GroundItem groundItem;
+    final GroundItem groundItem;
 
     /**
      * Creates a new {@link PlayerEvent}.

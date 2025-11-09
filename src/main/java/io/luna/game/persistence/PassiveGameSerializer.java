@@ -2,8 +2,6 @@ package io.luna.game.persistence;
 
 import io.luna.game.model.World;
 
-import java.util.Set;
-
 /**
  * A {@link GameSerializer} implementation that is passive to all persistent data.
  *
@@ -26,8 +24,4 @@ public final class PassiveGameSerializer extends GameSerializer {
         return false;
     }
 
-    @Override
-    public Set<String> loadBotUsernames(World world) {
-        return Set.of();
-    }
 }

@@ -38,7 +38,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 bot.log("Can't find ${itemName(usedId)} on index ${index.asInt}.")
                 return false
             }
-            if (handler.movement.walkUntilReached(target).await()) {
+            if (bot.movementStack.walk(target)) {
                 val cond = SuspendableCondition {
                     (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                             bot.isInteractingWith(target)

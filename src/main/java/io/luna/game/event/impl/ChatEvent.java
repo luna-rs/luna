@@ -1,6 +1,9 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Locatable;
 import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 import java.time.Instant;
 
@@ -9,7 +12,7 @@ import java.time.Instant;
  *
  * @author lare96
  */
-public final class ChatEvent extends PlayerEvent implements ControllableEvent {
+public final class ChatEvent extends PlayerEvent implements ControllableEvent, InjectableEvent {
 
     /**
      * The chat effect.
@@ -59,6 +62,11 @@ public final class ChatEvent extends PlayerEvent implements ControllableEvent {
         this.messageLength = messageLength;
         this.message = message;
         this.unpackedMessage = unpackedMessage;
+    }
+
+    @Override
+    public Locatable contextLocatable(Bot bot) {
+        return plr;
     }
 
     /**

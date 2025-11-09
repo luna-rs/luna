@@ -1,6 +1,8 @@
 package io.luna.game.model.collision;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import io.luna.game.GameService;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -39,7 +41,7 @@ public final class CollisionManager {
      * A {@code HashSet} of positions where the tile is part of a bridged structure.
      */
     private final Set<Position> bridges = new HashSet<>();
-
+    private final World world;
     /**
      * The {@link ChunkManager} used to lookup {@link CollisionMatrix} objects.
      */
@@ -51,6 +53,7 @@ public final class CollisionManager {
      * @param world The {@link World} instance.
      */
     public CollisionManager(World world) {
+        this.world = world;
         chunks = world.getChunks();
     }
 
@@ -87,7 +90,7 @@ public final class CollisionManager {
                 }
             }
 
-            apply(builder.build());
+            apply(builder.build(), true);
 
             CollisionUpdate.Builder objects = new CollisionUpdate.Builder();
             objects.type(CollisionUpdateType.ADDING);
@@ -95,7 +98,11 @@ public final class CollisionManager {
             repository.getAll(EntityType.OBJECT)
                     .forEach(entity -> objects.object((GameObject) entity));
 
-            apply(objects.build());
+            apply(objects.build(), true);
+        }
+
+        for (ChunkRepository repository : chunks.getAll()) {
+            repository.snapshotCollisionMap();
         }
     }
 
@@ -104,12 +111,12 @@ public final class CollisionManager {
      *
      * @param update The update to apply.
      */
-    public void apply(CollisionUpdate update) {
+    public void apply(CollisionUpdate update, boolean building) {
         ChunkRepository prev = null;
 
         CollisionUpdateType type = update.getType();
         Map<Position, Collection<DirectionFlag>> map = update.getFlags().asMap();
-
+        Set<ChunkRepository> snapshot = new HashSet<>();
         for (Map.Entry<Position, Collection<DirectionFlag>> entry : map.entrySet()) {
             Position position = entry.getKey();
             Chunk chunk = position.getChunk();
@@ -129,9 +136,8 @@ public final class CollisionManager {
             int localY = position.getY() % Chunk.SIZE;
 
             CollisionMatrix matrix = prev.getMatrices()[height];
-            CollisionFlag[] mobs = CollisionFlag.mobs();
-            CollisionFlag[] projectiles = CollisionFlag.projectiles();
-
+            ImmutableList<CollisionFlag> mobs = CollisionFlag.MOBS;
+            ImmutableList<CollisionFlag> projectiles = CollisionFlag.PROJECTILES;
             for (DirectionFlag flag : entry.getValue()) {
                 Direction direction = flag.getDirection();
                 if (direction == Direction.NONE) {
@@ -140,10 +146,20 @@ public final class CollisionManager {
 
                 int orientation = direction.getId();
                 if (flag.isImpenetrable()) {
-                    flag(type, matrix, localX, localY, projectiles[orientation]);
+                    flag(type, matrix, localX, localY, projectiles.get(orientation));
                 }
 
-                flag(type, matrix, localX, localY, mobs[orientation]);
+                flag(type, matrix, localX, localY, mobs.get(orientation));
+            }
+            snapshot.add(prev);
+        }
+
+
+        GameService game = world.getContext().getGame();
+        if (!building) {
+            // Server is completely online, perform snapshots.
+            for (ChunkRepository repository : snapshot) {
+                repository.snapshotCollisionMap();
             }
         }
     }
@@ -287,11 +303,11 @@ public final class CollisionManager {
      * @param direction The direction the entity is travelling.
      * @return {@code true} if next tile is traversable, {@code false} otherwise.
      */
-    public boolean traversable(Position position, EntityType type, Direction direction) {
+    public boolean traversable(Position position, EntityType type, Direction direction, boolean safe) {
         Position next = position.translate(1, direction);
         ChunkRepository repository = chunks.load(next);
 
-        if (!repository.traversable(next, type, direction)) {
+        if (!repository.traversable(next, type, direction, safe)) {
             return false;
         }
 
@@ -304,13 +320,18 @@ public final class CollisionManager {
                     repository = chunks.load(nextChunk);
                 }
 
-                if (!repository.traversable(next, type, component)) {
+                if (!repository.traversable(next, type, component, safe)) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+
+    // traversable with safe mode always off
+    public boolean traversable(Position position, EntityType type, Direction direction) {
+        return traversable(position, type, direction, false);
     }
 
     /**

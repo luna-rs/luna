@@ -9,6 +9,7 @@ import io.luna.game.model.mob.block.AbstractUpdateBlockSet;
 import io.luna.game.model.mob.block.PlayerUpdateBlockSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.block.UpdateState;
+import io.luna.game.model.mob.bot.Bot;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 import io.luna.net.msg.GameMessageWriter;
@@ -56,8 +57,10 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                     msg.putBits(2, 3);
                     iterator.remove();
                     player.getLocalPlayers().remove(other);
-                    if (player.isBot() && !other.isBot()) {
-                        player.asBot().getLocalHumans().remove(other);
+                    if (other.isBot()) {
+                        Bot otherBot = other.asBot();
+                        player.getLocalBots().remove(otherBot);
+                        otherBot.getLocalHumans().remove(player);
                     }
                 }
             }
@@ -75,8 +78,10 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
                 if (other.getPosition().isViewable(player.getPosition()) && player.getUpdatePlayers().add(other)) {
                     playersAdded++;
                     player.getLocalPlayers().add(other);
-                    if (player.isBot() && !other.isBot()) {
-                        player.asBot().getLocalHumans().add(other);
+                    if (other.isBot()) {
+                        Bot otherBot = other.asBot();
+                        player.getLocalBots().add(otherBot);
+                        otherBot.getLocalHumans().add(player);
                     }
                     addPlayer(msg, player, other);
                     blockSet.encode(other, blockMsg, UpdateState.ADD_LOCAL);

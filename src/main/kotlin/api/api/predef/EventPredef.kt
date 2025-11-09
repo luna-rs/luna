@@ -1,5 +1,6 @@
 package api.predef
 
+import api.bot.dsl.TypeContextInjectorReceiver
 import api.event.Matcher
 import api.event.dsl.InterceptBy
 import api.event.dsl.InterceptUseItem
@@ -16,6 +17,7 @@ import io.luna.game.event.impl.UseItemEvent.ItemOnItemEvent
 import io.luna.game.event.impl.UseItemEvent.ItemOnObjectEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
+import io.luna.game.model.mob.bot.injection.InjectableEvent
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -47,6 +49,11 @@ fun <E : Event> on(eventClass: KClass<E>) = InterceptBy(eventClass)
 fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriority.LOW, action: EventAction<E>) {
     scriptListeners += EventListener(eventClass.java, action, priority)
 }
+
+/**
+ * The context injection event interception function.
+ */
+fun <E : InjectableEvent> injector(eventClass: KClass<E>) = TypeContextInjectorReceiver(eventClass)
 
 /**
  * The [ItemOnItemEvent] and [ItemOnObjectEvent] matcher function. Forwards to [InterceptUseItem].

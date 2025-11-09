@@ -23,7 +23,7 @@ public enum Direction {
     SOUTH_WEST(5, new Step(-1, -1)),
     SOUTH(6, new Step(0, -1)),
     SOUTH_EAST(7, new Step(1, -1));
-// todo cleanup, documentation
+
     /**
      * A list of directions representing all possible directions of the NPC view cone, in order.
      */
@@ -40,20 +40,28 @@ public enum Direction {
     /**
      * An array of directions without any diagonal directions.
      */
-    public final static Direction[] NESW = {NORTH, EAST, SOUTH, WEST};
+    public final static ImmutableList<Direction> NESW = ImmutableList.of(NORTH, EAST, SOUTH, WEST);
 
     /**
      * An array of directions without any diagonal directions, and one step counter-clockwise, as used by
      * the clients collision mapping.
      */
-    public final static Direction[] WNES = {WEST, NORTH, EAST, SOUTH};
+    public final static ImmutableList<Direction> WNES = ImmutableList.of(WEST, NORTH, EAST, SOUTH);
 
     /**
      * An array of diagonal directions, and one step counter-clockwise, as used by the clients collision
      * mapping.
      */
-    public final static Direction[] WNES_DIAGONAL = {NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST};
+    public final static ImmutableList<Direction> WNES_DIAGONAL = ImmutableList.of(NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST);
     public static final ImmutableList<Direction> ALL = ImmutableList.copyOf(values());
+
+
+    private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST);
+    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST);
+    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST);
+    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST);
+
+
     /**
      * The direction identifier.
      */
@@ -69,13 +77,14 @@ public enum Direction {
         this.id = id;
         this.translate = translate;
     }
+
     /**
      * Gets the direction as an integer as used orientation in the client maps (WNES as opposed to NESW).
      *
      * @return The direction as an integer.
      */
     public int toForcedMovementId() {
-        switch(this) {
+        switch (this) {
             case NORTH:
             case NORTH_EAST:
             case NORTH_WEST:
@@ -93,6 +102,7 @@ public enum Direction {
         }
 
     }
+
     public Step getTranslation() {
         return translate;
     }
@@ -121,16 +131,16 @@ public enum Direction {
      * @param direction The direction to get the components for.
      * @return The components for the given direction.
      */
-    public static Direction[] diagonalComponents(Direction direction) {
+    public static ImmutableList<Direction> diagonalComponents(Direction direction) {
         switch (direction) {
             case NORTH_EAST:
-                return new Direction[]{NORTH, EAST};
+                return NORTH_EAST_COMPONENTS;
             case NORTH_WEST:
-                return new Direction[]{NORTH, WEST};
+                return NORTH_WEST_COMPONENTS;
             case SOUTH_EAST:
-                return new Direction[]{SOUTH, EAST};
+                return SOUTH_EAST_COMPONENTS;
             case SOUTH_WEST:
-                return new Direction[]{SOUTH, WEST};
+                return SOUTH_WEST_COMPONENTS;
         }
 
         throw new IllegalArgumentException("Must provide a diagonal direction.");

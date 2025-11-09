@@ -1,6 +1,7 @@
 package api.bot.action
 
 import api.bot.SuspendableCondition
+import api.predef.ext.*
 import io.luna.game.model.Entity
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Npc
@@ -15,7 +16,7 @@ import io.luna.net.msg.`in`.PlayerClickMessageReader
 /**
  * A [BotActionHandler] implementation for interaction related actions.
  */
-class BotInteractionActionHandler(private val bot: Bot, private val handler: BotActionHandler) {
+class BotInteractionActionHandler(private val bot: Bot) {
 
     /**
      * An action that forces the [Bot] to interact with [target]. If the bot is out of viewing distance, it will walk
@@ -30,7 +31,7 @@ class BotInteractionActionHandler(private val bot: Bot, private val handler: Bot
      * @return `false` if the interaction was unsuccessful.
      */
     suspend fun interact(option: Int, target: Entity): Boolean {
-        if (handler.movement.walkUntilReached(target).await()) {
+        if (bot.movementStack.walk(target)) {
             val cond = SuspendableCondition {
                 (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                         bot.isInteractingWith(target)
