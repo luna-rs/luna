@@ -6,114 +6,129 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 
 /**
- * A model representing a route for forced player movement.
+ * Represents a forced (exact) movement update for a player.
+ * <p>
+ * Exact movement is used by the 317 protocol to move a player to a specific coordinate using an interpolated
+ * slide animation, rather than the normal tile-by-tile walking mechanics. This is used for:
+ * </p>
+ *
+ * <ul>
+ *     <li>Pushing or pulling a player (e.g., agility obstacles).</li>
+ *     <li>Cutscenes or scripted movements.</li>
+ *     <li>Forced directional movement such as telekinetic effects.</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class ExactMovement {
 
     /**
-     * The starting position.
+     * The starting position before the forced movement begins.
      */
     private final Position startPosition;
 
     /**
-     * The destination position.
+     * The end position where the player is forced to move.
      */
     private final Position endPosition;
 
     /**
-     * The start duration.
+     * Delay before the movement begins (in ticks).
      */
     private final int durationStart;
 
     /**
-     * The movement duration.
+     * Duration of the forced movement itself (in ticks).
      */
     private final int durationEnd;
 
     /**
-     * The face direction.
+     * The direction the player should face while moving.
      */
     private final Direction direction;
 
     /**
-     * Creates a new {@link ExactMovement} for movement across the x-axis.
+     * Creates an {@link ExactMovement} moving along the x-axis.
      *
-     * @param player The player.
-     * @param amount The amount to move.
-     * @param durationTicks The duration.
-     * @return The exact movement instance.
+     * @param player The player being moved.
+     * @param amount The x-offset.
+     * @param durationTicks The number of ticks the movement should take.
+     * @return The resulting forced movement.
      */
     public static ExactMovement toX(Player player, int amount, int durationTicks) {
         return to(player, amount, 0, durationTicks);
     }
 
     /**
-     * Creates a new {@link ExactMovement} for movement across the y-axis.
+     * Creates an {@link ExactMovement} moving along the y-axis.
      *
-     * @param player The player.
-     * @param amount The amount to move.
-     * @param durationTicks The duration.
-     * @return The exact movement instance.
+     * @param player The player being moved.
+     * @param amount The y-offset.
+     * @param durationTicks The number of ticks the movement should take.
+     * @return The resulting forced movement.
      */
     public static ExactMovement toY(Player player, int amount, int durationTicks) {
         return to(player, 0, amount, durationTicks);
     }
 
     /**
-     * Creates a new {@link ExactMovement} for movement across both the x and y axis.
+     * Creates an {@link ExactMovement} along both axes.
      *
-     * @param player The player.
-     * @param amountX The x amount to move.
-     * @param amountY The y amount to move.
-     * @param durationTicks The duration.
-     * @return The exact movement instance.
+     * <p>
+     * Duration is scaled by protocol requirements (600ms units vs 30-tick cycles).
+     * </p>
+     *
+     * @param player The player being moved.
+     * @param amountX X-offset.
+     * @param amountY Y-offset.
+     * @param durationTicks Movement duration (ticks).
+     * @return The resulting forced movement.
      */
     public static ExactMovement to(Player player, int amountX, int amountY, int durationTicks) {
-        Position position = player.getPosition();
-        Position destination = player.getPosition().translate(amountX, amountY);
-        durationTicks = (durationTicks * 600) / 30;
-
-        return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
+        Position pos = player.getPosition();
+        Position dest = pos.translate(amountX, amountY);
+        durationTicks = (durationTicks * 600) / 30; // Convert to client’s expected movement units.
+        return new ExactMovement(pos, dest, 0, durationTicks, Direction.between(pos, dest));
     }
 
     /**
-     * Creates a new {@link ExactMovement} for movement across both the x and y axis.
+     * Creates forced movement to a position using movement distance as duration.
      *
      * @param player The player.
      * @param destination The destination.
-     * @return The exact movement instance.
+     * @return The resulting forced movement.
      */
     public static ExactMovement to(Player player, Position destination) {
-        Position position = player.getPosition();
-        int durationTicks = position.computeLongestDistance(destination);
+        Position pos = player.getPosition();
+        int durationTicks = pos.computeLongestDistance(destination);
         durationTicks = (durationTicks * 600) / 30;
-        return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
+        return new ExactMovement(pos, destination, 0, durationTicks, Direction.between(pos, destination));
     }
 
     /**
-     * Creates a new {@link ExactMovement} for movement across both the x and y axis.
+     * Creates forced movement to a position with a provided duration.
      *
      * @param player The player.
-     * @param destination The destination.
-     * @return The exact movement instance.
+     * @param destination The end position.
+     * @param durationTicks The duration.
+     * @return The resulting forced movement.
      */
     public static ExactMovement to(Player player, Position destination, int durationTicks) {
-        Position position = player.getPosition();
-        return new ExactMovement(position, destination, 0, durationTicks, Direction.between(position, destination));
+        Position pos = player.getPosition();
+        return new ExactMovement(pos, destination, 0, durationTicks, Direction.between(pos, destination));
     }
 
     /**
      * Creates a new {@link ExactMovement}.
      *
-     * @param startPosition The starting position.
-     * @param endPosition The destination position.
-     * @param durationStart The start duration.
-     * @param durationEnd The movement duration.
-     * @param direction The face direction.
+     * @param startPosition Starting position.
+     * @param endPosition Destination.
+     * @param durationStart Start delay.
+     * @param durationEnd Movement duration.
+     * @param direction Facing direction.
      */
-    public ExactMovement(Position startPosition, Position endPosition, int durationStart, int durationEnd, Direction direction) {
+    public ExactMovement(Position startPosition, Position endPosition,
+                         int durationStart, int durationEnd, Direction direction) {
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.durationStart = durationStart;
@@ -125,8 +140,12 @@ public final class ExactMovement {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ExactMovement)) return false;
-        ExactMovement movement = (ExactMovement) o;
-        return durationStart == movement.durationStart && durationEnd == movement.durationEnd && Objects.equal(startPosition, movement.startPosition) && Objects.equal(endPosition, movement.endPosition) && direction == movement.direction;
+        ExactMovement m = (ExactMovement) o;
+        return durationStart == m.durationStart &&
+                durationEnd == m.durationEnd &&
+                Objects.equal(startPosition, m.startPosition) &&
+                Objects.equal(endPosition, m.endPosition) &&
+                direction == m.direction;
     }
 
     @Override
@@ -135,35 +154,35 @@ public final class ExactMovement {
     }
 
     /**
-     * @return The starting position.
+     * @return The start position.
      */
     public Position getStartPosition() {
         return startPosition;
     }
 
     /**
-     * @return The destination position.
+     * @return The end position.
      */
     public Position getEndPosition() {
         return endPosition;
     }
 
     /**
-     * @return The start duration.
+     * @return Delay before movement begins.
      */
     public int getDurationStart() {
         return durationStart;
     }
 
     /**
-     * @return The movement duration.
+     * @return Duration of the forced movement.
      */
     public int getDurationEnd() {
         return durationEnd;
     }
 
     /**
-     * @return The face direction.
+     * @return Direction the player faces during movement.
      */
     public Direction getDirection() {
         return direction;

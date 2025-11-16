@@ -1,24 +1,39 @@
 package io.luna.game.model.mob.block;
 
+import io.luna.game.model.mob.Mob;
+
 /**
- * An enum representing update states.
+ * Represents the possible update states for a {@link Mob} during the main synchronization cycle.
+ * <p>
+ * These states are primarily used by the update task pipeline to determine which type of update mask or
+ * synchronization logic should be applied.
+ * </p>
  *
  * @author lare96
  */
 public enum UpdateState {
 
     /**
-     * Updating for themselves.
+     * Indicates an update being sent for the player’s own mob.
+     * <p>
+     * This state represents the self-update that occurs every cycle, ensuring the player’s own information remains
+     * in sync with their client.
+     * </p>
      */
     UPDATE_SELF,
 
     /**
-     * Updating existing local mobs.
+     * Indicates an update for a mob that is already within the player’s local viewport. These updates handle changes
+     * for entities that have already been registered as visible.
      */
     UPDATE_LOCAL,
 
     /**
-     * Adding new local mobs.
+     * Indicates an update for a mob that has just entered the player’s local viewport.
+     * <p>
+     * This state handles full initialization — such as spawning new players or NPCs, sending complete appearance
+     * data, and registering them into the client’s local mob list.
+     * </p>
      */
     ADD_LOCAL
 }

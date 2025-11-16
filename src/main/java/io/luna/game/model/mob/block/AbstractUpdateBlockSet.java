@@ -3,7 +3,6 @@ package io.luna.game.model.mob.block;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ByteOrder;
 
@@ -16,83 +15,99 @@ import static io.luna.game.model.mob.block.UpdateState.ADD_LOCAL;
 import static io.luna.game.model.mob.block.UpdateState.UPDATE_SELF;
 
 /**
- * A model representing a group of update blocks that need to be encoded. Implementations <strong>must be
- * stateless</strong> so instances can be shared concurrently.
+ * Represents an ordered collection of {@link UpdateBlock}s that may need to be encoded for a {@link Mob}
+ * (player or NPC) during the main update cycle.
+ * <p>
+ * This class is designed to be <strong>stateless and thread-safe</strong>, allowing a single instance to be safely
+ * reused by multiple encoder threads.
+ * <p>
+ * Concrete subclasses (e.g., {@code PlayerUpdateBlockSet}, {@code NpcUpdateBlockSet}) must define how to assemble and
+ * encode their specific block types.
  *
+ * @param <E> The mob subtype (Player or Npc).
  * @author lare96
  */
 public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
     /**
-     * The immutable list of update blocks.
+     * The immutable, ordered list of all possible update blocks.
+     * <p>
+     * The order of this list determines the encoding order, which must match the client’s expected mask order.
      */
     private final ImmutableList<UpdateBlock> updateBlocks;
 
     /**
-     * Creates a new {@link AbstractUpdateBlockSet}.
+     * Constructs this {@link AbstractUpdateBlockSet} and computes its block list.
      */
     public AbstractUpdateBlockSet() {
-        updateBlocks = computeBlocks();
+        this.updateBlocks = computeBlocks();
     }
 
     /**
-     * Adds the encoded block set to the main updating buffer.
+     * Adds the encoded block set to the main updating buffer. This method is responsible for writing the update mask
+     * and then calling {@link #encodeBlock(E, UpdateBlock, ByteMessage)} for each active block.
      *
-     * @param mob The mob.
+     * @param mob The mob whose update is being encoded.
      * @param msg The main updating buffer.
-     * @param state The updating state.
+     * @param state The update state (e.g., {@code ADD_LOCAL}, {@code UPDATE_SELF}).
      */
     public abstract void addBlockSet(E mob, ByteMessage msg, UpdateState state);
 
     /**
-     * Encodes a single update block.
+     * Encodes an individual {@link UpdateBlock} for a mob.
      *
-     * @param mob The mob.
-     * @param block The update block to encode.
-     * @param blockMsg The update block set buffer.
+     * @param mob The mob whose block is being encoded.
+     * @param block The update block definition.
+     * @param blockMsg The temporary block buffer.
      */
     public abstract void encodeBlock(E mob, UpdateBlock block, ByteMessage blockMsg);
 
     /**
-     * Computes the immutable list of update blocks. Update blocks are handled in the order they are provided here.
+     * Computes the immutable ordered list of {@link UpdateBlock}s that can be used for this mob type. This is called
+     * once per blockset instance.
+     *
+     * @return An immutable list defining all possible update blocks.
      */
     public abstract ImmutableList<UpdateBlock> computeBlocks();
 
     /**
-     * Encodes the backing group of update blocks.
+     * Encodes all pending update blocks into the specified message buffer. This method determines which blocks are
+     * active based on the mob's {@link UpdateFlagSet} and the update {@link UpdateState}.
      *
-     * @param mob The mob.
-     * @param blockMsg The update block set buffer.
+     * @param mob The mob being updated.
+     * @param blockMsg The target buffer for the update mask and block data.
      * @param state The update state.
      */
     final void encodeBlockSet(E mob, ByteMessage blockMsg, UpdateState state) {
         List<UpdateBlock> encodeBlocks = new ArrayList<>(updateBlocks.size());
         int mask = 0;
+
         for (UpdateBlock block : updateBlocks) {
-            UpdateFlag updateFlag = block.getFlag();
+            var flag = block.getFlag();
+
             if (mob.getType() == EntityType.PLAYER) {
-                // We are adding local players, so we need to force the appearance block.
-                if (state == ADD_LOCAL && updateFlag == APPEARANCE) {
+                // ADD_LOCAL forces the appearance block so the client can render the new player immediately.
+                if (state == ADD_LOCAL && flag == APPEARANCE) {
                     mask |= block.getMask(mob);
                     encodeBlocks.add(block);
                     continue;
                 }
 
-                // We are updating ourselves, ignore our own chat block.
-                if (state == UPDATE_SELF && updateFlag == CHAT) {
+                // Skip our own chat block during UPDATE_SELF (prevents local echo).
+                if (state == UPDATE_SELF && flag == CHAT) {
                     continue;
                 }
             }
 
-            // Add the update block to the cache, if its flagged.
-            if (mob.getFlags().get(updateFlag)) {
+            // Include block if flagged.
+            if (mob.getFlags().get(flag)) {
                 mask |= block.getMask(mob);
                 encodeBlocks.add(block);
             }
         }
 
         if (!encodeBlocks.isEmpty()) {
-            // Encode the update mask.
+            // Encode the mask. Masks > 8 bits require a short (extended mask) with the 0x20 bit set.
             if (mask >= 0x100 && mob.getType() == EntityType.PLAYER) {
                 mask |= 0x20;
                 blockMsg.putShort(mask, ByteOrder.LITTLE);
@@ -100,7 +115,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
                 blockMsg.put(mask);
             }
 
-            // And finally, encode the update blocks!
+            // Encode all active blocks in order.
             for (UpdateBlock block : encodeBlocks) {
                 encodeBlock(mob, block, blockMsg);
             }
@@ -108,11 +123,12 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
     }
 
     /**
-     * Encodes this enitre block set.
+     * Determines whether a mob should be updated and, if so, appends its update blockset to the provided update
+     * buffer.
      *
-     * @param mob The mob.
+     * @param mob The mob whose updates are being processed.
      * @param msg The main updating buffer.
-     * @param state The update state.
+     * @param state The current update state.
      */
     public void encode(E mob, ByteMessage msg, UpdateState state) {
         if (!mob.getFlags().isEmpty() || state == ADD_LOCAL) {

@@ -7,31 +7,76 @@ import java.util.EnumSet;
 import java.util.Iterator;
 
 /**
- * A model that manages update flags for mobs.
+ * A container used to track which {@link UpdateFlag} values a mob must apply during the next synchronization cycle.
  *
  * @author lare96
  */
 public final class UpdateFlagSet implements Iterable<UpdateFlag> {
 
     /**
-     * An enum representing update flags.
+     * The list of all possible update flags that a mob may signal during synchronization. Each flag corresponds to
+     * a specific {@link UpdateBlock} type.
      */
     public enum UpdateFlag {
+
+        /**
+         * Signals that a mob's appearance (equipment, models, colors) must be refreshed.
+         */
         APPEARANCE,
+
+        /**
+         * Signals that the mob has spoken and its chat message must be sent to nearby players.
+         */
         CHAT,
+
+        /**
+         * Signals that a graphic (spot animation) should be displayed.
+         */
         GRAPHIC,
+
+        /**
+         * Signals that an animation should be played (emotes, combat animations, etc.)
+         */
         ANIMATION,
+
+        /**
+         * Signals a forced chat message, overriding normal behavior.
+         */
         FORCED_CHAT,
+
+        /**
+         * Signals that the mob's interaction target has changed (face entity).
+         */
         INTERACTION,
+
+        /**
+         * Signals that the mob must face a specific world coordinate.
+         */
         FACE_POSITION,
+
+        /**
+         * Signals that the primary hitmark (+ damage + soak) should be displayed.
+         */
         PRIMARY_HIT,
+
+        /**
+         * Signals that the secondary hitmark should be displayed.
+         */
         SECONDARY_HIT,
+
+        /**
+         * Signals that the mob transforms into a different entity/NPC id.
+         */
         TRANSFORM,
+
+        /**
+         * Signals that the mob is performing forced movement.
+         */
         EXACT_MOVEMENT
     }
 
     /**
-     * A set that tracks flagged update blocks.
+     * Internal storage of active flags.
      */
     private final EnumSet<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
 
@@ -42,48 +87,56 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
     }
 
     /**
-     * Flag an update block.
+     * Flags an update block, marking it so it will be encoded in the next update cycle.
      *
-     * @param flag The block to flag.
+     * @param flag The update flag to add.
      */
     public void flag(UpdateFlag flag) {
         flags.add(flag);
     }
 
     /**
-     * Unflag an update block.
+     * Removes a previously set update flag.
      *
-     * @param flag The block to unflag.
+     * @param flag The update flag to remove.
      */
     public void unflag(UpdateFlag flag) {
         flags.remove(flag);
     }
 
     /**
-     * Retrieves the flag status of an update block.
+     * Determines if a specific flag is currently active.
      *
-     * @param flag The flag to lookup.
-     * @return {@code true} if {@code flag} is flagged.
+     * @param flag The update flag to check.
+     * @return {@code true} if the flag is set, otherwise {@code false}.
      */
     public boolean get(UpdateFlag flag) {
         return flags.contains(flag);
     }
 
     /**
-     * Returns if the backing set is empty or not.
+     * Returns whether any update flags are currently active.
      *
-     * @return {@code true} if no blocks are flagged.
+     * @return {@code true} if no flags are set.
      */
     public boolean isEmpty() {
         return flags.isEmpty();
     }
 
     /**
-     * Clears all flagged blocks. When this method returns, all blocks will be unflagged.
+     * Clears all active update flags.
+     * <p>
+     * This is typically called at the end of a mob’s update processing.
      */
     public void clear() {
         flags.clear();
     }
+
+    /**
+     * Returns the number of active update flags.
+     *
+     * @return The number of flags currently set.
+     */
     public int size() {
         return flags.size();
     }

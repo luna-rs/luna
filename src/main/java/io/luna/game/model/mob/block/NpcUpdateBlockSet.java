@@ -5,12 +5,27 @@ import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
 
 /**
- * An {@link AbstractUpdateBlockSet} implementation that handles the encoding of {@link Npc} update
- * blocks.
+ * Handles encoding of all {@link UpdateBlock} types relevant to NPCs.
+ *
+ * <p>
+ * NPC update sets differ from player update sets in both order and available block types.
+ * This class defines:
+ * </p>
+ *
+ * <ul>
+ *     <li>Which update blocks apply to NPCs.</li>
+ *     <li>The order they must be encoded in.</li>
+ *     <li>How each block is encoded for the NPC update mask.</li>
+ * </ul>
+ *
+ * <p>
+ * The update pipeline calls {@link #addBlockSet(Npc, ByteMessage, UpdateState)} during NPC synchronization. NPCs
+ * never cache block sets (unlike players).
+ * </p>
  *
  * @author lare96
  */
-public class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
+public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     @Override
     public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
