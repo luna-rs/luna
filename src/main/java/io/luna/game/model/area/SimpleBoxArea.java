@@ -88,7 +88,10 @@ public class SimpleBoxArea extends Area {
         ImmutableList.Builder<Position> list = ImmutableList.builder();
         for (int x = southWestX; x <= northEastX; x++) {
             for (int y = southWestY; y <= northEastY; y++) {
-                list.add(new Position(x, y));
+                Position position = new Position(x, y);
+                if (contains(position)) {
+                    list.add(position);
+                }
             }
         }
         return list.build();

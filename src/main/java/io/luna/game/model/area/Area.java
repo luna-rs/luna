@@ -30,6 +30,16 @@ public abstract class Area implements Locatable {
     }
 
     /**
+     * Creates a new {@link SimpleBoxArea} centered around a position with a specified radius.
+     *
+     * @param center The center {@link Position}.
+     * @param radius The radius (number of tiles) extending outward in all directions.
+     */
+    public static SimpleBoxArea of(Position center, int radius) {
+        return of(center.getX() - radius, center.getY() - radius, center.getX() + radius, center.getY() + radius);
+    }
+
+    /**
      * Creates an arbitrary polygonal {@link Area} requiring a list of vertices.
      *
      * @param vertices The vertices that make up this polygon.
@@ -56,16 +66,23 @@ public abstract class Area implements Locatable {
     private ImmutableList<Position> positions;
 
     /**
-     * The anchor position used in {@link #location()}.
+     * The anchor position used in {@link #absLocation()}.
      */
     private Position anchorPosition;
 
     @Override
-    public final Position location() {
-        if (anchorPosition == null) {
-            anchorPosition = randomPosition();
-        }
-        return anchorPosition;
+    public final Position absLocation() {
+        return getAnchorPosition();
+    }
+
+    @Override
+    public int getX() {
+        return getAnchorPosition().getX();
+    }
+
+    @Override
+    public int getY() {
+        return getAnchorPosition().getY();
     }
 
     @Override
@@ -99,6 +116,17 @@ public abstract class Area implements Locatable {
             positions = computePositions();
         }
         return positions;
+    }
+
+    /**
+     * @return The anchor position used in {@link #absLocation()}. Generates a new one using {@link #randomPosition()}
+     * if needed.
+     */
+    public Position getAnchorPosition() {
+        if (anchorPosition == null) {
+            anchorPosition = randomPosition();
+        }
+        return anchorPosition;
     }
 
     /**
