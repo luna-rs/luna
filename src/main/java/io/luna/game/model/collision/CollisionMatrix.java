@@ -17,7 +17,11 @@ import java.util.Arrays;
 import java.util.OptionalInt;
 
 /**
- * A 2-dimensional adjacency matrix containing tile collision data.
+ * A 2D grid of collision data for a single chunk plane.
+ * <p>
+ * Each cell in the matrix encodes a set of {@link CollisionFlag} values in a packed {@code short}, describing which
+ * movement and projectile directions are blocked for the tile at that local (x, y) coordinate.
+ * </p>
  *
  * @author Major
  * @author lare96
@@ -25,27 +29,27 @@ import java.util.OptionalInt;
 public final class CollisionMatrix {
 
     /**
-     * Indicates that all types of traversal are allowed.
+     * Bit pattern representing a fully open tile (no collision flags set).
      */
     private static final short ALL_ALLOWED = 0b00000000_00000000;
 
     /**
-     * Indicates that no types of traversal are allowed.
+     * Bit pattern representing a fully blocked tile (all movement and projectile flags set).
      */
     private static final short ALL_BLOCKED = (short) 0b11111111_11111111;
 
     /**
-     * Indicates that projectiles may traverse this tile, but mobs may not.
+     * Bit pattern representing a tile where mobs are blocked but projectiles may still pass.
      */
     private static final short ALL_MOBS_BLOCKED = (short) 0b11111111_00000000;
 
     /**
-     * Creates an array of CollisionMatrix objects, all of the specified width and length.
+     * Creates an array of {@link CollisionMatrix} instances, each with identical width and length.
      *
-     * @param count The length of the array to create.
-     * @param width The width of each CollisionMatrix.
-     * @param length The length of each CollisionMatrix.
-     * @return The array of CollisionMatrix objects.
+     * @param count The number of matrices to create.
+     * @param width The width (X dimension) of each matrix.
+     * @param length The length (Y dimension) of each matrix.
+     * @return A new array of {@code count} {@link CollisionMatrix} objects.
      */
     public static CollisionMatrix[] createMatrices(int count, int width, int length) {
         CollisionMatrix[] matrices = new CollisionMatrix[count];
@@ -54,40 +58,52 @@ public final class CollisionMatrix {
     }
 
     /**
-     * The length of the matrix.
+     * The length (Y dimension) of this matrix.
      */
     private final int length;
 
     /**
-     * The collision matrix, as a {@code short} array.
+     * The underlying collision data, as a flat array of packed {@code short} flags.
      */
     private final short[] matrix;
 
     /**
-     * The width of the matrix.
+     * The width (X dimension) of this matrix.
      */
     private final int width;
 
     /**
-     * Creates the CollisionMatrix.
+     * Creates a new {@link CollisionMatrix} with the given dimensions.
      *
-     * @param width The width of the matrix.
-     * @param length The length of the matrix.
+     * @param width The width (X dimension) of the matrix.
+     * @param length The length (Y dimension) of the matrix.
      */
-    public CollisionMatrix(int width, int length) {
+    CollisionMatrix(int width, int length) {
         this.width = width;
         this.length = length;
         matrix = new short[width * length];
     }
 
     /**
-     * Returns whether or not <strong>all</strong> of the specified {@link CollisionFlag}s are set for the specified
-     * coordinate pair.
+     * Creates a new {@link CollisionMatrix} with the given dimensions and matrix.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flags The CollisionFlags.
-     * @return {@code true} iff all of the CollisionFlags are set.
+     * @param width The width (X dimension) of the matrix.
+     * @param length The length (Y dimension) of the matrix.
+     * @param matrix The underlying collision data, as a flat array of packed {@code short} flags.
+     */
+   private CollisionMatrix(int width, int length, short[] matrix) {
+        this.width = width;
+        this.length = length;
+        this.matrix = matrix;
+    }
+
+    /**
+     * Returns whether <strong>all</strong> of the specified {@link CollisionFlag}s are set for the given tile.
+     *
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flags The collision flags to test.
+     * @return {@code true} if every flag in {@code flags} is set; otherwise {@code false}.
      */
     public boolean all(int x, int y, CollisionFlag... flags) {
         for (CollisionFlag flag : flags) {
@@ -95,18 +111,16 @@ public final class CollisionMatrix {
                 return false;
             }
         }
-
         return true;
     }
 
     /**
-     * Returns whether or not <strong>any</strong> of the specified {@link CollisionFlag}s are set for the specified
-     * coordinate pair.
+     * Returns whether <strong>any</strong> of the specified {@link CollisionFlag}s are set for the given tile.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flags The CollisionFlags.
-     * @return {@code true} iff any of the CollisionFlags are set.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flags The collision flags to test.
+     * @return {@code true} if at least one flag in {@code flags} is set; otherwise {@code false}.
      */
     public boolean any(int x, int y, CollisionFlag... flags) {
         for (CollisionFlag flag : flags) {
@@ -114,102 +128,106 @@ public final class CollisionMatrix {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
-     * Completely blocks the tile at the specified coordinate pair, while optionally allowing projectiles
-     * to pass through.
+     * Marks the tile at (x, y) as fully blocked for mob movement, and optionally for projectiles.
+     * <p>
+     * When {@code impenetrable} is {@code true}, both mobs and projectiles are blocked. When {@code false}, mobs are
+     * blocked but projectiles may still traverse the tile.
+     * </p>
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param impenetrable If projectiles should be permitted to traverse this tile.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param impenetrable {@code true} to block projectiles as well as mobs; {@code false} to block mobs only.
      */
-    public void block(int x, int y, boolean impenetrable) {
+    void block(int x, int y, boolean impenetrable) {
         set(x, y, impenetrable ? ALL_BLOCKED : ALL_MOBS_BLOCKED);
     }
 
     /**
-     * Completely blocks the tile at the specified coordinate pair.
+     * Marks the tile at (x, y) as fully blocked for both mobs and projectiles.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
      */
-    public void block(int x, int y) {
+    void block(int x, int y) {
         block(x, y, true);
     }
 
     /**
-     * Clears (i.e. sets to {@code false}) the value of the specified {@link CollisionFlag} for the specified
-     * coordinate pair.
+     * Clears the specified {@link CollisionFlag} for the tile at (x, y).
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flag The CollisionFlag.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flag The collision flag to clear.
      */
-    public void clear(int x, int y, CollisionFlag flag) {
+    void clear(int x, int y, CollisionFlag flag) {
         set(x, y, (short) (matrix[indexOf(x, y)] & ~flag.asShort()));
     }
 
     /**
-     * Adds an additional {@link CollisionFlag} for the specified coordinate pair.
+     * Sets (ORs) the specified {@link CollisionFlag} for the tile at (x, y).
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flag The CollisionFlag.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flag The collision flag to set.
      */
-    public void flag(int x, int y, CollisionFlag flag) {
+    void flag(int x, int y, CollisionFlag flag) {
         matrix[indexOf(x, y)] |= flag.asShort();
     }
 
     /**
-     * Returns whether or not the specified {@link CollisionFlag} is set for the specified coordinate pair.
+     * Returns whether the specified {@link CollisionFlag} is set for the tile at (x, y).
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flag The CollisionFlag.
-     * @return {@code true} iff the CollisionFlag is set.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flag The collision flag to test.
+     * @return {@code true} if the flag is set; otherwise {@code false}.
      */
     public boolean flagged(int x, int y, CollisionFlag flag) {
         return (get(x, y) & flag.asShort()) != 0;
     }
 
     /**
-     * Gets the value of the specified tile.
+     * Retrieves the packed collision value for the tile at (x, y).
      *
-     * @param x The x coordinate of the tile.
-     * @param y The y coordinate of the tile.
-     * @return The value.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @return The packed 16-bit collision value for that tile.
      */
     public int get(int x, int y) {
         return matrix[indexOf(x, y)] & 0xFFFF;
     }
 
     /**
-     * Gets the value of the specified tile.
+     * Retrieves the packed collision value for the tile at the given absolute position.
+     * <p>
+     * The supplied position is converted to local chunk coordinates using {@link Chunk#SIZE}.
+     * </p>
      *
-     * @param position The absolute position.
-     * @return The value.
+     * @param position The absolute world position.
+     * @return The packed 16-bit collision value for that tile.
      */
     public int get(Position position) {
         return matrix[indexOf(position.getX() % Chunk.SIZE, position.getY() % Chunk.SIZE)] & 0xFFFF;
     }
 
     /**
-     * Resets the cell of the specified coordinate pair.
+     * Resets the tile at (x, y) to a fully open state (no collision flags).
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
      */
-    public void reset(int x, int y) {
+    void reset(int x, int y) {
         set(x, y, ALL_ALLOWED);
     }
 
     /**
-     * Resets all cells in this matrix.
+     * Resets all tiles in this matrix to a fully open state.
      */
-    public void reset() {
+    void reset() {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < width; y++) {
                 reset(x, y);
@@ -218,41 +236,38 @@ public final class CollisionMatrix {
     }
 
     /**
-     * Sets (i.e. sets to {@code true}) the value of the specified {@link CollisionFlag} for the specified coordinate
-     * pair.
+     * Replaces all flags for the tile at (x, y) with the supplied {@link CollisionFlag}.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param flag The CollisionFlag.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param flag The collision flag to set (overwriting any existing flags).
      */
-    public void set(int x, int y, CollisionFlag flag) {
+    void set(int x, int y, CollisionFlag flag) {
         set(x, y, flag.asShort());
-    }
-
-    /**
-     * Replaces the data in this collision matrix with the data in {@code other}.
-     *
-     * @param other The matrix to replace this one with.
-     */
-    public void replace(CollisionMatrix other) {
-        System.arraycopy(other.matrix, 0, matrix, 0, matrix.length);
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("width", width).add("length", length)
-                .add("matrix", Arrays.toString(matrix)).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("width", width)
+                .add("length", length)
+                .add("matrix", Arrays.toString(matrix))
+                .toString();
     }
 
     /**
-     * Returns whether or not an Entity of the specified {@link EntityType type} cannot traverse the tile at the
-     * specified coordinate pair.
+     * Determines whether an entity of the given {@link EntityType} is blocked from entering the tile at (x, y)
+     * when attempting to move in the given {@link Direction}.
+     * <p>
+     * This method interprets directional collision flags using the same semantics as the original RS2 client,
+     * mapping the entity's approach direction to the appropriate directional flag(s) that would prevent movement.
+     * </p>
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param entity The {@link EntityType}.
-     * @param direction The {@link Direction} the Entity is approaching from.
-     * @return {@code true} iff the tile at the specified coordinate pair is not traversable.
+     * @param x The local X coordinate of the tile being entered.
+     * @param y The local Y coordinate of the tile being entered.
+     * @param entity The entity type (e.g. player, NPC, projectile).
+     * @param direction The movement direction from the previous tile into this tile.
+     * @return {@code true} if the tile is blocked when approached from {@code direction}; otherwise {@code false}.
      */
     public boolean untraversable(int x, int y, EntityType entity, Direction direction) {
         ImmutableList<CollisionFlag> flags = CollisionFlag.forType(entity);
@@ -285,12 +300,31 @@ public final class CollisionMatrix {
     }
 
     /**
-     * Gets the index in the matrix for the specified coordinate pair.
+     * Returns whether the tile at (x, y) is blocked for the given {@link EntityType}, regardless of direction. This
+     * checks all directional flags associated with the entity type and reports {@code true} if any are set.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @return The index.
-     * @throws ArrayIndexOutOfBoundsException If the specified coordinate pair does not fit in this matrix.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param entity The entity type to test collision for.
+     * @return {@code true} if the tile is blocked for that entity type; otherwise {@code false}.
+     */
+    public boolean isBlocked(int x, int y, EntityType entity) {
+        ImmutableList<CollisionFlag> entityFlags = CollisionFlag.forType(entity);
+        for (CollisionFlag flag : entityFlags) {
+            if (flagged(x, y, flag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Computes the internal array index corresponding to the tile at (x, y).
+     *
+     * @param x The local X coordinate (0 ≤ x &lt; width).
+     * @param y The local Y coordinate (0 ≤ y &lt; length).
+     * @return The flat array index for that tile.
+     * @throws ArrayIndexOutOfBoundsException If (x, y) is out of range for this matrix.
      */
     private int indexOf(int x, int y) {
         Preconditions.checkElementIndex(x, width, "X coordinate must be [0, " + width + "), received " + x + ".");
@@ -299,34 +333,35 @@ public final class CollisionMatrix {
     }
 
     /**
-     * Sets the appropriate index for the specified coordinate pair to the specified value.
+     * Writes a raw packed value into the tile at (x, y), overwriting any existing flags.
      *
-     * @param x The x coordinate.
-     * @param y The y coordinate.
-     * @param value The value.
+     * @param x The local X coordinate.
+     * @param y The local Y coordinate.
+     * @param value The packed 16-bit collision value to set.
      */
     private void set(int x, int y, short value) {
         matrix[indexOf(x, y)] = value;
     }
 
     /**
-     * If position {@code start} has reached a {@code wallObject}. Will always return {@code false} if the object is
-     * not a wall.
+     * Determines if the given {@code start} position has reached a wall object. This only applies when
+     * {@code wallObject} is a wall-type object; for other object types, this method always returns {@code false}.
+     * <p>
+     * Logic is a direct refactor of the #377 client object reachability rules for wall objects.
+     * </p>
      *
-     * <p><p><strong>Refactored from the #377 client.</strong>
-     *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
-     * @param wallObject The wall to determine if reached.
-     * @return {@code true} if the position has reached the wall, {@code false} otherwise.
+     * @param start The starting world position.
+     * @param lastRegion The region base used to compute local coordinates.
+     * @param wallObject The wall object being tested.
+     * @return {@code true} if {@code start} has reached {@code wallObject}; otherwise {@code false}.
      */
     public boolean reachedWall(Position start, Position lastRegion, GameObject wallObject) {
         int startX = start.getLocalX(lastRegion);
         int startY = start.getLocalY(lastRegion);
 
         Position end = wallObject.getPosition();
-        int endX = end.getLocalX(lastRegion); // end
-        int endY = end.getLocalY(lastRegion); // end
+        int endX = end.getLocalX(lastRegion);
+        int endY = end.getLocalY(lastRegion);
 
         if (startX == endX && startY == endY) {
             return true;
@@ -413,15 +448,16 @@ public final class CollisionMatrix {
     }
 
     /**
-     * If position {@code start} has reached a {@code decorationObject}. Will always return {@code false} if the
-     * object is not a decoration.
+     * Determines if the given {@code start} position has reached a decorative object. Only applies when
+     * {@code decorationObject} is a decoration-type object; otherwise this method returns {@code false}.
+     * <p>
+     * Logic is a direct refactor of the #377 client decoration reachability rules.
+     * </p>
      *
-     * <p><p><strong>Refactored from the #377 client.</strong>
-     *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
-     * @param decorationObject The decoration to determine if reached.
-     * @return {@code true} if the position has reached the decoration, {@code false} otherwise.
+     * @param start The starting world position.
+     * @param lastRegion The region base used to compute local coordinates.
+     * @param decorationObject The decorative object being tested.
+     * @return {@code true} if {@code start} has reached {@code decorationObject}; otherwise {@code false}.
      */
     public boolean reachedDecoration(Position start, Position lastRegion, GameObject decorationObject) {
         int startX = start.getLocalX(lastRegion);
@@ -474,14 +510,21 @@ public final class CollisionMatrix {
     }
 
     /**
-     * If position {@code start} has reached {@code object}.
+     * Determines if the given {@code start} position has reached a general object.
+     * <p>
+     * This method dispatches to one of:
+     * </p>
+     * <ul>
+     *     <li>{@link #reachedFacingEntity(Position, Position, Entity, int, int, OptionalInt)} for
+     *     default/diagonal/ground decoration objects, using object size and direction flags.</li>
+     *     <li>{@link #reachedWall(Position, Position, GameObject)} for wall-like objects.</li>
+     *     <li>{@link #reachedDecoration(Position, Position, GameObject)} for other decorative objects.</li>
+     * </ul>
      *
-     * <p><p><strong>Refactored from the #377 client.</strong>
-     *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
-     * @param object The object to determine if reached.
-     * @return {@code true} if the position has reached the object, {@code false} otherwise.
+     * @param start The starting world position.
+     * @param lastRegion The region base used to compute local coordinates.
+     * @param object The object being tested.
+     * @return {@code true} if {@code start} has reached {@code object}; otherwise {@code false}.
      */
     public boolean reachedObject(Position start, Position lastRegion, GameObject object) {
         ObjectType objectType = object.getObjectType();
@@ -505,7 +548,8 @@ public final class CollisionMatrix {
                 packedDirections = (packedDirections << objectDirection.getId() & 0xf) +
                         (packedDirections >> 4 - objectDirection.getId());
             }
-            return sizeX != 0 && sizeY != 0 && reachedFacingEntity(start, lastRegion, object, sizeX, sizeY, OptionalInt.of(packedDirections));
+            return sizeX != 0 && sizeY != 0 &&
+                    reachedFacingEntity(start, lastRegion, object, sizeX, sizeY, OptionalInt.of(packedDirections));
         } else {
             int objectTypeId = object.getObjectType().getId();
             if ((objectTypeId < 5 || objectTypeId == 10)) {
@@ -519,20 +563,28 @@ public final class CollisionMatrix {
     }
 
     /**
-     * Determines if position {@code start} has reached {@code target}, based on {@code sizeX}, {@code sizeY}, and
-     * {@code directionHash}.
+     * Determines if the given {@code start} position has reached an entity occupying a rectangular area with optional
+     * direction-based reach constraints.
+     * <p>
+     * This is the generalized “reach check” used for entities and objects with arbitrary width/length, and optional
+     * directional reachability (via {@code packedDirections}). Logic is refactored from the #377 client.
+     * </p>
      *
-     * <p><p><strong>Refactored from the #377 client.</strong>
-     *
-     * @param start The start position.
-     * @param lastRegion The position to get local coordinates from.
-     * @param target The entity to determine if reached.
-     * @param sizeX The width of the entity.
-     * @param sizeY The length of the entity.
-     * @param packedDirections Packed value for which directions the entity can be reached from. Only used for objects.
-     * @return {@code true} if the player has reached the entity, {@code false} otherwise.
+     * @param start The starting world position.
+     * @param lastRegion The region base used to compute local coordinates.
+     * @param target The entity being tested.
+     * @param sizeX The width (X size) of the entity in tiles.
+     * @param sizeY The length (Y size) of the entity in tiles.
+     * @param packedDirections Packed direction bits indicating which sides can be reached (objects only).
+     * @return {@code true} if {@code start} has reached the entity according to these rules; otherwise {@code false}.
      */
-    public boolean reachedFacingEntity(Position start, Position lastRegion, Entity target, int sizeX, int sizeY, OptionalInt packedDirections) {
+    public boolean reachedFacingEntity(Position start,
+                                       Position lastRegion,
+                                       Entity target,
+                                       int sizeX,
+                                       int sizeY,
+                                       OptionalInt packedDirections) {
+
         int packed = packedDirections.orElse(0);
 
         int startX = start.getLocalX(lastRegion);
@@ -550,5 +602,12 @@ public final class CollisionMatrix {
                 || startX == radiusX + 1 && startY >= endY && startY <= radiusY && (get(start) & 0x80) == 0 && (packed & 2) == 0
                 || startY == endY - 1 && startX >= endX && startX <= radiusX && (get(start) & 2) == 0 && (packed & 4) == 0
                 || startY == radiusY + 1 && startX >= endX && startX <= radiusX && (get(start) & 0x20) == 0 && (packed & 1) == 0;
+    }
+
+    /**
+     * Creates a thread-safe deep copy of this matrix.
+     */
+    public CollisionMatrix copy() {
+        return new CollisionMatrix(width, length, Arrays.copyOf(matrix, matrix.length));
     }
 }
