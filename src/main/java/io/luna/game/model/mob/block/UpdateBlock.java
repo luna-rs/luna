@@ -54,11 +54,12 @@ public abstract class UpdateBlock {
      * Encodes this update block for a {@link Player}.
      * Subclasses must override if they support player encoding.
      *
-     * @param player The player receiving the update.
+     * @param player The player whose data is being encoded.
      * @param msg The outgoing buffer.
+     * @param data The data to apply within this block.
      * @throws UnsupportedOperationException If the block is not valid for players.
      */
-    public void encodeForPlayer(Player player, ByteMessage msg) {
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
         throw new UnsupportedOperationException(flag + " not supported for Players.");
     }
 
@@ -68,9 +69,10 @@ public abstract class UpdateBlock {
      *
      * @param npc The NPC whose data is being encoded.
      * @param msg The outgoing buffer.
+     * @param data
      * @throws UnsupportedOperationException If the block is not valid for NPCs.
      */
-    public void encodeForNpc(Npc npc, ByteMessage msg) {
+    public void encodeForNpc(Npc npc, ByteMessage msg, UpdateBlockData data) {
         throw new UnsupportedOperationException(flag + " not supported for NPCs.");
     }
 

@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.block;
 
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,6 +81,20 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
      */
     private final EnumSet<UpdateFlag> flags = EnumSet.noneOf(UpdateFlag.class);
 
+    /**
+     * The mob holding these flags.
+     */
+    private final Mob mob;
+
+    /**
+     * Creates a new {@link UpdateFlagSet}.
+     *
+     * @param mob The mob holding these flags.
+     */
+    public UpdateFlagSet(Mob mob) {
+        this.mob = mob;
+    }
+
     @NotNull
     @Override
     public Iterator<UpdateFlag> iterator() {
@@ -93,15 +108,7 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
      */
     public void flag(UpdateFlag flag) {
         flags.add(flag);
-    }
-
-    /**
-     * Removes a previously set update flag.
-     *
-     * @param flag The update flag to remove.
-     */
-    public void unflag(UpdateFlag flag) {
-        flags.remove(flag);
+        mob.getWorld().addUpdateRequired(mob);
     }
 
     /**
@@ -110,7 +117,7 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
      * @param flag The update flag to check.
      * @return {@code true} if the flag is set, otherwise {@code false}.
      */
-    public boolean get(UpdateFlag flag) {
+    public boolean flagged(UpdateFlag flag) {
         return flags.contains(flag);
     }
 

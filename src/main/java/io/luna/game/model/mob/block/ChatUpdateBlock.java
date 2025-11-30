@@ -20,12 +20,11 @@ public final class ChatUpdateBlock extends UpdateBlock {
     }
 
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg) {
-        Chat chat = unwrap(player.getChat());
-        msg.putShort(chat.getColor() + chat.getEffect());
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
+        msg.putShort(data.chat.getColor() + data.chat.getEffect());
         msg.put(player.getRights().getClientValue(), ValueType.NEGATE);
-        msg.put(chat.getMessage().length, ValueType.ADD);
-        msg.putBytes(chat.getMessage(), ValueType.ADD);
+        msg.put(data.chat.getMessage().length, ValueType.ADD);
+        msg.putBytes(data.chat.getMessage(), ValueType.ADD);
     }
 
     @Override

@@ -1,12 +1,12 @@
 package io.luna.game.model.mob.block;
 
 import com.google.common.collect.ImmutableList;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
 
 /**
  * Handles encoding of all {@link UpdateBlock} types relevant to NPCs.
- *
  * <p>
  * NPC update sets differ from player update sets in both order and available block types.
  * This class defines:
@@ -19,8 +19,8 @@ import io.luna.net.codec.ByteMessage;
  * </ul>
  *
  * <p>
- * The update pipeline calls {@link #addBlockSet(Npc, ByteMessage, UpdateState)} during NPC synchronization. NPCs
- * never cache block sets (unlike players).
+ * The update pipeline calls {@link AbstractUpdateBlockSet#addBlockSet(Mob, ByteMessage, UpdateState)} during NPC
+ * synchronization. NPCs never cache block sets (unlike players).
  * </p>
  *
  * @author lare96
@@ -34,7 +34,7 @@ public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     @Override
     public void encodeBlock(Npc npc, UpdateBlock block, ByteMessage blockMsg) {
-        block.encodeForNpc(npc, blockMsg);
+        block.encodeForNpc(npc, blockMsg, npc.getBlockData());
     }
 
     @Override

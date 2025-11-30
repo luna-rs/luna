@@ -20,15 +20,13 @@ public final class ForcedChatUpdateBlock extends UpdateBlock {
     }
 
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg) {
-        String forcedChat = unwrap(player.getForcedChat());
-        msg.putString(forcedChat);
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
+        msg.putString(data.speak);
     }
 
     @Override
-    public void encodeForNpc(Npc npc, ByteMessage msg) {
-        String forcedChat = unwrap(npc.getForcedChat());
-        msg.putString(forcedChat);
+    public void encodeForNpc(Npc npc, ByteMessage msg, UpdateBlockData data) {
+        msg.putString(data.speak);
     }
 
     @Override

@@ -45,7 +45,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
 
     /**
      * Adds the encoded block set to the main updating buffer. This method is responsible for writing the update mask
-     * and then calling {@link #encodeBlock(E, UpdateBlock, ByteMessage)} for each active block.
+     * and then calling {@link #encodeBlock(Mob, UpdateBlock, ByteMessage)} for each active block.
      *
      * @param mob The mob whose update is being encoded.
      * @param msg The main updating buffer.
@@ -100,7 +100,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
             }
 
             // Include block if flagged.
-            if (mob.getFlags().get(flag)) {
+            if (mob.getFlags().flagged(flag)) {
                 mask |= block.getMask(mob);
                 encodeBlocks.add(block);
             }

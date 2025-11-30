@@ -134,9 +134,12 @@ public final class Animation {
      * </p>
      *
      * @param other The animation being compared against.
-     * @return {@code true} if this animation can replace {@code other}.
+     * @return {@code true} if this animation can replace {@code other}, or if {@code other} is {@code null}.
      */
     public boolean overrides(Animation other) {
+        if(other == null) {
+            return true;
+        }
         if(priority == AnimationPriority.IMMUTABLE) {
             return false;
         }

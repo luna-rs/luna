@@ -9,7 +9,6 @@ import io.luna.game.model.mob.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 
-import java.util.OptionalInt;
 import java.util.function.Function;
 
 /**
@@ -27,7 +26,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
     }
 
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg) {
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
         ByteMessage buf = ByteMessage.raw();
         try {
             buf.put(player.getAppearance().get(PlayerAppearance.GENDER)); // Gender.
@@ -35,11 +34,10 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
             buf.put(player.getPrayerIcon().getId()); // Prayer icon.
 
             // Transform the player if needed.
-            OptionalInt transformId = player.getTransformId();
-            if (transformId.isPresent()) {
+            if (data.transform != null) {
                 buf.put(255);
                 buf.put(255);
-                buf.putShort(transformId.getAsInt());
+                buf.putShort(data.transform);
             } else {
                 // Otherwise encode equipment.
                 encodeEquipment(buf, player);
@@ -50,7 +48,7 @@ public final class AppearanceUpdateBlock extends UpdateBlock {
 
             buf.putLong(player.getUsernameHash()); // Username.
             buf.put(player.getCombatLevel()); // Combat level.
-            buf.putShort(0); // TODO Skill level for Burthrope games' room.
+            buf.putShort(player.getSkills().getSkillLevel());
 
             // Append appearance block to block set buffer.
             int currentIndex = buf.getBuffer().writerIndex();

@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 
-import static io.luna.game.model.mob.block.UpdateState.UPDATE_LOCAL;
-
 /**
  * Handles encoding of all {@link UpdateBlock} types relevant to players.
  *
@@ -32,9 +30,8 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
 
     @Override
     public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
-        boolean canCache = state == UPDATE_LOCAL;
-
-        if (canCache && player.hasCachedBlock()) {
+        // The block has already been encoded for someone this cycle; reuse it.
+        if (state == UpdateState.UPDATE_LOCAL && player.hasCachedBlock()) {
             msg.putBytes(player.getCachedBlock());
             return;
         }
@@ -44,19 +41,19 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
             encodeBlockSet(player, blockMsg, state);
             msg.putBytes(blockMsg);
 
-            // TODO: Investigate whether caching is safe across all update phases.
-            if (canCache) {
+            // Cache the encoded block for someone else to reuse within this cycle.
+            if(state == UpdateState.UPDATE_LOCAL) {
                 player.setCachedBlock(blockMsg);
             }
         } finally {
-            // Prevent resource leaks.
+            // Release the temporary buffer now that the cached copy has been made.
             blockMsg.release();
         }
     }
 
     @Override
     public void encodeBlock(Player player, UpdateBlock block, ByteMessage blockMsg) {
-        block.encodeForPlayer(player, blockMsg);
+        block.encodeForPlayer(player, blockMsg, player.getBlockData());
     }
 
     @Override

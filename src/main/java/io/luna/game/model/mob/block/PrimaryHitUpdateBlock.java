@@ -20,21 +20,18 @@ public final class PrimaryHitUpdateBlock extends UpdateBlock {
         super(UpdateFlag.PRIMARY_HIT);
     }
 
-
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg) {
-        Hit hit = unwrap(player.getPrimaryHit());
-        msg.put(hit.getDamage(), ValueType.SUBTRACT);
-        msg.put(hit.getType().getOpcode(), ValueType.NEGATE);
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
+        msg.put(data.hit1.getDamage(), ValueType.SUBTRACT);
+        msg.put(data.hit1.getType().getOpcode(), ValueType.NEGATE);
         msg.put(player.getHealth(), ValueType.SUBTRACT);
         msg.put(player.getTotalHealth());
     }
 
     @Override
-    public void encodeForNpc(Npc npc, ByteMessage msg) {
-        Hit hit = unwrap(npc.getPrimaryHit());
-        msg.put(hit.getDamage(), ValueType.ADD);
-        msg.put(hit.getType().getOpcode(), ValueType.ADD);
+    public void encodeForNpc(Npc npc, ByteMessage msg, UpdateBlockData data) {
+        msg.put(data.hit1.getDamage(), ValueType.ADD);
+        msg.put(data.hit1.getType().getOpcode(), ValueType.ADD);
         msg.put(npc.getHealth());
         msg.put(npc.getTotalHealth(), ValueType.SUBTRACT);
     }

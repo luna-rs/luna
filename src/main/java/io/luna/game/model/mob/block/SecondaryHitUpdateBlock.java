@@ -21,19 +21,17 @@ public final class SecondaryHitUpdateBlock extends UpdateBlock {
     }
 
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg) {
-        Hit hit = unwrap(player.getSecondaryHit());
-        msg.put(hit.getDamage(), ValueType.ADD);
-        msg.put(hit.getType().getOpcode(), ValueType.SUBTRACT);
+    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
+        msg.put(data.hit2.getDamage(), ValueType.ADD);
+        msg.put(data.hit2.getType().getOpcode(), ValueType.SUBTRACT);
         msg.put(player.getHealth(), ValueType.NEGATE);
         msg.put(player.getTotalHealth());
     }
 
     @Override
-    public void encodeForNpc(Npc npc, ByteMessage msg) {
-        Hit hit = unwrap(npc.getSecondaryHit());
-        msg.put(hit.getDamage(), ValueType.ADD);
-        msg.put(hit.getType().getOpcode(), ValueType.NEGATE);
+    public void encodeForNpc(Npc npc, ByteMessage msg, UpdateBlockData data) {
+        msg.put(data.hit2.getDamage(), ValueType.ADD);
+        msg.put(data.hit2.getType().getOpcode(), ValueType.NEGATE);
         msg.put(npc.getHealth(), ValueType.ADD);
         msg.put(npc.getTotalHealth());
     }
