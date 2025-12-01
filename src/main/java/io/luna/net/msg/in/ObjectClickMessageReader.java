@@ -42,9 +42,9 @@ public final class ObjectClickMessageReader extends GameMessageReader<ObjectClic
                 gameObject = findObject(player, objectX, objectY, objectId);
                 return new ObjectSecondClickEvent(player, gameObject);
             case 50:
-                objectX = payload.getShort(true, ByteOrder.LITTLE);
-                objectY = payload.getShort(false);
-                objectId = payload.getShort(false, ByteOrder.LITTLE, ValueType.ADD);
+                objectY = payload.getShort(false, ValueType.ADD);
+                objectId = payload.getShort(false, ByteOrder.LITTLE);
+                objectX = payload.getShort(true, ByteOrder.LITTLE, ValueType.ADD);
                 gameObject = findObject(player, objectX, objectY, objectId);
                 return new ObjectThirdClickEvent(player, gameObject);
         }
