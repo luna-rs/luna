@@ -9,13 +9,9 @@ import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.World;
 import io.luna.game.model.collision.CollisionMatrix;
-import io.luna.game.model.collision.CollisionUpdate;
-import io.luna.game.model.collision.CollisionUpdateType;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.object.GameObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -74,7 +70,8 @@ public final class ChunkRepository implements Iterable<Entity> {
     /**
      * The thread-safe snapshot of {@link #matrices}.
      */
-    private volatile CollisionMatrix[] snapshot;
+    private volatile CollisionMatrix[] snapshot = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS.upperEndpoint(),
+            SIZE, SIZE);
 
     /**
      * Creates a new {@link ChunkRepository}.
@@ -129,35 +126,14 @@ public final class ChunkRepository implements Iterable<Entity> {
     }
 
     /**
-     * Updates the collision map with {@code entity}.
-     *
-     * @param entity The entity to update with.
-     * @param removal If the entity is being removed.
-     */
-    public void updateCollisionMap(Entity entity, boolean removal) {
-        if(entity.getType() == EntityType.PLAYER) {
-            return;
-        }
-
-        CollisionUpdate.Builder builder = new CollisionUpdate.Builder();
-        if (!removal) {
-            builder.type(CollisionUpdateType.ADDING);
-        } else {
-            builder.type(CollisionUpdateType.REMOVING);
-        }
-        if(entity.getType() == EntityType.OBJECT) {
-            builder.object((GameObject) entity);
-        } else if(entity.getType() == EntityType.NPC) {
-            builder.tile(entity.getPosition(), false, Direction.NESW);
-        }
-        world.getCollisionManager().apply(builder.build(), false);
-    }
-
-    /**
-     * Creates a thread-safe copy of the backing {@link #matrices}.
+     * Creates a thread-safe deep copy of the backing {@link #matrices}.
      */
     public void snapshotCollisionMap() {
-        snapshot = Arrays.copyOf(matrices, matrices.length);
+        CollisionMatrix[] copy = new CollisionMatrix[matrices.length];
+        for (int i = 0; i < matrices.length; i++) {
+            copy[i] = matrices[i].copy();
+        }
+        snapshot = copy;
     }
 
     /**
@@ -303,6 +279,10 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public CollisionMatrix[] getMatrices() {
         return matrices;
+    }
+
+    public CollisionMatrix[] getSnapshot() {
+        return snapshot;
     }
 
     /**
