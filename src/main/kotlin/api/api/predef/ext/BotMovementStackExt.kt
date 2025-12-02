@@ -19,7 +19,7 @@ suspend fun BotMovementStack.walk(target: Locatable): Boolean {
     bot.log("Walking until $target is reached.")
     bot.movementStack.addPath(target).await()
 
-    val location = target.location()
+    val location = target.absLocation()
     val timeout = bot.position.computeLongestDistance(location) * 5L;
     return SuspendableCondition { bot.walking.isEmpty && bot.position.isViewable(location) }.submit(timeout)
         .await()

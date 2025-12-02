@@ -39,6 +39,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class ChunkManager implements Iterable<ChunkRepository> {
 // todo rewrite, some confusion between this and gameobjectlist etc. where should we put functions to find world entites?
     // todo ^^ needs some standardization and organization
+
+    // standardized place for lookups... maybe in world class?
+    // world.findItem(pos).then(item -> ...) for all applicable entity types
     /**
      * Determines the local player count at which prioritized updating will start.
      */

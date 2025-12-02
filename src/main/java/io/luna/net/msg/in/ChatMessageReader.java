@@ -21,7 +21,7 @@ public final class ChatMessageReader extends GameMessageReader<ChatEvent> {
         int effect = msg.getPayload().get(false, ValueType.ADD);
         int size = msg.getSize() - 2;
         byte[] message = msg.getPayload().getBytes(size);
-        String unpackedMessage = StringUtils.unpackText(message);
+        String unpackedMessage = StringUtils.unpackText(message).trim();
         return new ChatEvent(player, effect, color, size, message, unpackedMessage);
     }
 

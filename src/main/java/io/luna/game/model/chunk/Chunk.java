@@ -78,8 +78,18 @@ public final class Chunk implements Locatable {
     }
 
     @Override
-    public Position location() {
+    public Position absLocation() {
         return getAbsPosition();
+    }
+
+    @Override
+    public int getX() {
+        return x;
+    }
+
+    @Override
+    public int getY() {
+        return y;
     }
 
     /**
@@ -123,20 +133,6 @@ public final class Chunk implements Locatable {
      */
     public int getAbsY() {
         return SIZE * (y + 6);
-    }
-
-    /**
-     * @return The {@code x} coordinate.
-     */
-    public int getX() {
-        return x;
-    }
-
-    /**
-     * @return The {@code y} coordinate.
-     */
-    public int getY() {
-        return y;
     }
 
     /**

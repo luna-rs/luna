@@ -69,7 +69,7 @@ public final class BotContextInjectorManager {
             }
 
             int radius = event.contextRadius(bot);
-            if (radius == -1 || !bot.getPosition().isWithinDistance(locatable.location(), radius)) {
+            if (radius == -1 || !bot.getPosition().isWithinDistance(locatable.absLocation(), radius)) {
                 continue;
             }
 

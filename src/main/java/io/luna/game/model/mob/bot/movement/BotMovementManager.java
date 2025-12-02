@@ -18,12 +18,19 @@ import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFacto
  */
 public final class BotMovementManager {
 
-    /**
-     * The shared pathfinding pool. Uses as many threads as there are available CPU cores,
-     * created in asynchronous mode for better parallelism under load.
+    /*
+     * TODO Webwalking support:
+     *  - Integrate stairs, doors, ladders, trapdoors, and other interactive world objects into BotPathfinder.
+     *  - Add a registration/metadata layer for these objects so the pathfinder can treat them as navigable edges
+     *    (e.g., open door, climb ladder, use trapdoor) instead of only relying on raw collision checks.
+     *  - Ensure bots automatically discover and use these interactions when computing paths to dynamic targets.
      */
-    private final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors(),
-            defaultForkJoinWorkerThreadFactory, null, true);
+
+    /**
+     * The shared pathfinding pool. Uses 2 threads to limit CPU usage, created in asynchronous mode for better
+     * parallelism under load.
+     */
+    private final ForkJoinPool pool = new ForkJoinPool(2, defaultForkJoinWorkerThreadFactory, null, true);
 
     /**
      * Returns the shared pathfinding pool.
