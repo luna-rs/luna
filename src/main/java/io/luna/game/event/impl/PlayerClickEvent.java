@@ -122,6 +122,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
     public Locatable contextLocatable(Bot bot) {
         return plr;
     }
+
     /**
      * @return The other player.
      */

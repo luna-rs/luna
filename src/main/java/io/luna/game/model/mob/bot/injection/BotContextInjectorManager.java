@@ -64,7 +64,7 @@ public final class BotContextInjectorManager {
     public void injectEvents(Bot bot) {
         for (InjectableEvent event : pendingDispatch) {
             Locatable locatable = event.contextLocatable(bot);
-            if (locatable == null) {
+            if (locatable == null || locatable.equals(bot)) {
                 continue;
             }
 
