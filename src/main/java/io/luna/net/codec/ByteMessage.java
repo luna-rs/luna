@@ -148,8 +148,8 @@ public final class ByteMessage extends DefaultByteBufHolder {
 
     @Override
     public boolean release() {
-        if (buf == Unpooled.EMPTY_BUFFER) {
-            return true;
+        if (buf == Unpooled.EMPTY_BUFFER || buf.refCnt() == 0) {
+            return false;
         }
         return buf.release();
     }

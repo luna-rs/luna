@@ -4,9 +4,7 @@ import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.MessageType;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.luna.net.msg.GameMessageReader.logger;
 import static java.util.Objects.requireNonNull;
-import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A model representing an incoming or outgoing packet of data.
@@ -51,21 +49,6 @@ public final class GameMessage {
         this.type = type;
         this.payload = payload;
         size = payload.getBuffer().readableBytes();
-    }
-
-    /**
-     * Release all references held by the underlying buffer.
-     */
-    public void release() {
-        // Release pooled buffer.
-        if (!payload.release()) {
-            // Ensure that all pooled Netty buffers are deallocated here, to avoid leaks. Entering this
-            // section of the code means that a buffer was not released (or retained) when it was supposed to
-            // be, so we log a warning.
-            logger.warn("Buffer reference count too high [opcode: {}, ref_count: {}]",
-                    box(opcode), box(payload.refCnt()));
-            payload.releaseAll();
-        }
     }
 
     /**

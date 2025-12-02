@@ -116,8 +116,7 @@ public class GameClient extends Client<GameMessage> {
     public void handleDecodedMessages() {
         int processed = 0;
         GameMessage msg;
-        while ((msg = pendingReadMessages.poll()) != null
-                && processed++ < MAX_READ_MESSAGES) {
+        while ((msg = pendingReadMessages.poll()) != null && processed++ < MAX_READ_MESSAGES) {
             try {
                 GameMessageReader<?> reader = repository.get(msg.getOpcode());
                 if (reader == null) {
@@ -128,7 +127,7 @@ public class GameClient extends Client<GameMessage> {
             } catch (Exception e) {
                 logger.error("Error reading packet {}.", msg.getOpcode(), e);
             } finally {
-                msg.release();
+                msg.getPayload().releaseAll();
                 processed++;
             }
         }
@@ -146,13 +145,18 @@ public class GameClient extends Client<GameMessage> {
      */
     public void queue(GameMessageWriter writer) {
         GameMessage msg = writer.toGameMessage(player);
+        if(msg == null) {
+            return;
+        }
         if (channel.isActive()) {
             channel.eventLoop().execute(() -> {
                 channel.write(msg, channel.voidPromise());
-                pendingWriteMessages.add(msg);
+                if(msg.getPayload().refCnt() > 0) {
+                    pendingWriteMessages.add(msg);
+                }
             });
         } else {
-            msg.release();
+            msg.getPayload().releaseAll();
         }
     }
 
@@ -170,7 +174,7 @@ public class GameClient extends Client<GameMessage> {
                 break;
             }
             if(msg.getPayload().refCnt() > 0) {
-                msg.release();
+                msg.getPayload().releaseAll();
             }
         }
     }

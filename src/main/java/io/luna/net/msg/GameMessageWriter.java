@@ -3,6 +3,8 @@ package io.luna.net.msg;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
 import io.netty.buffer.ByteBuf;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An abstraction model that converts raw written {@link ByteMessage} buffers into {@link GameMessage} types.
@@ -10,6 +12,8 @@ import io.netty.buffer.ByteBuf;
  * @author lare96
  */
 public abstract class GameMessageWriter {
+
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * Writes data into a buffer.
@@ -32,8 +36,11 @@ public abstract class GameMessageWriter {
             ByteMessage raw = write(player, pooledBuffer);
             return new GameMessage(raw.getOpcode(), raw.getType(), raw);
         } catch (Exception e) {
-            pooledBuffer.release(pooledBuffer.refCnt());
-            throw new RuntimeException(e);
+            if (pooledBuffer.refCnt() > 0) {
+                pooledBuffer.release(pooledBuffer.refCnt());
+            }
+            logger.catching(e);
+            return null;
         }
     }
 }
