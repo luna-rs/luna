@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import io.luna.LunaContext;
+import io.luna.game.GameService;
 import io.luna.game.cache.Archive;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
@@ -23,71 +24,52 @@ import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 import io.netty.buffer.ByteBuf;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static io.luna.game.cache.CacheUtils.MAP_PLANES;
 import static io.luna.game.cache.CacheUtils.MAP_SIZE;
 
 /**
- * A {@link CacheDecoder} implementation that loads map indexes, objects, and tiles from the cache.
+ * A {@link CacheDecoder} responsible for loading all region-based map data:
+ * <ul>
+ *     <li>{@link MapIndex} entries (per-region file references).</li>
+ *     <li>{@link MapTile} height/overlay/underlay tile information.</li>
+ *     <li>{@link MapObject} world objects (walls, scenery, interactables).</li>
+ * </ul>
+ *
+ * <p>
+ * This decoder reads the #377 cache using the original Jagex map format: tiles are stored in <strong>4 planes × 64 × 64</strong>
+ * grids, and objects are stored using packed "smart" deltas.
+ * </p>
+ *
+ * <p>
+ * After decoding, a thread-safe {@link MapIndexTable} is injected into the global {@link Cache} for access by the world loader.
+ * </p>
  *
  * @author lare96
  */
 public final class MapDecoder extends CacheDecoder<MapIndex> {
 
     /**
-     * A {@link Consumer} function that decodes map tiles based on the given opcode.
+     * Decoder for a single tile inside a 64×64×4 region.
+     * <p>
+     * Implements the #377 client’s terrain decoding:
+     * <ul>
+     *     <li>Height calculation</li>
+     *     <li>Overlay/underlay</li>
+     *     <li>Tile attributes</li>
+     *     <li>Orientation and shape types</li>
+     * </ul>
+     * <p>
+     * Each opcode modifies one part of the tile’s state until an opcode of {@code 0}
+     * finalizes the data.
      */
     private static final class MapTileDecoder implements Consumer<Integer> {
 
-        // Various functions from the #377 client used to decode data.
-        private static int computeHeight(int x, int y) {
-            int vertexHeight = (method176(x + 45365, y + 0x16713, 4) - 128)
-                    + (method176(x + 10294, y + 37821, 2) - 128 >> 1) + (method176(x, y, 1) - 128 >> 2);
-            vertexHeight = (int) (vertexHeight * 0.29999999999999999D) + 35;
-            if (vertexHeight < 10) {
-                vertexHeight = 10;
-            } else if (vertexHeight > 60) {
-                vertexHeight = 60;
-            }
-            return vertexHeight;
-        }
-
-        private static int method176(final int deltaX, final int deltaY, final int deltaScale) {
-            final int x = deltaX / deltaScale;
-            final int deltaPrimary = deltaX & deltaScale - 1;
-            final int y = deltaY / deltaScale;
-            final int deltaSecondary = deltaY & deltaScale - 1;
-            final int noiseSW = randomNoiseWeighedSum(x, y);
-            final int noiseSE = randomNoiseWeighedSum(x + 1, y);
-            final int noiseNE = randomNoiseWeighedSum(x, y + 1);
-            final int noiseNW = randomNoiseWeighedSum(x + 1, y + 1);
-            final int interpolationA = interpolate(noiseSW, noiseSE, deltaPrimary, deltaScale);
-            final int interpolationB = interpolate(noiseNE, noiseNW, deltaPrimary, deltaScale);
-            return interpolate(interpolationA, interpolationB, deltaSecondary, deltaScale);
-        }
-
-        private static int randomNoiseWeighedSum(final int x, final int y) {
-            final int vDist2 = calculateNoise(x - 1, y - 1) + calculateNoise(x + 1, y - 1) + calculateNoise(x - 1, y + 1)
-                    + calculateNoise(x + 1, y + 1);
-            final int vDist1 = calculateNoise(x - 1, y) + calculateNoise(x + 1, y) + calculateNoise(x, y - 1)
-                    + calculateNoise(x, y + 1);
-            final int vLocal = calculateNoise(x, y);
-            return vDist2 / 16 + vDist1 / 8 + vLocal / 4;
-        }
-
-        private static int calculateNoise(final int x, final int seed) {
-            int n = x + seed * 57;
-            n = n << 13 ^ n;
-            final int noise = n * (n * n * 15731 + 0xc0ae5) + 0x5208dd0d & 0x7fffffff;
-            return noise >> 19 & 0xff;
-        }
-
-        private static int interpolate(final int a, final int b, final int delta, final int deltaScale) {
-            final int f = 0x10000 - COSINE[(delta * 1024) / deltaScale] >> 1;
-            return (a * (0x10000 - f) >> 16) + (b * f >> 16);
-        }
-
+        /**
+         * Precomputed cosine table (identical to 377 client).
+         */
         private static final int[] COSINE = new int[2048];
 
         static {
@@ -97,69 +79,93 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         }
 
         /**
-         * The {@code x} coordinate of the tile being decoded.
+         * Procedural terrain sampling used in #377 for base heights on plane 0.
          */
-        private final int x;
+        private static int computeHeight(int x, int y) {
+            int vertexHeight =
+                    (sampleBilinearNoise(x + 45365, y + 0x16713, 4) - 128)
+                            + ((sampleBilinearNoise(x + 10294, y + 37821, 2) - 128) >> 1)
+                            + ((sampleBilinearNoise(x, y, 1) - 128) >> 2);
+
+            vertexHeight = (int) (vertexHeight * 0.3) + 35;
+            if (vertexHeight < 10) return 10;
+            if (vertexHeight > 60) return 60;
+            return vertexHeight;
+        }
 
         /**
-         * The {@code y} coordinate of the tile being decoded.
+         * Performs bilinear interpolation of noise samples, exactly as the 377 client.
          */
-        private final int y;
+        private static int sampleBilinearNoise(int deltaX, int deltaY, int scale) {
+            int x = deltaX / scale;
+            int dx = deltaX & (scale - 1);
+            int y = deltaY / scale;
+            int dy = deltaY & (scale - 1);
+
+            int sw = randomNoiseWeighedSum(x, y);
+            int se = randomNoiseWeighedSum(x + 1, y);
+            int ne = randomNoiseWeighedSum(x, y + 1);
+            int nw = randomNoiseWeighedSum(x + 1, y + 1);
+
+            int a = interpolate(sw, se, dx, scale);
+            int b = interpolate(ne, nw, dx, scale);
+            return interpolate(a, b, dy, scale);
+        }
 
         /**
-         * The {@code z} coordinate of the tile being decoded.
+         * Computes weighted noise around a vertex (8-neighbour sampling).
          */
-        private final int z;
+        private static int randomNoiseWeighedSum(int x, int y) {
+            int dist2 =
+                    calculateNoise(x - 1, y - 1) + calculateNoise(x + 1, y - 1)
+                            + calculateNoise(x - 1, y + 1) + calculateNoise(x + 1, y + 1);
+
+            int dist1 =
+                    calculateNoise(x - 1, y) + calculateNoise(x + 1, y)
+                            + calculateNoise(x, y - 1) + calculateNoise(x, y + 1);
+
+            int local = calculateNoise(x, y);
+
+            return dist2 / 16 + dist1 / 8 + local / 4;
+        }
 
         /**
-         * The data to decode.
+         * Core random noise function used by Jagex landscapes.
          */
+        private static int calculateNoise(int x, int seed) {
+            int n = x + seed * 57;
+            n = n << 13 ^ n;
+            int noise = n * (n * n * 15731 + 0xc0ae5) + 0x5208dd0d & 0x7fffffff;
+            return (noise >> 19) & 0xff;
+        }
+
+        /**
+         * Interpolates between two noise values using cosine smoothing.
+         */
+        private static int interpolate(int a, int b, int delta, int scale) {
+            int f = (0x10000 - COSINE[(delta * 1024) / scale]) >> 1;
+            return (a * (0x10000 - f) >> 16) + (b * f >> 16);
+        }
+
+        // --- Decoder State ---
+
+        private final int x, y, z;
         private final ByteBuf data;
-
-        /**
-         * The current tile map.
-         */
         private final MapTile[][][] tiles;
 
-        /**
-         * The height of the tile being decoded.
-         */
         private int height;
-
-        /**
-         * The overlay of the tile being decoded.
-         */
-        private int overlay;
-
-        /**
-         * The overlay type of the tile being decoded.
-         */
-        private int overlayType;
-
-        /**
-         * The overlay orientation of the tile being decoded.
-         */
-        private int overlayOrientation;
-
-        /**
-         * The attributes of the tile being decoded.
-         */
+        private int overlay, overlayType, overlayOrientation;
         private int attributes;
-
-        /**
-         * The underlay of the tile being decoded.
-         */
         private int underlay;
 
-
         /**
-         * Creates a new {@link MapTileDecoder}.
+         * Creates a decoder for a single tile.
          *
-         * @param x The {@code x} coordinate of the tile being decoded.
-         * @param y The {@code y} coordinate of the tile being decoded.
-         * @param z The {@code z} coordinate of the tile being decoded.
-         * @param data The data to decode.
-         * @param tiles The current tile map.
+         * @param x Tile X coordinate within the region (0–63).
+         * @param y Tile Y coordinate within the region (0–63).
+         * @param z Current plane (0–3).
+         * @param data Map tile buffer.
+         * @param tiles A partially-filled 4×64×64 grid of tiles.
          */
         private MapTileDecoder(int x, int y, int z, ByteBuf data, MapTile[][][] tiles) {
             this.x = x;
@@ -172,21 +178,20 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         @Override
         public void accept(Integer opcode) {
             if (opcode == 0) {
+                // Compute height from noise or inherit from below.
                 if (z == 0) {
-                    int offsetX = x - 48;
-                    int offsetY = y - 48;
-                    height = computeHeight(932731 + x - offsetX, 556238 + y - offsetY) * 8;
+                    height = computeHeight(x + 932731, y + 556238) * 8;
                 } else {
                     height = tiles[z - 1][x][y].getHeight() + 240;
                 }
             } else if (opcode == 1) {
-                int newHeight = data.readByte();
+                int h = data.readByte();
                 int below = (z == 0) ? 0 : tiles[z - 1][x][y].getHeight();
-                height = (((newHeight == 1) ? 0 : newHeight) * 8) + below;
+                height = ((h == 1 ? 0 : h) * 8) + below;
             } else if (opcode < 50) {
                 overlay = data.readByte();
                 overlayType = (opcode - 2) / 4;
-                overlayOrientation = opcode - 2 % 4;
+                overlayOrientation = (opcode - 2) % 4;
             } else if (opcode < 82) {
                 attributes = opcode - 49;
             } else {
@@ -195,20 +200,53 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         }
 
         /**
-         * Converts the decoded data into a {@link MapTile} type.
+         * Finalizes the decoder state into a single {@link MapTile} instance.
          */
         public MapTile toMapTile() {
             return new MapTile(x, y, z, height, overlay, overlayType, overlayOrientation, attributes, underlay);
         }
     }
 
+    /**
+     * Applies static map-tile collision metadata for a single {@link MapTile} during region construction.
+     *
+     * @param world The game world receiving the collision metadata.
+     * @param index The map index containing the tile, used to resolve its absolute position.
+     * @param tile The parsed map tile whose collision attributes (blocked/bridge) are being applied.
+     */
+    private void addCollisionData(World world, MapIndex index, MapTile tile) {
+        Region region = index.getRegion();
+        if (tile.isBlocked()) {
+            world.getCollisionManager().block(tile.getAbsPosition(region));
+        } else if (tile.isBridge()) {
+            world.getCollisionManager().markBridged(tile.getAbsPosition(region));
+        }
+    }
+
+
+    // -------------------------------------------------------------------------
+    // 1. Decode MapIndex (map_index file)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Reads all {@link MapIndex} entries from the {@code map_index} file.
+     * <p>
+     * Each entry contains:
+     * <ul>
+     *     <li>Region ID</li>
+     *     <li>Tile file ID</li>
+     *     <li>Object file ID</li>
+     *     <li>Priority flag</li>
+     * </ul>
+     */
     @Override
     public void decode(Cache cache, Builder<MapIndex> decodedObjects) throws Exception {
         Archive versionListArchive = Archive.decode(cache.getFile(0, 5));
         ByteBuf buf = versionListArchive.getFileData("map_index");
+
         try {
-            int indices = buf.readableBytes() / 7;
-            for (int i = 0; i < indices; i++) {
+            int count = buf.readableBytes() / 7;
+            for (int i = 0; i < count; i++) {
                 Region region = new Region(buf.readUnsignedShort());
                 int tileFileId = buf.readUnsignedShort();
                 int objectFileId = buf.readUnsignedShort();
@@ -220,100 +258,151 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // 2. Register tiles, objects, and collision into the world
+    // -------------------------------------------------------------------------
+
+    /**
+     * Converts decoded {@link MapIndex} records into concrete world data:
+     * <ul>
+     *     <li>Decodes all tiles and their heights/overlays</li>
+     *     <li>Decodes all world objects</li>
+     *     <li>Builds a global {@link MapIndexTable}</li>
+     * </ul>
+     * Then queues the next step to run on the game thread, which:
+     * <ul>
+     *     <li>Applies collision data from map tiles</li>
+     *     <li>Registers all map objects</li>
+     * </ul>
+     */
     @Override
-    public void handle(LunaContext ctx, Cache cache, ImmutableList<MapIndex> decodedObjects) throws Exception {
+    public void handle(LunaContext ctx,
+                       Cache cache,
+                       ImmutableList<MapIndex> decodedObjects) throws Exception {
+
+        // Build region -> index mapping.
         ImmutableMap.Builder<Region, MapIndex> tableBuilder = ImmutableMap.builder();
-        decodedObjects.forEach(it -> tableBuilder.put(it.getRegion(), it));
-        ImmutableMap<Region, MapIndex> table = tableBuilder.build();
+        decodedObjects.forEach(idx -> tableBuilder.put(idx.getRegion(), idx));
+        ImmutableMap<Region, MapIndex> indexMap = tableBuilder.build();
 
-        ImmutableList<MapObject> mapObjects = decodeMapObjects(cache, table.values());
-        ImmutableMap<MapIndex, MapTileGrid> mapTiles = decodeMapTiles(cache, table.values());
+        GameService game = ctx.getGame();
 
-        MapIndexTable indexTable = new MapIndexTable(table,
-                new MapObjectSet(mapObjects),
-                new MapTileGridSet(mapTiles));
-        cache.setMapIndexTable(indexTable);
+        ImmutableList<MapObject> mapObjects = decodeMapObjects(cache, indexMap.values());
+        ImmutableMap<MapIndex, MapTileGrid> mapTiles = decodeMapTiles(cache, indexMap.values());
 
-        ctx.getGame().sync(() -> {
+        MapIndexTable table = new MapIndexTable(indexMap, new MapObjectSet(mapObjects), new MapTileGridSet(mapTiles));
+        cache.setMapIndexTable(table);
+
+        // Apply results on the game thread.
+        game.sync(() -> {
             World world = ctx.getWorld();
-            for (MapObject object : indexTable.getObjectSet().getObjects()) {
-                world.getObjects().register(object.toGameObject(ctx));
+
+            // Tile collision (water, borders, bridges, map features).
+            for (Map.Entry<MapIndex, MapTileGrid> entry : table.getTileSet()) {
+                entry.getValue().forEach(tile -> addCollisionData(world, entry.getKey(), tile));
+            }
+
+            // Register map objects (walls, scenery, trees, buildings).
+            for (MapObject obj : table.getObjectSet().getObjects()) {
+                world.getObjects().register(obj.toGameObject(ctx));
             }
         });
     }
 
+    // -------------------------------------------------------------------------
+    // 3. Decode map objects (4, objectFileId)
+    // -------------------------------------------------------------------------
+
     /**
-     * Decodes the {@link MapObject} types using the provided cache and map indices.
+     * Decodes all object spawns inside every region using the original 377 delta-smart format.
+     * <p>
+     * Each object is encoded as:
+     * <ul>
+     *     <li>Delta ID stream</li>
+     *     <li>Delta position stream (packed X/Y/plane)</li>
+     *     <li>Type and rotation</li>
+     * </ul>
      *
-     * @param cache The cache resource.
-     * @param indices The map indices.
-     * @return The collection of map objects.
-     * @throws Exception If any errors occur.
+     * @return Immutable list of all region objects.
      */
-    private ImmutableList<MapObject> decodeMapObjects(Cache cache, ImmutableCollection<MapIndex> indices) throws Exception {
-        ImmutableList.Builder<MapObject> mapObjects = ImmutableList.builder();
+    private ImmutableList<MapObject> decodeMapObjects(Cache cache,
+                                                      ImmutableCollection<MapIndex> indices)
+            throws Exception {
+
+        ImmutableList.Builder<MapObject> list = ImmutableList.builder();
+
         for (MapIndex index : indices) {
-            int objectFileId = index.getObjectFileId();
-            Position basePosition = index.getRegion().getAbsPosition();
-            ByteBuf data = CacheUtils.unzip(cache.getFile(4, objectFileId));
+            int fileId = index.getObjectFileId();
+            Position base = index.getRegion().getAbsPosition();
+
+            ByteBuf data = CacheUtils.unzip(cache.getFile(4, fileId));
             try {
                 int id = -1;
-                int idOffset;
                 while (true) {
-                    idOffset = CacheUtils.readSmart(data);
-                    if (idOffset == 0) {
-                        break;
-                    }
+                    int idOffset = CacheUtils.readSmart(data);
+                    if (idOffset == 0) break;
                     id += idOffset;
 
-                    int objectPositionData = 0;
-                    int objectDataOffset;
+                    int packed = 0;
                     while (true) {
-                        objectDataOffset = CacheUtils.readSmart(data);
-                        if (objectDataOffset == 0) {
-                            break;
-                        }
-                        objectPositionData += objectDataOffset - 1;
+                        int posOffset = CacheUtils.readSmart(data);
+                        if (posOffset == 0) break;
+                        packed += posOffset - 1;
 
-                        int offsetX = objectPositionData >> 6 & 0x3f;
-                        int offsetY = objectPositionData & 0x3f;
-                        int plane = objectPositionData >> 12 & 0x3;
-                        int otherData = data.readUnsignedByte();
+                        int x = (packed >> 6) & 0x3F;
+                        int y = packed & 0x3F;
+                        int plane = (packed >> 12) & 0x3;
 
-                        // TODO Figure out why plane value is 1 for gnome stronghold log? Cheapfix for now.
-                        if((id == 2294 || id == 2295 || id == 2311 || id == 2297) && plane == 1) {
+                        int info = data.readUnsignedByte();
+                        ObjectType type = ObjectType.ALL.get(info >> 2);
+                        ObjectDirection rotation = ObjectDirection.ALL.get(info & 3);
+
+                        // Edge cases with incorrect planes, unsure why this is.
+                        if ((id == 2294 || id == 2295 || id == 2311 || id == 2297) && plane == 1)
                             plane = 0;
-                        }
-                        ObjectType type = ObjectType.ALL.get(otherData >> 2);
-                        ObjectDirection rotation = ObjectDirection.ALL.get(otherData & 3);
-                        Position position = basePosition.translate(offsetX, offsetY).setZ(plane);
-                        mapObjects.add(new MapObject(id, position, type, rotation));
+
+                        Position pos = base.translate(x, y).setZ(plane);
+                        list.add(new MapObject(id, pos, type, rotation));
                     }
                 }
             } finally {
                 data.release();
             }
         }
-        return mapObjects.build();
+
+        return list.build();
     }
 
+    // -------------------------------------------------------------------------
+    // 4. Decode map tiles (heightmap, overlays, flags)
+    // -------------------------------------------------------------------------
+
     /**
-     * Decodes the {@link MapTile} types using the provided cache and map indices.
-     *
-     * @param cache The cache resource.
-     * @param indices The map indices.
-     * @return The tile map.
-     * @throws Exception If any errors occur.
+     * Decodes all {@link MapTile} entries inside each region.
+     * <p>
+     * Tile format is the classic 377 opcode-driven terrain format:
+     * <ul>
+     *     <li>Height (noise or explicit)</li>
+     *     <li>Overlay/shape/orientation</li>
+     *     <li>Underlay</li>
+     *     <li>Attribute flags</li>
+     * </ul>
      */
-    private ImmutableMap<MapIndex, MapTileGrid> decodeMapTiles(Cache cache, ImmutableCollection<MapIndex> indices) throws Exception {
-        ImmutableMap.Builder<MapIndex, MapTileGrid> tileMap = ImmutableMap.builder();
+    private ImmutableMap<MapIndex, MapTileGrid> decodeMapTiles(
+            Cache cache,
+            ImmutableCollection<MapIndex> indices) throws Exception {
+
+        ImmutableMap.Builder<MapIndex, MapTileGrid> map = ImmutableMap.builder();
+
         for (MapIndex index : indices) {
             MapTile[][][] tiles = new MapTile[MAP_PLANES][MAP_SIZE][MAP_SIZE];
+
             ByteBuf data = CacheUtils.unzip(cache.getFile(4, index.getTileFileId()));
             try {
                 for (int z = 0; z < MAP_PLANES; z++) {
                     for (int x = 0; x < MAP_SIZE; x++) {
                         for (int y = 0; y < MAP_SIZE; y++) {
+
                             MapTileDecoder decoder = new MapTileDecoder(x, y, z, data, tiles);
 
                             int opcode = data.readUnsignedByte();
@@ -322,15 +411,17 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
                                 opcode = data.readUnsignedByte();
                                 decoder.accept(opcode);
                             }
+
                             tiles[z][x][y] = decoder.toMapTile();
                         }
                     }
                 }
-                tileMap.put(index, new MapTileGrid(index.getRegion(), tiles));
+                map.put(index, new MapTileGrid(index.getRegion(), tiles));
             } finally {
                 data.release();
             }
         }
-        return tileMap.build();
+
+        return map.build();
     }
 }

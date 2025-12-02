@@ -2,51 +2,81 @@ package io.luna.game.cache.map;
 
 import io.luna.game.model.Region;
 
+import java.util.Arrays;
+import java.util.function.Consumer;
+
 /**
- * A grid of {@link MapTile} types that make up a {@link Region}. The grid is 64x64x4 in total size and helps
- * organize the data for individual tiles into a set grouped by region.
+ * Represents the complete 64×64×4 tile grid for a single {@link Region}.
  *
  * @author lare96
  */
 public final class MapTileGrid {
 
     /**
-     * The region this grid of {@link MapTile} types is describing.
+     * The region whose tiles are represented by this grid.
      */
     private final Region region;
 
     /**
-     * The grid array.
+     * The 3D tile array (plane -> x -> y).
+     * <p>
+     * Each entry is a fully decoded {@link MapTile} describing overlay, height, underlay, and attributes.
      */
     private final MapTile[][][] grid;
 
     /**
-     * Creates a new {@link MapTileGrid}.
+     * Creates a new {@link MapTileGrid} for the given region.
      *
-     * @param region The region this grid of {@link MapTile} types is describing.
-     * @param newGrid The grid array.
+     * @param region The region these tiles belong to.
+     * @param newGrid The decoded 3D tile array ({@code [plane][x][y]}).
      */
     public MapTileGrid(Region region, MapTile[][][] newGrid) {
         this.region = region;
-        grid = newGrid.clone();
+        grid = Arrays.copyOf(newGrid, newGrid.length);
     }
 
     /**
-     * @return The region this grid of {@link MapTile} types is describing.
-     */
-    public Region getRegion() {
-        return region;
-    }
-
-    /**
-     * Retrieves a {@link MapTile} on the grid, within the {@link #region}.
+     * Iterates over every {@link MapTile} in the grid (all 64×64×4 tiles), invoking the supplied action
+     * once per tile.
      *
-     * @param x The {@code x} offset from the region.
-     * @param y The {@code y} offset from the region.
-     * @param plane The plane.
-     * @return The tile, {@code null} if no data for the tile, or throws {@link ArrayIndexOutOfBoundsException}.
+     * <p>
+     * Order of iteration:
+     * <pre>
+     * for each plane
+     *     for x from 0 to 63
+     *         for y from 0 to 63
+     * </pre>
+     * </p>
+     *
+     * @param action A callback that receives each {@link MapTile}.
+     */
+    public void forEach(Consumer<MapTile> action) {
+        for (MapTile[][] planeTiles : grid) {
+            for (MapTile[] planeTile : planeTiles) {
+                for (MapTile tile : planeTile) {
+                    action.accept(tile);
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves a {@link MapTile} from the grid using local region coordinates.
+     *
+     * @param x The local X offset inside the region (0–63).
+     * @param y The local Y offset inside the region (0–63).
+     * @param plane The plane (0–3).
+     * @return The corresponding tile (never {@code null} for real cache regions).
+     * @throws ArrayIndexOutOfBoundsException If any coordinate lies outside valid bounds.
      */
     public MapTile getTile(int x, int y, int plane) {
         return grid[plane][x][y];
+    }
+
+    /**
+     * Returns the {@link Region} this tile grid describes.
+     */
+    public Region getRegion() {
+        return region;
     }
 }
