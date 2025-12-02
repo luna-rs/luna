@@ -125,22 +125,10 @@ public final class Position implements Locatable {
     }
 
     @Override
-    public Position location() {
+    public Position absLocation() {
         return this;
     }
 
-    /**
-     * Gets the euclidean distance between this position and another position. Only x and y are considered
-     * (i.e. 2 dimensions).
-     *
-     * @param other The other position.
-     * @return The distance.
-     */
-    public int getEuclideanDistance(Position other) {
-        int deltaX = getX() - other.getX();
-        int deltaY = getY() - other.getY();
-        return (int) Math.ceil(Math.sqrt(deltaX * deltaX + deltaY * deltaY));
-    }
 
     /**
      * Determines if this position is within the given distance of another position.

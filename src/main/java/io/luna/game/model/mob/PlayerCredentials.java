@@ -31,7 +31,7 @@ public final class PlayerCredentials {
      * @param password The password.
      */
     public PlayerCredentials(String username, String password) {
-        this.username = username;
+        this.username = username.toLowerCase();
         this.password = password;
         usernameHash = StringUtils.encodeToBase37(username);
     }

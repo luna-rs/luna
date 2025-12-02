@@ -85,17 +85,17 @@ public final class GsonUtils {
     }
 
     /**
-     * Writes a {@link JsonElement} to a file at the specified path.
+     * Writes a {@link Object} to a file at the specified path.
      * <p>
      * The file will be created or overwritten, and the output will be formatted using
      * the shared {@link #GSON} instance.
      * </p>
      *
-     * @param element The JSON element to write.
+     * @param element The object to write.
      * @param path    The destination file path.
      * @throws IOException If an I/O error occurs during writing.
      */
-    public static void writeJson(JsonElement element, Path path) throws IOException {
+    public static void writeJson(Object element, Path path) throws IOException {
         try (FileWriter fw = new FileWriter(path.toFile(), StandardCharsets.UTF_8)) {
             fw.append(GSON.toJson(element));
         }

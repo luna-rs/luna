@@ -73,7 +73,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                     mob.damage(hit)
                     target.animation(Animation(422))
                     target.interact(mob)
-                    target.forceChat("What do you think you're doing?!")
+                    target.speak("What do you think you're doing?!")
                     mob.lock(stunDuration)
                     world.scheduleOnce(stunDuration - 1) {
                         mob.graphic(Graphic.NULL)

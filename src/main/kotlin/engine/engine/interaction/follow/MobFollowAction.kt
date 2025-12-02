@@ -18,7 +18,7 @@ class MobFollowAction(mob: Mob, private val target: Mob) : Action<Mob>(mob, Acti
     private var lastPosition: Position? = null
 
     override fun run(): Boolean {
-        val distance = mob.position.getEuclideanDistance(target.position)
+        val distance = mob.position.computeLongestDistance(target.position)
         if (distance >= 15) {
             return true
         }

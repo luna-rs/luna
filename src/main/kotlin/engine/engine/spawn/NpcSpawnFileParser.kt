@@ -21,7 +21,7 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
         /**
          * The path to the file.
          */
-        private val PATH = Paths.get("data", "game", "world", "npcSpawns.json")
+        private val PATH = Paths.get("data", "game", "world", "npc_spawns.json")
     }
 
     override fun convert(token: JsonObject): PersistentNpc {

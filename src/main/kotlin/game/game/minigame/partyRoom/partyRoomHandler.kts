@@ -38,7 +38,7 @@ class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.NORMAL
             null -> {}
             DropPartyOption -> {
                 val secondsLeft = DropPartyOption.secondsLeft ?: return false
-                npc.forceChat(when {
+                npc.speak(when {
                                   secondsLeft == 0 -> "The drop party has started! Everyone come join!"
                                   secondsLeft < 60 -> "The drop party is starting in $secondsLeft seconds!"
                                   secondsLeft < 3600 -> "The drop party is starting in ${secondsLeft / 60} minutes!"
@@ -48,7 +48,7 @@ class PartyPeteAction(private val npc: Npc) : Action<Npc>(npc, ActionType.NORMAL
 
             else -> {
                 if (rand(4) == 0) {
-                    npc.forceChat(MESSAGES.random()(PartyRoom.option!!.description))
+                    npc.speak(MESSAGES.random()(PartyRoom.option!!.description))
                 }
             }
         }

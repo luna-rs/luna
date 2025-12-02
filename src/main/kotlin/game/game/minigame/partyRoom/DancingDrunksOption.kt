@@ -54,12 +54,12 @@ object DancingDrunksOption : PartyRoomOption(100_000, "Dancing Drunks") {
         world.schedule(2, true) { task ->
             when (task.executionCounter) {
                 0 -> npcs.forEach { it.animation(BOW_ANIMATION) }
-                2 -> animate(npcs) { it.forceChat("We like to drink!") }
-                4 -> animate(npcs) { it.forceChat("NO!") }
-                6 -> animate(npcs) { it.forceChat("We LOVE to drink!") }
-                8 -> animate(npcs) { it.forceChat("Do you like to drink as well?") }
-                10 -> animate(npcs) { it.forceChat("Only time will tell!") }
-                12 -> animate(npcs) { it.forceChat("It's time to party!") }
+                2 -> animate(npcs) { it.speak("We like to drink!") }
+                4 -> animate(npcs) { it.speak("NO!") }
+                6 -> animate(npcs) { it.speak("We LOVE to drink!") }
+                8 -> animate(npcs) { it.speak("Do you like to drink as well?") }
+                10 -> animate(npcs) { it.speak("Only time will tell!") }
+                12 -> animate(npcs) { it.speak("It's time to party!") }
                 14 -> npcs.forEach { it.animation(BOW_ANIMATION) }
                 16 -> {
                     npcs.forEach {

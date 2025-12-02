@@ -106,9 +106,9 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
             GUARD_NAMES.contains(it.definition.name) && it.definition.actions.contains("Attack")
         }
         for (guard in nearbyGuards) {
-            if (!world.collisionManager.raycast(guard.position, mob.position) && guard.isInViewCone(mob)) {
+            if (!world.collisionManager.raycast(guard.position, mob.position) && guard.inViewCone(mob)) {
                 // The guard can see the player.
-                guard.forceChat("Hey! Get your hands off there!")
+                guard.speak("Hey! Get your hands off there!")
                 guard.follow(mob)
                 break
             }

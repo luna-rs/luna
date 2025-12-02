@@ -26,7 +26,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
             when (executionCounter) {
                 0 -> winner.face(Direction.NORTH)
                 1 -> {
-                    winner.forceChat(VICTORY_MESSAGES.random())
+                    winner.speak(VICTORY_MESSAGES.random())
                     winner.animation(Animation(862))
                 }
 
@@ -122,7 +122,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
             if (task.executionCounter == 0) {
                 women.forEach {
                     it.animation(TAUNT_ANIMATIONS.random())
-                    it.forceChat(BEFORE_MESSAGES.random())
+                    it.speak(BEFORE_MESSAGES.random())
                 }
             } else if (!woman1.isAlive || !woman2.isAlive) {
                 women.filter { it.isAlive }.forEach { world.schedule(WinningWomanTask(it)) }
@@ -136,9 +136,9 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
                 lastWoman.interact(otherWoman)
                 if (rand(3) == 0) {
                     if (rand().nextBoolean()) {
-                        lastWoman.forceChat(DURING_MESSAGES.random())
+                        lastWoman.speak(DURING_MESSAGES.random())
                     } else {
-                        otherWoman.forceChat(DURING_MESSAGES.random())
+                        otherWoman.speak(DURING_MESSAGES.random())
                     }
                 }
 

@@ -8,6 +8,7 @@ import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.util.GsonUtils
 import io.luna.util.parser.JsonFileParser
+import org.apache.logging.log4j.LogManager
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentLinkedQueue
 
@@ -28,7 +29,7 @@ internal class ItemSpawnFileParser : JsonFileParser<PersistentGroundItem>(PATH) 
         /**
          * The path to the file.
          */
-        private val PATH = Paths.get("data", "game", "world", "itemSpawns.json")
+        private val PATH = Paths.get("data", "game", "world", "item_spawns.json")
     }
 
     override fun convert(token: JsonObject): PersistentGroundItem {

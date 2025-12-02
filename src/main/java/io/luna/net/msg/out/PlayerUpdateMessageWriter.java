@@ -123,7 +123,7 @@ public final class PlayerUpdateMessageWriter extends GameMessageWriter {
      */
     private void handleMovement(Player player, ByteMessage msg, boolean updateTeleport) {
         boolean needsUpdate = !player.getFlags().isEmpty();
-        if (updateTeleport && player.getFlags().size() == 1 && player.getFlags().get(UpdateFlag.CHAT)) {
+        if (updateTeleport && player.getFlags().size() == 1 && player.getFlags().flagged(UpdateFlag.CHAT)) {
             // Needs update needs to be false if were only forcing chat
             needsUpdate = false;
         }

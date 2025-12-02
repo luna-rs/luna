@@ -19,8 +19,8 @@ import java.util.concurrent.CompletableFuture;
  * </p>
  *
  * <p>
- * Pathfinding is performed asynchronously on the thread pool managed by {@link BotMovementManager#getPool()}, while
- * movement application occurs on the game logic thread provided by {@link GameService#getGameExecutor()}.
+ * Pathfinding is performed asynchronously on the thread pool managed by {@link BotMovementManager#getPool()},
+ * while movement application occurs on the game logic thread provided by {@link GameService#getGameExecutor()}.
  * This separation ensures pathfinding does not block the main tick loop.
  * </p>
  *
@@ -29,9 +29,9 @@ import java.util.concurrent.CompletableFuture;
 public final class BotMovementStack {
 
     /**
-     * The logger.
+     * Logger for movement-related debugging and error reporting.
      */
-    private static Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Internal structure representing a single movement request in progress.
@@ -43,12 +43,16 @@ public final class BotMovementStack {
     private static final class BotMovementRequest {
 
         /**
-         * The future representing the asynchronous path generation or movement process.
+         * The future representing the asynchronous path generation and/or movement task.
+         * <p>
+         * This future completes when the generated path has been queued into the bot’s {@link WalkingQueue},
+         * not when the bot physically arrives at the destination.
+         * </p>
          */
         private final CompletableFuture<Void> result;
 
         /**
-         * The destination being targeted by this movement.
+         * The destination this movement request is trying to reach.
          */
         private final Locatable target;
 
@@ -65,25 +69,25 @@ public final class BotMovementStack {
     }
 
     /**
-     * The bot.
+     * The bot executing the movement operations.
      */
     private final Bot bot;
 
     /**
-     * The movement manager that schedules async pathfinding operations.
+     * Manager responsible for dispatching async pathfinding tasks.
      */
     private final BotMovementManager manager;
 
     /**
-     * The currently active movement request, or {@code null} if idle.
+     * The current pending movement request, or {@code null} if no movement task is active.
      */
     private BotMovementRequest request;
 
     /**
      * Creates a new {@link BotMovementStack}.
      *
-     * @param bot The bot.
-     * @param manager The movement manager coordinating async pathfinding.
+     * @param bot The bot associated with this stack.
+     * @param manager The manager coordinating asynchronous pathfinding operations.
      */
     public BotMovementStack(Bot bot, BotMovementManager manager) {
         this.bot = bot;
@@ -91,50 +95,94 @@ public final class BotMovementStack {
     }
 
     /**
-     * Begins an asynchronous walk operation toward the given target. If another movement is already in progress, it
-     * is cancelled and cleared before the new one begins.
-     *
+     * Begins an asynchronous walk operation toward the given target. If another movement is already in progress,
+     * it is cancelled and cleared before the new one begins.
      * <p>
      * Pathfinding is executed asynchronously using the movement manager's pool, and once complete, the resulting
      * path is applied on the game thread.
      * </p>
      *
      * @param target The target destination to walk toward.
-     * @return A {@link CompletableFuture} that completes when the path is generated and queued, not when the bot
-     * arrives at the destination. The returned future's default actions will run on the game thread.
+     * @return A {@link CompletableFuture} completing when the path has been generated and queued.
+     *         The returned future does <strong>not</strong> wait for arrival at the destination.
      */
     public CompletableFuture<Void> addPath(Locatable target) {
-        WalkingQueue walking = bot.getWalking();
-        if (request != null && !request.result.isDone()) {
-            if (request.target.equals(target)) {
-                // Duplicate request.
-                return request.result;
-            }
-            // Cancel existing request before we start a new one.
-            request.result.cancel(false);
-            walking.clear();
-            bot.log("Cancelling existing movement " + request.target + ".");
+        if (isCurrentTarget(target)) {
+            return request.result;
         }
-        // Generate async path and apply it when ready.
-        request = new BotMovementRequest(
-                CompletableFuture.supplyAsync(() -> walking.findPath(target, true), manager.getPool()).
-                        thenAcceptAsync(path -> {
-                            walking.addPath(path);
-                            bot.log("Path generated, now walking" + target + ".");
-                        }, bot.getService().getGameExecutor()).
-                        exceptionally(ex -> {
-                            if (!(ex instanceof CancellationException)) {
-                                logger.error("Pathfinding for bot {} and {} failed!", bot.getUsername(), target, ex);
-                            }
-                            return null;
-                        }),
-                target);
-        bot.log("Generating new movement path " + target + ".");
+        cancel();
+        request = createRequest(target);
         return request.result;
     }
 
     /**
-     * @return The bot.
+     * Determines whether the bot is already moving toward the specified target.
+     *
+     * @param target The destination to test against the active request.
+     * @return {@code true} if there is an active request and its destination equals {@code target}.
+     */
+    public boolean isCurrentTarget(Locatable target) {
+        return isActive() && request.target.equals(target);
+    }
+
+    /**
+     * Returns whether a movement request is currently active and not completed or cancelled.
+     *
+     * @return {@code true} if a movement request is in progress.
+     */
+    public boolean isActive() {
+        return request != null && !request.result.isDone();
+    }
+
+    /**
+     * Cancels the currently active movement request, if one exists.
+     * <p>
+     * Cancelling a request stops the bot's walking queue immediately and logs the cancellation.
+     * </p>
+     */
+    public void cancel() {
+        if (isActive()) {
+            request.result.cancel(false);
+            bot.getWalking().clear();
+            bot.log("Cancelling existing movement " + request.target + ".");
+        }
+    }
+
+    /**
+     * Creates a new asynchronous movement request toward the given target.
+     * <p>
+     * The path is generated off-thread using the movement pool, then submitted back to the game thread for
+     * execution. Any exceptions besides cancellation are logged.
+     * </p>
+     *
+     * @param target The movement destination.
+     * @return A constructed {@link BotMovementRequest} wrapping the future and target.
+     */
+    private BotMovementRequest createRequest(Locatable target) {
+        WalkingQueue walking = bot.getWalking();
+
+        bot.log("Generating new movement path to " + target + ".");
+        CompletableFuture<Void> pathFuture =
+                CompletableFuture.supplyAsync(() -> walking.findPath(target, true), manager.getPool())
+                        .thenAcceptAsync(path -> {
+                            walking.addPath(path);
+                            bot.log("Path generated, now walking to " + target + ".");
+                        }, bot.getService().getGameExecutor())
+                        .exceptionally(ex -> {
+                            if (!(ex instanceof CancellationException)) {
+                                logger.error("Pathfinding for bot {} and {} failed!",
+                                        bot.getUsername(), target, ex);
+                            }
+                            return null;
+                        });
+
+        return new BotMovementRequest(pathFuture, target);
+    }
+
+    /**
+     * Returns the bot associated with this movement stack.
+     *
+     * @return The bot instance.
      */
     public Bot getBot() {
         return bot;

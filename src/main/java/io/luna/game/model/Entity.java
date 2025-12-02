@@ -164,8 +164,18 @@ public abstract class Entity implements Attributable, Locatable {
     }
 
     @Override
-    public final Position location() {
+    public final Position absLocation() {
         return position;
+    }
+
+    @Override
+    public final int getX() {
+        return position.getX();
+    }
+
+    @Override
+    public final int getY() {
+        return position.getY();
     }
 
     /**
@@ -251,13 +261,13 @@ public abstract class Entity implements Attributable, Locatable {
 
                 setCurrentChunk();
                 onActive();
-                chunkRepository.updateCollisionMap(this, false);
+                world.getCollisionManager().updateEntity(this, false);
                 break;
             case INACTIVE:
                 try {
                     onInactive();
                 } finally {
-                    chunkRepository.updateCollisionMap(this, true);
+                    world.getCollisionManager().updateEntity(this, true);
                     removeCurrentChunk();
                 }
                 break;
@@ -294,10 +304,15 @@ public abstract class Entity implements Attributable, Locatable {
     public final void setPosition(Position newPosition) {
         boolean isLocal = this instanceof LocalEntity;
         if (!newPosition.equals(position) && !isLocal) {
-            if (type == EntityType.PLAYER && state == EntityState.ACTIVE) {
-                Player player = (Player) this;
-                if (!player.getControllers().checkMovement(newPosition)) {
-                    return;
+            if(state == EntityState.ACTIVE) {
+                if (type == EntityType.PLAYER) {
+                    Player player = (Player) this;
+                    if (!player.getControllers().checkMovement(newPosition)) {
+                        return;
+                    }
+                }
+                if(type == EntityType.NPC) {
+                    world.getCollisionManager().updateEntity(this, true);
                 }
             }
             Region old = position == null ? null : position.getRegion();
@@ -309,12 +324,9 @@ public abstract class Entity implements Attributable, Locatable {
                 }
             }
             if (state == EntityState.ACTIVE) {
-                if(type == EntityType.NPC) {
-                    chunkRepository.updateCollisionMap(this, true);
-                }
                 setCurrentChunk();
                 if(type == EntityType.NPC) {
-                    chunkRepository.updateCollisionMap(this, false);
+                    world.getCollisionManager().updateEntity(this, false);
                 }
             }
         }

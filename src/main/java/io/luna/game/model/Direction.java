@@ -56,10 +56,10 @@ public enum Direction {
     public static final ImmutableList<Direction> ALL = ImmutableList.copyOf(values());
 
 
-    private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST);
-    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST);
-    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST);
-    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST);
+    private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST, NORTH_EAST);
+    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST, NORTH_WEST);
+    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST, SOUTH_EAST);
+    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST, SOUTH_WEST);
 
 
     /**
