@@ -61,17 +61,16 @@ public final class GameService extends AbstractScheduledService {
         @Override
         public void running() {
             // Start the game world and run startup logic from Kotlin scripts.
-            sync(() -> {
-                loadPlugins();
-                world.start();
+            loadPlugins();
+            runSynchronizationTasks();
+            world.start();
 
-                // Players won't be able to log in until startup tasks are complete, so it's fine to block the
-                // game thread.
-                runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
+            // Players won't be able to log in until startup tasks are complete, so it's fine to block the
+            // game thread.
+            runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
-                // Release the lock in LunaServer.
-                onlineLock.complete(null);
-            });
+            // Release the lock in LunaServer.
+            onlineLock.complete(null);
         }
 
         @Override
@@ -179,6 +178,7 @@ public final class GameService extends AbstractScheduledService {
     @Override
     protected void startUp() {
         thread = Thread.currentThread();
+        thread.setName("GameThread");
     }
 
     @Override

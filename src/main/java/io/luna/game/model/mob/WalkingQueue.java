@@ -8,10 +8,11 @@ import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 import io.luna.game.model.collision.CollisionManager;
-import io.luna.game.model.path.AStarPathfindingAlgorithm;
-import io.luna.game.model.path.EuclideanHeuristic;
-import io.luna.game.model.path.PathfindingAlgorithm;
-import io.luna.game.model.path.SimplePathfindingAlgorithm;
+import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.path.BotPathfinder;
+import io.luna.game.model.path.GamePathfinder;
+import io.luna.game.model.path.PlayerPathfinder;
+import io.luna.game.model.path.SimplePathfinder;
 import io.luna.util.RandomUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -124,7 +125,6 @@ public final class WalkingQueue {
      * The collision manager.
      */
     private final CollisionManager collisionManager;
-    private final PathfindingAlgorithm pathfinding;
 
     /**
      * The mob.
@@ -151,10 +151,16 @@ public final class WalkingQueue {
     public WalkingQueue(Mob mob) {
         this.mob = mob;
         collisionManager = mob.getWorld().getCollisionManager();
-        if (mob instanceof Player) {
-            this.pathfinding = new AStarPathfindingAlgorithm(collisionManager, new EuclideanHeuristic());
+    }
+
+    private GamePathfinder<Position> getPathfinder() {
+        int plane = mob.getPosition().getZ();
+        if (mob instanceof Bot) {
+            return new BotPathfinder(collisionManager, plane);
+        } else if (mob instanceof Player) {
+            return new PlayerPathfinder(collisionManager, plane);
         } else {
-            this.pathfinding = new SimplePathfindingAlgorithm(collisionManager);
+            return new SimplePathfinder(collisionManager);
         }
     }
 
@@ -251,7 +257,7 @@ public final class WalkingQueue {
      */
     public boolean walkUntilReached(Locatable target) {
         Deque<Step> newPath = new ArrayDeque<>();
-        Deque<Position> path = pathfinding.find(mob.getPosition(), target.location());
+        Deque<Position> path = getPathfinder().find(mob.getPosition(), target.absLocation());
         Position lastPosition = mob.getPosition();
         boolean reached;
         boolean isEntity = target instanceof Entity;
@@ -259,7 +265,7 @@ public final class WalkingQueue {
             Position nextPosition = path.poll();
             // TODO check for obstacles?
             reached = isEntity ? collisionManager.reached(lastPosition, lastPosition, (Entity) target, 1) :
-                    target.location().isWithinDistance(lastPosition, 1);
+                    target.absLocation().isWithinDistance(lastPosition, 1);
             if (nextPosition == null || reached) {
                 break;
             }
@@ -472,10 +478,12 @@ public final class WalkingQueue {
         player.setRunEnergy(newValue, true);
     }
 
-
+    // TODO Only use BotPathfinder for long paths using the movement stack. For regular game engine pathing such as
+    // following, the default PlayerPathfinder should be used.
     public Deque<Step> findPath(Locatable target, boolean safe) {
         Position start = mob.getPosition();
-        Deque<Position> positionPath = pathfinding.find(start, target.location());
+        Position end = target.absLocation();
+        Deque<Position> positionPath = getPathfinder().find(start, end);
         Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
         Position last = start;
         for (; ; ) {
@@ -492,6 +500,7 @@ public final class WalkingQueue {
         }
         return stepPath;
     }
+
 
     /**
      * Returns the current size of the walking queue.
@@ -537,9 +546,5 @@ public final class WalkingQueue {
             clear();
         }
         this.locked = locked;
-    }
-
-    public PathfindingAlgorithm getPathfinding() {
-        return pathfinding;
     }
 }

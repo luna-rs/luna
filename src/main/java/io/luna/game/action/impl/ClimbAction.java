@@ -51,7 +51,9 @@ public final class ClimbAction extends LockedAction {
     public boolean run() {
         if (getExecutions() == 0) {
             mob.sendMessage(message);
-            mob.animation(new Animation(828));
+            mob.animation(new Animation(828)); // todo if going down, diff animation. also dimplify destination to
+            // simply up -> down. or autocompute destination based on ladder location
+            // maybe different action entirely for static ladders in the game world vs agility?
             return false;
         } else if (getExecutions() == 1) {
             mob.move(destination);

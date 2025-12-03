@@ -44,7 +44,6 @@ public final class ChatEvent extends PlayerEvent implements ControllableEvent, I
      */
     private final Instant timestamp = Instant.now();
 
-
     /**
      * Creates a new {@link ChatEvent}.
      *
@@ -66,6 +65,10 @@ public final class ChatEvent extends PlayerEvent implements ControllableEvent, I
 
     @Override
     public Locatable contextLocatable(Bot bot) {
+        long usernameHash = bot.getUsernameHash();
+        if(plr.getIgnores().contains(usernameHash)) {
+            return null;
+        }
         return plr;
     }
 

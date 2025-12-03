@@ -13,12 +13,6 @@ import io.luna.game.TickTimer;
 public final class TimeSource extends TickTimer {
 
     /**
-     * If this time source was checked. This is necessary so the first {@link #ready(int)} check always returns
-     * {@code true}.
-     */
-    private boolean checked;
-
-    /**
      * If this time source is waiting to queue an action.
      */
     private boolean waiting;
@@ -41,9 +35,8 @@ public final class TimeSource extends TickTimer {
      * @return {@code true} if an action is ready to be executed.
      */
     public boolean ready(int duration) {
-        if (!checked || getDurationTicks() >= duration) {
-            checked = true;
-            reset();
+        if (!isRunning() || getDurationTicks() >= duration) {
+            reset().start();
             return true;
         }
         return false;

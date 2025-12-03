@@ -101,6 +101,11 @@ public final class SkillSet implements Iterable<Skill> {
     private int combatLevel = -1;
 
     /**
+     * The skill level. Used for the games' room in real Runescape.
+     */ // todo set method, and save to character file
+    private int skillLevel;
+
+    /**
      * If this skill set is firing events.
      */
     private boolean firingEvents = true;
@@ -249,6 +254,13 @@ public final class SkillSet implements Iterable<Skill> {
             combatLevel = (int) combatLvl;
         }
         return combatLevel;
+    }
+
+    /**
+     * @return The skill level. Used for the games' room in real Runescape.
+     */
+    public int getSkillLevel() {
+        return skillLevel;
     }
 
     /**

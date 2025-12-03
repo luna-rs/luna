@@ -6,7 +6,7 @@ public  class CountdownTimer extends Action<Mob> {
 
     private long start;
     private long remaining;
-
+// todo needs testing!!
     public CountdownTimer(Mob mob, long start) {
         super(mob, ActionType.SOFT);
         this.start = start;
