@@ -25,6 +25,7 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.block.ExactMovement;
+import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.controller.ControllerManager;
@@ -64,8 +65,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -228,7 +227,7 @@ public class Player extends Mob {
     /**
      * The cached update block.
      */
-    private ByteMessage cachedBlock;
+    private volatile ByteMessage cachedBlock; // todo thread safety?
 
     /**
      * The rights.
@@ -249,16 +248,6 @@ public class Player extends Mob {
      * If the region has changed.
      */
     private boolean regionChanged;
-
-    /**
-     * The chat message.
-     */
-    private Optional<Chat> chat = Optional.empty();
-
-    /**
-     * The forced movement route.
-     */
-    private Optional<ExactMovement> exactMovement = Optional.empty();
 
     /**
      * The prayer icon.
@@ -444,10 +433,11 @@ public class Player extends Mob {
     }
 
     @Override
-    public void reset() {
+    public void reset(UpdateBlockData.Builder oldBlockData) {
         regionChanged = false;
-        chat = Optional.empty();
-        exactMovement = Optional.empty();
+        if (oldBlockData.getTransform() != null) {
+            pendingBlockData.transform(oldBlockData.getTransform());
+        }
     }
 
     @Override
@@ -457,14 +447,14 @@ public class Player extends Mob {
 
     @Override
     public void transform(int id) {
-        transformId = OptionalInt.of(id);
+        pendingBlockData.transform(id);
         flags.flag(UpdateFlag.APPEARANCE);
     }
 
     @Override
     public void resetTransform() {
-        if (transformId.isPresent()) {
-            transformId = OptionalInt.empty();
+        if (pendingBlockData.getTransform() != null) {
+            pendingBlockData.transform(null);
             flags.flag(UpdateFlag.APPEARANCE);
         }
     }
@@ -753,17 +743,17 @@ public class Player extends Mob {
      * @param chat The chat instance.
      */
     public void chat(Chat chat) {
-        this.chat = Optional.of(chat);
+        pendingBlockData.chat(chat);
         flags.flag(UpdateFlag.CHAT);
     }
 
     /**
      * Traverses the path in {@code forcedMovement}.
      *
-     * @param forcedMovement The forced movement path.
+     * @param move The forced movement path.
      */
-    public void exactMove(ExactMovement forcedMovement) {
-        this.exactMovement = Optional.of(forcedMovement);
+    public void exactMove(ExactMovement move) {
+        pendingBlockData.move(move);
         flags.flag(UpdateFlag.EXACT_MOVEMENT);
     }
 
@@ -816,7 +806,7 @@ public class Player extends Mob {
     /**
      * Plays the sound with {@code id} with {@code delay}.
      */
-   private void playSound(int soundId, int delay) {
+    private void playSound(int soundId, int delay) {
         int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
         queue(new SoundMessageWriter(soundId, volume, delay));
     }
@@ -1119,14 +1109,14 @@ public class Player extends Mob {
      * @param newMsg The value to set to.
      */
     public void setCachedBlock(ByteMessage newMsg) {
-        // We have a cached block, release a reference to it.
-        if (cachedBlock != null) {
-            cachedBlock.release();
-        }
-
         // Retain a reference to the new cached block.
         if (newMsg != null) {
             newMsg.retain();
+        }
+
+        // We have a cached block, release a reference to it.
+        if (cachedBlock != null) {
+            cachedBlock.release();
         }
 
         cachedBlock = newMsg;
@@ -1165,32 +1155,12 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The chat message.
-     */
-    public Optional<Chat> getChat() {
-        return chat;
-    }
-
-    /**
-     * @return The forced movement route.
-     */
-    public Optional<ExactMovement> getExactMovement() {
-        return exactMovement;
-    }
-
-    /**
      * @return The appearance.
      */
     public PlayerAppearance getAppearance() {
         return appearance;
     }
 
-    /**
-     * @return The transformation identifier.
-     */
-    public OptionalInt getTransformId() {
-        return transformId;
-    }
 
     /**
      * @return The inventory.

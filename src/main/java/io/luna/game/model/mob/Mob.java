@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import game.player.Sounds;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionQueue;
@@ -10,14 +11,12 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.block.Hit;
+import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
-import game.player.Sounds;
 
 import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -33,7 +32,7 @@ public abstract class Mob extends Entity {
     /**
      * The update flag set.
      */
-    protected final UpdateFlagSet flags = new UpdateFlagSet();
+    protected final UpdateFlagSet flags = new UpdateFlagSet(this);
 
     /**
      * The skill set.
@@ -69,52 +68,7 @@ public abstract class Mob extends Entity {
      * The last movement direction.
      */
     private Direction lastDirection = Direction.SOUTH;
-
-    /**
-     * The current animation.
-     */
-    private Optional<Animation> animation = Optional.empty();
-
-    /**
-     * The current position being faced.
-     */
-    private Optional<Position> facePosition = Optional.empty();
-
-    /**
-     * The current message being forced.
-     */
-    private Optional<String> forcedChat = Optional.empty();
-
-    /**
-     * The current graphic.
-     */
-    private Optional<Graphic> graphic = Optional.empty();
-
-    /**
-     * The current interaction index.
-     */
-    private OptionalInt interactionIndex = OptionalInt.empty();
-
-    /**
-     * The current primary hitsplat.
-     */
-    private Optional<Hit> primaryHit = Optional.empty();
-
-    /**
-     * The current secondary hitsplat.
-     */
-    private Optional<Hit> secondaryHit = Optional.empty();
-
-    /**
-     * The entity being interacted with.
-     */
-    private Optional<Entity> interactingWith = Optional.empty();
-
-    /**
-     * The transformation identifier.
-     */
-    OptionalInt transformId = OptionalInt.empty();
-
+    private Entity interactingWith;
     /**
      * The player instance. May be null.
      */
@@ -134,6 +88,9 @@ public abstract class Mob extends Entity {
      * If a teleportation is in progress.
      */
     protected boolean teleporting;
+
+    protected UpdateBlockData.Builder pendingBlockData = new UpdateBlockData.Builder();
+    private volatile UpdateBlockData blockData;
 
     /**
      * Creates a new {@link Mob}.
@@ -162,7 +119,7 @@ public abstract class Mob extends Entity {
     /**
      * Resets additional data for the next tick.
      */
-    public abstract void reset();
+    public abstract void reset(UpdateBlockData.Builder oldBlockData);
 
     /**
      * Transforms this mob into an npc with {@code id}.
@@ -185,6 +142,10 @@ public abstract class Mob extends Entity {
      * @return The total health of this mob.
      */
     public abstract int getTotalHealth();
+
+    public final void buildBlockData() {
+        blockData = pendingBlockData.build();
+    }
 
     /**
      * @return The current health of this mob.
@@ -271,10 +232,10 @@ public abstract class Mob extends Entity {
      * Damages the mob once.
      */
     public final void damage(Hit hit) {
-        if (primaryHit.isPresent()) {
-            secondaryHit(hit);
+        if (pendingBlockData.getHit1() != null) {
+            hit2(hit);
         } else {
-            primaryHit(hit);
+            hit1(hit);
         }
         addHealth(-hit.getDamage());
         if (this instanceof Player) {
@@ -297,45 +258,6 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Damages the mob twice.
-     */
-    public final void damage(Hit hit1, Hit hit2) {
-        damage(hit1);
-        damage(hit2);
-    }
-
-    /**
-     * Damages the mob three times.
-     */
-    public final void damage(Hit hit1, Hit hit2, Hit hit3) {
-        damage(hit1);
-        damage(hit2);
-        world.schedule(new Task(1) {
-            @Override
-            protected void execute() {
-                damage(hit3);
-                cancel();
-            }
-        });
-    }
-
-    /**
-     * Damages the mob four times.
-     */
-    public final void damage(Hit hit1, Hit hit2, Hit hit3, Hit hit4) {
-        damage(hit1);
-        damage(hit2);
-        world.schedule(new Task(1) {
-            @Override
-            protected void execute() {
-                damage(hit3);
-                damage(hit4);
-                cancel();
-            }
-        });
-    }
-
-    /**
      * Teleports to {@code position}. Will also stop movement and interrupt the current action.
      *
      * @param position The position to teleport to.
@@ -350,12 +272,12 @@ public abstract class Mob extends Entity {
     /**
      * Attempts to perform {@code newAnimation}.
      *
-     * @param newAnimation The animation to perform.
+     * @param animation The animation to perform.
      */
-    public final void animation(Animation newAnimation) {
-        if (animation.isEmpty() ||
-                animation.filter(newAnimation::overrides).isPresent()) {
-            animation = Optional.of(newAnimation);
+    public final void animation(Animation animation) {
+        Animation current = pendingBlockData.getAnimation();
+        if (current == null || animation.overrides(current)) {
+            pendingBlockData.animation(animation);
             flags.flag(UpdateFlag.ANIMATION);
         }
     }
@@ -366,7 +288,7 @@ public abstract class Mob extends Entity {
      * @param position The position.
      */
     public final void face(Position position) {
-        facePosition = Optional.of(position);
+        pendingBlockData.face(position);
         flags.flag(UpdateFlag.FACE_POSITION);
     }
 
@@ -376,7 +298,9 @@ public abstract class Mob extends Entity {
      * @param direction The direction to face.
      */
     public final void face(Direction direction) {
-        face(position.translate(direction.getTranslation().getX(), direction.getTranslation().getY()));
+        int x = direction.getTranslation().getX();
+        int y = direction.getTranslation().getY();
+        face(position.translate(x, y));
     }
 
     /**
@@ -384,18 +308,18 @@ public abstract class Mob extends Entity {
      *
      * @param message The message to force.
      */
-    public final void forceChat(Object message) {
-        forcedChat = Optional.of(Objects.toString(message));
+    public final void speak(Object message) {
+        pendingBlockData.speak(message.toString());
         flags.flag(UpdateFlag.FORCED_CHAT);
     }
 
     /**
      * Performs {@code graphic}.
      *
-     * @param newGraphic The graphic to perform.
+     * @param graphic The graphic to perform.
      */
-    public final void graphic(Graphic newGraphic) {
-        graphic = Optional.of(newGraphic);
+    public final void graphic(Graphic graphic) {
+        pendingBlockData.graphic(graphic);
         flags.flag(UpdateFlag.GRAPHIC);
     }
 
@@ -405,19 +329,18 @@ public abstract class Mob extends Entity {
     public final void interact(Entity entity) {
         if (entity == null) {
             // Reset the current interaction.
-            interactionIndex = OptionalInt.of(65535);
+            pendingBlockData.interact(65535);
             flags.flag(UpdateFlag.INTERACTION);
         } else if (entity instanceof Mob) {
             // Interact with player or npc.
             Mob mob = (Mob) entity;
-            interactionIndex = mob.type == EntityType.PLAYER ?
-                    OptionalInt.of(mob.index + 32768) : OptionalInt.of(mob.index);
+            pendingBlockData.interact(mob.type == EntityType.PLAYER ? mob.index + 32768 : mob.index);
             flags.flag(UpdateFlag.INTERACTION);
         } else {
             // Interact with a non-movable entity.
             face(entity.getPosition());
         }
-        interactingWith = Optional.ofNullable(entity);
+        interactingWith = entity;
     }
 
     /**
@@ -425,7 +348,7 @@ public abstract class Mob extends Entity {
      */
     public final void resetInteractingWith() {
         // Only reset if we're currently interacting.
-        if (interactingWith.isPresent()) {
+        if (interactingWith != null) {
             interact(null);
         }
     }
@@ -434,7 +357,7 @@ public abstract class Mob extends Entity {
      * Returns {@code true} if this mob is interacting with {@code entity}.
      */
     public boolean isInteractingWith(Entity entity) {
-        return interactingWith.filter(entity::equals).isPresent();
+        return Objects.equals(interactingWith, entity);
     }
 
     /**
@@ -442,8 +365,8 @@ public abstract class Mob extends Entity {
      *
      * @param hit The hit to display.
      */
-    private void primaryHit(Hit hit) {
-        primaryHit = Optional.of(hit);
+    private void hit1(Hit hit) {
+        pendingBlockData.hit1(hit);
         flags.flag(UpdateFlag.PRIMARY_HIT);
     }
 
@@ -452,8 +375,8 @@ public abstract class Mob extends Entity {
      *
      * @param hit The hit to display.
      */
-    private void secondaryHit(Hit hit) {
-        secondaryHit = Optional.of(hit);
+    private void hit2(Hit hit) {
+        pendingBlockData.hit2(hit);
         flags.flag(UpdateFlag.SECONDARY_HIT);
     }
 
@@ -481,19 +404,17 @@ public abstract class Mob extends Entity {
      */
     public final void resetFlags() {
         Direction defaultDirection = this instanceof Npc ? asNpc().getDefaultDirection().orElse(null) : null;
-        reset();
         teleporting = false;
-        animation = Optional.empty();
-        forcedChat = Optional.empty();
-        facePosition = defaultDirection == null ? Optional.empty() :
-                Optional.of(position.translate(1, defaultDirection));
-        interactionIndex = OptionalInt.empty();
-        primaryHit = Optional.empty();
-        secondaryHit = Optional.empty();
+        UpdateBlockData.Builder oldBlockData = pendingBlockData;
+        pendingBlockData = new UpdateBlockData.Builder();
+        if (defaultDirection != null) {
+            pendingBlockData.face(position.translate(1, defaultDirection));
+        }
         flags.clear();
         if (defaultDirection != null) {
             flags.flag(UpdateFlag.FACE_POSITION);
         }
+        reset(oldBlockData);
     }
 
     /**
@@ -593,55 +514,6 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * @return The current animation.
-     */
-    public final Optional<Animation> getAnimation() {
-        return animation;
-    }
-
-    /**
-     * @return The current position being faced.
-     */
-    public final Optional<Position> getFacePosition() {
-        return facePosition;
-    }
-
-    /**
-     * @return The current message being forced.
-     */
-    public final Optional<String> getForcedChat() {
-        return forcedChat;
-    }
-
-    /**
-     * @return The current graphic.
-     */
-    public final Optional<Graphic> getGraphic() {
-        return graphic;
-    }
-
-    /**
-     * @return The current interaction index.
-     */
-    public final OptionalInt getInteractionIndex() {
-        return interactionIndex;
-    }
-
-    /**
-     * @return The current primary hitsplat.
-     */
-    public final Optional<Hit> getPrimaryHit() {
-        return primaryHit;
-    }
-
-    /**
-     * @return The current secondary hitsplat.
-     */
-    public final Optional<Hit> getSecondaryHit() {
-        return secondaryHit;
-    }
-
-    /**
      * @return The walking queue.
      */
     public final WalkingQueue getWalking() {
@@ -653,20 +525,6 @@ public abstract class Mob extends Entity {
      */
     public final SkillSet getSkills() {
         return skills;
-    }
-
-    /**
-     * @return The entity being interacted with.
-     */
-    public final Optional<Entity> getInteractingWith() {
-        return interactingWith;
-    }
-
-    /**
-     * @return The transformation identifier.
-     */
-    public OptionalInt getTransformId() {
-        return transformId;
     }
 
     /**
@@ -684,20 +542,6 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * @return The {@code x} coordinate.
-     */
-    public int getX() {
-        return position.getX();
-    }
-
-    /**
-     * @return The {@code y} coordinate.
-     */
-    public int getY() {
-        return position.getY();
-    }
-
-    /**
      * @return The {@code z} coordinate.
      */
     public int getZ() {
@@ -709,5 +553,13 @@ public abstract class Mob extends Entity {
      */
     public boolean isTeleporting() {
         return teleporting;
+    }
+
+    public Entity getInteractingWith() {
+        return interactingWith;
+    }
+
+    public UpdateBlockData getBlockData() {
+        return blockData;
     }
 }

@@ -8,6 +8,7 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -25,8 +26,11 @@ import io.luna.util.SqlConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -105,7 +109,7 @@ public final class World {
     /**
      * The bot manager.
      */
-    private final BotManager botManager = new BotManager();
+    private final BotManager botManager;
 
     /**
      * The login service.
@@ -183,6 +187,11 @@ public final class World {
     private final SqlConnectionPool connectionPool;
 
     /**
+     * The mobs requiring updates.
+     */
+    private final Set<Mob> updatesRequired = new HashSet<>();
+
+    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -194,6 +203,7 @@ public final class World {
         collisionManager = new CollisionManager(this);
         botRepository = new BotRepository(this);
         persistenceService = new PersistenceService(this);
+        botManager = new BotManager();
 
         // Initialize the connection pool.
         try {
@@ -217,6 +227,10 @@ public final class World {
         items.startExpirationTask();
         collisionManager.build(false);
         botManager.load();
+    }
+
+    public void addUpdateRequired(Mob mob) {
+        updatesRequired.add(mob);
     }
 
     /**
@@ -264,6 +278,7 @@ public final class World {
 
         chunks.resetUpdatedChunks();
         botManager.getInjectorManager().clearEvents();
+        collisionManager.handleSnapshots();
 
         // Increment tick counter.
         currentTick.incrementAndGet();
@@ -315,6 +330,14 @@ public final class World {
      * Synchronization part of the game loop, apply the update procedure in parallel.
      */
     private void synchronize() {
+        // Build update block data.
+        for (Iterator<Mob> it = updatesRequired.iterator(); it.hasNext(); ) {
+            Mob mob = it.next();
+            mob.buildBlockData();
+            it.remove();
+        }
+
+        // Prepare synchronizer for parallel updating.
         synchronizer.bulkRegister(playerList.size());
         for (Player player : playerList) {
             if (player.getClient().isPendingLogout() || player.isBot()) {

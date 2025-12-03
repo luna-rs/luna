@@ -8,11 +8,11 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
+import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -129,8 +129,8 @@ public class Npc extends Mob {
     }
 
     @Override
-    public void reset() {
-        transformId = OptionalInt.empty();
+    public void reset(UpdateBlockData.Builder oldBlockData) {
+
     }
 
     @Override
@@ -147,7 +147,7 @@ public class Npc extends Mob {
     public void transform(int id) {
         definition = NpcDefinition.ALL.retrieve(id);
         combatDefinition = NpcCombatDefinition.ALL.get(id);
-        transformId = OptionalInt.of(id);
+        pendingBlockData.transform(id);
         setSkills();
         flags.flag(UpdateFlag.TRANSFORM);
     }
@@ -168,43 +168,18 @@ public class Npc extends Mob {
      * @param entity The entity.
      * @return {@code true} if the entity can be seen.
      */
-    public boolean isInViewCone(Entity entity) {
-        if (!position.isWithinDistance(entity.getPosition(), Position.VIEWING_DISTANCE / 2)) {
+    public boolean inViewCone(Entity entity, int viewingDistance) {
+        if (!position.isWithinDistance(entity.getPosition(), viewingDistance)) {
             return false;
         }
 
         // Whoever we're interacting with takes priority.
-        if (getInteractingWith().isPresent()) {
-            return getInteractingWith().get().equals(entity);
+        if (Objects.equals(getInteractingWith(), entity)) {
+            return true;
         }
 
         // Get deltas representing where the entity is relative to this NPC.
-        int deltaX = entity.getPosition().getX() - position.getX();
-        int deltaY = entity.getPosition().getY() - position.getY();
-        if (deltaX > 0) {
-            deltaX = 1;
-        }
-        if (deltaY > 0) {
-            deltaY = 1;
-        }
-        if (deltaX < 0) {
-            deltaX = -1;
-        }
-        if (deltaY < 0) {
-            deltaY = -1;
-        }
-
-        // Get the direction that matches the relative direction.
-        // Ie. Entity is to the WEST of this NPC.
-        Direction relativeDir = Direction.NONE;
-        for (Direction dir : Direction.ALL) {
-            if (dir.getTranslation().getX() == deltaX &&
-                    dir.getTranslation().getY() == deltaY) {
-                relativeDir = dir;
-                break;
-            }
-        }
-
+        Direction relativeDir = Direction.between(entity.getPosition(), position);
         if (relativeDir == Direction.NONE) {
             // On top of the entity, always seen.
             return true;
@@ -213,6 +188,10 @@ public class Npc extends Mob {
         // If the relative direction is within the NPCs view, return true.
         Direction lastDir = getLastDirection();
         return Direction.getAllVisible(lastDir).contains(relativeDir);
+    }
+
+    public boolean inViewCone(Entity entity) {
+        return inViewCone(entity, Position.VIEWING_DISTANCE);
     }
 
     /**
