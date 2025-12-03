@@ -16,35 +16,41 @@ import java.util.Queue;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing a repository that is used to keep track of all mobs in the world. Assigned indexes
- * are cached in order to improve performance.
+ * A repository that stores and manages all active {@link Mob} instances of a given type within the game world. Each
+ * mob is assigned a stable index in the range {@code [1, capacity]}, which is used by the update protocol.
+ * <p>
+ * Indexes are internally pooled, meaning insertions are O(1) and do not require scanning for free slots. Null slots
+ * are automatically skipped during iteration.
+ * </p>
  *
- * @param <E> The type of mobs to contain.
+ * <p>
+ * <strong>Important:</strong> This list should never be used directly to remove players. Use {@link Player#logout()}
+ * or {@link Player#forceLogout()} instead, both of which safely handle disconnection and persistence.
+ * </p>
+ *
+ * @param <E> The specific mob subtype (e.g., {@link Player}, {@link Npc}).
  * @author lare96
  */
 public final class MobList<E extends Mob> implements Iterable<E> {
 
     /**
-     * A {@code null}-skipping iterator.
+     * Iterator implementation that transparently skips {@code null} slots so consumers never encounter empty indices.
      */
     private final class MobListIterator implements Iterator<E> {
 
         /**
-         * The current index.
+         * Current scanning index.
          */
         private int curr;
 
         /**
-         * The previous index.
+         * Index of last returned element (needed for safe remove).
          */
         private int prev = -1;
 
@@ -55,11 +61,11 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         @Override
         public E next() {
-            // If 'hasNext()' is not called, skip nulls here.
+            // Skip ahead in case the user did not call hasNext().
             skip();
 
             if (curr >= capacity()) {
-                throw new NoSuchElementException("No elements left");
+                throw new NoSuchElementException("No more elements in MobList.");
             }
 
             E mob = get(curr);
@@ -69,18 +75,17 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
         @Override
         public void remove() {
-            checkState(prev != -1, "remove() can only be called once after each call to next()");
+            checkState(prev != -1, "remove() may only be invoked once after next()");
             MobList.this.remove(get(prev));
             prev = -1;
         }
 
         /**
-         * Iterates until a non-{@code null} element is found.
+         * Advances {@link #curr} until a non-null mob is found.
          *
-         * @return {@code true} if a non-{@code null} element was found.
+         * @return {@code true} if a valid mob was found; {@code false} if end reached.
          */
         private boolean skip() {
-            // Stop at the end of the repository, or until 'get(curr)' is non-null.
             while (get(curr) == null) {
                 if (++curr >= capacity()) {
                     return false;
@@ -91,38 +96,41 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * The world.
+     * The world that owns this list.
      */
     private final World world;
 
     /**
-     * The elements.
+     * Backing array storing mobs by index (1-indexed; slot 0 unused).
      */
     private final E[] mobs;
 
     /**
-     * The index cache.
+     * Pool of free indexes. Implemented as a FIFO to reduce index fragmentation.
      */
-    private final Queue<Integer> indexes;
+    private final Queue<Integer> indexPool;
 
     /**
-     * The size.
+     * Number of active mobs.
      */
     private int size;
 
     /**
-     * Creates a new {@link MobList}.
+     * Creates a new {@link MobList} with the specified capacity.
      *
-     * @param capacity The amount of mobs that can be contained.
+     * @param world The owning world.
+     * @param capacity Maximum mob count. Actual array size will be {@code capacity + 1}
+     * because index {@code 0} is reserved/unusable.
      */
-    @SuppressWarnings("unchecked")
     public MobList(World world, int capacity) {
         this.world = world;
         this.mobs = (E[]) new Mob[capacity + 1];
 
-        // Initialize the index cache.
-        this.indexes = IntStream.rangeClosed(1, capacity).boxed()
-                .collect(Collectors.toCollection(() -> new ArrayDeque<>(capacity)));
+        // Build initial free-index pool.
+        indexPool = new ArrayDeque<>(capacity);
+        for (int index = 1; index < capacity + 1; index++) {
+            indexPool.add(index);
+        }
     }
 
     @Override
@@ -131,10 +139,10 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Finds the first element that matches {@code filter}.
+     * Finds the first mob satisfying {@code filter}.
      *
-     * @param filter The predicate to test.
-     * @return The first element matching {@code filter}.
+     * @param filter Predicate used to test each mob.
+     * @return An {@link Optional} containing the first match, or empty if none match.
      */
     public Optional<E> findFirst(Predicate<? super E> filter) {
         for (E e : this) {
@@ -146,19 +154,17 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Finds the last element matching {@code filter}.
+     * Finds the last mob satisfying {@code filter}.
      *
-     * @param filter The predicate to test.
-     * @return The last element matching {@code filter}.
+     * <p>Unlike {@link #findFirst}, this method performs a manual reverse scan.</p>
+     *
+     * @param filter Predicate used to test mobs.
+     * @return The last matching mob, or empty if none match.
      */
     public Optional<E> findLast(Predicate<? super E> filter) {
-        // Iterator doesn't support reverse iteration.
-        for (int index = capacity() - 1; index > 1; index--) {
-            E mob = mobs[index];
-            if (mob == null) {
-                continue;
-            }
-            if (filter.test(mob)) {
+        for (int i = capacity() - 1; i > 0; i--) {
+            E mob = mobs[i];
+            if (mob != null && filter.test(mob)) {
                 return Optional.of(mob);
             }
         }
@@ -166,10 +172,10 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Finds all elements that match {@code filter}.
+     * Returns all mobs matching {@code filter}.
      *
-     * @param filter The predicate to test.
-     * @return A list of matching elements.
+     * @param filter Predicate used for filtering.
+     * @return A new list of matching mobs.
      */
     public List<E> findAll(Predicate<? super E> filter) {
         List<E> list = new ArrayList<>();
@@ -183,33 +189,36 @@ public final class MobList<E extends Mob> implements Iterable<E> {
 
     @Override
     public Spliterator<E> spliterator() {
+        // Underlying array may contain nulls; caller must filter when streaming.
         return Spliterators.spliterator(mobs, Spliterator.ORDERED | Spliterator.DISTINCT);
     }
 
     /**
-     * Returns a {@code null}-free stream.
+     * Returns a stream of all non-null mobs.
      *
-     * @return The stream.
+     * @return A null-free stream.
      */
     public Stream<E> stream() {
-        return StreamSupport.stream(spliterator(), false).filter(Objects::nonNull);
+        return Arrays.stream(mobs).filter(Objects::nonNull);
     }
 
     /**
-     * Attempts to add {@code mob}.
+     * Inserts a mob into the list and assigns it a unique index.
      *
-     * @param mob The mob to add.
+     * @param mob The mob to register.
+     * @throws IllegalStateException If the list is full.
+     * @throws IllegalArgumentException If the mob is already ACTIVE.
      */
     public void add(E mob) {
-        checkArgument(mob.getState() != EntityState.ACTIVE, "state == ACTIVE");
-        checkState(!isFull(), "isFull() == true");
+        checkArgument(mob.getState() != EntityState.ACTIVE, "Mob is already ACTIVE.");
+        checkState(!isFull(), "MobList is full.");
 
-        // No lookup, just grab next free index.
-        int index = indexes.remove();
+        int index = indexPool.remove();
         mobs[index] = mob;
         mob.setIndex(index);
         size++;
 
+        // Update state & world ownership.
         if (mob.getType() == EntityType.NPC) {
             mob.setState(EntityState.ACTIVE);
         } else if (mob.getType() == EntityType.PLAYER) {
@@ -218,32 +227,31 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Attempts to remove {@code mob}. <strong>Do not use this to remove players. Use {@link Player#logout()} to send the
-     * logout packet or use {@link Player#forceLogout()} to forcibly and safely disconnect the player.</strong>
+     * Removes a mob from the list and frees its index.
+     *
+     * <p><strong>Warning:</strong> Never use this for players. Use {@link Player#logout()} or
+     * {@link Player#forceLogout()}.</p>
      *
      * @param mob The mob to remove.
      */
     public void remove(E mob) {
-        checkArgument(mob.getIndex() != -1, "index == -1");
+        checkArgument(mob.getIndex() != -1,
+                "Mob has no assigned index.");
 
         mob.setState(EntityState.INACTIVE);
+
         if (mob.getType() == EntityType.PLAYER) {
             world.removePlayer(mob.asPlr());
         }
 
-        // Put back index, so other mobs can use it.
-        indexes.add(mob.getIndex());
-
+        indexPool.add(mob.getIndex());
         mobs[mob.getIndex()] = null;
         mob.setIndex(-1);
         size--;
     }
 
     /**
-     * Retrieves the mob on {@code index}.
-     *
-     * @param index The index to retrieve.
-     * @return The mob.
+     * Retrieves a mob by index (returns null if out of bounds or empty).
      */
     public E get(int index) {
         if (index < 0 || index >= capacity()) {
@@ -253,79 +261,64 @@ public final class MobList<E extends Mob> implements Iterable<E> {
     }
 
     /**
-     * Retrieves the mob on {@code index}. Identical to {@code get(int)} but may return {@code Optional.empty}.
-     *
-     * @param index The index to retrieve.
-     * @return The mob.
+     * Same as {@link #get(int)} but returns an {@link Optional}.
      */
     public Optional<E> retrieve(int index) {
         return Optional.ofNullable(get(index));
     }
 
     /**
-     * Determines if {@code mob} is contained within this list.
-     *
-     * @param mob The mob to check for.
-     * @return {@code true} if the mob is contained.
+     * @return {@code true} if this mob exists at its recorded index.
      */
     public boolean contains(E mob) {
-        return retrieve(mob.getIndex()).filter(mob::equals).isPresent();
+        return get(mob.getIndex()) != null;
     }
 
     /**
-     * Determines if the current size is equal to the capacity.
-     *
-     * @return {@code true} if this list is full.
+     * @return {@code true} if no more mobs can be inserted.
      */
     public boolean isFull() {
         return size == capacity();
     }
 
     /**
-     * Determines if the current size is 0.
-     *
-     * @return {@code true} if this list is empty.
+     * @return {@code true} if the list contains zero mobs.
      */
     public boolean isEmpty() {
         return size == 0;
     }
 
     /**
-     * @return The amount of taken indexes.
+     * @return The count of active mobs.
      */
     public int size() {
         return size;
     }
 
     /**
-     * Computes and returns the amount of free indexes.
-     *
-     * @return The remaining indexes.
+     * @return Number of unused/free mob indexes.
      */
     public int remaining() {
         return capacity() - size();
     }
 
     /**
-     * Returns the total amount indexes (both free and taken).
-     *
-     * @return The amount of free and taken indexes.
+     * @return Total number of slots (including free and used). <strong>Note:</strong> This is {@code mobs.length},
+     * which includes index {@code 0}.
      */
     public int capacity() {
         return mobs.length;
     }
 
     /**
-     * Creates a <strong>shallow copy</strong> of the backing array.
-     *
-     * @return A shallow copy of the backing array.
+     * Returns a shallow copy of the backing array. Mutations to the returned array do not affect the list.
      */
-    public E[] toArray() {
+    public E[] copy() {
         return Arrays.copyOf(mobs, mobs.length);
     }
 
     /**
-     * Removes all mobs from this list.
+     * Removes all mobs in the list. Equivalent to repeatedly calling {@link #remove(Mob)}.
      */
     public void clear() {
         forEach(this::remove);
