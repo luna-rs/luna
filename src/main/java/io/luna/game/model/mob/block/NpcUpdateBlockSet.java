@@ -29,12 +29,25 @@ public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     @Override
     public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
-        encodeBlockSet(npc, msg, state);
+        if (npc.hasCachedBlock()) {
+            msg.putBytes(npc.getCachedBlock());
+            return;
+        }
+
+        ByteMessage blockMsg = ByteMessage.raw();
+        try {
+            encodeBlockSet(npc, blockMsg, state);
+            msg.putBytes(blockMsg);
+            npc.setCachedBlock(blockMsg);
+        } finally {
+            // Release the temporary buffer now that the cached copy has been made.
+            blockMsg.release();
+        }
     }
 
     @Override
     public void encodeBlock(Npc npc, UpdateBlock block, ByteMessage blockMsg) {
-        block.encodeForNpc(npc, blockMsg, npc.getBlockData());
+        block.encodeForNpc(blockMsg, npc.getBlockData());
     }
 
     @Override

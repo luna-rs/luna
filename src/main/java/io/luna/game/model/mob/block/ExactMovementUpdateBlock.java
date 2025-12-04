@@ -1,7 +1,6 @@
 package io.luna.game.model.mob.block;
 
 import io.luna.game.model.Position;
-import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 import io.luna.net.codec.ValueType;
@@ -21,8 +20,8 @@ public final class ExactMovementUpdateBlock extends UpdateBlock {
     }
 
     @Override
-    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
-        Position lastRegion = player.getLastRegion();
+    public void encodeForPlayer(ByteMessage msg, UpdateBlockData data) {
+        Position lastRegion = data.move.getLastRegion();
         Position start = data.move.getStartPosition();
         Position end = data.move.getEndPosition();
 

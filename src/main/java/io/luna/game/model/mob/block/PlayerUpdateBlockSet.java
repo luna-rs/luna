@@ -53,7 +53,7 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
 
     @Override
     public void encodeBlock(Player player, UpdateBlock block, ByteMessage blockMsg) {
-        block.encodeForPlayer(player, blockMsg, player.getBlockData());
+        block.encodeForPlayer(blockMsg, player.getBlockData());
     }
 
     @Override

@@ -15,6 +15,7 @@ import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
+import io.luna.game.task.TaskState;
 
 import java.util.Objects;
 
@@ -23,88 +24,116 @@ import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.mob.Skill.HITPOINTS;
 
 /**
- * A model representing an interactable entity able to move around.
+ * Base type for interactable, movable entities in the world (players and NPCs).
  *
  * @author lare96
  */
 public abstract class Mob extends Entity {
 
     /**
-     * The update flag set.
+     * The update flag set representing which update blocks must be sent to nearby players.
      */
-    protected final UpdateFlagSet flags = new UpdateFlagSet(this);
+    protected final UpdateFlagSet flags = new UpdateFlagSet();
 
     /**
-     * The skill set.
+     * The skill set backing this mob's levels and experience.
      */
     protected final SkillSet skills = new SkillSet(this);
 
     /**
-     * The action set.
+     * The actions currently running for this mob.
      */
     protected final ActionQueue actions = new ActionQueue(this);
 
     /**
-     * The walking queue.
+     * The movement queue used for walking and running.
      */
     protected final WalkingQueue walking = new WalkingQueue(this);
 
     /**
-     * The mob list index.
+     * Index into the global {@link MobList}. {@code -1} indicates "not registered".
      */
     private int index = -1;
 
     /**
-     * The current walking direction.
+     * The current walking direction for this tick (or {@link Direction#NONE} if stationary).
      */
     private Direction walkingDirection = Direction.NONE;
 
     /**
-     * The current running direction.
+     * The current running direction for this tick (or {@link Direction#NONE} if not running).
      */
     private Direction runningDirection = Direction.NONE;
 
     /**
-     * The last movement direction.
+     * The last non-{@link Direction#NONE} movement direction. Used for facing/orientation defaults.
      */
     private Direction lastDirection = Direction.SOUTH;
-    private Entity interactingWith;
+
     /**
-     * The player instance. May be null.
+     * The entity this mob is currently interacting with (target), if any.
+     */
+    private Entity interactingWith;
+
+    /**
+     * Cached player view of this mob when {@link #type} is {@link EntityType#PLAYER}. May be {@code null}.
      */
     private Player playerInstance;
 
     /**
-     * The npc instance. May be null.
+     * Cached NPC view of this mob when {@link #type} is {@link EntityType#NPC}. May be {@code null}.
      */
     private Npc npcInstance;
 
     /**
-     * If this mob is locked.
+     * {@code true} if this mob is currently action-locked.
      */
     private boolean locked;
 
     /**
-     * If a teleportation is in progress.
+     * {@code true} while a teleport is in progress for this tick.
      */
     protected boolean teleporting;
 
+    /**
+     * Pending, mutable update data for this tick.
+     * <p>
+     * This must only be accessed and mutated from the game thread. After all mutations, {@link #buildBlockData()} must
+     * be called to publish an immutable snapshot.
+     * </p>
+     */
     protected UpdateBlockData.Builder pendingBlockData = new UpdateBlockData.Builder();
+
+    /**
+     * Immutable, read-only update data for this tick.
+     * <p>
+     * This field is published by {@link #buildBlockData()} and may be safely read from any thread (e.g., update
+     * encoder threads).
+     * </p>
+     */
     private volatile UpdateBlockData blockData;
 
     /**
-     * Creates a new {@link Mob}.
+     * The scheduled task controlling a timed action-lock, if any.
+     */
+    private Task lockTask;
+
+    /**
+     * Creates a new {@link Mob} at a specific starting position.
      *
-     * @param context The context instance.
+     * @param context The game context.
+     * @param position The initial world position.
+     * @param type The entity type of this mob.
      */
     public Mob(LunaContext context, Position position, EntityType type) {
         super(context, position, type);
     }
 
     /**
-     * Creates a new {@link Mob}.
+     * Creates a new {@link Mob} without an initial position.
      *
-     * @param context The context instance.
+     * @param context The game context.
+     * @param type The entity type of this mob.
      */
     public Mob(LunaContext context, EntityType type) {
         super(context, type);
@@ -117,70 +146,95 @@ public abstract class Mob extends Entity {
     public abstract int hashCode();
 
     /**
-     * Resets additional data for the next tick.
+     * Resets all mob-specific state for the next tick.
+     * <p>
+     * This is called from {@link #resetFlags()}, after a new {@link UpdateBlockData.Builder} is created and the
+     * flags have been cleared, but before the next tick begins.
+     * </p>
+     *
+     * @param oldBlockData The previous tick's block data (before reset), for reference if needed.
      */
     public abstract void reset(UpdateBlockData.Builder oldBlockData);
 
     /**
-     * Transforms this mob into an npc with {@code id}.
+     * Transforms this mob into an NPC with the given id.
      *
-     * @param id The transformation id.
+     * @param id The NPC definition id to transform into.
      */
     public abstract void transform(int id);
 
     /**
-     * Turns a transformed mob back into its original form.
+     * Reverts any active transform, restoring this mob to its original form.
      */
     public abstract void resetTransform();
 
     /**
-     * @return The combat level of this mob.
+     * Returns this mob's combat level.
+     *
+     * @return The combat level.
      */
     public abstract int getCombatLevel();
 
     /**
+     * Returns this mob's maximum hitpoints.
+     *
      * @return The total health of this mob.
      */
     public abstract int getTotalHealth();
 
+    /**
+     * Builds and publishes the immutable {@link UpdateBlockData} snapshot for this tick.
+     * <p>
+     * <strong>Threading/ordering requirements:</strong>
+     * </p>
+     * <ul>
+     *     <li>Must be called from the game thread only.</li>
+     *     <li>Must be called once all game logic for the tick has finished mutating {@link #pendingBlockData} and
+     *     {@link #flags}.</li>
+     *     <li>All online mobs should have {@code buildBlockData()} invoked before the updating begins.</li>
+     * </ul>
+     */
     public final void buildBlockData() {
         blockData = pendingBlockData.build();
     }
 
     /**
-     * @return The current health of this mob.
+     * Returns the current hitpoints of this mob.
+     *
+     * @return The current hitpoints level.
      */
     public final int getHealth() {
         return skill(HITPOINTS).getLevel();
     }
 
     /**
-     * Sets the current health of this mob.
+     * Sets the current hitpoints of this mob, clamping the value to {@code >= 0}, and scheduling a
+     * {@link MobDeathTask} if this call transitions the mob from alive to dead.
      *
-     * @param amount The new health.
+     * @param amount The new hitpoint value.
      */
     public final void setHealth(int amount) {
-        var hp = skill(HITPOINTS);
-        if (hp.getLevel() > 0) {
-            hp.setLevel(amount);
-            if (hp.getLevel() <= 0) {
-                Mob source = null; // TODO compute source after combat is done
-                world.schedule(new MobDeathTask(this, source));
-            }
+        Skill hp = skill(HITPOINTS);
+        int levelBefore = hp.getLevel();
+        hp.setLevel(Math.max(amount, 0));
+        if (levelBefore > 0 && hp.getLevel() <= 0) {
+            // TODO Determine the true killer/source after combat system is implemented.
+            Mob source = null;
+            world.schedule(new MobDeathTask(this, source));
         }
     }
 
     /**
-     * Adds or subtracts {@code amount} from the current health level.
+     * Adds or subtracts {@code amount} from the current hitpoints.
      *
-     * @param amount The amount to add or subtract.
+     * @param amount The amount to add (positive) or subtract (negative).
      */
     public final void addHealth(int amount) {
         setHealth(getHealth() + amount);
     }
 
     /**
-     * Shortcut to function {@link ActionQueue#submit(Action)}.
+     * Convenience method that submits an {@link Action} to this mob's {@link ActionQueue}.
      *
      * @param pending The action to submit.
      */
@@ -189,7 +243,12 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Action-locks this mob for the specified amount of ticks.
+     * Action-locks this mob for the specified number of ticks.
+     * <p>
+     * Equivalent to {@link #lock(int, Runnable)} with an empty {@code onUnlock} callback.
+     * </p>
+     *
+     * @param ticks The number of ticks to remain locked.
      */
     public void lock(int ticks) {
         lock(ticks, () -> {
@@ -197,39 +256,84 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Action-locks this mob for the specified amount of ticks and runs {@code onUnlock} on unlock.
+     * Action-locks this mob for the specified number of ticks and runs {@code onUnlock} when the lock expires.
+     * <p>
+     * Lock semantics:
+     * </p>
+     * <ul>
+     *     <li>If the mob is already {@link #locked}, this call attempts to extend the existing timed lock if the new
+     *     {@code ticks} duration exceeds the remaining time on {@link #lockTask}.</li>
+     *     <li>If no lock task is running, a new {@link Task} is scheduled to unlock the mob after {@code ticks}.</li>
+     *     <li>This timed lock is distinct from a "hard" lock created via {@link #lock()}.</li>
+     * </ul>
+     *
+     * @param ticks The number of ticks to remain locked.
+     * @param onUnlock A callback executed when the lock naturally expires.
      */
     public void lock(int ticks, Runnable onUnlock) {
         if (!locked) {
-            locked = true;
-            world.schedule(new Task(ticks) {
-                @Override
-                protected void execute() {
-                    locked = false;
-                    onUnlock.run();
-                    cancel();
+            if (lockTask != null && lockTask.getState() == TaskState.RUNNING) {
+                int elapsed = lockTask.getExecutionCounter();
+                int remaining = lockTask.getDelay() - elapsed;
+                if (ticks > remaining) {
+                    lockTask.setDelay(ticks - elapsed);
                 }
-            });
+            } else {
+                locked = true;
+                lockTask = new Task(ticks) {
+                    @Override
+                    protected void execute() {
+                        locked = false;
+                        onUnlock.run();
+                        cancel();
+                    }
+                };
+                world.schedule(lockTask);
+            }
         }
     }
 
     /**
-     * Action-locks this mob completely. <strong{@link #unlock()} must be called at some point or the player will
-     * not be able to perform any action, even logout!</strong>
+     * Action-locks this mob indefinitely.
+     * <p>
+     * This cancels any outstanding timed lock task and permanently sets {@link #locked} to {@code true}.
+     * <strong>{@link #unlock()} must be called at some point or the player will not be able to perform any action,
+     * including logout.</strong>
+     * </p>
      */
     public void lock() {
+        if (lockTask != null) {
+            lockTask.cancel();
+        }
         locked = true;
     }
 
     /**
-     * Undoes the action-lock on this mob.
+     * Removes any action-lock on this mob.
+     * <p>
+     * Cancels any outstanding timed lock task and sets {@link #locked} to {@code false}.
+     * </p>
      */
     public void unlock() {
+        if (lockTask != null) {
+            lockTask.cancel();
+        }
         locked = false;
     }
 
     /**
-     * Damages the mob once.
+     * Applies a single instance of damage to this mob, shows the appropriate hitsplat, and plays basic hit/block
+     * sounds for players.
+     * <p>
+     * TODO (future work):
+     * </p>
+     * <ul>
+     *     <li>Derive hit sounds from hit size, attack style, and weapon.</li>
+     *     <li>Send attacker sounds only to the attacker, and victim sounds only to the victim.</li>
+     *     <li>Add NPC-specific damage and attack sounds based on OSRS behavior.</li>
+     * </ul>
+     *
+     * @param hit The hit information to apply.
      */
     public final void damage(Hit hit) {
         if (pendingBlockData.getHit1() != null) {
@@ -240,37 +344,46 @@ public abstract class Mob extends Entity {
         addHealth(-hit.getDamage());
         if (this instanceof Player) {
             if (hit.getDamage() > 0) {
-                int healthPercent = getHealth() <= 0 ? 100 : (int) Math.floor((double) hit.getDamage() / getHealth());
-                if (healthPercent > 20) {
-                    asPlr().playSound(Sounds.TAKE_DAMAGE_4);
-                } else if (healthPercent > 10) {
-                    asPlr().playRandomSound(Sounds.TAKE_DAMAGE_3, Sounds.TAKE_DAMAGE_4);
-                } else if (healthPercent > 5) {
-                    asPlr().playRandomSound(Sounds.TAKE_DAMAGE, Sounds.TAKE_DAMAGE_2);
-                } else {
-                    asPlr().playSound(Sounds.TAKE_DAMAGE);
-                }
+                // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
+                asPlr().playRandomSound(
+                        Sounds.TAKE_DAMAGE,
+                        Sounds.TAKE_DAMAGE_2,
+                        Sounds.TAKE_DAMAGE_3,
+                        Sounds.TAKE_DAMAGE_4
+                );
             } else {
-                // TODO combat sounds
                 asPlr().playSound(Sounds.UNARMED_BLOCK);
             }
         }
     }
 
     /**
-     * Teleports to {@code position}. Will also stop movement and interrupt the current action.
+     * Immediately moves this mob to {@code position}, clearing movement and interaction.
+     * <p>
+     * This method:
+     * </p>
+     * <ul>
+     *     <li>Updates {@link #position} directly.</li>
+     *     <li>Clears the {@link WalkingQueue}.</li>
+     *     <li>Resets current interaction target.</li>
+     *     <li>Invokes {@link #onMove(Position)} hook.</li>
+     * </ul>
      *
-     * @param position The position to teleport to.
+     * @param position The destination position.
      */
     public final void move(Position position) {
         setPosition(position);
         walking.clear();
         resetInteractingWith();
-        onTeleport(position);
+        onMove(position);
     }
 
     /**
-     * Attempts to perform {@code newAnimation}.
+     * Attempts to play {@code animation} on this mob.
+     * <p>
+     * If the currently pending animation allows overrides (according to {@link Animation#overrides(Animation)}),
+     * it will be replaced by the new one; otherwise the call has no effect.
+     * </p>
      *
      * @param animation The animation to perform.
      */
@@ -283,9 +396,9 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Faces this mob to {@code position}.
+     * Faces this mob toward a specific {@link Position}.
      *
-     * @param position The position.
+     * @param position The world position to face.
      */
     public final void face(Position position) {
         pendingBlockData.face(position);
@@ -293,7 +406,7 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Faces this mob to {@code direction}.
+     * Faces this mob toward the given {@link Direction} from its current position.
      *
      * @param direction The direction to face.
      */
@@ -304,9 +417,9 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Forces {@code message} as chat.
+     * Forces this mob to say {@code message} as chat.
      *
-     * @param message The message to force.
+     * @param message The message to display (converted via {@link Object#toString()}).
      */
     public final void speak(Object message) {
         pendingBlockData.speak(message.toString());
@@ -314,9 +427,9 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Performs {@code graphic}.
+     * Plays the specified {@link Graphic} on this mob.
      *
-     * @param graphic The graphic to perform.
+     * @param graphic The graphic to display.
      */
     public final void graphic(Graphic graphic) {
         pendingBlockData.graphic(graphic);
@@ -324,46 +437,56 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Interacts with {@code entity}.
+     * Sets this mob's interaction target to {@code entity}.
+     * <p>
+     * Behavior:
+     * </p>
+     * <ul>
+     *     <li>If {@code entity} is {@code null}, the interaction index is reset (65535).</li>
+     *     <li>If {@code entity} is a {@link Mob}, the interaction index is encoded according to the protocol
+     *     (players use {@code index + 32768}, NPCs use {@code index}).</li>
+     *     <li>For non-mob entities, this mob simply turns to face the target position.</li>
+     * </ul>
+     *
+     * @param entity The new interaction target, or {@code null} to clear.
      */
     public final void interact(Entity entity) {
         if (entity == null) {
-            // Reset the current interaction.
             pendingBlockData.interact(65535);
             flags.flag(UpdateFlag.INTERACTION);
         } else if (entity instanceof Mob) {
-            // Interact with player or npc.
             Mob mob = (Mob) entity;
             pendingBlockData.interact(mob.type == EntityType.PLAYER ? mob.index + 32768 : mob.index);
             flags.flag(UpdateFlag.INTERACTION);
         } else {
-            // Interact with a non-movable entity.
             face(entity.getPosition());
         }
         interactingWith = entity;
     }
 
     /**
-     * Resets the current {@link Entity} we are interacting with.
+     * Clears the current interaction target, if one is set.
      */
     public final void resetInteractingWith() {
-        // Only reset if we're currently interacting.
         if (interactingWith != null) {
             interact(null);
         }
     }
 
     /**
-     * Returns {@code true} if this mob is interacting with {@code entity}.
+     * Returns whether this mob is currently interacting with {@code entity}.
+     *
+     * @param entity The entity to test.
+     * @return {@code true} if the current interaction target equals {@code entity}.
      */
     public boolean isInteractingWith(Entity entity) {
         return Objects.equals(interactingWith, entity);
     }
 
     /**
-     * Displays a primary hitsplat.
+     * Displays a primary hitsplat for this tick.
      *
-     * @param hit The hit to display.
+     * @param hit The hit data to display.
      */
     private void hit1(Hit hit) {
         pendingBlockData.hit1(hit);
@@ -371,9 +494,9 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Displays a secondary hitsplat.
+     * Displays a secondary hitsplat for this tick.
      *
-     * @param hit The hit to display.
+     * @param hit The hit data to display.
      */
     private void hit2(Hit hit) {
         pendingBlockData.hit2(hit);
@@ -381,16 +504,21 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * @return The mob list index.
+     * Returns this mob's index in the global {@link MobList}.
+     *
+     * @return The list index, or {@code -1} if not registered.
      */
     public final int getIndex() {
         return index;
     }
 
     /**
-     * Sets the value for {@link #index}. Should only be set by the {@link MobList}.
+     * Sets this mob's index in the global {@link MobList}.
+     * <p>
+     * This should only be invoked by the owning {@link MobList} implementation.
+     * </p>
      *
-     * @param index The index to set.
+     * @param index The new index, or {@code -1} to clear.
      */
     public final void setIndex(int index) {
         if (index != -1) {
@@ -400,7 +528,17 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Resets update flag data for the next tick.
+     * Resets update-related state for the next tick.
+     * <p>
+     * This method:
+     * </p>
+     * <ul>
+     *     <li>Clears the teleporting flag.</li>
+     *     <li>Swaps {@link #pendingBlockData} with a fresh builder.</li>
+     *     <li>Optionally restores a default facing direction for stationary NPCs.</li>
+     *     <li>Clears all {@link #flags} and re-applies {@link UpdateFlag#FACE_POSITION} if needed.</li>
+     *     <li>Invokes {@link #reset(UpdateBlockData.Builder)} for subclass-specific cleanup.</li>
+     * </ul>
      */
     public final void resetFlags() {
         Direction defaultDirection = this instanceof Npc ? asNpc().getDefaultDirection().orElse(null) : null;
@@ -418,24 +556,29 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Retrieves the skill with {@code id}.
+     * Retrieves the {@link Skill} with the given id.
      *
-     * @param id The identifier.
-     * @return The skill.
+     * @param id The skill identifier (see {@link Skill} constants).
+     * @return The skill instance.
      */
     public Skill skill(int id) {
         return skills.getSkill(id);
     }
 
     /**
-     * Returns if this mob is alive.
+     * Returns whether this mob is currently alive.
+     *
+     * @return {@code true} if hitpoints are greater than zero.
      */
     public boolean isAlive() {
         return skill(HITPOINTS).getLevel() > 0;
     }
 
     /**
-     * Returns this mob instance as a Player. Throws {@link IllegalStateException} if the mob is not a player.
+     * Returns this mob as a {@link Player}.
+     *
+     * @return The underlying player instance.
+     * @throws IllegalStateException If this mob is not a player.
      */
     public Player asPlr() {
         checkState(type == EntityType.PLAYER, "Mob instance is not a Player.");
@@ -446,7 +589,10 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Returns this mob instance as a Npc. Throws {@link IllegalStateException} if the mob is not a npc.
+     * Returns this mob as an {@link Npc}.
+     *
+     * @return The underlying NPC instance.
+     * @throws IllegalStateException If this mob is not an NPC.
      */
     public Npc asNpc() {
         checkState(type == EntityType.NPC, "Mob instance is not a Npc.");
@@ -457,15 +603,21 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * A function invoked when teleporting.
+     * Hook invoked after this mob is teleported by {@link #move(Position)}.
+     * <p>
+     * Subclasses may override this to perform any post-move logic, such as region checks, interface updates, or
+     * script callbacks.
+     * </p>
      *
-     * @param newPosition The teleport position.
+     * @param newPosition The destination position.
      */
-    public void onTeleport(Position newPosition) {
-
+    public void onMove(Position newPosition) {
+        // Default no-op.
     }
 
     /**
+     * Returns this mob's {@link UpdateFlagSet}.
+     *
      * @return The update flag set.
      */
     public final UpdateFlagSet getFlags() {
@@ -473,14 +625,16 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * @return The current walking direction.
+     * Returns the current walking direction for this tick.
+     *
+     * @return The walking direction, or {@link Direction#NONE}.
      */
     public final Direction getWalkingDirection() {
         return walkingDirection;
     }
 
     /**
-     * Sets the value for {@link #walkingDirection}.
+     * Updates the current walking direction for this tick.
      *
      * @param walkingDirection The new walking direction.
      */
@@ -489,14 +643,16 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * @return The current running direction.
+     * Returns the current running direction for this tick.
+     *
+     * @return The running direction, or {@link Direction#NONE}.
      */
     public Direction getRunningDirection() {
         return runningDirection;
     }
 
     /**
-     * Sets the value for {@link #runningDirection}.
+     * Updates the current running direction for this tick.
      *
      * @param runningDirection The new running direction.
      */
@@ -504,61 +660,92 @@ public abstract class Mob extends Entity {
         this.runningDirection = runningDirection;
     }
 
+    /**
+     * Returns the last non-{@link Direction#NONE} movement direction.
+     *
+     * @return The last movement direction.
+     */
     public Direction getLastDirection() {
         return lastDirection;
     }
 
-    // todo set this last direction field for immobile npcs that don't move on spawn. faceposition should set direction too? might solve for both?
+    /**
+     * Updates the last movement direction.
+     *
+     * @param lastDirection The new last direction value.
+     */
     public void setLastDirection(Direction lastDirection) {
         this.lastDirection = lastDirection;
     }
 
     /**
-     * @return The walking queue.
+     * Returns this mob's {@link WalkingQueue}.
+     *
+     * @return The walking queue instance.
      */
     public final WalkingQueue getWalking() {
         return walking;
     }
 
     /**
-     * @return The skill set.
+     * Returns this mob's {@link SkillSet}.
+     *
+     * @return The skill set instance.
      */
     public final SkillSet getSkills() {
         return skills;
     }
 
     /**
-     * @return The action set.
+     * Returns this mob's {@link ActionQueue}.
+     *
+     * @return The action queue instance.
      */
     public ActionQueue getActions() {
         return actions;
     }
 
     /**
-     * @return {@code true} if this mob is action-locked.
+     * Returns whether this mob is currently action-locked.
+     *
+     * @return {@code true} if locked, otherwise {@code false}.
      */
     public boolean isLocked() {
         return locked;
     }
 
     /**
-     * @return The {@code z} coordinate.
+     * Returns this mob's plane ({@code z}) coordinate.
+     *
+     * @return The z-level.
      */
     public int getZ() {
         return position.getZ();
     }
 
     /**
-     * @return {@code true} if a teleportation is in progress.
+     * Returns whether a teleport is currently in progress for this tick.
+     *
+     * @return {@code true} if teleporting, otherwise {@code false}.
      */
     public boolean isTeleporting() {
         return teleporting;
     }
 
+    /**
+     * Returns the entity this mob is currently interacting with, if any.
+     *
+     * @return The interaction target, or {@code null} if none.
+     */
     public Entity getInteractingWith() {
         return interactingWith;
     }
 
+    /**
+     * Returns the immutable {@link UpdateBlockData} built for this tick.
+     *
+     * @return The current block data snapshot, or {@code null} if {@link #buildBlockData()} has not yet been called.
+     */
     public UpdateBlockData getBlockData() {
         return blockData;
     }

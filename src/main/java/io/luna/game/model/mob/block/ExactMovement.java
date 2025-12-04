@@ -23,6 +23,16 @@ import io.luna.game.model.mob.Player;
 public final class ExactMovement {
 
     /**
+     * The last region-base position for the player when this movement was created.
+     * <p>
+     * Exact movement coordinates are encoded relative to the client's current region base. Storing {@code lastRegion}
+     * allows the server to translate {@link #startPosition} and {@link #endPosition} into the correct local offsets
+     * for the 317 protocol, even if the player has recently crossed region boundaries.
+     * </p>
+     */
+    private final Position lastRegion;
+
+    /**
      * The starting position before the forced movement begins.
      */
     private final Position startPosition;
@@ -88,7 +98,8 @@ public final class ExactMovement {
         Position pos = player.getPosition();
         Position dest = pos.translate(amountX, amountY);
         durationTicks = (durationTicks * 600) / 30; // Convert to client’s expected movement units.
-        return new ExactMovement(pos, dest, 0, durationTicks, Direction.between(pos, dest));
+        return new ExactMovement(player.getLastRegion(),
+                pos, dest, 0, durationTicks, Direction.between(pos, dest));
     }
 
     /**
@@ -102,7 +113,8 @@ public final class ExactMovement {
         Position pos = player.getPosition();
         int durationTicks = pos.computeLongestDistance(destination);
         durationTicks = (durationTicks * 600) / 30;
-        return new ExactMovement(pos, destination, 0, durationTicks, Direction.between(pos, destination));
+        return new ExactMovement(player.getLastRegion(),
+                pos, destination, 0, durationTicks, Direction.between(pos, destination));
     }
 
     /**
@@ -115,20 +127,23 @@ public final class ExactMovement {
      */
     public static ExactMovement to(Player player, Position destination, int durationTicks) {
         Position pos = player.getPosition();
-        return new ExactMovement(pos, destination, 0, durationTicks, Direction.between(pos, destination));
+        return new ExactMovement(player.getLastRegion(),
+                pos, destination, 0, durationTicks, Direction.between(pos, destination));
     }
 
     /**
      * Creates a new {@link ExactMovement}.
      *
+     * @param lastRegion The last region-base position for the player.
      * @param startPosition Starting position.
      * @param endPosition Destination.
      * @param durationStart Start delay.
      * @param durationEnd Movement duration.
      * @param direction Facing direction.
      */
-    public ExactMovement(Position startPosition, Position endPosition,
+    public ExactMovement(Position lastRegion, Position startPosition, Position endPosition,
                          int durationStart, int durationEnd, Direction direction) {
+        this.lastRegion = lastRegion;
         this.startPosition = startPosition;
         this.endPosition = endPosition;
         this.durationStart = durationStart;
@@ -151,6 +166,15 @@ public final class ExactMovement {
     @Override
     public int hashCode() {
         return Objects.hashCode(startPosition, endPosition, durationStart, durationEnd, direction);
+    }
+
+    /**
+     * Returns the region-base position used when this forced movement was created.
+     *
+     * @return The last region-base {@link Position} for the player.
+     */
+    public Position getLastRegion() {
+        return lastRegion;
     }
 
     /**

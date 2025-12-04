@@ -7,9 +7,6 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.net.codec.ByteMessage;
 
-import java.util.Optional;
-import java.util.OptionalInt;
-
 /**
  * Represents a single update block within a mob update cycle.
  * <p>
@@ -54,12 +51,11 @@ public abstract class UpdateBlock {
      * Encodes this update block for a {@link Player}.
      * Subclasses must override if they support player encoding.
      *
-     * @param player The player whose data is being encoded.
      * @param msg The outgoing buffer.
      * @param data The data to apply within this block.
      * @throws UnsupportedOperationException If the block is not valid for players.
      */
-    public void encodeForPlayer(Player player, ByteMessage msg, UpdateBlockData data) {
+    public void encodeForPlayer(ByteMessage msg, UpdateBlockData data) {
         throw new UnsupportedOperationException(flag + " not supported for Players.");
     }
 
@@ -67,12 +63,11 @@ public abstract class UpdateBlock {
      * Encodes this update block for an {@link Npc}.
      * Subclasses must override if they support NPC encoding.
      *
-     * @param npc The NPC whose data is being encoded.
      * @param msg The outgoing buffer.
      * @param data
      * @throws UnsupportedOperationException If the block is not valid for NPCs.
      */
-    public void encodeForNpc(Npc npc, ByteMessage msg, UpdateBlockData data) {
+    public void encodeForNpc(ByteMessage msg, UpdateBlockData data) {
         throw new UnsupportedOperationException(flag + " not supported for NPCs.");
     }
 
@@ -104,27 +99,6 @@ public abstract class UpdateBlock {
      */
     public final int getMask(Mob mob) {
         return mob.getType() == EntityType.PLAYER ? getPlayerMask() : getNpcMask();
-    }
-
-    /**
-     * Unwraps an {@link Optional}, throwing a {@link NoBlockValueException} if no value is present.
-     *
-     * @param optional The optional to unwrap.
-     * @param <T> The contained type.
-     * @return The value contained in the optional.
-     */
-    public final <T> T unwrap(Optional<T> optional) throws NoBlockValueException {
-        return optional.orElseThrow(() -> new NoBlockValueException(flag));
-    }
-
-    /**
-     * Unwraps an {@link OptionalInt}, throwing a {@link NoBlockValueException} if absent.
-     *
-     * @param optional The optional containing an integer.
-     * @return The value.
-     */
-    public final int unwrap(OptionalInt optional) throws NoBlockValueException {
-        return optional.orElseThrow(() -> new NoBlockValueException(flag));
     }
 
     /**

@@ -35,6 +35,14 @@ public final class Chat {
     private final int color;
 
     /**
+     * The rights level of the player who sent this chat message.
+     * <p>
+     * This value is used by the client to determine how to visually represent the sender (for example, displaying
+     * crowns or other status indicators for moderators and staff).
+     */
+    private final int rights;
+
+    /**
      * The text effect applied to the message (range: 0–5).
      * <p>
      * Effects include wave, shake, scroll, slide, and flashing text styles.
@@ -46,12 +54,14 @@ public final class Chat {
      * Creates a new {@link Chat} instance.
      *
      * @param message The packed chat message.
-     * @param color   The message color (0–11).
-     * @param effect  The text effect (0–5).
+     * @param color The message color (0–11).
+     * @param rights The sender's rights level.
+     * @param effect The text effect (0–5).
      */
-    public Chat(byte[] message, int color, int effect) {
+    public Chat(byte[] message, int color, int rights, int effect) {
         this.message = message;
         this.color = color;
+        this.rights = rights;
         this.effect = effect;
     }
 
@@ -60,6 +70,7 @@ public final class Chat {
         return MoreObjects.toStringHelper(this)
                 .add("color", color)
                 .add("effects", effect)
+                .add("rights", effect)
                 .add("message", StringUtils.unpackText(message))
                 .toString();
     }
@@ -76,8 +87,7 @@ public final class Chat {
     /**
      * Returns the chat color encoded for the update block mask.
      * <p>
-     * The 317 protocol expects the chat color to be shifted left by 8 bits,
-     * so this method applies:
+     * The 317 protocol expects the chat color to be shifted left by 8 bits, so this method applies:
      * </p>
      *
      * <pre>
@@ -88,6 +98,20 @@ public final class Chat {
      */
     public int getColor() {
         return (color & 0xff) << 8;
+    }
+
+    /**
+     * Returns the rights level of the player who sent this message.
+     * <p>
+     * This is the raw rights value as stored on the server (for example, regular players, moderators, and
+     * administrators may each have different numeric levels). It is typically consumed by the chat update block
+     * encoder to decide how to represent the sender in the client UI.
+     * </p>
+     *
+     * @return The sender's rights value.
+     */
+    public int getRights() {
+        return rights;
     }
 
     /**
