@@ -8,7 +8,8 @@ import io.luna.game.model.EntityState;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerAppearance;
+import io.luna.game.model.mob.block.LocalMobRepository;
+import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
@@ -212,6 +213,11 @@ public final class Bot extends Player {
         return new BotData(getUsername());
     }
 
+    @Override
+    public LocalMobRepository getLocalMobs() {
+        throw new IllegalStateException("Bots are not updated like regular players. Use getLocalHumans() instead.");
+    }
+
     /**
      * Asynchronously attempts to log in this bot, creating a new record if it does not exist.
      *
@@ -221,6 +227,10 @@ public final class Bot extends Player {
     public CompletableFuture<PlayerData> login() {
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
         String username = getUsername();
+        if(world.isFull()) {
+            future.completeExceptionally(new IllegalStateException("World is full."));
+            return future;
+        }
         if (world.getPlayerMap().containsKey(username)) {
             future.completeExceptionally(new IllegalStateException("Bot is already logged in!"));
             return future;
@@ -285,7 +295,7 @@ public final class Bot extends Player {
      * Randomizes the bot’s visible appearance.
      */
     public void randomizeAppearance() {
-        getAppearance().setValues(PlayerAppearance.randomValues());
+        getAppearance().setValues(PlayerAppearance.random());
         getFlags().flag(UpdateFlag.APPEARANCE);
     }
 

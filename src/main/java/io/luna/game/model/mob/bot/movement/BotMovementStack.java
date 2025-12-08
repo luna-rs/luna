@@ -103,8 +103,8 @@ public final class BotMovementStack {
      * </p>
      *
      * @param target The target destination to walk toward.
-     * @return A {@link CompletableFuture} completing when the path has been generated and queued.
-     *         The returned future does <strong>not</strong> wait for arrival at the destination.
+     * @return A {@link CompletableFuture} completing when the path has been generated and queued. The returned future
+     * does <strong>not</strong> wait for arrival at the destination.
      */
     public CompletableFuture<Void> addPath(Locatable target) {
         if (isCurrentTarget(target)) {
@@ -163,7 +163,7 @@ public final class BotMovementStack {
 
         bot.log("Generating new movement path to " + target + ".");
         CompletableFuture<Void> pathFuture =
-                CompletableFuture.supplyAsync(() -> walking.findPath(target, true), manager.getPool())
+                CompletableFuture.supplyAsync(() -> walking.findPath(target.absLocation(), true), manager.getPool())
                         .thenAcceptAsync(path -> {
                             walking.addPath(path);
                             bot.log("Path generated, now walking to " + target + ".");

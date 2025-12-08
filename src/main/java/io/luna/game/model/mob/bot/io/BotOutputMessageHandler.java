@@ -3,7 +3,7 @@ package io.luna.game.model.mob.bot.io;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerAppearance;
+import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.object.GameObject;
 import io.luna.net.codec.ByteMessage;
@@ -164,7 +164,7 @@ public final class BotOutputMessageHandler {
      * @return {@code true} if successfully queued.
      */
     public boolean sendCharacterDesignSelection() {
-        return sendCharacterDesignSelection(PlayerAppearance.randomValues());
+        return sendCharacterDesignSelection(PlayerAppearance.random());
     }
 
     /**

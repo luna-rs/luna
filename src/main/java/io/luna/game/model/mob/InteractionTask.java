@@ -16,7 +16,6 @@ import java.util.Set;
 /**
  * A {@link Task} that drives walking towards an interactable {@link Entity} and fires an {@link InteractableEvent}
  * (plus an optional action) once the player is in range.
- *
  * <p>
  * This task is responsible for the "click → path → reach → interact" flow:
  * </p>
@@ -227,7 +226,6 @@ public final class InteractionTask extends Task {
 
     /**
      * Called when the player has stopped walking (no path remaining) but has not reached the target.
-     *
      * <p>
      * This typically indicates that pathfinding has failed or that no valid route exists.
      * The player is informed that the target cannot be reached, and the task cancels itself.
@@ -245,7 +243,6 @@ public final class InteractionTask extends Task {
     /**
      * Returns the set of cardinal directions (N/E/S/W) that best approximate the direction from the player to the
      * target entity.
-     *
      * <p>
      * If the player is diagonally adjacent (e.g. {@link Direction#NORTH_EAST}), this returns the two relevant
      * cardinal options (NORTH and EAST). If the player is already aligned along a cardinal direction or is on the
