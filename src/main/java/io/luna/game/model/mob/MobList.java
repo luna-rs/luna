@@ -208,12 +208,15 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param mob The mob to register.
      * @throws IllegalStateException If the list is full.
      * @throws IllegalArgumentException If the mob is already ACTIVE.
+     * @return {@code true} if the mob was successfully added.
      */
-    public void add(E mob) {
+    public boolean add(E mob) {
         checkArgument(mob.getState() != EntityState.ACTIVE, "Mob is already ACTIVE.");
-        checkState(!isFull(), "MobList is full.");
 
-        int index = indexPool.remove();
+        Integer index = indexPool.poll();
+        if(index == null) {
+            return false;
+        }
         mobs[index] = mob;
         mob.setIndex(index);
         size++;
@@ -224,6 +227,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
         } else if (mob.getType() == EntityType.PLAYER) {
             world.addPlayer(mob.asPlr());
         }
+        return true;
     }
 
     /**
@@ -278,7 +282,7 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @return {@code true} if no more mobs can be inserted.
      */
     public boolean isFull() {
-        return size == capacity();
+        return size == capacity() - 1;
     }
 
     /**
