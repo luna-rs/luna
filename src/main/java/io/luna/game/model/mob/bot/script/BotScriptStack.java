@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.bot.script;
 
 import api.bot.BotScript;
+import api.bot.VoidBotScript;
 import io.luna.game.model.mob.bot.Bot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,6 +95,11 @@ public final class BotScriptStack {
         BotScript<?>[] loadedScripts = new BotScript<?>[loadedBuffer.size()];
         for (BotScriptSnapshot<?> snapshot : loadedBuffer) {
             String scriptClass = snapshot.getScriptClass();
+            if (scriptClass.equals("null")) {
+                // Dynamic script was here, temporarily hold a void script in its place.
+                loadedScripts[snapshot.getIndex()] = new VoidBotScript(bot);
+                continue;
+            }
             try {
                 loadedScripts[snapshot.getIndex()] = scriptManager.loadScript(scriptClass, bot, snapshot.getData());
             } catch (Exception e) {
@@ -101,6 +107,9 @@ public final class BotScriptStack {
             }
         }
         buffer.addAll(Arrays.asList(loadedScripts));
+
+        // Remove all void scripts after to maintain order.
+        buffer.removeIf(script -> script instanceof VoidBotScript);
     }
 
     /**
@@ -115,6 +124,10 @@ public final class BotScriptStack {
         List<BotScriptSnapshot<?>> snapshots = new ArrayList<>(buffer.size());
         for (BotScript<?> script : buffer) {
             Object snapshot = script.snapshot();
+            if(snapshot == null) {
+                snapshots.add(new BotScriptSnapshot<>(index++, "null", "null"));
+                continue;
+            }
             snapshots.add(new BotScriptSnapshot<>(index++, script.getClass().getName(), snapshot));
         }
         return snapshots;
