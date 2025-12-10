@@ -11,11 +11,14 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.block.Hit;
+import io.luna.game.model.mob.block.Hit.HitType;
 import io.luna.game.model.mob.block.UpdateBlockData;
+import io.luna.game.model.mob.block.UpdateBlockData.Builder;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
+import io.luna.net.codec.ByteMessage;
 
 import java.util.Objects;
 
@@ -31,7 +34,10 @@ import static io.luna.game.model.mob.Skill.HITPOINTS;
 public abstract class Mob extends Entity {
 
     /**
-     * The update flag set representing which update blocks must be sent to nearby players.
+     * The set of update flags indicating which update blocks need to be encoded for this mob.
+     * <p>
+     * This is tick-local state and must only be mutated from the game thread.
+     * </p>
      */
     protected final UpdateFlagSet flags = new UpdateFlagSet();
 
@@ -41,12 +47,12 @@ public abstract class Mob extends Entity {
     protected final SkillSet skills = new SkillSet(this);
 
     /**
-     * The actions currently running for this mob.
+     * The queue of active and pending actions for this mob.
      */
     protected final ActionQueue actions = new ActionQueue(this);
 
     /**
-     * The movement queue used for walking and running.
+     * The movement queue used for walking and running steps.
      */
     protected final WalkingQueue walking = new WalkingQueue(this);
 
@@ -66,7 +72,10 @@ public abstract class Mob extends Entity {
     private Direction runningDirection = Direction.NONE;
 
     /**
-     * The last non-{@link Direction#NONE} movement direction. Used for facing/orientation defaults.
+     * The last non-{@link Direction#NONE} movement direction.
+     * <p>
+     * Used as a default facing direction (e.g., for idle NPC orientation).
+     * </p>
      */
     private Direction lastDirection = Direction.SOUTH;
 
@@ -87,31 +96,54 @@ public abstract class Mob extends Entity {
 
     /**
      * {@code true} if this mob is currently action-locked.
+     * <p>
+     * While locked, its {@link ActionQueue} and {@link WalkingQueue} should be treated as suspended by higher-level
+     * logic.
+     * </p>
      */
     private boolean locked;
 
     /**
-     * {@code true} while a teleport is in progress for this tick.
+     * {@code true} if this mob must be re-placed on the client this tick (i.e., encode a placement/teleport-style
+     * movement update instead of normal walking/running).
      */
-    protected boolean teleporting;
+    protected boolean pendingPlacement;
 
     /**
      * Pending, mutable update data for this tick.
      * <p>
-     * This must only be accessed and mutated from the game thread. After all mutations, {@link #buildBlockData()} must
-     * be called to publish an immutable snapshot.
+     * This must only be accessed and mutated from the game thread. Once all per-tick mutations are complete,
+     * {@link #buildBlockData()} must be called to publish an immutable snapshot for the encoder threads.
      * </p>
      */
-    protected UpdateBlockData.Builder pendingBlockData = new UpdateBlockData.Builder();
+    protected UpdateBlockData.Builder pendingBlockData = new UpdateBlockData.Builder(this);
 
     /**
-     * Immutable, read-only update data for this tick.
+     * Immutable update data for this tick.
      * <p>
-     * This field is published by {@link #buildBlockData()} and may be safely read from any thread (e.g., update
-     * encoder threads).
+     * This is published from the game thread by {@link #buildBlockData()} and may then be read safely from any thread
+     * (e.g., by the player/NPC update encoders).
      * </p>
      */
     private volatile UpdateBlockData blockData;
+
+    /**
+     * Cached encoded update block for this mob (per tick), used to avoid re-encoding the same block for multiple
+     * observers.
+     * <p>
+     * This ByteMessage is reference-counted; see {@link #setCachedBlock(ByteMessage)} for semantics.
+     * </p>
+     */
+    private volatile ByteMessage cachedBlock;
+
+    /**
+     * The current transform id to apply for this mob, or {@code -1} if not transformed.
+     * <p>
+     * The actual interpretation of this value is defined by subclasses in {@link #transform(int)} /
+     * {@link #resetTransform()}.
+     * </p>
+     */
+    protected int transformId = -1;
 
     /**
      * The scheduled task controlling a timed action-lock, if any.
@@ -148,20 +180,21 @@ public abstract class Mob extends Entity {
     /**
      * Resets all mob-specific state for the next tick.
      * <p>
-     * This is called from {@link #resetFlags()}, after a new {@link UpdateBlockData.Builder} is created and the
-     * flags have been cleared, but before the next tick begins.
+     * This is called from {@link #resetFlags()} after a new {@link UpdateBlockData.Builder} is created and
+     * {@link #flags} have been cleared, but before the next game tick begins.
      * </p>
-     *
-     * @param oldBlockData The previous tick's block data (before reset), for reference if needed.
+     * <p>
+     * Implementations should clear or re-initialize any per-tick state that is not already handled by {@link Mob}.
+     * </p>
      */
-    public abstract void reset(UpdateBlockData.Builder oldBlockData);
+    public abstract void reset();
 
     /**
      * Transforms this mob into an NPC with the given id.
      *
-     * @param id The NPC definition id to transform into.
+     * @param requestedId The NPC definition id to transform into.
      */
-    public abstract void transform(int id);
+    public abstract void transform(int requestedId);
 
     /**
      * Reverts any active transform, restoring this mob to its original form.
@@ -185,17 +218,24 @@ public abstract class Mob extends Entity {
     /**
      * Builds and publishes the immutable {@link UpdateBlockData} snapshot for this tick.
      * <p>
-     * <strong>Threading/ordering requirements:</strong>
+     * Threading/ordering requirements:
      * </p>
      * <ul>
      *     <li>Must be called from the game thread only.</li>
      *     <li>Must be called once all game logic for the tick has finished mutating {@link #pendingBlockData} and
      *     {@link #flags}.</li>
-     *     <li>All online mobs should have {@code buildBlockData()} invoked before the updating begins.</li>
+     *     <li>All online mobs should have {@code buildBlockData()} invoked before the updating stage begins.</li>
      * </ul>
+     * <p>
+     * The snapshot is only rebuilt if no previous snapshot exists, or if any update flags are currently set. This
+     * avoids unnecessary object creation when there are no updates to send.
+     * </p>
      */
     public final void buildBlockData() {
-        blockData = pendingBlockData.build();
+        if (blockData == null || !flags.isEmpty()) {
+            // Only build block data when actually needed.
+            blockData = pendingBlockData.build();
+        }
     }
 
     /**
@@ -303,6 +343,7 @@ public abstract class Mob extends Entity {
      */
     public void lock() {
         if (lockTask != null) {
+            // Cancel timed lock so it does not interfere with hard lock semantics.
             lockTask.cancel();
         }
         locked = true;
@@ -322,26 +363,45 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Applies a single instance of damage to this mob, shows the appropriate hitsplat, and plays basic hit/block
-     * sounds for players.
+     * Applies a single hit to this mob with an explicit {@link HitType}.
      * <p>
-     * TODO (future work):
+     * This method:
      * </p>
      * <ul>
-     *     <li>Derive hit sounds from hit size, attack style, and weapon.</li>
-     *     <li>Send attacker sounds only to the attacker, and victim sounds only to the victim.</li>
-     *     <li>Add NPC-specific damage and attack sounds based on OSRS behavior.</li>
+     *     <li>Normalizes negative damage to zero.</li>
+     *     <li>Converts {@link HitType#BLOCKED} to {@link HitType#NORMAL} if damage is non-zero.</li>
+     *     <li>Reduces this mob's hitpoints via {@link #addHealth(int)} / {@link #setHealth(int)}.</li>
+     *     <li>Builds and enqueues a {@link Hit} into the first or second hitsplat slot for this tick.</li>
+     *     <li>Triggers basic player damage/block sounds when this mob is a {@link Player}.</li>
      * </ul>
      *
-     * @param hit The hit information to apply.
+     * @param amount The damage amount (negative values will be treated as zero).
+     * @param type The hit type to use.
      */
-    public final void damage(Hit hit) {
+    public final void damage(int amount, HitType type) {
+        if (amount < 0) {
+            amount = 0;
+        }
+        if (amount == 0) {
+            type = HitType.BLOCKED;
+        } else if (type == HitType.BLOCKED) {
+            type = HitType.NORMAL;
+        }
+
+        // Apply damage to hitpoints (clamped to >= 0).
+        if (getHealth() - amount < 0) {
+            setHealth(0);
+        } else {
+            addHealth(-amount);
+        }
+
+        Hit hit = new Hit(amount, type, getHealth(), getTotalHealth());
         if (pendingBlockData.getHit1() != null) {
             hit2(hit);
         } else {
             hit1(hit);
         }
-        addHealth(-hit.getDamage());
+
         if (this instanceof Player) {
             if (hit.getDamage() > 0) {
                 // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
@@ -358,16 +418,19 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Immediately moves this mob to {@code position}, clearing movement and interaction.
+     * Applies a single normal hit to this mob.
      * <p>
-     * This method:
+     * Convenience overload for {@link #damage(int, HitType)} using {@link HitType#NORMAL}.
      * </p>
-     * <ul>
-     *     <li>Updates {@link #position} directly.</li>
-     *     <li>Clears the {@link WalkingQueue}.</li>
-     *     <li>Resets current interaction target.</li>
-     *     <li>Invokes {@link #onMove(Position)} hook.</li>
-     * </ul>
+     *
+     * @param amount The damage amount.
+     */
+    public void damage(int amount) {
+        damage(amount, HitType.NORMAL);
+    }
+
+    /**
+     * Immediately moves this mob to {@code position}, clearing movement and interactions.
      *
      * @param position The destination position.
      */
@@ -375,6 +438,7 @@ public abstract class Mob extends Entity {
         setPosition(position);
         walking.clear();
         resetInteractingWith();
+        pendingPlacement = true;
         onMove(position);
     }
 
@@ -391,7 +455,6 @@ public abstract class Mob extends Entity {
         Animation current = pendingBlockData.getAnimation();
         if (current == null || animation.overrides(current)) {
             pendingBlockData.animation(animation);
-            flags.flag(UpdateFlag.ANIMATION);
         }
     }
 
@@ -402,7 +465,6 @@ public abstract class Mob extends Entity {
      */
     public final void face(Position position) {
         pendingBlockData.face(position);
-        flags.flag(UpdateFlag.FACE_POSITION);
     }
 
     /**
@@ -423,7 +485,6 @@ public abstract class Mob extends Entity {
      */
     public final void speak(Object message) {
         pendingBlockData.speak(message.toString());
-        flags.flag(UpdateFlag.FORCED_CHAT);
     }
 
     /**
@@ -433,7 +494,6 @@ public abstract class Mob extends Entity {
      */
     public final void graphic(Graphic graphic) {
         pendingBlockData.graphic(graphic);
-        flags.flag(UpdateFlag.GRAPHIC);
     }
 
     /**
@@ -490,7 +550,6 @@ public abstract class Mob extends Entity {
      */
     private void hit1(Hit hit) {
         pendingBlockData.hit1(hit);
-        flags.flag(UpdateFlag.PRIMARY_HIT);
     }
 
     /**
@@ -500,7 +559,6 @@ public abstract class Mob extends Entity {
      */
     private void hit2(Hit hit) {
         pendingBlockData.hit2(hit);
-        flags.flag(UpdateFlag.SECONDARY_HIT);
     }
 
     /**
@@ -529,22 +587,11 @@ public abstract class Mob extends Entity {
 
     /**
      * Resets update-related state for the next tick.
-     * <p>
-     * This method:
-     * </p>
-     * <ul>
-     *     <li>Clears the teleporting flag.</li>
-     *     <li>Swaps {@link #pendingBlockData} with a fresh builder.</li>
-     *     <li>Optionally restores a default facing direction for stationary NPCs.</li>
-     *     <li>Clears all {@link #flags} and re-applies {@link UpdateFlag#FACE_POSITION} if needed.</li>
-     *     <li>Invokes {@link #reset(UpdateBlockData.Builder)} for subclass-specific cleanup.</li>
-     * </ul>
      */
     public final void resetFlags() {
         Direction defaultDirection = this instanceof Npc ? asNpc().getDefaultDirection().orElse(null) : null;
-        teleporting = false;
-        UpdateBlockData.Builder oldBlockData = pendingBlockData;
-        pendingBlockData = new UpdateBlockData.Builder();
+        pendingPlacement = false;
+        pendingBlockData = new UpdateBlockData.Builder(this);
         if (defaultDirection != null) {
             pendingBlockData.face(position.translate(1, defaultDirection));
         }
@@ -552,7 +599,7 @@ public abstract class Mob extends Entity {
         if (defaultDirection != null) {
             flags.flag(UpdateFlag.FACE_POSITION);
         }
-        reset(oldBlockData);
+        reset();
     }
 
     /**
@@ -603,10 +650,10 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Hook invoked after this mob is teleported by {@link #move(Position)}.
+     * Hook invoked after this mob is moved by {@link #move(Position)}.
      * <p>
      * Subclasses may override this to perform any post-move logic, such as region checks, interface updates, or
-     * script callbacks.
+     * script callbacks. The default implementation is a no-op.
      * </p>
      *
      * @param newPosition The destination position.
@@ -728,8 +775,8 @@ public abstract class Mob extends Entity {
      *
      * @return {@code true} if teleporting, otherwise {@code false}.
      */
-    public boolean isTeleporting() {
-        return teleporting;
+    public boolean isPendingPlacement() {
+        return pendingPlacement;
     }
 
     /**
@@ -748,5 +795,79 @@ public abstract class Mob extends Entity {
      */
     public UpdateBlockData getBlockData() {
         return blockData;
+    }
+
+    /**
+     * Returns the cached encoded update block for this mob, if any.
+     * <p>
+     * The returned {@link ByteMessage} is reference-counted. Callers must <b>not</b> modify its contents; it is intended
+     * to be treated as read-only and only copied from (e.g., via {@code putBytes}).
+     * </p>
+     *
+     * @return The cached update block, or {@code null} if none is cached.
+     */
+    public ByteMessage getCachedBlock() {
+        return cachedBlock;
+    }
+
+    /**
+     * Returns {@code true} if this mob currently has a cached encoded update block.
+     *
+     * @return {@code true} if a cached block is present, otherwise {@code false}.
+     */
+    public boolean hasCachedBlock() {
+        return cachedBlock != null;
+    }
+
+    /**
+     * Sets the cached encoded update block for this mob.
+     * <p>
+     * Reference-counting semantics:
+     * </p>
+     * <ul>
+     *     <li>If {@code newMsg} is non-null, its reference count is incremented via {@link ByteMessage#retain()}.</li>
+     *     <li>If an existing {@link #cachedBlock} is present, its reference count is decremented via {@link ByteMessage#release()}.</li>
+     *     <li>The internal {@link #cachedBlock} reference is then updated to {@code newMsg}.</li>
+     * </ul>
+     * <p>
+     * Callers must ensure that {@code newMsg} will not be modified after passing it here; it is reused as a shared,
+     * read-only buffer for all observers of this mob for the duration of the tick.
+     * </p>
+     *
+     * @param newMsg The new cached block, or {@code null} to clear.
+     */
+    public void setCachedBlock(ByteMessage newMsg) {
+        // Retain a reference to the new cached block.
+        if (newMsg != null) {
+            newMsg.retain();
+        }
+
+        // If we already have a cached block, release its reference.
+        if (cachedBlock != null) {
+            cachedBlock.release();
+        }
+
+        cachedBlock = newMsg;
+    }
+
+    /**
+     * Returns the mutable builder used to accumulate this tick's update block data.
+     * <p>
+     * This is intended for use on the game thread only; encoder threads should read from {@link #getBlockData()} instead.
+     * </p>
+     *
+     * @return The pending block data builder.
+     */
+    public Builder getPendingBlockData() {
+        return pendingBlockData;
+    }
+
+    /**
+     * Returns the current transform id to apply for this mob, or {@code -1} if no transform is active.
+     *
+     * @return The transform id, or {@code -1} if none.
+     */
+    public int getTransformId() {
+        return transformId;
     }
 }
