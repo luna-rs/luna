@@ -229,7 +229,7 @@ public final class CollisionMatrix {
      */
     void reset() {
         for (int x = 0; x < width; x++) {
-            for (int y = 0; y < width; y++) {
+            for (int y = 0; y < length; y++) {
                 reset(x, y);
             }
         }
@@ -351,17 +351,16 @@ public final class CollisionMatrix {
      * </p>
      *
      * @param start The starting world position.
-     * @param lastRegion The region base used to compute local coordinates.
      * @param wallObject The wall object being tested.
      * @return {@code true} if {@code start} has reached {@code wallObject}; otherwise {@code false}.
      */
-    public boolean reachedWall(Position start, Position lastRegion, GameObject wallObject) {
-        int startX = start.getLocalX(lastRegion);
-        int startY = start.getLocalY(lastRegion);
+    public boolean reachedWall(Position start,  GameObject wallObject) {
+        int startX = start.getLocalX(start);
+        int startY = start.getLocalY(start);
 
         Position end = wallObject.getPosition();
-        int endX = end.getLocalX(lastRegion);
-        int endY = end.getLocalY(lastRegion);
+        int endX = end.getLocalX(start);
+        int endY = end.getLocalY(start);
 
         if (startX == endX && startY == endY) {
             return true;
@@ -455,17 +454,16 @@ public final class CollisionMatrix {
      * </p>
      *
      * @param start The starting world position.
-     * @param lastRegion The region base used to compute local coordinates.
      * @param decorationObject The decorative object being tested.
      * @return {@code true} if {@code start} has reached {@code decorationObject}; otherwise {@code false}.
      */
-    public boolean reachedDecoration(Position start, Position lastRegion, GameObject decorationObject) {
-        int startX = start.getLocalX(lastRegion);
-        int startY = start.getLocalY(lastRegion);
+    public boolean reachedDecoration(Position start, GameObject decorationObject) {
+        int startX = start.getLocalX(start);
+        int startY = start.getLocalY(start);
 
         Position end = decorationObject.getPosition();
-        int endX = end.getLocalX(end);
-        int endY = end.getLocalY(end);
+        int endX = end.getLocalX(start);
+        int endY = end.getLocalY(start);
 
         if (startX == endX && startY == endY)
             return true;
@@ -515,18 +513,17 @@ public final class CollisionMatrix {
      * This method dispatches to one of:
      * </p>
      * <ul>
-     *     <li>{@link #reachedFacingEntity(Position, Position, Entity, int, int, OptionalInt)} for
+     *     <li>{@link #reachedFacingEntity(Position, Entity, int, int, OptionalInt)} for
      *     default/diagonal/ground decoration objects, using object size and direction flags.</li>
-     *     <li>{@link #reachedWall(Position, Position, GameObject)} for wall-like objects.</li>
-     *     <li>{@link #reachedDecoration(Position, Position, GameObject)} for other decorative objects.</li>
+     *     <li>{@link #reachedWall(Position, GameObject)} for wall-like objects.</li>
+     *     <li>{@link #reachedDecoration(Position, GameObject)} for other decorative objects.</li>
      * </ul>
      *
      * @param start The starting world position.
-     * @param lastRegion The region base used to compute local coordinates.
      * @param object The object being tested.
      * @return {@code true} if {@code start} has reached {@code object}; otherwise {@code false}.
      */
-    public boolean reachedObject(Position start, Position lastRegion, GameObject object) {
+    public boolean reachedObject(Position start,GameObject object) {
         ObjectType objectType = object.getObjectType();
         if (objectType == ObjectType.DEFAULT ||
                 objectType == ObjectType.DIAGONAL_DEFAULT ||
@@ -549,14 +546,14 @@ public final class CollisionMatrix {
                         (packedDirections >> 4 - objectDirection.getId());
             }
             return sizeX != 0 && sizeY != 0 &&
-                    reachedFacingEntity(start, lastRegion, object, sizeX, sizeY, OptionalInt.of(packedDirections));
+                    reachedFacingEntity(start, object, sizeX, sizeY, OptionalInt.of(packedDirections));
         } else {
             int objectTypeId = object.getObjectType().getId();
             if ((objectTypeId < 5 || objectTypeId == 10)) {
-                return reachedWall(start, lastRegion, object);
+                return reachedWall(start, object);
             }
             if (objectTypeId < 10) {
-                return reachedDecoration(start, lastRegion, object);
+                return reachedDecoration(start,  object);
             }
             return false;
         }
@@ -571,7 +568,6 @@ public final class CollisionMatrix {
      * </p>
      *
      * @param start The starting world position.
-     * @param lastRegion The region base used to compute local coordinates.
      * @param target The entity being tested.
      * @param sizeX The width (X size) of the entity in tiles.
      * @param sizeY The length (Y size) of the entity in tiles.
@@ -579,7 +575,6 @@ public final class CollisionMatrix {
      * @return {@code true} if {@code start} has reached the entity according to these rules; otherwise {@code false}.
      */
     public boolean reachedFacingEntity(Position start,
-                                       Position lastRegion,
                                        Entity target,
                                        int sizeX,
                                        int sizeY,
@@ -587,12 +582,12 @@ public final class CollisionMatrix {
 
         int packed = packedDirections.orElse(0);
 
-        int startX = start.getLocalX(lastRegion);
-        int startY = start.getLocalY(lastRegion);
+        int startX = start.getLocalX(start);
+        int startY = start.getLocalY(start);
 
         Position end = target.getPosition();
-        int endX = end.getLocalX(lastRegion);
-        int endY = end.getLocalY(lastRegion);
+        int endX = end.getLocalX(start);
+        int endY = end.getLocalY(start);
 
         int radiusX = (endX + sizeX) - 1;
         int radiusY = (endY + sizeY) - 1;
