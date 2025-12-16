@@ -1,7 +1,6 @@
 package engine.bank
 
 import api.predef.*
-import engine.bank.Banking
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 
@@ -22,7 +21,7 @@ on(ServerLaunchEvent::class) {
 
         // Add listeners for "Use"
         object1(id) {
-            val npc = plr.localNpcs.stream().filter { Banking.bankingNpcs.contains(it.id) }
+            val npc = plr.localMobs.localNpcs().filter { Banking.bankingNpcs.contains(it.id) }
                 .filter { it.position.isWithinDistance(gameObject.position, 1) }.findFirst()
             if (npc.isPresent) {
                 openDialogue(plr, npc.get().id)

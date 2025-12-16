@@ -7,7 +7,6 @@ import io.luna.game.GameSettings.PasswordStrength;
 import io.luna.game.LogoutService;
 import io.luna.game.model.Position;
 import io.luna.game.model.item.IndexedItem;
-import io.luna.game.model.mob.MusicTab;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
@@ -38,7 +37,6 @@ public class PlayerData {
     public String lastIp;
     public Instant logoutTime;
     public int[] appearance;
-    public MusicTab musicTab;
     public List<IndexedItem> inventory;
     public List<IndexedItem> bank;
     public List<IndexedItem> equipment;
@@ -81,7 +79,6 @@ public class PlayerData {
         player.setRights(rights);
         player.setLastIp(lastIp);
         player.getAppearance().setValues(appearance);
-        player.setMusicTab(musicTab);
         player.getInventory().load(inventory);
         player.getBank().load(bank);
         player.getEquipment().load(equipment);
@@ -127,7 +124,6 @@ public class PlayerData {
         lastIp = player.getClient().getIpAddress();
         logoutTime = Instant.now();
         appearance = player.getAppearance().toArray();
-        musicTab = player.getMusicTab().copy();
         inventory = player.getInventory().toList();
         bank = player.getBank().toList();
         equipment = player.getEquipment().toList();

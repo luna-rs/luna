@@ -12,6 +12,8 @@ import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.WalkingQueue.Step;
+import io.luna.game.model.path.AStarPathfinder;
+import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
@@ -169,7 +171,8 @@ public final class SmartWanderingAction extends Action<Mob> {
      * @return A future representing the waypoint build operation.
      */
     private CompletableFuture<Void> buildWaypointsAsync(GameService game, Position dest) {
-        return game.submit(() -> mob.getWalking().findPath(dest, true)).
+        AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
+        return game.submit(() -> mob.getWalking().findPath(dest, true, pf)).
                 thenAcceptAsync(path -> {
                     if (path != null && !path.isEmpty()) {
                         // Convert steps into absolute positions. Z is pinned to the mob's current plane.

@@ -8,7 +8,7 @@ import game.player.Jingles
 import io.luna.Luna
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.Player.SkullIcon
+import io.luna.game.model.mob.SkullIcon
 import io.luna.game.model.mob.block.Animation.AnimationPriority
 
 /**

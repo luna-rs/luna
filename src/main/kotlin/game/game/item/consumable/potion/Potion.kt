@@ -4,7 +4,6 @@ import api.predef.*
 import game.item.consumable.potion.PotionCountdownTimer
 import game.item.consumable.potion.PotionEffect
 import io.luna.game.model.mob.Player
-import io.luna.game.model.mob.block.Hit
 
 /**
  * An enum representing potions that can be consumed.
@@ -207,7 +206,7 @@ enum class Potion(val fourDose: Int,
             attack.addLevels(2 + (0.20 * attack.staticLevel).toInt(), true)
             strength.addLevels(2 + (0.12 * strength.staticLevel).toInt(), true)
             defence.removeLevels(2 + (0.10 * defence.staticLevel).toInt())
-            damage(Hit(removeHp))
+            damage(removeHp)
             prayer.addLevels((0.10 * prayer.staticLevel).toInt(), true)
         }
 
@@ -217,7 +216,7 @@ enum class Potion(val fourDose: Int,
         private fun Player.onSaradominBrew() {
             val removeHp = 2 + (0.15 * hitpoints.staticLevel).toInt()
             defence.addLevels(2 + (0.20 * defence.staticLevel).toInt(), true)
-            damage(Hit(removeHp))
+            damage(removeHp)
             attack.removeLevels((0.10 * attack.staticLevel).toInt())
             strength.removeLevels((0.10 * strength.staticLevel).toInt())
             magic.removeLevels((0.10 * magic.staticLevel).toInt())

@@ -14,6 +14,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.overlay.StandardInterface
 import io.luna.game.model.mob.overlay.TextInput
 import io.luna.game.model.mob.varp.Varp
+import io.luna.game.model.`object`.ObjectType
 import io.luna.net.msg.out.SoundMessageWriter
 import io.luna.util.CacheDumpUtils
 import java.lang.Boolean.parseBoolean
@@ -75,7 +76,7 @@ cmd("delete", RIGHTS_DEV) {
 /**
  * A command that spawns a non-player character.
  */
-cmd("game/npc", RIGHTS_DEV) {
+cmd("npc", RIGHTS_DEV) {
     val npc = Npc(ctx, asInt(0), plr.position)
     world.addNpc(npc)
 }
@@ -89,6 +90,7 @@ cmd("object", RIGHTS_DEV) {
                     x = pos.x,
                     y = pos.y,
                     z = pos.z,
+                    type = ObjectType.ALL[asInt(1)]!!,
                     plr = plr)
 }
 

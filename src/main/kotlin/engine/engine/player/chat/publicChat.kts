@@ -20,6 +20,6 @@ val chat = FileOutputType.CHAT.level
  * Sends the chat update block.
  */
 on(ChatEvent::class, EventPriority.HIGH) {
-    plr.chat(Chat(message, color, effect))
+    plr.chat(Chat(message, color, plr.rights.clientValue, effect))
     logger.log(chat, "{}: {}", plr.username, unpackedMessage)
 }

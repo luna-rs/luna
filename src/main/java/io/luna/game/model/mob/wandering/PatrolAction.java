@@ -8,6 +8,8 @@ import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.WalkingQueue;
+import io.luna.game.model.path.AStarPathfinder;
+import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.util.RandomUtils;
 import io.luna.util.Rational;
 
@@ -233,7 +235,8 @@ public final class PatrolAction extends Action<Mob> {
      */
     private CompletableFuture<Void> computeAndQueuePathAsync(GameService game, Position dest) {
         WalkingQueue walking = mob.getWalking();
-        return game.submit(() -> walking.findPath(dest, true)).
+        AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
+        return game.submit(() -> walking.findPath(dest, true, pf)).
                 thenAcceptAsync(walking::addPath, game.getGameExecutor())
                 .exceptionally(ex -> {
                     logger.catching(ex);

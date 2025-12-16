@@ -5,6 +5,8 @@ import api.predef.*
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.FocusChangedEvent
 import io.luna.game.event.impl.PlayerTimeoutEvent
+import io.luna.game.event.impl.RegionChangedEvent
+import io.luna.game.event.impl.WalkingEvent
 import io.luna.game.model.mob.Player
 
 /**
@@ -16,6 +18,9 @@ val Player.idleTimer by Attr.timer()
  * Logs the player out after some inactivity.
  */
 on(PlayerTimeoutEvent::class, EventPriority.HIGH) {
+    if(plr.actions.size() > 0) {
+        plr.idleTimer.reset()
+    }
     if (!plr.idleTimer.isRunning) {
         plr.idleTimer.start()
     }

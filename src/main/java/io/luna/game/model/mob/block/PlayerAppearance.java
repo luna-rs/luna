@@ -185,7 +185,7 @@ public final class PlayerAppearance {
     public static int[] random() {
         int[] appearance = new int[13];
         int index = 0;
-        int gender = RandomUtils.randomBoolean() ? 1 : 0;
+        int gender = RandomUtils.nextBoolean() ? 1 : 0;
         appearance[index++] = gender;
         for (int loops = 0; loops < 7; loops++) {
             Range<Integer> nextModels = VALID_MODELS.get(gender, index);

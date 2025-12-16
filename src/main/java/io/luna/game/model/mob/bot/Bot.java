@@ -3,15 +3,17 @@ package io.luna.game.model.mob.bot;
 import api.bot.action.BotActionHandler;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Sets;
+import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.model.EntityState;
+import io.luna.game.model.Position;
 import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.block.LocalMobRepository;
-import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.PlayerCredentials;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.block.LocalMobRepository;
+import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
@@ -29,6 +31,8 @@ import org.apache.logging.log4j.Logger;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a fully autonomous {@link Player} controlled entirely by the Luna server.
@@ -78,6 +82,7 @@ public final class Bot extends Player {
         private final LunaContext context;
         private boolean temporary;
         private String username;
+        private Position position = Luna.settings().game().startingPosition();
 
         /**
          * Creates a new {@link Builder}.
@@ -105,6 +110,17 @@ public final class Bot extends Player {
         }
 
         /**
+         * Sets the spawn position.
+         *
+         * @param spawnPosition The desired spawn location.
+         * @return This builder instance.
+         */
+        public Builder setSpawnPosition(Position spawnPosition) {
+            position = requireNonNull(spawnPosition);
+            return this;
+        }
+
+        /**
          * Marks this bot as temporary (non-persistent).
          *
          * @return This builder instance.
@@ -124,7 +140,7 @@ public final class Bot extends Player {
             if (username == null) {
                 throw new IllegalStateException("Username was not set.");
             }
-            return new Bot(context, username, generatePassword(), temporary);
+            return new Bot(context, username, generatePassword(), position, temporary);
         }
     }
 
@@ -179,11 +195,13 @@ public final class Bot extends Player {
      * @param context The context instance.
      * @param username The username.
      * @param password The password.
+     * @param position The spawn position.
      * @param temporary Whether this bot is temporary (non-persistent).
      */
-    private Bot(LunaContext context, String username, String password, boolean temporary) {
+    private Bot(LunaContext context, String username, String password, Position position, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
         this.temporary = temporary;
+        this.position = position;
 
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
@@ -227,7 +245,7 @@ public final class Bot extends Player {
     public CompletableFuture<PlayerData> login() {
         CompletableFuture<PlayerData> future = new CompletableFuture<>();
         String username = getUsername();
-        if(world.isFull()) {
+        if (world.isFull()) {
             future.completeExceptionally(new IllegalStateException("World is full."));
             return future;
         }
@@ -246,13 +264,15 @@ public final class Bot extends Player {
                     if (data != null) {
                         temporary = false;
                     }
-                    loadData(data);
-                    world.getBots().add(this);
-                    world.getPlayers().add(this);
-                    setState(EntityState.ACTIVE);
-                    log("I'm alive!");
-                    logger.info("{} has logged in.", username);
-                    return data;
+                    if (world.getPlayers().add(this)) {
+                        loadData(data);
+                        world.getBots().add(this);
+                        setState(EntityState.ACTIVE);
+                        log("I'm alive!");
+                        logger.info("{} has logged in.", username);
+                        return data;
+                    }
+                    return null;
                 }, service.getGameExecutor());
     }
 

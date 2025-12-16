@@ -98,11 +98,6 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         timer.reset()
     }
 
-    override fun load(snapshot: BotScriptSnapshot<InputData>) {
-        // Load our previous snapshot so we can resume the script.
-        data = snapshot.data
-    }
-
     override fun snapshot(): InputData {
         // Save the remaining idle time needed.
         val remaining = data.durationMinutes - timer.elapsed().toMinutes()
@@ -124,7 +119,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
     private suspend fun doFollow() {
         bot.log("Looking for someone to follow.")
         var following = false
-        for (player in bot.localPlayers) {
+        for (player in bot.localHumans) {
             if (!player.walking.isEmpty) {
                 bot.log("Trying to follow $player.")
                 // Search through local players, follow a random moving player.

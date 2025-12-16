@@ -2,6 +2,7 @@ package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.WalkingQueue.Step;
+import io.luna.util.RandomUtils;
 
 import java.util.Set;
 
@@ -76,6 +77,18 @@ public enum Direction {
     Direction(int id, Step translate) {
         this.id = id;
         this.translate = translate;
+    }
+
+    public static Direction random() {
+        Direction selected = RandomUtils.random(ALL);
+        if(selected == Direction.NONE) {
+            if (RandomUtils.nextBoolean()) {
+                return RandomUtils.random(Direction.NESW);
+            } else {
+                return RandomUtils.random(Direction.WNES_DIAGONAL);
+            }
+        }
+        return selected;
     }
 
     /**

@@ -21,7 +21,7 @@ public final class PlayerModelAnimation {
      * the provided setters.
      * </p>
      */
-    public static final class ModelAnimationBuilder {
+    public static final class Builder {
 
         /**
          * The standing (idle) animation id.
@@ -64,7 +64,7 @@ public final class PlayerModelAnimation {
          * @param standingId The new standing animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setStandingId(int standingId) {
+        public Builder setStandingId(int standingId) {
             this.standingId = standingId;
             return this;
         }
@@ -75,7 +75,7 @@ public final class PlayerModelAnimation {
          * @param standingTurnId The new standing-and-turning animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setStandingTurnId(int standingTurnId) {
+        public Builder setStandingTurnId(int standingTurnId) {
             this.standingTurnId = standingTurnId;
             return this;
         }
@@ -86,7 +86,7 @@ public final class PlayerModelAnimation {
          * @param walkingId The new walking animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setWalkingId(int walkingId) {
+        public Builder setWalkingId(int walkingId) {
             this.walkingId = walkingId;
             return this;
         }
@@ -97,7 +97,7 @@ public final class PlayerModelAnimation {
          * @param turning180DegreesId The new 180-degree turning animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setTurning180DegreesId(int turning180DegreesId) {
+        public Builder setTurning180DegreesId(int turning180DegreesId) {
             this.turning180DegreesId = turning180DegreesId;
             return this;
         }
@@ -108,7 +108,7 @@ public final class PlayerModelAnimation {
          * @param turning90DegreesCwId The new 90-degree clockwise turning animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setTurning90DegreesCwId(int turning90DegreesCwId) {
+        public Builder setTurning90DegreesCwId(int turning90DegreesCwId) {
             this.turning90DegreesCwId = turning90DegreesCwId;
             return this;
         }
@@ -119,7 +119,7 @@ public final class PlayerModelAnimation {
          * @param turning90DegreesCcwId The new 90-degree counter-clockwise turning animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setTurning90DegreesCcwId(int turning90DegreesCcwId) {
+        public Builder setTurning90DegreesCcwId(int turning90DegreesCcwId) {
             this.turning90DegreesCcwId = turning90DegreesCcwId;
             return this;
         }
@@ -130,7 +130,7 @@ public final class PlayerModelAnimation {
          * @param runningId The new running animation id.
          * @return This builder instance for method chaining.
          */
-        public ModelAnimationBuilder setRunningId(int runningId) {
+        public Builder setRunningId(int runningId) {
             this.runningId = runningId;
             return this;
         }
@@ -152,7 +152,7 @@ public final class PlayerModelAnimation {
      * This constant can be used as a safe fallback when no equipment-specific animation overrides are present.
      * </p>
      */
-    public static final PlayerModelAnimation DEFAULT = new ModelAnimationBuilder().build();
+    public static final PlayerModelAnimation DEFAULT = new Builder().build();
 
     /**
      * Standing (idle) animation id.

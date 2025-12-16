@@ -109,6 +109,7 @@ public class GameObject extends StationaryEntity {
                 add("y", position.getY()).
                 add("z", position.getZ()).
                 add("type", objectType).
+                add("direction", direction).
                 add("view", getView()).toString();
     }
 

@@ -2,7 +2,6 @@ package io.luna.game.model.mob;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import game.item.consumable.potion.PotionCountdownTimer;
@@ -25,7 +24,9 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.block.ExactMovement;
-import io.luna.game.model.mob.block.UpdateBlockData;
+import io.luna.game.model.mob.block.LocalMobRepository;
+import io.luna.game.model.mob.block.PlayerAppearance;
+import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.controller.ControllerManager;
@@ -43,7 +44,6 @@ import io.luna.game.persistence.PlayerData;
 import io.luna.game.task.TaskState;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
-import io.luna.net.codec.ByteMessage;
 import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.AssignmentMessageWriter;
 import io.luna.net.msg.out.GameChatboxMessageWriter;
@@ -69,301 +69,207 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * A model representing a player-controlled mob.
+ * Represents a player-controlled mob (human client or {@link Bot}) within the game world.
  *
  * @author lare96
  */
 public class Player extends Mob {
 
     /**
-     * An enum representing prayer icons.
-     */
-    public enum PrayerIcon {
-        NONE(-1),
-        PROTECT_FROM_MELEE(0),
-        PROTECT_FROM_MISSILES0(1),
-        PROTECT_FROM_MAGIC(2),
-        RETRIBUTION(3),
-        SMITE(4),
-        REDEMPTION(5);
-
-        /**
-         * The identifier.
-         */
-        private final int id;
-
-        /**
-         * Creates a new {@link PrayerIcon}.
-         *
-         * @param id The identifier.
-         */
-        PrayerIcon(int id) {
-            this.id = id;
-        }
-
-        /**
-         * @return The identifier.
-         */
-        public int getId() {
-            return id;
-        }
-    }
-
-    /**
-     * An enum representing skull icons.
-     */
-    public enum SkullIcon { // TODO test/redo
-        NONE(-1),
-        WHITE(0),
-        RED(1);
-
-        /**
-         * The identifier.
-         */
-        private final int id;
-
-        /**
-         * Creates a new {@link SkullIcon}.
-         *
-         * @param id The identifier.
-         */
-        SkullIcon(int id) {
-            this.id = id;
-        }
-
-        /**
-         * @return The identifier.
-         */
-        public int getId() {
-            return id;
-        }
-    }
-
-    /**
-     * The asynchronous logger.
+     * Asynchronous logger used for player-specific events and errors.
      */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A set of local players. Should only be accessed from the updating threads.
+     * Repository of local mobs visible to this player for update processing.
      */
-    private final Set<Player> updatePlayers = new LinkedHashSet<>(255);
+    private final LocalMobRepository localMobs = new LocalMobRepository(this);
 
     /**
-     * A set of local npcs. Should only be accessed from the updating threads.
-     */
-    private final Set<Npc> updateNpcs = new LinkedHashSet<>(255);
-
-    /**
-     * All players being updated around this player.
-     */
-    private final Set<Player> localPlayers = Sets.newConcurrentHashSet();
-
-    /**
-     * All {@link Bot} players only being updated around this player.
-     */
-    private final Set<Bot> localBots = Sets.newConcurrentHashSet();
-
-    /**
-     * All NPCs being updated around this player.
-     */
-    private final Set<Npc> localNpcs = Sets.newConcurrentHashSet();
-
-    /**
-     * The appearance.
-     */
-    private final PlayerAppearance appearance = new PlayerAppearance();
-
-    /**
-     * The credentials.
-     */
-    private final PlayerCredentials credentials;
-
-    /**
-     * The inventory.
-     */
-    private final Inventory inventory = new Inventory(this);
-
-    /**
-     * The equipment.
-     */
-    private final Equipment equipment = new Equipment(this);
-
-    /**
-     * The bank.
-     */
-    private final Bank bank = new Bank(this);
-
-    /**
-     * The interface set.
-     */
-    private final AbstractOverlaySet overlays = new AbstractOverlaySet(this);
-
-    /**
-     * The game tab set.
-     */
-    private final GameTabSet tabs = new GameTabSet(this);
-
-    /**
-     * The text cache.
-     */
-    private final Map<Integer, String> textCache = new HashMap<>();
-
-    /**
-     * The privacy options.
-     */
-    private PlayerPrivacy privacyOptions = new PlayerPrivacy();
-
-    /**
-     * The music tab data.
-     */
-    private MusicTab musicTab = new MusicTab();
-
-    /**
-     * The spellbook.
-     */
-    private Spellbook spellbook = Spellbook.REGULAR;
-
-    /**
-     * The cached update block.
-     */
-    private volatile ByteMessage cachedBlock; // todo thread safety?
-
-    /**
-     * The rights.
-     */
-    private PlayerRights rights = PlayerRights.PLAYER;
-
-    /**
-     * The game client.
-     */
-    private GameClient client;
-
-    /**
-     * The last known region.
-     */
-    private Position lastRegion;
-
-    /**
-     * If the region has changed.
-     */
-    private boolean regionChanged;
-
-    /**
-     * The prayer icon.
+     * The current overhead prayer icon.
      */
     private PrayerIcon prayerIcon = PrayerIcon.NONE;
 
     /**
-     * The skull icon.
+     * The current skull icon.
      */
     private SkullIcon skullIcon = SkullIcon.NONE;
 
     /**
-     * The model animation.
+     * The current model animation set used by this player.
      */
-    private ModelAnimation modelAnimation = ModelAnimation.DEFAULT;
+    private PlayerModelAnimation model = PlayerModelAnimation.DEFAULT;
 
     /**
-     * The dialogue queue.
+     * Credentials backing this account (username, password, hash, username hash).
+     */
+    private final PlayerCredentials credentials;
+
+    /**
+     * Current appearance data for this player.
+     */
+    private final PlayerAppearance appearance = new PlayerAppearance();
+
+    /**
+     * The inventory container for this player.
+     */
+    private final Inventory inventory = new Inventory(this);
+
+    /**
+     * The equipment container for this player.
+     */
+    private final Equipment equipment = new Equipment(this);
+
+    /**
+     * The bank container for this player.
+     */
+    private final Bank bank = new Bank(this);
+
+    /**
+     * Active overlay (interface) set for this player.
+     */
+    private final AbstractOverlaySet overlays = new AbstractOverlaySet(this);
+
+    /**
+     * The game tab set (inventory, equipment, magic, etc.).
+     */
+    private final GameTabSet tabs = new GameTabSet(this);
+
+    /**
+     * Cache of widget text values keyed by widget id, used to avoid redundant text packets.
+     */
+    private final Map<Integer, String> textCache = new HashMap<>();
+
+    /**
+     * Player privacy options (PM, trade, etc.).
+     */
+    private PlayerPrivacy privacyOptions = new PlayerPrivacy();
+
+    /**
+     * Current spellbook in use by this player.
+     */
+    private Spellbook spellbook = Spellbook.REGULAR;
+
+    /**
+     * The account rights for this player.
+     */
+    private PlayerRights rights = PlayerRights.PLAYER;
+
+    /**
+     * The active {@link GameClient} backing this player's session.
+     */
+    private GameClient client;
+
+    /**
+     * The last region position used for region-change detection.
+     */
+    private Position lastRegion;
+
+    /**
+     * Whether the region changed this tick.
+     */
+    private boolean regionChanged;
+
+    /**
+     * The current dialogue queue, or {@code null} if none is active.
      */
     private DialogueQueue dialogues;
 
     /**
-     * The private message counter.
+     * Local counter used to assign unique private message ids for this player.
      */
     private int privateMsgCounter = 1;
 
     /**
-     * The friend list.
+     * The friend list, stored as username hashes.
      */
     private final Set<Long> friends = new LinkedHashSet<>();
 
     /**
-     * The ignore list.
+     * The ignore list, stored as username hashes.
      */
     private final Set<Long> ignores = new LinkedHashSet<>();
 
     /**
-     * The interaction menu.
+     * The interaction menu state (right-click options, custom actions).
      */
     private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
 
     /**
-     * The hashed password.
+     * The hashed password. May be {@code null} for legacy/plaintext accounts until conversion.
      */
     private String hashedPassword;
 
     /**
-     * The last IP address logged in with.
+     * The last known IP address this player logged in with.
      */
     private String lastIp;
 
     /**
-     * When the player is unbanned.
+     * Timestamp when this player will be unbanned, or {@code null} if not banned.
      */
     private Instant unbanInstant;
 
     /**
-     * When the player is unmuted.
+     * Timestamp when this player will be unmuted, or {@code null} if not muted.
      */
     private Instant unmuteInstant;
 
     /**
-     * The SQL database ID.
+     * SQL database primary key for this account, or {@code -1} if not yet assigned.
      */
     private int databaseId = -1;
 
     /**
-     * The run energy percentage.
+     * Current run energy percentage (0–100).
      */
     private double runEnergy;
 
     /**
-     * The combined weight of the {@link #inventory} and {@link #equipment}.
+     * Combined weight of {@link #inventory} and {@link #equipment}.
      */
     private double weight;
 
     /**
-     * When this account was first created on.
+     * Timestamp when this account was first created.
      */
     private Instant createdAt = Instant.now();
 
     /**
-     * The total time played (total time logged in).
+     * Total time played (accumulated across logins). See {@link #getTimePlayed()} for details.
      */
     private Duration timePlayed = Duration.ZERO;
 
     /**
-     * The controller manager.
+     * Controller manager for this player, handling region/area-specific behaviour.
      */
     private final ControllerManager controllers = new ControllerManager(this);
 
     /**
-     * The varp manager.
+     * Manager for persistent varps attached to this player.
      */
     private final PersistentVarpManager varpManager = new PersistentVarpManager(this);
 
     /**
-     * All cached values for varps.
+     * Cached client-side varp values, keyed by varp id. Used for efficient varbit packing.
      */
     private final Map<Integer, Integer> cachedVarps = new HashMap<>();
 
     /**
-     * The time online.
+     * Stopwatch tracking how long this player has been online for the current session.
      */
     private final Stopwatch timeOnline = Stopwatch.createUnstarted();
 
     /**
-     * The current interaction task.
+     * The current interaction task (e.g., walking to an entity and performing an action), or {@code null}.
      */
     private InteractionTask interactionTask;
 
     /**
-     * Creates a new {@link Player}.
+     * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
-     * @param context The context instance.
-     * @param credentials The credentials.
+     * @param context The global context instance.
+     * @param credentials The credentials backing this account.
      */
     public Player(LunaContext context, PlayerCredentials credentials) {
         super(context, EntityType.PLAYER);
@@ -413,7 +319,7 @@ public class Player extends Mob {
 
     @Override
     protected void onActive() {
-        teleporting = true;
+        pendingPlacement = true;
         flags.flag(UpdateFlag.APPEARANCE);
         queue(new AssignmentMessageWriter(true));
         timeOnline.start();
@@ -427,17 +333,13 @@ public class Player extends Mob {
     }
 
     @Override
-    public void onTeleport(Position position) {
-        teleporting = true;
+    public void onMove(Position position) {
         overlays.closeWindows();
     }
 
     @Override
-    public void reset(UpdateBlockData.Builder oldBlockData) {
+    public void reset() {
         regionChanged = false;
-        if (oldBlockData.getTransform() != null) {
-            pendingBlockData.transform(oldBlockData.getTransform());
-        }
     }
 
     @Override
@@ -446,15 +348,15 @@ public class Player extends Mob {
     }
 
     @Override
-    public void transform(int id) {
-        pendingBlockData.transform(id);
+    public void transform(int npcId) {
+        transformId = npcId;
         flags.flag(UpdateFlag.APPEARANCE);
     }
 
     @Override
     public void resetTransform() {
-        if (pendingBlockData.getTransform() != null) {
-            pendingBlockData.transform(null);
+        if (transformId > -1) {
+            transformId = -1;
             flags.flag(UpdateFlag.APPEARANCE);
         }
     }
@@ -465,23 +367,32 @@ public class Player extends Mob {
     }
 
     /**
-     * Sends a save request to the {@link PersistenceService}.
+     * Sends a save request for this player to the {@link PersistenceService}.
      *
-     * @return The result of the save task.
+     * @return A {@link CompletableFuture} that completes when the save has finished.
      */
     public CompletableFuture<Void> save() {
         return world.getPersistenceService().save(this);
     }
 
     /**
-     * Prepares the save data to be serialized by a {@link LogoutService} worker.
+     * Prepares a {@link PlayerData} snapshot for this player, ready to be serialized by {@link LogoutService} or
+     * other persistence workers.
+     *
+     * @return A new {@link PlayerData} instance describing the current state of this player.
      */
     public PlayerData createSaveData() {
         return new PlayerData(getUsername()).save(this);
     }
 
     /**
-     * Loads the argued save data into this player.
+     * Loads the given {@link PlayerData} into this player.
+     * <p>
+     * If {@code data} is {@code null}, this is treated as a first-time login and the player is placed at the
+     * configured starting position with default rights.
+     * </p>
+     *
+     * @param data The data to load, or {@code null} for a new player.
      */
     public void loadData(PlayerData data) {
         if (data != null) {
@@ -492,19 +403,25 @@ public class Player extends Mob {
             setPosition(Luna.settings().game().startingPosition());
             rights = Luna.settings().game().betaMode() || LunaChannelFilter.WHITELIST.contains(client.getIpAddress()) ?
                     PlayerRights.DEVELOPER : PlayerRights.PLAYER;
+            if (isBot()) {
+                rights = PlayerRights.PLAYER;
+            }
         }
     }
 
     /**
-     * Attempts to handle {@code event} once this player has reached {@code entity}.
+     * Schedules an {@link InteractableEvent} to be executed once this player reaches the target {@link Entity}.
+     * <p>
+     * If an existing {@link InteractionTask} is running, it is cancelled and replaced.
+     * </p>
      *
-     * @param entity The entity to reach.
-     * @param event The event to post once reached.
-     * @param action Will be run if the interaction is successful.
+     * @param entity The entity to interact with.
+     * @param event The event to post once the entity is reached.
+     * @param action A callback to run if the interaction completes successfully.
      */
     public void handleInteractableEvent(Entity entity, InteractableEvent event, Runnable action) {
         if (interactionTask == null || interactionTask.getState() == TaskState.CANCELLED) {
-            // Cancelled interaction task, create new one.
+            // Cancelled or missing interaction task, create new one.
             interactionTask = new InteractionTask(this, entity, event, action);
             world.schedule(interactionTask);
         } else if (interactionTask.getState() == TaskState.RUNNING) {
@@ -516,7 +433,7 @@ public class Player extends Mob {
     }
 
     /**
-     * Cancels the current {@link InteractionTask} if one exists.
+     * Cancels the current {@link InteractionTask}, if present.
      */
     public void resetInteractionTask() {
         if (interactionTask != null) {
@@ -525,10 +442,17 @@ public class Player extends Mob {
     }
 
     /**
-     * Adds {@code item} to the inventory. If the inventory is full, add it to the bank. If the bank is full, will drop
-     * it on the floor.
+     * Gives the argued {@link Item} to this player.
+     * <p>
+     * The item is:
+     * </p>
+     * <ol>
+     *     <li>First attempt to add to the inventory.</li>
+     *     <li>Otherwise placed in the bank if there is space.</li>
+     *     <li>Otherwise dropped on the ground beneath the player.</li>
+     * </ol>
      *
-     * @param item The item to give the player.
+     * @param item The item to give this player.
      */
     public void giveItem(Item item) {
         String name = item.getItemDef().getName();
@@ -563,10 +487,16 @@ public class Player extends Mob {
     }
 
     /**
-     * Determines if this player has any item with {@code id} in the inventory, bank, equipped, or if it's dropped
-     * nearby on the floor and visible.
+     * Determines whether this player has an item with the given id:
+     * <ul>
+     *     <li>In their {@link Inventory},</li>
+     *     <li>In their {@link Bank},</li>
+     *     <li>In their {@link Equipment}, or</li>
+     *     <li>On the ground nearby and visible to this player.</li>
+     * </ul>
      *
-     * @param id The item ID to check for.
+     * @param id The item id to search for.
+     * @return {@code true} if at least one such item is found.
      */
     public boolean hasItem(int id) {
         if (inventory.contains(id) ||
@@ -579,9 +509,9 @@ public class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link GameChatboxMessageWriter} packet.
+     * Shortcut for queuing a {@link GameChatboxMessageWriter} packet.
      *
-     * @param msg The message to send.
+     * @param msg The message or {@link Messages} enum to send.
      */
     public void sendMessage(Object msg) {
         if (msg instanceof Messages) {
@@ -591,9 +521,12 @@ public class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link VarpMessageWriter} packet for an arbitrary varp.
+     * Sends an arbitrary {@link Varp} update to the client and records it in the cached varp map.
+     * <p>
+     * If the varp is also tracked as a {@link PersistentVarp}, the persistent value is updated as well.
+     * </p>
      *
-     * @param varp The varp to send.
+     * @param varp The varp to send to this player.
      */
     public void sendVarp(Varp varp) {
         PersistentVarp persistentVarp = PersistentVarp.ALL.get(varp.getId());
@@ -605,29 +538,29 @@ public class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link VarpMessageWriter} packet for a persistent varp.
+     * Sends a {@link Varp} update for a {@link PersistentVarp} using an integer value.
      *
      * @param persistentVarp The persistent varp id.
-     * @param value The new integer value to set.
+     * @param value The new integer value.
      */
     public void sendVarp(PersistentVarp persistentVarp, int value) {
         sendVarp(new Varp(persistentVarp.getClientId(), value));
     }
 
     /**
-     * Shortcut to queue a new {@link VarpMessageWriter} packet for a persistent varp.
+     * Sends a {@link Varp} update for a {@link PersistentVarp} using a boolean value.
      *
      * @param persistentVarp The persistent varp id.
-     * @param value The new boolean value to set.
+     * @param value The new boolean value.
      */
     public void sendVarp(PersistentVarp persistentVarp, boolean value) {
         sendVarp(persistentVarp, value ? 1 : 0);
     }
 
     /**
-     * Shortcut to queue a new {@link VarpMessageWriter} packet for a varbit.
+     * Sends a single {@link Varbit} update by packing its value into the parent varp.
      *
-     * @param varbit The varbit.
+     * @param varbit The varbit instance.
      */
     public void sendVarbit(Varbit varbit) {
         int parentId = varbit.getDef().getParentVarpId();
@@ -637,10 +570,10 @@ public class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link VarpMessageWriter} packet for multiple varbits with the same parent varp.
+     * Sends multiple {@link Varbit} updates that share the same parent varp.
      *
-     * @param parentId The parent varp id.
-     * @param varbits The varbits.
+     * @param parentId The id of the parent varp.
+     * @param varbits The varbits to update. All must share the same parent.
      */
     public void sendVarbits(int parentId, List<Varbit> varbits) {
         if (varbits.isEmpty()) {
@@ -666,11 +599,11 @@ public class Player extends Mob {
     }
 
     /**
-     * Shortcut to queue a new {@link WidgetTextMessageWriter} packet. This function makes use of caching mechanisms that
-     * can boost performance when invoked repetitively.
+     * Sends a widget text update using {@link WidgetTextMessageWriter}, with a small cache to avoid sending
+     * duplicate values.
      *
-     * @param msg The message to send.
-     * @param id The widget identifier.
+     * @param msg The text to send.
+     * @param id The widget id to update.
      */
     public void sendText(Object msg, int id) {
         // Retrieve the text that's already on the interface.
@@ -683,31 +616,38 @@ public class Player extends Mob {
     }
 
     /**
-     * Clears the {@link #textCache} for entry {@code id}.
+     * Clears the cached widget text for the given id.
      *
-     * @param id The widget identifier.
+     * @param id The widget identifier to clear.
      */
     public void clearText(int id) {
         textCache.remove(id);
     }
 
     /**
-     * @return {@code true} if this player is a bot.
+     * Returns whether this player is a {@link Bot}.
+     *
+     * @return {@code true} if this player is actually a bot instance.
      */
     public boolean isBot() {
         return this instanceof Bot;
     }
 
     /**
-     * @return This instance, cast to the {@link Bot} type. If this player is not a bot, {@link ClassCastException}
-     * will be thrown.
+     * Casts this player to {@link Bot}.
+     *
+     * @return This instance, cast to {@link Bot}.
+     * @throws ClassCastException If this player is not a bot.
      */
     public Bot asBot() {
         return (Bot) this;
     }
 
     /**
-     * Logs out this player using the logout packet. The proper way to logout the player.
+     * Requests a graceful logout by sending the logout packet.
+     * <p>
+     * This is the normal way to log a player out and will be handled via {@link LogoutService}.
+     * </p>
      */
     public void logout() {
         var channel = client.getChannel();
@@ -717,30 +657,17 @@ public class Player extends Mob {
     }
 
     /**
-     * Logs out this player using the logout packet. The proper way to logout the player.
+     * Forces a logout for this player.
      */
     public void forceLogout() {
-        // todo implement, maybe with a boolean isForcedLogout
-        var channel = client.getChannel();
-        if (channel.isActive()) {
-            queue(new LogoutMessageWriter());
-        }
+        client.setForcedLogout(true);
+        logout();
     }
 
     /**
-     * Disconnects this player's channel. Use this if an error occurs with the player.
-     */
-    public void disconnect() {
-        var channel = client.getChannel();
-        if (channel.isActive()) {
-            channel.disconnect();
-        }
-    }
-
-    /**
-     * Sends the {@code chat} message.
+     * Queues a chat update block for this player.
      *
-     * @param chat The chat instance.
+     * @param chat The chat payload to send.
      */
     public void chat(Chat chat) {
         pendingBlockData.chat(chat);
@@ -748,9 +675,9 @@ public class Player extends Mob {
     }
 
     /**
-     * Traverses the path in {@code forcedMovement}.
+     * Queues a forced movement path using {@link ExactMovement}.
      *
-     * @param move The forced movement path.
+     * @param move The forced movement descriptor.
      */
     public void exactMove(ExactMovement move) {
         pendingBlockData.move(move);
@@ -758,20 +685,28 @@ public class Player extends Mob {
     }
 
     /**
-     * A shortcut function to {@link GameClient#queue(GameMessageWriter)}.
+     * Shortcut for {@link GameClient#queue(GameMessageWriter)}.
      *
-     * @param msg The message to queue in the buffer.
+     * @param msg The message to enqueue.
      */
     public void queue(GameMessageWriter msg) {
         client.queue(msg);
     }
 
     /**
-     * Sends a region update if needed, and refreshes all {@link Entity} types that need to be displayed.
+     * Sends a region update if needed and refreshes nearby {@link Entity} instances.
+     * <p>
+     * This method:
+     * </p>
+     * <ol>
+     *     <li>Detects if a region change has occurred and sends a {@link RegionMessageWriter} if required.</li>
+     *     <li>Handles pending placement (full refresh).</li>
+     *     <li>Delegates to {@link io.luna.game.model.chunk.ChunkManager#sendUpdates(Player, Position, boolean)}.</li>
+     * </ol>
      *
-     * @param oldPosition The player's old position before movement processing.
+     * @param oldPosition The previous position before movement processing.
      */
-    public void sendRegionUpdate(Position oldPosition) { // todo rename
+    public void updateLocalView(Position oldPosition) {
         boolean fullRefresh = false;
         if (lastRegion == null || needsRegionUpdate()) {
             fullRefresh = true;
@@ -779,16 +714,16 @@ public class Player extends Mob {
             lastRegion = position;
             queue(new RegionMessageWriter(position));
         }
-        if (isTeleporting()) {
+        if (isPendingPlacement()) {
             fullRefresh = true;
         }
         world.getChunks().sendUpdates(this, oldPosition, fullRefresh);
     }
 
     /**
-     * Determines if the player needs to send a region update message.
+     * Determines whether this player requires a region update based on their offset from {@link #lastRegion}.
      *
-     * @return {@code true} if the player needs a region update.
+     * @return {@code true} if a region update should be sent.
      */
     public boolean needsRegionUpdate() {
         int deltaX = position.getLocalX(lastRegion);
@@ -797,36 +732,32 @@ public class Player extends Mob {
     }
 
     /**
-     * Plays a random sound from {@code sounds}.
+     * Plays a random sound from the given set of {@link Sounds}.
+     *
+     * @param sounds One or more possible sounds to choose from.
      */
-    public void playRandomSound(Sounds... sound) {
-        playSound(RandomUtils.random(sound), 0);
+    public void playRandomSound(Sounds... sounds) {
+        if (sounds.length == 1) {
+            playSound(sounds[0]);
+        } else if (sounds.length > 1) {
+            playSound(RandomUtils.random(sounds), 0);
+        }
     }
 
     /**
-     * Plays the sound with {@code id} with {@code delay}.
-     */
-    private void playSound(int soundId, int delay) {
-        int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
-        queue(new SoundMessageWriter(soundId, volume, delay));
-    }
-
-    /**
-     * Plays sound with {@code id} with no delay.
-     */
-    private void playSound(int soundId) { // todo no point in magic numbers, reove this
-        playSound(soundId, 0);
-    }
-
-    /**
-     * Plays {@code sound} with no delay.
+     * Plays a {@link Sounds} enum value immediately.
+     *
+     * @param sound The sound to play.
      */
     public void playSound(Sounds sound) {
         playSound(sound, 0);
     }
 
     /**
-     * Plays {@code sound} with {@code delay}.
+     * Plays a {@link Sounds} enum value with a delay in game ticks.
+     *
+     * @param sound The sound to play.
+     * @param delayTicks The delay in game ticks before the sound is played.
      */
     public void playSound(Sounds sound, int delayTicks) {
         int delay = (delayTicks * 600) / 30;
@@ -835,7 +766,9 @@ public class Player extends Mob {
     }
 
     /**
-     * Saves all active {@link PotionCountdownTimer} types to a {@link JsonArray}.
+     * Serializes all active {@link PotionCountdownTimer} actions to JSON for persistence.
+     *
+     * @return A {@link JsonArray} representing all active potion timers.
      */
     public JsonArray savePotionsToJson() {
         JsonArray array = new JsonArray();
@@ -846,7 +779,9 @@ public class Player extends Mob {
     }
 
     /**
-     * Loads all previously active {@link PotionCountdownTimer} types into this player.
+     * Restores all {@link PotionCountdownTimer} actions from the given JSON representation.
+     *
+     * @param array A {@link JsonArray} created by {@link #savePotionsToJson()}, or {@code null}.
      */
     public void loadPotionsFromJson(JsonArray array) {
         if (array != null) {
@@ -857,25 +792,28 @@ public class Player extends Mob {
     }
 
     /**
-     * Returns a new builder that will be used to create dialogues.
+     * Creates a new {@link DialogueQueueBuilder} for this player with a default capacity.
      *
-     * @return The dialogue builder.
+     * @return A new dialogue builder instance.
      */
     public DialogueQueueBuilder newDialogue() {
         return new DialogueQueueBuilder(this, 10);
     }
 
     /**
-     * @return The run energy percentage.
+     * Returns the current run energy percentage.
+     *
+     * @return The run energy (0–100).
      */
     public double getRunEnergy() {
         return runEnergy;
     }
 
     /**
-     * Sets the run energy percentage.
+     * Sets the current run energy percentage and optionally updates the client.
      *
-     * @param newRunEnergy The value to set to.
+     * @param newRunEnergy The new run energy (will be clamped to [0, 100]).
+     * @param update Whether to send an {@link UpdateRunEnergyMessageWriter} to the client.
      */
     public void setRunEnergy(double newRunEnergy, boolean update) {
         if (newRunEnergy > 100.0) {
@@ -891,9 +829,9 @@ public class Player extends Mob {
     }
 
     /**
-     * Increases the current run energy level.
+     * Modifies run energy by a delta amount and updates the client.
      *
-     * @param amount The value to change by.
+     * @param amount The amount to add (or subtract) from the current run energy.
      */
     public void increaseRunEnergy(double amount) {
         double newEnergy = runEnergy + amount;
@@ -906,14 +844,19 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The combined weight of the inventory and equipment.
+     * Returns the combined weight of this player's inventory and equipment.
+     *
+     * @return The combined weight.
      */
     public double getWeight() {
         return weight;
     }
 
     /**
-     * Sets the combined weight of the inventory and equipment.
+     * Sets the combined weight of this player's inventory and equipment and optionally updates the client.
+     *
+     * @param newWeight The new weight value.
+     * @param update Whether to send an {@link UpdateWeightMessageWriter} to the client.
      */
     public void setWeight(double newWeight, boolean update) {
         if (weight != newWeight) {
@@ -925,53 +868,61 @@ public class Player extends Mob {
     }
 
     /**
-     * Sets when the player is unmuted.
+     * Sets the instant when this player will be unmuted.
      *
-     * @param unmuteInstant The value to set to.
+     * @param unmuteInstant The new unmute instant, or {@code null} to clear.
      */
     public void setUnmuteInstant(Instant unmuteInstant) {
         this.unmuteInstant = unmuteInstant;
     }
 
     /**
-     * @return When the player is unmuted.
+     * Returns the instant when this player will be unmuted.
+     *
+     * @return The unmute instant, or {@code null} if not muted.
      */
     public Instant getUnmuteInstant() {
         return unmuteInstant;
     }
 
     /**
-     * Sets when the player is unbanned.
+     * Sets the instant when this player will be unbanned.
      *
-     * @param unbanInstant The value to set to.
+     * @param unbanInstant The new unban instant, or {@code null} to clear.
      */
     public void setUnbanInstant(Instant unbanInstant) {
         this.unbanInstant = unbanInstant;
     }
 
     /**
-     * @return When the player is unbanned.
+     * Returns the instant when this player will be unbanned.
+     *
+     * @return The unban instant, or {@code null} if not banned.
      */
     public Instant getUnbanInstant() {
         return unbanInstant;
     }
 
     /**
-     * @return {@code true} if the player is muted.
+     * Returns whether this player is currently muted.
+     *
+     * @return {@code true} if {@link #unmuteInstant} is set and in the future.
      */
     public boolean isMuted() {
         return unmuteInstant != null && !Instant.now().isAfter(unmuteInstant);
     }
 
     /**
-     * @return The rights.
+     * Returns this player's rights.
+     *
+     * @return The current {@link PlayerRights}.
      */
     public PlayerRights getRights() {
         return rights;
     }
 
     /**
-     * Sets the rights.
+     * Sets this player's rights.
      *
      * @param rights The new rights.
      */
@@ -980,28 +931,36 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The username.
+     * Returns this player's username.
+     *
+     * @return The username string.
      */
     public String getUsername() {
         return credentials.getUsername();
     }
 
     /**
-     * @return The hashed password..
+     * Returns the stored hashed password, if any.
+     *
+     * @return The hashed password, or {@code null}.
      */
     public String getHashedPassword() {
         return hashedPassword;
     }
 
     /**
-     * Sets the hashed password.
+     * Sets the hashed password for this player.
+     *
+     * @param hashedPassword The new hashed password.
      */
     public void setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
     }
 
     /**
-     * Sets the plaintext password.
+     * Sets the plaintext password and clears any previously stored hash.
+     *
+     * @param password The plaintext password.
      */
     public void setPassword(String password) {
         credentials.setPassword(password);
@@ -1009,13 +968,17 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The password.
+     * Returns the plaintext password (if stored).
+     *
+     * @return The plaintext password.
      */
     public String getPassword() {
         return credentials.getPassword();
     }
 
     /**
+     * Returns the hashed username used for efficient lookups.
+     *
      * @return The username hash.
      */
     public long getUsernameHash() {
@@ -1023,16 +986,22 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The game client.
+     * Returns the {@link GameClient} associated with this player.
+     *
+     * @return The active game client.
      */
     public GameClient getClient() {
         return client;
     }
 
     /**
-     * Sets the game client.
+     * Sets the {@link GameClient} for this player.
      *
-     * @param newClient The value to set to.
+     * <p>
+     * This may only be called once; subsequent calls will log a warning and be ignored.
+     * </p>
+     *
+     * @param newClient The new client instance to associate.
      */
     public void setClient(GameClient newClient) {
         if (client != null) {
@@ -1043,39 +1012,13 @@ public class Player extends Mob {
     }
 
     /**
-     * @return A set of local players. Should only be accessed from the updating threads.
-     */
-    public Set<Player> getUpdatePlayers() {
-        return updatePlayers;
-    }
-
-    /**
-     * @return A set of local npcs. Should only be accessed from the updating threads.
-     */
-    public Set<Npc> getUpdateNpcs() {
-        return updateNpcs;
-    }
-
-    /**
-     * Sets the music tab data.
+     * Sets whether this player is currently running.
      *
-     * @param musicTab The new value.
-     */
-    public void setMusicTab(MusicTab musicTab) {
-        this.musicTab = musicTab;
-    }
-
-    /**
-     * @return The music tab data.
-     */
-    public MusicTab getMusicTab() {
-        return musicTab;
-    }
-
-    /**
-     * Sets if this player is running.
+     * <p>
+     * This updates both the running varp and the walking queue's running mode.
+     * </p>
      *
-     * @param running The new value.
+     * @param running {@code true} to enable running, {@code false} to disable.
      */
     public void setRunning(boolean running) {
         sendVarp(PersistentVarp.RUNNING, running);
@@ -1083,264 +1026,232 @@ public class Player extends Mob {
     }
 
     /**
-     * @return {@code true} if this player is running.
+     * Returns whether this player is currently running.
+     *
+     * @return {@code true} if the running varp is set, {@code false} otherwise.
      */
     public boolean isRunning() {
         return varpManager.getValue(PersistentVarp.RUNNING) == 1;
     }
 
     /**
-     * @return The cached update block.
-     */
-    public ByteMessage getCachedBlock() {
-        return cachedBlock;
-    }
-
-    /**
-     * @return {@code true} if the player has a cached block.
-     */
-    public boolean hasCachedBlock() {
-        return cachedBlock != null;
-    }
-
-    /**
-     * Sets the cached update block.
+     * Returns the last known region position used for region-change detection.
      *
-     * @param newMsg The value to set to.
-     */
-    public void setCachedBlock(ByteMessage newMsg) {
-        // Retain a reference to the new cached block.
-        if (newMsg != null) {
-            newMsg.retain();
-        }
-
-        // We have a cached block, release a reference to it.
-        if (cachedBlock != null) {
-            cachedBlock.release();
-        }
-
-        cachedBlock = newMsg;
-    }
-
-    /**
-     * @return The last known region.
+     * @return The last region position, or {@code null} if unknown.
      */
     public Position getLastRegion() {
         return lastRegion;
     }
 
     /**
-     * Sets the last known region.
+     * Sets the last known region position for region-change detection.
      *
-     * @param lastRegion The value to set to.
+     * @param lastRegion The new last-region position.
      */
     public void setLastRegion(Position lastRegion) {
         this.lastRegion = lastRegion;
     }
 
     /**
-     * @return {@code true} if the region has changed.
+     * Returns whether this player's region changed during the last update.
+     *
+     * @return {@code true} if the region changed.
      */
     public boolean isRegionChanged() {
         return regionChanged;
     }
 
     /**
-     * Sets if the region has changed.
+     * Marks whether this player's region changed during the last update.
      *
-     * @param regionChanged The value to set to.
+     * @param regionChanged The new flag value.
      */
     public void setRegionChanged(boolean regionChanged) {
         this.regionChanged = regionChanged;
     }
 
     /**
-     * @return The appearance.
+     * Returns the current appearance object for this player.
+     *
+     * @return The {@link PlayerAppearance}.
      */
     public PlayerAppearance getAppearance() {
         return appearance;
     }
 
-
     /**
-     * @return The inventory.
+     * Returns the inventory container.
+     *
+     * @return The {@link Inventory}.
      */
     public Inventory getInventory() {
         return inventory;
     }
 
     /**
-     * @return The equipment.
+     * Returns the equipment container.
+     *
+     * @return The {@link Equipment}.
      */
     public Equipment getEquipment() {
         return equipment;
     }
 
     /**
-     * @return The bank.
+     * Returns the bank container.
+     *
+     * @return The {@link Bank}.
      */
     public Bank getBank() {
         return bank;
     }
 
     /**
-     * @return The prayer icon.
+     * Returns the current player model animation set.
+     *
+     * @return The {@link PlayerModelAnimation}.
      */
-    public PrayerIcon getPrayerIcon() {
-        return prayerIcon;
+    public PlayerModelAnimation getModel() {
+        return model;
     }
 
     /**
-     * Sets the prayer icon.
+     * Sets the player model animation set and flags an appearance update.
      *
-     * @param prayerIcon The value to set to.
+     * @param model The new model animation set.
      */
-    public void setPrayerIcon(PrayerIcon prayerIcon) {
-        this.prayerIcon = prayerIcon;
+    public void setModel(PlayerModelAnimation model) {
+        this.model = model;
         flags.flag(UpdateFlag.APPEARANCE);
     }
 
     /**
-     * @return The skull icon.
-     */
-    public SkullIcon getSkullIcon() {
-        return skullIcon;
-    }
-
-    /**
-     * Sets the skull icon.
+     * Returns the active overlay set.
      *
-     * @param skullIcon The value to set to.
-     */
-    public void setSkullIcon(SkullIcon skullIcon) {
-        this.skullIcon = skullIcon;
-        flags.flag(UpdateFlag.APPEARANCE);
-    }
-
-    /**
-     * @return The model animation.
-     */
-    public ModelAnimation getModelAnimation() {
-        return modelAnimation;
-    }
-
-    /**
-     * Sets the model animation.
-     *
-     * @param modelAnimation The value to set to.
-     */
-    public void setModelAnimation(ModelAnimation modelAnimation) {
-        this.modelAnimation = modelAnimation;
-        flags.flag(UpdateFlag.APPEARANCE);
-    }
-
-    /**
-     * @return The interface set.
+     * @return The {@link AbstractOverlaySet}.
      */
     public AbstractOverlaySet getOverlays() {
         return overlays;
     }
 
     /**
-     * @return The game tab set.
+     * Returns the game tab set for this player.
+     *
+     * @return The {@link GameTabSet}.
      */
     public GameTabSet getTabs() {
         return tabs;
     }
 
     /**
-     * Resets the current dialogue queue.
+     * Clears the current dialogue queue, if any.
      */
     public void resetDialogues() {
         setDialogues(null);
     }
 
     /**
-     * Sets the dialouge queue.
+     * Sets the current dialogue queue.
      *
-     * @param dialogues The new value.
+     * @param dialogues The new dialogue queue, or {@code null}.
      */
     public void setDialogues(DialogueQueue dialogues) {
         this.dialogues = dialogues;
     }
 
     /**
-     * @return The dialogue queue.
+     * Returns the current dialogue queue.
+     *
+     * @return The active {@link DialogueQueue}, or {@code null}.
      */
     public DialogueQueue getDialogues() {
         return dialogues;
     }
 
     /**
-     * Returns the private message identifier and subsequently increments it by {@code 1}.
+     * Returns a new private message id and increments the internal counter.
      *
-     * @return The private message identifier.
+     * @return A new private message identifier.
      */
     public int newPrivateMessageId() {
         return privateMsgCounter++;
     }
 
     /**
-     * @return The friend list.
+     * Returns the friend list (username hashes).
+     *
+     * @return The friend set.
      */
     public Set<Long> getFriends() {
         return friends;
     }
 
     /**
-     * @return The ignore list.
+     * Returns the ignore list (username hashes).
+     *
+     * @return The ignore set.
      */
     public Set<Long> getIgnores() {
         return ignores;
     }
 
     /**
-     * @return The interaction menu.
+     * Returns this player's interaction menu.
+     *
+     * @return The {@link PlayerInteractionMenu}.
      */
     public PlayerInteractionMenu getInteractions() {
         return interactions;
     }
 
     /**
-     * @return The IP address currently logged in with.
+     * Returns the current IP address this player is logged in with.
+     *
+     * @return The current IP address.
      */
     public String getCurrentIp() {
         return client.getIpAddress();
     }
 
     /**
-     * @return The last IP address logged in with.
+     * Returns the last IP address this player logged in with.
+     *
+     * @return The last login IP address, or {@code null}.
      */
     public String getLastIp() {
         return lastIp;
     }
 
     /**
-     * Sets the last IP address logged in with.
+     * Sets the last IP address this player logged in with.
      *
-     * @param lastIp The new value.
+     * @param lastIp The new last login IP.
      */
     public void setLastIp(String lastIp) {
         this.lastIp = lastIp;
     }
 
     /**
-     * @return The SQL database ID.
+     * Returns this player's SQL database id, or {@code -1} if not yet assigned.
+     *
+     * @return The database id.
      */
     public int getDatabaseId() {
         return databaseId;
     }
 
     /**
-     * Sets the SQL database ID.
+     * Sets this player's SQL database id.
      *
-     * @param databaseId The new value.
+     * @param databaseId The new database id.
      */
     public void setDatabaseId(int databaseId) {
         this.databaseId = databaseId;
     }
 
     /**
+     * Returns this player's {@link ControllerManager}.
+     *
      * @return The controller manager.
      */
     public ControllerManager getControllers() {
@@ -1348,6 +1259,8 @@ public class Player extends Mob {
     }
 
     /**
+     * Returns this player's {@link PersistentVarpManager}.
+     *
      * @return The varp manager.
      */
     public PersistentVarpManager getVarpManager() {
@@ -1355,35 +1268,45 @@ public class Player extends Mob {
     }
 
     /**
-     * @return The time online.
+     * Returns the session stopwatch tracking how long this player has been online.
+     *
+     * @return The {@link Stopwatch} instance.
      */
     public Stopwatch getTimeOnline() {
         return timeOnline;
     }
 
     /**
-     * @return The current interaction task.
+     * Returns the current {@link InteractionTask}, if any.
+     *
+     * @return The interaction task, or {@code null}.
      */
     public InteractionTask getInteractionTask() {
         return interactionTask;
     }
 
     /**
-     * Sets the current interaction task.
+     * Sets the current {@link InteractionTask}.
+     *
+     * @param interactionTask The new interaction task, or {@code null}.
      */
     public void setInteractionTask(InteractionTask interactionTask) {
         this.interactionTask = interactionTask;
     }
 
     /**
-     * @return All cached values for varps.
+     * Returns the cached varp values keyed by varp id.
+     *
+     * @return The cached varp map.
      */
     public Map<Integer, Integer> getCachedVarps() {
         return cachedVarps;
     }
 
     /**
-     * @return The current spellbook.
+     * Returns the currently active spellbook, defaulting to {@link Spellbook#REGULAR} if {@code null}.
+     *
+     * @return The active spellbook.
      */
     public Spellbook getSpellbook() {
         if (spellbook == null) {
@@ -1393,10 +1316,10 @@ public class Player extends Mob {
     }
 
     /**
-     * Updates the current spellbook and potentially the magic tab as well.
+     * Updates the active spellbook and optionally refreshes the magic tab.
      *
-     * @param newSpellbook The new spellbok.
-     * @param updateTab If the magic tab should be updated.
+     * @param newSpellbook The new spellbook, or {@code null} to reset to regular.
+     * @param updateTab Whether the magic tab interface should be refreshed.
      */
     public void updateSpellbook(Spellbook newSpellbook, boolean updateTab) {
         if (newSpellbook == null) {
@@ -1409,51 +1332,42 @@ public class Player extends Mob {
     }
 
     /**
-     * Updates the current spellbook and the magic tab.
+     * Convenience method to set the active spellbook and refresh the magic tab.
+     *
+     * @param newSpellbook The new spellbook.
      */
     public void setSpellbook(Spellbook newSpellbook) {
         updateSpellbook(newSpellbook, true);
     }
 
     /**
-     * @return The local players.
-     */
-    public Set<Player> getLocalPlayers() {
-        return localPlayers;
-    }
-
-    /**
-     * @return The local bots.
-     */
-    public Set<Bot> getLocalBots() {
-        return localBots;
-    }
-
-    /**
-     * @return The local npcs.
-     */
-    public Set<Npc> getLocalNpcs() {
-        return localNpcs;
-    }
-
-    /**
-     * Sets when this account was first created on.
+     * Sets the instant this account was first created.
      *
-     * @param createdAt The new value.
+     * @param createdAt The creation instant.
      */
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
     /**
-     * @return When this account was first created on.
+     * Returns the instant this account was first created.
+     *
+     * @return The creation instant.
      */
     public Instant getCreatedAt() {
         return createdAt;
     }
 
     /**
-     * @return The total amount of time played.
+     * Returns the total amount of time this account has been played.
+     *
+     * <p>
+     * This method updates {@link #timePlayed} by adding the elapsed {@link #timeOnline} duration
+     * since the last call, then resets and restarts the stopwatch. Avoid calling this too frequently
+     * if you need a stable snapshot of playtime.
+     * </p>
+     *
+     * @return The accumulated time played.
      */
     public Duration getTimePlayed() {
         if (timePlayed == null) {
@@ -1466,28 +1380,79 @@ public class Player extends Mob {
     }
 
     /**
-     * Sets the total time played (total time logged in).
+     * Returns this player's local mob repository used during updating.
      *
-     * @param timePlayed The new value.
+     * @return The {@link LocalMobRepository}.
+     */
+    public LocalMobRepository getLocalMobs() {
+        return localMobs;
+    }
+
+    /**
+     * Sets the total time played stored for this account.
+     *
+     * @param timePlayed The new total playtime value.
      */
     public void setTimePlayed(Duration timePlayed) {
         this.timePlayed = timePlayed;
     }
 
     /**
-     * Sets the new privacy options.
+     * Sets this player's privacy options.
+     *
+     * @param privacyOptions The new privacy options.
      */
     public void setPrivacyOptions(PlayerPrivacy privacyOptions) {
         this.privacyOptions = privacyOptions;
     }
 
     /**
-     * @return The privacy options.
+     * Returns this player's privacy options.
+     *
+     * @return The privacy options (never {@code null}).
      */
     public PlayerPrivacy getPrivacyOptions() {
         if (privacyOptions == null) {
             privacyOptions = new PlayerPrivacy();
         }
         return privacyOptions;
+    }
+
+    /**
+     * Returns the current prayer icon for this player.
+     *
+     * @return The {@link PrayerIcon}.
+     */
+    public PrayerIcon getPrayerIcon() {
+        return prayerIcon;
+    }
+
+    /**
+     * Sets the prayer icon for this player and flags an appearance update.
+     *
+     * @param prayerIcon The new prayer icon.
+     */
+    public void setPrayerIcon(PrayerIcon prayerIcon) {
+        this.prayerIcon = prayerIcon;
+        flags.flag(UpdateFlag.APPEARANCE);
+    }
+
+    /**
+     * Returns the current skull icon for this player.
+     *
+     * @return The {@link SkullIcon}.
+     */
+    public SkullIcon getSkullIcon() {
+        return skullIcon;
+    }
+
+    /**
+     * Sets the skull icon for this player and flags an appearance update.
+     *
+     * @param skullIcon The new skull icon.
+     */
+    public void setSkullIcon(SkullIcon skullIcon) {
+        this.skullIcon = skullIcon;
+        flags.flag(UpdateFlag.APPEARANCE);
     }
 }

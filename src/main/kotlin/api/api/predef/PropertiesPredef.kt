@@ -41,10 +41,13 @@ val logger = bindings.logger!!
 val scriptListeners: MutableList<EventListener<*>> = bindings.listeners!!
 
 /**
- * The script event listeners.
+ * The script event matcher listeners.
  */
 val scriptMatchers: MutableList<EventMatcherListener<*>> = bindings.matchers!!
 
+/**
+ * The script event injectors.
+ */
 val scriptInjectors: MutableList<BotContextInjector> = bindings.injectors!!
 
 /**
@@ -206,7 +209,7 @@ val Equipment.hands: Item?
     get() = this[Equipment.HANDS]
 
 val Equipment.feet: Item?
-    get() = this[Equipment.FEET]
+    get() = this[Equipment.BOOTS]
 
 val Equipment.ring: Item?
     get() = this[Equipment.RING]

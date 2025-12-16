@@ -64,13 +64,12 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                     Thieving.rollRogueEquipment(mob, target)
                 } else {
                     val stunDuration = Duration.ofSeconds(thievable.stun).toTicks()
-                    val hit = Hit(thievable.damage.random())
 
                     mob.playSound(Sounds.PICKPOCKET_FAILED)
                     mob.sendMessage("You have been stunned.");
                     mob.animation(Animation(424))
                     mob.graphic(Graphic(80, 5, 60))
-                    mob.damage(hit)
+                    mob.damage(thievable.damage.random())
                     target.animation(Animation(422))
                     target.interact(mob)
                     target.speak("What do you think you're doing?!")

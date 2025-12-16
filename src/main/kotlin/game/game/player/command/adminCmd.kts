@@ -178,7 +178,7 @@ cmd("set_rights", RIGHTS_ADMIN) {
 /**
  * A command that opens the player's bank.
  */
-cmd("engine/bank", RIGHTS_ADMIN) { plr.bank.open() }
+cmd("bank", RIGHTS_ADMIN) { plr.bank.open() }
 
 /**
  * A command that turns the player into a non-player character.
