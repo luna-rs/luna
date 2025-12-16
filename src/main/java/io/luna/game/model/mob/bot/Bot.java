@@ -110,9 +110,10 @@ public final class Bot extends Player {
         }
 
         /**
-         * Sets the spawn position.
+         * Sets the default spawn position.
          *
-         * @param spawnPosition The desired spawn location.
+         * @param spawnPosition The desired spawn location. Only applies for new bots, old bots will log in where they
+         * previously left off.
          * @return This builder instance.
          */
         public Builder setSpawnPosition(Position spawnPosition) {
@@ -180,6 +181,11 @@ public final class Bot extends Player {
     private final BotActionHandler actionHandler = new BotActionHandler(this);
 
     /**
+     * The default spawn position.
+     */
+    private final Position spawnPosition;
+
+    /**
      * Whether this bot is temporary (non-persistent).
      */
     private boolean temporary;
@@ -195,14 +201,14 @@ public final class Bot extends Player {
      * @param context The context instance.
      * @param username The username.
      * @param password The password.
-     * @param position The spawn position.
+     * @param position The default spawn position.
      * @param temporary Whether this bot is temporary (non-persistent).
      */
     private Bot(LunaContext context, String username, String password, Position position, boolean temporary) {
         super(context, new PlayerCredentials(username, password));
         this.temporary = temporary;
-        this.position = position;
 
+        spawnPosition = position;
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
@@ -266,6 +272,9 @@ public final class Bot extends Player {
                     }
                     if (world.getPlayers().add(this)) {
                         loadData(data);
+                        if (data == null) {
+                            setPosition(spawnPosition);
+                        }
                         world.getBots().add(this);
                         setState(EntityState.ACTIVE);
                         log("I'm alive!");
