@@ -1,5 +1,6 @@
 package io.luna.game.model.mob;
 
+import com.google.common.collect.ImmutableSet;
 import game.player.Sounds;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
@@ -19,8 +20,10 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 import io.luna.net.codec.ByteMessage;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -128,13 +131,23 @@ public abstract class Mob extends Entity {
     private volatile UpdateBlockData blockData;
 
     /**
+     * Immutable snapshot of update flags for this tick.
+     * <p>
+     * This is published from the game thread by {@link #buildBlockData()} and may then be read safely from any thread
+     * (e.g., by the player/NPC update encoders).
+     * </p>
+     */
+    private volatile ImmutableSet<UpdateFlag> flagData;
+
+    /**
      * Cached encoded update block for this mob (per tick), used to avoid re-encoding the same block for multiple
      * observers.
      * <p>
-     * This ByteMessage is reference-counted; see {@link #setCachedBlock(ByteMessage)} for semantics.
+     * The underlying {@link ByteBuf} is reference-counted; see {@link #acquireCachedBlock()},
+     * {@link #cacheBlockIfAbsent(ByteMessage)}, and {@link #clearCachedBlock()} for semantics.
      * </p>
      */
-    private volatile ByteMessage cachedBlock;
+    private final AtomicReference<ByteBuf> cachedBlock = new AtomicReference<>();
 
     /**
      * The current transform id to apply for this mob, or {@code -1} if not transformed.
@@ -232,9 +245,99 @@ public abstract class Mob extends Entity {
      * </p>
      */
     public final void buildBlockData() {
+        flagData = flags.snapshot();
         if (blockData == null || !flags.isEmpty()) {
             // Only build block data when actually needed.
             blockData = pendingBlockData.build();
+        }
+    }
+
+
+    /**
+     * Acquires a safe, read-only view of the cached encoded update block for this mob.
+     * <p>
+     * If a cached block is present, this method returns a {@link ByteBuf} view created via
+     * {@link ByteBuf#retainedDuplicate()}. This has two important properties:
+     * </p>
+     * <ul>
+     *     <li><b>Pins lifetime:</b> the returned buffer's reference count is incremented, preventing it from being
+     *     freed while the caller is using it.</li>
+     *     <li><b>Independent indices:</b> the returned buffer has its own reader/writer indices, so copying from it
+     *     won't interfere with other readers.</li>
+     * </ul>
+     * <p>
+     * The returned buffer must be treated as <b>read-only</b>. Callers must always release it when finished:
+     * </p>
+     *
+     * <pre>{@code
+     * ByteBuf buf = mob.acquireCachedBlock();
+     * if (buf != null) {
+     *     try {
+     *         // copy from buf
+     *     } finally {
+     *         buf.release();
+     *     }
+     * }
+     * }</pre>
+     *
+     * @return A retained duplicate of the cached update block, or {@code null} if none is cached.
+     */
+    public ByteBuf acquireCachedBlock() {
+        ByteBuf buf = cachedBlock.get();
+        return buf == null ? null : buf.retainedDuplicate();
+    }
+
+    /**
+     * Attempts to publish an encoded update block into this mob's per-tick cache.
+     * <p>
+     * This method uses a compare-and-set (CAS) strategy so that the first thread to compute an update block
+     * for this mob during the current tick "wins", and all other threads reuse the already-cached block.
+     * </p>
+     * <p>
+     * The cached instance is stored as a {@link ByteBuf} created via {@link ByteBuf#retainedDuplicate()} from
+     * {@code msg}'s underlying buffer. This avoids copying bytes while ensuring the cached buffer:
+     * </p>
+     * <ul>
+     *     <li>has an incremented reference count for safe sharing, and</li>
+     *     <li>has independent indices so readers don't interfere with one another.</li>
+     * </ul>
+     * <p>
+     * If caching fails because another thread already published a block, the duplicate created by this method
+     * is released before returning.
+     * </p>
+     *
+     * @param msg The newly encoded update block to cache.
+     * @return {@code true} if the block was cached by this call, or {@code false} if a block was already cached.
+     */
+    public boolean cacheBlockIfAbsent(ByteMessage msg) {
+        ByteBuf cachedMsg = msg.getBuffer().retainedDuplicate();
+        if (cachedBlock.compareAndSet(null, cachedMsg)) {
+            if (this instanceof Npc && asNpc().getIndex() == 1)
+                System.err.println("cached block , won by " + Thread.currentThread().getName() + ", refs: " + cachedMsg.refCnt());
+            return true;
+        }
+        cachedMsg.release();
+        return false;
+    }
+
+    /**
+     * Clears the cached update block for this mob.
+     * <p>
+     * This is intended to be called once per tick (typically during post-synchronization) after all update writers
+     * have finished reading the cached block. If a cached block is present, this method releases the mob's cached
+     * reference.
+     * </p>
+     * <p>
+     * Callers must ensure they do not clear the cache while other threads may still be using a buffer acquired via
+     * {@link #acquireCachedBlock()}.
+     * </p>
+     */
+    public void clearCachedBlock() {
+        ByteBuf old = cachedBlock.getAndSet(null);
+        if (old != null) {
+            if (this instanceof Npc && asNpc().getIndex() == 1)
+                System.err.println("About to clear old block, refs: " + old.refCnt());
+            old.release();
         }
     }
 
@@ -798,56 +901,12 @@ public abstract class Mob extends Entity {
     }
 
     /**
-     * Returns the cached encoded update block for this mob, if any.
-     * <p>
-     * The returned {@link ByteMessage} is reference-counted. Callers must <b>not</b> modify its contents; it is intended
-     * to be treated as read-only and only copied from (e.g., via {@code putBytes}).
-     * </p>
+     * Returns the immutable snapshot of {@link UpdateFlagSet} built for this tick.
      *
-     * @return The cached update block, or {@code null} if none is cached.
+     * @return The current flag data snapshot.
      */
-    public ByteMessage getCachedBlock() {
-        return cachedBlock;
-    }
-
-    /**
-     * Returns {@code true} if this mob currently has a cached encoded update block.
-     *
-     * @return {@code true} if a cached block is present, otherwise {@code false}.
-     */
-    public boolean hasCachedBlock() {
-        return cachedBlock != null;
-    }
-
-    /**
-     * Sets the cached encoded update block for this mob.
-     * <p>
-     * Reference-counting semantics:
-     * </p>
-     * <ul>
-     *     <li>If {@code newMsg} is non-null, its reference count is incremented via {@link ByteMessage#retain()}.</li>
-     *     <li>If an existing {@link #cachedBlock} is present, its reference count is decremented via {@link ByteMessage#release()}.</li>
-     *     <li>The internal {@link #cachedBlock} reference is then updated to {@code newMsg}.</li>
-     * </ul>
-     * <p>
-     * Callers must ensure that {@code newMsg} will not be modified after passing it here; it is reused as a shared,
-     * read-only buffer for all observers of this mob for the duration of the tick.
-     * </p>
-     *
-     * @param newMsg The new cached block, or {@code null} to clear.
-     */
-    public void setCachedBlock(ByteMessage newMsg) {
-        // Retain a reference to the new cached block.
-        if (newMsg != null) {
-            newMsg.retain();
-        }
-
-        // If we already have a cached block, release its reference.
-        if (cachedBlock != null) {
-            cachedBlock.release();
-        }
-
-        cachedBlock = newMsg;
+    public ImmutableSet<UpdateFlag> getFlagData() {
+        return flagData;
     }
 
     /**
