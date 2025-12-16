@@ -63,11 +63,10 @@ public final class DialogueQueueBuilder {
      * Creates a new {@link DialogueQueueBuilder}.
      *
      * @param player The player.
-     * @param initialSize The initial size of the internal queue.
      */
-    public DialogueQueueBuilder(Player player, int initialSize) {
+    public DialogueQueueBuilder(Player player) {
         this.player = player;
-        dialogues = new ArrayDeque<>(initialSize);
+        dialogues = new ArrayDeque<>();
     }
 
     /**
