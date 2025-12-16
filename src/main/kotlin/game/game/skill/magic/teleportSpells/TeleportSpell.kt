@@ -87,7 +87,7 @@ enum class TeleportSpell(val level: Int,
                xp = 68.0,
                button = 1541,
                displayName = "the Watchtower",
-               destination = Position(2546, 3115),
+               destination = Position(2547, 3112),
                style = TeleportStyle.REGULAR,
                requirements = listOf(
                    RuneRequirement(Rune.EARTH, 2),

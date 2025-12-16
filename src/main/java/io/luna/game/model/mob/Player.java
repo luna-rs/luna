@@ -770,7 +770,7 @@ public class Player extends Mob {
      *
      * @return A {@link JsonArray} representing all active potion timers.
      */
-    public JsonArray savePotionsToJson() {
+    public JsonArray savePotionsToJson() { // todo left off here, needs testing tomorrow
         JsonArray array = new JsonArray();
         for (var timer : actions.getAll(PotionCountdownTimer.class)) {
             array.add(timer.saveJson());
@@ -797,7 +797,7 @@ public class Player extends Mob {
      * @return A new dialogue builder instance.
      */
     public DialogueQueueBuilder newDialogue() {
-        return new DialogueQueueBuilder(this, 10);
+        return new DialogueQueueBuilder(this);
     }
 
     /**
