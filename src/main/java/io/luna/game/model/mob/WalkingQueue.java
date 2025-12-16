@@ -170,13 +170,24 @@ public final class WalkingQueue {
      */
     public void walkRandomDirection() {
         RandomUtils.shuffle(shuffledDirections);
-        CollisionManager collision = mob.getWorld().getCollisionManager();
         for (Direction dir : shuffledDirections) {
-            if (collision.traversable(mob.getPosition(), EntityType.NPC, dir)) {
-                walk(mob.getPosition().translate(1, dir));
+            if (walk(dir)) {
                 break;
             }
         }
+    }
+
+    /**
+     * Forces the mob to walk {@code 1} square in a random traversable NESW direction. If none of the directions are
+     * traversable, the mob will not move.
+     */
+    public boolean walk(Direction dir) {
+        CollisionManager collision = mob.getWorld().getCollisionManager();
+        if (collision.traversable(mob.getPosition(), EntityType.NPC, dir)) {
+            walk(mob.getPosition().translate(1, dir));
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -264,7 +275,7 @@ public final class WalkingQueue {
         for (; ; ) {
             Position nextPosition = path.poll();
             // TODO check for obstacles?
-            reached = isEntity ? collisionManager.reached(lastPosition, lastPosition, (Entity) target, 1) :
+            reached = isEntity ? collisionManager.reached(lastPosition, (Entity) target, 1) :
                     target.absLocation().isWithinDistance(lastPosition, 1);
             if (nextPosition == null || reached) {
                 break;
@@ -479,11 +490,14 @@ public final class WalkingQueue {
     }
 
     // TODO Only use BotPathfinder for long paths using the movement stack. For regular game engine pathing such as
-    // following, the default PlayerPathfinder should be used.
-    public Deque<Step> findPath(Locatable target, boolean safe) {
-        Position start = mob.getPosition();
-        Position end = target.absLocation();
-        Deque<Position> positionPath = getPathfinder().find(start, end);
+// following, the default PlayerPathfinder should be used.
+    public Deque<Step> findPath(Position target, boolean safe) {
+        return findPath(target, safe, null);
+    }
+
+    public Deque<Step> findPath(Position target, boolean safe, GamePathfinder<Position> pf) {
+        Position start = mob.getPosition(); // todo move this to arg
+        Deque<Position> positionPath = (pf == null ? getPathfinder() : pf).find(start, target);
         Deque<Step> stepPath = new ArrayDeque<>(positionPath.size());
         Position last = start;
         for (; ; ) {
@@ -500,7 +514,6 @@ public final class WalkingQueue {
         }
         return stepPath;
     }
-
 
     /**
      * Returns the current size of the walking queue.

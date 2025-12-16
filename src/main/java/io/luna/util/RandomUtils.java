@@ -141,7 +141,7 @@ public final class RandomUtils {
      *
      * @return {@code true} or {@code false}, chosen at random.
      */
-    public static boolean randomBoolean() {
+    public static boolean nextBoolean() {
         return ThreadLocalRandom.current().nextBoolean();
     }
 
@@ -223,6 +223,9 @@ public final class RandomUtils {
     public static int random(Range<Integer> range) {
         int low = range.hasLowerBound() ? range.lowerEndpoint() : Integer.MIN_VALUE;
         int high = range.hasUpperBound() ? range.upperEndpoint() : Integer.MAX_VALUE;
+        if (low == high) {
+            return low;
+        }
         if (range.upperBoundType() == BoundType.OPEN && range.lowerBoundType() == BoundType.CLOSED)
             return inclusive(low, high - 1);
         if (range.upperBoundType() == BoundType.CLOSED && range.lowerBoundType() == BoundType.OPEN)

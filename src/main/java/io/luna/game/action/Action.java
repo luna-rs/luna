@@ -26,7 +26,7 @@ public abstract class Action<T extends Mob> {
     /**
      * The logger.
      */
-    private static final Logger logger = LogManager.getLogger();
+    protected static final Logger logger = LogManager.getLogger();
 
     /**
      * The mob assigned to this action.

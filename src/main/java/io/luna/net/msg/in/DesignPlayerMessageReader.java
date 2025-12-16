@@ -2,7 +2,7 @@ package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.DesignPlayerEvent;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerAppearance.DesignPlayerInterface;
+import io.luna.game.model.mob.block.PlayerAppearance.DesignPlayerInterface;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 

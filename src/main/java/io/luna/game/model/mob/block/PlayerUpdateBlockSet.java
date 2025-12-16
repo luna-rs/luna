@@ -4,6 +4,7 @@ package io.luna.game.model.mob.block;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
+import io.netty.buffer.ByteBuf;
 
 /**
  * Handles encoding of all {@link UpdateBlock} types relevant to players.
@@ -31,9 +32,14 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
     @Override
     public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
         // The block has already been encoded for someone this cycle; reuse it.
-        if (state == UpdateState.UPDATE_LOCAL && player.hasCachedBlock()) {
-            msg.putBytes(player.getCachedBlock());
-            return;
+        ByteBuf cachedBlock = player.acquireCachedBlock();
+        if (state == UpdateState.UPDATE_LOCAL && cachedBlock != null) {
+            try {
+                msg.putBytes(cachedBlock);
+                return;
+            } finally {
+                cachedBlock.release();
+            }
         }
 
         ByteMessage blockMsg = ByteMessage.raw();
@@ -42,8 +48,8 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
             msg.putBytes(blockMsg);
 
             // Cache the encoded block for someone else to reuse within this cycle.
-            if(state == UpdateState.UPDATE_LOCAL) {
-                player.setCachedBlock(blockMsg);
+            if (state == UpdateState.UPDATE_LOCAL) {
+                player.cacheBlockIfAbsent(blockMsg);
             }
         } finally {
             // Release the temporary buffer now that the cached copy has been made.

@@ -100,7 +100,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
             }
 
             // Include block if flagged.
-            if (mob.getFlags().flagged(flag)) {
+            if (mob.getFlagData().contains(flag)) {
                 mask |= block.getMask(mob);
                 encodeBlocks.add(block);
             }
@@ -131,7 +131,7 @@ public abstract class AbstractUpdateBlockSet<E extends Mob> {
      * @param state The current update state.
      */
     public void encode(E mob, ByteMessage msg, UpdateState state) {
-        if (!mob.getFlags().isEmpty() || state == ADD_LOCAL) {
+        if (!mob.getFlagData().isEmpty() || state == ADD_LOCAL) {
             addBlockSet(mob, msg, state);
         }
     }

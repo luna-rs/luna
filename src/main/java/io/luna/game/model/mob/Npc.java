@@ -24,23 +24,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Represents a non-player-controlled mob in the world.
- * <p>
- * An {@link Npc} is defined by:
- * <ul>
- *     <li>A base spawn identifier and {@link NpcDefinition}.</li>
- *     <li>An optional {@link NpcCombatDefinition} describing combat stats and respawn time.</li>
- *     <li>A base spawn {@link Position}, used for respawning and wandering bounds.</li>
- *     <li>An optional {@link #defaultDirection} that can lock the NPC's facing direction
- *     and effectively make it stationary.</li>
- * </ul>
- * <p>
- * The class also exposes helpers for:
- * <ul>
- *     <li>Transforming the NPC into another definition.</li>
- *     <li>Checking whether an {@link Entity} is inside the NPC's viewing cone.</li>
- *     <li>Starting simple or “smart” wandering actions within a radius.</li>
- *     <li>Tracking nearby human players via {@link #getLocalHumans()}.</li>
- * </ul>
  *
  * @author lare96
  */
@@ -64,9 +47,8 @@ public class Npc extends Mob {
     /**
      * The direction this NPC should always face, if present.
      * <p>
-     * When this value is present, the NPC is considered stationary and will not perform
-     * wandering movements. It may still turn to face interacting entities if logic
-     * elsewhere overrides this behaviour.
+     * When this value is present, the NPC is considered stationary and will not perform wandering movements. It may
+     * still turn to face interacting entities if logic elsewhere overrides this behaviour.
      */
     private Optional<Direction> defaultDirection = Optional.empty();
 
@@ -78,39 +60,30 @@ public class Npc extends Mob {
     /**
      * The current combat definition for this NPC, if any.
      * <p>
-     * This may be empty for non-combat or “dummy” NPCs.
+     * This may be empty for non-combat or non-attackable NPCs.
      */
     private Optional<NpcCombatDefinition> combatDefinition;
 
     /**
-     * The remaining ticks until this NPC should respawn after death.
+     * The time, in ticks until this NPC respawns after death.
      * <p>
-     * A value of {@code -1} usually indicates no respawn time or that respawning
-     * is handled elsewhere.
+     * A value of {@code -1} usually indicates no respawn time or that respawning is handled elsewhere.
      */
     private int respawnTicks;
 
     /**
      * The set of human players that currently have this NPC in their local view.
      * <p>
-     * This is maintained as a concurrent set and can be used for things like
-     * targeted updates, proximity-based behaviour, or analytics.
+     * This is maintained as a concurrent set and can be used for things like targeted updates, proximity-based
+     * behaviour, or analytics.
      */
     private final Set<Player> localHumans = Sets.newConcurrentHashSet();
 
     /**
      * Creates a new {@link Npc}.
-     * <p>
-     * This constructor:
-     * <ul>
-     *     <li>Initializes the base identifier and spawn position.</li>
-     *     <li>Loads the {@link NpcDefinition} and {@link NpcCombatDefinition} for the ID.</li>
-     *     <li>Initializes combat skills based on the combat definition, if present.</li>
-     *     <li>Sets the NPC's current position to the given spawn position.</li>
-     * </ul>
      *
-     * @param context  The server context.
-     * @param id       The base NPC identifier.
+     * @param context The server context.
+     * @param id The base NPC identifier.
      * @param position The initial spawn position.
      */
     public Npc(LunaContext context, int id, Position position) {
@@ -130,12 +103,6 @@ public class Npc extends Mob {
         setPosition(position);
     }
 
-    /**
-     * Compares this NPC to another object for equality based on index identity.
-     *
-     * @param obj The object to compare with.
-     * @return {@code true} if the other object is an {@link Npc} with the same index.
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -148,21 +115,11 @@ public class Npc extends Mob {
         return false;
     }
 
-    /**
-     * Computes a hash code for this NPC based on its index.
-     *
-     * @return The hash code.
-     */
     @Override
     public int hashCode() {
         return Objects.hash(getIndex());
     }
 
-    /**
-     * Returns a debug-friendly string representation of this NPC including index, name and ID.
-     *
-     * @return A string representation of this NPC.
-     */
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).
@@ -171,83 +128,36 @@ public class Npc extends Mob {
                 add("id", getId()).toString();
     }
 
-    /**
-     * Returns the size (width and height) of this NPC in tiles.
-     * <p>
-     * This value comes from the NPC definition and is used for collision, clipping
-     * and spatial calculations.
-     *
-     * @return The size of this NPC.
-     */
     @Override
     public final int size() {
         return definition.getSize();
     }
 
-    /**
-     * Returns the width of this NPC in tiles.
-     *
-     * @return The X-size of this NPC.
-     */
     @Override
     public final int sizeX() {
         return definition.getSize();
     }
 
-    /**
-     * Returns the height of this NPC in tiles.
-     *
-     * @return The Y-size of this NPC.
-     */
     @Override
     public final int sizeY() {
         return definition.getSize();
     }
 
-    /**
-     * Resets any NPC-specific state.
-     * <p>
-     * The base implementation is currently empty; subclasses or future extensions
-     * may override this to clear custom state when the NPC is reused.
-     */
     @Override
     public void reset() {
 
     }
 
-    /**
-     * Returns the combat level of this NPC.
-     *
-     * @return The combat level, or {@code 0} if no combat definition is present.
-     */
     @Override
     public int getCombatLevel() {
         return combatDefinition.map(NpcCombatDefinition::getLevel).orElse(0);
     }
 
-    /**
-     * Returns the maximum hitpoints of this NPC.
-     *
-     * @return The total hitpoints, or {@code -1} if no combat definition is present.
-     */
     @Override
     public int getTotalHealth() {
         return combatDefinition.map(NpcCombatDefinition::getHitpoints).orElse(-1);
     }
 
-    /**
-     * Transforms this NPC into another definition.
-     * <p>
-     * This updates:
-     * <ul>
-     *     <li>The {@link #definition} and {@link #combatDefinition}.</li>
-     *     <li>The skill levels, based on the new combat definition.</li>
-     *     <li>The internal {@code transformId} field.</li>
-     * </ul>
-     * and flags a {@link UpdateFlag#TRANSFORM} so clients update their model.
-     *
-     * @param requestedId The new NPC identifier.
-     */
     @Override
     public void transform(int requestedId) {
         definition = NpcDefinition.ALL.retrieve(requestedId);
@@ -275,7 +185,7 @@ public class Npc extends Mob {
      * If this NPC is currently interacting with an entity, the interacting entity is always
      * considered visible even if outside the normal viewing cone.
      *
-     * @param entity          The entity to test visibility against.
+     * @param entity The entity to test visibility against.
      * @param viewingDistance The maximum distance in tiles at which the NPC can see the entity.
      * @return {@code true} if the entity is within range and inside the NPC's viewing cone.
      */
@@ -456,9 +366,9 @@ public class Npc extends Mob {
      *     (size ≥ 4096), otherwise submits a {@link DumbWanderingAction}.</li>
      * </ul>
      *
-     * @param radius     The wandering radius in tiles. Must be 0 or greater.
-     * @param frequency  The {@link WanderingFrequency} controlling how often the NPC
-     *                   attempts to move within the area.
+     * @param radius The wandering radius in tiles. Must be 0 or greater.
+     * @param frequency The {@link WanderingFrequency} controlling how often the NPC
+     * attempts to move within the area.
      */
     public void startWandering(int radius, WanderingFrequency frequency) {
         checkArgument(radius >= 0, "Radius must be 0 or above.");

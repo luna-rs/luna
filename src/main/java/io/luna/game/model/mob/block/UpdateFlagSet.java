@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.block;
 
+import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import org.jetbrains.annotations.NotNull;
 
@@ -121,6 +122,15 @@ public final class UpdateFlagSet implements Iterable<UpdateFlag> {
      */
     public void clear() {
         flags.clear();
+    }
+
+    /**
+     * Creates an immutable snapshot of the backing update flags. Primarily used by player updating threads.
+     *
+     * @return An immutable snapshot of the flags.
+     */
+    public ImmutableSet<UpdateFlag> snapshot() {
+        return ImmutableSet.copyOf(flags);
     }
 
     /**

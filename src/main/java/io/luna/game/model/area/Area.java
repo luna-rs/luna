@@ -26,7 +26,9 @@ public abstract class Area implements Locatable {
      * @return The created {@link Area} instance.
      */
     public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY) {
-        return new SimpleBoxArea(southWestX, southWestY, northEastX, northEastY);
+        SimpleBoxArea box = new SimpleBoxArea(southWestX, southWestY, northEastX, northEastY);
+        box.setAnchorPosition(new Position(southWestX, southWestY));
+        return box;
     }
 
     /**
@@ -36,7 +38,10 @@ public abstract class Area implements Locatable {
      * @param radius The radius (number of tiles) extending outward in all directions.
      */
     public static SimpleBoxArea of(Position center, int radius) {
-        return of(center.getX() - radius, center.getY() - radius, center.getX() + radius, center.getY() + radius);
+        SimpleBoxArea box = of(center.getX() - radius, center.getY() - radius,
+                center.getX() + radius, center.getY() + radius);
+        box.setAnchorPosition(center);
+        return box;
     }
 
     /**
@@ -57,7 +62,9 @@ public abstract class Area implements Locatable {
      * @return A circular area
      */
     public static CircularArea of(Point center, int radius) {
-        return new CircularArea(center.x, center.y, radius);
+        CircularArea area = new CircularArea(center.x, center.y, radius);
+        area.setAnchorPosition(new Position(center.x, center.y));
+        return area;
     }
 
     /**

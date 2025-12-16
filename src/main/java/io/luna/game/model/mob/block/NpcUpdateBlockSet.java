@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.net.codec.ByteMessage;
+import io.netty.buffer.ByteBuf;
 
 /**
  * Handles encoding of all {@link UpdateBlock} types relevant to NPCs.
@@ -29,16 +30,21 @@ public final class NpcUpdateBlockSet extends AbstractUpdateBlockSet<Npc> {
 
     @Override
     public void addBlockSet(Npc npc, ByteMessage msg, UpdateState state) {
-        if (npc.hasCachedBlock()) {
-            msg.putBytes(npc.getCachedBlock());
-            return;
+        ByteBuf cachedBlock = npc.acquireCachedBlock();
+        if (cachedBlock != null) {
+            try {
+                msg.putBytes(cachedBlock);
+                return;
+            } finally {
+                cachedBlock.release();
+            }
         }
 
         ByteMessage blockMsg = ByteMessage.raw();
         try {
             encodeBlockSet(npc, blockMsg, state);
             msg.putBytes(blockMsg);
-            npc.setCachedBlock(blockMsg);
+            npc.cacheBlockIfAbsent(blockMsg);
         } finally {
             // Release the temporary buffer now that the cached copy has been made.
             blockMsg.release();

@@ -3,7 +3,7 @@ package game.npc.makeOverMage
 import api.predef.*
 import api.predef.ext.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
-import io.luna.game.model.mob.PlayerAppearance
+import io.luna.game.model.mob.block.PlayerAppearance
 
 /**
  * Dialogue for "Talk" option.

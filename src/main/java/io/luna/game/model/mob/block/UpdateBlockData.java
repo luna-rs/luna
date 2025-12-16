@@ -184,13 +184,13 @@ public final class UpdateBlockData {
         public UpdateBlockData build() {
             if (mob instanceof Player) {
                 Player player = mob.asPlr();
-                return new UpdateBlockData(animation, face, speak, graphic, interact, hit1, hit2, mob.getTransformId(),
-                        chat, move, player.getPrayerIcon(), player.getSkullIcon(), player.getAppearance().toArray(),
-                        player.getModel(), player.getEquipment().toArray(), player.getUsernameHash(),
-                        player.getSkills().getCombatLevel(), player.getSkills().getSkillLevel());
+                return new UpdateBlockData( animation, face, speak, graphic, interact, hit1,
+                        hit2, mob.getTransformId(), chat, move, player.getPrayerIcon(), player.getSkullIcon(),
+                        player.getAppearance().toArray(), player.getModel(), player.getEquipment().toArray(),
+                        player.getUsernameHash(), player.getSkills().getCombatLevel(), player.getSkills().getSkillLevel());
             } else {
-                return new UpdateBlockData(animation, face, speak, graphic, interact, hit1, hit2, mob.getTransformId(),
-                        null, null, null, null, null, null, null, 0L, 0, 0);
+                return new UpdateBlockData(animation, face, speak, graphic, interact, hit1,
+                        hit2, mob.getTransformId(), null, null, null, null, null, null, null, 0L, 0, 0);
             }
         }
 

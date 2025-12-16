@@ -124,4 +124,8 @@ public final class ActionQueue {
     public void interruptAll() {
         processing.values().forEach(Action::interrupt);
     }
+
+    public int size() {
+        return processing.size();
+    }
 }
