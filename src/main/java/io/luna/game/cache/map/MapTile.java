@@ -148,7 +148,6 @@ public final class MapTile {
      * @return {@code true} if the tile should block movement, otherwise {@code false}.
      */
     public boolean isBlocked() {
-        // Note: use != 0, not == 1, to be robust if multiple bits are set.
         return (attributes & BLOCKED) != 0 || isWater();
     }
 

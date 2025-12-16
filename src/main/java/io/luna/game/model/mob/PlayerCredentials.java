@@ -3,32 +3,41 @@ package io.luna.game.model.mob;
 import io.luna.util.StringUtils;
 
 /**
- * A model representing a player's credentials.
+ * Holds the authentication credentials for a single player account.
+ * <p>
+ * The username is normalized to lower-case and a pre-computed base-37 hash is stored for efficient lookups and
+ * protocol usage. The password field is mutable so that password changes can be applied in memory and later persisted
+ * by the account persistence layer.
  *
  * @author lare96
  */
 public final class PlayerCredentials {
 
     /**
-     * The username.
+     * The normalized, lower-case username for this account.
      */
     private final String username;
 
     /**
-     * The password.
+     * The credential string used to authenticate this account, as entered on the login screen.
+     * <p>
+     * <p>
+     * Note: The password is stored as a plain {@link String}; avoid logging it and keep its lifetime as short as
+     * possible.
+     * </p>
      */
     private String password;
 
     /**
-     * The username hash.
+     * The pre-computed base-37 hash of {@link #username}, used for protocol encoding and fast lookups.
      */
     private final long usernameHash;
 
     /**
-     * Creates a new {@link PlayerCredentials}.
+     * Creates a new {@link PlayerCredentials} instance.
      *
-     * @param username The username.
-     * @param password The password.
+     * @param username The raw username supplied by the client. This will be normalized to lower-case internally.
+     * @param password The credential string used to authenticate the account (plaintext).
      */
     public PlayerCredentials(String username, String password) {
         this.username = username.toLowerCase();
@@ -37,37 +46,39 @@ public final class PlayerCredentials {
     }
 
     /**
-     * Creates a new {@link PlayerCredentials}.
+     * Returns the normalized, lower-case username.
      *
-     * @param username The username.
-     */
-    public PlayerCredentials(String username) {
-        this(username, null);
-    }
-
-    /**
-     * @return The username.
+     * @return The normalized username.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Sets the new password.
+     * Replaces the current credential string with a new plaintext value.
+     *
+     * @param password The new credential string (for example, a hashed password).
      */
     public void setPassword(String password) {
         this.password = password;
     }
 
     /**
-     * @return The password.
+     * Returns the plaintext credential string used to authenticate this account.
+     * <p>
+     * Callers should treat this value as sensitive and avoid logging or exposing it.
+     * </p>
+     *
+     * @return The current credential string.
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * @return The username hash.
+     * Returns the base-37 hash of the username.
+     *
+     * @return The pre-computed username hash.
      */
     public long getUsernameHash() {
         return usernameHash;

@@ -87,6 +87,11 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
     @Override
     boolean addRequest(String username, LoginRequest request) {
+        if(world.isFull()) {
+            // Too many players online.
+            request.client.sendLoginResponse(request.player, LoginResponse.WORLD_FULL);
+            return false;
+        }
         if(world.getBots().exists(username)) {
             // Regular player trying to log in as a bot.
             request.client.sendLoginResponse(request.player, LoginResponse.COULD_NOT_COMPLETE_LOGIN);
@@ -94,7 +99,7 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
         }
         if (world.getPlayerMap().containsKey(username) ||
                 world.getLogoutService().isSavePending(username)) {
-            // Short-circuit here, faster and prevents wasting resources.
+            // Account already online, or a save in progress.
             request.client.sendLoginResponse(request.player, LoginResponse.ACCOUNT_ONLINE);
             return false;
         }

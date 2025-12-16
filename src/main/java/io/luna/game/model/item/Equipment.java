@@ -204,7 +204,7 @@ public final class Equipment extends ItemContainer {
     /**
      * The feet index.
      */
-    public static final int FEET = 10;
+    public static final int BOOTS = 10;
 
     /**
      * The ring index.

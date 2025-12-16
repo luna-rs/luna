@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.cache.Archive;
 import io.luna.game.cache.Cache;
 import io.luna.game.cache.CacheDecoder;
@@ -19,12 +18,10 @@ import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.cache.map.MapTileGridSet;
 import io.luna.game.model.Position;
 import io.luna.game.model.Region;
-import io.luna.game.model.World;
 import io.luna.game.model.object.ObjectDirection;
 import io.luna.game.model.object.ObjectType;
 import io.netty.buffer.ByteBuf;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 import static io.luna.game.cache.CacheUtils.MAP_PLANES;
@@ -207,23 +204,6 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         }
     }
 
-    /**
-     * Applies static map-tile collision metadata for a single {@link MapTile} during region construction.
-     *
-     * @param world The game world receiving the collision metadata.
-     * @param index The map index containing the tile, used to resolve its absolute position.
-     * @param tile The parsed map tile whose collision attributes (blocked/bridge) are being applied.
-     */
-    private void addCollisionData(World world, MapIndex index, MapTile tile) {
-        Region region = index.getRegion();
-        if (tile.isBlocked()) {
-            world.getCollisionManager().block(tile.getAbsPosition(region));
-        } else if (tile.isBridge()) {
-            world.getCollisionManager().markBridged(tile.getAbsPosition(region));
-        }
-    }
-
-
     // -------------------------------------------------------------------------
     // 1. Decode MapIndex (map_index file)
     // -------------------------------------------------------------------------
@@ -285,28 +265,11 @@ public final class MapDecoder extends CacheDecoder<MapIndex> {
         decodedObjects.forEach(idx -> tableBuilder.put(idx.getRegion(), idx));
         ImmutableMap<Region, MapIndex> indexMap = tableBuilder.build();
 
-        GameService game = ctx.getGame();
-
         ImmutableList<MapObject> mapObjects = decodeMapObjects(cache, indexMap.values());
         ImmutableMap<MapIndex, MapTileGrid> mapTiles = decodeMapTiles(cache, indexMap.values());
 
         MapIndexTable table = new MapIndexTable(indexMap, new MapObjectSet(mapObjects), new MapTileGridSet(mapTiles));
         cache.setMapIndexTable(table);
-
-        // Apply results on the game thread.
-        game.sync(() -> {
-            World world = ctx.getWorld();
-
-            // Tile collision (water, borders, bridges, map features).
-            for (Map.Entry<MapIndex, MapTileGrid> entry : table.getTileSet()) {
-                entry.getValue().forEach(tile -> addCollisionData(world, entry.getKey(), tile));
-            }
-
-            // Register map objects (walls, scenery, trees, buildings).
-            for (MapObject obj : table.getObjectSet().getObjects()) {
-                world.getObjects().register(obj.toGameObject(ctx));
-            }
-        });
     }
 
     // -------------------------------------------------------------------------

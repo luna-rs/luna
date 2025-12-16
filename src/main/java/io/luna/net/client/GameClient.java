@@ -78,6 +78,11 @@ public class GameClient extends Client<GameMessage> {
     private final Player player;
 
     /**
+     * If the next logout should be forced (will logout while in combat, etc).
+     */
+    private volatile boolean forcedLogout;
+
+    /**
      * Creates a new {@link GameClient} bound to the given network channel and player.
      *
      * @param channel The Netty channel for this connection.
@@ -145,13 +150,13 @@ public class GameClient extends Client<GameMessage> {
      */
     public void queue(GameMessageWriter writer) {
         GameMessage msg = writer.toGameMessage(player);
-        if(msg == null) {
+        if (msg == null) {
             return;
         }
         if (channel.isActive()) {
             channel.eventLoop().execute(() -> {
                 channel.write(msg, channel.voidPromise());
-                if(msg.getPayload().refCnt() > 0) {
+                if (msg.getPayload().refCnt() > 0) {
                     pendingWriteMessages.add(msg);
                 }
             });
@@ -173,7 +178,7 @@ public class GameClient extends Client<GameMessage> {
             if (msg == null) {
                 break;
             }
-            if(msg.getPayload().refCnt() > 0) {
+            if (msg.getPayload().refCnt() > 0) {
                 msg.getPayload().releaseAll();
             }
         }
@@ -182,8 +187,8 @@ public class GameClient extends Client<GameMessage> {
     /**
      * Flushes all queued messages to the client immediately.
      * <p>
-     * This method should be called sparingly, as it triggers a full I/O flush
-     * on the underlying Netty channel. Normally invoked once per game cycle.
+     * This method should be called sparingly, as it triggers a full I/O flush on the underlying Netty channel.
+     * Normally invoked once per game cycle.
      * </p>
      * <p>
      * If the channel is inactive, all pending messages are released instead.
@@ -191,7 +196,7 @@ public class GameClient extends Client<GameMessage> {
      */
     public void flush() {
         if (channel.isActive()) {
-            channel.eventLoop().execute(() -> {
+            channel.eventLoop().submit(() -> {
                 channel.flush();
                 releasePendingWrites();
             });
@@ -218,6 +223,22 @@ public class GameClient extends Client<GameMessage> {
      */
     public boolean isPendingLogout() {
         return pendingLogout.get();
+    }
+
+    /**
+     * @return If the next logout should be forced (will logout while in combat, etc).
+     */
+    public boolean isForcedLogout() {
+        return forcedLogout;
+    }
+
+    /**
+     * Sets if the next logout should be forced.
+     *
+     * @param forcedLogout The new value.
+     */
+    public void setForcedLogout(boolean forcedLogout) {
+        this.forcedLogout = forcedLogout;
     }
 
     /**

@@ -39,7 +39,7 @@ public final class MapIndexTable {
         this.objectSet = objectSet;
         this.tileSet = tileSet;
     }
-
+// todo helper methods for getting the index by id, etc.
     /**
      * @return All mapped {@link MapIndex} types.
      */

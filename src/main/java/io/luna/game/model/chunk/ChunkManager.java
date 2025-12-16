@@ -6,12 +6,12 @@ import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,7 +22,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -114,19 +113,15 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * @param <T> The mob type.
      * @return The set of mobs that need to be updated.
      */
-    public <T extends Mob> Set<T> findUpdateMobs(Player player, Class<T> type) {
-        int count;
-        if (type == Player.class) {
-            count = player.getUpdatePlayers().size();
-        } else if (type == Npc.class) {
-            count = player.getUpdateNpcs().size();
-        } else {
-            throw new IllegalStateException("Invalid mob type.");
-        }
-        return find(player.getPosition(), type,
-                () -> count > UNSORTED_THRESHOLD ? new TreeSet<>(new ChunkMobComparator(player)) : new HashSet<>(),
+    public <T extends Mob> Collection<T> findUpdateMobs(Player player, Class<T> type) {
+        List<T> mobs = find(player.getPosition(), type,
+                () -> new ArrayList<>(255),
                 entity -> entity.isViewableFrom(player),
                 Position.VIEWING_DISTANCE);
+        if (mobs.size() >= 255) {
+            mobs.sort(new LocalMobComparator(player));
+        }
+        return mobs;
     }
 
     /**
@@ -233,17 +228,17 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
      * @param <T> The type of entity to find.
      * @return The set of entities.
      */
-    public <T extends Entity> Set<T> find(Position base, Class<T> type, Supplier<Set<T>> setFunc, Predicate<T> cond, int distance) {
+    public <T extends Collection<V>, V extends Entity> T find(Position base, Class<V> type, Supplier<T> setFunc, Predicate<V> cond, int distance) {
         checkArgument(distance > 0, "[distance] cannot be below 1.");
         int radius = Math.floorDiv(distance, Chunk.SIZE) + 2;
-        Set<T> found = setFunc.get();
+        T found = setFunc.get();
         EntityType entityType = EntityType.CLASS_TO_TYPE.get(type);
         Chunk chunk = base.getChunk();
         for (int x = -radius; x < radius; x++) {
             for (int y = -radius; y < radius; y++) {
                 ChunkRepository repository = load(chunk.translate(x, y));
-                Set<T> entities = repository.getAll(entityType);
-                for (T entity : entities) {
+                Set<V> entities = repository.getAll(entityType);
+                for (V entity : entities) {
                     if (cond.test(entity)) {
                         found.add(entity);
                     }

@@ -3,6 +3,7 @@ package io.luna.game.model.mob;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Sets;
 import io.luna.LunaContext;
+import io.luna.game.action.Action;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
@@ -167,9 +168,6 @@ public class Npc extends Mob {
         flags.flag(UpdateFlag.TRANSFORM);
     }
 
-    /**
-     * Resets any prior transformation and returns this NPC to its base definition.
-     */
     @Override
     public void resetTransform() {
         transform(id);
@@ -178,12 +176,12 @@ public class Npc extends Mob {
     /**
      * Determines if the given {@link Entity} is within the viewing cone of this NPC.
      * <p>
-     * The viewing cone is derived from the NPC's last movement direction. If the entity is
-     * directly behind the NPC (outside that cone), this method returns {@code false}. If the
-     * entity occupies the same tile, it always returns {@code true}.
+     * The viewing cone is derived from the NPC's last movement direction. If the entity is directly behind the NPC
+     * (outside that cone), this method returns {@code false}. If the entity occupies the same tile, it always
+     * returns {@code true}.
      * <p>
-     * If this NPC is currently interacting with an entity, the interacting entity is always
-     * considered visible even if outside the normal viewing cone.
+     * If this NPC is currently interacting with an entity, the interacting entity is always considered visible even
+     * if outside the normal viewing cone.
      *
      * @param entity The entity to test visibility against.
      * @param viewingDistance The maximum distance in tiles at which the NPC can see the entity.
@@ -212,8 +210,8 @@ public class Npc extends Mob {
     }
 
     /**
-     * Determines if the given {@link Entity} is within this NPC's viewing cone,
-     * using the default {@link Position#VIEWING_DISTANCE}.
+     * Determines if the given {@link Entity} is within this NPC's viewing cone, using the default
+     * {@link Position#VIEWING_DISTANCE}.
      *
      * @param entity The entity to test visibility against.
      * @return {@code true} if the entity is within the default viewing distance and inside the viewing cone.
@@ -223,8 +221,8 @@ public class Npc extends Mob {
     }
 
     /**
-     * Sets the NPC's combat-related skills (attack, strength, defence, ranged, magic, hitpoints)
-     * based on its current {@link NpcCombatDefinition}, if one is present.
+     * Sets the NPC's combat-related skills (attack, strength, defence, ranged, magic, hitpoints) based on its current
+     * {@link NpcCombatDefinition}, if one is present.
      */
     private void setSkills() {
         // Set the attack, strength, defence, ranged, and magic levels.
@@ -259,8 +257,8 @@ public class Npc extends Mob {
     /**
      * Returns the base spawn position for this NPC.
      * <p>
-     * This is the position the NPC was created at and is usually the center of its wandering
-     * radius and respawn location.
+     * This is the position the NPC was created at and is usually the center of its wandering radius and respawn
+     * location.
      *
      * @return The base spawn position.
      */
@@ -269,8 +267,7 @@ public class Npc extends Mob {
     }
 
     /**
-     * Returns the current NPC identifier, which may differ from {@link #getBaseId()}
-     * if the NPC has been transformed.
+     * Returns the current NPC identifier, which may differ from {@link #getBaseId()} if the NPC has been transformed.
      *
      * @return The current NPC identifier from the active definition.
      */
@@ -299,8 +296,8 @@ public class Npc extends Mob {
     /**
      * Determines if this NPC is stationary.
      * <p>
-     * An NPC is considered stationary if it has a {@link #defaultDirection} set, meaning
-     * it is expected to always face that direction and not wander.
+     * An NPC is considered stationary if it has a {@link #defaultDirection} set, meaning it is expected to always
+     * face that direction and not wander.
      *
      * @return {@code true} if this NPC does not move, {@code false} otherwise.
      */
@@ -322,8 +319,8 @@ public class Npc extends Mob {
     /**
      * Sets the default facing direction for this NPC.
      * <p>
-     * NPCs with a default direction set are considered stationary by wandering logic and
-     * will not be scheduled for movement unless the direction is cleared.
+     * NPCs with a default direction set are considered stationary by wandering logic and will not be scheduled
+     * for movement unless the direction is cleared.
      *
      * @param defaultDirection The default direction, or {@link Optional#empty()} to allow movement.
      */
@@ -334,8 +331,7 @@ public class Npc extends Mob {
     /**
      * Sets the remaining respawn ticks for this NPC.
      * <p>
-     * How this value is decremented and acted upon is controlled by higher-level NPC
-     * or world management code.
+     * How this value is decremented and acted upon is controlled by higher-level NPC or world management code.
      *
      * @param respawnTicks The number of ticks until this NPC should respawn.
      */
@@ -358,12 +354,12 @@ public class Npc extends Mob {
      * This method:
      * <ul>
      *     <li>Validates that the radius is non-negative.</li>
-     *     <li>Interrupts any existing wandering {@link io.luna.game.action.Action} such as
-     *     {@link DumbWanderingAction}, {@link SmartWanderingAction} or {@link PatrolAction}.</li>
+     *     <li>Interrupts any existing wandering {@link Action} such as {@link DumbWanderingAction},
+     *     {@link SmartWanderingAction} or {@link PatrolAction}.</li>
      *     <li>Clears the {@link #defaultDirection} so the NPC is no longer considered stationary.</li>
      *     <li>Constructs an {@link Area} centered on the current position with the given radius.</li>
      *     <li>Submits a {@link SmartWanderingAction} if the area is larger than {@code 64x64}
-     *     (size ≥ 4096), otherwise submits a {@link DumbWanderingAction}.</li>
+     *     (size > 4096), otherwise submits a {@link DumbWanderingAction}.</li>
      * </ul>
      *
      * @param radius The wandering radius in tiles. Must be 0 or greater.
@@ -379,7 +375,7 @@ public class Npc extends Mob {
         }
         setDefaultDirection(Optional.empty());
 
-        Area wanderingArea = Area.of(position, radius);
+        Area wanderingArea = Area.of(basePosition, radius);
         if (wanderingArea.size() >= 4096) {
             // If our wandering area is bigger than 64x64, use smart wanderer.
             actions.submit(new SmartWanderingAction(this, wanderingArea, frequency));
@@ -390,11 +386,6 @@ public class Npc extends Mob {
 
     /**
      * Returns the set of human players that currently have this NPC in their local view.
-     * <p>
-     * This set is backed by a concurrent collection, allowing safe modification from
-     * multiple threads that manage local view state. It can be used for behaviours that
-     * depend on which players can currently see this NPC (e.g., targeted updates or
-     * dynamic dialogue).
      *
      * @return A concurrent {@link Set} of players that currently see this NPC.
      */

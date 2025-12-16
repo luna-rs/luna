@@ -8,7 +8,6 @@ import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.item.GroundItemList;
 import io.luna.game.model.item.shop.ShopManager;
-import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.MobList;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
@@ -26,11 +25,10 @@ import io.luna.util.SqlConnectionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -45,6 +43,18 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class World {
 
+
+    /**
+     * The asynchronous logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    private static final String UPDATING_THREADS_NAME = "PlayerUpdatingThread";
+
+    public static boolean isUpdatingThread() {
+        return Objects.equals(Thread.currentThread().getName(), UPDATING_THREADS_NAME);
+    }
+
     /**
      * A model that sends {@link Player} and {@link Npc} synchronization packets.
      */
@@ -54,23 +64,27 @@ public final class World {
          * The player.
          */
         private final Player player;
+        private final Collection<Player> localPlayers;
+        private final Collection<Npc> localNpcs;
+
 
         /**
          * Creates a new {@link PlayerSynchronizationTask}.
          *
          * @param player The player.
          */
-        private PlayerSynchronizationTask(Player player) {
+        private PlayerSynchronizationTask(Player player, Collection<Player> localPlayers, Collection<Npc> localNpcs) {
             this.player = player;
+            this.localPlayers = localPlayers;
+            this.localNpcs = localNpcs;
         }
 
         @Override
         public void run() {
             synchronized (player) {
                 try {
-                    player.queue(new PlayerUpdateMessageWriter());
-                    player.queue(new NpcUpdateMessageWriter());
-                    player.getClient().flush();
+                    player.queue(new PlayerUpdateMessageWriter(localPlayers));
+                    player.queue(new NpcUpdateMessageWriter(localNpcs));
                 } catch (Exception e) {
                     logger.warn("{} could not complete synchronization.", player, e);
                     player.forceLogout();
@@ -82,24 +96,20 @@ public final class World {
     }
 
     /**
-     * The asynchronous logger.
-     */
-    private final Logger logger = LogManager.getLogger();
-
-    /**
      * The context instance.
      */
     private final LunaContext context;
 
     /**
-     * A list of active players.
+     * A list of active players. Default according to OSRS is 2000, but his can be changed to be effectively limitless
+     * (Integer.MAX_VALUE).
      */
-    private final MobList<Player> playerList = new MobList<>(this, 2048);
+    private final MobList<Player> playerList = new MobList<>(this, 2000);
 
     /**
      * A list of active npcs.
      */
-    private final MobList<Npc> npcList = new MobList<>(this, 16384);
+    private final MobList<Npc> npcList = new MobList<>(this, 16_384);
 
     /**
      * A list of active bots.
@@ -187,11 +197,6 @@ public final class World {
     private final SqlConnectionPool connectionPool;
 
     /**
-     * The mobs requiring updates.
-     */
-    private final Set<Mob> updatesRequired = new HashSet<>();
-
-    /**
      * Creates a new {@link World}.
      *
      * @param context The context instance
@@ -217,7 +222,7 @@ public final class World {
         }
 
         // Initialize synchronization thread pool.
-        updatePool = ExecutorUtils.threadPool("WorldSynchronizationThread");
+        updatePool = ExecutorUtils.threadPool(UPDATING_THREADS_NAME);
     }
 
     /**
@@ -227,10 +232,6 @@ public final class World {
         items.startExpirationTask();
         collisionManager.build(false);
         botManager.load();
-    }
-
-    public void addUpdateRequired(Mob mob) {
-        updatesRequired.add(mob);
     }
 
     /**
@@ -301,6 +302,10 @@ public final class World {
         // Then, pre-process NPC walking and action queues.
         for (Npc npc : npcList) {
             try {
+                if (npc.isLocked()) {
+                    // Skip pre-processing for locked NPCs.
+                    continue;
+                }
                 npc.getWalking().process();
                 npc.getActions().process();
             } catch (Exception e) {
@@ -331,10 +336,11 @@ public final class World {
      */
     private void synchronize() {
         // Build update block data.
-        for (Iterator<Mob> it = updatesRequired.iterator(); it.hasNext(); ) {
-            Mob mob = it.next();
-            mob.buildBlockData();
-            it.remove();
+        for (Player player : playerList) {
+            player.buildBlockData();
+        }
+        for (Npc npc : npcList) {
+            npc.buildBlockData();
         }
 
         // Prepare synchronizer for parallel updating.
@@ -350,8 +356,12 @@ public final class World {
                 related to it are sent. Queued data will be sent after updating
                 completes, within the synchronization task.
             */
-            player.sendRegionUpdate(player.getPosition());
-            updatePool.execute(new PlayerSynchronizationTask(player));
+            player.updateLocalView(player.getPosition());
+
+            // Prepare local mobs for updating and encode them using our thread pool.
+            Collection<Player> localPlayers = chunks.findUpdateMobs(player, Player.class);
+            Collection<Npc> localNpcs = chunks.findUpdateMobs(player, Npc.class);
+            updatePool.execute(new PlayerSynchronizationTask(player, localPlayers, localNpcs));
         }
         synchronizer.arriveAndAwaitAdvance();
     }
@@ -365,6 +375,7 @@ public final class World {
         for (Npc npc : npcList) {
             try {
                 npc.resetFlags();
+                npc.clearCachedBlock();
             } catch (Exception e) {
                 npcList.remove(npc);
                 logger.warn("{} could not complete post-synchronization.", npc, e);
@@ -373,7 +384,8 @@ public final class World {
         for (Player player : playerList) {
             try {
                 player.resetFlags();
-                player.setCachedBlock(null);
+                player.clearCachedBlock();
+                player.getClient().flush();
             } catch (Exception e) {
                 player.logout();
                 logger.warn("{} could not complete post-synchronization.", player, e);
@@ -408,6 +420,11 @@ public final class World {
      */
     public CompletableFuture<Void> saveAll() {
         return persistenceService.saveAll();
+    }
+
+    // thread safe boolean to determeine if world is fulll
+    public boolean isFull() {
+        return playerMap.size() >= playerList.capacity() - 1;
     }
 
     /**

@@ -73,6 +73,10 @@ public final class ChunkRepository implements Iterable<Entity> {
     private volatile CollisionMatrix[] snapshot = CollisionMatrix.createMatrices(Position.HEIGHT_LEVELS.upperEndpoint(),
             SIZE, SIZE);
 
+    // if the entire chunk is untraversable
+    // todo temp naming, etc.
+    private final boolean untraversable;
+
     /**
      * Creates a new {@link ChunkRepository}.
      *
@@ -85,6 +89,8 @@ public final class ChunkRepository implements Iterable<Entity> {
         for (EntityType type : EntityType.ALL) {
             entities.put(type, new HashSet<>());
         }
+        untraversable = !world.getContext().getCache().
+                getMapIndexTable().getIndexTable().containsKey(chunk.getAbsPosition().getRegion());
     }
 
     @Override
@@ -119,6 +125,10 @@ public final class ChunkRepository implements Iterable<Entity> {
      * @return {@code true} if traversable.
      */
     public boolean traversable(Position next, EntityType type, Direction direction, boolean safe) {
+        if (untraversable) {
+            return false;
+        }
+
         CollisionMatrix matrix = safe ? snapshot[next.getZ()] : matrices[next.getZ()];
         int x = next.getX(), y = next.getY();
 

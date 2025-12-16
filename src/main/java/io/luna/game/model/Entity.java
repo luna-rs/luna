@@ -311,23 +311,17 @@ public abstract class Entity implements Attributable, Locatable {
                         return;
                     }
                 }
-                if(type == EntityType.NPC) {
-                    world.getCollisionManager().updateEntity(this, true);
-                }
             }
             Region old = position == null ? null : position.getRegion();
             position = newPosition;
-            if(old != null) {
-                Region now = newPosition.getRegion();
-                if (!old.equals(now) && this instanceof Player) {
-                    plugins.post(new RegionChangedEvent((Player) this, old, now));
-                }
-            }
             if (state == EntityState.ACTIVE) {
-                setCurrentChunk();
-                if(type == EntityType.NPC) {
-                    world.getCollisionManager().updateEntity(this, false);
+                if(old != null) {
+                    Region now = newPosition.getRegion();
+                    if (!old.equals(now) && this instanceof Player) {
+                        plugins.post(new RegionChangedEvent((Player) this, old, now));
+                    }
                 }
+                setCurrentChunk();
             }
         }
     }

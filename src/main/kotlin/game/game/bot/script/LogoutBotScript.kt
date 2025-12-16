@@ -20,7 +20,4 @@ class LogoutBotScript(bot: Bot, private var urgent: Boolean) : BotScript<Boolean
     }
 
     override fun snapshot(): Boolean = urgent
-    override fun load(snapshot: BotScriptSnapshot<Boolean>) {
-        urgent = snapshot.data
-    }
 }

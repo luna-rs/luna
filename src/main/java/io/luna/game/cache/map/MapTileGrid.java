@@ -1,5 +1,6 @@
 package io.luna.game.cache.map;
 
+import io.luna.game.model.Position;
 import io.luna.game.model.Region;
 
 import java.util.Arrays;
@@ -71,6 +72,16 @@ public final class MapTileGrid {
      */
     public MapTile getTile(int x, int y, int plane) {
         return grid[plane][x][y];
+    }
+
+    /**
+     * Retrieves a {@link MapTile} from the grid using absolute coordinates.
+     *
+     * @param abs The absolute coordinates.
+     * @return The corresponding tile, or {@code null} if the coordinates are not within this grid.
+     */
+    public MapTile getTile(Position abs) {
+        return getTile(abs.getX() % 64, abs.getY() % 64, abs.getZ());
     }
 
     /**

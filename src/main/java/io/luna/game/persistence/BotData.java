@@ -16,6 +16,9 @@ import java.util.List;
  */
 public final class BotData extends PlayerData {
 
+    /**
+     * The script snapshots to load.
+     */
     public List<BotScriptSnapshot<?>> scripts;
 
     /**

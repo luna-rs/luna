@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
  *
  * @author lare96
  */
-public final class ChunkMobComparator implements Comparator<Mob> {
+public final class LocalMobComparator implements Comparator<Mob> {
 
     /**
      * Represents the data that will be used to compare the left and right mobs.
@@ -55,6 +55,8 @@ public final class ChunkMobComparator implements Comparator<Mob> {
 
     }
 
+    // todo redo to be more robust, faster, care more about important values
+
     /**
      * An immutable list of factors used to compare mobs.
      */
@@ -63,7 +65,8 @@ public final class ChunkMobComparator implements Comparator<Mob> {
             this::compareFriends,
             this::compareSize,
             this::compareCombatLevel,
-            this::compareCombat
+            this::compareCombat,
+            this::comparePlayers
     );
 
     /**
@@ -72,11 +75,11 @@ public final class ChunkMobComparator implements Comparator<Mob> {
     private final Player player;
 
     /**
-     * Creates a new {@link ChunkMobComparator}.
+     * Creates a new {@link LocalMobComparator}.
      *
      * @param player The player to compare mobs for.
      */
-    public ChunkMobComparator(Player player) {
+    public LocalMobComparator(Player player) {
         this.player = player;
     }
 
@@ -91,12 +94,6 @@ public final class ChunkMobComparator implements Comparator<Mob> {
             leftWeight += data.left;
             rightWeight += data.right;
         }
-
-        // The weight is equal, meaning equal importance. Just let left win.
-        if (leftWeight == rightWeight) {
-            leftWeight++;
-        }
-
         // Compare weight to determine which entity wins priority.
         return Integer.compare(leftWeight, rightWeight);
     }
@@ -124,7 +121,7 @@ public final class ChunkMobComparator implements Comparator<Mob> {
     private ComparableFactorData compareSize(Mob left, Mob right) {
         int leftSize = left.size();
         int rightSize = right.size();
-        return computeWeightFactor(leftSize, rightSize, 3);
+        return computeWeightFactor(leftSize, rightSize, 1);
     }
 
     /**
@@ -153,6 +150,12 @@ public final class ChunkMobComparator implements Comparator<Mob> {
         return computeWeightFactor(leftFactor, rightFactor, 4);
     }
 
+    private ComparableFactorData comparePlayers(Mob left, Mob right) {
+        int leftFactor = left instanceof Player && left.asPlr().isBot() ? 0 : 1;
+        int rightFactor = right instanceof Player && right.asPlr().isBot() ? 0 : 1;
+        return computeWeightFactor(leftFactor, rightFactor, 12);
+    }
+
     /**
      * Determines if {@code mob} is on {@code player}'s friend list.
      *
@@ -176,10 +179,13 @@ public final class ChunkMobComparator implements Comparator<Mob> {
      */
     private ComparableFactorData compareCombat(Mob left, Mob right) {
         //todo needs combat to finish
-        int leftCombat = /* left.inCombat() ? 1 :*/ 0;
-        int rightCombat = /* right.inCombat() ? 1 :*/ 0;
+        int leftCombat = !left.getWalking().isEmpty() ? 1 : 0; /* left.inCombat() ? 1 : 0;*/
+        int rightCombat = !right.getWalking().isEmpty() ? 1 : 0; /* right.inCombat() ? 1 :     0;*/
+
         return computeWeightFactor(leftCombat, rightCombat, 5);
     }
+
+    //todo compare if player being attacked or not by mobs
 
     /**
      * Compares the factor values and awards weight based on a which one is greater.

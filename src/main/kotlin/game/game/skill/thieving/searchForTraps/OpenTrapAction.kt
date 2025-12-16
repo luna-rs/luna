@@ -39,12 +39,8 @@ class OpenTrapAction(plr: Player, val obj: GameObject, val thievable: ThievableC
     /**
      * Determines how much damage will be done when a trap is opened.
      */
-    private fun computeDamage(): Hit {
+    private fun computeDamage(): Int {
         val maxDamage = (thievable.level / 2).coerceAtMost(mob.health)
-        val damage = rand(1, maxDamage)
-        return when {
-            maxDamage == 0 -> Hit(0, HitType.BLOCKED)
-            else -> Hit(damage, HitType.NORMAL)
-        }
+        return rand(0, maxDamage)
     }
 }

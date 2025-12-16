@@ -114,7 +114,7 @@ public class LoginClient extends Client<LoginRequestMessage> {
      * @return {@code true} if the final login response {@link LoginResponse#NORMAL}.
      */
     public boolean sendFinalLoginResponse(Player player, PlayerData data, LoginRequestMessage message) {
-        if (world.getPlayers().isFull()) {
+        if (world.isFull()) {
             sendLoginResponse(player, LoginResponse.WORLD_FULL);
             return false;
         } else if (world.getLogoutService().isSavePending(player.getUsername()) || world.getPlayer(player.getUsernameHash()).isPresent()) {

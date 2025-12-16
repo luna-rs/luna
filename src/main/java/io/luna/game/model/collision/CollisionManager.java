@@ -5,10 +5,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import io.luna.LunaContext;
+import io.luna.game.cache.map.MapIndex;
+import io.luna.game.cache.map.MapIndexTable;
+import io.luna.game.cache.map.MapObject;
+import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.Region;
 import io.luna.game.model.World;
 import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
@@ -128,6 +134,24 @@ public final class CollisionManager {
             }
         }
 
+        // Tile collision and map objects (water, borders, bridges, map features).
+        LunaContext context = world.getContext();
+        MapIndexTable table = context.getCache().getMapIndexTable();
+        for (Map.Entry<MapIndex, MapTileGrid> entry : table.getTileSet()) {
+            entry.getValue().forEach(tile -> {
+                Region region = entry.getKey().getRegion();
+                if (tile.isBlocked()) {
+                    block(tile.getAbsPosition(region));
+                } else if (tile.isBridge()) {
+                    markBridged(tile.getAbsPosition(region));
+                }
+            });
+        }
+
+        for (MapObject mapObject : table.getObjectSet().getObjects()) {
+            world.getObjects().register(mapObject.toGameObject(context));
+        }
+
         // Apply global blocked tiles.
         CollisionUpdate.Builder tiles = new CollisionUpdate.Builder();
         tiles.type(CollisionUpdateType.ADDING);
@@ -146,15 +170,6 @@ public final class CollisionManager {
             }
         }
         apply(tiles.build(), true);
-
-        // Apply static object-based collision.
-        CollisionUpdate.Builder objects = new CollisionUpdate.Builder();
-        objects.type(CollisionUpdateType.ADDING);
-        for (ChunkRepository repository : chunks.getAll()) {
-            repository.getAll(EntityType.OBJECT)
-                    .forEach(entity -> objects.object((GameObject) entity));
-        }
-        apply(objects.build(), true);
 
         // Snapshot final built state.
         for (ChunkRepository repository : chunks.getAll()) {
@@ -535,14 +550,12 @@ public final class CollisionManager {
      * </p>
      *
      * @param start The starting position.
-     * @param lastRegion The last known region position used to derive local coordinates.
      * @param target The target entity to interact with.
      * @param distance The interaction distance (must not exceed {@link Position#VIEWING_DISTANCE}).
      * @return {@code true} if the start position has successfully “reached” the target for interaction,
      * otherwise {@code false}.
      */
     public boolean reached(Position start,
-                           Position lastRegion,
                            Entity target,
                            int distance) {
 
@@ -560,10 +573,10 @@ public final class CollisionManager {
             return start.isWithinDistance(end, distance) && raycast(start, end);
         } else if (target instanceof Mob) {
             // In the client, NPC sizes are all assumed 1x1.
-            return matrices.reachedFacingEntity(start, lastRegion, target, 1, 1, OptionalInt.empty());
+            return matrices.reachedFacingEntity(start, target, 1, 1, OptionalInt.empty());
         } else if (target instanceof GameObject) {
             // Normal object, wall, or decoration.
-            return matrices.reachedObject(start, lastRegion, (GameObject) target);
+            return matrices.reachedObject(start, (GameObject) target);
         } else if (target instanceof GroundItem) {
             // Items are only “reached” when standing directly on them.
             return start.equals(end);
@@ -598,7 +611,6 @@ public final class CollisionManager {
      */
     public boolean reached(Mob mob, Entity target, int distance) {
         return reached(mob.getPosition(),
-                mob.getPosition(),
                 target,
                 distance);
     }

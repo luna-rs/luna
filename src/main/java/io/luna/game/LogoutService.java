@@ -115,6 +115,9 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
     @Override
     boolean canFinishRequest(String username, LogoutRequest request) {
         Player player = request.player;
+        if(player.getClient().isForcedLogout()) {
+            return true;
+        }
         return (/* TODO No combat for 30 seconds && */player.getControllers().checkLogout() && !player.isLocked()) ||
                 request.isTimeout();
     }
