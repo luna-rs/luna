@@ -32,13 +32,15 @@ public final class PlayerUpdateBlockSet extends AbstractUpdateBlockSet<Player> {
     @Override
     public void addBlockSet(Player player, ByteMessage msg, UpdateState state) {
         // The block has already been encoded for someone this cycle; reuse it.
-        ByteBuf cachedBlock = player.acquireCachedBlock();
-        if (state == UpdateState.UPDATE_LOCAL && cachedBlock != null) {
-            try {
-                msg.putBytes(cachedBlock);
-                return;
-            } finally {
-                cachedBlock.release();
+        if (state == UpdateState.UPDATE_LOCAL) {
+            ByteBuf cachedBlock = player.acquireCachedBlock();
+            if (cachedBlock != null) {
+                try {
+                    msg.putBytes(cachedBlock);
+                    return;
+                } finally {
+                    cachedBlock.release();
+                }
             }
         }
 

@@ -312,8 +312,6 @@ public abstract class Mob extends Entity {
     public boolean cacheBlockIfAbsent(ByteMessage msg) {
         ByteBuf cachedMsg = msg.getBuffer().retainedDuplicate();
         if (cachedBlock.compareAndSet(null, cachedMsg)) {
-            if (this instanceof Npc && asNpc().getIndex() == 1)
-                System.err.println("cached block , won by " + Thread.currentThread().getName() + ", refs: " + cachedMsg.refCnt());
             return true;
         }
         cachedMsg.release();
@@ -335,8 +333,6 @@ public abstract class Mob extends Entity {
     public void clearCachedBlock() {
         ByteBuf old = cachedBlock.getAndSet(null);
         if (old != null) {
-            if (this instanceof Npc && asNpc().getIndex() == 1)
-                System.err.println("About to clear old block, refs: " + old.refCnt());
             old.release();
         }
     }
