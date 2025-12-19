@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableSet
 import io.luna.game.model.Locatable
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
-import io.luna.game.model.mob.Mob
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.overlay.WalkableInterface
@@ -27,12 +26,12 @@ object WildernessAreaController : PlayerLocationController() {
     override fun canEnter(plr: Player, newPos: Position): Boolean {
         setWildernessLevel(plr, newPos)
         plr.overlays.open(WalkableInterface(197))
-        plr.interactions.show(INTERACTION_ATTACK)
+        plr.contextMenu.show(OPTION_ATTACK)
         return true
     }
 
     override fun canExit(plr: Player, newPos: Position): Boolean {
-        plr.interactions.hide(INTERACTION_ATTACK)
+        plr.contextMenu.hide(OPTION_ATTACK)
         plr.overlays.closeWalkable()
         plr.wildernessLevel = 0
         plr.clearText(199)

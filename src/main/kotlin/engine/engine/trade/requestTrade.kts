@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
  * Request to trade with another [Player].
  */
 on(PlayerFourthClickEvent::class)
-    .filter { plr.interactions.contains(INTERACTION_TRADE) }
+    .filter { plr.contextMenu.contains(OPTION_TRADE) }
     .then {
         when {
             plr.overlays.hasWindow() -> plr.sendMessage(Messages.BUSY)

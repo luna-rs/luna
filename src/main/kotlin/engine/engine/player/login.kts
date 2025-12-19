@@ -5,7 +5,6 @@ import game.minigame.partyRoom.dropParty.DropPartyOption.depositItems
 import io.luna.Luna
 import io.luna.game.event.impl.LoginEvent
 import io.luna.game.model.item.RefreshListener.PlayerRefreshListener
-import io.luna.game.model.mob.Player
 import io.luna.net.msg.out.SkillUpdateMessageWriter
 import io.luna.net.msg.out.UpdatePrivacyOptionMessageWriter
 import io.luna.net.msg.out.UpdateRunEnergyMessageWriter
@@ -18,8 +17,8 @@ import io.luna.game.event.EventPriority
 on(LoginEvent::class, EventPriority.HIGH) {
     plr.tabs.resetAll()
 
-    plr.interactions.show(INTERACTION_FOLLOW)
-    plr.interactions.show(INTERACTION_TRADE)
+    plr.contextMenu.show(OPTION_FOLLOW)
+    plr.contextMenu.show(OPTION_TRADE)
 
     plr.equipment.loadBonuses()
     plr.depositItems.setListeners(PlayerRefreshListener(plr, "You can only deposit 8 items at a time."))

@@ -191,9 +191,9 @@ public class Player extends Mob {
     private final Set<Long> ignores = new LinkedHashSet<>();
 
     /**
-     * The interaction menu state (right-click options, custom actions).
+     * The context menu state (right-click options, custom actions).
      */
-    private final PlayerInteractionMenu interactions = new PlayerInteractionMenu(this);
+    private final PlayerContextMenu contextMenu = new PlayerContextMenu(this);
 
     /**
      * The hashed password. May be {@code null} for legacy/plaintext accounts until conversion.
@@ -770,7 +770,7 @@ public class Player extends Mob {
      *
      * @return A {@link JsonArray} representing all active potion timers.
      */
-    public JsonArray savePotionsToJson() { // todo left off here, needs testing tomorrow
+    public JsonArray savePotionsToJson() {
         JsonArray array = new JsonArray();
         for (var timer : actions.getAll(PotionCountdownTimer.class)) {
             array.add(timer.saveJson());
@@ -1196,12 +1196,12 @@ public class Player extends Mob {
     }
 
     /**
-     * Returns this player's interaction menu.
+     * Returns this player's context menu.
      *
-     * @return The {@link PlayerInteractionMenu}.
+     * @return The {@link PlayerContextMenu}.
      */
-    public PlayerInteractionMenu getInteractions() {
-        return interactions;
+    public PlayerContextMenu getContextMenu() {
+        return contextMenu;
     }
 
     /**
@@ -1362,9 +1362,8 @@ public class Player extends Mob {
      * Returns the total amount of time this account has been played.
      *
      * <p>
-     * This method updates {@link #timePlayed} by adding the elapsed {@link #timeOnline} duration
-     * since the last call, then resets and restarts the stopwatch. Avoid calling this too frequently
-     * if you need a stable snapshot of playtime.
+     * This method updates {@link #timePlayed} by adding the elapsed {@link #timeOnline} duration since the last call,
+     * then resets and restarts the stopwatch. Avoid calling this too frequently if you need a stable snapshot of playtime.
      * </p>
      *
      * @return The accumulated time played.

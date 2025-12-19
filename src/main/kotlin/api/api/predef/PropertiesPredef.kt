@@ -6,7 +6,7 @@ import io.luna.game.event.EventMatcherListener
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Mob
-import io.luna.game.model.mob.PlayerInteraction
+import io.luna.game.model.mob.PlayerContextMenuOption
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.Skill
 import io.luna.game.model.mob.bot.injection.BotContextInjector
@@ -89,10 +89,10 @@ val RIGHTS_DEV = PlayerRights.DEVELOPER
 
 
 /* Player interaction properties. */
-val INTERACTION_TRADE = PlayerInteraction.TRADE!!
-val INTERACTION_CHALLENGE = PlayerInteraction.CHALLENGE!!
-val INTERACTION_ATTACK = PlayerInteraction.ATTACK!!
-val INTERACTION_FOLLOW = PlayerInteraction.FOLLOW!!
+val OPTION_TRADE = PlayerContextMenuOption.TRADE!!
+val OPTION_CHALLENGE = PlayerContextMenuOption.CHALLENGE!!
+val OPTION_ATTACK = PlayerContextMenuOption.ATTACK!!
+val OPTION_FOLLOW = PlayerContextMenuOption.FOLLOW!!
 
 
 /* Skill id properties. */

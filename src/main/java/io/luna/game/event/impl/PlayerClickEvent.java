@@ -4,7 +4,7 @@ import io.luna.game.model.Entity;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.PlayerInteraction;
+import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.mob.bot.Bot;
 import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
@@ -62,7 +62,7 @@ public class PlayerClickEvent extends PlayerEvent implements ControllableEvent, 
         @Override
         public int distance() {
             // todo better way of doing this
-            return plr.getInteractions().contains(PlayerInteraction.FOLLOW) ? Position.VIEWING_DISTANCE :
+            return plr.getContextMenu().contains(PlayerContextMenuOption.FOLLOW) ? Position.VIEWING_DISTANCE :
                     super.distance();
         }
     }

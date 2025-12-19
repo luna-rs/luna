@@ -12,9 +12,9 @@ import org.apache.logging.log4j.Logger;
  * </p>
  *
  * <ul>
- *     <li><b>Public Chat</b>, whether other players can see messages.</li>
- *     <li><b>Private Chat</b>, who can message the player.</li>
- *     <li><b>Trade/Requests</b>, who can send trade or other interaction requests.</li>
+ *     <li><b>Public Chat</b>, whether other players public chat messages can be seen.</li>
+ *     <li><b>Private Chat</b>, who can private message the player and see their online status.</li>
+ *     <li><b>Trade/Requests</b>, who can send trade or other interaction requests to the player.</li>
  * </ul>
  *
  * @author lare96
@@ -116,7 +116,7 @@ public final class PlayerPrivacy {
     private final PrivacyMode privateChat;
 
     /**
-     * The privacy setting for trade and request interactions.
+     * The privacy setting for interactions.
      */
     private final PrivacyMode trade;
 
@@ -132,7 +132,7 @@ public final class PlayerPrivacy {
      *
      * @param publicChat The privacy mode for public chat.
      * @param privateChat The privacy mode for private chat.
-     * @param trade The privacy mode for trade and requests.
+     * @param trade The privacy mode for interactions.
      */
     public PlayerPrivacy(PrivacyMode publicChat, PrivacyMode privateChat, PrivacyMode trade) {
         this.publicChat = publicChat;
