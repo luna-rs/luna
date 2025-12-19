@@ -6,4 +6,4 @@ import io.luna.game.model.mob.Player
 /**
  * The current trading partner.
  */
-var Player.tradingWith by Attr.int(-1)
+var Player.tradingWith by Attr.int { -1 }

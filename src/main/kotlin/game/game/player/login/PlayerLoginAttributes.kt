@@ -8,4 +8,4 @@ import io.luna.game.model.mob.Player
 /**
  * If it's a player's first login.
  */
-var Player.firstLogin by Attr.boolean(true).persist("first_login")
+var Player.firstLogin by Attr.boolean { true }.persist("first_login")

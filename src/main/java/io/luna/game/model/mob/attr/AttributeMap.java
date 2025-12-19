@@ -1,5 +1,8 @@
 package io.luna.game.model.mob.attr;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +17,11 @@ import static com.google.common.base.Preconditions.checkState;
  * @author lare96
  */
 public final class AttributeMap {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Global registry of persistence keys used to prevent collisions.
@@ -67,7 +75,7 @@ public final class AttributeMap {
                 checkState(loadedAttributes.put(name, convertedValue) == null,
                         "Duplicate persistent attribute key {%s}.", key);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
+                logger.catching(e);
             }
         });
     }
@@ -128,10 +136,10 @@ public final class AttributeMap {
             if (attr.isPersistent()) {
                 // Attribute persistent, load it from saved data or load it's initial value.
                 Object loadedValue = loadedAttributes.remove(attr.getPersistenceKey());
-                value = loadedValue == null ? attr.getInitialValue() : loadedValue;
+                value = loadedValue == null ? attr.getDefaultValueSupplier().get() : loadedValue;
             } else {
                 // Attribute not persistent, load it's initial value.
-                value = attr.getInitialValue();
+                value = attr.getDefaultValueSupplier().get();
             }
             attributes.put(attr, value);
         }

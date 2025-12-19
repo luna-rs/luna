@@ -5,9 +5,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.luna.game.model.Entity;
 
+import java.util.function.Supplier;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a serializable, optionally persistent attribute associated with a type (e.g., {@link Entity}).
@@ -41,9 +42,9 @@ public final class Attribute<T> {
     }
 
     /**
-     * The default or initial value of the attribute.
+     * The default value supplier of the attribute.
      */
-    private final T initialValue;
+    private final Supplier<T> defaultValueSupplier;
 
     /**
      * The runtime class of the attribute's value.
@@ -56,23 +57,13 @@ public final class Attribute<T> {
     private String persistenceKey;
 
     /**
-     * Creates a new non-null {@link Attribute} from a concrete value.
-     *
-     * @param initialValue The initial value.
-     */
-    public Attribute(T initialValue) {
-        this.initialValue = requireNonNull(initialValue, "Initial value cannot be <null>.");
-        valueType = (Class<T>) initialValue.getClass();
-    }
-
-    /**
      * Creates a new {@link Attribute} with an optional initial value.
      *
-     * @param type The type of the value.
-     * @param initialValue The initial value (nullable).
+     * @param type The type of the value supplier.
+     * @param defaultValueSupplier The default value supplier.
      */
-    public Attribute(Class<T> type, T initialValue) {
-        this.initialValue = initialValue;
+    public Attribute(Class<T> type, Supplier<T> defaultValueSupplier) {
+        this.defaultValueSupplier = defaultValueSupplier;
         valueType = type;
     }
 
@@ -112,10 +103,10 @@ public final class Attribute<T> {
     }
 
     /**
-     * @return The initial value.
+     * @return The default value supplier.
      */
-    public T getInitialValue() {
-        return initialValue;
+    public Supplier<T> getDefaultValueSupplier() {
+        return defaultValueSupplier;
     }
 
     /**

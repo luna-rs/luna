@@ -41,7 +41,7 @@ object Slayer {
     /**
      * An attribute representing if tasks will be checked for difficulty before being assigned.
      */
-    var Player.difficultyChecking: Boolean by Attr.boolean(true).persist("slayer_difficulty_checking")
+    var Player.difficultyChecking: Boolean by Attr.boolean { true }.persist("slayer_difficulty_checking")
 
     /**
      * Decrement `1` from the remaining amount of tasks and adds XP for [npcId]. If the remaining amount of monsters is

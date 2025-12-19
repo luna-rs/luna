@@ -2,9 +2,10 @@ package game.item.consumable.potion
 
 import com.google.gson.JsonObject
 import game.item.consumable.potion.PotionEffect.Companion.potionEffects
+import game.player.item.consume.potion.Potion
 import io.luna.game.action.CountdownTimer
 import io.luna.game.model.mob.Player
-import game.player.item.consume.potion.Potion
+import kotlin.math.log
 
 /**
  * A [CountdownTimer] implementation that manages timers for [Potion] effects.

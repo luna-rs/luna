@@ -1,10 +1,10 @@
 package game.skill.woodcutting
 
 import api.attr.Attr
-import io.luna.game.model.`object`.GameObject
 import game.skill.Skills
 import game.skill.woodcutting.cutTree.Axe
 import game.skill.woodcutting.cutTree.Tree
+import io.luna.game.model.`object`.GameObject
 
 /**
  * Contains utility functions related to the woodcutting skill.
@@ -16,7 +16,7 @@ object Woodcutting {
     /**
      * An attribute representing how many logs are left in a tree.
      */
-    var GameObject.treeHealth: Int by Attr.int(-1)
+    var GameObject.treeHealth: Int by Attr.int { -1 }
 
     /**
      * Determines which method to use for handling tree stump behavior: OSRS-style or 317-style.

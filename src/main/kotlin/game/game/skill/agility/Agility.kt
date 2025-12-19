@@ -15,7 +15,7 @@ object Agility {
     /**
      * The completed obstacles player attribute.
      */
-    val Player.completedObstacles by Attr.obj(HashMultimap.create<AgilityCourse, AgilityObstacle>())
+    val Player.completedObstacles by Attr.obj { HashMultimap.create<AgilityCourse, AgilityObstacle>() }
 
     /**
      * Creates and registers a new agility course.
@@ -29,7 +29,7 @@ object Agility {
      * Checks the player's agility level against [level] and awards [xp] if successful, sends a message otherwise.
      */
     fun checkLevel(plr: Player, level: Int): Boolean {
-        if(plr.agility.level >= level) {
+        if (plr.agility.level >= level) {
             return true
         }
         plr.sendMessage("You need an Agility level of $level to do this.")

@@ -10,6 +10,7 @@ import com.google.common.math.IntMath
 import com.google.common.primitives.Ints
 import game.minigame.partyRoom.PartyRoom
 import game.minigame.partyRoom.PartyRoomOption
+import game.skill.cooking.cookFood.Food
 import io.luna.Luna
 import io.luna.game.model.EntityState
 import io.luna.game.model.Position
@@ -24,7 +25,6 @@ import io.luna.game.model.`object`.GameObject
 import io.luna.game.model.`object`.ObjectDirection
 import io.luna.game.model.`object`.ObjectType
 import io.luna.game.task.Task
-import game.skill.cooking.cookFood.Food
 import java.time.Duration
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -230,7 +230,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
     /**
      * Items that a player has selected, but not yet confirmed to be deposited.
      */
-    val Player.depositItems by Attr.obj(ItemContainer(8, ItemContainer.StackPolicy.STANDARD, 2274))
+    val Player.depositItems by Attr.obj { ItemContainer(8, ItemContainer.StackPolicy.STANDARD, 2274) }
         .persist("drop_party_items")
 
     /**

@@ -23,16 +23,16 @@ final class AttributeTest {
         var gson = GsonUtils.GSON;
 
         // Test for duplicate keys.
-        new Attribute<>(false).persist("duplicate_key");
-        assertThrows(IllegalStateException.class, () -> new Attribute<>(false).persist("duplicate_key"));
+        new Attribute<>(() -> false).persist("duplicate_key");
+        assertThrows(IllegalStateException.class, () -> new Attribute<>(() -> false).persist("duplicate_key"));
 
         // Test for empty key.
-        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(false).persist(""));
+        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(() -> false).persist(""));
 
         // Test for whitespace characters.
-        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(false).persist("test key"));
+        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(() -> false).persist("test key"));
 
         // Test for uppercase characters.
-        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(false).persist("TEST_KEY"));
+        assertThrows(IllegalArgumentException.class, () -> new Attribute<>(() -> false).persist("TEST_KEY"));
     }
 }
