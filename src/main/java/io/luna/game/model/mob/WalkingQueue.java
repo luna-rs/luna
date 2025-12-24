@@ -17,6 +17,7 @@ import java.util.Queue;
  * responsible for generating valid paths and avoiding blocked tiles.
  *
  * @author lare96
+ * @author Graham
  */
 public final class WalkingQueue {
 
