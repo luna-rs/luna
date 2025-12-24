@@ -5,7 +5,6 @@ import io.luna.game.action.ActionType;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.task.Task;
@@ -180,8 +179,7 @@ public final class InteractionTask extends Task {
                  * tile so the player is no longer standing diagonally adjacent.
                  */
                 for (Direction dir : directions) {
-                    if (collisionManager.traversable(current, EntityType.NPC, dir)) {
-                        player.getWalking().walk(current.translate(1, dir));
+                    if (player.getNavigator().step(dir)) {
                         break;
                     }
                 }
@@ -191,7 +189,7 @@ public final class InteractionTask extends Task {
                  * We are standing on top of the entity's tile. Move one step in a random
                  * NESW direction to get off the tile before interacting.
                  */
-                player.getWalking().walkRandomDirection();
+                player.getNavigator().stepRandom(false);
                 delayed = true;
             }
 

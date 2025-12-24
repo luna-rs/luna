@@ -35,7 +35,7 @@ public final class CollisionUpdate {
      * @return {@code true} if the object should block movement on its tiles, otherwise {@code false}.
      */
     private static boolean unwalkable(GameObjectDefinition definition, int type) {
-        boolean isSolidFloorDecoration = type == GROUND_DECORATION.getId() && definition.isInteractive() && definition.isSolid();
+        boolean isSolidFloorDecoration = type == GROUND_DECORATION.getId() && definition.isInteractive();
         boolean isRoof = type > DIAGONAL_DEFAULT.getId() && type < GROUND_DECORATION.getId();
 
         boolean isWall = type >= STRAIGHT_WALL.getId() && type <= RECTANGLE_CORNER_WALL.getId() ||
@@ -236,11 +236,10 @@ public final class CollisionUpdate {
             boolean impenetrable = definition.isImpenetrable();
             int orientation = object.getDirection().getId();
 
-            if (type == ObjectType.GROUND_DECORATION.getId() && definition.isInteractive()) {
-                // Solid, interactive floor decorations block all directions on a single tile.
+            if (type == ObjectType.GROUND_DECORATION.getId()) {
+                // Solid, interactive, floor decorations: block all directions on a single tile.
                 tile(new Position(x, y, height), impenetrable, Direction.NESW);
-            } else if ((type == DEFAULT.getId() || type == DIAGONAL_DEFAULT.getId()) && definition.isSolid()
-                    || (type > DIAGONAL_DEFAULT.getId() && type < GROUND_DECORATION.getId())) {
+            } else if (type >= DIAGONAL_WALL.getId() && type < GROUND_DECORATION.getId()) {
                 // Large, solid multi-tile objects: block all directions on each covered tile.
                 for (int dx = 0; dx < definition.getSizeX(); dx++) {
                     for (int dy = 0; dy < definition.getSizeY(); dy++) {
@@ -248,13 +247,13 @@ public final class CollisionUpdate {
                     }
                 }
             } else if (type == STRAIGHT_WALL.getId()) {
-                // Normal straight wall: blocks a single cardinal edge between two tiles.
+                // Normal straight walls: block a single cardinal edge between two tiles.
                 wall(position, impenetrable, Direction.WNES.get(orientation));
-            } else if (type == DIAGONAL_WALL.getId()
-                    || type == DIAGONAL_CORNER_WALL.getId()
-                    || type == RECTANGLE_CORNER_WALL.getId()
-                    || type == WALL_CORNER.getId()) {
-                // All diagonal / corner wall pieces: block the two cardinal directions that form the corner.
+            } else if (type == DIAGONAL_CORNER_WALL.getId() || type == RECTANGLE_CORNER_WALL.getId()) {
+                // Diagonal/rectangle corner walls: block a single diagonal edge.
+                wall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
+            } else if (type == WALL_CORNER.getId()) {
+                // Corner walls: block two cardinal edges that form an L-shaped corner.
                 largeCornerWall(position, impenetrable, Direction.WNES_DIAGONAL.get(orientation));
             }
         }

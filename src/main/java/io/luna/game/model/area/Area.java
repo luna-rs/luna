@@ -26,8 +26,13 @@ public abstract class Area implements Locatable {
      * @return The created {@link Area} instance.
      */
     public static SimpleBoxArea of(int southWestX, int southWestY, int northEastX, int northEastY) {
-        SimpleBoxArea box = new SimpleBoxArea(southWestX, southWestY, northEastX, northEastY);
-        box.setAnchorPosition(new Position(southWestX, southWestY));
+        int normalizedSwX = Math.min(southWestX, northEastX);
+        int normalizedSwY = Math.min(southWestY, northEastY);
+        int normalizedNeX = Math.max(southWestX, northEastX);
+        int normalizedNeY = Math.max(southWestY, northEastY);
+
+        SimpleBoxArea box = new SimpleBoxArea(normalizedSwX, normalizedSwY, normalizedNeX, normalizedNeY);
+        box.setAnchorPosition(new Position(normalizedSwX, normalizedSwY));
         return box;
     }
 

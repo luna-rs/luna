@@ -7,4 +7,4 @@ import kotlin.reflect.KClass
 /**
  * An implementation of [ActionQueue.contains] for [KClass].
  */
-fun ActionQueue.contains(type: KClass<out Action<*>>) = contains(type.java)
+operator fun ActionQueue.contains(type: KClass<out Action<*>>) = contains(type.java)

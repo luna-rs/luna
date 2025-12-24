@@ -11,6 +11,7 @@ import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.game.model.`object`.GameObject
 import io.luna.net.msg.`in`.ItemOnItemMessageReader
+import kotlinx.coroutines.future.await
 import java.util.*
 
 /**
@@ -38,7 +39,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                 bot.log("Can't find ${itemName(usedId)} on index ${index.asInt}.")
                 return false
             }
-            if (bot.movementStack.walk(target)) {
+            if (bot.movementStack.walkUntilReached(target).await()) {
                 val cond = SuspendableCondition {
                     (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                             bot.isInteractingWith(target)

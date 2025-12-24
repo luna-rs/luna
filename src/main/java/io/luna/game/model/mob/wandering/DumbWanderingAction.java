@@ -3,7 +3,6 @@ package io.luna.game.model.mob.wandering;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Direction;
-import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
@@ -61,9 +60,7 @@ public final class DumbWanderingAction extends Action<Mob> {
                 Position nextPosition = mob.getPosition().translate(1, nextDirection);
 
                 // Stay inside wander bounds and respect collision/pathing rules.
-                if (area.contains(nextPosition) &&
-                        world.getCollisionManager().traversable(mob.getPosition(), EntityType.NPC, nextDirection)) {
-                    mob.getWalking().walk(nextPosition);
+                if (area.contains(nextPosition) && mob.getNavigator().step(nextDirection)) {
                     break;
                 }
             }

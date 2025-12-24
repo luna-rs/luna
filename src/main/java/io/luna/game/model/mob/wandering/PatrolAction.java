@@ -7,6 +7,7 @@ import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.WalkingNavigator;
 import io.luna.game.model.mob.WalkingQueue;
 import io.luna.game.model.path.AStarPathfinder;
 import io.luna.game.model.path.PlayerPathfinder;
@@ -208,7 +209,7 @@ public final class PatrolAction extends Action<Mob> {
                 // If we've already pathed to this waypoint last, re-roll on next execution.
                 return false;
             }
-            pathJob = computeAndQueuePathAsync(game, waypoints.get(targetIndex));
+            pathJob = computeAndQueuePathAsync(waypoints.get(targetIndex));
             lastWaypointIndex = targetIndex;
 
             // Check if end of route has been reached, if so reset.
@@ -222,25 +223,15 @@ public final class PatrolAction extends Action<Mob> {
     }
 
     /**
-     * Submits an asynchronous pathfinding task to the {@link GameService} to compute a path to the given destination
+     * Submits an asynchronous pathfinding task to the {@link WalkingNavigator} to compute a path to the given destination
      * and, once computed, queues the resulting steps onto the mob's {@link WalkingQueue}.
-     * <p>
-     * Pathfinding is performed off the main thread, and {@link WalkingQueue#addPath} is executed on the game executor
-     * to ensure all walking mutations happen on the correct thread.
      *
-     * @param game The game service used to submit the pathfinding job.
      * @param dest The destination position to path towards.
      * @return A {@link CompletableFuture} that completes once the path has been queued, or completes exceptionally
      * if pathfinding fails.
      */
-    private CompletableFuture<Void> computeAndQueuePathAsync(GameService game, Position dest) {
-        WalkingQueue walking = mob.getWalking();
+    private CompletableFuture<Void> computeAndQueuePathAsync(Position dest) {
         AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
-        return game.submit(() -> walking.findPath(dest, true, pf)).
-                thenAcceptAsync(walking::addPath, game.getGameExecutor())
-                .exceptionally(ex -> {
-                    logger.catching(ex);
-                    return null;
-                });
+        return mob.getNavigator().walk(dest, pf, true);
     }
 }

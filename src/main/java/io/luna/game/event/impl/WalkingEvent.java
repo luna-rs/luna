@@ -1,9 +1,8 @@
 package io.luna.game.event.impl;
 
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
-import io.luna.game.model.mob.WalkingQueue.Step;
 
-import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
@@ -55,59 +54,32 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     }
 
     /**
+     * The steps to be sent to the walking queue.
+     */
+    private final Deque<Position> steps;
+    /**
      * The walking origin.
      */
     private final WalkingOrigin origin;
-
-    /**
-     * The {@code x} coordinate of the first step.
-     */
-    private final int firstStepX;
-
-    /**
-     * The {@code y} coordinate of the first step.
-     */
-    private final int firstStepY;
-
-    /**
-     * The path.
-     */
-    private final int[][] path;
-
-    /**
-     * The path size.
-     */
-    private final int pathSize;
 
     /**
      * If the player is running.
      */
     private final boolean running;
 
-    /**
-     * The steps to be sent to the walking queue.
-     */
-    private Deque<Step> steps;
 
     /**
      * Creates a new {@link WalkingEvent}.
      *
      * @param player The player.
+     *
      * @param origin The walking origin.
-     * @param firstStepX The {@code x} coordinate of the first step.
-     * @param firstStepY The {@code y} coordinate of the first step.
-     * @param path The path.
-     * @param pathSize The path size.
      * @param running If the player is running.
      */
-    public WalkingEvent(Player player, WalkingOrigin origin, int firstStepX, int firstStepY, int[][] path,
-                        int pathSize, boolean running) {
+    public WalkingEvent(Player player, Deque<Position> steps, WalkingOrigin origin, boolean running) {
         super(player);
+        this.steps = steps;
         this.origin = origin;
-        this.firstStepX = firstStepX;
-        this.firstStepY = firstStepY;
-        this.path = path;
-        this.pathSize = pathSize;
         this.running = running;
     }
 
@@ -119,34 +91,6 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     }
 
     /**
-     * @return The {@code x} coordinate of the first step.
-     */
-    public int getFirstStepX() {
-        return firstStepX;
-    }
-
-    /**
-     * @return The {@code y} coordinate of the first step.
-     */
-    public int getFirstStepY() {
-        return firstStepY;
-    }
-
-    /**
-     * @return The path
-     */
-    public int[][] getPath() {
-        return path;
-    }
-
-    /**
-     * @return The path size.
-     */
-    public int getPathSize() {
-        return pathSize;
-    }
-
-    /**
      * @return If the player is running.
      */
     public boolean isRunning() {
@@ -154,16 +98,9 @@ public final class WalkingEvent extends PlayerEvent implements ControllableEvent
     }
 
     /**
-     * @return The walking path.
+     * @return The walking path converted from a nested array to a queue of positions.
      */
-    public Deque<Step> getSteps() {
-        if (steps == null) {
-            steps = new ArrayDeque<>(pathSize + 1);
-            steps.add(new Step(firstStepX, firstStepY));
-            for (int i = 0; i < pathSize; i++) {
-                steps.add(new Step(path[i][0] + firstStepX, path[i][1] + firstStepY));
-            }
-        }
-        return this.steps;
+    public Deque<Position> getSteps() {
+        return steps;
     }
 }

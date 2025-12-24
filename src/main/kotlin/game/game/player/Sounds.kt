@@ -6,7 +6,6 @@ package game.player
  * @author lare96
  */
 enum class Sounds(val id: Int) {
-    PICK_LOCK(37),
     TELEGRAB(200),
     TELEPORT_REGULAR(202),
     ENCHANT_LVL_6(203),
@@ -53,6 +52,7 @@ enum class Sounds(val id: Int) {
     TAKE_DAMAGE_3(823),
     TAKE_DAMAGE_4(824),
     TELEPORT_ANCIENT(1048),
+    PICK_LOCK(1272),
     STRING_BOW(1311),
     BURN_LOG_QUICK(2584)
 }

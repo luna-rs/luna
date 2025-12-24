@@ -33,10 +33,10 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * Range of valid skill identifiers.
      * <p>
-     * This is a closed range: {@code [0, 20)} which corresponds to ids 0..20 inclusive.
+     * This is a closed-open range: {@code [0, 21)} which corresponds to ids 0..20 inclusive.
      * </p>
      */
-    public static final Range<Integer> SKILL_IDS = Range.closed(0, 20);
+    public static final Range<Integer> SKILL_IDS = Range.closedOpen(0, 21);
 
     /**
      * The maximum attainable experience in a single skill.
@@ -82,7 +82,7 @@ public final class SkillSet implements Iterable<Skill> {
         }
 
         for (int index = 99; index > 0; index--) {
-            if (EXPERIENCE_TABLE [index] > experience) {
+            if (EXPERIENCE_TABLE[index] > experience) {
                 continue;
             }
             return index;
@@ -237,7 +237,7 @@ public final class SkillSet implements Iterable<Skill> {
      * @throws IllegalArgumentException if {@code newSkills.length != skills.length}.
      */
     public void set(Skill[] newSkills) {
-        checkArgument(newSkills.length == skills.length, "newSkills.length must equal skills.length");
+        checkArgument(newSkills.length == skills.length, "newSkills.length [" + newSkills.length + "] must equal skills.length [" + skills.length + "].");
 
         firingEvents = false;
         try {

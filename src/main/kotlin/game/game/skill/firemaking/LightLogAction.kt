@@ -2,12 +2,11 @@ package game.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Sounds
 import io.luna.game.model.Direction
-import io.luna.game.model.EntityType
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.ObjectType
-import game.player.Sounds
 
 /**
  * A [LightAction] implementation that enables lighting logs to create fires.
@@ -80,14 +79,16 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
             mob.firemaking.addExperience(log.exp)
 
             // Walk in a non-blocked direction prioritizing west.
-            val collision = mob.world.collisionManager
             for (dir in WALK_DIRECTIONS) {
-                if (collision.traversable(mob.position, EntityType.NPC, dir)) {
-                    val newPosition = mob.position.translate(1, dir)
-                    mob.lock(3)
-                    mob.walking.walk(newPosition)
-                    world.scheduleOnce(2) {
-                        mob.face(dir.opposite())
+                if (mob.navigator.step(dir)) {
+                    mob.lock()
+                    world.schedule(1) {
+                        if(executions == 2) {
+                            mob.face(dir.opposite())
+                        } else if(executions >= 3) {
+                            mob.unlock()
+                            it.cancel()
+                        }
                     }
                     break
                 }

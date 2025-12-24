@@ -18,7 +18,6 @@ import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.io.BotClient;
 import io.luna.game.model.mob.bot.io.BotInputMessageHandler;
 import io.luna.game.model.mob.bot.io.BotOutputMessageHandler;
-import io.luna.game.model.mob.bot.movement.BotMovementStack;
 import io.luna.game.model.mob.bot.script.BotScriptStack;
 import io.luna.game.persistence.BotData;
 import io.luna.game.persistence.PlayerData;
@@ -212,7 +211,7 @@ public final class Bot extends Player {
         botClient = new BotClient(this, context.getServer().getMessageRepository());
         manager = world.getBotManager();
         scriptStack = new BotScriptStack(this, manager.getScriptManager());
-        movementStack = new BotMovementStack(this, manager.getMovementManager());
+        movementStack = new BotMovementStack(this);
         setClient(botClient);
     }
 

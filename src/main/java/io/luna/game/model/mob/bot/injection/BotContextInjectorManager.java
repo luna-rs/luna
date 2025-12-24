@@ -3,6 +3,7 @@ package io.luna.game.model.mob.bot.injection;
 import com.google.common.collect.ImmutableList;
 import io.luna.game.event.Event;
 import io.luna.game.model.Locatable;
+import io.luna.game.model.Position;
 import io.luna.game.model.mob.bot.Bot;
 
 import java.util.ArrayList;
@@ -69,7 +70,11 @@ public final class BotContextInjectorManager {
             }
 
             int radius = event.contextRadius(bot);
-            if (radius == -1 || !bot.getPosition().isWithinDistance(locatable.absLocation(), radius)) {
+            Position position = locatable.absLocation();
+            if (position == null) {
+                continue;
+            }
+            if (radius == -1 || !bot.getPosition().isWithinDistance(position, radius)) {
                 continue;
             }
 

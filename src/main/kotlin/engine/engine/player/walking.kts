@@ -15,5 +15,4 @@ on(WalkingEvent::class, EventPriority.HIGH) {
     }
     plr.walking.clear()
     plr.walking.addPath(steps)
-    plr.walking.setRunningPath(isRunning || plr.isRunning)
 }

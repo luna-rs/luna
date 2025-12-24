@@ -1,37 +1,44 @@
-package io.luna.game.model.mob.bot.movement;
+package io.luna.game.model.mob.bot;
 
 import io.luna.game.GameService;
+import io.luna.game.model.Entity;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.Locatable;
+import io.luna.game.model.mob.WalkingNavigator;
 import io.luna.game.model.mob.WalkingQueue;
-import io.luna.game.model.mob.bot.Bot;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import io.luna.game.task.Task;
 
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * A movement controller that manages sequential pathfinding and movement requests.
  * <p>
  * It encapsulates a single active {@link BotMovementRequest}, representing the current movement operation the bot
- * is performing. When a new request is issued via {@link #addPath(Locatable)}, any existing request is
+ * is performing. When a new request is issued via {@link #walk(Locatable)}, any existing request is
  * automatically cancelled and replaced.
  * </p>
- *
  * <p>
- * Pathfinding is performed asynchronously on the thread pool managed by {@link BotMovementManager#getPool()},
- * while movement application occurs on the game logic thread provided by {@link GameService#getGameExecutor()}.
- * This separation ensures pathfinding does not block the main tick loop.
+ * Pathfinding is performed asynchronously on the thread pool managed by {@link WalkingNavigator}, while movement
+ * application occurs on the game logic thread provided by {@link GameService#getGameExecutor()}. This separation
+ * ensures pathfinding does not block the main tick loop.
  * </p>
  *
  * @author lare96
  */
 public final class BotMovementStack {
 
-    /**
-     * Logger for movement-related debugging and error reporting.
+    /*
+     * TODO Webwalking support:
+     *  - Integrate stairs, doors, ladders, trapdoors, and other interactive world objects into BotPathfinder.
+     *  - Add a registration/metadata layer for these objects so the pathfinder can treat them as navigable edges
+     *    (e.g., open door, climb ladder, use trapdoor) instead of only relying on raw collision checks.
+     *  - Ensure bots automatically discover and use these interactions when computing paths to dynamic targets.
+     *
+     * TODO Movement priorities:
+     *  - NORMAL: Default movement priority. Will be ignored if current request is HIGH/IMMUTABLE.
+     *  - HIGH: Will ignore NORMAL requests for cancellation. Overridden by other HIGH level requests and IMMUTABLE.
+     *  - IMMUTABLE: Once requested, can never be overridden, even by another IMMUTABLE request.
      */
-    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Internal structure representing a single movement request in progress.
@@ -74,11 +81,6 @@ public final class BotMovementStack {
     private final Bot bot;
 
     /**
-     * Manager responsible for dispatching async pathfinding tasks.
-     */
-    private final BotMovementManager manager;
-
-    /**
      * The current pending movement request, or {@code null} if no movement task is active.
      */
     private BotMovementRequest request;
@@ -87,11 +89,9 @@ public final class BotMovementStack {
      * Creates a new {@link BotMovementStack}.
      *
      * @param bot The bot associated with this stack.
-     * @param manager The manager coordinating asynchronous pathfinding operations.
      */
-    public BotMovementStack(Bot bot, BotMovementManager manager) {
+    public BotMovementStack(Bot bot) {
         this.bot = bot;
-        this.manager = manager;
     }
 
     /**
@@ -106,13 +106,54 @@ public final class BotMovementStack {
      * @return A {@link CompletableFuture} completing when the path has been generated and queued. The returned future
      * does <strong>not</strong> wait for arrival at the destination.
      */
-    public CompletableFuture<Void> addPath(Locatable target) {
+    public CompletableFuture<Void> walk(Locatable target) {
         if (isCurrentTarget(target)) {
             return request.result;
         }
         cancel();
         request = createRequest(target);
         return request.result;
+    }
+
+    /**
+     * Begins an asynchronous walk operation toward the given target and returns a future that completes once the bot
+     * stops moving and is either within interaction distance of the target or has failed to reach it.
+     * <p>
+     * This method first queues a path via {@link #walk(Locatable)} and then schedules a lightweight polling task on the
+     * game thread to detect when the bot's {@link WalkingQueue} becomes empty. Once movement ends, the future completes
+     * {@code true} if the bot is within the target's effective size distance, otherwise {@code false}.
+     * </p>
+     *
+     * @param target The target destination to walk toward.
+     * @return A {@link CompletableFuture} that completes {@code true} if the bot ends within reach of {@code target},
+     * or {@code false} if movement ends elsewhere or the bot becomes inactive.
+     */
+    public CompletableFuture<Boolean> walkUntilReached(Locatable target) {
+        // TODO If priorities are ever added this needs to be changed to ensure its listening for the right target.
+        CompletableFuture<Boolean> walkResult = new CompletableFuture<>();
+        walk(target).thenAcceptAsync(it ->
+                bot.getWorld().schedule(new Task(true, 1) {
+                    @Override
+                    protected void execute() {
+                        if (bot.getState() == EntityState.INACTIVE) {
+                            cancel();
+                            return;
+                        }
+                        if (bot.getWalking().isEmpty()) {
+                            int size = 1;
+                            if (target instanceof Entity) {
+                                size = ((Entity) target).size();
+                            }
+                            if (bot.getPosition().isWithinDistance(target.absLocation(), size)) {
+                                walkResult.complete(true);
+                            } else {
+                                walkResult.complete(false);
+                            }
+                            cancel();
+                        }
+                    }
+                }), bot.getService().getGameExecutor());
+        return walkResult;
     }
 
     /**
@@ -159,24 +200,8 @@ public final class BotMovementStack {
      * @return A constructed {@link BotMovementRequest} wrapping the future and target.
      */
     private BotMovementRequest createRequest(Locatable target) {
-        WalkingQueue walking = bot.getWalking();
-
         bot.log("Generating new movement path to " + target + ".");
-        CompletableFuture<Void> pathFuture =
-                CompletableFuture.supplyAsync(() -> walking.findPath(target.absLocation(), true), manager.getPool())
-                        .thenAcceptAsync(path -> {
-                            walking.addPath(path);
-                            bot.log("Path generated, now walking to " + target + ".");
-                        }, bot.getService().getGameExecutor())
-                        .exceptionally(ex -> {
-                            if (!(ex instanceof CancellationException)) {
-                                logger.error("Pathfinding for bot {} and {} failed!",
-                                        bot.getUsername(), target, ex);
-                            }
-                            return null;
-                        });
-
-        return new BotMovementRequest(pathFuture, target);
+        return new BotMovementRequest(bot.getNavigator().walk(target, true), target);
     }
 
     /**

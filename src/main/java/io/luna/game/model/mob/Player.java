@@ -1021,8 +1021,10 @@ public class Player extends Mob {
      * @param running {@code true} to enable running, {@code false} to disable.
      */
     public void setRunning(boolean running) {
-        sendVarp(PersistentVarp.RUNNING, running);
-        walking.setRunningPath(running);
+        if(isRunning() != running) {
+            sendVarp(PersistentVarp.RUNNING, running);
+            walking.setRunning(running);
+        }
     }
 
     /**

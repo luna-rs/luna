@@ -11,7 +11,6 @@ import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.WalkingQueue.Step;
 import io.luna.game.model.path.AStarPathfinder;
 import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.util.RandomUtils;
@@ -132,6 +131,7 @@ public final class SmartWanderingAction extends Action<Mob> {
      * </p>
      */
     private void populateDestinationQueue() {
+        // TODO If nothing found in common areas, sample from zones.
         MapIndexTable indexTable = world.getContext().getCache().getMapIndexTable();
         for (int loop = 0; loop < 50; loop++) {
             Position nextPosition = area.randomPosition();
@@ -172,15 +172,14 @@ public final class SmartWanderingAction extends Action<Mob> {
      */
     private CompletableFuture<Void> buildWaypointsAsync(GameService game, Position dest) {
         AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
-        return game.submit(() -> mob.getWalking().findPath(dest, true, pf)).
-                thenAcceptAsync(path -> {
-                    if (path != null && !path.isEmpty()) {
-                        // Convert steps into absolute positions. Z is pinned to the mob's current plane.
-                        List<Position> stepList = path.stream().map(step ->
-                                new Position(step.getX(), step.getY(), mob.getZ())).collect(Collectors.toList());
-                        waypoints.addAll(stepList);
-                    }
-                }, game.getGameExecutor())
+        return mob.getNavigator().findPath(mob.getPosition(), dest, pf, true).thenAcceptAsync(path -> {
+            if (path != null && !path.isEmpty()) {
+                // Convert steps into absolute positions. Z is pinned to the mob's current plane.
+                List<Position> stepList = path.stream().map(step ->
+                        new Position(step.getX(), step.getY(), mob.getZ())).collect(Collectors.toList());
+                waypoints.addAll(stepList);
+            }
+        }, game.getGameExecutor())
                 .exceptionally(ex -> {
                     logger.catching(ex);
                     return null;
@@ -199,8 +198,8 @@ public final class SmartWanderingAction extends Action<Mob> {
         int stepsLeft = RandomUtils.inclusive(minSteps, Position.VIEWING_DISTANCE * 2);
         stepsLeft = Math.min(stepsLeft, waypoints.size());
 
-        Deque<Step> path = new ArrayDeque<>(stepsLeft);
-        for (; ; ) {
+        Deque<Position> path = new ArrayDeque<>(stepsLeft);
+        for (; ;) {
             if (stepsLeft < 1) {
                 break;
             }
@@ -209,8 +208,7 @@ public final class SmartWanderingAction extends Action<Mob> {
                 break;
             }
             stepsLeft--;
-            Step nextStep = new Step(position.getX(), position.getY());
-            path.add(nextStep);
+            path.add(position);
         }
         mob.getWalking().addPath(path);
     }

@@ -12,6 +12,7 @@ import io.luna.net.msg.`in`.GroundItemClickMessageReader
 import io.luna.net.msg.`in`.NpcClickMessageReader
 import io.luna.net.msg.`in`.ObjectClickMessageReader
 import io.luna.net.msg.`in`.PlayerClickMessageReader
+import kotlinx.coroutines.future.await
 
 /**
  * A [BotActionHandler] implementation for interaction related actions.
@@ -31,7 +32,7 @@ class BotInteractionActionHandler(private val bot: Bot) {
      * @return `false` if the interaction was unsuccessful.
      */
     suspend fun interact(option: Int, target: Entity): Boolean {
-        if (bot.movementStack.walk(target)) {
+        if (bot.movementStack.walkUntilReached(target).await()) {
             val cond = SuspendableCondition {
                 (target is GroundItem && bot.isWithinDistance(target, 1)) ||
                         bot.isInteractingWith(target)

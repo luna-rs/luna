@@ -3,7 +3,6 @@ package io.luna.game.model;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Range;
 import io.luna.game.model.chunk.Chunk;
-import io.luna.game.model.mob.WalkingQueue.Step;
 
 import java.util.Comparator;
 import java.util.Objects;
@@ -215,8 +214,7 @@ public final class Position implements Locatable {
      * @return The translated position.
      */
     public Position translate(int amount, Direction direction) {
-        Step translation = direction.getTranslation();
-        return translate(amount * translation.getX(), amount * translation.getY(), 0);
+        return translate(amount * direction.getTranslateX(), amount * direction.getTranslateY(), 0);
     }
 
     /**

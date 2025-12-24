@@ -27,9 +27,9 @@ class MobFollowAction(mob: Mob, private val target: Mob) : Action<Mob>(mob, Acti
             return false
         }
         if (mob.position == target.position) {
-            mob.walking.walkRandomDirection()
+            mob.navigator.stepRandom(false)
         } else {
-            mob.walking.walkBehind(target)
+            mob.navigator.walkBehind(target, false)
             lastPosition = target.position
         }
         return false

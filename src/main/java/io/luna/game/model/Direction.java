@@ -1,7 +1,6 @@
 package io.luna.game.model;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.game.model.mob.WalkingQueue.Step;
 import io.luna.util.RandomUtils;
 
 import java.util.Set;
@@ -15,15 +14,15 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Graham
  */
 public enum Direction {
-    NONE(-1, new Step(0, 0)),
-    NORTH_WEST(0, new Step(-1, 1)),
-    NORTH(1, new Step(0, 1)),
-    NORTH_EAST(2, new Step(1, 1)),
-    WEST(3, new Step(-1, 0)),
-    EAST(4, new Step(1, 0)),
-    SOUTH_WEST(5, new Step(-1, -1)),
-    SOUTH(6, new Step(0, -1)),
-    SOUTH_EAST(7, new Step(1, -1));
+    NONE(-1, 0, 0),
+    NORTH_WEST(0, -1, 1),
+    NORTH(1, 0, 1),
+    NORTH_EAST(2, 1, 1),
+    WEST(3, -1, 0),
+    EAST(4, 1, 0),
+    SOUTH_WEST(5, -1, -1),
+    SOUTH(6, 0, -1),
+    SOUTH_EAST(7, 1, -1);
 
     /**
      * A list of directions representing all possible directions of the NPC view cone, in order.
@@ -55,33 +54,37 @@ public enum Direction {
      */
     public final static ImmutableList<Direction> WNES_DIAGONAL = ImmutableList.of(NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST);
     public static final ImmutableList<Direction> ALL = ImmutableList.copyOf(values());
+    public static final ImmutableList<Direction> ALL_EXCEPT_NONE = ImmutableList.copyOf(values()).stream().
+            filter(it -> it != Direction.NONE).collect(ImmutableList.toImmutableList());
 
 
-    private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST, NORTH_EAST);
-    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST, NORTH_WEST);
-    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST, SOUTH_EAST);
-    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST, SOUTH_WEST);
+    private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST);
+    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST);
+    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST);
+    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST);
 
 
     /**
      * The direction identifier.
      */
     private final int id;
-    private final Step translate;
+    private final int translateX;
+    private final int translateY;
 
     /**
      * Creates a new {@link Direction}.
      *
      * @param id The direction identifier.
      */
-    Direction(int id, Step translate) {
+    Direction(int id, int translateX, int translateY) {
         this.id = id;
-        this.translate = translate;
+        this.translateX = translateX;
+        this.translateY = translateY;
     }
 
     public static Direction random() {
         Direction selected = RandomUtils.random(ALL);
-        if(selected == Direction.NONE) {
+        if (selected == Direction.NONE) {
             if (RandomUtils.nextBoolean()) {
                 return RandomUtils.random(Direction.NESW);
             } else {
@@ -116,8 +119,13 @@ public enum Direction {
 
     }
 
-    public Step getTranslation() {
-        return translate;
+
+    public int getTranslateX() {
+        return translateX;
+    }
+
+    public int getTranslateY() {
+        return translateY;
     }
 
     public static Set<Direction> getAllVisible(Direction from) {
@@ -225,18 +233,7 @@ public enum Direction {
     }
 
     /**
-     * Returns the direction between two steps.
-     *
-     * @param current The current step.
-     * @param next The next step.
-     * @return The direction between the current and next steps.
-     */
-    public static Direction between(Step current, Step next) {
-        return between(current.getX(), current.getY(), next.getX(), next.getY());
-    }
-
-    /**
-     * Returns the direction between two steps.
+     * Returns the direction between two positions.
      *
      * @param current The current step.
      * @param next The next step.

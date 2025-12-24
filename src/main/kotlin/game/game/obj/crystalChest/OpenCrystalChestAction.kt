@@ -6,6 +6,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import game.player.Animations
+import game.player.Sounds
 
 /**
  * A [RepeatingAction] that opens and loots a crystal chest [GameObject].
@@ -50,6 +51,7 @@ class OpenCrystalChestAction(plr: Player, val gameObject: GameObject, private va
             mob.lock()
             mob.sendMessage("You unlock the chest with your key.")
             mob.animation(Animations.PICKPOCKET)
+            mob.playSound(Sounds.PICK_LOCK)
             world.addObject(173, gameObject.position, gameObject.objectType, gameObject.direction, mob)
             state = State.SEARCHING
             return false

@@ -60,6 +60,11 @@ public abstract class Mob extends Entity {
     protected final WalkingQueue walking = new WalkingQueue(this);
 
     /**
+     * The movement navigator used for routing and generating paths.
+     */
+    protected final WalkingNavigator navigator = new WalkingNavigator(this);
+
+    /**
      * Index into the global {@link MobList}. {@code -1} indicates "not registered".
      */
     private int index = -1;
@@ -572,8 +577,8 @@ public abstract class Mob extends Entity {
      * @param direction The direction to face.
      */
     public final void face(Direction direction) {
-        int x = direction.getTranslation().getX();
-        int y = direction.getTranslation().getY();
+        int x = direction.getTranslateX();
+        int y = direction.getTranslateY();
         face(position.translate(x, y));
     }
 
@@ -831,6 +836,13 @@ public abstract class Mob extends Entity {
      */
     public final WalkingQueue getWalking() {
         return walking;
+    }
+
+    /**
+     * @return The movement navigator used for routing and generating paths.
+     */
+    public WalkingNavigator getNavigator() {
+        return navigator;
     }
 
     /**
