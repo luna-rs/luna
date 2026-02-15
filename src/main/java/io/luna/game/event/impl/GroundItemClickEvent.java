@@ -6,7 +6,6 @@ import io.luna.game.model.Position;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 /**
  * A {@link PlayerEvent} sent when a player clicks one of the options of an item on the ground.

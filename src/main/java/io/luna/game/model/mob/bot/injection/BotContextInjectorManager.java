@@ -2,6 +2,7 @@ package io.luna.game.model.mob.bot.injection;
 
 import com.google.common.collect.ImmutableList;
 import io.luna.game.event.Event;
+import io.luna.game.event.impl.InjectableEvent;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.bot.Bot;

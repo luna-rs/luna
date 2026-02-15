@@ -1,9 +1,11 @@
-package io.luna.game.model.mob.bot.injection;
+package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.bot.injection.BotContextInjector;
+import io.luna.game.model.mob.bot.injection.BotContextInjectorManager;
 
 /**
  * Represents an {@link Event} that can be injected into a {@link Bot} through the {@link BotContextInjectorManager}.

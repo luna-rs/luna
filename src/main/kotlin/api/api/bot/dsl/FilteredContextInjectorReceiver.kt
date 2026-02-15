@@ -3,14 +3,14 @@ package api.bot.dsl
 import api.predef.*
 import io.luna.game.model.mob.bot.Bot
 import io.luna.game.model.mob.bot.injection.BotContextInjector
-import io.luna.game.model.mob.bot.injection.InjectableEvent
+import io.luna.game.event.impl.InjectableEvent
 import kotlin.reflect.KClass
 
 /**
  * A DSL receiver used to finalize the definition of a bot event injector by attaching an action block that
  * executes when the filter condition passes.
  *
- * Instances of this class are created by [TypeContextInjectorReceiver.filter]. When the `then` function is called,
+ * Instances of this class are created by [ActionContextInjectorReceiver.filter]. When the `then` function is called,
  * a new [BotContextInjector] is built and registered with the [scriptInjectors] list.
  *
  * @param E The [InjectableEvent] subtype being handled.
@@ -20,8 +20,8 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-class FilterContextInjectorReceiver<E : InjectableEvent>(private val type: KClass<E>,
-                                                         private val filter: BotInjectorWrapper<E>.() -> Boolean) {
+class FilteredContextInjectorReceiver<E : InjectableEvent>(private val type: KClass<E>,
+                                                                                                      private val filter: BotInjectorWrapper<E>.() -> Boolean) {
 
     /**
      * Defines the action to perform when the filter predicate succeeds.

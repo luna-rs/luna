@@ -7,7 +7,7 @@ import io.luna.game.event.EventListenerPipeline;
 import io.luna.game.event.EventListenerPipelineSet;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.bot.injection.BotContextInjectorManager;
-import io.luna.game.model.mob.bot.injection.InjectableEvent;
+import io.luna.game.event.impl.InjectableEvent;
 
 import static java.util.Objects.requireNonNull;
 

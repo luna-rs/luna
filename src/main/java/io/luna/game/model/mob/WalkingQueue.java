@@ -43,17 +43,17 @@ public final class WalkingQueue {
     /**
      * The deque of upcoming steps to process for this mob.
      * <p>
-     * This represents the forward walking path. Each position is a tile the mob will move onto
-     * in order as {@link #process()} is called every cycle.
+     * This represents the forward walking path. Each position is a tile the mob will move to in order as {@link #process()}
+     * is called every cycle.
      */
     private final Deque<Position> current = new ArrayDeque<>();
 
     /**
      * The deque of previously visited steps for this mob.
      * <p>
-     * History is used when queuing a new path that starts on a tile the mob recently walked through.
-     * In that case, the queue can "backtrack" using this history to smoothly splice the new path
-     * into the old one without teleporting or snapping.
+     * History is used when queuing a new path that starts on a tile the mob recently walked through. In that case, the
+     * queue can "backtrack" using this history to smoothly splice the new path into the old one without teleporting
+     * or snapping.
      */
     private final Deque<Position> history = new ArrayDeque<>();
 
@@ -89,7 +89,6 @@ public final class WalkingQueue {
             return;
         }
 
-        // Prepare required values for path processing.
         Position currentStep = mob.getPosition();
         int plane = mob.getZ();
 

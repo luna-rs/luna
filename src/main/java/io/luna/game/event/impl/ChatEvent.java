@@ -3,7 +3,6 @@ package io.luna.game.event.impl;
 import io.luna.game.model.Locatable;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 import java.time.Instant;
 

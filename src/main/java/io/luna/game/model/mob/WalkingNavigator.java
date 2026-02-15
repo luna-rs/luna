@@ -96,7 +96,7 @@ public class WalkingNavigator {
     /**
      * Attempts to queue a single random step.
      *
-     * @param includeDiagonals If {@code true}, considers 8 directions; otherwise only NESW.
+     * @param includeDiagonals If {@code true}, considers 8 directions; otherwise only uses NESW.
      * @return {@code true} if a step was queued, {@code false} if all candidate directions were blocked.
      */
     public boolean stepRandom(boolean includeDiagonals) {

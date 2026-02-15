@@ -4,7 +4,6 @@ import io.luna.game.model.Locatable;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 import java.util.Optional;
 import java.util.OptionalInt;

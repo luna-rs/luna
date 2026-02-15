@@ -6,7 +6,6 @@ import io.luna.game.model.Position;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.PlayerContextMenuOption;
 import io.luna.game.model.mob.bot.Bot;
-import io.luna.game.model.mob.bot.injection.InjectableEvent;
 
 /**
  * A player-click based event. Not intended for interception.

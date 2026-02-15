@@ -51,13 +51,13 @@ class BotShopActionHandler(private val bot: Bot, private val handler: BotActionH
         val shopInterface = bot.overlays[ShopInterface::class] ?: return SuspendableFutureFailed
 
         bot.log("Buying $amount of ${itemName(id)}.")
-        val shopIndex = shopInterface.shop.container.computeIndexForId(id)
+        val shopIndex = shopInterface.shop.items.computeIndexForId(id)
         if (shopIndex.isEmpty) {
             // Shop doesn't have the item.
             bot.log("Shop doesn't have that item.")
             return SuspendableFutureFailed
         }
-        val shopItem = shopInterface.shop.container[shopIndex.asInt]
+        val shopItem = shopInterface.shop.items[shopIndex.asInt]
         if (shopItem == null || !bot.inventory.hasSpaceFor(shopItem)) {
             bot.log("Not enough inventory space to buy this item.")
             return SuspendableFutureFailed

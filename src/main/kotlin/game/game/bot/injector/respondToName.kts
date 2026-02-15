@@ -11,6 +11,6 @@ injector(ChatEvent::class).
     then {
         if(!bot.actions.contains(MobFollowAction::class)) {
             bot.follow(msg.plr)
-            bot.output.chat("Hi ${msg.plr.username}, you called me??")
+            bot.output.chat("Hi ${msg.plr.username}. I like it when you say my name ;)")
         }
     }
