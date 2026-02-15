@@ -11,6 +11,7 @@ import io.luna.game.model.item.ItemContainer.StackPolicy;
 import io.luna.game.model.mob.Player;
 
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +19,23 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 /**
- * A model representing a single shop where items can be bought and sold.
+ * A model representing a single in-game shop where {@link Item}s may be bought and sold.
+ * <p>
+ * A shop is composed of:
+ * <ul>
+ *     <li>A backing {@link ItemContainer} that holds the current visible stock.</li>
+ *     <li>An original stock snapshot ({@code amountMap}) used to determine restock eligibility and pricing.</li>
+ *     <li>A {@link RestockPolicy} that controls if/when stock replenishment is triggered.</li>
+ *     <li>A {@link BuyPolicy} that controls whether players may sell items to the shop.</li>
+ *     <li>A {@link Currency} item id used to pay for purchases and receive proceeds from sales.</li>
+ * </ul>
+ * <p>
+ * Pricing is dynamic and influenced by how overstocked or understocked the shop is relative to its expected stock.
+ * The expected stock for a slot is derived from {@code amountMap} when the shop naturally stocks the item, or
+ * {@link #GEN_DEFAULT_STOCK} for general-store style items.
+ * <p>
+ * This implementation also tracks which {@link Player}s are currently viewing the shop so that display updates
+ * can be broadcast when stock changes.
  *
  * @author lare96
  * @author natis1
@@ -26,133 +43,129 @@ import java.util.Set;
 public final class Shop {
 
     /**
-     * By what amount does an uncommon item decrease in value when overstocked by 1.
+     * Price change per extra unit stocked for uncommon/rare items in specialty shops.
      */
     private static final double SP_RARE_PRICE_CHANGE = 0.02;
 
     /**
-     * By what amount does a common item change in value when over/understocked by 1.
+     * Price change per unit stocked delta for common items in specialty shops.
      */
     private static final double SP_COMM_PRICE_CHANGE = 0.001;
 
     /**
-     * By what amount does an item that doesn't belong to a shop (IE sold to a general store) change in value
-     * when over/understocked by 1.
+     * Price change per unit stocked delta for items not naturally stocked by a shop (general-store behavior).
      */
     private static final double GEN_PRICE_CHANGE = 0.03;
 
     /**
-     * How many items must a store stock by default for it to be considered a "common" item that uses the much lower
-     * price change value.
+     * The expected stock threshold at which an item is treated as "common" and uses the lower price change value.
      */
     private static final int SP_COMM_THRESHOLD = 20;
 
     /**
-     * At what stock does a general store sell an item that doesn't belong at its regular item price.
+     * The expected default stock used for pricing items that are not naturally stocked by a shop.
      */
     private static final int GEN_DEFAULT_STOCK = 10;
 
     /**
-     * What is the minimum price of an item at a specialized shop?
-     * This is also the minimum sell price for the player, regardless of what GEN_MIN_PRICE says.
+     * The minimum specialty shop buy/sell price multiplier relative to base item value.
      */
     private static final double SP_MIN_PRICE = 0.1;
 
     /**
-     * What is the minimum price that general stores can sell items that they don't stock to the player at?
+     * The minimum general-store buy price multiplier relative to base item value for non-stocked items.
      */
     private static final double GEN_MIN_PRICE = 0.3;
 
     /**
-     * What is the maximum price of an item, anywhere, buying or selling, relative to its base price?
+     * The maximum price multiplier relative to base item value.
      */
     private static final double MAX_PRICE = 1.3;
 
     /**
-     * What proportion of base price do items sell for when the stock of a store matches its default stock?
+     * The starting sell price multiplier for specialty shops when stock matches expected stock.
      */
     private static final double SP_STARTING_SELL_PRICE = 0.55;
 
     /**
-     * What proportion of base price do general items start at? (Uses the price when the general store is fully stocked
-     * which as far as RS2 is concerned, happens at 10 items by default.). To make it user friendly and easier to edit
-     * the variable is worded this way rather than just directly set at 0.10.
+     * The starting sell price multiplier for general-store style items at default stock.
      */
     private static final double GEN_STARTING_SELL_PRICE = 0.40 - (GEN_DEFAULT_STOCK * GEN_PRICE_CHANGE);
 
     /**
-     * For transactions with more than one item purchased or sold at a time, some slight rounding error, which can be
-     * no greater than the amount of items purchased minus 1, may occur because it doesn't calculate each item bought
-     * individually. This means that 2 items sold for 0.7 coins each will yield 1 coin, instead of the 0 coins you
-     * would get in vanilla behavior.
-     * <p>
-     * This behavior can be changed, resulting in a much less efficient price calculating formula, but which ultimately
-     * is slightly more authentic (but perhaps less desirable) to the original game.
+     * Shared number formatter used when displaying price messages to players.
      */
-    private static final boolean PERFECT_PRECISION_TRANSACTIONS = false;
+    private static final NumberFormat PRICE_FORMAT = NumberFormat.getInstance(Locale.UK);
 
     /**
-     * The number formatter. Uses the UK locale.
-     */
-    private static final NumberFormat FORMAT = NumberFormat.getInstance(Locale.UK);
-
-    /**
-     * The world instance.
+     * The world instance used for scheduling restock tasks.
      */
     private final World world;
 
     /**
-     * The shop name.
+     * The display name of the shop.
      */
     private final String name;
 
     /**
-     * The shop items.
+     * The backing container for shop stock.
      */
-    private final ItemContainer container = new ItemContainer(40, StackPolicy.ALWAYS, 3900);
+    private final ItemContainer items = new ItemContainer(40, StackPolicy.ALWAYS, 3900);
 
     /**
-     * The restock policy.
+     * Restock behavior configuration for this shop. {@code null} signifies that this shop will not restock items.
      */
     private final RestockPolicy restockPolicy;
 
     /**
-     * The sell policy.
+     * Controls whether (and what) players may sell to this shop.
      */
     private final BuyPolicy buyPolicy;
 
     /**
-     * The currency used to buy items.
+     * The currency used by this shop for buying and selling.
      */
     private final Currency currency;
 
     /**
-     * The players viewing this shop.
+     * The set of players currently viewing this shop interface.
      */
     private final Set<Player> viewing = new HashSet<>();
 
     /**
-     * A dictionary of original item amounts. {@link OptionalInt#empty()} indicates an empty slot.
+     * Snapshot of original stock amounts for each shop slot.
+     * <p>
+     * A present value indicates the item is naturally stocked by this shop and may be restocked according to policy.
+     * {@link OptionalInt#empty()} indicates the slot was originally empty and should be treated as non-stocked for
+     * restocking behavior.
      */
-    private final OptionalInt[] amountMap = new OptionalInt[40];
+    private final OptionalInt[] amountMap;
 
     /**
-     * The restock task.
+     * The task responsible for replenishing stock over time, depending on the {@link #restockPolicy}.
      */
     private RestockTask restockTask;
 
     /**
-     * A set of indexes that need restocking.
+     * The set of slot indexes that have reached the restock threshold and require replenishment.
      */
-    private final Set<Integer> needsRestock = new HashSet<>();
+    private final Set<Integer> restockItems = new HashSet<>();
 
     /**
      * Creates a new {@link Shop}.
+     * <p>
+     * The shop container is created immediately and configured with a {@link ShopListener} for stock initialization,
+     * restock triggering, and display update broadcasting.
+     * <p>
+     * The {@code amountMap} is initialized to {@link OptionalInt#empty()} for all slots. The actual snapshot of
+     * original stock values is established when the backing {@link ItemContainer} is initialized and the listener
+     * receives its {@code onInit} callback.
      *
-     * @param name The shop name.
+     * @param world The world instance used for scheduling restock tasks.
+     * @param name The shop name displayed to players.
      * @param restockPolicy The restock policy.
-     * @param buyPolicy The sell policy.
-     * @param currency The currency used to buy items.
+     * @param buyPolicy The policy controlling what items may be sold to this shop.
+     * @param currency The currency item used for transactions.
      */
     public Shop(World world, String name, RestockPolicy restockPolicy, BuyPolicy buyPolicy, Currency currency) {
         this.world = world;
@@ -160,89 +173,98 @@ public final class Shop {
         this.restockPolicy = restockPolicy;
         this.buyPolicy = buyPolicy;
         this.currency = currency;
-        restockTask = new RestockTask(this);
 
-        container.setListeners(new ShopListener(this));
+        amountMap = new OptionalInt[40];
+        Arrays.fill(amountMap, OptionalInt.empty());
+
+        restockTask = new RestockTask(this);
+        items.setListeners(new ShopListener(this));
     }
 
     /**
-     * Sends the sell value of the inventory item on {@code index} to the Player.
+     * Sends a message to {@code player} describing how much this shop would pay for the inventory item located at
+     * {@code index}.
      *
-     * @param player The player.
-     * @param index The index of the item.
+     * @param player The player requesting the sell value.
+     * @param index The inventory slot index.
      */
     public void sendSellValue(Player player, int index) {
         Item item = player.getInventory().get(index);
         if (item != null && computeCanSell(item)) {
-            int value = computeSellValue(item, 1);
+            int value = computeSellValue(item.getId(), 1);
             String itemName = item.getItemDef().getName();
             String currencyName = currency.computeName(value);
 
-            player.sendMessage(itemName + ": shop will buy for " + FORMAT.format(value) + " " + currencyName + ".");
+            player.sendMessage(itemName + ": shop will buy for " + PRICE_FORMAT.format(value) + " " + currencyName + ".");
         } else {
             player.sendMessage("You cannot sell that item here.");
         }
     }
 
     /**
-     * Sends the buy value of the shop item on {@code index} to the Player.
+     * Sends a message to {@code player} describing how much it currently costs to buy the shop item located at
+     * {@code index}.
+     * <p>
+     * If the item slot is empty or out of stock, the player is informed the shop has run out.
      *
-     * @param player The player.
-     * @param index The index of the item.
+     * @param player The player requesting the buy value.
+     * @param index The shop container slot index.
      */
     public void sendBuyValue(Player player, int index) {
-        Item item = container.get(index);
+        Item item = items.get(index);
         if (item != null && item.getAmount() > 0) {
             String itemName = item.getItemDef().getName();
             int value = computeBuyValue(item, index, 1);
             String currencyName = currency.computeName(value);
 
-            player.sendMessage(itemName + ": currently costs " + FORMAT.format(value) + " " + currencyName + ".");
+            player.sendMessage(itemName + ": currently costs " + PRICE_FORMAT.format(value) + " " + currencyName + ".");
         } else {
             player.sendMessage("The shop has run out of stock.");
         }
     }
 
     /**
-     * Buy an item from this shop.
+     * Attempts to buy an item from this shop.
      *
-     * @param player The player.
-     * @param index The item's index.
-     * @param buyAmount The amount to buy.
-     * @return {@code true} if the item was bought.
+     * @param player The player buying items.
+     * @param index The shop slot index.
+     * @param buyAmount The amount requested.
+     * @return {@code true} if at least one item was purchased, otherwise {@code false}.
      */
     public boolean buy(Player player, int index, int buyAmount) {
         Inventory inventory = player.getInventory();
-        Item shopItem = container.get(index);
+        Item shopItem = items.get(index);
 
-        // Invalid index or nothing left in stock.
-        if (shopItem == null || shopItem.getAmount() <= 0) {
+        if (shopItem == null || shopItem.getAmount() < 1) {
             player.sendMessage("The shop has run out of stock.");
             return false;
         }
-        ItemDefinition itemDef = shopItem.getItemDef();
 
-        // Adjust the buy amount if it's greater than the amount in stock.
         if (buyAmount > shopItem.getAmount()) {
+            // Buy amount is above store amount, clamp it.
             buyAmount = shopItem.getAmount();
         }
 
-        // Adjust buy amount if it's greater than available inventory space.
         int spacesNeeded = inventory.computeSpaceFor(shopItem.withAmount(buyAmount));
         int spacesAvailable = inventory.computeRemainingSize();
         if (spacesNeeded > spacesAvailable) {
-            if (itemDef.isStackable() || spacesAvailable == 0) {
+            if (spacesAvailable == 0) {
+                // No free space left.
                 inventory.fireCapacityExceededEvent();
                 return false;
             }
+            // Buy amount needs more inventory space than we have available, clamp it.
             buyAmount = spacesAvailable;
         }
 
-        // Determine if player has enough currency.
+        if (buyAmount < 1) {
+            return false;
+        }
+
         int hasValue = inventory.computeAmountForId(currency.getId());
         int totalValue = computeBuyValue(shopItem, index, buyAmount);
         if (hasValue < totalValue) {
-            // They don't, buy as many as they can afford.
+            // Total value is below what we have, find out the max we can purchase.
             while (buyAmount > 0 && hasValue < totalValue) {
                 buyAmount--;
                 totalValue = computeBuyValue(shopItem, index, buyAmount);
@@ -250,21 +272,19 @@ public final class Shop {
             player.sendMessage("You do not have enough " + currency.getPluralName() + " to buy this item.");
 
             if (buyAmount == 0) {
-                // They can't even afford one!
+                // If we don't have enough for anything, stop here.
                 return false;
             }
         }
 
-        // Buy the item.
         Item buyItem = shopItem.withAmount(buyAmount);
         Item currencyItem = new Item(currency.getId(), totalValue);
+
         if (inventory.remove(currencyItem) && inventory.add(buyItem)) {
-            if (amountMap[index] == OptionalInt.empty()) {
-                // Item was never originally in shop, remove it.
-                return container.remove(buyItem);
+            if (amountMap[index].isEmpty()) {
+                return items.remove(buyItem);
             } else {
-                // Decrement item on shop window.
-                container.set(index, shopItem.addAmount(-buyAmount));
+                items.set(index, shopItem.addAmount(-buyAmount));
                 return true;
             }
         }
@@ -272,94 +292,94 @@ public final class Shop {
     }
 
     /**
-     * Sell an item to this shop.
+     * Attempts to sell an item from a player's inventory into this shop.
+     * <p>
+     * The sale flow generally performs:
+     * <ol>
+     *     <li>Validation that the item exists and may be sold under {@link #buyPolicy}.</li>
+     *     <li>Clamping the sell amount to the available inventory quantity.</li>
+     *     <li>Checking that the shop has capacity to accept the item.</li>
+     *     <li>Checking that the resulting currency can fit in the player's inventory.</li>
+     *     <li>Removing the sold item and adding currency to the player.</li>
+     *     <li>Adding the sold item into the shop container.</li>
+     * </ol>
      *
-     * @param player The player.
-     * @param index The item's index.
-     * @param sellAmount The amount to sell.
-     * @return {@code true} if the item was sold.
+     * @param player The player selling items.
+     * @param index The inventory slot index.
+     * @param sellAmount The amount requested.
+     * @return {@code true} if the sale completed, otherwise {@code false}.
      */
     public boolean sell(Player player, int index, int sellAmount) {
         Inventory inventory = player.getInventory();
         Item inventoryItem = inventory.get(index);
 
-        // Invalid index or cannot sell item.
         if (inventoryItem == null || !computeCanSell(inventoryItem)) {
             player.sendMessage("You cannot sell that item here.");
             return false;
         }
 
-        // Adjust the sell amount if it's greater than what's in the inventory.
         int inventoryAmount = inventory.computeAmountForId(inventoryItem.getId());
         if (sellAmount > inventoryAmount) {
             sellAmount = inventoryAmount;
         }
 
-        // Check if the shop has the space to hold the item being sold.
         Item sellItem = inventoryItem.withAmount(sellAmount);
-        boolean exceedsCapacity = !container.hasSpaceFor(sellItem);
-        if (exceedsCapacity) {
+        if (!items.hasSpaceFor(sellItem)) {
             player.sendMessage("This shop is currently full.");
             return false;
         }
 
-        // Ensure that the currency can fit into the inventory.
-        int totalValue = computeSellValue(sellItem, sellAmount);
+        int totalValue = computeSellValue(sellItem.getId(), sellAmount);
         Item currencyItem = new Item(currency.getId(), totalValue);
         if (!inventory.hasSpaceFor(currencyItem)) {
             inventory.fireCapacityExceededEvent();
             return false;
         }
 
-        // Sell the item.
         if (inventory.remove(sellItem) && inventory.add(currencyItem)) {
-            return container.add(sellItem);
+            return items.add(sellItem);
         }
         return false;
     }
 
     /**
-     * Computes the buy value of {@code item}.
+     * Computes the total currency cost of purchasing {@code amountBought} units of {@code item} from this shop.
      * <p>
-     * This is based on extensive black-box testing of modern OSRS's shops, and assuming that none of the code for shop prices
-     * has changed since RS2. The principal difference between this function and most private servers is that this one
-     * accounts for the different shop formulas used with items that the store normally stocks
-     * (for example: selling a staff to Zaff, or a security book to a general store).
+     * Pricing is dynamic and depends on current stock relative to expected stock:
+     * <ul>
+     *     <li>Items naturally stocked by this shop (slot present in {@code amountMap}) use specialty pricing rules.</li>
+     *     <li>Items not naturally stocked use general-store style pricing with {@link #GEN_DEFAULT_STOCK} as expected stock.</li>
+     * </ul>
+     * <p>
      *
-     * @param item The item.
-     * @param index The index of the item in the shop.
-     * @param amountBought The amount of the item to be purchased.
-     * @return The buy value.
+     * @param item The shop item.
+     * @param index The slot index in the shop container.
+     * @param amountBought The quantity being purchased.
+     * @return The total purchase cost in units of {@link #currency}.
+     * @throws IllegalArgumentException If {@code amountBought} is negative.
      */
     private int computeBuyValue(Item item, int index, int amountBought) {
         Preconditions.checkArgument(amountBought >= 0);
 
         int totalMoney = 0;
         int value = item.getItemDef().getValue();
-        int amountStocked = container.computeAmountForIndex(index);
-        int itemsToReachMaxPrice, itemsToReachMinPrice, expectedAmount;
-        double maxPrice, minPrice, priceChange;
+        int amountStocked = items.computeAmountForIndex(index);
+
+        int itemsToReachMaxPrice;
+        int itemsToReachMinPrice;
+        int expectedAmount;
+
+        double maxPrice;
+        double minPrice;
+        double priceChange;
+
         expectedAmount = amountMap[index].orElse(GEN_DEFAULT_STOCK);
-        /*
-          If an item is naturally sold by the shop it will have a natural expected stock.
 
-          These items are sold by the shop at much lower price than normal:
-          100% value - 2% per extra item stocked, minimum of 10%, maximum 130%???
-
-          whereas items that are not naturally sold are sold at a price of:
-          130% - 3% per item stocked, minimum of 40%
-
-          These values seem to be rounded to the nearest coin.
-         */
         if (amountMap[index].isPresent()) {
             maxPrice = MAX_PRICE;
             minPrice = SP_MIN_PRICE;
             priceChange = (expectedAmount >= SP_COMM_THRESHOLD) ? SP_COMM_PRICE_CHANGE : SP_RARE_PRICE_CHANGE;
             itemsToReachMaxPrice = (int) ((maxPrice - 1) / priceChange);
-            // This needs to be 1 less than the actual amount rounded up
-            // which can be efficiently done by subtracting a small epsilon and then flooring.
-            // Otherwise the shop will unintentionally give you a 2% discount if you try
-            // buying an item while the shop is overstocked by exactly 44 items.s
             itemsToReachMinPrice = (int) (((1 - minPrice) / priceChange) - 0.000001);
         } else {
             maxPrice = MAX_PRICE;
@@ -369,97 +389,73 @@ public final class Shop {
             itemsToReachMinPrice = (int) (((1 - minPrice) / priceChange) - 0.000001);
         }
 
-        // Assume that all items bought were bought at normal price, without any offset.
         double valueMod = amountBought;
 
-        /*
-         Excluding the boundaries (max priced and minimum priced items),
-         the problem at this point boils down to something similar to the common puzzle of adding the first 100 integers.
-
-         http://mathcentral.uregina.ca/QQ/database/QQ.02.06/jo1.html
-
-         Thus we can implement that solution but for the item value.
-        */
-
-        // First, find the number of items purchased at the maximum possible price.
-        // We check if any items are bought at maximum price
         int maxPriceItems = ((expectedAmount - amountStocked + amountBought) * priceChange >= (maxPrice - 1.0))
-                // and then set the number bought at that price
                 ? (expectedAmount - itemsToReachMaxPrice - amountStocked + amountBought) : 0;
-        // This formula above only applies if you are not at the max price from the start. if you are, then all
-        // items are bought at maximum price.
 
         if (maxPriceItems > amountBought) {
             maxPriceItems = amountBought;
         }
 
-        // The number of items bought at minimum price.
         int minPriceItems = ((expectedAmount - amountStocked) * priceChange <= (minPrice - 1.0))
                 ? (amountStocked - expectedAmount - itemsToReachMinPrice) : 0;
+
         if (minPriceItems > amountBought) {
             minPriceItems = amountBought;
         }
+
         int startingIndex = minPriceItems;
         int endingIndex = amountBought - maxPriceItems - 1;
         int netIndex = endingIndex - startingIndex + 1;
 
-        if (PERFECT_PRECISION_TRANSACTIONS) {
-            for (int i = 0; i < minPriceItems; i++) {
-                totalMoney += (int) (minPrice * value);
-            }
-            for (int i = 0; i < maxPriceItems; i++) {
-                totalMoney += (int) (maxPrice * value);
-            }
-            // Now iterate over each item
-            for (int i = startingIndex; i <= endingIndex; i++) {
-                totalMoney += (int) (((expectedAmount - amountStocked + i) * priceChange + 1.0) * value);
-            }
-        } else {
+        valueMod += minPriceItems * (minPrice - 1.0) + maxPriceItems * (maxPrice - 1.0);
 
-            // Add all the price deltas in maximum and minimum priced items
-            valueMod += minPriceItems * (minPrice - 1.0) + maxPriceItems * (maxPrice - 1.0);
-            // Now, we can make the assumption that price is not clamped for the remaining items. This allows us to use
-            // gauss's technique for finding the total value mod.
+        double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * priceChange;
+        double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * priceChange;
+        double netPriceMod = (endingPriceMod + startingPriceMod);
 
-            double startingPriceMod = (expectedAmount - amountStocked + startingIndex) * priceChange;
-            double endingPriceMod = (expectedAmount - amountStocked + endingIndex) * priceChange;
-            double netPriceMod = (endingPriceMod + startingPriceMod);
-            valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
-            // round and return
-            totalMoney = (int) ((value * valueMod) + 0.5);
-        }
+        valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
+        totalMoney = (int) ((value * valueMod) + 0.5);
+
         if (totalMoney < amountBought) {
             totalMoney = amountBought;
         }
+
         return totalMoney;
     }
 
     /**
-     * Computes the sell value of {@code item}.
+     * Computes the total currency received for selling {@code amountSold} units of an item into this shop.
      * <p>
-     * This is based on extensive black-box testing of modern OSRS's shops, and assuming that none of the code for
-     * shop sell prices has changed too much.
-     * <p>
-     * In general stores sell values scale with every item sold, starting at 40% of base value,
-     * and decreasing by 3% for every item that the shop already has.
-     * <p>
-     * In specialty stores. Sell values start at 55% of base value, and decrease by 2% for every item the shop
-     * has overstocked.
+     * The sell value depends on whether the item is naturally stocked by this shop:
+     * <ul>
+     *     <li>For specialty-stocked items, the starting multiplier is {@link #SP_STARTING_SELL_PRICE}.</li>
+     *     <li>For general/non-stock items, the starting multiplier is derived from {@link #GEN_STARTING_SELL_PRICE}.</li>
+     * </ul>
      *
-     * @param item The item.
-     * @param amountSold The amount of item sold to the shop.
-     * @return The sell value.
+     * @param id The item id being sold.
+     * @param amountSold The quantity being sold.
+     * @return The total sell value in units of {@link #currency}.
+     * @throws IllegalArgumentException If {@code amountSold} is negative.
      */
-    private int computeSellValue(Item item, int amountSold) {
+    private int computeSellValue(int id, int amountSold) {
         Preconditions.checkArgument(amountSold >= 0);
 
         int totalMoney = 0;
-        int value = item.getItemDef().getValue();
-        int itemsToReachMaxPrice, expectedAmount;
-        double maxPrice, minPrice, priceChange, startingPrice;
-        int storeIndex = container.computeIndexForId(item.getId()).orElse(-1);
+        int value = ItemDefinition.ALL.retrieve(id).getValue();
+
+        int itemsToReachMaxPrice;
+        int expectedAmount;
+
+        double maxPrice;
+        double minPrice;
+        double priceChange;
+        double startingPrice;
+
+        int storeIndex = items.computeIndexForId(id).orElse(-1);
         expectedAmount = (storeIndex != -1) ? amountMap[storeIndex].orElse(GEN_DEFAULT_STOCK) : GEN_DEFAULT_STOCK;
-        int amountStocked = (storeIndex != -1) ? container.computeAmountForIndex(storeIndex) : 0;
+        int amountStocked = (storeIndex != -1) ? items.computeAmountForIndex(storeIndex) : 0;
 
         if (storeIndex != -1 && amountMap[storeIndex].isPresent()) {
             startingPrice = SP_STARTING_SELL_PRICE;
@@ -477,108 +473,98 @@ public final class Shop {
 
         double valueMod = amountSold * startingPrice;
 
-        // First, find the number of items sold at the maximum possible price.
         int maxPriceItems = ((expectedAmount - amountStocked) * priceChange >= (maxPrice - startingPrice))
-                // and then set the number sold at that price
                 ? (expectedAmount - itemsToReachMaxPrice - amountStocked) : 0;
+
         if (maxPriceItems > amountSold) {
             maxPriceItems = amountSold;
         }
 
-        // The number of items bought at minimum price.
         int minPriceItems = ((expectedAmount - amountStocked - amountSold) * priceChange <= (minPrice - startingPrice))
                 ? (amountSold + amountStocked - expectedAmount) : 0;
+
         if (minPriceItems > amountSold) {
             minPriceItems = amountSold;
         }
+
         int startingIndex = maxPriceItems;
         int endingIndex = amountSold - minPriceItems - 1;
         int netIndex = endingIndex - startingIndex + 1;
 
-        // Add all the price deltas in maximum and minimum priced items
-        // Even though this is less code, it takes about an order of magnitude more time to run.
-        if (PERFECT_PRECISION_TRANSACTIONS) {
-            for (int i = 0; i < minPriceItems; i++) {
-                totalMoney += (int) (minPrice * value);
-            }
-            for (int i = 0; i < maxPriceItems; i++) {
-                totalMoney += (int) (maxPrice * value);
-            }
-            // Now iterate over each item
-            for (int i = startingIndex; i <= endingIndex; i++) {
-                totalMoney += (int) (((expectedAmount - amountStocked - i) * priceChange + startingPrice) * value);
-            }
-            return totalMoney;
-        } else {
-            valueMod += minPriceItems * (minPrice - startingPrice) + maxPriceItems * (maxPrice - startingPrice);
 
-            // Now, we can make the assumption that price is not clamped for the remaining items. This allows us to use
-            // gauss's technique for finding the total value mod.
-            double startingPriceMod = (expectedAmount - amountStocked - startingIndex) * priceChange;
-            double endingPriceMod = (expectedAmount - amountStocked - endingIndex) * priceChange;
-            double netPriceMod = (endingPriceMod + startingPriceMod);
-            valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
-            totalMoney = (int) (value * valueMod);
-        }
+        valueMod += minPriceItems * (minPrice - startingPrice) + maxPriceItems * (maxPrice - startingPrice);
+
+        double startingPriceMod = (expectedAmount - amountStocked - startingIndex) * priceChange;
+        double endingPriceMod = (expectedAmount - amountStocked - endingIndex) * priceChange;
+        double netPriceMod = (endingPriceMod + startingPriceMod);
+
+        valueMod += netPriceMod * (double) (netIndex / 2) + (netIndex % 2 * 0.5 * netPriceMod);
+        totalMoney = (int) (value * valueMod);
+
         return totalMoney;
     }
 
     /**
-     * Computes if {@code item} can be sold to this shop.
+     * Determines whether a given {@link Item} can be sold to this shop.
      *
-     * @param item The item.
-     * @return {@code true} if this item can be sold.
+     * @param item The item being checked.
+     * @return {@code true} if the item can be sold to this shop.
      */
     public boolean computeCanSell(Item item) {
         return computeCanSell(item.getId());
     }
 
     /**
-     * Computes if {@code item} can be sold to this shop.
+     * Determines whether a given item id can be sold to this shop.
+     * <p>
+     * Items may not be sold if they are:
+     * <ul>
+     *     <li>A currency identifier.</li>
+     *     <li>Not tradeable according to {@link ItemDefinition#isTradeable()}.</li>
+     *     <li>Disallowed by {@link #buyPolicy}.</li>
+     * </ul>
      *
-     * @param id The item ID.
-     * @return {@code true} if this item can be sold.
+     * @param id The item id being checked.
+     * @return {@code true} if the item can be sold to this shop.
      */
     public boolean computeCanSell(int id) {
         if (!Currency.IDENTIFIERS.contains(id) && ItemDefinition.ALL.retrieve(id).isTradeable()) {
             switch (buyPolicy) {
                 case ALL:
-                    // All trading items can be sold.
                     return true;
                 case NONE:
-                    // No items can be sold.
                     return false;
                 case EXISTING:
-                    // Only existing items can be sold.
-                    return container.computeIndexForId(id).isPresent();
+                    return items.computeIndexForId(id).isPresent();
             }
         }
-
-        // Cannot sell non-trading items.
         return false;
     }
 
     /**
-     * Initializes this shop by setting the backing array of items.
+     * Initializes the shop with a list of starting stock items.
+     * <p>
+     * This loads the given items into the backing {@link ItemContainer}. The {@link ShopListener}
+     * will snapshot original amounts (into {@link #amountMap}) when the container is initialized.
      *
-     * @param shopItems The items to include in this shop.
+     * @param shopItems The initial items for this shop.
      */
     public void init(List<IndexedItem> shopItems) {
-        container.load(shopItems);
+        items.load(shopItems);
     }
 
     /**
-     * Prompts this shop to start restocking. Will only create a new task if a previously running one was cancelled.
-     * If a restock task is already running, this does nothing.
+     * Triggers restocking behavior based on {@link #restockPolicy}.
+     * <p>
+     * A new restock task is only created if the previous task has been cancelled. If a task is already
+     * running, this method performs no action.
      */
     void restockItems() {
-        if (restockPolicy != RestockPolicy.DISABLED) {
+        if (restockPolicy != null) {
             switch (restockTask.getState()) {
                 case RUNNING:
-                    // Restock task is already running.
                     return;
                 case CANCELLED:
-                    // Instantiate new restock task.
                     restockTask = new RestockTask(this);
                     break;
             }
@@ -587,58 +573,68 @@ public final class Shop {
     }
 
     /**
-     * @return The shop name.
+     * @return The shop display name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The shop items.
+     * @return The backing container holding current shop stock.
      */
-    public ItemContainer getContainer() {
-        return container;
+    public ItemContainer getItems() {
+        return items;
     }
 
     /**
-     * @return The restock policy.
+     * @return Restock behavior configuration for this shop. {@code null} signifies that this shop will not restock items.
      */
     public RestockPolicy getRestockPolicy() {
         return restockPolicy;
     }
 
     /**
-     * @return The sell policy.
+     * @return The policy controlling what items players may sell to this shop.
      */
     public BuyPolicy getBuyPolicy() {
         return buyPolicy;
     }
 
     /**
-     * @return The currency used to buy items.
+     * @return The currency used by this shop for purchases and sales.
      */
     public Currency getCurrency() {
         return currency;
     }
 
     /**
-     * @return The players viewing this shop.
+     * Retrieves the set of players currently viewing this shop.
+     * <p>
+     * Package-private to avoid exposing mutable internal state to outside packages.
+     *
+     * @return The viewing set.
      */
     Set<Player> getViewing() {
         return viewing;
     }
 
     /**
-     * @return A dictionary of original item amounts.
+     * Retrieves the original stock snapshot map for shop slots.
+     * <p>
+     * Package-private to avoid exposing mutable internal state to outside packages.
+     *
+     * @return The original stock snapshot.
      */
     OptionalInt[] getAmountMap() {
         return amountMap;
     }
 
     /**
-     * @return A set of indexes that need restocking.
+     * Retrieves the set of slot indexes that have reached the restock threshold and require replenishment.
+     *
+     * @return The restock-needed slot index set.
      */
-    public Set<Integer> getNeedsRestock() {
-        return needsRestock;
+    public Set<Integer> getRestockItems() {
+        return restockItems;
     }
 }

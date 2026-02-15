@@ -9,41 +9,52 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
- * A model that manages global shop instances. Shops are created dynamically, registered within this model, and are
- * then retrievable by their {@link Shop#getName()}.
+ * A manager responsible for maintaining and providing access to all globally registered {@link Shop} instances.
+ * <p>
+ * Shops are created dynamically at runtime and registered into this manager using {@link #register(Shop)}.
+ * Once registered, shops may be retrieved by name via {@link #get(String)} or {@link #lookup(String)}.
+ * <p>
+ * Shop names are treated as unique identifiers. If a shop is registered with a name that already exists in the
+ * manager, the existing shop will be overwritten and a warning will be logged.
  *
- * @author lare96 
+ * @author lare96
  */
 public final class ShopManager {
 
     /**
-     * The asynchronous logger.
+     * Logger used for reporting registration conflicts and other shop-related warnings.
      */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A map of shops.
+     * Backing map containing all registered shops, keyed by {@link Shop#getName()}.
      */
     private final Map<String, Shop> shops = new HashMap<>();
 
     /**
-     * Register {@code shop} in the backing map.
+     * Registers a {@link Shop} instance into this manager.
+     * <p>
+     * If a shop with the same name already exists, it will be replaced and a warning will be logged to indicate the
+     * overwrite.
      *
-     * @param shop The shop.
+     * @param shop The shop to register.
      */
     public void register(Shop shop) {
         String name = shop.getName();
         if (shops.put(name, shop) != null) {
-            logger.warn("Shop with name '" + name + "' was overwritten because it already exists.");
+            logger.warn("Shop with name '{}' was overwritten because it already exists.", name);
         }
     }
 
     /**
-     * The equivalent to {@link #lookup(String)}, but throws an {@link NoSuchElementException} if the
-     * requested shop doesn't exist.
+     * Retrieves a registered {@link Shop} by name.
+     * <p>
+     * This method is equivalent to {@link #lookup(String)}, but will throw an exception if the requested shop does
+     * not exist.
      *
-     * @param name The shop name.
-     * @return {@code }
+     * @param name The name of the shop.
+     * @return The registered shop instance.
+     * @throws NoSuchElementException If no shop exists with the given name.
      */
     public Shop get(String name) {
         return lookup(name).orElseThrow(() ->
@@ -51,20 +62,22 @@ public final class ShopManager {
     }
 
     /**
-     * Performs a lookup in the backing map for {@code name}.
+     * Performs a lookup for a {@link Shop} by name.
+     * <p>
+     * If no shop exists with the specified name, an empty {@link Optional} is returned.
      *
-     * @param name The shop name.
-     * @return The shop instance, wrapped in an optional.
+     * @param name The name of the shop.
+     * @return An {@link Optional} containing the shop if present, otherwise empty.
      */
     public Optional<Shop> lookup(String name) {
         return Optional.ofNullable(shops.get(name));
     }
 
     /**
-     * Determines if the backing map contains an entry for {@code name}.
+     * Determines whether a shop with the specified name is registered.
      *
-     * @param name The shop name.
-     * @return {@code true} if the backing map contains the name.
+     * @param name The name of the shop.
+     * @return {@code true} if a shop with the given name exists, otherwise {@code false}.
      */
     public boolean contains(String name) {
         return shops.containsKey(name);

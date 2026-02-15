@@ -9,22 +9,22 @@ import java.util.List;
 import java.util.OptionalInt;
 
 /**
- * A {@link RefreshListener} implementation that queues display messages and triggers restock task
- * scheduling.
+ * A {@link RefreshListener} implementation responsible for synchronizing shop state with its visual representation
+ * and managing restock behavior.
  *
  * @author lare96
  */
 public final class ShopListener extends RefreshListener {
 
     /**
-     * The shop.
+     * The shop instance this listener is bound to.
      */
     private final Shop shop;
 
     /**
-     * Creates a new {@link ShopListener}.
+     * Creates a new {@link ShopListener} bound to the specified {@link Shop}.
      *
-     * @param shop The shop.
+     * @param shop The shop associated with this listener.
      */
     public ShopListener(Shop shop) {
         this.shop = shop;
@@ -32,6 +32,7 @@ public final class ShopListener extends RefreshListener {
 
     @Override
     public void onInit(ItemContainer items) {
+        // Initialize original shop item amounts.
         OptionalInt[] amountMap = shop.getAmountMap();
         for (int index = 0; index < items.capacity(); index++) {
             int amount = items.computeAmountForIndex(index);
@@ -47,29 +48,33 @@ public final class ShopListener extends RefreshListener {
     public void displayUpdate(ItemContainer items, List<IndexedItem> updateItems,
                               WidgetIndexedItemsMessageWriter msg) {
 
-        // Determine if a restock is needed.
+        // Determine if restocking is needed based on updated items.
         for (IndexedItem item : updateItems) {
             if (item == null) {
                 continue;
             }
+
             int itemIndex = item.getIndex();
             double originalAmount = shop.getAmountMap()[itemIndex].orElse(-1);
-            if (originalAmount <= 0) { // Item is not restockable
+
+            // Item is not restockable.
+            if (originalAmount <= 0) {
                 continue;
             }
-            double currentAmount = item.getAmount();
-            double percent = Math.floor((currentAmount / originalAmount) * 100.0);
-            double requiredPercent = shop.getRestockPolicy().getStartPercent();
-            if (percent <= requiredPercent) {
-                shop.getNeedsRestock().add(itemIndex);
+
+            int currentAmount = item.getAmount();
+            boolean aggressive = shop.getRestockPolicy().isAggressive();
+            if ((currentAmount != originalAmount && aggressive) || (currentAmount == 0 && !aggressive)) {
+                shop.getRestockItems().add(itemIndex);
             }
         }
 
-        if (!shop.getNeedsRestock().isEmpty()) {
+        // Trigger restocking if at least one item meets the threshold.
+        if (!shop.getRestockItems().isEmpty()) {
             shop.restockItems();
         }
 
-        // Queue message for whoever has shop open.
+        // Queue update messages for all players currently viewing the shop.
         shop.getViewing().forEach(player -> player.queue(msg));
     }
 

@@ -3,134 +3,163 @@ package io.luna.game.model.item.shop;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A model representing a policy for how items are restocked in {@link Shop} types.
+ * A model that defines how a {@link Shop} replenishes its stock over time.
+ * <p>
+ * A {@link RestockPolicy} determines:
+ * <ul>
+ *     <li><b>Rate</b>: how often restock logic runs (in game ticks).</li>
+ *     <li><b>Amount</b>: how many units are added per restock cycle.</li>
+ *     <li><b>Aggression</b>: whether restocking begins as soon as stock falls below the original amount, or only once
+ *     stock is depleted.</li>
+ * </ul>
+ * <p>
+ * Policies are immutable and are built via {@link Builder}. Several commonly used presets are provided as constants.
  *
  * @author lare96
  */
 public final class RestockPolicy {
 
     /**
-     * A builder for {@link RestockPolicy} instances.
+     * A slow restock policy (adds {@code 1} item every {@code 10} ticks).
      */
-    private static final class Builder {
+    public static final RestockPolicy SLOW = new Builder().setRate(10).setAmount(1).build();
+
+    /**
+     * A default restock policy (adds {@code 1} item every {@code 3} ticks).
+     */
+    public static final RestockPolicy DEFAULT = new Builder().setRate(3).setAmount(1).build();
+
+    /**
+     * A fast restock policy (adds {@code 1} item every {@code 1} tick).
+     */
+    public static final RestockPolicy FAST = new Builder().setRate(1).setAmount(1).build();
+
+    /**
+     * A builder for {@link RestockPolicy} instances.
+     * <p>
+     * The builder provides a fluent API for assembling a policy. All values are validated to ensure a policy is
+     * always created in a usable state.
+     */
+    public static final class Builder {
 
         /**
-         * The amount to be restocked.
+         * The amount to restock per cycle.
          */
         private int amount = -1;
 
         /**
-         * The rate at which the restock occurs.
+         * The tick-rate between restock cycles.
          */
         private int rate = -1;
 
         /**
-         * The amount that the restock will start at. Defaults to 0.
+         * Whether this policy is aggressive.
          */
-        private int startPercent = 0;
+        private boolean aggressive;
 
         /**
-         * Sets the amount to be restocked.
+         * Sets how many items are added each time restocking occurs.
+         *
+         * @param amount The restock amount per cycle.
+         * @return This builder instance.
+         * @throws IllegalStateException If {@code amount <= 0}.
          */
         public Builder setAmount(int amount) {
+            checkState(amount > 0, "Amount to restock must be > 0.");
             this.amount = amount;
             return this;
         }
 
         /**
-         * Sets the rate at which the restock occurs.
+         * Sets how frequently restocking occurs.
+         * <p>
+         * The rate is measured in game ticks.
+         *
+         * @param rate The tick delay between restock cycles.
+         * @return This builder instance.
+         * @throws IllegalStateException If {@code rate <= 0}.
          */
         public Builder setRate(int rate) {
+            checkState(rate > 0, "Restock rate must be > 0.");
             this.rate = rate;
             return this;
-
         }
 
         /**
-         * Sets the percentage of items remaining that the restock will start at. Defaults to 0.
+         * Enables aggressive restocking behavior.
+         * <p>
+         * When aggressive restocking is enabled, items are eligible for restocking earlier than normal
+         * (exact trigger threshold is defined by the {@link Shop} / {@link RestockTask} logic).
+         *
+         * @return This builder instance.
          */
-        public Builder setStartPercent(int startPercent) {
-            this.startPercent = startPercent;
+        public Builder setAggressive() {
+            aggressive = true;
             return this;
         }
 
         /**
-         * Creates a new {@link RestockPolicy} with the specified values.
+         * Builds an immutable {@link RestockPolicy} using the configured builder values.
+         *
+         * @return A new immutable restock policy.
+         * @throws IllegalStateException If required values are invalid.
          */
         public RestockPolicy build() {
-            checkState(amount == -1 || amount > 0, "[amount] must be -1 or > 0");
-            checkState(rate == -1 || rate > 0, "[rate] must be -1 or > 0");
-            checkState(startPercent >= 0 && startPercent <= 99, "[startPercent] must be >= 0 or <= 99");
-            return new RestockPolicy(amount, rate, startPercent);
+            checkState(amount != -1, "Amount to restock was not set.");
+            checkState(rate != -1, "Restock rate was not set.");
+            return new RestockPolicy(amount, rate, aggressive);
         }
     }
 
     /**
-     * The {@code DISABLED} restock policy. No items are restocked.
-     */
-    public static final RestockPolicy DISABLED = new Builder().build();
-
-    /**
-     * The {@code SLOW} restock policy. One item is restocked every {@code 15} seconds.
-     */
-    public static final RestockPolicy SLOW = new Builder().setAmount(1).setRate(25).build();
-
-    /**
-     * The {@code DEFAULT} restock policy. One item is restocked every {@code 4.8} seconds.
-     */
-    public static final RestockPolicy DEFAULT = new Builder().setAmount(1).setRate(8).build();
-
-    /**
-     * The {@code FAST} restock policy. One item is restocked every {@code 0.6} seconds.
-     */
-    public static final RestockPolicy FAST = new Builder().setAmount(1).setRate(1).build();
-
-    /**
-     * The amount to be restocked.
+     * The amount added each time a restock cycle runs.
      */
     private final int amount;
 
     /**
-     * The rate at which the restock occurs.
+     * The tick-rate delay between restock cycles.
      */
     private final int rate;
 
     /**
-     * The percentage of items remaining that the restock will start at.
+     * Whether restocking is aggressive.
+     * <p>
+     * If aggressive restocking is enabled, items may begin restocking as soon as they drop below their original
+     * stock level. Otherwise, they wait until there is no stock left.
      */
-    private final int startPercent;
+    private final boolean aggressive;
 
     /**
      * Creates a new {@link RestockPolicy}.
      *
-     * @param amount The amount to be restocked.
-     * @param rate The rate in which the restock occurs.
-     * @param startPercent The percentage of items remaining that the restock will start at.
+     * @param amount Amount added per cycle.
+     * @param rate Tick delay between cycles.
+     * @param aggressive Whether aggressive restocking is enabled.
      */
-    private RestockPolicy(int amount, int rate, int startPercent) {
+    private RestockPolicy(int amount, int rate, boolean aggressive) {
         this.amount = amount;
         this.rate = rate;
-        this.startPercent = startPercent;
+        this.aggressive = aggressive;
     }
 
     /**
-     * @return The amount to be restocked.
+     * @return The amount added per restock cycle.
      */
     public int getAmount() {
         return amount;
     }
 
     /**
-     * @return The rate at which the restock occurs.
+     * @return The tick delay between restock cycles.
      */
     public int getRate() {
         return rate;
     }
 
     /**
-     * @return The percentage of items remaining that the restock will start at.
+     * @return {@code true} if aggressive restocking is enabled.
      */
-    public int getStartPercent() {
-        return startPercent;
+    public boolean isAggressive() {
+        return aggressive;
     }
 }
