@@ -62,11 +62,11 @@ public final class ShopInterface extends InventoryOverlayInterface {
 
         // Refresh inventory onto shop overlay.
         Inventory inventory = player.getInventory();
-        inventory.setSecondaryRefresh(3823);
-        inventory.refreshSecondary(player);
+        inventory.setSecondaryWidget(3823);
+        inventory.updateSecondaryWidget(player);
 
         // Refresh shop stock and register the viewer for future updates.
-        container.refreshPrimary(player);
+        container.updatePrimaryWidget(player);
         shop.getViewing().add(player);
 
         // Write shop title text.
@@ -76,7 +76,7 @@ public final class ShopInterface extends InventoryOverlayInterface {
     @Override
     public void onClose(Player player) {
         shop.getViewing().remove(player);
-        player.getInventory().resetSecondaryRefresh();
+        player.getInventory().clearSecondaryWidget();
     }
 
     /**

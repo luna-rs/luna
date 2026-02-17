@@ -27,7 +27,7 @@ class EnchantJewelleryAction(plr: Player, private val itemIndex: Int, private va
     override fun execute() {
         val removeItems = Magic.checkRequirements(mob, type.level, type.requirements)
         if (removeItems != null) {
-            val itemId = mob.inventory.computeIdForIndex(itemIndex).orElse(-1)
+            val itemId = mob.inventory.computeIdForIndex(itemIndex)
             val enchantItem = type.enchantMap[itemId]
             if (enchantItem == null) {
                 mob.sendMessage("Nothing interesting happens.")

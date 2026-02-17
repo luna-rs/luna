@@ -39,8 +39,8 @@ cmd("viewbank", RIGHTS_ADMIN) {
     val viewing = getInputFrom(0)
     val viewingPlr = world.getPlayer(viewing).orElseThrow()
     val bankInterface = object : DynamicBankInterface("The bank of ${viewingPlr.username}") {
-        override fun buildDisplayItems(player: Player?): MutableList<Item> =
-            viewingPlr.bank.filterNotNull().toMutableList()
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> =
+            viewingPlr.bank.filterNotNull().toCollection(ArrayList())
     }
     plr.overlays.open(bankInterface)
 }

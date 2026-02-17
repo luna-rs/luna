@@ -59,8 +59,8 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         plr.sendText("", 3431)
         plr.sendText("Are you sure you want to make this trade?", 3535)
         // Refresh inventory to trade inventory.
-        plr.inventory.setSecondaryRefresh(3322)
-        plr.inventory.refreshSecondary(plr)
+        plr.inventory.setSecondaryWidget(3322)
+        plr.inventory.updateSecondaryWidget(plr)
 
         // Clear left and right trade panels.
         val clearLeftMsg = WidgetItemsMessageWriter(3415, listOf())
@@ -75,7 +75,7 @@ class OfferTradeInterface(val other: Player) : InventoryOverlayInterface(3323, 3
         if(!completed) {
             plr.tradingWith = -1
 
-            plr.inventory.resetSecondaryRefresh()
+            plr.inventory.clearSecondaryWidget()
             plr.inventory.addAll(items)
             plr.sendMessage("The trade has been declined.")
 

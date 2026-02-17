@@ -5,165 +5,190 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.luna.util.StringUtils;
 
+import java.util.Objects;
 import java.util.OptionalInt;
 
 /**
- * A definition model describing an item.
+ * A cache-backed definition describing an item.
+ * <p>
+ * Item definitions provide immutable metadata used for:
+ * <ul>
+ *     <li>display/examine strings (name/description)</li>
+ *     <li>inventory and ground context menu actions</li>
+ *     <li>stackability, tradeability, value, membership restrictions</li>
+ *     <li>client model rendering parameters (model id, zoom, rotations, offsets, scales)</li>
+ *     <li>note to unnote relationships (banknotes)</li>
+ *     <li>optional “team” metadata (used by some items/capes in some revisions)</li>
+ *     <li>weight metadata (used by weight/run-energy systems if enabled)</li>
+ * </ul>
+ * <p>
+ * <b>Notes:</b>
+ * Items may have a noted/unnoted relationship:
+ * <ul>
+ *     <li>{@link #unnotedId} stores the unnoted id for a noted item.</li>
+ *     <li>{@link #notedId} stores the noted id for an unnoted item (populated via {@link #toNote(ItemDefinition)}).</li>
+ * </ul>
+ * This class provides {@link #isNoted()} to identify note definitions.
+ * <p>
+ * <b>Immutability note:</b> Most fields are final, but {@link #notedId} is intentionally mutable to allow linking
+ * an unnoted definition to its noted partner after construction (see {@link #toNote(ItemDefinition)}).
  *
  * @author lare96
  */
 public final class ItemDefinition implements Definition {
 
     /**
-     * The definition count.
+     * Total number of item definitions expected for this cache.
      */
     public static final int SIZE = 7956;
 
     /**
-     * The item definition repository.
+     * Repository of all {@link ItemDefinition}s, indexed by item id.
      */
     public static final DefinitionRepository<ItemDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
-     * The item identifier.
+     * The item id.
      */
     private final int id;
 
     /**
-     * The item name.
+     * The item display name.
      */
     private final String name;
 
     /**
-     * The item description.
+     * The examine/description text.
      */
     private final String description;
 
     /**
-     * The item model identifier.
+     * The model id used for rendering this item in the client.
      */
     private final int modelId;
 
     /**
-     * The item model zoom.
+     * The model zoom value used for rendering this item in the client.
      */
     private final int modelZoom;
 
     /**
-     * The item model {@code x} rotation.
+     * The model rotation around the X axis.
      */
     private final int modelRotationX;
 
     /**
-     * The item model {@code y} rotation.
+     * The model rotation around the Y axis.
      */
     private final int modelRotationY;
 
     /**
-     * The item model rotation {@code z} coordinate.
+     * The model rotation around the Z axis.
      */
     private final int modelRotationZ;
 
     /**
-     * The item model {@code x} offset.
+     * The model X offset.
      */
     private final int modelOffsetX;
 
     /**
-     * The item model {@code y} offset.
+     * The model Y offset.
      */
     private final int modelOffsetY;
 
     /**
-     * If the item is stackable.
+     * Whether this item stacks in containers.
      */
     private final boolean stackable;
 
     /**
-     * The item value.
+     * Base value (often used for shops or examine value, depending on revision).
      */
     private final int value;
 
     /**
-     * If the item is members only.
+     * Whether this item is members-only.
      */
     private final boolean members;
 
     /**
-     * The item inventory actions.
+     * Inventory context menu actions (client order).
      */
     private final ImmutableList<String> inventoryActions;
 
     /**
-     * The item ground actions.
+     * Ground context menu actions (client order).
      */
     private final ImmutableList<String> groundActions;
 
     /**
-     * The item's unnoted identifier, if it has one.
+     * Unnoted id for this item, if this item is a note.
      */
     private final OptionalInt unnotedId;
 
     /**
-     * The item's noted identifier, if it has one.
+     * Noted id for this item, if this item has a note variant.
+     * <p>
+     * This starts empty and may be populated after construction via {@link #toNote(ItemDefinition)}.
      */
     private OptionalInt notedId = OptionalInt.empty();
 
     /**
-     * The item model {@code x} scale.
+     * Model scale on the X axis.
      */
     private final int modelScaleX;
 
     /**
-     * The item model {@code y} scale.
+     * Model scale on the Y axis.
      */
     private final int modelScaleY;
 
     /**
-     * The item model {@code z} scale.
+     * Model scale on the Z axis.
      */
     private final int modelScaleZ;
 
     /**
-     * The team id of this item, if it has one.
+     * Team id for this item, if present.
      */
     private final OptionalInt teamId;
 
     /**
-     * The weight of this item.
+     * Weight value for this item.
      */
     private final double weight;
 
     /**
-     * If this item is tradeable.
+     * Whether this item is tradeable.
      */
     private final boolean tradeable;
 
     /**
      * Creates a new {@link ItemDefinition}.
      *
-     * @param id The item identifier.
+     * @param id The item id.
      * @param name The item name.
-     * @param description The item description.
-     * @param modelId The item mode identifier.
-     * @param modelZoom The item model zoom.
-     * @param modelRotationX The item model {@code x} rotation.
-     * @param modelRotationY The item model {@code y} rotation.
-     * @param modelRotationZ The item model {@code z} rotation.
-     * @param modelOffsetX The item model {@code x} offset.
-     * @param modelOffsetY The item model {@code y} offset.
-     * @param stackable If the item is stackable.
-     * @param value The item value.
-     * @param members If the item is members only.
-     * @param inventoryActions The item inventory actions.
-     * @param groundActions The item ground actions.
-     * @param unnotedId The item's unnoted identifier, if it has one.
-     * @param modelScaleX The item model {@code x} scale.
-     * @param modelScaleY The item model {@code y} scale.
-     * @param modelScaleZ The item model {@code z} scale.
-     * @param teamId The team id of this item, if it has one.
-     * @param weight The weight of this item.
-     * @param tradeable If this item is tradeable.
+     * @param description The examine/description text.
+     * @param modelId The model id.
+     * @param modelZoom The model zoom.
+     * @param modelRotationX The model X rotation.
+     * @param modelRotationY The model Y rotation.
+     * @param modelRotationZ The model Z rotation.
+     * @param modelOffsetX The model X offset.
+     * @param modelOffsetY The model Y offset.
+     * @param stackable Whether the item stacks.
+     * @param value The base value.
+     * @param members Whether the item is members-only.
+     * @param inventoryActions Inventory actions (client order).
+     * @param groundActions Ground actions (client order).
+     * @param unnotedId Unnoted id if this item is a note.
+     * @param modelScaleX Model X scale.
+     * @param modelScaleY Model Y scale.
+     * @param modelScaleZ Model Z scale.
+     * @param teamId Optional team id.
+     * @param weight Weight value.
+     * @param tradeable Whether the item is tradeable.
      */
     public ItemDefinition(int id, String name, String description, int modelId, int modelZoom, int modelRotationX,
                           int modelRotationY, int modelRotationZ, int modelOffsetX, int modelOffsetY, boolean stackable,
@@ -193,38 +218,41 @@ public final class ItemDefinition implements Definition {
         this.weight = weight;
         this.tradeable = tradeable;
 
+        /*
+         * If this definition already has an unnoted id, it is a note definition (its noted id is itself).
+         */
         if (unnotedId.isPresent()) {
             notedId = OptionalInt.of(id);
         }
     }
 
     /**
-     * Determines if {@code id} is valid.
+     * Returns {@code true} if the given id is within the valid item id bounds for this cache.
      *
-     * @param id The identifier.
-     * @return {@code true} if the identifier is valid.
+     * @param id The id to test.
+     * @return {@code true} if {@code id} is within {@code (0, SIZE)}.
      */
     public static boolean isIdValid(int id) {
         return id > 0 && id < SIZE;
     }
 
     /**
-     * Determines if the inventory action at {@code index} is equal to {@code action}.
+     * Returns {@code true} if the inventory action at {@code index} equals {@code action}.
      *
-     * @param index The action index.
-     * @param action The action to compare.
-     * @return {@code true} if the actions are equal.
+     * @param index The action index (client order).
+     * @param action The action text to compare (case-sensitive).
+     * @return {@code true} if the action matches.
      */
     public boolean hasInventoryAction(int index, String action) {
-        return action.equals(inventoryActions.get(index));
+        return Objects.equals(action, inventoryActions.get(index));
     }
 
     /**
-     * Determines if the ground action at {@code index} is equal to {@code action}.
+     * Returns {@code true} if the ground action at {@code index} equals {@code action}.
      *
-     * @param index The action index.
-     * @param action The action to compare.
-     * @return {@code true} if the actions are equal.
+     * @param index The action index (client order).
+     * @param action The action text to compare (case-sensitive).
+     * @return {@code true} if the action matches.
      */
     public boolean hasGroundAction(int index, String action) {
         return action.equals(groundActions.get(index));
@@ -265,177 +293,258 @@ public final class ItemDefinition implements Definition {
     }
 
     /**
-     * Converts this definition into a proper noted definition, and modifies the unnoted definition to reference it.
+     * Builds a noted version of an unnoted definition and links the pair together.
+     * <p>
+     * This method is intended to be called on a definition that represents the <b>note</b> (the “paper” item), passing
+     * the corresponding unnoted definition.
+     * <p>
+     * Side effects:
+     * <ul>
+     *     <li>mutates {@code unnotedDef.notedId} to reference this note id</li>
+     *     <li>returns a new {@link ItemDefinition} representing the noted item using the unnoted name/value and a
+     *     banknote-style description</li>
+     * </ul>
      *
-     * @param unnotedDef The unnoted item definition data.
-     * @return The new noted definition.
+     * @param unnotedDef The unnoted item definition that this note represents.
+     * @return A newly constructed noted {@link ItemDefinition}.
      */
     public ItemDefinition toNote(ItemDefinition unnotedDef) {
         unnotedDef.notedId = OptionalInt.of(id);
         String description = "Swap this note at any bank for " + StringUtils.addArticle(unnotedDef.name) + ".";
-        return new ItemDefinition(id, unnotedDef.name, description,
-                modelId, modelZoom, modelRotationX, modelRotationY,
-                modelRotationZ, modelOffsetX, modelOffsetY, true, unnotedDef.value, unnotedDef.members,
-                Iterables.toArray(inventoryActions, String.class), Iterables.toArray(groundActions, String.class),
-                unnotedId, modelScaleX, modelScaleY, modelScaleZ, teamId, weight, true);
+        return new ItemDefinition(
+                id,
+                unnotedDef.name,
+                description,
+                modelId,
+                modelZoom,
+                modelRotationX,
+                modelRotationY,
+                modelRotationZ,
+                modelOffsetX,
+                modelOffsetY,
+                true,
+                unnotedDef.value,
+                unnotedDef.members,
+                Iterables.toArray(inventoryActions, String.class),
+                Iterables.toArray(groundActions, String.class),
+                unnotedId,
+                modelScaleX,
+                modelScaleY,
+                modelScaleZ,
+                teamId,
+                weight,
+                true
+        );
     }
 
     /**
-     * @return {@code true} if this definition is noted.
+     * Returns {@code true} if this definition represents a noted item.
+     * <p>
+     * In this model, an item is considered “noted” when it has both:
+     * <ul>
+     *     <li>an {@link #unnotedId} (it points to the real item)</li>
+     *     <li>a {@link #notedId} (it is itself, or has been linked)</li>
+     * </ul>
+     *
+     * @return {@code true} if noted.
      */
     public boolean isNoted() {
         return unnotedId.isPresent() && notedId.isPresent();
     }
 
     /**
-     * @return The item name.
+     * Returns the item name.
+     *
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The item description.
+     * Returns the examine/description text.
+     *
+     * @return The description.
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * @return The item model identifier.
+     * Returns the model id.
+     *
+     * @return The model id.
      */
     public int getModelId() {
         return modelId;
     }
 
     /**
-     * @return The item model zoom.
+     * Returns the model zoom.
+     *
+     * @return The zoom.
      */
     public int getModelZoom() {
         return modelZoom;
     }
 
     /**
-     * @return The item model {@code x} rotation.
+     * Returns the model X rotation.
+     *
+     * @return The X rotation.
      */
     public int getModelRotationX() {
         return modelRotationX;
     }
 
     /**
-     * @return The item model {@code y} rotation.
+     * Returns the model Y rotation.
+     *
+     * @return The Y rotation.
      */
     public int getModelRotationY() {
         return modelRotationY;
     }
 
     /**
-     * @return The item model {@code z} rotation.
+     * Returns the model Z rotation.
+     *
+     * @return The Z rotation.
      */
     public int getModelRotationZ() {
         return modelRotationZ;
     }
 
     /**
-     * @return The item model {@code x} offset.
+     * Returns the model X offset.
+     *
+     * @return The X offset.
      */
     public int getModelOffsetX() {
         return modelOffsetX;
     }
 
     /**
-     * @return The item model {@code y} offset.
+     * Returns the model Y offset.
+     *
+     * @return The Y offset.
      */
     public int getModelOffsetY() {
         return modelOffsetY;
     }
 
     /**
-     * @return If the item is stackable.
+     * Returns whether this item is stackable.
+     *
+     * @return {@code true} if stackable.
      */
     public boolean isStackable() {
         return stackable;
     }
 
     /**
-     * @return The item value.
+     * Returns the base value.
+     *
+     * @return The value.
      */
     public int getValue() {
         return value;
     }
 
     /**
-     * @return If the item is members only.
+     * Returns whether this item is members-only.
+     *
+     * @return {@code true} if members-only.
      */
     public boolean isMembers() {
         return members;
     }
 
     /**
-     * @return The item inventory actions.
+     * Returns inventory actions in client order.
+     *
+     * @return The inventory actions list.
      */
     public ImmutableList<String> getInventoryActions() {
         return inventoryActions;
     }
 
     /**
-     * @return The item ground actions.
+     * Returns ground actions in client order.
+     *
+     * @return The ground actions list.
      */
     public ImmutableList<String> getGroundActions() {
         return groundActions;
     }
 
     /**
-     * @return The item's unnoted identifier, if it has one.
+     * Returns the unnoted id for this item, if this item is a note.
+     *
+     * @return The unnoted id.
      */
     public OptionalInt getUnnotedId() {
         return unnotedId;
     }
 
     /**
-     * @return The item's noted identifier, if it has one.
+     * Returns the noted id for this item, if this item has a noted variant.
+     *
+     * @return The noted id.
      */
     public OptionalInt getNotedId() {
         return notedId;
     }
 
     /**
-     * @return The item model {@code x} scale.
+     * Returns the model X scale.
+     *
+     * @return The X scale.
      */
     public int getModelScaleX() {
         return modelScaleX;
     }
 
     /**
-     * @return The item model {@code y} scale.
+     * Returns the model Y scale.
+     *
+     * @return The Y scale.
      */
     public int getModelScaleY() {
         return modelScaleY;
     }
 
     /**
-     * @return The item model {@code z} scale.
+     * Returns the model Z scale.
+     *
+     * @return The Z scale.
      */
     public int getModelScaleZ() {
         return modelScaleZ;
     }
 
     /**
-     * @return The team id of this item, if it has one.
+     * Returns the team id, if present.
+     *
+     * @return The team id.
      */
     public OptionalInt getTeamId() {
         return teamId;
     }
 
     /**
-     * @return The weight of this item.
+     * Returns the weight.
+     *
+     * @return The weight.
      */
     public double getWeight() {
         return weight;
     }
 
     /**
-     * @return If this item is tradeable.
+     * Returns whether this item is tradeable.
+     *
+     * @return {@code true} if tradeable.
      */
     public boolean isTradeable() {
         return tradeable;

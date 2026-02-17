@@ -3,173 +3,193 @@ package io.luna.game.model.def;
 import java.util.Arrays;
 
 /**
- * A definition model describing an attackable non-player.
+ * A definition describing combat-related data for an attackable NPC.
+ * <p>
+ * This definition complements {@link NpcDefinition} by providing the data used by combat/respawn systems, including:
+ * <ul>
+ *     <li>respawn timing</li>
+ *     <li>aggression and poison flags</li>
+ *     <li>combat level, hitpoints, max hit, and attack speed</li>
+ *     <li>combat animations (attack/defence/death)</li>
+ *     <li>combat “skill levels” (attack/strength/defence/ranged/magic)</li>
+ *     <li>combat bonuses (attack + defence bonus arrays in style order)</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class NpcCombatDefinition implements Definition {
 
+    /* -------- Skill index constants -------- */
+
     /**
-     * The attack skill index.
+     * Skill array index: Attack.
      */
     public static final int ATTACK = 0;
 
     /**
-     * The strength skill index.
+     * Skill array index: Strength.
      */
     public static final int STRENGTH = 1;
 
     /**
-     * The defence skill index.
+     * Skill array index: Defence.
      */
     public static final int DEFENCE = 2;
 
     /**
-     * The ranged skill index.
+     * Skill array index: Ranged.
      */
     public static final int RANGED = 3;
 
     /**
-     * The magic skill index.
+     * Skill array index: Magic.
      */
     public static final int MAGIC = 4;
 
+    /* -------- Bonus index constants -------- */
+
     /**
-     * The stab attack bonus index.
+     * Bonus array index: stab attack.
      */
     public static final int STAB_ATTACK = 0;
 
     /**
-     * The slash attack bonus index.
+     * Bonus array index: slash attack.
      */
     public static final int SLASH_ATTACK = 1;
 
     /**
-     * The crush attack bonus index.
+     * Bonus array index: crush attack.
      */
     public static final int CRUSH_ATTACK = 2;
 
     /**
-     * The magic attack bonus index.
+     * Bonus array index: magic attack.
      */
     public static final int MAGIC_ATTACK = 3;
 
     /**
-     * The ranged attack bonus index.
+     * Bonus array index: ranged attack.
      */
     public static final int RANGED_ATTACK = 4;
 
     /**
-     * The stab defence bonus index.
+     * Bonus array index: stab defence.
      */
     public static final int STAB_DEFENCE = 5;
 
     /**
-     * The slash defence bonus index.
+     * Bonus array index: slash defence.
      */
     public static final int SLASH_DEFENCE = 6;
 
     /**
-     * The crush defence bonus index.
+     * Bonus array index: crush defence.
      */
     public static final int CRUSH_DEFENCE = 7;
 
     /**
-     * The magic defence bonus index.
+     * Bonus array index: magic defence.
      */
     public static final int MAGIC_DEFENCE = 8;
 
     /**
-     * The ranged defence bonus index.
+     * Bonus array index: ranged defence.
      */
     public static final int RANGED_DEFENCE = 9;
 
     /**
-     * The NPC combat definition repository.
+     * Repository of {@link NpcCombatDefinition}s keyed by NPC id.
      */
     public static final DefinitionRepository<NpcCombatDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
-     * The identifier.
+     * The NPC id this combat definition belongs to.
      */
     private final int id;
 
     /**
-     * The respawn time (in ticks).
+     * Respawn delay in ticks after death.
      */
     private final int respawnTime;
 
     /**
-     * If the non-player is aggressive.
+     * Whether this NPC will auto-attack eligible players.
      */
     private final boolean aggressive;
 
     /**
-     * If the non-player is poisonous.
+     * Whether this NPC can apply poison on hit (mechanics defined elsewhere).
      */
     private final boolean poisonous;
 
     /**
-     * The combat level.
+     * The combat level displayed for this NPC.
      */
     private final int level;
 
     /**
-     * The hitpoint amount.
+     * The NPC hitpoints (life points) value.
      */
     private final int hitpoints;
 
     /**
-     * The maximum hit.
+     * The maximum melee hit (or general max hit if you use a unified model).
      */
     private final int maximumHit;
 
     /**
-     * The attack speed.
+     * Attack delay in ticks between attacks.
      */
     private final int attackSpeed;
 
     /**
-     * The attack animation.
+     * Animation id played when this NPC attacks.
      */
     private final int attackAnimation;
 
     /**
-     * The defence animation
+     * Animation id played when this NPC blocks/defends.
      */
     private final int defenceAnimation;
 
     /**
-     * The death animation.
+     * Animation id played when this NPC dies.
      */
     private final int deathAnimation;
 
     /**
-     * An array of skills.
+     * Combat “skill levels” array.
+     * <p>
+     * Expected ordering is defined by the skill index constants:
+     * {@link #ATTACK}, {@link #STRENGTH}, {@link #DEFENCE}, {@link #RANGED}, {@link #MAGIC}.
      */
     private final int[] skills;
 
     /**
-     * An array of bonuses.
+     * Combat bonuses array.
+     * <p>
+     * Expected ordering is defined by the bonus index constants (attack then defence):
+     * {@link #STAB_ATTACK}..{@link #RANGED_DEFENCE}.
      */
     private final int[] bonuses;
 
     /**
      * Creates a new {@link NpcCombatDefinition}.
      *
-     * @param id The identifier.
-     * @param respawnTime The respawn time (in ticks).
-     * @param aggressive If the non-player is aggressive.
-     * @param poisonous If the non-player is poisonous.
+     * @param id The NPC id this definition belongs to.
+     * @param respawnTime Respawn delay in ticks.
+     * @param aggressive Whether the NPC is aggressive.
+     * @param poisonous Whether the NPC can poison targets.
      * @param level The combat level.
-     * @param hitpoints The hitpoint amount.
-     * @param maximumHit The maximum hit.
-     * @param attackSpeed The attack speed.
-     * @param attackAnimation The attack animation.
-     * @param defenceAnimation The defence animation
-     * @param deathAnimation The death animation.
-     * @param skills A list of skills.
-     * @param bonuses A list of bonuses.
+     * @param hitpoints The hitpoints value.
+     * @param maximumHit The maximum hit value.
+     * @param attackSpeed Attack delay in ticks.
+     * @param attackAnimation Attack animation id.
+     * @param defenceAnimation Defence/block animation id.
+     * @param deathAnimation Death animation id.
+     * @param skills Skill level array (defensively copied).
+     * @param bonuses Bonus array (defensively copied).
      */
     public NpcCombatDefinition(int id, int respawnTime, boolean aggressive, boolean poisonous, int level,
                                int hitpoints, int maximumHit, int attackSpeed, int attackAnimation, int defenceAnimation,
@@ -189,33 +209,46 @@ public final class NpcCombatDefinition implements Definition {
         this.bonuses = Arrays.copyOf(bonuses, bonuses.length);
     }
 
+    /**
+     * Returns the NPC id this combat definition belongs to.
+     *
+     * @return The NPC id.
+     */
     @Override
     public int getId() {
         return id;
     }
 
     /**
-     * @return The respawn time (in ticks).
+     * Returns the respawn delay in ticks.
+     *
+     * @return The respawn delay.
      */
     public int getRespawnTime() {
         return respawnTime;
     }
 
     /**
-     * @return If the non-player is aggressive.
+     * Returns whether this NPC is aggressive.
+     *
+     * @return {@code true} if aggressive.
      */
     public boolean isAggressive() {
         return aggressive;
     }
 
     /**
-     * @return If the non-player is poisonous.
+     * Returns whether this NPC can poison targets.
+     *
+     * @return {@code true} if poisonous.
      */
     public boolean isPoisonous() {
         return poisonous;
     }
 
     /**
+     * Returns the combat level.
+     *
      * @return The combat level.
      */
     public int getLevel() {
@@ -223,13 +256,17 @@ public final class NpcCombatDefinition implements Definition {
     }
 
     /**
-     * @return The hitpoint amount.
+     * Returns the hitpoints value.
+     *
+     * @return The hitpoints.
      */
     public int getHitpoints() {
         return hitpoints;
     }
 
     /**
+     * Returns the maximum hit value.
+     *
      * @return The maximum hit.
      */
     public int getMaximumHit() {
@@ -237,6 +274,8 @@ public final class NpcCombatDefinition implements Definition {
     }
 
     /**
+     * Returns the attack speed in ticks.
+     *
      * @return The attack speed.
      */
     public int getAttackSpeed() {
@@ -244,31 +283,42 @@ public final class NpcCombatDefinition implements Definition {
     }
 
     /**
-     * @return The attack animation.
+     * Returns the attack animation id.
+     *
+     * @return The attack animation id.
      */
     public int getAttackAnimation() {
         return attackAnimation;
     }
 
     /**
-     * @return The defence animation.
+     * Returns the defence animation id.
+     *
+     * @return The defence animation id.
      */
     public int getDefenceAnimation() {
         return defenceAnimation;
     }
 
     /**
-     * @return The death animation.
+     * Returns the death animation id.
+     *
+     * @return The death animation id.
      */
     public int getDeathAnimation() {
         return deathAnimation;
     }
-    
+
     /**
-     * Gets the skill at the specified identifier.
+     * Returns the skill level at the given skill index.
+     * <p>
+     * Callers should use the provided skill index constants ({@link #ATTACK}, {@link #STRENGTH}, etc.) to avoid
+     * hardcoding indices.
+     * <p>
+     * Note: This method will throw {@link ArrayIndexOutOfBoundsException} if an invalid index is used.
      *
-     * @param id The skill identifier.
-     * @return The skill at the specified identifier as an {@code int}.
+     * @param id The skill index.
+     * @return The skill level value.
      */
     public int getSkill(int id) {
         return skills[id];

@@ -72,7 +72,7 @@ public final class DestroyItemDialogue extends DialogueInterface {
     public void destroyItem(Player player) {
         Inventory inventory = player.getInventory();
 
-        int destroyIndex = index.orElse(inventory.computeIndexForId(itemId).orElse(-1));
+        int destroyIndex = index.orElse(inventory.computeIndexForId(itemId));
         if (destroyIndex == -1 || inventory.get(destroyIndex).getId() != itemId) {
             player.getOverlays().closeWindows();
             return;

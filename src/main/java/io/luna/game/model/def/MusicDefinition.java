@@ -7,34 +7,46 @@ import io.luna.game.model.Region;
 import java.util.Optional;
 
 /**
- * Represents a single song that can be played in the music tab
+ * A cache/data-backed definition describing a single music track in the in-game music tab.
+ * <p>
+ * This definition contains both:
+ * <ul>
+ *     <li><b>UI metadata</b> for the music tab (line id and button id)</li>
+ *     <li><b>world metadata</b> describing which {@link Region}s should trigger this track</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class MusicDefinition implements Definition {
 
     /**
-     * A repository of all music definitions.
+     * The repository of all music definitions keyed by song id.
      */
     public static final MapDefinitionRepository<MusicDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
-     * A repository of all regions identifiers to music definitions.
+     * Lazy-built map of region id to music definition.
+     * <p>
+     * Built by {@link #getAllMusicForRegions()} on first access.
      */
     private static ImmutableMap<Integer, MusicDefinition> ALL_REGIONS;
 
     /**
-     * Attempts to find the proper song to play based on region ID.
+     * Attempts to find the appropriate song for the given region id.
      *
-     * @param id The region ID to check.
-     * @return The result wrapped in an optional.
+     * @param id The region id to look up.
+     * @return The matching {@link MusicDefinition}, if any.
      */
     public static Optional<MusicDefinition> getMusicForRegion(int id) {
         return Optional.ofNullable(getAllMusicForRegions().get(id));
     }
 
     /**
-     * Returns the backing map of region mappings to definitions. Will build it first if necessary.
+     * Returns the backing region-id to music-definition map, building it if necessary.
+     * <p>
+     * This method is intentionally lazy to avoid paying the indexing cost unless region-based music lookup is used.
+     *
+     * @return An immutable region mapping.
      */
     public static ImmutableMap<Integer, MusicDefinition> getAllMusicForRegions() {
         if (ALL_REGIONS == null) {
@@ -55,22 +67,22 @@ public final class MusicDefinition implements Definition {
     private final int id;
 
     /**
-     * The song name.
+     * The display name shown in the music tab.
      */
     private final String name;
 
     /**
-     * The song line id.
+     * The widget line id used to display the track name/state in the music list.
      */
     private final int lineId;
 
     /**
-     * The song button id.
+     * The button/widget id associated with selecting this track in the music tab.
      */
     private final int buttonId;
 
     /**
-     * The regions this song is played in.
+     * Regions in which this track should play.
      */
     private final ImmutableSet<Region> regions;
 
@@ -79,9 +91,9 @@ public final class MusicDefinition implements Definition {
      *
      * @param id The song id.
      * @param name The song name.
-     * @param lineId The song line id.
-     * @param buttonId The song button id.
-     * @param regions The regions this song is played in.
+     * @param lineId The music tab line widget id.
+     * @param buttonId The music tab button/widget id.
+     * @param regions The regions that should map to this track.
      */
     public MusicDefinition(int id, String name, int lineId, int buttonId, ImmutableSet<Region> regions) {
         this.id = id;
@@ -97,31 +109,38 @@ public final class MusicDefinition implements Definition {
     }
 
     /**
-     * @return The song name.
+     * Returns the display name.
+     *
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The song line id.
+     * Returns the music tab line widget id.
+     *
+     * @return The line id.
      */
     public int getLineId() {
         return lineId;
     }
 
     /**
-     * @return The song button id.
+     * Returns the music tab button/widget id.
+     *
+     * @return The button id.
      */
     public int getButtonId() {
         return buttonId;
     }
 
     /**
-     * @return The regions this song is played in.
+     * Returns the set of regions that trigger this track.
+     *
+     * @return The regions set.
      */
     public ImmutableSet<Region> getRegions() {
         return regions;
     }
-
 }

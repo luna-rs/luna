@@ -12,10 +12,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Represents a serializable, optionally persistent attribute associated with a type (e.g., {@link Entity}).
- *
- * <p>Attributes wrap a value of type {@code T} and optionally declare a persistence key, allowing
- * them to be stored and retrieved across sessions using JSON serialization. Each persistent key must be
- * unique.</p>
+ * <p>
+ * Attributes wrap a value of type {@code T} and optionally declare a persistence key, allowing them to be stored and
+ * retrieved across sessions using JSON serialization. Each persistent key must be unique.
  *
  * @param <T> The value type of the attribute.
  * @author lare96

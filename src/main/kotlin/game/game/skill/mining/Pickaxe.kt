@@ -77,8 +77,7 @@ enum class Pickaxe(val level: Int,
         /**
          * Does the player have [pick]?
          */
-        fun hasPick(plr: Player, pick: Pickaxe) =
-            plr.equipment.nonNullGet(Equipment.WEAPON).map { it.id == pick.itemId }.orElse(false) ||
-                    plr.inventory.contains(pick.itemId)
+        fun hasPick(plr: Player, pick: Pickaxe) = plr.equipment[Equipment.WEAPON]?.id == pick.itemId ||
+                plr.inventory.contains(pick.itemId)
     }
 }

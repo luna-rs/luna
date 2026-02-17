@@ -74,7 +74,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
      * Computes the bar type that will be used to superheat.
      */
     private fun computeBarType(): BarType? {
-        val itemId = mob.inventory.computeIdForIndex(index).orElse(-1)
+        val itemId = mob.inventory.computeIdForIndex(index)
         val possibleBars = BarType.ORE_TO_BAR[itemId]
         if (possibleBars.isEmpty()) {
             mob.sendMessage("You cannot use this spell on this item.")

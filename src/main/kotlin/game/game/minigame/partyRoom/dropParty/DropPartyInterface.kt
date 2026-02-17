@@ -11,10 +11,10 @@ import io.luna.game.model.mob.overlay.InventoryOverlayInterface
  */
 class DropPartyInterface : InventoryOverlayInterface(2156, 5063) {
     override fun onOpen(plr: Player) {
-        plr.inventory.setSecondaryRefresh(5064)
-        plr.inventory.refreshSecondary(plr)
+        plr.inventory.setSecondaryWidget(5064)
+        plr.inventory.updateSecondaryWidget(plr)
 
-        DropPartyOption.chest.items.refreshPrimary(plr)
-        plr.depositItems.refreshPrimary(plr)
+        DropPartyOption.chest.items.updatePrimaryWidget(plr)
+        plr.depositItems.updatePrimaryWidget(plr)
     }
 }

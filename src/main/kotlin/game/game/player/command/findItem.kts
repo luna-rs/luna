@@ -11,7 +11,6 @@ import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.NumberInput
-import kotlin.streams.toList
 
 /**
  * A standard interface representing the result of a search.
@@ -19,19 +18,18 @@ import kotlin.streams.toList
 class SearchResultInterface(private val searchToken: String) :
     DynamicBankInterface("Search results for '$searchToken' ...") {
 
-    override fun buildDisplayItems(plr: Player): List<Item> {
+    override fun buildDisplayItems(plr: Player): ArrayList<Item> {
         // Perform search here, filter items based on search token.
         val itemsFound = ItemDefinition.ALL
-            .stream()
             .filter { it.id > 0 && !it.isNoted && it.name.lowercase().contains(searchToken) }
-            .map { Item(it.id, 1) }.toList()
+            .map { Item(it.id, 1) }.toCollection(ArrayList())
 
         val resultCount = itemsFound.size
         val maxResults = plr.bank.capacity()
         if (resultCount > maxResults) {
             // Truncate results.
             plr.sendMessage("Too many results ($resultCount) for search term '$searchToken'! The search has been truncated.")
-            return itemsFound.dropLast(resultCount - maxResults)
+            return itemsFound.dropLast(resultCount - maxResults).toCollection(ArrayList())
         } else {
             // Display as usual.
             plr.sendMessage("Found $resultCount results for search term '$searchToken'.")
@@ -70,14 +68,14 @@ cmd("finddef", RIGHTS_DEV) {
     val search = getInputFrom(1).lowercase().trim()
     val matches = arrayListOf<Pair<Int, String>>()
     when (type) {
-        "game/obj", "object", "objects" -> GameObjectDefinition.ALL.stream()
+        "obj", "object", "objects" -> GameObjectDefinition.ALL.stream()
             .filter { it.name.lowercase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
-        "game/item", "items" -> ItemDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
+        "item", "items" -> ItemDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
 
-        "game/npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
+        "npc", "npcs" -> NpcDefinition.ALL.stream().filter { it.name.lowercase().contains(search) }
             .forEach { matches.add(it.id to it.name) }
     }
     if (matches.isNotEmpty()) {

@@ -99,8 +99,8 @@ cmd("object", RIGHTS_DEV) {
  */
 cmd("roll", RIGHTS_DEV) {
     val times = asInt(0)
-    plr.overlays.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest'") {
-        override fun buildDisplayItems(player: Player?): MutableList<Item> {
+    plr.overlays.open(object : DynamicBankInterface("Drop simulation for 'Crystal chest x $times'") {
+        override fun buildDisplayItems(player: Player?): ArrayList<Item> {
             val items = arrayListOf<Item>()
             repeat(times) {
                 items += CrystalChestDropTable.roll(plr, plr)
