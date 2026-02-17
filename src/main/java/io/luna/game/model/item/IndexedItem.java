@@ -3,14 +3,26 @@ package io.luna.game.model.item;
 import java.util.Objects;
 
 /**
- * A model representing an item paired with an index.
+ * Represents an {@link Item} paired with a container slot index.
+ * <p>
+ * This is primarily used for:
+ * <ul>
+ *   <li>Serialization/persistence of container state (saving/loading items with their slot)</li>
+ *   <li>UI refresh packets that require explicit slot indices</li>
+ *   <li>Converting between raw slot data and {@link Item} instances</li>
+ * </ul>
+ * <p>
+ * <b>Immutability:</b> Instances are immutable.
+ * <p>
+ * <b>Equality:</b> Two {@link IndexedItem}s are equal if and only if their {@code index}, {@code id}, and
+ * {@code amount} are all equal.
  *
- * @author lare96 
+ * @author lare96
  */
 public class IndexedItem {
 
     /**
-     * The index.
+     * The container slot index where the item resides.
      */
     private final int index;
 
@@ -25,9 +37,9 @@ public class IndexedItem {
     private final int amount;
 
     /**
-     * Creates a new {@link IndexedItem} with an amount of 1.
+     * Creates a new {@link IndexedItem} with an {@code amount} of {@code 1}.
      *
-     * @param index The index.
+     * @param index The slot index.
      * @param id The item identifier.
      */
     public IndexedItem(int index, int id) {
@@ -37,7 +49,7 @@ public class IndexedItem {
     /**
      * Creates a new {@link IndexedItem}.
      *
-     * @param index The index.
+     * @param index The slot index.
      * @param id The item identifier.
      * @param amount The item amount.
      */
@@ -48,15 +60,19 @@ public class IndexedItem {
     }
 
     /**
-     * Creates a new {@link IndexedItem}.
+     * Creates a new {@link IndexedItem} from an {@link Item}.
      *
-     * @param index The index.
-     * @param item The item.
+     * @param index The slot index.
+     * @param item The item to copy id/amount from.
+     * @throws NullPointerException if {@code item} is null.
      */
     public IndexedItem(int index, Item item) {
         this(index, item.getId(), item.getAmount());
     }
 
+    /**
+     * Two {@link IndexedItem}s are equal if their slot index, id, and amount are equal.
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -64,29 +80,27 @@ public class IndexedItem {
         }
         if (obj instanceof IndexedItem) {
             IndexedItem other = (IndexedItem) obj;
-            return index == other.index &&
-                    id == other.id &&
-                    amount == other.amount;
+            return index == other.index && id == other.id && amount == other.amount;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-         return Objects.hash(index, id, amount);
+        return Objects.hash(index, id, amount);
     }
 
     /**
-     * Returns this indexed item as an {@link Item}.
+     * Converts this indexed entry into a plain {@link Item} (dropping index information).
      *
-     * @return The converted indexed item.
+     * @return A new {@link Item} with this entry's {@link #id} and {@link #amount}.
      */
     public Item toItem() {
         return new Item(id, amount);
     }
 
     /**
-     * @return The index.
+     * @return The slot index.
      */
     public int getIndex() {
         return index;
