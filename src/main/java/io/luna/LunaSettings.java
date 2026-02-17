@@ -1,5 +1,6 @@
 package io.luna;
 
+import game.skill.SkillsSettings;
 import io.luna.game.GameSettings;
 import io.luna.util.SqlConnectionPool.DatabaseSettings;
 import io.luna.util.logging.LoggingSettings;
@@ -14,6 +15,7 @@ public final class LunaSettings {
     private final GameSettings game;
     private final DatabaseSettings database;
     private final LoggingSettings logging;
+    private final SkillsSettings skills;
 
     /**
      * The game settings.
@@ -36,10 +38,18 @@ public final class LunaSettings {
         return logging;
     }
 
+    /**
+     * The skills settings.
+     */
+    public SkillsSettings skills() {
+        return skills;
+    }
+
     // Never called
-    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging) {
+    private LunaSettings(GameSettings game, DatabaseSettings database, LoggingSettings logging, SkillsSettings skills) {
         this.game = game;
         this.database = database;
         this.logging = logging;
+        this.skills = skills;
     }
 }

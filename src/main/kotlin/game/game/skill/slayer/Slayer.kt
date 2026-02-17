@@ -18,11 +18,6 @@ import io.luna.game.model.mob.dialogue.Expression
 object Slayer {
 
     /**
-     * If specialized slayer equipment is needed in order to fight specific slayer monsters.
-     */
-    const val EQUIPMENT_NEEDED = true
-
-    /**
      * The XP multiplier specifically for slayer.
      */
     private val XP_MULTIPLIER = 1.0

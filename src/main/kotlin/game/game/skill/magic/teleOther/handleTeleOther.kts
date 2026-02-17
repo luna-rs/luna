@@ -8,6 +8,7 @@ import io.luna.game.model.mob.varp.PersistentVarp
 import game.player.Messages
 import game.skill.magic.Magic
 import game.skill.magic.teleOther.TeleOtherAction.Companion.teleOtherRequests
+import io.luna.Luna
 import java.util.concurrent.TimeUnit
 
 /**
@@ -29,7 +30,7 @@ fun open(source: Player, target: Player, type: TeleOtherType) {
     val timestamp = source.teleOtherRequests[target.usernameHash]
     if (timestamp != null) {
         val elapsed = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - timestamp)
-        if (elapsed < TeleOtherAction.TELEOTHER_DELAY_SECONDS) {
+        if (elapsed < Luna.settings().skills().teleOtherThrottleSeconds()) {
             source.sendMessage("You have already recently sent a teleother request to this person.")
             return
         }

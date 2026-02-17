@@ -27,5 +27,12 @@
       "COMMANDS",
       "PRIVATE_MESSAGE"
     ]
+  },
+  "skills": {
+    "woodcutting_speed": 4,
+    "use_317_tree_stumps": false,
+    "slayer_equipment_needed": false,
+    "max_firemaking_light_ticks": 10,
+    "tele_other_throttle_seconds": 30
   }
 }

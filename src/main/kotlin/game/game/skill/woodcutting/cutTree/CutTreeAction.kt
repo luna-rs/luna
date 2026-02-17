@@ -2,6 +2,11 @@ package game.skill.woodcutting.cutTree
 
 import api.predef.*
 import api.predef.ext.*
+import game.player.Sounds
+import game.skill.woodcutting.Woodcutting
+import game.skill.woodcutting.Woodcutting.treeHealth
+import game.skill.woodcutting.searchNest.Nest
+import io.luna.Luna
 import io.luna.game.action.impl.ItemContainerAction.AnimatedInventoryAction
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.EntityState
@@ -9,16 +14,12 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
-import game.player.Sounds
-import game.skill.woodcutting.Woodcutting
-import game.skill.woodcutting.Woodcutting.treeHealth
-import game.skill.woodcutting.searchNest.Nest
 
 /**
  * An [InventoryAction] that will enable the cutting of trees.
  */
 class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: GameObject) :
-    AnimatedInventoryAction(plr, Woodcutting.CUT_SPEED_TICKS, 6, Int.MAX_VALUE) {
+    AnimatedInventoryAction(plr, Luna.settings().skills().woodcuttingSpeed(), 6, Int.MAX_VALUE) {
 
     /**
      * Sound delay for woodcutting.
@@ -71,7 +72,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
                     complete()
                 }
             }
-            if (Woodcutting.USE_317_TREE_STUMPS) {
+            if (Luna.settings().skills().use317TreeStumps()) {
                 if (rand().nextInt(8) == 0) {
                     deleteAndRespawnTree()
                     complete()

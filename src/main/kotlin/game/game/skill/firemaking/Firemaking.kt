@@ -3,6 +3,7 @@ package game.skill.firemaking
 import api.predef.*
 import io.luna.game.model.mob.Player
 import game.skill.Skills
+import io.luna.Luna
 
 /**
  * Holds constants and useful global functions related to Firemaking.
@@ -10,11 +11,6 @@ import game.skill.Skills
  * @author lare96
  */
 object Firemaking {
-
-    /**
-     * The maximum amount of ticks the player can wait before a log will be lit.
-     */
-    const val MAXIMUM_LIGHT_DURATION = 10
 
     /**
      * The tinderbox item ID.
@@ -41,13 +37,14 @@ object Firemaking {
      * Computes the amount of ticks required to light [log].
      */
     fun computeLightDelay(plr: Player, log: Log): Int {
+        val max = Luna.settings().skills().maxFiremakingLightTicks()
         var ticks = 1
-        repeat(MAXIMUM_LIGHT_DURATION) { // Loop until successful. User-defined maximum light duration.
+        repeat(max) { // Loop until successful. User-defined maximum light duration.
             if (Skills.success(log.chance, plr.firemaking.level)) {
                 return ticks
             }
             ticks++
         }
-        return ticks.coerceAtMost(MAXIMUM_LIGHT_DURATION)
+        return ticks.coerceAtMost(max)
     }
 }

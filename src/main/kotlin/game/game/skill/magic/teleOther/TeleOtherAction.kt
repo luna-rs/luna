@@ -24,11 +24,6 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
     companion object {
 
         /**
-         * Seconds that must be waited in-between teleother requests to the same person.
-         */
-        const val TELEOTHER_DELAY_SECONDS = 30
-
-        /**
          * An attribute representing all recent teleother requests sent by the player.
          */
         val Player.teleOtherRequests by Attr.map<Long, Long>()
