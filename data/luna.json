@@ -9,7 +9,8 @@
     "serializer": "SqlGameSerializer",
     "port": 43594,
     "connection_limit": 2,
-    "password_strength": "DEFAULT"
+    "password_strength": "DEFAULT",
+    "merge_stackable_ground_items": false
   },
   "database": {
     "host": "localhost",
