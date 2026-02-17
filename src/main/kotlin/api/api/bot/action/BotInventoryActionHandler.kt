@@ -28,15 +28,15 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
          * Use an item on a generic interactable entity.
          */
         private suspend fun useOnEntity(target: Entity, action: (Int) -> Unit): Boolean {
-            val index = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else OptionalInt.of(usedIndex)
-            if (index.isEmpty) {
+            val index = if (usedIndex == -1) bot.inventory.computeIndexForId(usedId) else usedIndex
+            if (index == -1) {
                 // We don't have the item.
                 bot.log("I don't have ${itemName(usedId)}.")
                 return false
             }
-            val id = bot.inventory[index.asInt]?.id
+            val id = bot.inventory[index]?.id
             if (usedId != id) {
-                bot.log("Can't find ${itemName(usedId)} on index ${index.asInt}.")
+                bot.log("Can't find ${itemName(usedId)} on index ${index}.")
                 return false
             }
             if (bot.movementStack.walkUntilReached(target).await()) {
@@ -45,7 +45,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
                             bot.isInteractingWith(target)
                 }
                 bot.log("Using ${itemName(usedId)} on $target.")
-                action(index.asInt)
+                action(index)
                 return cond.submit(30).await()
             }
             return false
@@ -59,12 +59,12 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
         fun onItem(targetId: Int): Boolean {
             val usedIndex = bot.inventory.computeIndexForId(usedId)
             val targetIndex = bot.inventory.computeIndexForId(targetId)
-            if (usedIndex.isEmpty || targetIndex.isEmpty) {
+            if (usedIndex == -1 || targetIndex == -1) {
                 bot.log("I don't have ${itemName(usedId)} or ${itemName(targetId)}.")
                 return false
             }
             bot.log("Using ${itemName(usedId)} on ${itemName(targetId)}.")
-            bot.output.useItemOnItem(targetIndex.asInt, usedIndex.asInt, targetId, usedId)
+            bot.output.useItemOnItem(targetIndex, usedIndex, targetId, usedId)
             return true
         }
 
@@ -99,14 +99,14 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
     suspend fun dropItem(id: Int): Boolean {
         bot.log("Dropping ${itemName(id)}.")
         val index = bot.inventory.computeIndexForId(id)
-        if (index.isEmpty) {
+        if (index == -1) {
             // We don't have the item.
             bot.log("I don't have ${itemName(id)}.")
             return false
         }
         val openDestroyCond =
-            SuspendableCondition { bot.inventory[index.asInt] == null || DestroyItemDialogue::class in bot.overlays }
-        bot.output.sendInventoryItemClick(5, index.asInt, id)
+            SuspendableCondition { bot.inventory[index] == null || DestroyItemDialogue::class in bot.overlays }
+        bot.output.sendInventoryItemClick(5, index, id)
         if (openDestroyCond.submit(5).await()) {
             if (itemDef(id).isTradeable) {
                 return true
@@ -120,7 +120,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
             }
             return true
         }
-        bot.log("Could not drop/destroy ${bot.inventory[index.asInt]}.")
+        bot.log("Could not drop/destroy ${bot.inventory[index]}.")
         return false
     }
 
@@ -141,7 +141,7 @@ class BotInventoryActionHandler(private val bot: Bot, private val handler: BotAc
      * clicked.
      */
     fun clickItem(option: Int, id: Int, index: Int = -1): Boolean {
-        val clickIndex = if (index == -1) bot.inventory.computeIndexForId(id).orElse(-1) else index
+        val clickIndex = if (index == -1) bot.inventory.computeIndexForId(id) else index
         if (clickIndex == -1) {
             bot.log("Can't find ${itemName(id)}.")
             return false

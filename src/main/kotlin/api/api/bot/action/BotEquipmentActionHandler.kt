@@ -19,7 +19,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
     fun equip(id: Int): SuspendableFuture {
         bot.log("Trying to equip ${itemName(id)}.")
         val index = bot.inventory.computeIndexForId(id)
-        if (index.isEmpty) {
+        if (index == -1) {
             // We don't have the item, invalid item.
             bot.log("Don't have ${itemName(id)}.")
             return SuspendableFutureFailed
@@ -31,7 +31,7 @@ class BotEquipmentActionHandler(private val bot: Bot, private val handler: BotAc
             return SuspendableFutureFailed
         }
         val suspendCond = SuspendableCondition({ bot.equipment[equipmentIndex.get()]?.id == id })
-        bot.output.sendInventoryItemClick(2, index.asInt, id)
+        bot.output.sendInventoryItemClick(2, index, id)
         return suspendCond.submit()
     }
 

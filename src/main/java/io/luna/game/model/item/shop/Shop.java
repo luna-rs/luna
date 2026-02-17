@@ -250,7 +250,7 @@ public final class Shop {
         if (spacesNeeded > spacesAvailable) {
             if (spacesAvailable == 0) {
                 // No free space left.
-                inventory.fireCapacityExceededEvent();
+                inventory.onCapacityExceeded();
                 return false;
             }
             // Buy amount needs more inventory space than we have available, clamp it.
@@ -332,7 +332,7 @@ public final class Shop {
         int totalValue = computeSellValue(sellItem.getId(), sellAmount);
         Item currencyItem = new Item(currency.getId(), totalValue);
         if (!inventory.hasSpaceFor(currencyItem)) {
-            inventory.fireCapacityExceededEvent();
+            inventory.onCapacityExceeded();
             return false;
         }
 
@@ -453,7 +453,7 @@ public final class Shop {
         double priceChange;
         double startingPrice;
 
-        int storeIndex = items.computeIndexForId(id).orElse(-1);
+        int storeIndex = items.computeIndexForId(id);
         expectedAmount = (storeIndex != -1) ? amountMap[storeIndex].orElse(GEN_DEFAULT_STOCK) : GEN_DEFAULT_STOCK;
         int amountStocked = (storeIndex != -1) ? items.computeAmountForIndex(storeIndex) : 0;
 
@@ -535,7 +535,7 @@ public final class Shop {
                 case NONE:
                     return false;
                 case EXISTING:
-                    return items.computeIndexForId(id).isPresent();
+                    return items.contains(id);
             }
         }
         return false;

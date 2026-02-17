@@ -13,36 +13,51 @@ import java.util.Optional;
 import static io.luna.util.StringUtils.addArticle;
 
 /**
- * A model describing an equipment item definition.
+ * A cache/data-backed definition describing how an {@link ItemDefinition} behaves when equipped.
+ * <p>
+ * Equipment definitions are keyed by item id and provide the metadata needed by equipment systems, including:
+ * <ul>
+ *     <li>the equipment slot index (helmet/weapon/chest/etc.)</li>
+ *     <li>special model coverage flags (full body, full helmet)</li>
+ *     <li>two-handed flag (affects weapon/shield rules)</li>
+ *     <li>skill requirements to equip the item</li>
+ *     <li>equipment bonuses (attack/defence/strength/prayer, etc.)</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class EquipmentDefinition implements Definition {
 
     /**
-     * A requirement for equipping an item.
+     * A single skill requirement for equipping an item.
      */
     public static final class Requirement {
 
         /**
-         * The requirement skill name.
+         * The skill name as provided by the data source (e.g., "Attack").
          */
         private final String name;
 
         /**
-         * The requirement skill identifier.
+         * The internal skill id resolved from {@link #name}.
          */
         private final int id;
 
         /**
-         * The requirement skill level.
+         * The minimum level required.
          */
         private final int level;
 
         /**
-         * Creates a new {@link Requirement}.
+         * Creates a new {@link Requirement} from JSON data.
+         * <p>
+         * Expected JSON fields:
+         * <ul>
+         *     <li>{@code name}: skill name</li>
+         *     <li>{@code level}: required level</li>
+         * </ul>
          *
-         * @param jsonReq The requirement data, in JSON.
+         * @param jsonReq The requirement JSON object.
          */
         public Requirement(JsonObject jsonReq) {
             name = jsonReq.get("name").getAsString();
@@ -52,26 +67,27 @@ public final class EquipmentDefinition implements Definition {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).
-                    add("name", name).
-                    add("id", id).
-                    add("level", level).toString();
+            return MoreObjects.toStringHelper(this)
+                    .add("name", name)
+                    .add("id", id)
+                    .add("level", level)
+                    .toString();
         }
 
         /**
-         * Determines if the specified {@link Mob} meets this requirement.
+         * Returns {@code true} if {@code mob} meets this requirement.
          *
          * @param mob The mob to check.
-         * @return {@code true} if {@code mob} meets this requirement, otherwise {@code false}.
+         * @return {@code true} if the skill level is at least {@link #level}.
          */
         public boolean meets(Mob mob) {
             return mob.skill(id).getLevel() >= level;
         }
 
         /**
-         * Sends the player a message stating they don't meet this requirement.
+         * Sends the player a message explaining that they do not meet this requirement.
          *
-         * @param player The player to send the message to.
+         * @param player The player to message.
          */
         public void sendFailureMessage(Player player) {
             Skill skill = player.skill(id);
@@ -80,23 +96,27 @@ public final class EquipmentDefinition implements Definition {
         }
 
         /**
-         * @return The requirement skill name.
+         * Returns the skill name.
+         *
+         * @return The skill name.
          */
         public String getName() {
             return name;
         }
 
         /**
-         * Retrieves and returns the skill identifier.
+         * Returns the internal skill id.
          *
-         * @return The requirement skill identifier.
+         * @return The skill id.
          */
         public int getId() {
             return id;
         }
 
         /**
-         * @return The requirement skill level.
+         * Returns the minimum required level.
+         *
+         * @return The required level.
          */
         public int getLevel() {
             return level;
@@ -104,58 +124,60 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * A map of equipment definitions.
+     * Repository of all {@link EquipmentDefinition}s keyed by item id.
      */
     public static final DefinitionRepository<EquipmentDefinition> ALL = new MapDefinitionRepository<>();
 
     /**
-     * The identifier.
+     * The item id this equipment definition belongs to.
      */
     private final int id;
 
     /**
-     * The equipment index.
+     * The equipment slot index this item is worn in.
+     * <p>
+     * This index is consumed by the equipment container (e.g., {@code Equipment.HEAD}, {@code Equipment.WEAPON}, etc.).
      */
     private final int index;
 
     /**
-     * If this item is two-handed.
+     * Whether the item is two-handed (equipping it may force the shield slot to be unequipped).
      */
     private final boolean twoHanded;
 
     /**
-     * If this item covers the arms and torso.
+     * Whether the item covers the arms/torso (affects appearance model hiding rules).
      */
     private final boolean fullBody;
 
     /**
-     * If this item covers the head and face.
+     * Whether the item covers the head/face (affects appearance model hiding rules).
      */
     private final boolean fullHelmet;
 
     /**
-     * An immutable list of equipment requirements.
+     * Skill requirements for equipping this item.
      */
     private final ImmutableList<Requirement> requirements;
 
     /**
-     * A list of equipment bonuses.
+     * Equipment bonuses array (defensively copied).
      */
     private final int[] bonuses;
 
     /**
      * Creates a new {@link EquipmentDefinition}.
      *
-     * @param id The identifier.
-     * @param index The equipment index.
-     * @param twoHanded If this item is two-handed.
-     * @param fullBody If this item covers the arms and torso.
-     * @param fullHelmet If this item covers the head and face.
-     * @param requirements A list of equipment requirements.
-     * @param bonuses A list of equipment bonuses.
+     * @param id The item id.
+     * @param index The equipment slot index.
+     * @param twoHanded Whether the item is two-handed.
+     * @param fullBody Whether the item covers the arms/torso.
+     * @param fullHelmet Whether the item covers the head/face.
+     * @param requirements Equipment requirements (copied into an immutable list).
+     * @param bonuses Equipment bonuses (defensively copied).
      */
     public EquipmentDefinition(int id, int index, boolean twoHanded, boolean fullBody, boolean fullHelmet,
-                              Requirement[] requirements, int[] bonuses) {
+                               Requirement[] requirements, int[] bonuses) {
         this.id = id;
         this.index = index;
         this.twoHanded = twoHanded;
@@ -166,71 +188,90 @@ public final class EquipmentDefinition implements Definition {
     }
 
     /**
-     * Returns the first failed requirement found.
+     * Returns the first requirement the player does not meet.
      *
-     * @param player The player to check for.
-     * @return The first requirement that was not met, or an empty optional if {@code player}
-     * meets all requirements.
+     * @param player The player to check.
+     * @return The first failed requirement, or {@link Optional#empty()} if all requirements are met.
      */
     public Optional<Requirement> getFailedRequirement(Player player) {
-        return requirements.stream().filter(requirement -> !requirement.meets(player)).findFirst();
+        return requirements.stream()
+                .filter(requirement -> !requirement.meets(player))
+                .findFirst();
     }
 
     /**
-     * Determines if the player meets all equipment requirements.
+     * Returns {@code true} if the player meets all requirements to equip this item.
      *
-     * @param player The player to determine for.
-     * @return {@code true} if {@code player} meets all requirements.
+     * @param player The player to check.
+     * @return {@code true} if all requirements are met.
      */
     public boolean meetsAllRequirements(Player player) {
         return getFailedRequirement(player).isEmpty();
     }
 
+    /**
+     * Returns the item id this equipment definition belongs to.
+     *
+     * @return The id.
+     */
     @Override
     public int getId() {
         return id;
     }
 
     /**
-     * @return The equipment index.
+     * Returns the equipment slot index this item is worn in.
+     *
+     * @return The slot index.
      */
     public int getIndex() {
         return index;
     }
 
     /**
-     * @return If this item is two-handed.
+     * Returns whether this item is two-handed.
+     *
+     * @return {@code true} if two-handed.
      */
     public boolean isTwoHanded() {
         return twoHanded;
     }
 
     /**
-     * @return If this item covers the arms and torso.
+     * Returns whether this item covers the arms/torso.
+     *
+     * @return {@code true} if full body.
      */
     public boolean isFullBody() {
         return fullBody;
     }
 
     /**
-     * @return If this item covers the head and face.
+     * Returns whether this item covers the head/face.
+     *
+     * @return {@code true} if full helmet.
      */
     public boolean isFullHelmet() {
         return fullHelmet;
     }
 
     /**
-     * @return An immutable list of the requirements.
+     * Returns the list of skill requirements.
+     *
+     * @return The requirements list (immutable).
      */
     public ImmutableList<Requirement> getRequirements() {
         return requirements;
     }
 
     /**
-     * Gets the bonus at the specified identifier.
+     * Returns the bonus at the given bonus index.
      *
-     * @param id The bonus identifier.
-     * @return The bonus at the specified identifier as an {@code int}.
+     * <p>
+     * Note: this will throw {@link ArrayIndexOutOfBoundsException} if an invalid index is supplied.
+     *
+     * @param id The bonus index.
+     * @return The bonus value.
      */
     public int getBonus(int id) {
         return bonuses[id];

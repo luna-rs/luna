@@ -1,10 +1,10 @@
 package game.skill.woodcutting.cutTree
 
 import api.predef.*
+import game.skill.woodcutting.cutTree.Tree.*
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.skill.woodcutting.cutTree.Tree.*
 
 /**
  * An enumerated type representing all axes that can be used to cut [Tree]s.
@@ -160,7 +160,6 @@ enum class Axe(val id: Int,
          * Determines if the player has an axe.
          */
         fun hasAxe(plr: Player, axe: Axe) =
-            plr.equipment.nonNullGet(Equipment.WEAPON).map { it.id == axe.id }.orElse(false) ||
-                    plr.inventory.contains(axe.id)
+            plr.equipment[Equipment.WEAPON]?.id == axe.id || plr.inventory.contains(axe.id)
     }
 }

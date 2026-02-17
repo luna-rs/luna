@@ -19,7 +19,7 @@ object ItemContainerTypeAdapter : TypeAdapter<ItemContainer>() {
     override fun write(writer: JsonWriter, value: ItemContainer) {
         writer.beginObject().name("capacity").value(value.capacity())
         writer.name("stack_policy").value(value.policy.name)
-        writer.name("widget_id").value(value.primaryRefresh)
+        writer.name("widget_id").value(value.primaryWidget)
         writer.name("items").beginArray()
         for (item in value.toList()) {
             writer.jsonValue(Attribute.getGsonInstance().toJson(item))

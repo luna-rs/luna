@@ -23,8 +23,8 @@ on(LoginEvent::class, EventPriority.HIGH) {
     plr.equipment.loadBonuses()
     plr.depositItems.setListeners(PlayerRefreshListener(plr, "You can only deposit 8 items at a time."))
 
-    plr.inventory.refreshPrimary(plr)
-    plr.equipment.refreshPrimary(plr)
+    plr.inventory.updatePrimaryWidget(plr)
+    plr.equipment.updatePrimaryWidget(plr)
 
     plr.queue(UpdateRunEnergyMessageWriter())
     plr.queue(UpdatePrivacyOptionMessageWriter())

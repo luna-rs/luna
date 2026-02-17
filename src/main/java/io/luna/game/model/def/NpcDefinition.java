@@ -3,19 +3,42 @@ package io.luna.game.model.def;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A definition model describing a non-player mob.
+ * A cache-backed definition describing a non-player character (NPC).
+ *
+ * <p>
+ * NPC definitions provide the immutable metadata needed to render and interact with NPCs, including:
+ * <ul>
+ *     <li>identity: id, name, description</li>
+ *     <li>movement/animation ids: stand, walk, turn animations</li>
+ *     <li>interaction: context menu actions (e.g., "Talk-to", "Attack")</li>
+ *     <li>presentation: size, minimap visibility, degrees-to-turn</li>
+ *     <li>combat metadata: combat level</li>
+ *     <li>transformation data: varp/varbit-driven morph children via {@link VarpChildDefinition}</li>
+ * </ul>
+ *
+ * <p>
+ * <b>Repository:</b> All NPC definitions are stored in {@link #ALL}, indexed by id. The repository size
+ * ({@value #SIZE}) should match the expected NPC count for the target cache revision.
+ *
+ * <p>
+ * <b>Actions:</b> {@link #actions} represents the NPC's context menu actions in client order. Slots may be
+ * {@code null} depending on the cache dump, so callers should null-check if needed.
+ *
+ * <p>
+ * <b>Transformations:</b> If {@link #getVarpDef()} is non-null, the NPC may transform into one of several child ids
+ * depending on a varp/varbit value. This class only stores the transformation metadata; selection logic lives elsewhere.
  *
  * @author lare96
  */
 public final class NpcDefinition implements Definition {
 
     /**
-     * The definition count.
+     * Total number of NPC definitions expected for this cache.
      */
     public static final int SIZE = 14974;
 
     /**
-     * The NPC definition repository.
+     * Repository of all {@link NpcDefinition}s, indexed by NPC id.
      */
     public static final DefinitionRepository<NpcDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
@@ -25,67 +48,71 @@ public final class NpcDefinition implements Definition {
     private final int id;
 
     /**
-     * The NPC name.
+     * The NPC display name.
      */
     private final String name;
 
     /**
-     * The NPC description.
+     * The examine/description text.
      */
     private final String description;
 
     /**
-     * The NPC size.
+     * The NPC size in tiles (typically 1 for most NPCs).
      */
     private final int size;
 
     /**
-     * The NPC stand animation.
+     * Animation id for the idle/stand pose.
      */
     private final int standAnimationId;
 
     /**
-     * The NPC walk animation.
+     * Animation id for walking.
      */
     private final int walkAnimationId;
 
     /**
-     * The NPC turn back animation.
+     * Animation id for turning back.
      */
     private final int turnBackAnimationId;
 
     /**
-     * The NPC turn right animation.
+     * Animation id for turning right.
      */
     private final int turnRightAnimationId;
 
     /**
-     * The NPC turn left animation.
+     * Animation id for turning left.
      */
     private final int turnLeftAnimationId;
 
     /**
-     * The NPC degrees to turn.
+     * The degrees to turn, used by the client for turn smoothing/rotation behavior.
      */
     private final int degreesToTurn;
 
     /**
-     * The NPC context menu actions.
+     * The context menu actions for this NPC in client order.
+     *
+     * <p>
+     * Common examples: "Talk-to", "Attack", "Pickpocket", "Trade".
+     * Some indices may be {@code null} if not populated in the cache.
      */
     private final ImmutableList<String> actions;
 
     /**
-     * If the NPC is visible on the minimap.
+     * Whether this NPC is visible on the minimap.
      */
     private final boolean minimapVisible;
 
     /**
-     * The NPC combat level.
+     * The NPC combat level (often shown in the client for attackable NPCs).
      */
     private final int combatLevel;
 
     /**
-     * The NPC transformation varP definition.
+     * Transformation metadata describing varp/varbit-driven morphing behavior (nullable).
      */
     private final VarpChildDefinition varpDef;
 
@@ -93,19 +120,19 @@ public final class NpcDefinition implements Definition {
      * Creates a new {@link NpcDefinition}.
      *
      * @param id The NPC id.
-     * @param name The NPC name.
-     * @param description The NPC description.
-     * @param size The NPC size.
-     * @param standAnimationId The NPC stand animation.
-     * @param walkAnimationId The NPC walk animation.
-     * @param turnBackAnimationId The NPC turn back animation.
-     * @param turnRightAnimationId The NPC turn right animation.
-     * @param turnLeftAnimationId The NPC turn left animation.
-     * @param degreesToTurn The NPC degrees to turn.
-     * @param actions The NPC context menu actions.
-     * @param minimapVisible If the NPC is visible on the minimap.
-     * @param combatLevel The NPC combat level.
-     * @param varpDef The NPC transformation varP definition.
+     * @param name The NPC display name.
+     * @param description The examine/description text.
+     * @param size The NPC size in tiles.
+     * @param standAnimationId The stand/idle animation id.
+     * @param walkAnimationId The walk animation id.
+     * @param turnBackAnimationId The turn-back animation id.
+     * @param turnRightAnimationId The turn-right animation id.
+     * @param turnLeftAnimationId The turn-left animation id.
+     * @param degreesToTurn Turn degrees metadata used for rotation behavior.
+     * @param actions Context menu actions in client order.
+     * @param minimapVisible Whether this NPC is shown on the minimap.
+     * @param combatLevel The combat level.
+     * @param varpDef Transformation metadata (nullable).
      */
     public NpcDefinition(int id, String name, String description, int size, int standAnimationId, int walkAnimationId,
                          int turnBackAnimationId, int turnRightAnimationId, int turnLeftAnimationId, int degreesToTurn,
@@ -127,109 +154,144 @@ public final class NpcDefinition implements Definition {
         this.varpDef = varpDef;
     }
 
-
     /**
-     * Determines if the NPC action at {@code index} is equal to {@code action}.
+     * Returns {@code true} if the action at {@code index} equals {@code action}.
      *
-     * @param index The action index.
-     * @param action The action to compare.
-     * @return {@code true} if the actions are equal.
+     * <p>
+     * Note: this will throw if {@code index} is out of range. Additionally, if the cache provides null action entries,
+     * {@code actions.get(index)} may be null and this method will throw a {@link NullPointerException}.
+     * Callers that expect nulls should guard accordingly.
+     *
+     * @param index The action index (client order).
+     * @param action The action text to compare (case-sensitive).
+     * @return {@code true} if the action matches.
      */
     public boolean hasAction(int index, String action) {
         return action.equals(actions.get(index));
     }
 
+    /**
+     * Returns the NPC id.
+     *
+     * @return The id.
+     */
     @Override
     public int getId() {
         return id;
     }
 
     /**
-     * @return The NPC name.
+     * Returns the NPC display name.
+     *
+     * @return The name.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * @return The NPC description.
+     * Returns the examine/description text.
+     *
+     * @return The description.
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * @return The NPC size.
+     * Returns the NPC size in tiles.
+     *
+     * @return The size.
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * @return The NPC stand animation.
+     * Returns the stand/idle animation id.
+     *
+     * @return The stand animation id.
      */
     public int getStandAnimationId() {
         return standAnimationId;
     }
 
     /**
-     * @return The NPC walk animation.
+     * Returns the walk animation id.
+     *
+     * @return The walk animation id.
      */
     public int getWalkAnimationId() {
         return walkAnimationId;
     }
 
     /**
-     * @return The NPC turn back animation.
+     * Returns the turn-back animation id.
+     *
+     * @return The turn-back animation id.
      */
     public int getTurnBackAnimationId() {
         return turnBackAnimationId;
     }
 
     /**
-     * @return The NPC turn right animation.
+     * Returns the turn-right animation id.
+     *
+     * @return The turn-right animation id.
      */
     public int getTurnRightAnimationId() {
         return turnRightAnimationId;
     }
 
     /**
-     * @return The NPC turn left animation.
+     * Returns the turn-left animation id.
+     *
+     * @return The turn-left animation id.
      */
     public int getTurnLeftAnimationId() {
         return turnLeftAnimationId;
     }
 
     /**
-     * @return The NPC degrees to turn.
+     * Returns the degrees-to-turn metadata used for rotation behavior.
+     *
+     * @return The degrees-to-turn value.
      */
     public int getDegreesToTurn() {
         return degreesToTurn;
     }
 
     /**
-     * @return The NPC context menu actions.
+     * Returns the NPC context menu actions in client order.
+     *
+     * @return The actions list.
      */
     public ImmutableList<String> getActions() {
         return actions;
     }
 
     /**
-     * @return If the NPC is visible on the minimap.
+     * Returns whether this NPC is visible on the minimap.
+     *
+     * @return {@code true} if visible on the minimap.
      */
     public boolean isMinimapVisible() {
         return minimapVisible;
     }
 
     /**
-     * @return The NPC combat level.
+     * Returns the NPC combat level.
+     *
+     * @return The combat level.
      */
     public int getCombatLevel() {
         return combatLevel;
     }
 
     /**
-     * @return The NPC transformation varP definition.
+     * Returns transformation metadata describing varp/varbit-driven morphing behavior, if present.
+     *
+     * @return The varp child definition, or {@code null} if this NPC does not transform.
      */
     public VarpChildDefinition getVarpDef() {
         return varpDef;

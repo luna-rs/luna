@@ -66,7 +66,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             return false
         }
         val inventoryIndex = bot.inventory.computeIndexForId(item.id)
-        if (inventoryIndex.isEmpty) {
+        if (inventoryIndex == -1) {
             // We don't have the item.
             bot.log("I don't have ${name(item)}.")
             return false
@@ -90,14 +90,14 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             SuspendableCondition { bot.inventory.computeAmountForId(item.id) < existingAmount }
         if (clickWidget != 5) {
             // Click deposit 1, 5, 10, or all.
-            bot.output.sendItemWidgetClick(clickWidget, inventoryIndex.asInt, 5064, depositItem.id)
+            bot.output.sendItemWidgetClick(clickWidget, inventoryIndex, 5064, depositItem.id)
             bot.log("Clicking deposit option $clickWidget.")
             return depositCond.submit().await()
         } else {
             // Click deposit x.
             val amountCond =
                 SuspendableCondition { NumberInput::class in bot.overlays }
-            bot.output.sendItemWidgetClick(5, inventoryIndex.asInt, 5064, depositItem.id) // Click "Deposit X" on item.
+            bot.output.sendItemWidgetClick(5, inventoryIndex, 5064, depositItem.id) // Click "Deposit X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {
                 bot.log("Entering amount (${depositItem.amount}).")
@@ -152,7 +152,7 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
             return false
         }
         val bankIndex = bot.bank.computeIndexForId(item.id)
-        if (bankIndex.isEmpty) {
+        if (bankIndex == -1) {
             // We don't have the item.
             bot.log("I don't have ${name(item)}.")
             return false
@@ -174,11 +174,11 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
         if (clickWidget != 5) {
             // Withdraw 1, 5, 10, or all.
             bot.log("Clicking withdraw option $clickWidget.")
-            bot.output.sendItemWidgetClick(clickWidget, bankIndex.asInt, 5382, withdrawItem.id)
+            bot.output.sendItemWidgetClick(clickWidget, bankIndex, 5382, withdrawItem.id)
             return withdrawCond.submit().await()
         } else {
             val amountCond = SuspendableCondition { NumberInput::class in bot.overlays }
-            bot.output.sendItemWidgetClick(5, bankIndex.asInt, 5382, withdrawItem.id) // Click "Withdraw X" on item.
+            bot.output.sendItemWidgetClick(5, bankIndex, 5382, withdrawItem.id) // Click "Withdraw X" on item.
             // Wait until amount input interface is open.
             if (amountCond.submit().await()) {
                 bot.log("Entering amount (${withdrawItem.amount}).")

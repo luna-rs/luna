@@ -28,7 +28,7 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         }
 
     override fun execute() {
-        val wearingGoldsmithGauntlet = mob.equipment.computeIdForIndex(Equipment.HANDS).orElse(-1) == 776
+        val wearingGoldsmithGauntlet = mob.equipment.computeIdForIndex(Equipment.HANDS) == 776
         val xp = if (wearingGoldsmithGauntlet) barType.xp * 2.5 else barType.xp
 
         mob.playSound(Sounds.SMELTING)

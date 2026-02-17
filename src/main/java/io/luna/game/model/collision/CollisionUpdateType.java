@@ -2,6 +2,8 @@ package io.luna.game.model.collision;
 
 /**
  * An enum which represents the type of a {@link CollisionUpdate}.
+ *
+ * @author Major
  */
 public enum CollisionUpdateType {
 

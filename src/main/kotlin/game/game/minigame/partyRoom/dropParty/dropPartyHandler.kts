@@ -79,7 +79,7 @@ button(2246) {
             plr.depositItems.clear()
             for (otherPlr in world.players) {
                 if (DropPartyInterface::class in otherPlr.overlays) {
-                    DropPartyOption.chest.items.refreshPrimary(otherPlr)
+                    DropPartyOption.chest.items.updatePrimaryWidget(otherPlr)
                 }
             }
         }

@@ -3,10 +3,21 @@ package io.luna.game.model.def;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
+import java.util.Objects;
 import java.util.OptionalInt;
 
 /**
- * A definition model describing in-game objects.
+ * A cache-backed definition describing an in-game world object.
+ * <p>
+ * Object definitions provide immutable metadata used for rendering and interaction, including:
+ * <ul>
+ *     <li>identity: id, name, examine text</li>
+ *     <li>size: {@code sizeX} (width) and {@code sizeY} (length) in tiles</li>
+ *     <li>interaction/menu actions (e.g., "Open", "Climb", "Search")</li>
+ *     <li>collision/behavior flags (solid, impenetrable, interactive, obstructive)</li>
+ *     <li>optional object animation id</li>
+ *     <li>optional varp/varbit-driven transformation data via {@link VarpChildDefinition}</li>
+ * </ul>
  *
  * @author Trevor Flynn {@literal <trevorflynn@liquidcrystalstudios.com>}
  * @author lare96
@@ -14,95 +25,96 @@ import java.util.OptionalInt;
 public final class GameObjectDefinition implements Definition {
 
     /**
-     * The definition count.
+     * Total number of object definitions expected for this cache.
      */
     public static final int SIZE = 14974;
 
     /**
-     * The object definitions.
+     * Repository of all {@link GameObjectDefinition}s, indexed by object id.
      */
     public static final DefinitionRepository<GameObjectDefinition> ALL = new ArrayDefinitionRepository<>(SIZE);
 
     /**
-     * The identifier.
+     * The object id.
      */
     private final int id;
 
     /**
-     * The name.
+     * The object display name.
      */
     private final String name;
 
     /**
-     * The examine text.
+     * The examine/description text.
      */
     private final String description;
 
     /**
-     * The width.
+     * Width in tiles.
      */
     private final int sizeX;
 
     /**
-     * The length.
+     * Length in tiles.
      */
     private final int sizeY;
 
     /**
-     * The interaction direction.
+     * Interaction direction/orientation metadata from the cache.
      */
     private final int direction;
 
     /**
-     * If the object is solid.
+     * Whether the object is solid (typically blocks movement).
      */
     private final boolean solid;
 
     /**
-     * If the object is impenetrable.
+     * Whether the object is impenetrable (typically blocks projectiles/line-of-sight, depending on engine rules).
      */
     private final boolean impenetrable;
 
     /**
-     * If the object is interactive.
+     * Whether the object is interactive (has interaction options).
      */
     private final boolean interactive;
 
     /**
-     * The object animation identifier, if it has one.
+     * Optional animation id for the object.
      */
     private final OptionalInt animationId;
 
     /**
-     * An immutable list of actions.
+     * Context menu actions in client order.
      */
     private final ImmutableList<String> actions;
 
     /**
-     * If the object is obstructive.
+     * Whether the object is obstructive (often used by clipping/pathfinding rules).
      */
     private final boolean obstructive;
 
     /**
-     * The transformation definition.
+     * Optional varp/varbit-driven transformation metadata (nullable).
      */
     private final VarpChildDefinition varpDef;
 
     /**
      * Creates a new {@link GameObjectDefinition}.
      *
-     * @param id The identifier.
-     * @param name The name.
-     * @param description The examine text.
-     * @param sizeX The width.
-     * @param sizeY The length.
-     * @param solid If the object is solid.
-     * @param impenetrable If the object is impenetrable.
-     * @param interactive If the object is interactive.
-     * @param animationId The object animation identifier, if it has one.
-     * @param actions An immutable list of actions.
-     * @param obstructive If the object is obstructive.
-     * @param varpDef The transformation definition.
+     * @param id The object id.
+     * @param name The object name.
+     * @param description The examine/description text.
+     * @param sizeX Width in tiles.
+     * @param sizeY Length in tiles.
+     * @param direction Interaction direction/orientation metadata.
+     * @param solid Whether the object blocks movement.
+     * @param impenetrable Whether the object blocks projectiles/LOS (depending on rules).
+     * @param interactive Whether the object is interactive.
+     * @param animationId Optional animation id.
+     * @param actions Context menu actions in client order.
+     * @param obstructive Whether the object is obstructive (clipping/pathfinding hint).
+     * @param varpDef Transformation metadata (nullable).
      */
     public GameObjectDefinition(int id, String name, String description, int sizeX, int sizeY, int direction, boolean solid,
                                 boolean impenetrable, boolean interactive, OptionalInt animationId, ImmutableList<String> actions,
@@ -140,26 +152,33 @@ public final class GameObjectDefinition implements Definition {
                 .toString();
     }
 
+    /**
+     * Returns the object id.
+     *
+     * @return The id.
+     */
     @Override
     public int getId() {
         return id;
     }
 
     /**
-     * Determines if the object action at {@code index} is equal to {@code action}.
+     * Returns {@code true} if the action at {@code index} equals {@code action}.
      *
-     * @param index The action index.
-     * @param action The action to compare.
-     * @return {@code true} if the actions are equal.
+     * @param index The action index (client order).
+     * @param action The action text to compare (case-sensitive).
+     * @return {@code true} if the action matches.
      */
     public boolean hasAction(int index, String action) {
         if (index < 0 || index >= actions.size()) {
             return false;
         }
-        return action.equals(actions.get(index));
+        return Objects.equals(action, actions.get(index));
     }
 
     /**
+     * Returns the object name.
+     *
      * @return The name.
      */
     public String getName() {
@@ -167,13 +186,17 @@ public final class GameObjectDefinition implements Definition {
     }
 
     /**
-     * @return The examine text.
+     * Returns the examine/description text.
+     *
+     * @return The description.
      */
     public String getDescription() {
         return description;
     }
 
     /**
+     * Returns the width in tiles.
+     *
      * @return The width.
      */
     public int getSizeX() {
@@ -181,6 +204,8 @@ public final class GameObjectDefinition implements Definition {
     }
 
     /**
+     * Returns the length in tiles.
+     *
      * @return The length.
      */
     public int getSizeY() {
@@ -188,63 +213,81 @@ public final class GameObjectDefinition implements Definition {
     }
 
     /**
-     * @return The interaction direction.
+     * Returns the interaction direction/orientation metadata.
+     *
+     * @return The direction value.
      */
     public int getDirection() {
         return direction;
     }
 
     /**
-     * @return The total area of the object ({@link #sizeX} * {@link #sizeY}).
+     * Returns the object's area in tiles ({@code sizeX * sizeY}).
+     *
+     * @return The area in tiles.
      */
     public int getSize() {
         return sizeX * sizeY;
     }
 
     /**
-     * @return If the object is solid.
+     * Returns whether this object is solid.
+     *
+     * @return {@code true} if solid.
      */
     public boolean isSolid() {
         return solid;
     }
 
     /**
-     * @return If the object is impenetrable.
+     * Returns whether this object is impenetrable.
+     *
+     * @return {@code true} if impenetrable.
      */
     public boolean isImpenetrable() {
         return impenetrable;
     }
 
     /**
-     * @return If the object is interactive.
+     * Returns whether this object is interactive.
+     *
+     * @return {@code true} if interactive.
      */
     public boolean isInteractive() {
         return interactive;
     }
 
     /**
-     * @return The object animation identifier, if it has one.
+     * Returns the object animation id, if present.
+     *
+     * @return The animation id.
      */
     public OptionalInt getAnimationId() {
         return animationId;
     }
 
     /**
-     * @return An immutable list of actions.
+     * Returns context menu actions in client order.
+     *
+     * @return The actions list.
      */
     public ImmutableList<String> getActions() {
         return actions;
     }
 
     /**
-     * @return If the object is obstructive.
+     * Returns whether this object is obstructive.
+     *
+     * @return {@code true} if obstructive.
      */
     public boolean isObstructive() {
         return obstructive;
     }
 
     /**
-     * @return The transformation definition.
+     * Returns varp/varbit-driven transformation metadata, if present.
+     *
+     * @return The transformation definition, or {@code null} if this object does not transform.
      */
     public VarpChildDefinition getVarpDef() {
         return varpDef;

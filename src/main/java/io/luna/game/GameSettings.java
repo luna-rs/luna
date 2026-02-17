@@ -2,6 +2,7 @@ package io.luna.game;
 
 import io.luna.LunaRuntime;
 import io.luna.game.model.Position;
+import io.luna.game.model.item.GroundItem;
 import io.netty.util.ResourceLeakDetector.Level;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -67,6 +68,7 @@ public final class GameSettings {
     private final double experienceMultiplier;
     private final String serializer;
     private final PasswordStrength passwordStrength;
+    private final boolean mergeStackableGroundItems;
 
     /**
      * The port that the server will be bound on.
@@ -116,6 +118,17 @@ public final class GameSettings {
     }
 
     /**
+     * If true, stackable items with the same {@code id} and {@link io.luna.game.model.chunk.ChunkUpdatableView}
+     * on the same {@link Position} will be merged into a single ground item stack.
+     * <p>
+     * This can be used to improve player convenience (fewer stacks on the ground) and reduce entity count.
+     * When disabled, each stack is represented as its own {@link GroundItem} entity.
+     */
+    public boolean mergeStackableGroundItems() {
+        return mergeStackableGroundItems;
+    }
+
+    /**
      * Determines if luna is running in Beta mode.
      */
     public boolean betaMode() {
@@ -154,7 +167,8 @@ public final class GameSettings {
      * To prevent public instantiation.
      */
     private GameSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
-                         double experienceMultiplier, String serializer, PasswordStrength passwordStrength) {
+                         double experienceMultiplier, String serializer, PasswordStrength passwordStrength,
+                         boolean mergeStackableGroundItems) {
         // Will never be called.
         this.runtimeMode = runtimeMode;
         this.port = port;
@@ -163,5 +177,6 @@ public final class GameSettings {
         this.experienceMultiplier = experienceMultiplier;
         this.serializer = serializer;
         this.passwordStrength = passwordStrength;
+        this.mergeStackableGroundItems = mergeStackableGroundItems;
     }
 }
