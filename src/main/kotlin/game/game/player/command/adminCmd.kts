@@ -191,7 +191,7 @@ cmd("to_npc", RIGHTS_ADMIN) {
 /**
  * A command that spawns an item.
  */
-cmd("game/item", RIGHTS_ADMIN) {
+cmd("item", RIGHTS_ADMIN) {
     val id = asInt(0)
     val amount = if (args.size == 2) asInt(1) else 1
     plr.inventory.add(Item(id, amount))
