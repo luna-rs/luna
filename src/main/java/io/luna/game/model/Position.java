@@ -78,8 +78,6 @@ public final class Position implements Locatable {
      * @throws IllegalArgumentException If z is not in the range [0-3], inclusively.
      */
     public Position(int x, int y, int z) {
-        checkArgument(x >= 0, "x < 0");
-        checkArgument(y >= 0, "y < 0");
         checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
         this.x = x;
         this.y = y;

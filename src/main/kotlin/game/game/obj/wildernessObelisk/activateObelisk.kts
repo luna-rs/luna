@@ -17,7 +17,7 @@ val activatedSet = EnumSet.noneOf(Obelisk::class.java)
  * Get nearby players, and determine which ones we will teleport.
  */
 fun selectNearbyPlayers(obelisk: Obelisk, teleporting: ArrayList<Player>) {
-    val players = world.chunks.findViewable(obelisk.anchor, Player::class)
+    val players = world.findViewable(obelisk.anchor, Player::class)
     for (nearby in players) {
         if (obelisk.bounds.contains(nearby)) {
             nearby.lock()

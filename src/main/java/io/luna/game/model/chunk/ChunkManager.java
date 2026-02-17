@@ -1,16 +1,12 @@
 package io.luna.game.model.chunk;
 
-import io.luna.game.model.Entity;
-import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
-import io.luna.game.model.StationaryEntity;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.out.ClearChunkMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,48 +14,54 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
- * A model that loads new chunks and manages loaded chunks.
+ * Loads and manages {@link ChunkRepository} instances for the world, and drives per-player chunk update dispatch.
+ * <p>
+ * A {@link ChunkRepository} is created lazily on demand via {@link #load(Chunk)} / {@link #load(Position)} and then
+ * retained in {@link #repositories}. Each repository holds the entities and queued update requests for its chunk.
+ * <p>
+ * <b>View radius:</b> This manager defines a square "viewable" area around a base chunk. The current implementation
+ * iterates from {@code -VIEWABLE_RADIUS} (inclusive) to {@code VIEWABLE_RADIUS} (inclusive), producing a symmetric
+ * inclusive radius.
+ * <p>
+ * <b>Update dispatch:</b> {@link #sendUpdates(Player, Position, boolean)} compares the chunks around the player's old
+ * and new positions and:
+ * <ul>
+ *     <li>sends grouped updates for chunks that remain visible</li>
+ *     <li>sends grouped updates + persistent replays for chunks newly entering view</li>
+ * </ul>
+ * <p>
+ * <b>Reset flow:</b> Any chunk that was sent updates is tracked in {@link #updated}. After all players have been
+ * processed for the tick, callers should invoke {@link #resetUpdatedChunks()} to drain/clear temporary requests and
+ * promote any persistent requests in those chunks.
  *
  * @author lare96
  */
 public final class ChunkManager implements Iterable<ChunkRepository> {
-// todo rewrite, some confusion between this and gameobjectlist etc. where should we put functions to find world entites?
-    // todo ^^ needs some standardization and organization
 
-    // standardized place for lookups... maybe in world class?
-    // world.findItem(pos).then(item -> ...) for all applicable entity types
     /**
-     * Determines the local player count at which prioritized updating will start.
+     * How many "layers" of chunks are considered viewable around a base chunk.
      */
-    public static final int UNSORTED_THRESHOLD = 50;
+    public static final int VIEWABLE_RADIUS = 3;
 
     /**
-     * How many layers of chunks will be loaded when looking for viewable entities.
-     */
-    public static final int VIEWABLE_RADIUS = 4;
-
-    /**
-     * A map of loaded chunks.
+     * Loaded chunk repositories keyed by {@link Chunk}.
      */
     private final Map<Chunk, ChunkRepository> repositories = new ConcurrentHashMap<>(29_278);
 
     /**
-     * A queue of chunks that updates were sent to.
+     * Chunks that have had updates sent this tick and therefore must be reset in {@link #resetUpdatedChunks()}.
+     * <p>
+     * Using a {@link Set} prevents duplicate resets of the same chunk when multiple players observe it in one tick.
      */
-    private final Queue<ChunkRepository> updated = new ArrayDeque<>();
+    private final Set<ChunkRepository> updated = new HashSet<>();
 
     /**
      * The world instance.
@@ -86,68 +88,62 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     }
 
     /**
-     * Loads a {@link ChunkRepository} based on the argued chunk, constructing and loading a new one if needed.
+     * Loads (or retrieves) the {@link ChunkRepository} for {@code chunk}.
+     * <p>
+     * Repositories are created lazily and then cached.
      *
-     * @param chunk The chunk to get the repository of.
-     * @return The existing or newly loaded chunk.
+     * @param chunk The chunk to load.
+     * @return The existing or newly created repository.
      */
     public ChunkRepository load(Chunk chunk) {
         return repositories.computeIfAbsent(chunk, key -> new ChunkRepository(world, key));
     }
 
     /**
-     * Loads a {@link ChunkRepository} based on the argued position, constructing and loading a new one if needed.
+     * Loads (or retrieves) the {@link ChunkRepository} for the chunk containing {@code position}.
      *
-     * @param position The position to get the repository of.
-     * @return The existing or newly loaded chunk.
+     * @param position The position whose chunk repository should be loaded.
+     * @return The existing or newly created repository.
      */
     public ChunkRepository load(Position position) {
         return load(position.getChunk());
     }
 
     /**
-     * Returns a set of all nearby {@link Mob} types matching {@code type} that need to be updated for {@code player}.
+     * Finds nearby mobs of {@code type} that should be considered for updates relative to {@code player}.
+     * <p>
+     * This is a convenience wrapper around the world-level query API and typically filters by whether each mob
+     * is viewable from {@code player}.
      *
-     * @param player The player.
-     * @param type The mob type.
-     * @param <T> The mob type.
-     * @return The set of mobs that need to be updated.
+     * @param player The player requesting an update set.
+     * @param type The mob subtype class to search for.
+     * @param <T> The mob subtype.
+     * @return A list of matching mobs.
      */
     public <T extends Mob> Collection<T> findUpdateMobs(Player player, Class<T> type) {
-        List<T> mobs = find(player.getPosition(), type,
+        return world.find(
+                player.getPosition(),
+                type,
                 () -> new ArrayList<>(255),
                 entity -> entity.isViewableFrom(player),
-                Position.VIEWING_DISTANCE);
-        if (mobs.size() >= 255) {
-            mobs.sort(new LocalMobComparator(player));
-        }
-        return mobs;
+                Position.VIEWING_DISTANCE
+        );
     }
 
     /**
-     * Finds {@code type} entities viewable from {@code position}.
-     *
-     * @param position The position.
-     * @param type The type of entity to find.
-     * @param <T> The type of entity to find.
-     * @return The set of entities.
-     */
-    public <T extends Entity> Set<T> findViewable(Position position, Class<T> type) {
-        return find(position, type, HashSet::new,
-                entity -> entity.isWithinDistance(position, Position.VIEWING_DISTANCE), Position.VIEWING_DISTANCE);
-    }
-
-    /**
-     * Finds a set of surrounding chunks to the chunk located on {@code base}.
+     * Computes the repositories for chunks in the viewable area around {@code base}.
+     * <p>
+     * The current implementation returns a list in deterministic nested-loop order. Repositories are loaded
+     * as a side effect of this call.
      *
      * @param base The base position.
-     * @return The set of chunks.
+     * @return A list of repositories surrounding {@code base}'s chunk.
      */
-    public Set<ChunkRepository> findViewableChunks(Position base) {
+    public List<ChunkRepository> findViewableChunks(Position base) {
         Chunk chunk = base.getChunk();
-        Set<ChunkRepository> viewable = new HashSet<>(16);
-        for (int x = -VIEWABLE_RADIUS; x < VIEWABLE_RADIUS; x++) {
-            for (int y = -VIEWABLE_RADIUS; y < VIEWABLE_RADIUS; y++) {
+        List<ChunkRepository> viewable = new ArrayList<>(16);
+        for (int x = -VIEWABLE_RADIUS; x <= VIEWABLE_RADIUS; x++) {
+            for (int y = -VIEWABLE_RADIUS; y <= VIEWABLE_RADIUS; y++) {
                 ChunkRepository repository = load(chunk.translate(x, y));
                 viewable.add(repository);
             }
@@ -156,45 +152,60 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     }
 
     /**
-     * Refreshes {@link StationaryEntity} types within all viewable chunks of {@code player}.
+     * Sends chunk update messages for {@code player} based on movement and refresh mode.
+     * <p>
+     * This method computes:
+     * <ul>
+     *     <li>chunks that remain in view</li>
+     *     <li>chunks newly entering view</li>
+     * </ul>
+     * <p>
+     * For chunks remaining in view, only the current tick's queued updates are sent. For chunks newly entering
+     * view, persistent updates are replayed in addition to current tick updates.
+     * <p>
+     * Any chunk that has updates sent is tracked in {@link #updated} so the caller can later invoke
+     * {@link #resetUpdatedChunks()} once per tick.
      *
-     * @param player The player.
-     * @param oldPosition The old position of the player.
-     * @param fullRefresh If a full refresh is being performed.
+     * @param player The player to send updates to.
+     * @param oldPosition The player's previous position.
+     * @param fullRefresh If {@code true}, treat all viewable chunks as "new" (forces full resend).
      */
     public void sendUpdates(Player player, Position oldPosition, boolean fullRefresh) {
-        Set<ChunkRepository> oldChunks = findViewableChunks(oldPosition);
-        Set<ChunkRepository> newChunks = findViewableChunks(player.getPosition());
-        Set<ChunkRepository> viewableOldChunks = new HashSet<>();
+        List<ChunkRepository> oldChunks = findViewableChunks(oldPosition);
+        List<ChunkRepository> newChunks = findViewableChunks(player.getPosition());
+        List<ChunkRepository> viewableOldChunks = new ArrayList<>();
 
         if (!fullRefresh) {
-            // Don't need a full refresh, partial update of old viewable chunks. Only do a full update
-            // of new chunks.
+            // Chunks still in view: new ∩ old.
             viewableOldChunks.addAll(newChunks);
             viewableOldChunks.retainAll(oldChunks);
 
+            // Truly new chunks: new - old.
             newChunks.removeAll(oldChunks);
         }
 
-        // Send out grouped entity updates for old chunks that still remain in view.
+        // Send grouped updates for chunks that remain in view.
         for (ChunkRepository chunk : viewableOldChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
             if (!updates.isEmpty()) {
                 updated.add(chunk);
+                player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
         }
 
-        // Send out grouped entity updates for new chunks in view.
+        // Send grouped updates + persistent replays for newly viewable chunks.
         for (ChunkRepository chunk : newChunks) {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
-            // Chunk was cleared, so resend static updates like displaying registered objects and items.
+
+            // Replay persistent updates (objects/items/etc.) when the chunk is treated as "new" to the client.
             for (ChunkUpdatableRequest request : chunk.getPersistentUpdates()) {
                 ChunkUpdatableView view = request.getUpdatable().computeCurrentView();
                 if (view.isViewableFor(player)) {
                     updates.add(request.getMessage());
                 }
             }
+
             if (!updates.isEmpty()) {
                 updated.add(chunk);
                 player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
@@ -204,80 +215,30 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
     }
 
     /**
-     * Resets the list of pending updates for all updated chunks.
+     * Resets queued update state for all chunks that were updated this tick.
+     *
+     * <p>
+     * This should typically be called once per game tick after all players have been processed. It delegates to
+     * {@link ChunkRepository#resetUpdates()} and then removes each chunk from the {@link #updated} set.
      */
     public void resetUpdatedChunks() {
-        for (; ; ) {
-            ChunkRepository chunk = updated.poll();
-            if (chunk == null) {
-                break;
-            }
+        Iterator<ChunkRepository> it = updated.iterator();
+        while (it.hasNext()) {
+            ChunkRepository chunk = it.next();
             chunk.resetUpdates();
+            it.remove();
         }
     }
 
     /**
-     * Finds {@code type} entities matching {@code cond} within {@code distance} to {@code base}.
-     * The entities will be stored in a set generated by {@code setFunc}.
-     *
-     * @param base The base position to find entities around.
-     * @param type The type of entity to search for.
-     * @param setFunc Generates the set that the entities will be stored in.
-     * @param cond Filters the entities that will be found.
-     * @param distance The distance to check for.
-     * @param <T> The type of entity to find.
-     * @return The set of entities.
-     */
-    public <T extends Collection<V>, V extends Entity> T find(Position base, Class<V> type, Supplier<T> setFunc, Predicate<V> cond, int distance) {
-        checkArgument(distance > 0, "[distance] cannot be below 1.");
-        int radius = Math.floorDiv(distance, Chunk.SIZE) + 2;
-        T found = setFunc.get();
-        EntityType entityType = EntityType.CLASS_TO_TYPE.get(type);
-        Chunk chunk = base.getChunk();
-        for (int x = -radius; x < radius; x++) {
-            for (int y = -radius; y < radius; y++) {
-                ChunkRepository repository = load(chunk.translate(x, y));
-                Set<V> entities = repository.getAll(entityType);
-                for (V entity : entities) {
-                    if (cond.test(entity)) {
-                        found.add(entity);
-                    }
-                }
-            }
-        }
-        return found;
-    }
-
-    /**
-     * Finds {@code type} entities matching {@code cond} within {@code distance} to {@code base}.
-     * The entities will be stored in a set generated by {@code setFunc}.
-     *
-     * @param base The base position to find entities around.
-     * @param type The type of entity to search for.
-     * @param cond Filters the entities that will be found.
-     * @param <T> The type of entity to find.
-     * @return The set of entities.
-     */
-    public <T extends Entity> T findOnPosition(Position base, Class<T> type, Predicate<T> cond) {
-        ChunkRepository repository = load(base.getChunk());
-        Set<T> entities = repository.getAll(EntityType.CLASS_TO_TYPE.get(type));
-        for (T entity : entities) {
-            if (cond.test(entity)) {
-                return entity;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @return All chunks being managed by this repository.
+     * @return An unmodifiable collection of all loaded repositories.
      */
     public Collection<ChunkRepository> getAll() {
         return Collections.unmodifiableCollection(repositories.values());
     }
 
     /**
-     * @return A stream over every single chunk.
+     * @return A sequential stream over all loaded repositories.
      */
     public Stream<ChunkRepository> stream() {
         return StreamSupport.stream(spliterator(), false);

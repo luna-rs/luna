@@ -2,10 +2,10 @@ package api.bot.action
 
 import api.bot.SuspendableFuture
 import api.predef.*
+import api.predef.ext.*
 import io.luna.game.model.Entity
 import io.luna.game.model.Entity.EntityDistanceComparator
 import io.luna.game.model.EntityType
-import io.luna.game.model.Position
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Npc
@@ -96,21 +96,6 @@ class BotActionHandler(val bot: Bot) {
     }
 
     /**
-     * Returns a set of all viewable entities matching [type] and [cond], sorted by closest -> furthest distance.
-     *
-     * @param type The type of entity.
-     * @param cond The condition.
-     */
-    fun <T : Entity> findViewable(type: KClass<T>, cond: (T) -> Boolean): MutableSet<T> {
-        val base = bot.position
-        return world.chunks.find(bot.position,
-                                 type.java,
-                                 { TreeSet(EntityDistanceComparator(bot)) },
-                                 { it.isWithinDistance(base, Position.VIEWING_DISTANCE) && cond(it) },
-                                 Position.VIEWING_DISTANCE);
-    }
-
-    /**
      * Returns the nearest entity matching [type] and [cond]. Returns `null` if no entity was found.
      *
      * @param type The type of entity.
@@ -119,7 +104,7 @@ class BotActionHandler(val bot: Bot) {
     fun <T : Entity> findNearest(type: KClass<T>, cond: (T) -> Boolean): T? {
 
         // Check if entity is within viewable distance first.
-        val viewableResult = findViewable(type, cond)
+        val viewableResult = world.findViewable(bot.position, type, cond)
         if (viewableResult.isNotEmpty()) {
             return viewableResult.firstOrNull()
         }

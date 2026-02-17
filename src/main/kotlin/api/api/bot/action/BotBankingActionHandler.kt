@@ -10,8 +10,8 @@ import engine.bank.Banking
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.mob.overlay.NumberInput
+import io.luna.game.model.mob.varp.PersistentVarp
 import io.luna.game.model.`object`.GameObject
 
 /**
@@ -38,8 +38,8 @@ class BotBankingActionHandler(private val bot: Bot, private val handler: BotActi
     fun homeBank(): GameObject {
         if (homeBanks.isEmpty()) {
             for (position in HOME_BANK_POSITIONS) {
-                val gameObject = world.chunks.findOnPosition(position, GameObject::class.java)
-                { Banking.bankingObjects.contains(it.id) }
+                val gameObject = world.findOnTile(position, GameObject::class) { Banking.bankingObjects.contains(it.id) }
+                        .firstOrNull()
                 if (gameObject != null) {
                     homeBanks += gameObject
                 }

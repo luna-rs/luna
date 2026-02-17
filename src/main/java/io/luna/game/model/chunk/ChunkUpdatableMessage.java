@@ -4,8 +4,10 @@ import io.luna.net.msg.GameMessageWriter;
 import io.luna.net.msg.out.GroupedEntityMessageWriter;
 
 /**
- * Signifies a message type that can be included within a {@link GroupedEntityMessageWriter} as a part of
- * the {@link ChunkUpdatableRequest} system. Should only be extended by {@link GameMessageWriter} types.
+ * An interface for message types that can be queued through the {@link ChunkUpdatableRequest} system.
+ * <p>
+ * Implementations are intended to be {@link GameMessageWriter} instances that can be batched into a single
+ * {@link GroupedEntityMessageWriter} for efficient transmission to the client.
  *
  * @author lare96
  */

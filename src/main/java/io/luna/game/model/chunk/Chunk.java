@@ -9,47 +9,67 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A {@link Locatable} made up of 8x8 tiles on the Runescape map.
+ * A {@link Locatable} representing a single 8x8 tile chunk on the RuneScape map.
+ * <p>
+ * Chunks are used as the spatial unit for:
+ * <ul>
+ *     <li>entity partitioning (see {@link ChunkRepository})</li>
+ *     <li>grouped per-chunk update messages</li>
+ *     <li>collision/pathfinding partitioning</li>
+ * </ul>
+ * <p>
+ * The {@link #x} and {@link #y} fields represent chunk coordinates (not tile coordinates). A {@link Position}
+ * can be converted to a chunk via {@link Position#getChunk()} and back to an absolute tile base via
+ * {@link #getAbsPosition()}.
  *
  * @author lare96
  */
 public final class Chunk implements Locatable {
 
     /**
-     * The dimensions of a chunk.
+     * The dimensions of a chunk in tiles.
      */
     public static final int SIZE = 8;
 
     /**
-     * The {@code x} coordinate of this chunk.
+     * Chunk-space x coordinate.
      */
     private final int x;
 
     /**
-     * The {@code y} coordinate of this chunk.
+     * Chunk-space y coordinate.
      */
     private final int y;
 
     /**
-     * Creates a new {@link Chunk}.
+     * Creates a chunk from a tile {@link Position}.
      *
-     * @param position The position to get the chunk coordinates of.
+     * <p>
+     * The chunk coordinates are derived from the position's "bottom-left chunk" coordinates.
+     *
+     * @param position The position to derive chunk coordinates from.
      */
     public Chunk(Position position) {
         this(position.getBottomLeftChunkX(), position.getBottomLeftChunkY());
     }
 
     /**
-     * Creates a new {@link Chunk}.
+     * Creates a chunk directly from chunk-space coordinates.
      *
-     * @param x The {@code x} coordinate of this chunk.
-     * @param y The {@code y} coordinate of this chunk.
+     * @param x The chunk x coordinate.
+     * @param y The chunk y coordinate.
      */
     public Chunk(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
+    /**
+     * Checks whether {@code position} belongs to this chunk.
+     *
+     * @param position The position to test.
+     * @return {@code true} if {@code position}'s chunk equals this chunk.
+     */
     @Override
     public boolean contains(Position position) {
         return position.getChunk().equals(this);
@@ -77,42 +97,64 @@ public final class Chunk implements Locatable {
         return false;
     }
 
+    /**
+     * Returns the absolute (tile) location representing this chunk's base.
+     * <p>
+     * This delegates to {@link #getAbsPosition()} to satisfy {@link Locatable}.
+     *
+     * @return The absolute base position of this chunk.
+     */
     @Override
     public Position absLocation() {
         return getAbsPosition();
     }
 
+    /**
+     * @return The chunk x coordinate.
+     */
     @Override
     public int getX() {
         return x;
     }
 
+    /**
+     * @return The chunk y coordinate.
+     */
     @Override
     public int getY() {
         return y;
     }
 
     /**
-     * Returns the packed deltas of {@code position} from the base position of this chunk. Used by
-     * {@link ChunkUpdatableMessage} types to place entities on the map.
+     * Packs the tile offset of {@code position} within this chunk into a single {@code int}.
+     * <p>
+     * The packed form is {@code (deltaX << 4) | deltaY}, where {@code deltaX} and {@code deltaY} are the
+     * 0..7 tile deltas from this chunk's absolute base.
+     * <p>
+     * This is used by {@link ChunkUpdatableMessage} implementations when encoding per-chunk placement data.
      *
-     * @param position The position.
-     * @return The offset.
+     * @param position The position to compute an offset for.
+     * @return The packed delta offset.
+     * @throws IllegalStateException if {@code position} is not within this chunk.
      */
     public int offset(Position position) {
         int deltaX = position.getX() - getAbsX();
         int deltaY = position.getY() - getAbsY();
+
         checkState(deltaX >= 0 && deltaX < Chunk.SIZE, "Invalid X delta [" + deltaX + "].");
         checkState(deltaY >= 0 && deltaY < Chunk.SIZE, "Invalid Y delta [" + deltaY + "].");
+
         return deltaX << 4 | deltaY;
     }
 
     /**
-     * Returns a new {@link Chunk} translated by {@code addX} and {@code addY}.
+     * Returns a translated chunk.
+     * <p>
+     * If {@code addX == 0 && addY == 0}, this returns {@code this} to avoid allocation.
      *
-     * @param addX The x translation.
-     * @param addY The y translation.
-     * @return The new chunk position.
+     * @param addX Chunk-space delta x.
+     * @param addY Chunk-space delta y.
+     * @return The translated chunk.
      */
     public Chunk translate(int addX, int addY) {
         if (addX == 0 && addY == 0) {
@@ -122,21 +164,33 @@ public final class Chunk implements Locatable {
     }
 
     /**
-     * @return The absolute {@code x} coordinate.
+     * Returns the absolute (tile) x coordinate of this chunk's base.
+     * <p>
+     * NOTE: This implementation applies an engine-specific offset ({@code +6}) when converting chunk-space to
+     * absolute tile-space.
+     *
+     * @return The absolute base x coordinate in tiles.
      */
     public int getAbsX() {
         return SIZE * (x + 6);
     }
 
     /**
-     * @return The absolute {@code y} coordinate.
+     * Returns the absolute (tile) y coordinate of this chunk's base.
+     * <p>
+     * NOTE: This implementation applies an engine-specific offset ({@code +6}) when converting chunk-space to
+     * absolute tile-space.
+     *
+     * @return The absolute base y coordinate in tiles.
      */
     public int getAbsY() {
         return SIZE * (y + 6);
     }
 
     /**
-     * @return The absolute position of this chunk.
+     * Returns the absolute (tile) base position of this chunk.
+     *
+     * @return The absolute base position in tiles.
      */
     public Position getAbsPosition() {
         return new Position(getAbsX(), getAbsY());
