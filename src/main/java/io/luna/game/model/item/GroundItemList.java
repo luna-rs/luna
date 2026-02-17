@@ -1,365 +1,431 @@
 package io.luna.game.model.item;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterators;
-import io.luna.game.model.StationaryEntityList;
+import com.google.common.collect.ListMultimap;
+import io.luna.Luna;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
+import io.luna.game.model.StationaryEntityList;
 import io.luna.game.model.World;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.task.Task;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link StationaryEntityList} implementation model for {@link GroundItem}s.
+ * A {@link StationaryEntityList} implementation that owns and manages every {@link GroundItem} in a {@link World}.
+ * <p>
+ * <b>Primary responsibilities:</b>
+ * <ul>
+ *     <li><b>Tile-indexed storage</b> via a {@link ListMultimap} keyed by {@link Position} for fast per-tile lookups.</li>
+ *     <li><b>Visibility lifecycle</b> by calling {@link GroundItem#show()} on registration and {@link GroundItem#hide()}
+ *     on removal, using the item's {@link ChunkUpdatableView} for local/global visibility rules.</li>
+ *     <li><b>Optional stack merging</b> for stackable items on the same tile and same view (configurable).</li>
+ *     <li><b>Expiration processing</b> driven by a tick task that converts local tradeable items to global after a delay,
+ *     and removes items after their lifetime expires.</li>
+ * </ul>
+ * <p>
+ * <b>Tile cap / client limitation:</b>
+ * RuneScape clients have an upper bound on the number of ground-item models per tile. This list enforces a hard cap of
+ * {@value #MAX_ITEMS_PER_TILE} items per {@link Position}. When a tile is full, additional items are queued in
+ * {@link #pending} until space becomes available.
  *
  * @author lare96
  */
 public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
     /**
-     * A {@link Task} that will handle ground item expiration.
+     * The maximum number of ground items that may be visible on a single tile.
+     */
+    private static final int MAX_ITEMS_PER_TILE = 255;
+
+    /**
+     * A {@link Task} that processes ground item expiration.
      */
     private final class ExpirationTask extends Task {
 
         /**
-         * The amount of ticks it takes for a tradeable item to become global.
+         * The number of ticks before a tradeable local item becomes global.
          */
         private static final int TRADEABLE_LOCAL_TICKS = 100;
 
         /**
-         * The amount of ticks it takes for an untradeable item to expire.
+         * The number of ticks before an untradeable local item is removed.
          */
         private static final int UNTRADEABLE_LOCAL_TICKS = 300;
 
         /**
-         * The amount of ticks it takes for a global item to expire.
+         * The number of ticks before a global item is removed.
          */
         private static final int GLOBAL_TICKS = 300;
 
         /**
-         * Creates a new {@link ExpirationTask}.
+         * Creates a new {@link ExpirationTask} that runs once per tick.
          */
         public ExpirationTask() {
             super(false, 1);
         }
 
-        /**
-         * A queue of items awaiting registration.
-         */
-        private final Queue<GroundItem> registerQueue = new ArrayDeque<>();
-
-        /**
-         * A queue of items awaiting unregistration.
-         */
-        private final Queue<GroundItem> expiredQueue = new ArrayDeque<>();
-
-        @Override
-        protected boolean onSchedule() {
-            checkState(!expiring, "The expiration task has already been started.");
-            expiring = true;
-            return true;
-        }
-
         @Override
         protected void execute() {
             processItems();
-            removeExpiredItems();
-            addGlobalItems();
+            processPendingItems();
         }
 
         /**
-         * Process expiration timers for all perishable items.
+         * Scans active items and updates their expiration state.
          */
         private void processItems() {
-            for (var item : world.getItems()) {
+            Iterator<GroundItem> it = active.values().iterator();
+            while (it.hasNext()) {
+                GroundItem item = it.next();
                 if (!item.isExpiring()) {
                     continue;
                 }
+
                 boolean isTradeable = item.def().isTradeable();
                 int expireTicks = item.addExpireTick();
+
                 if (item.isLocal()) {
                     if (isTradeable && expireTicks >= TRADEABLE_LOCAL_TICKS) {
-                        // Item is tradeable and only visible to one player, make it global.
-                        GroundItem globalItem = new GroundItem(item.getContext(), item.getId(), item.getAmount(),
-                                item.getPosition(), ChunkUpdatableView.globalView());
-                        expiredQueue.add(item);
-                        registerQueue.add(globalItem);
+                        /*
+                         * Local + tradeable: convert to global visibility.
+                         */
+                        it.remove();
+                        item.hide();
+                        item.setState(EntityState.INACTIVE);
+
+                        GroundItem globalItem = new GroundItem(
+                                item.getContext(),
+                                item.getId(),
+                                item.getAmount(),
+                                item.getPosition(),
+                                ChunkUpdatableView.globalView());
+                        pending.put(item.getPosition(), globalItem);
                     } else if (!isTradeable && expireTicks >= UNTRADEABLE_LOCAL_TICKS) {
-                        // Item is untradeable and only visible to one player, unregister it.
-                        expiredQueue.add(item);
+                        /*
+                         * Local + untradeable: remove after local-only lifetime.
+                         */
+                        it.remove();
+                        item.hide();
+                        item.setState(EntityState.INACTIVE);
                     }
                 } else if (item.isGlobal() && expireTicks >= GLOBAL_TICKS) {
-                    // Item is visible to everyone, unregister it.
-                    expiredQueue.add(item);
+                    /*
+                     * Global: remove after global lifetime.
+                     */
+                    it.remove();
+                    item.hide();
+                    item.setState(EntityState.INACTIVE);
                 }
             }
         }
 
         /**
-         * Unregisters any expired items from the world.
+         * Drains queued items from {@link #pending} into {@link #active} when a tile has available capacity.
+         * <p>
+         * Items are promoted per-tile, in insertion order, until the tile reaches {@link #MAX_ITEMS_PER_TILE}.
          */
-        private void removeExpiredItems() {
-            for (; ; ) {
-                var nextItem = expiredQueue.poll();
-                if (nextItem == null) {
-                    break;
+        private void processPendingItems() {
+            for (Map.Entry<Position, Collection<GroundItem>> nextEntry : pending.asMap().entrySet()) {
+                List<GroundItem> activeList = active.get(nextEntry.getKey());
+                int spaces = MAX_ITEMS_PER_TILE - activeList.size();
+                if (spaces < 1) {
+                    /*
+                     * No spaces yet; leave these queued.
+                     */
+                    continue;
                 }
-                world.getItems().unregister(nextItem);
-            }
-        }
 
-        /**
-         * Registers previously expired tradeable local items as global.
-         */
-        private void addGlobalItems() {
-            for (; ; ) {
-                var nextItem = registerQueue.poll();
-                if (nextItem == null) {
-                    break;
+                Iterator<GroundItem> it = nextEntry.getValue().iterator();
+                while (it.hasNext()) {
+                    GroundItem pendingItem = it.next();
+                    pendingItem.setState(EntityState.ACTIVE);
+                    pendingItem.show();
+                    activeList.add(pendingItem);
+                    it.remove();
+
+                    if (--spaces <= 0) {
+                        /*
+                         * Tile is full again; keep the rest queued.
+                         */
+                        break;
+                    }
                 }
-                world.getItems().register(nextItem);
             }
         }
     }
 
     /**
-     * The ground items.
+     * Active ground items, keyed by exact tile {@link Position}.
      */
-    private final List<GroundItem> items = new ArrayList<>(128);
+    private final ListMultimap<Position, GroundItem> active = ArrayListMultimap.create(128, 128);
 
     /**
-     * If the expiration task was started.
+     * Overflow queue for tiles that have reached {@link #MAX_ITEMS_PER_TILE}.
+     * <p>
+     * Items in this multimap are <b>not visible</b> until promoted by {@link ExpirationTask#processPendingItems()}.
+     */
+    private final ListMultimap<Position, GroundItem> pending = ArrayListMultimap.create(128, 128);
+
+    /**
+     * If the expiration task has been scheduled.
      */
     private boolean expiring;
 
     /**
      * Creates a new {@link GroundItemList}.
      *
-     * @param world The world.
+     * @param world The owning world instance.
      */
     public GroundItemList(World world) {
         super(world, EntityType.ITEM);
     }
 
-    /**
-     * @implSpec The spliterator reports the characteristics of SIZED, SUBSIZED, NONNULL, and IMMUTABLE.
-     */
     @Override
     public Spliterator<GroundItem> spliterator() {
-        return Spliterators.spliterator(items, Spliterator.NONNULL | Spliterator.IMMUTABLE | Spliterator.DISTINCT);
+        return Spliterators.spliterator(active.values(), Spliterator.NONNULL | Spliterator.SIZED | Spliterator.ORDERED);
     }
 
     @Override
     public Iterator<GroundItem> iterator() {
-        return Iterators.unmodifiableIterator(items.iterator());
+        return Iterators.unmodifiableIterator(active.values().iterator());
     }
 
     @Override
     protected boolean onRegister(GroundItem item) {
-        if (item.def().isStackable()) {
-            return addStackable(item);
-        } else {
-            return add(item);
+        if (item.def().isStackable() && Luna.settings().game().mergeStackableGroundItems()) {
+            return addOrMerge(item);
         }
+        return add(item);
     }
 
     @Override
     protected boolean onUnregister(GroundItem item) {
-        if (item.def().isStackable()) {
-            return removeStackable(item);
-        } else {
-            return remove(item);
+        if (item.def().isStackable() && Luna.settings().game().mergeStackableGroundItems()) {
+            return removeOrUnmerge(item);
         }
+        return remove(item);
     }
 
     @Override
     public int size() {
-        return items.size();
+        return active.size();
     }
 
     /**
-     * Starts the ground item expiration task. This will make it so that items are automatically unregistered after
-     * not being picked up for a certain amount of time.
+     * Starts the ground-item expiration task.
+     * <p>
+     * This should typically be called once during world initialization.
+     *
+     * @throws IllegalStateException If the expiration task has already been started.
      */
     public void startExpirationTask() {
+        checkState(!expiring, "The expiration task has already been started.");
+        expiring = true;
         world.schedule(new ExpirationTask());
     }
 
     /**
-     * Adds a stackable ground item.
-     *
-     * @param item The item.
-     * @return {@code true} if successful.
-     */
-    private boolean addStackable(GroundItem item) {
-        var position = item.getPosition();
-        Optional<GroundItem> foundItem = findExisting(item);
-        if (foundItem.isPresent()) {
-            var existing = foundItem.get();
-            int newAmount = item.getAmount() + existing.getAmount();
-            if (newAmount < 0) { // Overflow.
-                return false;
-            }
-
-            if (removeFromSet(existing)) { // Remove some of the existing item, add with new amount.
-                return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
-                        position, item.getView()));
-            }
-        } else if (tileSpaceFor(position, 1)) {
-            return addToSet(item);
-        }
-        return false;
-    }
-
-    /**
-     * Removes a stackable ground item.
-     *
-     * @param item The item.
-     * @return {@code true} if successful.
-     */
-    private boolean removeStackable(GroundItem item) {
-        int removeAmount = item.getAmount();
-        var position = item.getPosition();
-        Optional<GroundItem> foundItem = findExisting(item);
-        if (foundItem.isPresent()) {
-            var existing = foundItem.get();
-            int newAmount = existing.getAmount() - removeAmount;
-            if (newAmount <= 0) { // Remove all of the item.
-                return removeFromSet(existing);
-            }
-
-            if (removeFromSet(existing)) { // Remove item, add with new amount.
-                return addToSet(new GroundItem(item.getContext(), item.getId(), newAmount,
-                        position, item.getView()));
-            }
-        }
-        return true; // Item wasn't found.
-    }
-
-    /**
-     * Adds unstackable ground items.
-     *
-     * @param item The item.
-     * @return {@code true} if at least one item was added.
-     */
-    private boolean add(GroundItem item) {
-        int addAmount = item.getAmount();
-        if (!tileSpaceFor(item.getPosition(), addAmount)) { // Too many items on one tile.
-            return false;
-        }
-        if (addAmount == 1) {
-            return addToSet(item);
-        }
-
-        boolean failed = true;
-        for (int i = 0; i < addAmount; i++) { // Add items 1 by 1.
-            if (addToSet(new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getView()))) {
-                failed = false;
-            }
-        }
-        return !failed;
-    }
-
-    /**
-     * Removes unstackable ground items.
-     *
-     * @param item The item.
-     * @return {@code true}if at least one item was removed.
-     */
-    private boolean remove(GroundItem item) {
-        int loops = item.getAmount();
-        if (loops == 1) {
-            return findExisting(item).map(this::removeFromSet).orElse(true);
-        }
-        boolean failed = true;
-        var iter = findAllExisting(item).iterator();
-        while (iter.hasNext()) {
-            var nextItem = iter.next();
-            if (removeFromSet(nextItem)) {
-                failed = false;
-            }
-            if (--loops <= 0) {
-                break;
-            }
-        }
-        return !failed;
-    }
-
-    /**
-     * Determines if this tile has space for {@code addAmount} new item models.
-     *
-     * @param position The tile.
-     * @param addAmount The amount of item models.
-     * @return {@code true} if this tile has enough space.
-     */
-    private boolean tileSpaceFor(Position position, int addAmount) {
-        return world.getChunks().load(position).stream(type).
-                filter(it -> it.getPosition().equals(position)).count() + addAmount <= 255;
-    }
-
-    /**
-     * Adds {@code item} to the backing set and makes it visible.
+     * Adds a stackable ground item, merging it into an existing stack if one exists.
+     * <p>
+     * Matching is by:
+     * <ul>
+     *     <li>same {@link Position}</li>
+     *     <li>same item id</li>
+     *     <li>same {@link ChunkUpdatableView}</li>
+     * </ul>
      *
      * @param item The item to add.
-     * @return {@code true} if successful.
+     * @return {@code true} if the add/merge succeeded.
      */
-    private boolean addToSet(GroundItem item) {
-        items.add(item);
-        item.setState(EntityState.ACTIVE);
-        item.show();
-        return true;
-    }
+    private boolean addOrMerge(GroundItem item) {
+        Position position = item.getPosition();
+        GroundItem existing = findExisting(item);
 
-    /**
-     * Removes {@code item} from the backing set and makes it invisible.
-     *
-     * @param item The item to remove.
-     * @return {@code true} if successful.
-     */
-    private boolean removeFromSet(GroundItem item) {
-        if (items.remove(item)) {
-            item.hide();
-            item.setState(EntityState.INACTIVE);
+        if (existing != null) {
+            int newAmount = item.getAmount() + existing.getAmount();
+            if (newAmount < 0) {
+                /*
+                 * Overflow: refuse to merge.
+                 */
+                return false;
+            }
+            if (removeFromSet(existing)) {
+                GroundItem replace = new GroundItem(item.getContext(), item.getId(), newAmount, position, item.getView());
+                replace.setExpireTicks(existing.getExpireTicks());
+                addToSet(replace);
+                return true;
+            }
+        } else {
+            addToSet(item);
             return true;
         }
         return false;
     }
 
     /**
-     * Finds all existing ground items matching {@code item}.
+     * Removes a stackable ground item, decrementing an existing stack if present.
+     * <p>
+     * If the resulting amount is {@code <= 0}, the stack is fully removed. If no matching stack exists, this method
+     * is treated as a successful no-op (mirrors typical “remove-if-present” semantics).
      *
-     * @param item The item to find.
-     * @return The found items.
+     * @param item The item to remove (the amount represents how much to remove).
+     * @return {@code true} if the removal/decrement succeeded (or the stack was not present).
      */
-    private Stream<GroundItem> findAllExisting(GroundItem item) {
+    private boolean removeOrUnmerge(GroundItem item) {
+        int removeAmount = item.getAmount();
         Position position = item.getPosition();
-        Stream<GroundItem> localItems = world.getChunks().
-                load(position).
-                stream(type);
-        return localItems.filter(it -> it.getId() == item.getId() &&
-                it.getPosition().equals(position) &&
-                it.getView().equals(item.getView()));
+        GroundItem existing = findExisting(item);
+
+        if (existing != null) {
+            int newAmount = existing.getAmount() - removeAmount;
+            if (newAmount <= 0) {
+                return removeFromSet(existing);
+            }
+
+            if (removeFromSet(existing)) {
+                GroundItem replace = new GroundItem(item.getContext(), item.getId(), newAmount, position, item.getView());
+                replace.setExpireTicks(existing.getExpireTicks());
+                addToSet(replace);
+                return true;
+            }
+        }
+
+        /*
+         * Treat “not found” as success.
+         */
+        return true;
     }
 
     /**
-     * Finds an existing ground item matching {@code item}.
+     * Adds a ground item without stack merging.
+     * <p>
+     * For non-stackable definitions, {@link GroundItem#getAmount()} represents how many separate ground-item entities
+     * should be created (1 per unit). For stackable definitions, only a single entity is created.
      *
-     * @param item The item to find.
-     * @return The found item.
+     * @param item The item to add.
+     * @return {@code true} if at least one entity was added.
      */
-    private Optional<GroundItem> findExisting(GroundItem item) {
-        return findAllExisting(item).findFirst();
+    private boolean add(GroundItem item) {
+        int addAmount = item.def().isStackable() ? 1 : item.getAmount();
+        if (addAmount == 1) {
+            addToSet(item);
+            return true;
+        }
+
+        boolean failed = true;
+        for (int i = 0; i < addAmount; i++) {
+            addToSet(new GroundItem(item.getContext(), item.getId(), 1, item.getPosition(), item.getView()));
+            failed = false;
+        }
+        return !failed;
+    }
+
+    /**
+     * Removes a ground item without stack merging.
+     * <p>
+     * For stackable definitions, this removes at most one matching entity (same tile + same id + same view). For
+     * non-stackable definitions, this removes up to {@link GroundItem#getAmount()} entities (1 per unit).
+     *
+     * @param item The item to remove.
+     * @return {@code true} if at least one entity was removed.
+     */
+    private boolean remove(GroundItem item) {
+        int loops = item.def().isStackable() ? 1 : item.getAmount();
+        Position position = item.getPosition();
+        Iterator<GroundItem> it = active.get(position).iterator();
+
+        boolean changed = false;
+        while (it.hasNext()) {
+            GroundItem existing = it.next();
+            if (existing.getId() == item.getId()
+                    && existing.getView().equals(item.getView())) {
+                existing.hide();
+                existing.setState(EntityState.INACTIVE);
+                it.remove();
+                changed = true;
+            }
+
+            if (--loops <= 0) {
+                break;
+            }
+        }
+        return changed;
+    }
+
+    /**
+     * Adds {@code item} to the backing multimap and shows it, if the tile has capacity.
+     * <p>
+     * If the tile is full, the item is queued into {@link #pending} instead, and will become visible later when
+     * {@link ExpirationTask#processPendingItems()} promotes it.
+     *
+     * @param item The item to add.
+     */
+    private void addToSet(GroundItem item) {
+        List<GroundItem> tileItems = active.get(item.getPosition());
+        if (tileItems.size() < MAX_ITEMS_PER_TILE) {
+            tileItems.add(item);
+            item.setState(EntityState.ACTIVE);
+            item.show();
+        } else {
+            /*
+             * Tile overflow: keep it queued and invisible for now.
+             */
+            pending.put(item.getPosition(), item);
+        }
+    }
+
+    /**
+     * Removes {@code item} from either the active set or the pending queue, and hides it.
+     * <p>
+     * If the item is not present in either multimap, this returns {@code false}.
+     *
+     * @param item The item to remove.
+     * @return {@code true} if the item was found and removed.
+     */
+    private boolean removeFromSet(GroundItem item) {
+        if (active.remove(item.getPosition(), item) ||
+                pending.remove(item.getPosition(), item)) {
+            if(item.getState() == EntityState.ACTIVE) {
+                item.hide();
+                item.setState(EntityState.INACTIVE);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Finds the first active ground item on the same tile that matches {@code item}'s id and view.
+     * <p>
+     * Used for:
+     * <ul>
+     *     <li>stack merging</li>
+     *     <li>stack decrement/removal</li>
+     * </ul>
+     *
+     * @param item The item to find a match for.
+     * @return The matching ground item, or {@code null} if not found.
+     */
+    private GroundItem findExisting(GroundItem item) {
+        Position position = item.getPosition();
+        List<GroundItem> existingList = active.get(position);
+        for (GroundItem existing : existingList) {
+            if (existing.getId() == item.getId()
+                    && existing.getView().equals(item.getView())) {
+                return existing;
+            }
+        }
+        return null;
     }
 }

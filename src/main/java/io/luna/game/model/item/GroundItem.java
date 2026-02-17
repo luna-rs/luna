@@ -2,7 +2,6 @@ package io.luna.game.model.item;
 
 import com.google.common.base.MoreObjects;
 import io.luna.LunaContext;
-import io.luna.game.model.Entity;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.Position;
 import io.luna.game.model.StationaryEntity;
@@ -10,18 +9,33 @@ import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.def.ItemDefinition;
+import io.luna.game.model.mob.attr.AttributeMap;
 import io.luna.net.msg.out.AddGroundItemMessageWriter;
 import io.luna.net.msg.out.RemoveGroundItemMessageWriter;
 import io.luna.net.msg.out.UpdateGroundItemMessageWriter;
 
 import java.util.Objects;
-import java.util.OptionalInt;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An {@link Entity} implementation representing an item on a tile.
+ * A {@link StationaryEntity} representing an item lying on a world tile (a "ground item").
+ * <p>
+ * Ground items are rendered through the chunk update system and are visible to players according to their
+ * {@link ChunkUpdatableView}.
+ * <p>
+ * <b>Stack rules:</b> This class enforces that non-stackable item definitions may only exist as single units on the
+ * ground (amount must be {@code 1}). Any "multiple" non-stackable drop must be represented as multiple
+ * {@link GroundItem} entities (one per unit).
+ * <p>
+ * <b>Expiration:</b> Expiration is controlled by an internal tick counter:
+ * <ul>
+ *   <li>{@code expireTicks == -1} means the item does not expire</li>
+ *   <li>{@code expireTicks >= 0} means the item is expiring and the value represents elapsed ticks</li>
+ * </ul>
+ * <p>
+ * <b>Identity equality:</b> {@link #equals(Object)} and {@link #hashCode()} use identity semantics (this instance
+ * only). If you need content-based equality, use {@link #isIdentical(GroundItem)}.
  *
  * @author lare96
  */
@@ -33,30 +47,36 @@ public class GroundItem extends StationaryEntity {
     private final int id;
 
     /**
-     * The item amount.
+     * The item amount. Always {@code 1} for non-stackable item definitions.
      */
     private int amount;
 
     /**
-     * The current amount of expiration ticks.
+     * Expiration tick counter.
+     * <p>
+     * Value meanings:
+     * <ul>
+     *   <li>{@code -1} => not expiring</li>
+     *   <li>{@code 0+} => expiring; counts elapsed ticks since expiration started</li>
+     * </ul>
      */
-    private OptionalInt expireTicks = OptionalInt.of(0);
+    private int expireTicks;
 
     /**
      * Creates a new {@link GroundItem}.
      *
-     * @param context The context instance.
+     * @param context The active {@link LunaContext} instance.
      * @param id The item identifier.
      * @param amount The item amount.
-     * @param position The position of the item.
-     * @param view Who this item is viewable to.
+     * @param position The world position of the item.
+     * @param view The visibility rules for this item.
      */
     public GroundItem(LunaContext context, int id, int amount, Position position, ChunkUpdatableView view) {
         super(context, position, EntityType.ITEM, view);
         checkArgument(ItemDefinition.isIdValid(id), "Invalid item identifier.");
         checkArgument(amount > 0, "Amount must be above 0.");
 
-        // Non-stackable ground items are placed one by one.
+        // Non-stackable ground items must be represented one-by-one.
         ItemDefinition def = ItemDefinition.ALL.retrieve(id);
         checkArgument(def.isStackable() || amount == 1,
                 "Non-stackable ground items [" + def.getName() + "] have a maximum amount of 1.");
@@ -67,11 +87,14 @@ public class GroundItem extends StationaryEntity {
 
     /**
      * Creates a new {@link GroundItem}.
+     * <p>
+     * If {@code item} is a {@link DynamicItem}, its attributes are copied onto this ground item via
+     * {@link #setAttributes(AttributeMap)}.
      *
-     * @param context The context instance.
-     * @param item The item instance.
-     * @param position The position of the item.
-     * @param view Who this item is viewable to.
+     * @param context The active {@link LunaContext} instance.
+     * @param item The item stack to place on the ground.
+     * @param position The world position of the item.
+     * @param view The visibility rules for this item.
      */
     public GroundItem(LunaContext context, Item item, Position position, ChunkUpdatableView view) {
         this(context, item.getId(), item.getAmount(), position, view);
@@ -80,11 +103,27 @@ public class GroundItem extends StationaryEntity {
         }
     }
 
+    /**
+     * Uses identity-based hashing.
+     * <p>
+     * Ground items represent physical drop entities in the world. Even if two drops share the same id, amount,
+     * position, and view, they are still separate entities.
+     * <p>
+     * For example, two {@code abyssal whip} drops on the same tile may have identical data, but they are distinct
+     * world objects and must be treated independently.
+     * <p>
+     * Identity-based hashing ensures each drop remains uniquely tracked regardless of field equality.
+     */
     @Override
     public final int hashCode() {
         return System.identityHashCode(this);
     }
 
+    /**
+     * Uses identity-based equality.
+     *
+     * @see #hashCode()
+     */
     @Override
     public final boolean equals(Object obj) {
         return this == obj;
@@ -92,26 +131,41 @@ public class GroundItem extends StationaryEntity {
 
     @Override
     public final String toString() {
-        return MoreObjects.toStringHelper(this).
-                add("id", id).
-                add("amount", amount).
-                add("x", position.getX()).
-                add("y", position.getY()).
-                add("z", position.getZ()).
-                add("view", getView()).
-                toString();
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .add("amount", amount)
+                .add("x", position.getX())
+                .add("y", position.getY())
+                .add("z", position.getZ())
+                .add("view", getView())
+                .toString();
     }
 
+    /**
+     * Ground items do not occupy collision size in the world model.
+     *
+     * @return Always {@code 0}.
+     */
     @Override
     public final int size() {
         return 0;
     }
 
+    /**
+     * Ground items do not occupy collision size in the world model.
+     *
+     * @return Always {@code 0}.
+     */
     @Override
     public final int sizeX() {
         return 0;
     }
 
+    /**
+     * Ground items do not occupy collision size in the world model.
+     *
+     * @return Always {@code 0}.
+     */
     @Override
     public final int sizeY() {
         return 0;
@@ -128,36 +182,55 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Returns {@code true} if these items have the same id and amount, are on the same position, and have the same owner.
+     * Field-based comparison for "content equality" of ground items.
+     * <p>
+     * Two ground items are considered identical if:
+     * <ul>
+     *   <li>their {@link #id} matches</li>
+     *   <li>their {@link #amount} matches</li>
+     *   <li>their {@link #position} matches</li>
+     *   <li>their {@link #getView()} matches</li>
+     * </ul>
+     * <p>
+     * This method ignores entity identity and state (active/inactive).
      *
-     * @param other The ground item to compare with.
-     * @return {@code true} if these ground items are identical.
+     * @param other The other ground item to compare with.
+     * @return {@code true} if the two ground items represent the same "drop" data.
      */
     public boolean isIdentical(GroundItem other) {
-        return id == other.id &&
-                amount == other.amount &&
-                Objects.equals(position, other.position) &&
-                Objects.equals(getView(), other.getView());
+        return id == other.id
+                && amount == other.amount
+                && Objects.equals(position, other.position)
+                && Objects.equals(getView(), other.getView());
     }
 
     /**
-     * Sets whether this item will expire or not.
+     * Enables or disables expiration for this ground item.
+     * <p>
+     * When enabling expiration:
+     * <ul>
+     *   <li>if expiration was previously disabled, tick counter becomes {@code 0}</li>
+     * </ul>
+     * <p>
+     * When disabling expiration:
+     * <ul>
+     *   <li>tick counter becomes {@code -1}</li>
+     * </ul>
      *
-     * @param expire The value.
+     * @param expire {@code true} to enable expiration, false to disable.
      */
     public final void setExpire(boolean expire) {
-        if (expire && expireTicks.isEmpty()) {
-            expireTicks = OptionalInt.of(0);
-        } else if (!expire && expireTicks.isPresent()) {
-            expireTicks = OptionalInt.empty();
+        if (expire && expireTicks == -1) {
+            expireTicks = 0;
+        } else if (!expire && expireTicks >= 0) {
+            expireTicks = -1;
         }
     }
 
     /**
-     * Add an expiration tick for this item. Will throw {@link IllegalStateException} if this item
-     * does not expire.
+     * Increments the expiration tick counter by 1.
      *
-     * @return The new expiration minutes.
+     * @return The updated expiration tick count.
      */
     public final int addExpireTick() {
         int newValue = getExpireTicks() + 1;
@@ -166,33 +239,32 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Sets the current expiration ticks for this item. Will throw {@link IllegalStateException} if this item
-     * does not expire.
+     * Sets the current expiration tick counter.
+     *
+     * @param ticks The new tick counter value.
      */
     public final void setExpireTicks(int ticks) {
-        checkState(isExpiring(), "This item does not expire.");
-        expireTicks = OptionalInt.of(ticks);
+        expireTicks = ticks;
     }
 
     /**
-     * Retrieves the current expiration ticks for this item. Will throw {@link IllegalStateException} if this item
-     * does not expire.
+     * @return The current expiration tick counter value ({@code -1} if not expiring).
      */
     public final int getExpireTicks() {
-        return expireTicks.orElseThrow(() -> new IllegalStateException("This item does not expire."));
+        return expireTicks;
     }
 
     /**
-     * Determines if this item expires.
-     *
-     * @return {@code true} if this item expires.
+     * @return {@code true} if this item is configured to expire.
      */
     public final boolean isExpiring() {
-        return expireTicks.isPresent();
+        return expireTicks >= 0;
     }
 
     /**
-     * Retrieves the item definition instance.
+     * Retrieves the {@link ItemDefinition} for this ground item's {@link #id}.
+     *
+     * @return The item definition for this ground item.
      */
     public final ItemDefinition def() {
         return ItemDefinition.ALL.retrieve(id);
@@ -206,14 +278,25 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * Updates the amount of this item in real time using {@link UpdateGroundItemMessageWriter}.
+     * Updates the visible amount of this ground item in-place.
+     * <p>
+     * This sends an {@link UpdateGroundItemMessageWriter} to relevant viewers via the chunk update system, then
+     * updates {@link #amount} server-side.
+     * <p>
+     * Constraints:
+     * <ul>
+     *   <li>{@code value > 0}</li>
+     *   <li>if the item definition is non-stackable, the amount must remain {@code 1}</li>
+     * </ul>
      *
-     * @param value The amount to change to. Cannot be negative.
+     * @param value The new amount.
+     * @throws IllegalArgumentException if {@code value <= 0} or violates non-stackable constraints.
      */
     public final void updateAmount(int value) {
         checkArgument(value > 0, "amount cannot be < 0");
-        checkArgument(def().isStackable() || amount == 1,
+        checkArgument(def().isStackable() || value == 1,
                 "Non-stackable ground items have a maximum amount of 1.");
+
         int offset = getChunk().offset(position);
         UpdateGroundItemMessageWriter msg = new UpdateGroundItemMessageWriter(offset, id, amount, value);
         chunkRepository.queueUpdate(new ChunkUpdatableRequest(this, msg, false));
@@ -221,16 +304,19 @@ public class GroundItem extends StationaryEntity {
     }
 
     /**
-     * @return The item amount
+     * @return The current item amount.
      */
     public final int getAmount() {
         return amount;
     }
 
     /**
-     * Returns an item instance with this ground item's ID and amount.
+     * Converts this ground item back into an {@link Item}.
+     * <p>
+     * If this ground item has attributes (dynamic data), a {@link DynamicItem} is created using the stored attributes.
+     * Otherwise, a normal {@link Item} is created using this ground item's id and amount.
      *
-     * @return The item instance.
+     * @return A new item instance representing this ground item.
      */
     public final Item toItem() {
         return hasAttributes() ? new DynamicItem(id, attributes()) : new Item(id, amount);
