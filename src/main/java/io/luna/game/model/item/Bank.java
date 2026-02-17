@@ -13,24 +13,46 @@ import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.net.msg.out.WidgetItemsMessageWriter;
 import io.luna.net.msg.out.WidgetTextMessageWriter;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.OptionalInt;
 
 /**
- * An item container model representing a player's bank.
+ * An {@link ItemContainer} implementation representing a {@link Player}'s bank.
+ * <p>
+ * The bank is a large, stack-always container (size 352) backed by the bank interface widget {@code 5382}. It supports:
+ * <ul>
+ *     <li>opening/closing the banking overlay UI</li>
+ *     <li>depositing items from inventory into the bank</li>
+ *     <li>withdrawing items from the bank into inventory, optionally as notes</li>
+ * </ul>
+ * <p>
+ * <b>Note handling:</b>
+ * <ul>
+ *     <li>Deposits normalize noted items into their unnoted id (so banks store the “real” item).</li>
+ *     <li>Withdrawals may convert to noted form when {@link PersistentVarp#WITHDRAW_AS_NOTE} is enabled and the item has
+ *     a valid noted id.</li>
+ * </ul>
+ * <p>
+ * <b>UI updates:</b> The bank and inventory are refreshed when opening and when the underlying container changes via
+ * {@link PlayerRefreshListener}.
  *
  * @author lare96
  */
 public final class Bank extends ItemContainer {
 
     /**
-     * The interface that will be displayed when the bank opens.
+     * The overlay interface shown when the player opens the bank.
+     * <p>
+     * This is an {@link InventoryOverlayInterface} which shows the bank interface (primary) and an inventory overlay.
+     * When the overlay is closed, the inventory secondary widget is cleared.
      */
     public final class BankInterface extends InventoryOverlayInterface {
 
         /**
          * Creates a new {@link BankInterface}.
+         * <p>
+         * {@code 5292} is the bank interface id and {@code 5063} is the inventory overlay component.
          */
         public BankInterface() {
             super(5292, 5063);
@@ -38,17 +60,26 @@ public final class Bank extends ItemContainer {
 
         @Override
         public void onClose(Player player) {
-            inventory.resetSecondaryRefresh();
+            inventory.clearSecondaryWidget();
         }
     }
 
     /**
-     * An interface that uses the banking interface to display miscellaneous items.
+     * A “bank-like” interface that reuses the bank widget layout to display an arbitrary list of items.
+     * <p>
+     * This is useful for any UI that wants the familiar bank view (scrollable item grid), without binding to the
+     * player's actual bank contents. Implementations provide their own item list via {@link #buildDisplayItems(Player)}.
+     * <p>
+     * <b>Item reduction:</b> The list is reduced into stacked entries by id prior to display (all identical ids are
+     * combined by summing amounts). This is done using a {@link Multiset}.
+     * <p>
+     * <b>UI text:</b> Several header widgets are cleared on open, a custom title is written, and the default bank texts
+     * are restored on close.
      */
     public static abstract class DynamicBankInterface extends StandardInterface {
 
         /**
-         * The widgets to clear when the interface opens.
+         * The widgets whose text should be cleared when this interface opens.
          */
         private static final ImmutableList<WidgetTextMessageWriter> CLEAR_WIDGETS = ImmutableList.of(
                 new WidgetTextMessageWriter("", 5388),
@@ -59,12 +90,14 @@ public final class Bank extends ItemContainer {
                 new WidgetTextMessageWriter("", 8133));
 
         /**
-         * The title.
+         * The title displayed in the bank header widget.
          */
         private final String title;
 
         /**
-         * Creates a new {@link DynamicBankInterface}.
+         * Creates a new {@link DynamicBankInterface} using the standard bank interface id.
+         *
+         * @param title The header title to display (widget {@code 5383}).
          */
         public DynamicBankInterface(String title) {
             super(5292);
@@ -72,25 +105,38 @@ public final class Bank extends ItemContainer {
         }
 
         /**
-         * Builds the list of items that will be displayed.
+         * Builds the list of items that will be displayed in the bank item grid.
+         * <p>
+         * The returned list will be mutated by {@link #onOpen(Player)} to reduce/stack identical ids.
+         *
+         * @param player The player opening the interface.
+         * @return A mutable list of items to display.
          */
-        public abstract List<Item> buildDisplayItems(Player player);
+        public abstract ArrayList<Item> buildDisplayItems(Player player);
 
         @Override
         public void onOpen(Player player) {
-            List<Item> displayItems = buildDisplayItems(player);
+            ArrayList<Item> displayItems = buildDisplayItems(player);
+
+            /*
+             * Reduce the list into stacked id to totalAmount entries.
+             */
             Multiset<Integer> reduceItems = HashMultiset.create();
             Iterator<Item> displayItemsIterator = displayItems.iterator();
             while (displayItemsIterator.hasNext()) {
                 Item item = displayItemsIterator.next();
+                if (item == null || item.getAmount() == 0) {
+                    continue;
+                }
                 reduceItems.add(item.getId(), item.getAmount());
                 displayItemsIterator.remove();
             }
+
             for (Entry<Integer> entry : reduceItems.entrySet()) {
-                int id = entry.getElement();
-                int amount = entry.getCount();
-                displayItems.add(new Item(id, amount));
+                int count = entry.getCount();
+                displayItems.add(new Item(entry.getElement(), count));
             }
+
             player.queue(new WidgetItemsMessageWriter(5382, displayItems));
             CLEAR_WIDGETS.forEach(player::queue);
             player.sendText(title, 5383);
@@ -98,6 +144,9 @@ public final class Bank extends ItemContainer {
 
         @Override
         public void onClose(Player player) {
+            /*
+             * Restore default bank header labels.
+             */
             player.sendText("The Bank of Runescape", 5383);
             player.sendText("Withdraw as:", 5388);
             player.sendText("Item", 5389);
@@ -109,115 +158,128 @@ public final class Bank extends ItemContainer {
     }
 
     /**
-     * The player.
+     * The owning player.
      */
     private final Player player;
 
     /**
-     * The inventory.
+     * The player's inventory.
      */
     private final Inventory inventory;
 
     /**
-     * The banking interface.
+     * The overlay interface instance used for banking.
      */
     private final BankInterface bankInterface = new BankInterface();
 
     /**
      * Creates a new {@link Bank}.
      *
-     * @param player The player.
+     * @param player The owning player.
      */
     public Bank(Player player) {
         super(352, StackPolicy.ALWAYS, 5382);
         this.player = player;
         inventory = player.getInventory();
 
-        setListeners(new PlayerRefreshListener(player, bankInterface, "You do not have enough bank space to deposit that."));
+        /*
+         * Keeps the bank interface and inventory overlay in sync when the container changes.
+         */
+        setListeners(new PlayerRefreshListener(
+                player,
+                bankInterface,
+                "You do not have enough bank space to deposit that."
+        ));
     }
 
     /**
-     * Opens the banking interface.
+     * Opens the bank overlay interface if it is not already open.
+     * <p>
+     * This method temporarily stops container event dispatch while it prepares the UI state, then restarts events.
+     * The open sequence:
+     * <ul>
+     *     <li>resets withdraw-as-note varp to "item"</li>
+     *     <li>clears placeholder spaces</li>
+     *     <li>renders inventory as a secondary widget on the bank interface</li>
+     *     <li>refreshes both inventory overlay and bank item grid</li>
+     *     <li>opens the overlay</li>
+     * </ul>
      */
     public void open() {
         if (!isOpen()) {
-            disableEvents();
+            stopEvents();
             try {
                 player.getVarpManager().setAndSendValue(PersistentVarp.WITHDRAW_AS_NOTE, 0);
 
-                // Display items on interface.
                 clearSpaces();
-                inventory.setSecondaryRefresh(5064);
-                inventory.refreshSecondary(player); // Refresh inventory onto bank.
-                refreshPrimary(player); // Refresh bank.
+                inventory.setSecondaryWidget(5064);
+                inventory.updateSecondaryWidget(player);
+                updatePrimaryWidget(player);
 
-                // Open interface.
                 player.getOverlays().open(bankInterface);
             } finally {
-                enableEvents();
+                startEvents();
             }
         }
     }
 
     /**
-     * Deposits an item from the inventory.
+     * Deposits an item from inventory into the bank.
      *
-     * @param inventoryIndex The index of the item to deposit.
-     * @param amount The amount to deposit.
-     * @return {@code true} if successful.
+     * @param inventoryIndex The inventory slot index.
+     * @param amount The requested deposit amount.
+     * @return {@code true} if the deposit succeeded.
      */
     public boolean deposit(int inventoryIndex, int amount) {
-
-        // Return if item doesn't exist or invalid amount.
         Item item = inventory.get(inventoryIndex);
         if (item == null || amount < 1) {
             return false;
         }
 
-        // Get correct item identifier and amount to deposit.
-        int id = item.getItemDef().getUnnotedId().orElse(item.getId());
+        /*
+         * Clamp to the actual amount present in inventory (by the inventory item id).
+         */
         int existingAmount = inventory.computeAmountForId(item.getId());
         amount = Math.min(amount, existingAmount);
-        item = item.withAmount(amount).withId(id);
 
-        // Determine if enough space in bank.
-        if (!hasSpaceFor(item)) {
-            fireCapacityExceededEvent();
+        /*
+         * Remove what the player actually has (original id).
+         */
+        item = item.withAmount(amount);
+
+        /*
+         * Convert to unnoted id for bank storage.
+         */
+        int unnotedId = item.getItemDef().getUnnotedId().orElse(item.getId());
+        Item unnotedItem = item.withId(unnotedId);
+
+        if (!hasSpaceFor(unnotedItem)) {
+            onCapacityExceeded();
             return false;
         }
 
-        // Deposit item.
         if (inventory.remove(item)) {
-            return add(item);
+            return add(unnotedItem);
         }
         return false;
     }
 
     /**
-     * Withdraws an item from the bank.
+     * Withdraws an item from the bank into the inventory.
      *
-     * @param bankIndex The index of the item to withdraw.
-     * @param amount The amount to withdraw.
-     * @return {@code true} if successful.
+     * @param bankIndex The bank slot index.
+     * @param amount The requested withdraw amount.
+     * @return {@code true} if the withdrawal succeeded.
      */
     public boolean withdraw(int bankIndex, int amount) {
-
-        // Return if item doesn't exist or invalid amount.
         Item item = get(bankIndex);
         if (item == null || amount < 1) {
             return false;
         }
 
-        // No free spaces in inventory.
-        int remaining = inventory.computeRemainingSize();
-        if (remaining < 1) {
-            inventory.fireCapacityExceededEvent();
-            return false;
-        }
-
-        // Get correct item identifier and amount to withdraw.
         int id = item.getId();
         int existingAmount = item.getAmount();
+        int remaining = inventory.computeRemainingSize();
         amount = Math.min(amount, existingAmount);
 
         if (player.getVarpManager().getValue(PersistentVarp.WITHDRAW_AS_NOTE) == 1) {
@@ -229,24 +291,37 @@ public final class Bank extends ItemContainer {
             }
         }
 
-        // For non-stackable items, make the amount equal to free slots left if necessary.
+        /*
+         * For non-stackables, limit the withdraw amount by remaining slots and ensure enough inventory space.
+         */
         ItemDefinition withdrawItemDef = ItemDefinition.ALL.retrieve(id);
         if (!withdrawItemDef.isStackable()) {
+            if (remaining == 0) {
+                inventory.onCapacityExceeded();
+                return false;
+            }
             amount = Math.min(amount, remaining);
         }
 
-        // Withdraw the item.
-        item = item.withAmount(amount);
+        /*
+         * For stackables, ensure there's enough space to withdraw at 0 inventory capacity.
+         */
+        Item withdrawItem = item.withId(id).withAmount(amount);
+        if (remaining == 0 && !inventory.hasSpaceFor(withdrawItem)) {
+            inventory.onCapacityExceeded();
+            return false;
+        }
+
         if (remove(item)) {
-            return inventory.add(item.withId(id));
+            return inventory.add(withdrawItem);
         }
         return false;
     }
 
     /**
-     * Determines if the {@link BankInterface} is open.
+     * Returns {@code true} if the banking overlay interface is currently open.
      *
-     * @return {@code true} if the banking interface is open.
+     * @return {@code true} if open.
      */
     public boolean isOpen() {
         return bankInterface.isOpen();
