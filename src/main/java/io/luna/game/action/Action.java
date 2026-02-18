@@ -9,75 +9,99 @@ import org.apache.logging.log4j.Logger;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * An abstraction model similar to a {@link Task} that is carried out by a {@link Mob}. Actions also differ from regular
- * {@link Task} types because they follow specific rules about how they're processed. These rules are based on their
- * {@link ActionType}.
+ * A tick-driven unit of work executed by a {@link Mob} and managed by an {@link ActionQueue}.
  * <p>
- * <p>
- * A mob can perform multiple actions per tick, and there is no limit to how many actions can be processing in the
- * {@link ActionQueue}. Nested actions (submitting actions within actions) are supported, but they will not be processed
- * until the next tick (even if {@link #instant} is {@code true}).
+ * Actions are conceptually similar to {@link Task}s, but differ in two key ways:
+ * <ul>
+ *   <li>They are executed <b>per-mob</b> through {@link ActionQueue}, rather than the global task scheduler.</li>
+ *   <li>They obey queue semantics defined by {@link ActionType} (weak/strong/normal/soft rules).</li>
+ * </ul>
  *
- * @param <T> The type of mob dedicated to this action.
+ * <h3>Scheduling model</h3>
+ * <ul>
+ *   <li>An action may be {@linkplain #submit() submitted} at any time.</li>
+ *   <li>Once submitted, it enters {@link ActionState#PROCESSING} and participates in the queue each tick.</li>
+ *   <li>{@link #run()} is invoked when the internal tick counter reaches {@link #delay}.</li>
+ *   <li>{@link #run()} returning {@code true} marks the action as complete and removes it from the queue.</li>
+ * </ul>
+ *
+ * <h3>Instant execution</h3>
+ * <p>If {@link #instant} is {@code true}, the action attempts to execute on its first eligible cycle.
+ * However, actions submitted <em>from within another action</em> (nested submission) are still not executed
+ * until a subsequent queue cycle, because {@link ActionQueue} snapshots and processes actions per tick.
+ *
+ * <h3>Lifecycle hooks</h3>
+ * <ul>
+ *   <li>{@link #onSubmit()} - called immediately when the action is registered into the queue.</li>
+ *   <li>{@link #onProcess()} - called once per tick during the processing stage.</li>
+ *   <li>{@link #onFinished()} - called once when the action leaves the queue (completed or interrupted).</li>
+ * </ul>
+ *
+ * @param <T> The mob type dedicated to this action.
  * @author lare96
  */
 public abstract class Action<T extends Mob> {
 
     /**
-     * The logger.
+     * Shared logger for action failures.
      */
     protected static final Logger logger = LogManager.getLogger();
 
     /**
-     * The mob assigned to this action.
+     * The mob executing this action.
      */
     protected final T mob;
 
     /**
-     * The world instance.
+     * Convenience reference to the mob's world.
      */
     protected final World world;
 
     /**
-     * The action type.
+     * Queue semantics for this action.
      */
     protected final ActionType actionType;
 
     /**
-     * If the first execution of this action should run instantly.
+     * Whether the first execution should occur immediately (subject to queue timing).
      */
     private final boolean instant;
 
     /**
-     * The action state.
+     * Current lifecycle state of this action within the {@link ActionQueue}.
      */
     private ActionState state;
 
     /**
-     * The delay of this action. 0 means the action will run instantly on its first execution (unless it was submitted
-     * within another action).
+     * Tick delay between executions.
+     * <p>
+     * This is the number of ticks that must elapse between calls to {@link #run()}.
      */
     private int delay;
 
     /**
-     * The mutable counter, used to time the {@link #delay}. The initial value needs to be
-     * {@code -1} due to action processing happening after player input.
+     * Tick counter used to time execution.
+     * <p>
+     * Initialized to {@code -1} because action processing occurs after player input; this keeps the first cycle
+     * timing consistent with "instant" actions.
      */
     private int counter = -1;
 
     /**
-     * How many executions have occurred. An execution means {@link #run()} was called. This value will return {@code 0}
-     * on the first execution.
+     * Number of times {@link #run()} has been invoked.
+     * <p>
+     * This value is {@code 0} on the first execution, and increments after each attempted call.
      */
     private int executions;
 
     /**
-     * Creates a new {@link Action} that will run every {@code delay}.
+     * Creates a new {@link Action}.
      *
      * @param mob The mob assigned to this action.
-     * @param actionType The action type.
-     * @param instant If the first execution of this action should run instantly.
-     * @param delay The delay.
+     * @param actionType The queue semantics for this action.
+     * @param instant Whether the first execution should run immediately (subject to queue timing).
+     * @param delay Tick delay between executions. Must be {@code > 0}.
+     * @throws IllegalArgumentException If {@code delay <= 0}.
      */
     public Action(T mob, ActionType actionType, boolean instant, int delay) {
         checkArgument(delay > 0, "Delay must be above 0!");
@@ -89,29 +113,42 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Creates a new {@link Action} that runs instantly on its first execution, and every {@code 600}ms afterward.
+     * Creates a new {@link Action} that executes immediately on its first eligible cycle and then every tick after.
      *
      * @param mob The mob assigned to this action.
-     * @param actionType The action type.
+     * @param actionType The queue semantics for this action.
      */
     public Action(T mob, ActionType actionType) {
         this(mob, actionType, true, 1);
     }
 
     /**
-     * Submits this action to the underlying mob's {@link ActionQueue}.
+     * Submits this action to the owning mob's {@link ActionQueue}.
+     * <p>
+     * Submission transitions the action to {@link ActionState#PROCESSING} and invokes {@link #onSubmit()}.
      */
     public final void submit() {
         mob.getActions().submit(this);
     }
 
     /**
-     * Determines if this action is ready to be removed from the queue.
+     * Evaluates whether the action should execute on this cycle and whether it has completed.
+     * <p>
+     * This is called internally by {@link ActionQueue} during the execution stage. It:
+     * <ul>
+     *   <li>applies {@link #instant} behavior on the first execution,</li>
+     *   <li>advances the internal counter,</li>
+     *   <li>invokes {@link #run()} when the delay elapses,</li>
+     *   <li>handles exceptions by logging and {@link #interrupt() interrupting} the action,</li>
+     *   <li>increments {@link #executions} after each attempted execution window.</li>
+     * </ul>
+     *
+     * @return {@code true} if {@link #run()} indicates completion and the action should be removed.
      */
     final boolean isComplete() {
 
-        // Run instantly on first execution if needed.
-        if(instant && executions == 0) {
+        // Run instantly on first execution if requested.
+        if (instant && executions == 0) {
             counter = delay;
         }
 
@@ -131,14 +168,16 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Runs this action.
+     * Performs one execution of this action.
      *
-     * @return {@code true} if this action has completed, and should be removed from the queue.
+     * @return {@code true} if the action has completed and should be removed from the queue.
      */
     public abstract boolean run();
 
     /**
      * Completes this action normally.
+     * <p>
+     * Transitions from {@link ActionState#PROCESSING} to {@link ActionState#COMPLETED} and invokes {@link #onFinished()} once.
      */
     public final void complete() {
         if (state == ActionState.PROCESSING) {
@@ -148,8 +187,12 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Completes this action abnormally. Usually as a result of thrown exceptions or triggers from outside this
-     * action.
+     * Interrupts this action abnormally.
+     * <p>
+     * Transitions from {@link ActionState#PROCESSING} to {@link ActionState#INTERRUPTED} and invokes {@link #onFinished()}
+     * once.
+     * <p>
+     * Interruptions typically occur due to queue rules (e.g., weak vs strong) or exceptions thrown during execution.
      */
     public final void interrupt() {
         if (state == ActionState.PROCESSING) {
@@ -159,24 +202,30 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * Called when this action is submitted.
+     * Hook invoked immediately when the action is submitted to the {@link ActionQueue}.
+     * <p>
+     * Override to perform setup (clear walking, start animations, close interfaces, etc.).
      */
     public void onSubmit() {
-
+        /* optional */
     }
 
     /**
-     * Called when this action is processed by {@link ActionQueue#process()}.
+     * Hook invoked once per tick during the processing stage of {@link ActionQueue#process()}.
+     * <p>
+     * Override for per-tick bookkeeping that should occur regardless of whether {@link #run()} executes.
      */
     public void onProcess() {
-
+        /* optional */
     }
 
     /**
-     * Called after this action is removed, either by interruption or because of successful completion.
+     * Hook invoked once after this action leaves the queue, either via {@link #complete()} or {@link #interrupt()}.
+     * <p>
+     * Override for cleanup (unlocking, stopping animations, resetting state, etc.).
      */
     public void onFinished() {
-
+        /* optional */
     }
 
     /**
@@ -187,45 +236,47 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * @return The action type.
+     * @return The {@link ActionType} that controls queue semantics for this action.
      */
     public ActionType getActionType() {
         return actionType;
     }
 
     /**
-     * @return The action state.
+     * @return The current {@link ActionState}.
      */
     public ActionState getState() {
         return state;
     }
 
     /**
-     * Sets the action state.
+     * Sets the current {@link ActionState}.
+     *
+     * <p>Intended for internal use by {@link ActionQueue}.
      */
     void setState(ActionState state) {
         this.state = state;
     }
 
     /**
-     * @return If the first execution of this action should run instantly.
+     * @return Whether this action attempts to execute immediately on its first eligible cycle.
      */
     public boolean isInstant() {
         return instant;
     }
 
     /**
-     * @return The delay of this action. 0 means the action will run instantly on its first execution (unless it was
-     * submitted within another action).
+     * @return The tick delay between {@link #run()} executions.
      */
     public int getDelay() {
         return delay;
     }
 
     /**
-     * Sets the future delay of this action.
+     * Updates the execution delay for future cycles.
      *
-     * @param newDelay The new delay.
+     * @param newDelay The new tick delay. Must be {@code > 0}.
+     * @throws IllegalArgumentException If {@code newDelay <= 0}.
      */
     public void setDelay(int newDelay) {
         if (delay != newDelay) {
@@ -235,8 +286,11 @@ public abstract class Action<T extends Mob> {
     }
 
     /**
-     * @return How many executions have occurred. An execution means {@link #run()} was called. This value will
-     * return {@code 0} on the first execution.
+     * Returns how many times {@link #run()} has executed.
+     * <p>
+     * The first time {@link #run()} is invoked, this returns {@code 0}.
+     *
+     * @return The execution count.
      */
     public int getExecutions() {
         return executions;

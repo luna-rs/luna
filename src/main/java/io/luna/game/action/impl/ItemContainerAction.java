@@ -12,17 +12,25 @@ import io.luna.game.model.mob.block.Animation;
 import java.util.List;
 
 /**
- * An {@link Action} implementation that supports inventory modifications. Users should override the {@link #add()}
- * and {@link #remove()} functions to add and remove items.
+ * An {@link Action} that performs atomic modifications on an {@link ItemContainer} (add/remove lists).
  * <p>
- * These action types are always {@link ActionType#WEAK}.
+ * This is a convenience base for “consume X, produce Y” style interactions (crafting, fletching, cooking, etc.).
+ * Implementations provide the items to remove via {@link #remove()} and items to add via {@link #add()}, and can run
+ * custom logic via {@link #execute()} after the container has been updated.
+ * <h3>Action semantics</h3>
+ * <ul>
+ *   <li>Always uses {@link ActionType#WEAK} (does not hard-lock the player).</li>
+ *   <li>On submit, clears walking if {@link #executeIf(boolean)} allows starting.</li>
+ *   <li>Each execution validates requirements, checks space, then applies container changes.</li>
+ *   <li>Stops early when requirements are not met or the action is interrupted.</li>
+ * </ul>
  *
  * @author lare96
  */
 public abstract class ItemContainerAction extends Action<Player> {
 
     /**
-     * An {@link ItemContainerAction} implementation that works with the inventory.
+     * Specialization of {@link ItemContainerAction} targeting the player's {@link Inventory}.
      */
     public static abstract class InventoryAction extends ItemContainerAction {
 
@@ -30,9 +38,9 @@ public abstract class ItemContainerAction extends Action<Player> {
          * Creates a new {@link InventoryAction}.
          *
          * @param player The player.
-         * @param instant If this action should run instantly.
-         * @param delay The delay of this action.
-         * @param repeatTimes The amount of times to repeat.
+         * @param instant Whether the action should execute instantly.
+         * @param delay The action delay (ticks) between executions.
+         * @param repeatTimes Number of executions before completing.
          */
         public InventoryAction(Player player, boolean instant, int delay, int repeatTimes) {
             super(player, player.getInventory(), instant, delay, repeatTimes);
@@ -40,17 +48,20 @@ public abstract class ItemContainerAction extends Action<Player> {
     }
 
     /**
-     * An {@link InventoryAction} implementation that requires time synchronization with an {@link Animation}.
+     * Inventory action that also plays an {@link Animation} at a fixed tick cadence.
+     * <p>
+     * This is meant for content where the server-side action loop must stay synchronized with an animation cycle
+     * (e.g., repeated skilling animations).
      */
     public static abstract class AnimatedInventoryAction extends InventoryAction {
 
         /**
-         * The animation delay, in ticks.
+         * Ticks between animation replays.
          */
         private final int animationDelay;
 
         /**
-         * The animation timer.
+         * Countdown timer for the next animation replay.
          */
         private int animationTimer;
 
@@ -58,9 +69,9 @@ public abstract class ItemContainerAction extends Action<Player> {
          * Creates a new {@link AnimatedInventoryAction}.
          *
          * @param player The player.
-         * @param actionDelay The delay of this action.
-         * @param animationDelay The animation delay, in ticks.
-         * @param repeatTimes The amount of times to repeat.
+         * @param actionDelay The delay (ticks) between action executions.
+         * @param animationDelay The delay (ticks) between animation replays.
+         * @param repeatTimes Number of executions before completing.
          */
         public AnimatedInventoryAction(Player player, int actionDelay, int animationDelay, int repeatTimes) {
             super(player, false, actionDelay, repeatTimes);
@@ -68,17 +79,19 @@ public abstract class ItemContainerAction extends Action<Player> {
         }
 
         /**
-         * Called every {@link #animationDelay}.
+         * Supplies the animation played every {@link #animationDelay} ticks while the action is processing.
          *
-         * @return The animation that will be played every {@link #animationDelay}.
+         * @return The animation to play.
          */
         public abstract Animation animation();
 
         /**
-         * Forwarded from {@link #onProcess()} ()}.
+         * Per-tick hook called before animation timing logic.
+         * <p>
+         * Override for any additional per-tick behavior needed while processing.
          */
         public void onProcessAnimation() {
-
+            /* optional */
         }
 
         @Override
@@ -92,22 +105,22 @@ public abstract class ItemContainerAction extends Action<Player> {
     }
 
     /**
-     * The item container.
+     * The container being modified (inventory, bank, etc.).
      */
     private final ItemContainer container;
 
     /**
-     * The amount of times to repeat.
+     * Remaining executions before completion.
      */
     private int repeat;
 
     /**
-     * The items being added.
+     * Items computed for the current cycle to add to the container.
      */
     protected List<Item> currentAdd;
 
     /**
-     * The items being removed.
+     * Items computed for the current cycle to remove from the container.
      */
     protected List<Item> currentRemove;
 
@@ -115,10 +128,10 @@ public abstract class ItemContainerAction extends Action<Player> {
      * Creates a new {@link ItemContainerAction}.
      *
      * @param player The player.
-     * @param container The container.
-     * @param instant If this action should run instantly.
-     * @param delay The delay of this action.
-     * @param repeat The amount of times to repeat.
+     * @param container The container to modify.
+     * @param instant Whether the action executes instantly.
+     * @param delay Delay (ticks) between executions.
+     * @param repeat Number of executions before completing.
      */
     public ItemContainerAction(Player player, ItemContainer container, boolean instant, int delay, int repeat) {
         super(player, ActionType.WEAK, instant, delay);
@@ -126,20 +139,9 @@ public abstract class ItemContainerAction extends Action<Player> {
         this.repeat = repeat;
     }
 
-    /**
-     * Creates a new {@link ItemContainerAction} with a delay of {@code 1} that runs instantly.
-     *
-     * @param player The player.
-     * @param container The container.
-     * @param repeat The amount of times to repeat.
-     */
-    public ItemContainerAction(Player player, ItemContainer container, int repeat) {
-        this(player, container, true, 1, repeat);
-    }
-
     @Override
     public final void onSubmit() {
-        if(executeIf(true)) {
+        if (executeIf(true)) {
             mob.getWalking().clear();
         } else {
             complete();
@@ -152,14 +154,23 @@ public abstract class ItemContainerAction extends Action<Player> {
     }
 
     /**
-     * Handles the addition and removal of the items from the container.
+     * Executes one “cycle” of the action.
+     * <p>Flow:
+     * <ol>
+     *   <li>Validate {@link #executeIf(boolean)} for this tick.</li>
+     *   <li>Compute {@link #remove()} and ensure items exist.</li>
+     *   <li>Compute {@link #add()}.</li>
+     *   <li>Verify container space after remove/add.</li>
+     *   <li>Apply remove/add, then call {@link #execute()}.</li>
+     * </ol>
      *
-     * @return {@code true} if this action is complete.
+     * @return {@code true} to complete the action and remove it from the queue.
      */
     private boolean handleItems() {
         if (!executeIf(false)) {
             return true;
         }
+
         currentRemove = remove();
         if (getState() != ActionState.PROCESSING || !container.containsAll(currentRemove)) {
             if (getExecutions() == 0) {
@@ -167,10 +178,12 @@ public abstract class ItemContainerAction extends Action<Player> {
             }
             return true;
         }
+
         currentAdd = add();
         if (getState() != ActionState.PROCESSING) {
             return true;
         }
+
         int addSpaces = container.computeSpaceForAll(currentRemove);
         int removeSpaces = container.computeSpaceForAll(currentAdd);
         int requiredSpaces = removeSpaces - addSpaces;
@@ -179,54 +192,64 @@ public abstract class ItemContainerAction extends Action<Player> {
             mob.sendMessage(onInventoryFull());
             return true;
         }
+
         if (getExecutions() == 0) {
             mob.getOverlays().closeWindows(false);
         }
+
         container.removeAll(currentRemove);
         container.addAll(currentAdd);
         execute();
+
         return --repeat == 0;
     }
 
     /**
-     * @return The message this action will send when the inventory is full.
+     * @return Message sent when the container lacks space for the operation.
      */
     public String onInventoryFull() {
         return Inventory.INVENTORY_FULL_MESSAGE;
     }
 
     /**
-     * @return The message this action will send if you lack the materials to start.
+     * @return Message sent when required inputs are missing on the first execution.
      */
     public String onNoMaterials() {
         return "You do not have enough materials to do this.";
     }
 
     /**
-     * Invoked when the inventory is changed.
+     * Called after the container has been modified for this cycle.
+     * <p>
+     * Use this for XP, sounds, graphics, interfaces, etc.
      */
     public abstract void execute();
 
     /**
-     * @return The items that will be removed.
+     * Supplies the items to remove for this execution.
+     *
+     * @return Items to remove (may be empty).
      */
     public List<Item> remove() {
         return List.of();
     }
 
     /**
-     * @return The items that will be added.
+     * Supplies the items to add for this execution.
+     *
+     * @return Items to add (may be empty).
      */
     public List<Item> add() {
         return List.of();
     }
 
     /**
-     * A function invoked every {@code delay} and on registration. Will stop the action and perform no processing if
-     * {@code false} is returned.
+     * Predicate invoked on submit and every cycle.
+     * <p>
+     * If this returns {@code false}, the action completes immediately and performs no processing.
      *
-     * @param start If this action is currently being registered.
-     * @return {@code false} to interrupt the action.
+     * @param start {@code true} if invoked during registration/submit; {@code false} if invoked during a cycle.
+     * @return {@code false} to prevent starting or to stop the action.
      */
     public boolean executeIf(boolean start) {
         return true;

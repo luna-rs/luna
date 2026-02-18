@@ -16,7 +16,7 @@ public class TickTimer implements Comparable<Long> {
     /**
      * The world.
      */
-    private final World world;
+    protected final World world;
 
     /**
      * A snapshot of the world's tick at a certain point in time.

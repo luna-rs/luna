@@ -6,34 +6,37 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
 
 /**
- * A {@link LockedAction} implementation that enables a {@link Player} to climb somewhere.
+ * A {@link LockedAction} that performs a simple two-step “climb” sequence for a {@link Player}.
+ * <p>
+ * This is intended for basic ladders/stairs-style transitions. More complex climbing (agility, obstacle timing,
+ * direction-specific animations) should be implemented in specialized actions.
  *
  * @author lare96
  */
 public final class ClimbAction extends LockedAction {
 
     /**
-     * The destination.
+     * The destination tile to move the player to after climbing.
      */
     private final Position destination;
 
     /**
-     * The direction to face after climbing.
+     * The direction the player should face after arriving at {@link #destination}.
      */
     private final Direction direction;
 
     /**
-     * The message to send while climbing.
+     * A message sent to the player when the climb begins.
      */
     private final String message;
 
     /**
      * Creates a new {@link ClimbAction}.
      *
-     * @param player The player.
-     * @param destination The destination.
-     * @param direction The direction.
-     * @param message The message.
+     * @param player The player performing the climb.
+     * @param destination The destination to move to after the climb delay.
+     * @param direction The direction to face after moving.
+     * @param message The message to send when the climb starts.
      */
     public ClimbAction(Player player, Position destination, Direction direction, String message) {
         super(player);
@@ -44,6 +47,7 @@ public final class ClimbAction extends LockedAction {
 
     @Override
     public void onLock() {
+        // Prevent queued movement from interfering with the climb sequence.
         mob.getWalking().clear();
     }
 
@@ -51,15 +55,21 @@ public final class ClimbAction extends LockedAction {
     public boolean run() {
         if (getExecutions() == 0) {
             mob.sendMessage(message);
-            mob.animation(new Animation(828)); // todo if going down, diff animation. also dimplify destination to
-            // simply up -> down. or autocompute destination based on ladder location
-            // maybe different action entirely for static ladders in the game world vs agility?
+
+            // Default climb animation. (Consider choosing based on climb direction/content type.)
+            mob.animation(new Animation(828));
+
+            // Continue to the next tick to perform the move.
             return false;
+
         } else if (getExecutions() == 1) {
             mob.move(destination);
             mob.face(direction);
+
+            // Complete after placing the player.
             return false;
         }
+
         return true;
     }
 }

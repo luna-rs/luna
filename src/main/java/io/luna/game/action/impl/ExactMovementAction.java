@@ -60,7 +60,7 @@ public class ExactMovementAction extends LockedAction {
      * without changing their walking animation.
      *
      * @param player The player to move.
-     * @param route  The exact movement route describing the start and end positions.
+     * @param route The exact movement route describing the start and end positions.
      */
     public ExactMovementAction(Player player, ExactMovement route) {
         super(player);
@@ -73,8 +73,8 @@ public class ExactMovementAction extends LockedAction {
      * Creates a new {@link ExactMovementAction} that moves the player along the given route and
      * applies a custom walking animation for the duration of the movement.
      *
-     * @param player            The player to move.
-     * @param route             The exact movement route describing the start and end positions.
+     * @param player The player to move.
+     * @param route The exact movement route describing the start and end positions.
      * @param walkingAnimationId The animation id to use for both standing and walking while moving.
      */
     public ExactMovementAction(Player player, ExactMovement route, int walkingAnimationId) {

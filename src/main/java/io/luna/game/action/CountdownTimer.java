@@ -24,6 +24,7 @@ public  class CountdownTimer extends Action<Mob> {
     @Override
     public boolean run() {
         long result = --remaining;
+        System.out.println(result);
         if (result <= 0) {
             onComplete();
             return true;
