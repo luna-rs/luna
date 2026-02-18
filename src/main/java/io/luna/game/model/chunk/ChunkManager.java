@@ -189,7 +189,6 @@ public final class ChunkManager implements Iterable<ChunkRepository> {
             List<ChunkUpdatableMessage> updates = chunk.getUpdates(player);
             if (!updates.isEmpty()) {
                 updated.add(chunk);
-                player.queue(new ClearChunkMessageWriter(player.getLastRegion(), chunk));
                 player.queue(new GroupedEntityMessageWriter(player.getLastRegion(), chunk, updates));
             }
         }
