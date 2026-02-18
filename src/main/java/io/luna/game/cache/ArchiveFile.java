@@ -1,76 +1,72 @@
 package io.luna.game.cache;
 
 /**
- * Holds information about a single file in the archived cache.
+ * Metadata for a single file entry within a cache {@link Archive}.
  *
  * @author Graham Edgecombe
  */
 public final class ArchiveFile {
-	
-	/**
-	 * The name hash.
-	 */
-	private final int hash;
-	
-	/**
-	 * The uncompressed size.
-	 */
-	private final int uncompressedSize;
-	
-	/**
-	 * The compressed size.
-	 */
-	private final int compressedSize;
-	
-	/**
-	 * The offset in the named cache.
-	 */
-	private final int offset;
-	
-	/**
-	 * Creates an archived file.
-	 * @param hash The hash.
-	 * @param uncompressedSize The uncompressed size.
-	 * @param compressedSize The compressed size.
-	 * @param offset The offset.
-	 */
-	public ArchiveFile(int hash, int uncompressedSize, int compressedSize, int offset) {
-		this.hash = hash;
-		this.uncompressedSize = uncompressedSize;
-		this.compressedSize = compressedSize;
-		this.offset = offset;
-	}
-	
-	/**
-	 * Gets the hash of the name of this file.
-	 * @return The hash of this file's name.
-	 */
-	public int getHash() {
-		return hash;
-	}
-	
-	/**
-	 * Gets the uncompressed size.
-	 * @return The uncompressed size, in bytes.
-	 */
-	public int getUncompressedSize() {
-		return uncompressedSize;
-	}
-	
-	/**
-	 * Gets the compressed size.
-	 * @return The compressed size, in bytes.
-	 */
-	public int getCompressedSize() {
-		return compressedSize;
-	}
-	
-	/**
-	 * Gets the offset.
-	 * @return The offset.
-	 */
-	public int getOffset() {
-		return offset;
-	}
-	
+
+    /**
+     * Hash of the file name (see {@link CacheUtils#hash(String)}).
+     */
+    private final int hash;
+
+    /**
+     * File size after decompression, in bytes.
+     */
+    private final int uncompressedSize;
+
+    /**
+     * File size as stored in the archive payload, in bytes.
+     */
+    private final int compressedSize;
+
+    /**
+     * Byte offset into the archive payload where the file data begins.
+     */
+    private final int offset;
+
+    /**
+     * Creates a new {@link ArchiveFile} entry.
+     *
+     * @param hash The name hash.
+     * @param uncompressedSize The size after decompression.
+     * @param compressedSize The stored size inside the archive payload.
+     * @param offset The byte offset within the archive payload.
+     */
+    public ArchiveFile(int hash, int uncompressedSize, int compressedSize, int offset) {
+        this.hash = hash;
+        this.uncompressedSize = uncompressedSize;
+        this.compressedSize = compressedSize;
+        this.offset = offset;
+    }
+
+    /**
+     * @return The hash of the file name.
+     */
+    public int getHash() {
+        return hash;
+    }
+
+    /**
+     * @return The size after decompression, in bytes.
+     */
+    public int getUncompressedSize() {
+        return uncompressedSize;
+    }
+
+    /**
+     * @return The stored size, in bytes.
+     */
+    public int getCompressedSize() {
+        return compressedSize;
+    }
+
+    /**
+     * @return The byte offset within the archive payload where the file begins.
+     */
+    public int getOffset() {
+        return offset;
+    }
 }
