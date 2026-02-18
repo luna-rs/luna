@@ -4,65 +4,45 @@ import io.luna.game.event.impl.DropItemEvent;
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent;
 
 /**
- * Represents the priority level assigned to event listeners within the Luna event system.
+ * Priority levels for listeners in Luna's event system.
  * <p>
- * Each listener registered for an event type is assigned one of three priority levels:
- * {@link #LOW}, {@link #NORMAL}, or {@link #HIGH}. The priority determines the order in
- * which listeners are executed during event dispatch.
- * </p>
- *
- * <p>
- * Priorities are typically assigned automatically depending on how the listener was
- * declared. For example:
+ * In practice:
  * <ul>
- *     <li>{@code LOW} – Default for unfiltered event listeners</li>
- *     <li>{@code NORMAL} – Default for filtered listeners and matchers</li>
- *     <li>{@code HIGH} – Reserved for a single “default” implementation per event type</li>
+ *   <li>{@link #HIGH} is reserved for the single "default behavior" implementation of an event.</li>
+ *   <li>{@link #NORMAL} is used for common filtered listeners and middleware-style logic.</li>
+ *   <li>{@link #LOW} is used for broad/unfiltered listeners and "after everything" hooks.</li>
  * </ul>
- * </p>
  *
  * @author lare96
  */
 public enum EventPriority {
 
     /**
-     * The default priority for standard unfiltered listeners.
+     * Lowest priority.
      * <p>
-     * Used when registering basic event handlers such as:
-     * <pre>
-     * on(ChatEvent::class) {
-     *     ...
-     * }
-     * </pre>
+     * Executed last. Commonly used for broad/unfiltered handlers and "post-processing" hooks.
      */
     LOW,
 
     /**
-     * The default priority for filtered listeners and matchers.
+     * Standard priority.
      * <p>
-     * Filtered listeners and automatic matchers are assigned this level by default. The listeners
-     * are ran before the matchers.
-     * <pre>
-     * on(ChatEvent::class).filter { plr is Bot }.then {
-     *     ...
-     * }
-     * </pre>
+     * Executed after {@link #HIGH} and before matcher routing. Commonly used for filtered listeners and
+     * middleware-style logic.
      */
     NORMAL,
 
     /**
-     * The highest priority, reserved for “default functionality” of the event.
+     * Highest priority, reserved for default event behavior.
      * <p>
-     * Only one high-priority listener may exist per event type. These are executed
-     * before all others and define the base behavior of the event.
-     * </p>
+     * Only one HIGH listener may exist per event type. This listener runs first and typically performs the core
+     * action represented by the event.
      * <p>
-     * Example:
+     * Examples:
      * <ul>
-     *     <li>For {@link DropItemEvent}, the high-priority listener performs the actual drop</li>
-     *     <li>For {@link PickupItemEvent}, it performs the actual pickup</li>
+     *   <li>{@link DropItemEvent}: performs the actual item drop.</li>
+     *   <li>{@link PickupItemEvent}: performs the actual item pickup.</li>
      * </ul>
-     * </p>
      */
     HIGH
 }

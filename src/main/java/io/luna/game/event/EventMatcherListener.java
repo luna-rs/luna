@@ -9,26 +9,31 @@ import java.util.function.Consumer;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A script-aware event handler used in conjunction with {@link EventMatcher}.
+ * Script-aware listener wrapper used by {@link EventMatcher} implementations.
+ * <p>
+ * This mirrors {@link EventListener} but is intended for matcher-backed dispatch paths where listeners are stored
+ * in key-based structures.
  *
- * @param <E> The type of event handled.
+ * @param <E> The event type handled by this matcher listener.
  */
 public final class EventMatcherListener<E extends Event> {
 
     /**
-     * The script containing this matcher listener.
+     * The script that declared/owns this matcher listener.
+     * <p>
+     * Injected after construction and may be {@code null} until registration completes.
      */
     private final Script script;
 
     /**
-     * The listener.
+     * The callback executed when a matching event is dispatched.
      */
     private final Consumer<E> listener;
 
     /**
      * Creates a new {@link EventMatcherListener}.
      *
-     * @param listener The listener.
+     * @param listener The callback to run when a matching event is dispatched.
      */
     public EventMatcherListener(Consumer<E> listener) {
         this.listener = listener;
@@ -36,9 +41,12 @@ public final class EventMatcherListener<E extends Event> {
     }
 
     /**
-     * Applies the wrapped function and handles exceptions.
+     * Executes the callback for {@code msg}.
      *
-     * @param msg The event to apply the function with.
+     * <p>Any exception thrown by the callback is wrapped into a {@link ScriptExecutionException}
+     * so the dispatcher can attribute/log it against the owning script.
+     *
+     * @param msg The event instance.
      */
     public void apply(E msg) {
         try {
@@ -49,9 +57,11 @@ public final class EventMatcherListener<E extends Event> {
     }
 
     /**
-     * Sets the script containing this matcher listener.
+     * Injects the script that owns this matcher listener.
      *
-     * @param newScript The script to set to.
+     * <p>Intended to be called once during registration/loading.
+     *
+     * @param newScript The script to associate with this matcher listener.
      */
     public void setScript(Script newScript) {
         checkState(script == null, "Script already set.");
@@ -59,14 +69,14 @@ public final class EventMatcherListener<E extends Event> {
     }
 
     /**
-     * @return The script containing this matcher listener. Possibly {@code null}.
+     * @return The owning script (may be {@code null} before injection).
      */
     public Script getScript() {
         return script;
     }
 
     /**
-     * @return The listener.
+     * @return The callback executed when a matching event is dispatched.
      */
     public Consumer<E> getListener() {
         return listener;

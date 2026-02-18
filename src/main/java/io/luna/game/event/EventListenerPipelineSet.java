@@ -8,21 +8,32 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A container of pipelines, each responsible for dispatching a specific type of event.
+ * Registry of {@link EventListenerPipeline}s keyed by {@link Event} type.
+ * <p>
+ * This is the central container used to:
+ * <ul>
+ *   <li>Resolve a pipeline for a given event class (creating it lazily if absent).</li>
+ *   <li>Register listeners into the appropriate pipeline.</li>
+ *   <li>Swap pipeline sets during hot reload.</li>
+ * </ul>
+ * <p>
+ * <strong>Keying note:</strong> Pipelines are currently stored by {@code eventType.getSimpleName()}. This assumes
+ * event simple names are unique across the codebase/plugins.
  *
  * @author lare96
  */
 public final class EventListenerPipelineSet implements Iterable<EventListenerPipeline<?>> {
 
     /**
-     * The map of pipelines.
+     * Pipelines mapped by {@link Event} simple name.
      */
     private final Map<String, EventListenerPipeline<?>> pipelines = new HashMap<>();
 
     /**
-     * Adds a listener to the appropriate pipeline based on its event type.
+     * Adds a listener to the pipeline associated with its {@link EventListener#getEventType()}.
      *
      * @param listener The listener to register.
+     * @param <E> The event type.
      */
     public <E extends Event> void add(EventListener<E> listener) {
         Class<E> eventType = listener.getEventType();
@@ -33,23 +44,25 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * Fetches or creates the pipeline for the specified event type.
+     * Fetches (or lazily creates) the pipeline for {@code eventType}.
      *
-     * @param eventType The class of the event.
-     * @return The corresponding pipeline.
+     * @param eventType The event class.
+     * @param <E> The event type.
+     * @return The pipeline responsible for dispatching {@code eventType}.
      */
     @SuppressWarnings("unchecked")
     public <E extends Event> EventListenerPipeline<E> get(Class<E> eventType) {
         EventListenerPipeline<?> pipeline = pipelines.computeIfAbsent(eventType.getSimpleName(),
                 key -> new EventListenerPipeline<>(eventType));
-        //noinspection unchecked
         return (EventListenerPipeline<E>) pipeline;
     }
 
     /**
-     * Replaces all current pipelines with the ones in {@code set}. Used for hot reloading.
+     * Replaces all pipelines in this set with those from {@code set}.
+     * <p>
+     * Used for hot reloading script/plugin listeners.
      *
-     * @param set The new pipeline set.
+     * @param set The pipeline set to copy from.
      */
     public void replaceAll(EventListenerPipelineSet set) {
         pipelines.clear();
@@ -63,7 +76,7 @@ public final class EventListenerPipelineSet implements Iterable<EventListenerPip
     }
 
     /**
-     * @return The pipeline count.
+     * @return The number of pipelines currently registered.
      */
     public int size() {
         return pipelines.size();
