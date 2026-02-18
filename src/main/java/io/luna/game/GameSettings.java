@@ -2,114 +2,166 @@ package io.luna.game;
 
 import io.luna.LunaRuntime;
 import io.luna.game.model.Position;
+import io.luna.game.model.chunk.ChunkUpdatableView;
 import io.luna.game.model.item.GroundItem;
 import io.netty.util.ResourceLeakDetector.Level;
-import org.mindrot.jbcrypt.BCrypt;
 
 /**
- * Holds settings parsed from the "game" section in {@code ./data/luna.json} file.
+ * Settings parsed from the {@code "game"} section of {@code ./data/luna.json}.
+ * <p>
+ * This class is immutable and instantiated by the JSON loader (not directly in code). It provides core runtime
+ * configuration such as networking, starting location, XP rate, persistence serializer selection,
+ * password hashing policy, and a few world-behavior toggles.
  *
  * @author lare96
  */
 public final class GameSettings {
 
     /**
-     * The password strength levels.
+     * Password hashing/verification policy for player logins.
+     * <p>
+     * The {@link #getRounds()} value corresponds to BCrypt "log rounds" when hashing is enabled. When {@link #NONE}
+     * is selected, password verification is disabled entirely.
      */
     public enum PasswordStrength {
 
         /**
-         * No password protection, passwords will not be verified. Passwords entered at login will be saved as
-         * "password." Anyone will be able to log in to any account with just the username.
+         * Disables password verification.
+         * <p>
+         * Intended only for local development/testing. In this mode, accounts are effectively protected only by
+         * username, and password entries are not meaningfully validated.
          */
         NONE(-1),
 
         /**
-         * The lowest acceptable rounds for {@link BCrypt} encryption to work. Use when you want to maximize performance.
+         * Minimal BCrypt cost factor (fastest, weakest).
+         * <p>
+         * Useful for local testing or constrained environments where hashing cost must be low.
          */
         LOW(4),
 
         /**
-         * A good tradeoff between security and performance.
+         * Balanced BCrypt cost factor (recommended default).
          */
         DEFAULT(8),
 
         /**
-         * Provides a higher level of security at a higher performance cost.
+         * Higher BCrypt cost factor (slowest, strongest).
+         * <p>
+         * Use when you want stronger brute-force resistance and can afford higher CPU cost on login.
          */
         HIGH(16);
 
         /**
-         * The encryption rounds.
+         * BCrypt cost factor (log rounds), or {@code -1} when hashing is disabled.
          */
         private final int rounds;
 
         /**
          * Creates a new {@link PasswordStrength}.
          *
-         * @param rounds The encryption rounds.
+         * @param rounds BCrypt cost factor (log rounds), or {@code -1} when hashing is disabled.
          */
         PasswordStrength(int rounds) {
             this.rounds = rounds;
         }
 
         /**
-         * @return The encryption rounds.
+         * Returns BCrypt cost factor (log rounds).
+         *
+         * @return BCrypt rounds, or {@code -1} when hashing/verification is disabled.
          */
         public int getRounds() {
             return rounds;
         }
     }
 
+    /**
+     * Runtime mode (development vs production).
+     */
     private final LunaRuntime runtimeMode;
+
+    /**
+     * TCP port the server binds to.
+     */
     private final int port;
+
+    /**
+     * Max simultaneous connections per IP/channel.
+     */
     private final int connectionLimit;
+
+    /**
+     * Starting spawn position for new players / invalid logouts.
+     */
     private final Position startingPosition;
+
+    /**
+     * Global experience multiplier applied to skill XP gains.
+     */
     private final double experienceMultiplier;
+
+    /**
+     * Fully-qualified or simple serializer identifier from {@code io.luna.game.model.mob.persistence}.
+     */
     private final String serializer;
+
+    /**
+     * Password hashing policy.
+     */
     private final PasswordStrength passwordStrength;
+
+    /**
+     * Whether stackable ground items merge into a single stack.
+     */
     private final boolean mergeStackableGroundItems;
 
     /**
-     * The port that the server will be bound on.
+     * Returns the TCP port that the server will bind on.
      */
     public int port() {
         return port;
     }
 
     /**
-     * The maximum amount of connections allowed per channel. This restricts how many accounts can be logged in
-     * at the same time, from the same IP address.
+     * Returns the maximum number of concurrent connections allowed per IP.
+     * <p>
+     * This limits how many accounts can be logged in at the same time from the same IP address.
      */
     public int connectionLimit() {
         return connectionLimit;
     }
 
     /**
-     * The position that new players will start on.
+     * Returns the starting position for new players (and for safety fallbacks).
      */
     public Position startingPosition() {
         return startingPosition;
     }
 
     /**
-     * The experience multiplier. This value determines how fast mobs can level up their skills.
+     * Returns the global experience multiplier.
+     * <p>
+     * This value determines how quickly mobs gain skill XP relative to base rates.
      */
     public double experienceMultiplier() {
         return experienceMultiplier;
     }
 
     /**
-     * The serializer from the {@code io.luna.game.model.mob.persistence} package that will be used to serialize and
-     * deserialize player data.
+     * Returns the persistence serializer identifier to use.
+     * <p>
+     * This value corresponds to a serializer implementation in the {@code io.luna.game.model.mob.persistence} package.
      */
     public String serializer() {
         return serializer;
     }
 
     /**
-     * The {@link BCrypt} password encryption strength level. It is safe to change strength levels while in a
-     * production environment (character data will not be broken).
+     * Returns the BCrypt password encryption/verification strength policy.
+     * <p>
+     * It is safe to change strength levels in production: existing character data is not broken, because verification
+     * uses the stored BCrypt hash parameters.
      *
      * @see PasswordStrength
      */
@@ -118,18 +170,19 @@ public final class GameSettings {
     }
 
     /**
-     * If true, stackable items with the same {@code id} and {@link io.luna.game.model.chunk.ChunkUpdatableView}
-     * on the same {@link Position} will be merged into a single ground item stack.
+     * Returns whether stackable ground items are merged into a single stack on the same tile/view.
      * <p>
-     * This can be used to improve player convenience (fewer stacks on the ground) and reduce entity count.
-     * When disabled, each stack is represented as its own {@link GroundItem} entity.
+     * If enabled, stackable items with the same {@code id} and {@link ChunkUpdatableView} on the same {@link Position}
+     * will be merged into one {@link GroundItem} stack. This reduces entity count and improves convenience.
+     * <p>
+     * If disabled, each stack is represented as its own {@link GroundItem} entity.
      */
     public boolean mergeStackableGroundItems() {
         return mergeStackableGroundItems;
     }
 
     /**
-     * Determines if luna is running in Beta mode.
+     * Returns {@code true} when the server is running in a “beta-like” mode.
      */
     public boolean betaMode() {
         switch (runtimeMode) {
@@ -142,8 +195,10 @@ public final class GameSettings {
     }
 
     /**
-     * Please note as the leak detection levels get higher, the tradeoff is a <strong>substantial</strong>
-     * performance loss. {@code PARANOID} should <strong>never</strong> be used in a production environment.
+     * Returns the Netty resource leak detection level appropriate for the current runtime mode.
+     * <p>
+     * <strong>Important:</strong> higher leak detection levels can cause substantial performance loss.
+     * {@code PARANOID} should never be used in production.
      */
     public Level resourceLeakDetection() {
         switch (runtimeMode) {
@@ -157,19 +212,19 @@ public final class GameSettings {
     }
 
     /**
-     * Determines what mode Luna is running in.
+     * Returns the current runtime mode.
      */
     public LunaRuntime runtimeMode() {
         return runtimeMode;
     }
 
     /**
-     * To prevent public instantiation.
+     * Private constructor for JSON deserialization.
      */
     private GameSettings(LunaRuntime runtimeMode, int port, int connectionLimit, Position startingPosition,
                          double experienceMultiplier, String serializer, PasswordStrength passwordStrength,
                          boolean mergeStackableGroundItems) {
-        // Will never be called.
+        // Will never be called directly.
         this.runtimeMode = runtimeMode;
         this.port = port;
         this.connectionLimit = connectionLimit;

@@ -6,40 +6,65 @@ import io.luna.util.ExecutorUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 /**
- * An {@link AbstractIdleService} implementation that manages threads for persistence based services, required for logging in
- * and out. This is necessary in order to avoid overworking the networking threads.
+ * Base {@link AbstractIdleService} for authentication-style persistence work (login/logout).
+ * <p>
+ * This service exists to keep persistence and account I/O off the Netty event loop threads. Subclasses typically:
+ * <ul>
+ *   <li>accept requests via {@link #submit(String, Object)}</li>
+ *   <li>dispatch background work on {@link #workers}</li>
+ *   <li>store in-flight requests in {@link #pending}</li>
+ *   <li>finalize completed requests on the game thread via {@link #finishRequests()}</li>
+ * </ul>
  *
- * @param <T> The request type.
+ * <h3>Two-phase model</h3>
+ * <ol>
+ *   <li><b>Queue/dispatch</b> (any thread): {@link #submit(String, Object)} validates and records a request, and the
+ *       subclass usually schedules persistence work on {@link #workers}.</li>
+ *   <li><b>Finalize</b> (game thread): {@link #finishRequests()} polls up to {@link #REQUESTS_THRESHOLD} pending
+ *       entries per tick and applies results to game state.</li>
+ * </ol>
+ * The per-tick threshold prevents worst-case spikes (e.g., mass logins/logouts) from monopolizing a single game tick.
+ *
+ * @param <T> The request type stored in {@link #pending}.
  * @author lare96
  */
 abstract class AuthenticationService<T> extends AbstractIdleService {
 
     /**
-     * The amount of requests to service per tick.
+     * Maximum number of pending requests to attempt to finalize per tick.
      */
     static final int REQUESTS_THRESHOLD = 50;
 
     /**
-     * The world.
+     * World reference for scheduling/finalization context.
      */
     final World world;
 
     /**
-     * The workers that will service requests.
+     * Worker pool used for persistence tasks.
+     * <p>
+     * Subclasses typically submit blocking I/O here (database reads/writes, file system, etc.).
      */
     final ExecutorService workers;
 
     /**
-     * The map of pending requests.
+     * Map of in-flight requests keyed by username.
+     * <p>
+     * This serves as:
+     * <ul>
+     *   <li>a de-duplication mechanism (one request per username at a time)</li>
+     *   <li>a hand-off structure between worker threads and the game thread</li>
+     * </ul>
      */
     final ConcurrentHashMap<String, T> pending = new ConcurrentHashMap<>();
 
     /**
      * Creates a new {@link AuthenticationService}.
      *
-     * @param world The world.
+     * @param world The world instance.
      */
     AuthenticationService(World world) {
         this.world = world;
@@ -52,7 +77,12 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     }
 
     /**
-     * Iterates the set of pending requests and finalizes them.
+     * Attempts to finalize pending requests.
+     * <p>
+     * This should be called from the game loop (once per tick). It iterates up to {@link #REQUESTS_THRESHOLD} entries
+     * and finalizes those that are ready according to {@link #canFinishRequest(String, Object)}.
+     * <p>
+     * Finalization is performed by {@link #finishRequest(String, Object)} and the entry is then removed from {@link #pending}.
      */
     public final void finishRequests() {
         if (state() == State.RUNNING) {
@@ -73,44 +103,66 @@ abstract class AuthenticationService<T> extends AbstractIdleService {
     }
 
     /**
-     * Determines if there is a pending request with {@code username} as a key.
+     * Checks whether there is already a pending request for {@code username}.
      *
-     * @param username The key.
-     * @return {@code true} if the key is present.
+     * @param username The username key.
+     * @return {@code true} if a request is currently pending for that username.
      */
     public final boolean hasRequest(String username) {
         return pending.containsKey(username);
     }
 
     /**
-     * Submits a new request to be serviced.
+     * Submits a new request if the service is running and no request is already pending for {@code username}.
+     * <p>
+     * The pending insertion is performed atomically via {@link ConcurrentHashMap#computeIfAbsent(Object, Function)}
+     * to prevent duplicate submissions when multiple workers/threads submit concurrently.
+     * <p>
+     * Whether the request is accepted is determined by {@link #addRequest(String, Object)}.
      *
-     * @param request The request.
+     * @param username The username key for de-duplication.
+     * @param request The request payload.
      */
     public final void submit(String username, T request) {
         if (state() == State.RUNNING) {
-            // Atomically compute the value (or no value) since we have multiple login workers potentially
-            // accessing this.
+            // Atomically compute the value (or no value) since we have multiple workers potentially accessing this.
             pending.computeIfAbsent(username, key -> addRequest(username, request) ? request : null);
         }
     }
 
     /**
-     * Determines if the request can be added to {@link #pending}.
+     * Validates and begins servicing a request.
+     * <p>
+     * Implementations typically:
+     * <ul>
+     *   <li>validate the request</li>
+     *   <li>schedule blocking work onto {@link #workers}</li>
+     *   <li>return {@code true} if the request should be inserted into {@link #pending}</li>
+     * </ul>
      *
-     * @return {@code true} to add the request, {@code false} to cancel.
+     * @param username The username key.
+     * @param request The request payload.
+     * @return {@code true} to store in {@link #pending}, {@code false} to reject the request.
      */
     abstract boolean addRequest(String username, T request);
 
     /**
-     * Determines if the request is no longer pending and can be finalized.
+     * Returns whether a pending request is ready to be finalized on the game thread.
      *
-     * @return {@code true} if the request is no longer pending.
+     * @param username The username key.
+     * @param request The request payload.
+     * @return {@code true} if the request can be finalized and removed from {@link #pending}.
      */
     abstract boolean canFinishRequest(String username, T request);
 
     /**
-     * Run after the request is finalized and removed from {@link #pending}.
+     * Finalizes a request on the game thread after it is deemed ready.
+     * <p>
+     * This is where implementations should apply results to game state (log the player in, persist logout state,
+     * update registries, etc.). Called immediately before the request is removed from {@link #pending}.
+     *
+     * @param username The username key.
+     * @param request The request payload.
      */
     abstract void finishRequest(String username, T request);
 }

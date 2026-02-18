@@ -31,15 +31,34 @@ import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminatio
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * An {@link AbstractScheduledService} implementation that handles the launch, processing, and termination
- * of the main game thread.
+ * Main game loop service.
+ *
+ * <p>{@link GameService} owns the single “game thread” and executes the world tick at a fixed rate
+ * (typically 600ms per tick). It also provides safe cross-thread scheduling utilities so other
+ * threads (Netty, persistence workers, bot systems, etc.) can request work to run on the game thread.
+ *
+ * <h3>Responsibilities</h3>
+ * <ul>
+ *   <li>Bootstrap: load Kotlin plugins/scripts and start the {@link World}.</li>
+ *   <li>Tick loop: run {@link World#process()} at a fixed cadence.</li>
+ *   <li>Synchronization: drain {@link #syncTasks} to run queued logic on the game thread.</li>
+ *   <li>Lifecycle: coordinate graceful shutdown and system updates.</li>
+ *   <li>Utilities: provide {@link #sync(Supplier)} and {@link #submit(Supplier)} helpers.</li>
+ * </ul>
+ *
+ * <p><strong>Threading model:</strong> All game state mutation should occur on the game thread.
+ * Use {@link #sync(Runnable)} / {@link #sync(Supplier)} (or {@link #getGameExecutor()}) to marshal
+ * logic onto the game thread from other threads.
  *
  * @author lare96
  */
 public final class GameService extends AbstractScheduledService {
 
     /**
-     * An {@link Executor} implementation that will run all code on the game thread, using {@link #sync(Runnable)}.
+     * Executor that guarantees execution on the game thread.
+     *
+     * <p>If invoked from the game thread, the command runs immediately.
+     * Otherwise the command is enqueued into {@link #syncTasks} and executed at the start of the next tick.
      */
     private final class GameServiceExecutor implements Executor {
 
@@ -54,7 +73,10 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * A listener that will be notified of any changes in the game thread's state.
+     * Service listener that responds to lifecycle transitions of the underlying scheduled service.
+     *
+     * <p>Most “startup sequence” logic is performed when the service enters {@link State#RUNNING},
+     * and shutdown coordination is handled when the service is stopping or terminated.
      */
     private final class GameServiceListener extends Service.Listener {
 
@@ -65,11 +87,10 @@ public final class GameService extends AbstractScheduledService {
             runSynchronizationTasks();
             world.start();
 
-            // Players won't be able to log in until startup tasks are complete, so it's fine to block the
-            // game thread.
+            // Players won't be able to log in until startup tasks are complete, so it's fine to block the game thread.
             runKotlinTasks(ServerLaunchEvent::new, "Waiting for Kotlin startup tasks to complete...");
 
-            // Release the lock in LunaServer.
+            // Release the lock in LunaServer so networking can begin accepting logins.
             onlineLock.complete(null);
         }
 
@@ -94,7 +115,9 @@ public final class GameService extends AbstractScheduledService {
         }
 
         /**
-         * Initializes the {@link PluginBootstrap} which loads all Kotlin scripts and prepares event listeners.
+         * Initializes {@link PluginBootstrap}, which loads Kotlin plugins/scripts and prepares event listeners.
+         *
+         * <p>This is executed on the game thread as part of startup.
          */
         private void loadPlugins() {
             try {
@@ -103,7 +126,8 @@ public final class GameService extends AbstractScheduledService {
 
                 int pluginCount = context.getPlugins().getPluginCount();
                 int scriptCount = context.getPlugins().getScriptCount();
-                logger.info("{} Kotlin plugins containing {} scripts have been loaded.", box(pluginCount), box(scriptCount));
+                logger.info("{} Kotlin plugins containing {} scripts have been loaded.",
+                        box(pluginCount), box(scriptCount));
             } catch (Exception e) {
                 logger.fatal("Error loading plugins!", e);
                 System.exit(1);
@@ -111,51 +135,49 @@ public final class GameService extends AbstractScheduledService {
         }
     }
 
-    /**
-     * The asynchronous logger.
-     */
+    /** Async logger. */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * A queue of synchronization tasks.
+     * Queue of “synchronization tasks” to be executed on the game thread.
+     *
+     * <p>These tasks are drained at the beginning of each tick by {@link #runSynchronizationTasks()}.
      */
     private final Queue<Runnable> syncTasks = new ConcurrentLinkedQueue<>();
 
-    /**
-     * The synchronization executor.
-     */
+    /** Executor that marshals work onto the game thread via {@link #syncTasks}. */
     private final GameServiceExecutor gameExecutor;
 
     /**
-     * The synchronizer for the online status. Locks connections from being accepted until the server is completely
-     * online.
+     * Online gate used by {@link io.luna.LunaServer} to prevent accepting logins until startup is complete.
+     *
+     * <p>Completed when the game thread has started, plugins are loaded, and startup tasks have finished.
      */
     private final CompletableFuture<Void> onlineLock = new CompletableFuture<>();
 
-    /**
-     * The context instance.
-     */
+    /** Context handle (cache/world/plugins/etc.). */
     private final LunaContext context;
 
-    /**
-     * The world instance.
-     */
+    /** World state owned by this server instance. */
     private final World world;
 
     /**
-     * A thread pool for general purpose low-overhead tasks.
+     * General-purpose worker pool for low-overhead async tasks.
+     *
+     * <p>This pool is intentionally bounded/managed by {@link ExecutorUtils} to reduce attack surface for
+     * untrusted workloads.
      */
     private final ExecutorService pool;
 
     /**
-     * An instance of this thread (the game thread).
+     * The game thread instance. Set during {@link #startUp()}.
      */
     private volatile Thread thread;
 
     /**
-     * Creates a new {@link GameService}.
+     * Creates a new {@link GameService} for the supplied {@link LunaContext}.
      *
-     * @param context The context instance.
+     * @param context The server context.
      */
     public GameService(LunaContext context) {
         this.context = context;
@@ -172,6 +194,7 @@ public final class GameService extends AbstractScheduledService {
 
     @Override
     protected Scheduler scheduler() {
+        // 600ms game tick cadence.
         return Scheduler.newFixedRateSchedule(600, 600, TimeUnit.MILLISECONDS);
     }
 
@@ -191,11 +214,14 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs the entire game loop including synchronization tasks.
+     * Runs one full tick: synchronization stage + world processing stage.
+     *
+     * <p>Any exceptions thrown while processing are caught and logged so a single failure does not
+     * permanently stall the tick loop.
      */
     private void process() {
         try {
-            // Do stuff from other threads.
+            // Drain tasks requested by other threads.
             runSynchronizationTasks();
 
             // Run the main game loop.
@@ -206,16 +232,17 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs all pending synchronization tasks in the backing queue. This allows other Threads to execute game logic
-     * on the main game thread.
+     * Executes all pending synchronization tasks enqueued from other threads.
+     *
+     * <p>This is the mechanism that allows external threads to safely run logic on the main game thread:
+     * tasks are added via {@link #sync(Supplier)} or {@link #getGameExecutor()} and executed here.
      */
     private void runSynchronizationTasks() {
-        for (; ; ) {
+        for (;;) {
             var runnable = syncTasks.poll();
             if (runnable == null) {
                 break;
             }
-
             try {
                 runnable.run();
             } catch (Exception e) {
@@ -225,10 +252,13 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs both synchronous and asynchronous logic from Kotlin scripts and waits for it to complete.
+     * Dispatches a server-state event to Kotlin scripts and blocks until any asynchronous work completes.
      *
-     * @param eventFunction Produces the event message to pass.
-     * @param waitingMessage The message to log while waiting for tasks to complete.
+     * <p>This helper creates a temporary background pool, constructs an event (which carries the pool),
+     * posts it, and then waits for all script-launched async tasks to finish.
+     *
+     * @param eventFunction Produces the event instance (given the temporary pool).
+     * @param waitingMessage Log message printed while waiting.
      */
     private <E extends Event> void runKotlinTasks(Function<ExecutorService, E> eventFunction, String waitingMessage) {
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");
@@ -240,10 +270,20 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Performs a graceful shutdown of Luna. A shutdown performed in this way allows Luna to properly save resources before the
-     * application exits. This method will block for as long as it needs to until all important threads have completed their tasks.
-     * <p>
-     * This function runs on the game thread, so players can be freely manipulated without synchronization.
+     * Performs a graceful shutdown sequence.
+     *
+     * <p>This method runs on the game thread, so player/world state can be manipulated without additional
+     * synchronization. The sequence aims to:
+     * <ul>
+     *   <li>Stop coroutines and script activity</li>
+     *   <li>Stop accepting new logins</li>
+     *   <li>Persist all players</li>
+     *   <li>Disconnect online players</li>
+     *   <li>Close the cache and shutdown persistence services</li>
+     *   <li>Drain general-purpose task pools</li>
+     * </ul>
+     *
+     * <p>This method blocks until all critical shutdown steps complete.
      */
     private void gracefulShutdown() {
         var world = context.getWorld();
@@ -273,7 +313,6 @@ public final class GameService extends AbstractScheduledService {
 
         // Close logout resources.
         logoutService.stopAsync().awaitTerminated();
-        ;
 
         // Wait for general-purpose tasks to complete.
         pool.shutdown();
@@ -281,12 +320,15 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Schedules a system update in {@code ticks} amount of time.
+     * Schedules a system update countdown and triggers a graceful shutdown after it completes.
      *
-     * @param ticks The amount of ticks to schedule for.
+     * <p>This broadcasts a client system update timer to all online players and schedules a shutdown
+     * slightly after the countdown finishes.
+     *
+     * @param ticks Countdown length in game ticks.
      */
     public void scheduleSystemUpdate(int ticks) {
-        // Preliminary save of all players.
+        // Preliminary save of all players (fire-and-forget).
         world.getPersistenceService().saveAll();
 
         // Send out system update messages.
@@ -303,7 +345,12 @@ public final class GameService extends AbstractScheduledService {
         });
     }
 
-
+    /**
+     * Convenience overload for {@link #sync(Supplier)} when no return value is needed.
+     *
+     * @param t The task to run on the game thread.
+     * @return A future completed when the task has run.
+     */
     public CompletableFuture<Void> sync(Runnable t) {
         return sync(() -> {
             t.run();
@@ -312,40 +359,15 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Queues a task to be run on the game thread at the start of the next tick. This is useful when you are performing
-     * work on another thread, but a portion still needs to be run on the game thread. For example
-     * <pre>
-     * {@code
-     * // We're on the game thread.
-     * GameService service = player.getService();
-     * player.sendMessage("You will be awarded your prize within one minute if you qualify.");
-     * service.submit(() -> {
-     *      // Now we're in a pooled thread.
+     * Queues work to run on the game thread and returns a {@link CompletableFuture} for its result.
      *
-     *      // Takes 5-10s to complete.
-     *      Prize prize = Prize.slowlyRetrieveData(player.getUsername());
+     * <p>If called from the game thread, the work is executed immediately (no queue hop).
+     * Otherwise, it is enqueued and executed at the start of the next tick.
      *
-     *      if(prize.isQualified()) {
-     *          // This code needs to be run on the game thread to ensure thread safety.
-     *          service.sync(() -> {
-     *             player.sendMessage("You qualified! Your prize was sent to your bank!");
-     *             player.getBank().addAll(prize.getItems());
-     *          });
-     *      } else {
-     *          // This as well.
-     *          var future =  service.sync(() -> player.sendMessage("You didn't qualify. Bummer."));
+     * <p>This is the preferred API for safely mutating game state from worker threads.
      *
-     *          // Can even wait for the sync task to complete!
-     *          future.join();
-     *          logger.info("Player was notified that they didn't qualify!");
-     *      }
-     * });
-     * }
-     * </pre>
-     * The same code can also be run without synchronization overhead (from {@link CompletableFuture}) via
-     * {@link #gameExecutor}.
-     *
-     * @param s The task to run.
+     * @param s The supplier to execute on the game thread.
+     * @return A future completed with the supplier's result.
      */
     public <T> CompletableFuture<T> sync(Supplier<T> s) {
         CompletableFuture<T> result = new CompletableFuture<>();
@@ -360,52 +382,60 @@ public final class GameService extends AbstractScheduledService {
     }
 
     /**
-     * Runs a result-bearing and listening asynchronous task. <strong>Warning: Tasks may not be ran right away, as
-     * there is a limit to how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you
-     * require a faster pool for higher priority tasks, consider using a dedicated pool from {@link ExecutorUtils}.
+     * Submits a result-bearing asynchronous task to the general-purpose pool.
+     *
+     * <p><strong>Warning:</strong> tasks may not execute immediately due to pool growth limits intended
+     * to mitigate DoS-style workloads. For latency-sensitive tasks, use a dedicated pool from
+     * {@link ExecutorUtils}.
      *
      * @param t The task to run.
-     * @return The result of {@code t}.
+     * @return A future completed with the task's result.
      */
     public <T> CompletableFuture<T> submit(Supplier<T> t) {
         return CompletableFuture.supplyAsync(t, pool);
     }
 
     /**
-     * Runs a listening asynchronous task.  <strong>Warning: Tasks may not be ran right away, as there is a limit to
-     * how large the backing pool can grow to. This is to prevent DOS type attacks.</strong> If you require a faster
-     * pool for higher priority tasks, consider using a dedicated pool.
+     * Submits an asynchronous task to the general-purpose pool.
+     *
+     * <p><strong>Warning:</strong> tasks may not execute immediately due to pool growth limits intended
+     * to mitigate DoS-style workloads. For latency-sensitive tasks, use a dedicated pool.
      *
      * @param t The task to run.
-     * @return The result of {@code t}.
+     * @return A future completed when the task finishes.
      */
     public CompletableFuture<Void> submit(Runnable t) {
         return CompletableFuture.runAsync(t, pool);
     }
 
-    /**
-     * @return The context instance.
-     */
+    /** @return The context instance. */
     public LunaContext getContext() {
         return context;
     }
 
     /**
-     * @return The game executor. Any code passed through it will run on the game thread.
+     * Returns an {@link Executor} that guarantees execution on the game thread.
+     *
+     * <p>This can be used when you want “fire-and-forget” marshalling without the overhead of a
+     * {@link CompletableFuture} (see {@link #sync(Supplier)}).
      */
     public Executor getGameExecutor() {
         return gameExecutor;
     }
 
     /**
-     * @return The synchronizer for the online status.
+     * Returns the online lock that gates login acceptance until startup completes.
+     *
+     * @return The online lock future.
      */
     public CompletableFuture<Void> getOnlineLock() {
         return onlineLock;
     }
 
     /**
-     * @return An instance of this thread (game thread).
+     * Returns the current game thread instance.
+     *
+     * @return The game thread.
      */
     public Thread getThread() {
         return thread;

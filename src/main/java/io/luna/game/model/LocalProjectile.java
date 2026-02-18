@@ -17,8 +17,6 @@ import java.util.OptionalInt;
  * @author lare96
  */
 public class LocalProjectile extends LocalEntity {
-// TODO https://github.com/luna-rs/luna/issues/377
-    // TODO Do more research on values
 
     /**
      * A builder for {@link LocalProjectile} types.
@@ -30,7 +28,7 @@ public class LocalProjectile extends LocalEntity {
         private int endHeight;
         private int ticksToStart;
         private int ticksToEnd;
-        private int initialSlope = 16; //25 * 128 / 180; // to-do number between 0-64
+        private int initialSlope = 18; // 16
         private ChunkUpdatableView view = ChunkUpdatableView.globalView();
 
         public TargetBuilder setId(int id) {
@@ -59,15 +57,15 @@ public class LocalProjectile extends LocalEntity {
         }
 
         public TargetBuilder setDurationTicks(int durationTicks) {
-            // int ticksToMs = durationTicks * 600;
-            //  int msToClientTicks = ticksToMs / 20;
+            int ticksToMs = durationTicks * 600;
+            int msToClientTicks = ticksToMs / 20;
             ticksToStart = 0;
-            ticksToEnd = durationTicks;// msToClientTicks;
+            ticksToEnd = msToClientTicks;
             return this;
         }
 
         public TargetBuilder setInitialSlope(int initialSlope) {
-            this.initialSlope = initialSlope; //* 128 / 180;
+            this.initialSlope = initialSlope;
             return this;
         }
 
@@ -100,7 +98,6 @@ public class LocalProjectile extends LocalEntity {
     public static class EntityTargetBuilder extends TargetBuilder {
         private Entity sourceEntity;
         private Entity targetEntity;
-        private int sourceDistanceOffset;
 
         public EntityTargetBuilder(LunaContext context) {
             super(context);
@@ -134,7 +131,7 @@ public class LocalProjectile extends LocalEntity {
 
         @Override
         public int distanceFromSource() {
-            return (sourceEntity.size() * 64);// + (sourceDistanceOffset * 64); // startdistanceoffset?
+            return (sourceEntity.size() * 64);
         }
 
         public EntityTargetBuilder setSourceEntity(Entity sourceEntity) {
@@ -144,12 +141,6 @@ public class LocalProjectile extends LocalEntity {
 
         public EntityTargetBuilder setTargetEntity(Entity targetEntity) {
             this.targetEntity = targetEntity;
-            return this;
-
-        }
-
-        public EntityTargetBuilder setSourceDistanceOffset(int sourceDistanceOffset) {
-            this.sourceDistanceOffset = sourceDistanceOffset;
             return this;
 
         }

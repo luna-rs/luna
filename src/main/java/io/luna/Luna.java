@@ -10,24 +10,33 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
- * Instantiates a {@link LunaServer} that will start Luna.
+ * Application entrypoint and global bootstrap for the Luna RSPS runtime.
+ * <p>
+ * This class is responsible for:
+ * <ul>
+ *   <li>Loading global configuration from {@code ./data/luna.json}</li>
+ *   <li>Setting up logging / Netty logging integration</li>
+ *   <li>Creating a {@link LunaContext} and starting {@link LunaServer}</li>
+ * </ul>
+ * {@link #settings()} is a globally accessible configuration handle and is initialized once in the static initializer.
+ * If configuration cannot be loaded, the process fails fast with an {@link ExceptionInInitializerError}.
  *
  * @author lare96
  */
 public final class Luna {
 
     /**
-     * The asynchronous logger.
+     * The asynchronous logger. Initialized after Log4j system properties are configured.
      */
     private static final Logger logger;
 
     /**
-     * The global settings.
+     * Global settings loaded from {@code ./data/luna.json}.
      */
     private static final LunaSettings settings;
 
     /**
-     * A private constructor.
+     * Private constructor to prevent instantiation.
      */
     private Luna() {
     }
@@ -36,9 +45,13 @@ public final class Luna {
         try {
             Thread.currentThread().setName("InitializationThread");
 
+            // Load settings first so logging/bootstrap can reference them if needed.
             settings = loadSettings();
 
+            // Route Netty's internal logger through the JDK logger (commonly bridged by the hosting environment).
             InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
+
+            // Configure Log4j2 before obtaining the logger instance.
             System.setProperty("log4j2.configurationFactory", "io.luna.util.logging.LoggingConfigurationFactory");
             System.setProperty("log4j.skipJansi", "true");
             System.setProperty("Log4jContextSelector",
@@ -52,9 +65,7 @@ public final class Luna {
     }
 
     /**
-     * Invoked when this program is started, initializes Luna.
-     *
-     * @param args The program arguments, always ignored.
+     * Program entrypoint. Creates the runtime {@link LunaContext} and starts the server.
      */
     public static void main(String[] args) {
         try {
@@ -62,21 +73,26 @@ public final class Luna {
             context.getServer().init();
         } catch (Exception e) {
             logger.fatal("Luna could not be started.", e);
+
+            // Note: non-zero exit code is typically preferable for startup failure.
             System.exit(0);
         }
     }
 
     /**
-     * Loads the contents of the file and parses it into a {@link LunaSettings} object.
+     * Loads {@code ./data/luna.json} and parses it into a {@link LunaSettings} object.
      *
-     * @return The settings object.
+     * @return Parsed global settings.
+     * @throws IOException If the file cannot be read or parsed.
      */
     private static LunaSettings loadSettings() throws IOException {
         return GsonUtils.readAsType(Paths.get("data", "luna.json"), LunaSettings.class);
     }
 
     /**
-     * @return The global settings.
+     * Returns global settings loaded during bootstrap.
+     *
+     * @return The global settings singleton.
      */
     public static LunaSettings settings() {
         return settings;

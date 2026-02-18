@@ -39,48 +39,61 @@ import static com.google.common.util.concurrent.Uninterruptibles.awaitTerminatio
 import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * A model that handles Server initialization logic.
+ * Startup orchestrator for the Luna server.
+ * <p>
+ * {@link LunaServer#init()} performs all initialization steps needed to accept logins:
+ * <ol>
+ *   <li>Scan the classpath for plugin/script metadata (ClassGraph)</li>
+ *   <li>Open the 377 cache and launch cache decoders</li>
+ *   <li>Run background “launch tasks” (parsers, bot name loading, repositories)</li>
+ *   <li>Start core {@link Service}s (game loop + login/logout workers)</li>
+ *   <li>Wait for the online lock (ensures game is ready to accept players)</li>
+ *   <li>Bring the Netty network online and bind to the configured port</li>
+ * </ol>
+ * <p>
+ * The classpath scan result is exposed via {@link #getClasspath()} while initialization is running (useful for
+ * script loading / reflection-based registries).
  *
  * @author lare96
  */
 public final class LunaServer {
 
     /**
-     * The asynchronous logger.
+     * Async logger.
      */
     private static final Logger logger = LogManager.getLogger();
 
     /**
-     * The context.
+     * Owning context (cache/world/services/plugins).
      */
     private final LunaContext context;
 
     /**
-     * A channel handler that will filter channels.
+     * Channel filter used by the Netty pipeline.
      */
     private final LunaChannelFilter channelFilter = new LunaChannelFilter();
 
     /**
-     * A message repository.
+     * Repository of message codecs/handlers (protocol).
      */
     private final GameMessageRepository messageRepository = new GameMessageRepository();
 
     /**
-     * The result of scanning the classpath.
+     * Classpath scan result. Non-null only during {@link #init()}.
      */
     private volatile ScanResult classpath;
 
     /**
-     * A package-private constructor.
+     * Package-private constructor. Instances are owned by {@link LunaContext}.
      */
     LunaServer(LunaContext context) {
         this.context = context;
     }
 
     /**
-     * Runs the individual tasks that start Luna.
+     * Runs initialization. When this returns successfully, the server is online and accepting connections.
      *
-     * @throws Exception If an error occurs.
+     * @throws Exception If a fatal startup failure occurs.
      */
     public void init() throws Exception {
         try (ScanResult result = new ClassGraph().enableClassInfo().disableJarScanning().scan()) {
@@ -95,23 +108,27 @@ public final class LunaServer {
             GameService game = context.getGame();
             game.getOnlineLock().join();
 
-            // We're ready to accept logins!
+            // We're ready to accept logins.
             initNetwork();
 
             long elapsedTime = launchTimer.elapsed(TimeUnit.SECONDS);
-            logger.info("Luna is now online on port {} (took {}s).", box(Luna.settings().game().port()), box(elapsedTime));
+            logger.info("Luna is now online on port {} (took {}s).",
+                    box(Luna.settings().game().port()), box(elapsedTime));
         } finally {
             classpath = null;
         }
     }
 
     /**
-     * Initializes the cache resource and the cache decoders.
+     * Opens the cache and schedules cache decoders.
+     *
+     * @throws Exception If the cache cannot be opened or decoders fail to start.
      */
     private void initCache() throws Exception {
         Cache cache = context.getCache();
         cache.open();
-        cache.runDecoders(context, new ObjectDefinitionDecoder(),
+        cache.runDecoders(context,
+                new ObjectDefinitionDecoder(),
                 new WidgetDefinitionDecoder(),
                 new ItemDefinitionDecoder(),
                 new NpcDefinitionDecoder(),
@@ -121,13 +138,16 @@ public final class LunaServer {
     }
 
     /**
-     * Initializes the network server using Netty.
+     * Initializes the Netty server and binds to the configured port.
+     * <p>
+     * Resource leak detection level is configured via settings for debugging memory / ByteBuf leaks.
      */
     private void initNetwork() {
         ResourceLeakDetector.setLevel(Luna.settings().game().resourceLeakDetection());
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         EventLoopGroup loopGroup = new NioEventLoopGroup();
+
         bootstrap.group(loopGroup);
         bootstrap.channel(NioServerSocketChannel.class);
         bootstrap.childHandler(new LunaChannelInitializer(context, channelFilter, messageRepository));
@@ -135,23 +155,29 @@ public final class LunaServer {
     }
 
     /**
-     * Initializes all {@link Service}s. This will start the game loop and create login/logout workers.
+     * Starts core {@link Service}s (game loop and world login/logout services) and waits until healthy.
+     *
+     * @throws InterruptedException If startup is interrupted.
      */
     private void initServices() throws InterruptedException {
         World world = context.getWorld();
 
-        // Core game services.
         var gameService = context.getGame();
         var loginService = world.getLoginService();
         var logoutService = world.getLogoutService();
+
         var allServices = new ServiceManager(List.of(gameService, loginService, logoutService));
         allServices.startAsync().awaitHealthy();
+
         logger.info("All services are now running.");
     }
 
     /**
-     * Initializes misc. startup tasks.
-     **/
+     * Runs miscellaneous startup tasks in parallel and waits for completion.
+     *
+     * <p>This stage is intended for file parsing and other initialization that should finish before
+     * players can safely interact with content.
+     */
     private void initLaunchTasks() {
         List<Runnable> taskList = new ArrayList<>();
         taskList.add(new MessageRepositoryFileParser(messageRepository));
@@ -163,29 +189,36 @@ public final class LunaServer {
         for (Runnable task : taskList) {
             pool.execute(task);
         }
+
         int count = taskList.size();
         logger.info("Waiting for {} Java launch task(s) to complete...", box(count));
+
         pool.shutdown();
         awaitTerminationUninterruptibly(pool);
+
+        // Wait for cache decoders after launch tasks (keeps startup ordering deterministic).
         context.getCache().waitForDecoders();
     }
 
     /**
-     * @return A channel handler that will filter channels.
+     * @return The channel filter used by Netty.
      */
     public LunaChannelFilter getChannelFilter() {
         return channelFilter;
     }
 
     /**
-     * @return A message repository.
+     * @return The message repository (protocol definitions).
      */
     public GameMessageRepository getMessageRepository() {
         return messageRepository;
     }
 
     /**
-     * @return The result of scanning the classpath. Only non-null while the server is initializing.
+     * Returns the classpath scan result used during initialization.
+     *
+     * @return The scan result (non-null only during {@link #init()}).
+     * @throws NullPointerException If called outside initialization.
      */
     public ScanResult getClasspath() {
         if (classpath == null) {
