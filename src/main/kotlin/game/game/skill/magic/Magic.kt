@@ -148,7 +148,7 @@ object Magic {
         return when (action.executions) {
             0 -> {
                 plr.animation(Animation(1979))
-                val sound = LocalSound(ctx,
+                val sound = LocalSound.of(ctx,
                                        Sounds.TELEPORT_ANCIENT,
                                        plr.position,
                                        ChunkUpdatableView.globalView())
