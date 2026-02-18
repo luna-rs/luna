@@ -114,7 +114,7 @@ object Magic {
         val plr = action.mob
         return when (action.executions) {
             0 -> {
-                val sound = LocalSound(ctx,
+                val sound = LocalSound.of(ctx,
                                        Sounds.TELEPORT_REGULAR,
                                        plr.position,
                                        ChunkUpdatableView.globalView())
