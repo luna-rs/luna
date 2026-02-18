@@ -4,40 +4,49 @@ import com.google.common.base.Objects;
 import io.luna.game.model.Region;
 
 /**
- * A class representing a single map index. Their purpose is to map a single {@link Region} to a tile and
- * object file in the cache.
+ * Maps a single {@link Region} to its corresponding cache file identifiers.
+ * <p>
+ * In the RuneScape cache, each region is backed by two archives:
+ * <ul>
+ *   <li><b>Tile/terrain</b> data (heights, overlays, underlays, tile flags)</li>
+ *   <li><b>Object</b> data (static world objects placed in the region)</li>
+ * </ul>
+ * <p>
+ * {@link MapIndex} is the decoded entry tying the region id to those archive ids.
  *
  * @author lare96
  */
 public final class MapIndex {
 
     /**
-     * The map region this index identifies.
+     * The region this index entry describes.
      */
     private final Region region;
 
     /**
-     * The map tile file id.
+     * Cache file/archive id for the region's terrain (tile) data.
      */
     private final int tileFileId;
 
     /**
-     * The map object file id.
+     * Cache file/archive id for the region's object placement data.
      */
     private final int objectFileId;
 
     /**
-     * If the region detailed by this index is a priority region.
+     * Whether this region is marked as "priority" in the index.
+     *
+     * <p>This flag is typically used to prefer decoding/loading certain regions first.
      */
     private final boolean priority;
 
     /**
      * Creates a new {@link MapIndex}.
      *
-     * @param region The map region this index identifies.
-     * @param tileFileId The map tile file id.
-     * @param objectFileId The map object file id.
-     * @param priority If the region detailed by this index is a priority region.
+     * @param region The region this index entry describes.
+     * @param tileFileId Cache id for the region's terrain/tile data.
+     * @param objectFileId Cache id for the region's object placement data.
+     * @param priority Whether this region is marked as priority.
      */
     public MapIndex(Region region, int tileFileId, int objectFileId, boolean priority) {
         this.region = region;
@@ -60,28 +69,28 @@ public final class MapIndex {
     }
 
     /**
-     * @return The map region this index identifies.
+     * @return The region this index entry describes.
      */
     public Region getRegion() {
         return region;
     }
 
     /**
-     * @return The map tile file id.
+     * @return Cache file/archive id for the region's terrain (tile) data.
      */
     public int getTileFileId() {
         return tileFileId;
     }
 
     /**
-     * @return The map object file id.
+     * @return Cache file/archive id for the region's object placement data.
      */
     public int getObjectFileId() {
         return objectFileId;
     }
 
     /**
-     * @return If the region detailed by this index is a priority region.
+     * @return {@code true} if this region is marked as priority.
      */
     public boolean isPriority() {
         return priority;

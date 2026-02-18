@@ -39,7 +39,6 @@ public final class MapTileGrid {
     /**
      * Iterates over every {@link MapTile} in the grid (all 64×64×4 tiles), invoking the supplied action
      * once per tile.
-     *
      * <p>
      * Order of iteration:
      * <pre>

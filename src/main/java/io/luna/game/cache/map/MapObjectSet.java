@@ -6,21 +6,23 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Iterator;
 
 /**
- * Represents a collection of all decoded {@link MapObject} types from the cache.
+ * Immutable collection of all decoded {@link MapObject} placements.
+ * <p>
+ * Backed by an {@link ImmutableList} for compact storage and fast iteration.
  *
  * @author lare96
  */
 public final class MapObjectSet implements Iterable<MapObject> {
 
     /**
-     * The {@link ImmutableList} of objects.
+     * All decoded object placements.
      */
     private final ImmutableList<MapObject> objects;
 
     /**
      * Creates a new {@link MapObjectSet}.
      *
-     * @param objects The {@link ImmutableList} of objects.
+     * @param objects All decoded object placements.
      */
     public MapObjectSet(ImmutableList<MapObject> objects) {
         this.objects = objects;
@@ -33,11 +35,9 @@ public final class MapObjectSet implements Iterable<MapObject> {
     }
 
     /**
-     * @return The {@link ImmutableList} of objects.
+     * @return The underlying immutable list of decoded object placements.
      */
     public ImmutableList<MapObject> getObjects() {
         return objects;
     }
-
-
 }

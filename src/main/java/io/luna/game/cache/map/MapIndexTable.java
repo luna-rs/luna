@@ -6,70 +6,83 @@ import com.google.common.collect.ImmutableSet;
 import io.luna.game.model.Region;
 
 /**
- * Represents the set of all {@link MapIndex} types along with the decoded object and tile data.
+ * Holds the decoded map index table and its derived decoded data sets.
+ * <p>
+ * This is effectively the "map database" produced by decoding the cache:
+ * <ul>
+ *   <li>An index table mapping each {@link Region} to its {@link MapIndex} (tile/object archive ids)</li>
+ *   <li>The decoded static {@link MapObject} placements for all regions</li>
+ *   <li>The decoded {@link MapTileGrid} terrain for all regions</li>
+ * </ul>
  *
  * @author lare96
  */
 public final class MapIndexTable {
 
     /**
-     * The index table, mapped by region.
+     * The index table keyed by region.
      */
     private final ImmutableMap<Region, MapIndex> indexTable;
 
     /**
-     * The object set.
+     * All decoded static map objects across the map.
      */
     private final MapObjectSet objectSet;
 
     /**
-     * The tile set.
+     * All decoded tile grids across the map.
      */
     private final MapTileGridSet tileSet;
 
     /**
      * Creates a new {@link MapIndexTable}.
      *
-     * @param indexTable The index table, mapped by region.
-     * @param objectSet The object set.
-     * @param tileSet The tile set.
+     * @param indexTable Index entries keyed by region.
+     * @param objectSet Decoded object placements.
+     * @param tileSet Decoded terrain grids.
      */
     public MapIndexTable(ImmutableMap<Region, MapIndex> indexTable, MapObjectSet objectSet, MapTileGridSet tileSet) {
         this.indexTable = indexTable;
         this.objectSet = objectSet;
         this.tileSet = tileSet;
     }
-// todo helper methods for getting the index by id, etc.
+
     /**
-     * @return All mapped {@link MapIndex} types.
+     * Returns all {@link MapIndex} entries (one per region).
+     *
+     * @return All indices.
      */
     public ImmutableCollection<MapIndex> getAllIndices() {
         return indexTable.values();
     }
 
     /**
-     * @return The keys ({@link Region}) of all {@link MapIndex} types.
+     * Returns all regions that exist in the index table.
+     *
+     * @return All regions.
      */
     public ImmutableSet<Region> getAllRegions() {
         return indexTable.keySet();
     }
 
     /**
-     * @return The index table, mapped by region.
+     * Returns the index table keyed by region.
+     *
+     * @return The region -> index map.
      */
     public ImmutableMap<Region, MapIndex> getIndexTable() {
         return indexTable;
     }
 
     /**
-     * @return The object set.
+     * @return All decoded object placements.
      */
     public MapObjectSet getObjectSet() {
         return objectSet;
     }
 
     /**
-     * @return The tile set.
+     * @return All decoded terrain grids.
      */
     public MapTileGridSet getTileSet() {
         return tileSet;
