@@ -10,26 +10,46 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A {@link Locatable} made up of a single tile on the Runescape map.
+ * Represents a single tile coordinate on the RuneScape map.
+ * <p>
+ * A {@code Position} is immutable and uniquely defined by three components:
+ * <ul>
+ *     <li>{@code x} – The horizontal tile coordinate.</li>
+ *     <li>{@code y} – The vertical tile coordinate.</li>
+ *     <li>{@code z} – The height level (plane), restricted to {@code 0..3}.</li>
+ * </ul>
+ *
+ * <h2>Partitioning</h2>
+ * Positions can be mapped into higher-level partitions:
+ * <ul>
+ *     <li>{@link Chunk} – 8x8 tiles.</li>
+ *     <li>{@link Region} – 64x64 tiles.</li>
+ * </ul>
  *
  * @author lare96
+ * @see Locatable
+ * @see Chunk
+ * @see Region
  */
 public final class Position implements Locatable {
 
     /**
-     * A {@link Comparator} that sorts {@link Position} types by closest to furthest distance from the base position.
+     * A {@link Comparator} that sorts {@link Position} values by distance from a base position.
+     * <p>
+     * This comparator uses {@link #computeLongestDistance(Position)} (Chebyshev distance) and orders
+     * positions from closest to furthest relative to the base.
      */
     public static final class PositionDistanceComparator implements Comparator<Position> {
 
         /**
-         * The base position.
+         * The base position used for comparisons.
          */
         private final Position base;
 
         /**
          * Creates a new {@link PositionDistanceComparator}.
          *
-         * @param base The base position.
+         * @param base The base position used to measure distance.
          */
         public PositionDistanceComparator(Position base) {
             this.base = base;
@@ -37,45 +57,44 @@ public final class Position implements Locatable {
 
         @Override
         public int compare(Position o1, Position o2) {
-            int distance = base.computeLongestDistance(o1);
+            int distance1 = base.computeLongestDistance(o1);
             int distance2 = base.computeLongestDistance(o2);
-            return Integer.compare(distance2, distance);
+            return Integer.compare(distance1, distance2);
         }
     }
 
     /**
-     * The maximum amount of tiles a player can view.
+     * The maximum number of tiles a player can typically view in any direction.
      */
     public static final int VIEWING_DISTANCE = 15;
 
     /**
-     * A {@link Range} of all height levels.
+     * Valid height levels for positions.
      */
     public static final Range<Integer> HEIGHT_LEVELS = Range.closedOpen(0, 4);
 
     /**
-     * The x coordinate.
+     * The x tile coordinate.
      */
     private final int x;
 
     /**
-     * The y coordinate.
+     * The y tile coordinate.
      */
     private final int y;
 
     /**
-     * The z coordinate.
+     * The height level (plane).
      */
     private final int z;
 
     /**
-     * Creates a new {@link Position}, where all {@code x, y, and z} are non-negative.
+     * Creates a new {@link Position}.
      *
      * @param x The x coordinate.
      * @param y The y coordinate.
-     * @param z The z coordinate.
-     * @throws IllegalArgumentException If either x, y, or z are negative.
-     * @throws IllegalArgumentException If z is not in the range [0-3], inclusively.
+     * @param z The height level (0-3).
+     * @throws IllegalArgumentException If {@code z} is not within {@link #HEIGHT_LEVELS}.
      */
     public Position(int x, int y, int z) {
         checkArgument(HEIGHT_LEVELS.contains(z), z + " (z >= 0 && z < 4)");
@@ -85,7 +104,7 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Creates a new {@link Position} with {@code 0} as the z coordinate.
+     * Creates a new {@link Position} on height level {@code 0}.
      *
      * @param x The x coordinate.
      * @param y The y coordinate.
@@ -94,6 +113,12 @@ public final class Position implements Locatable {
         this(x, y, 0);
     }
 
+    /**
+     * A position contains only itself.
+     *
+     * @param position The position to test.
+     * @return {@code true} if the positions are equal.
+     */
     @Override
     public boolean contains(Position position) {
         return position.equals(this);
@@ -101,7 +126,11 @@ public final class Position implements Locatable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("x", x).add("y", y).add("z", z).toString();
+        return MoreObjects.toStringHelper(this)
+                .add("x", x)
+                .add("y", y)
+                .add("z", z)
+                .toString();
     }
 
     @Override
@@ -121,24 +150,31 @@ public final class Position implements Locatable {
         return false;
     }
 
+    /**
+     * The absolute location of a position is itself.
+     *
+     * @return This position.
+     */
     @Override
     public Position absLocation() {
         return this;
     }
 
-
     /**
-     * Determines if this position is within the given distance of another position.
+     * Determines whether this position lies within an axis-aligned distance of {@code other}.
+     * <p>
+     * This check requires both {@code |dx| <= distance} and {@code |dy| <= distance}, and also
+     * requires the positions to be on the same height level.
      *
-     * @param other The position to compare.
-     * @param distance The distance from {@code other} to compare. This parameter must be non-negative.
-     * @return {@code true} if {@code other} is within {@code distance}, and on the same plane.
-     * @throws IllegalArgumentException If distance < 0.
+     * @param other The position to compare against.
+     * @param distance The maximum allowed distance (non-negative).
+     * @return {@code true} if {@code other} is within range and on the same plane.
+     * @throws IllegalArgumentException If {@code distance < 0}.
      */
     public boolean isWithinDistance(Position other, int distance) {
         checkArgument(distance >= 0, "Distance must be non-negative.");
 
-        if (z != other.z) { // check if position is on the same plane.
+        if (z != other.z) {
             return false;
         }
         int deltaX = Math.abs(other.x - x);
@@ -147,28 +183,32 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Determines if this position is viewable from another position.
+     * Determines whether {@code other} is within {@link #VIEWING_DISTANCE} of this position.
      *
-     * @param other The position to compare.
-     * @return {@code true} if {@code other} is within {@link  #VIEWING_DISTANCE}.
+     * @param other The other position.
+     * @return {@code true} if viewable.
      */
     public boolean isViewable(Position other) {
         return isWithinDistance(other, VIEWING_DISTANCE);
     }
 
     /**
-     * Forwards to {@link #isViewable(Position)} with {@link Entity#getPosition()} as the argument.
+     * Forwards to {@link #isViewable(Position)} using {@link Entity#getPosition()}.
+     *
+     * @param other The entity to test.
+     * @return {@code true} if the entity's position is viewable.
      */
     public boolean isViewable(Entity other) {
-        // refactor to isvisible
         return isViewable(other.getPosition());
     }
 
     /**
-     * Returns the longest distance between this position and {@code other}.
+     * Computes the longest axis distance between this position and {@code other}.
+     * <p>
+     * This is equivalent to Chebyshev distance: {@code max(|dx|, |dy|)}.
      *
      * @param other The other position.
-     * @return The longest distance between this and {@code other}.
+     * @return The longest distance.
      */
     public int computeLongestDistance(Position other) {
         int deltaX = Math.abs(other.x - x);
@@ -178,10 +218,12 @@ public final class Position implements Locatable {
 
     /**
      * Returns a new position translated by the specified amounts.
+     * <p>
+     * If no translation is applied, this instance is returned.
      *
-     * @param amountX The x amount.
-     * @param amountY The y amount
-     * @param amountZ The z amount.
+     * @param amountX The x delta.
+     * @param amountY The y delta.
+     * @param amountZ The z delta.
      * @return The translated position.
      */
     public Position translate(int amountX, int amountY, int amountZ) {
@@ -192,11 +234,10 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns a new position translated by the specified amounts. The z coordinate will remain
-     * unchanged.
+     * Returns a new position translated by the specified X and Y amounts on the same plane.
      *
-     * @param amountX The x amount.
-     * @param amountY The y amount
+     * @param amountX The x delta.
+     * @param amountY The y delta.
      * @return The translated position.
      */
     public Position translate(int amountX, int amountY) {
@@ -204,10 +245,9 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns a new position translated by the specified amount. The z coordinate will remain
-     * unchanged.
+     * Returns a new position translated in a {@link Direction}.
      *
-     * @param amount The amount.
+     * @param amount The number of tiles to move.
      * @param direction The direction.
      * @return The translated position.
      */
@@ -216,67 +256,73 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns a new {@link Position} identical to this one in values, except with {@code newZ}.
+     * Returns a new {@link Position} with the same X and Y coordinates but a different height level.
      *
-     * @param newZ The new {@code z}.
-     * @return
+     * @param newZ The new height level.
+     * @return The new position.
      */
     public Position setZ(int newZ) {
         return new Position(x, y, newZ);
     }
 
     /**
-     * Gets the central x coordinate of this position's chunk.
+     * Returns the chunk X coordinate (8x8 tile partition) for this position.
+     *
+     * @return The chunk X coordinate.
      */
     public int getChunkX() {
         return x / 8;
     }
 
     /**
-     * Gets the central y coordinate of this position's chunk.
+     * Returns the chunk Y coordinate (8x8 tile partition) for this position.
+     *
+     * @return The chunk Y coordinate.
      */
     public int getChunkY() {
         return y / 8;
     }
 
     /**
-     * Returns the formatted x coordinate of this position's chunk.
+     * Returns the bottom-left chunk X coordinate of the local player view (13x13 chunks centered on player).
      *
-     * @return The bottom-left chunk x.
+     * @return The bottom-left view chunk X.
      */
     public int getBottomLeftChunkX() {
         return x / 8 - 6;
     }
 
     /**
-     * Returns the formatted y coordinate of this position's chunk.
+     * Returns the bottom-left chunk Y coordinate of the local player view (13x13 chunks centered on player).
      *
-     * @return The bottom-left chunk y.
+     * @return The bottom-left view chunk Y.
      */
     public int getBottomLeftChunkY() {
         return y / 8 - 6;
     }
 
     /**
-     * Returns the local x coordinate within the chunk of {@code base}.
+     * Returns the local X coordinate within the view area described by {@code base}.
      *
-     * @param base The base chunk.
+     * @param base The base position (typically the player position).
+     * @return The local X coordinate.
      */
     public int getLocalX(Position base) {
         return x - base.getBottomLeftChunkX() * 8;
     }
 
     /**
-     * Returns the local y coordinate within the chunk of {@code base}.
+     * Returns the local Y coordinate within the view area described by {@code base}.
      *
-     * @param base The base chunk.
+     * @param base The base position (typically the player position).
+     * @return The local Y coordinate.
      */
     public int getLocalY(Position base) {
         return y - base.getBottomLeftChunkY() * 8;
     }
 
     /**
-     * Returns the {@link Chunk} that this position is contained in.
+     * Returns the {@link Chunk} that contains this position.
      *
      * @return The chunk.
      */
@@ -285,7 +331,7 @@ public final class Position implements Locatable {
     }
 
     /**
-     * Returns the {@link Region} that this position is contained in.
+     * Returns the {@link Region} that contains this position.
      *
      * @return The region.
      */
@@ -308,7 +354,7 @@ public final class Position implements Locatable {
     }
 
     /**
-     * @return The z coordinate.
+     * @return The height level.
      */
     public int getZ() {
         return z;

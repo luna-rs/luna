@@ -8,31 +8,43 @@ import io.luna.game.model.chunk.ChunkUpdatableRequest;
 import io.luna.game.model.chunk.ChunkUpdatableView;
 
 /**
- * A temporary {@link Entity} that cannot be interacted with (i.e. Area-based sounds, projectiles, graphics). Discarded
- * after being displayed within a {@link ChunkUpdatableRequest}.
+ * A lightweight, non-interactable {@link Entity} that exists only to emit a one-off (or short-lived) chunk update
+ * to nearby players.
+ * <p>
+ * Local entities are used for effects that are "rendered" client-side but are not part of the persistent world
+ * model (e.g., area sounds, spot graphics, projectiles, temporary visuals).
+ *
+ * <h3>Lifecycle</h3>
+ * <ul>
+ *   <li>Constructed with a {@link ChunkUpdatableView} describing who can see it.</li>
+ *   <li>{@link #display()} queues a {@link ChunkUpdatableRequest} for its current {@link Chunk}.</li>
+ *   <li>Once displayed, it transitions to {@link EntityState#ACTIVE} and will not re-display.</li>
+ * </ul>
+ * <p>
+ * Because local entities do not have a stable world index (unlike players/npcs), equality is identity-based ({@code ==}).
  *
  * @author lare96
  */
 public abstract class LocalEntity extends Entity implements ChunkUpdatable {
 
     /**
-     * The id.
+     * The effect/object id interpreted by the concrete local-entity type.
      */
     protected final int id;
 
     /**
-     * Who this entity is viewable for.
+     * The visibility rules determining which players receive the update for this entity.
      */
     protected final ChunkUpdatableView view;
 
     /**
      * Creates a new {@link LocalEntity}.
      *
-     * @param context The context.
-     * @param id The id.
-     * @param type The type.
-     * @param position The position.
-     * @param view Who this entity is viewable for.
+     * @param context The game context.
+     * @param id The local-entity id (meaning is defined by the implementation).
+     * @param type The entity type classification.
+     * @param position The world position this local entity is anchored to.
+     * @param view Who this entity is viewable for (who should receive the update).
      */
     public LocalEntity(LunaContext context, int id, EntityType type, Position position, ChunkUpdatableView view) {
         super(context, position, type);
@@ -41,10 +53,12 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * The message to send to display this entity as a part of a {@link ChunkUpdatableRequest}.
+     * Builds the message used to render this local entity as part of a {@link ChunkUpdatableRequest}.
+     * <p>
+     * The {@code offset} is a packed local position inside the chunk, provided by {@link Chunk#offset(Position)}.
      *
-     * @param offset The position offset.
-     * @return The game message.
+     * @param offset The chunk-local position offset for {@link #getPosition()}.
+     * @return The outbound update message that causes the client to display this entity/effect.
      */
     public abstract ChunkUpdatableMessage displayMessage(int offset);
 
@@ -54,7 +68,7 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Local entities rely solely on identity when compared because they lack an index.
+     * Local entities rely solely on object identity for hashing since they do not have a stable index.
      */
     @Override
     public final int hashCode() {
@@ -62,7 +76,7 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Local entities rely solely on identity when compared because they lack an index.
+     * Local entities rely solely on object identity for equality since they do not have a stable index.
      */
     @Override
     public final boolean equals(Object obj) {
@@ -70,7 +84,7 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Local entities aren't interactable and don't have a size.
+     * Local entities are not interactable and do not occupy tiles for collision/size purposes.
      */
     @Override
     public final int sizeX() {
@@ -78,7 +92,7 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Local entities aren't interactable and don't have a size.
+     * Local entities are not interactable and do not occupy tiles for collision/size purposes.
      */
     @Override
     public final int sizeY() {
@@ -86,8 +100,10 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * Displays this entity by sending an update request with {@link #displayMessage(int)}. Does nothing if this
-     * function has already been called.
+     * Queues a chunk update to display this local entity to viewers determined by {@link #getView()}.
+     * <p>
+     * This method is single-use: once the entity has been displayed (i.e., state becomes {@link EntityState#ACTIVE}),
+     * subsequent calls do nothing.
      */
     public final void display() {
         if (state != EntityState.ACTIVE) {
@@ -100,17 +116,16 @@ public abstract class LocalEntity extends Entity implements ChunkUpdatable {
     }
 
     /**
-     * @return The id.
+     * @return The local entity id.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * @return Who this entity is viewable for.
+     * @return The visibility rules determining who receives the update for this entity.
      */
     public ChunkUpdatableView getView() {
         return view;
     }
-
 }
