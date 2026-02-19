@@ -66,7 +66,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
                     .setTargetPosition(groundItem.position)
                     .setId(143)
                     .setStartHeight(35)
-                    .setEndHeight(0)
+                    .setEndHeight(10)
                     .setTicksToStart(45)
                     .setTicksToEnd(0)
                     .setInitialSlope(10)
