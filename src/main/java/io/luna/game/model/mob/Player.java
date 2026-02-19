@@ -328,6 +328,7 @@ public class Player extends Mob {
 
     @Override
     protected void onInactive() {
+        pendingPlacement = true;
         overlays.closeWindows();
         plugins.post(new LogoutEvent(this));
     }
