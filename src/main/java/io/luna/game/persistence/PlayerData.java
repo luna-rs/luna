@@ -87,11 +87,11 @@ public class PlayerData {
         player.getIgnores().addAll(ignores);
         player.setUnbanInstant(unbanInstant);
         player.setUnmuteInstant(unmuteInstant);
-        player.setRunEnergy(runEnergy, false);
-        player.setWeight(weight, false);
+        player.setRunEnergy(runEnergy, true);
+        player.setWeight(weight, true);
         player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
-        player.updateSpellbook(spellbook, false);
+        player.updateSpellbook(spellbook, true);
         player.setTimePlayed(timePlayed);
         player.setCreatedAt(createdAt);
         player.setPrivacyOptions(privacyOptions);
