@@ -1,6 +1,11 @@
 package game.skill.magic.telekineticGrab
 
 import api.predef.*
+import game.player.Messages
+import game.player.Sounds
+import game.skill.magic.Magic
+import game.skill.magic.Rune
+import game.skill.magic.RuneRequirement
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.EntityState
 import io.luna.game.model.LocalGraphic
@@ -10,11 +15,6 @@ import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import game.player.Messages
-import game.player.Sounds
-import game.skill.magic.Magic
-import game.skill.magic.Rune
-import game.skill.magic.RuneRequirement
 
 /**
  * A [LockedAction] implementation that handles the telegrab spell.
@@ -24,6 +24,7 @@ import game.skill.magic.RuneRequirement
 class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : LockedAction(plr) {
 
     override fun onLock() {
+        mob.walking.clear()
         mob.face(groundItem.position)
         if (!world.collisionManager.raycast(mob.position, groundItem.position)) {
             mob.sendMessage("I can't reach that!")
@@ -60,20 +61,16 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
 
             1 -> false
             2 -> {
-                // todo https://github.com/luna-rs/luna/issues/377
                 val projectile = LocalProjectile.followPath(ctx)
                     .setSourcePosition(mob.position)
                     .setTargetPosition(groundItem.position)
-                    .setId(143) // Telegrab projectile
-                    .setStartHeight(35) // Slightly above ground
-                    .setEndHeight(31) // Ground level target
-                    .setTicksToStart(3)
-                    .setTicksToEnd(0) // becomes faster with increase
-                    .setInitialSlope(16)// ~3 ticks duration
-                   // .setInitialSlope(0) Moderate slope
-                   .build() /*LocalProjectile.followPath(ctx).setSourcePosition(mob.position)
-                    .setTargetPosition(groundItem.position).setDurationTicks(2).setStartHeight(35)
-                    .setId(143).build()*/
+                    .setId(143)
+                    .setStartHeight(35)
+                    .setEndHeight(0)
+                    .setTicksToStart(45)
+                    .setTicksToEnd(0)
+                    .setInitialSlope(10)
+                    .build()
                 projectile.display()
                 false
             }
