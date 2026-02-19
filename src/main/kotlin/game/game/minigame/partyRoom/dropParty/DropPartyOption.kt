@@ -13,6 +13,7 @@ import game.minigame.partyRoom.PartyRoomOption
 import game.skill.cooking.cookFood.Food
 import io.luna.Luna
 import io.luna.game.model.EntityState
+import io.luna.game.model.LocalGraphic
 import io.luna.game.model.Position
 import io.luna.game.model.area.Area
 import io.luna.game.model.chunk.ChunkUpdatableView
@@ -162,7 +163,7 @@ object DropPartyOption : PartyRoomOption(200_000, "Drop Party") {
                 plr.sendMessage("You stomp on the balloon.")
                 plr.animation(Animation(794))
                 world.scheduleOnce(1) {
-                    animate()
+                    LocalGraphic(ctx, 92, 0, 0, position, ChunkUpdatableView.globalView()).display()
                     if (world.removeObject(this)) {
                         world.addItem(item, position, plr)
                     }

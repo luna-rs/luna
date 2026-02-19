@@ -69,8 +69,7 @@ public final class LocalGraphic extends LocalEntity {
     }
 
     /**
-     * Produces the network message responsible for displaying this graphic
-     * to nearby players.
+     * Produces the network message responsible for displaying this graphic to nearby players.
      *
      * @param offset The chunk-relative position offset.
      * @return The encoded {@link ChunkUpdatableMessage}.

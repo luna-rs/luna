@@ -30,8 +30,8 @@ object PartyRoom {
      * The party room teleport positions.
      */
     val TELEPORT_POSITIONS = listOf(
-            Position(2736, 3475, 0),
-            Position(2737, 3475, 0)
+        Position(2736, 3475, 0),
+        Position(2737, 3475, 0)
     )
 
     /**
