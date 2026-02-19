@@ -1,6 +1,8 @@
 package io.luna.util.parser;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
@@ -18,6 +20,11 @@ import java.util.List;
  * @author lare96
  */
 public abstract class FileParser<P, T, R> implements Runnable {
+
+    /**
+     * The logger.
+     */
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * The immutable list of files to parse.
@@ -40,7 +47,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
 
     @Override
     public final void run() {
-       parseFile(filePath);
+        parseFile(filePath);
     }
 
     /**
@@ -107,7 +114,7 @@ public abstract class FileParser<P, T, R> implements Runnable {
                         currentIndex++;
                     }
                 } catch (Exception e) {
-                    e.printStackTrace(); // todo use logger
+                    logger.catching(e);
                 }
             }
             onCompleted(ImmutableList.copyOf(tokenObjects));
