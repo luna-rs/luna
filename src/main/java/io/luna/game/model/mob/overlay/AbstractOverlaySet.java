@@ -6,7 +6,6 @@ import io.luna.net.msg.out.CloseWindowsMessageWriter;
 import io.luna.net.msg.out.WalkableInterfaceMessageWriter;
 
 import java.util.EnumMap;
-import java.util.Objects;
 
 /**
  * Manages the set of {@link AbstractOverlay} instances currently displayed on a single {@link Player}'s screen.
@@ -174,15 +173,20 @@ public final class AbstractOverlaySet {
         } else if (WalkableInterface.class.isAssignableFrom(type)) {
             overlayType = OverlayType.WIDGET_WALKABLE;
         }
-        if(overlayType != null) {
+        if (overlayType != null) {
             AbstractOverlay overlay = overlayMap.get(overlayType);
-            if(overlay != null && Objects.equals(overlay.getClass(), type)) {
+            if (overlay == null) {
+                return null;
+            }
+            Class<?> overlayClass = overlay.getClass();
+            if (type.isAssignableFrom(overlayClass)) {
                 return (T) overlay;
             }
         } else {
             // More expensive lookup, could be one of those types without being a subclass.
             for (AbstractOverlay overlay : overlayMap.values()) {
-                if (overlay.getClass() == type) {
+                Class<?> overlayClass = overlay.getClass();
+                if (type.isAssignableFrom(overlayClass)) {
                     return (T) overlay;
                 }
             }

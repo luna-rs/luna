@@ -11,20 +11,20 @@ import io.luna.game.model.mob.overlay.OverlayType
  */
 fun clickOption(msg: ButtonClickEvent, option: Int) {
     val plr = msg.plr
-    val inter = plr.overlays[OptionDialogue::class]
+    val options = plr.overlays[OptionDialogue::class]
 
-    if (inter != null) {
+    if (options != null) {
         when (option) {
-            1 -> inter.first(plr)
-            2 -> inter.second(plr)
-            3 -> inter.third(plr)
-            4 -> inter.fourth(plr)
-            5 -> inter.fifth(plr)
+            1 -> options.first(plr)
+            2 -> options.second(plr)
+            3 -> options.third(plr)
+            4 -> options.fourth(plr)
+            5 -> options.fifth(plr)
             else -> throw IllegalArgumentException("'option' must be between 1-5 inclusive.")
         }
 
         // Only close if we still have the same interface open.
-        if (plr.dialogues == null && inter.isOpen && !plr.overlays.containsType(OverlayType.INPUT)) {
+        if (plr.dialogues == null && options.isOpen && !plr.overlays.containsType(OverlayType.INPUT)) {
             plr.overlays.closeWindows()
         }
     }
