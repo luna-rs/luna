@@ -2,10 +2,6 @@ package io.luna.game.model.item;
 
 import io.luna.game.model.mob.Player;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 /**
  * An {@link ItemContainerListener} that maintains a {@link Player}'s carried weight as items are added, removed, or
  * replaced in an {@link ItemContainer}.
@@ -31,7 +27,7 @@ public final class WeightListener implements ItemContainerListener {
     /**
      * Accumulated weight deltas recorded during a bulk update operation.
      */
-    private final List<Double> weightChanges = new ArrayList<>();
+    private double weightChange;
 
     /**
      * Creates a new {@link WeightListener}.
@@ -49,20 +45,13 @@ public final class WeightListener implements ItemContainerListener {
 
     @Override
     public void onBulkUpdate(int index, ItemContainer items, Item oldItem, Item newItem) {
-        weightChanges.add(computeWeightDifference(oldItem, newItem));
+        weightChange += computeWeightDifference(oldItem, newItem);
     }
 
     @Override
     public void onBulkUpdateCompleted(ItemContainer items) {
-        Iterator<Double> iterator = weightChanges.iterator();
-        double currentWeight = player.getWeight();
-
-        while (iterator.hasNext()) {
-            currentWeight += iterator.next();
-            iterator.remove();
-        }
-
-        player.setWeight(currentWeight, true);
+        player.setWeight(player.getWeight() + weightChange, true);
+        weightChange = 0.0;
     }
 
     /**
