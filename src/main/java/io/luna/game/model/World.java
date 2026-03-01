@@ -16,8 +16,7 @@ import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.bot.BotManager;
 import io.luna.game.model.mob.bot.BotRepository;
 import io.luna.game.model.object.GameObjectList;
-import io.luna.game.persistence.GameSerializerManager;
-import io.luna.game.persistence.PersistenceService;
+import io.luna.game.persistence.*;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskManager;
 import io.luna.net.msg.out.NpcUpdateMessageWriter;
@@ -270,14 +269,18 @@ public final class World {
         botManager = new BotManager();
 
         // Initialize the connection pool.
-        try {
-            connectionPool = new SqlConnectionPool.Builder()
-                    .poolName("LunaSqlPool")
-                    .database("luna_players")
-                    .build();
-        } catch (Exception e) {
-            logger.fatal("Fatal error creating SQL pool!", e);
-            throw new RuntimeException(e);
+        if (getSerializerManager().getSerializer() instanceof SqlGameSerializer) {
+            try {
+                connectionPool = new SqlConnectionPool.Builder()
+                        .poolName("LunaSqlPool")
+                        .database("luna_players")
+                        .build();
+            } catch (Exception e) {
+                logger.fatal("Fatal error creating SQL pool!", e);
+                throw new RuntimeException(e);
+            }
+        } else {
+            connectionPool = null;
         }
 
         // Initialize synchronization thread pool.
