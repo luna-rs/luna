@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
  * <h2>Lifecycle</h2>
  * Tasks are tracked by {@link TaskState} and typically move through these states:
  * <ul>
- *   <li><b>Idle</b> - Created but not currently running ({@link TaskState#IDLE}).</li>
+ *   <li><b>Idle</b> - Created or restarted but not currently running ({@link TaskState#IDLE}).</li>
  *   <li><b>Running</b> - Actively scheduled and eligible to execute ({@link TaskState#RUNNING}).</li>
  *   <li><b>Cancelled</b> - Permanently stopped; cannot be reused unless {@link #restart()} is called
  *   ({@link TaskState#CANCELLED}).</li>
@@ -175,9 +175,12 @@ public abstract class Task {
      * scheduled again by a {@link TaskManager}.
      */
     public final void restart() {
-        state = TaskState.IDLE;
-        delayCounter = 0;
-        executionCounter = 0;
+        if (state == TaskState.CANCELLED) {
+            state = TaskState.IDLE;
+            delayCounter = 0;
+            executionCounter = 0;
+            onRestart();
+        }
     }
 
     /**
@@ -206,6 +209,15 @@ public abstract class Task {
      * Called exactly once when {@link #cancel()} transitions the task to {@link TaskState#CANCELLED}.
      */
     protected void onCancel() {
+
+    }
+
+    /**
+     * A hook executed when this task is restarted.
+     * <p>
+     * Called exactly once when {@link #restart()} transitions the task back to {@link TaskState#IDLE}.
+     */
+    protected void onRestart() {
 
     }
 

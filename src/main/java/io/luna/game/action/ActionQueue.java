@@ -6,9 +6,11 @@ import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
  * Per-mob action scheduler responsible for registering and processing {@link Action}s each game cycle.
@@ -57,6 +59,14 @@ public final class ActionQueue {
     private final Queue<Action<?>> executing = new ArrayDeque<>();
 
     /**
+     * Fast-membership set of action classes currently present in this queue.
+     * <p>
+     * This set exists purely as an O(1) {@link #contains(Class)} shortcut for “is an action of type X currently
+     * queued?”, avoiding a linear scan across {@link #processing} and {@link #executing}.
+     */
+    private final Set<Class<?>> types = new HashSet<>();
+
+    /**
      * Creates a new {@link ActionQueue} for {@code mob}.
      *
      * @param mob The mob that owns this action queue.
@@ -77,6 +87,7 @@ public final class ActionQueue {
         processing.put(action.actionType, action);
         action.setState(ActionState.PROCESSING);
         action.onSubmit();
+        types.add(action.getClass());
     }
 
     /**
@@ -88,33 +99,28 @@ public final class ActionQueue {
      * @return {@code true} if an instance of {@code type} exists in the queue.
      */
     public boolean contains(Class<? extends Action<?>> type) {
-        for (Action<?> action : processing.values()) {
-            if (action.getClass() == type) {
-                return true;
-            }
-        }
-        for (Action<?> action : executing) {
-            if (action.getClass() == type) {
-                return true;
-            }
-        }
-        return false;
+        return types.contains(type);
     }
 
     /**
-     * Returns all processing actions assignable to {@code type}.
-     * <p>
-     * Only actions currently stored in the processing set are returned (not the temporary execution queue).
+     * Returns all processing and executing actions assignable to {@code type}.
      *
      * @param type The action base type.
-     * @return All matching actions currently processing.
+     * @return All matching actions.
      */
-    @SuppressWarnings("unchecked")
     public <T extends Action<?>> List<T> getAll(Class<T> type) {
-        return (List<T>) processing.values()
-                .stream()
-                .filter(type::isInstance)
-                .collect(Collectors.toList());
+        List<T> filtered = new ArrayList<>();
+        for (Action<?> action : processing.values()) {
+            if (type.isAssignableFrom(action.getClass())) {
+                filtered.add((T) action);
+            }
+        }
+        for (Action<?> action : executing) {
+            if (type.isAssignableFrom(action.getClass())) {
+                filtered.add((T) action);
+            }
+        }
+        return filtered;
     }
 
     /**
@@ -175,6 +181,13 @@ public final class ActionQueue {
                 action.complete();
             }
         }
+    }
+
+    /**
+     * Intended for internal use, removes the specified action type from the cache.
+     */
+    void removeType(Action<?> action) {
+        types.remove(action.getClass());
     }
 
     /**
