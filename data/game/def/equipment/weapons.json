@@ -1,0 +1,1992 @@
+[
+  {
+    "id": 3093,
+    "type": "DART"
+  },
+  {
+    "id": 3094,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 3095,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3096,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3097,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3098,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3099,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3100,
+    "type": "CLAWS"
+  },
+  {
+    "id": 3101,
+    "type": "CLAWS"
+  },
+  {
+    "id": 35,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4151,
+    "type": "WHIP",
+    "model": {
+      "standing": 1832,
+      "walking": 1660,
+      "running": 1661
+    }
+  },
+  {
+    "id": 4153,
+    "type": "WARHAMMER",
+    "model": {
+      "standing": 1662,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 4158,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4170,
+    "type": "STAFF"
+  },
+  {
+    "id": 4178,
+    "type": "WHIP",
+    "model": {
+      "standing": 1832,
+      "walking": 1660,
+      "running": 1661
+    }
+  },
+  {
+    "id": 3170,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3171,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3172,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3173,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3174,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3175,
+    "type": "UNARMED"
+  },
+  {
+    "id": 3176,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4212,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3190,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4214,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4215,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3192,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4216,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4217,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3194,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4218,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4219,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3196,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4220,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4221,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3198,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4222,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4223,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 3200,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 3202,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 3204,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4236,
+    "type": "UNARMED"
+  },
+  {
+    "id": 1203,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1205,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1207,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1209,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1211,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1213,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1215,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1217,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1219,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1221,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1223,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1225,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1227,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1229,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1231,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1233,
+    "type": "DAGGER",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1235,
+    "type": "DAGGER"
+  },
+  {
+    "id": 1237,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1239,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1241,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1243,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1245,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1247,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1249,
+    "type": "SPEAR"
+  },
+  {
+    "id": 1251,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1253,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1255,
+    "type": "UNARMED"
+  },
+  {
+    "id": 1257,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1259,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1261,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1263,
+    "type": "UNARMED",
+    "poison": "MELEE"
+  },
+  {
+    "id": 1265,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1267,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1269,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1271,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1273,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1275,
+    "type": "PICKAXE"
+  },
+  {
+    "id": 1277,
+    "type": "SWORD"
+  },
+  {
+    "id": 1279,
+    "type": "SWORD"
+  },
+  {
+    "id": 1281,
+    "type": "SWORD"
+  },
+  {
+    "id": 1283,
+    "type": "SWORD"
+  },
+  {
+    "id": 1285,
+    "type": "SWORD"
+  },
+  {
+    "id": 1287,
+    "type": "SWORD"
+  },
+  {
+    "id": 1289,
+    "type": "SWORD"
+  },
+  {
+    "id": 1291,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1293,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1295,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1297,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1299,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1301,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 1303,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 7447,
+    "type": "KNIFE"
+  },
+  {
+    "id": 1305,
+    "type": "LONGSWORD",
+    "model": {
+      "standing": 809,
+      "walking": -1,
+      "running": -1
+    }
+  },
+  {
+    "id": 1307,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1309,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1311,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1313,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1315,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1317,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1319,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 1321,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1323,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1325,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1327,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1329,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1331,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1333,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 1335,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1337,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1339,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1341,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1343,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1345,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1347,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1349,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1351,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1353,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1355,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1357,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1359,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1361,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1363,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1365,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1367,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1369,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1371,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1373,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1375,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 1377,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 2402,
+    "type": "UNARMED"
+  },
+  {
+    "id": 1379,
+    "type": "STAFF"
+  },
+  {
+    "id": 1381,
+    "type": "STAFF"
+  },
+  {
+    "id": 1383,
+    "type": "STAFF"
+  },
+  {
+    "id": 1385,
+    "type": "STAFF"
+  },
+  {
+    "id": 1387,
+    "type": "STAFF"
+  },
+  {
+    "id": 1389,
+    "type": "STAFF"
+  },
+  {
+    "id": 1391,
+    "type": "STAFF"
+  },
+  {
+    "id": 2415,
+    "type": "STAFF"
+  },
+  {
+    "id": 2416,
+    "type": "STAFF"
+  },
+  {
+    "id": 1393,
+    "type": "STAFF"
+  },
+  {
+    "id": 2417,
+    "type": "STAFF"
+  },
+  {
+    "id": 1395,
+    "type": "STAFF"
+  },
+  {
+    "id": 1397,
+    "type": "STAFF"
+  },
+  {
+    "id": 1399,
+    "type": "STAFF"
+  },
+  {
+    "id": 1401,
+    "type": "STAFF"
+  },
+  {
+    "id": 2425,
+    "type": "KNIFE"
+  },
+  {
+    "id": 6522,
+    "type": "KNIFE"
+  },
+  {
+    "id": 1403,
+    "type": "STAFF"
+  },
+  {
+    "id": 6523,
+    "type": "UNARMED"
+  },
+  {
+    "id": 1405,
+    "type": "STAFF"
+  },
+  {
+    "id": 6525,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6526,
+    "type": "UNARMED"
+  },
+  {
+    "id": 1407,
+    "type": "STAFF"
+  },
+  {
+    "id": 6527,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6528,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 1409,
+    "type": "STAFF"
+  },
+  {
+    "id": 1419,
+    "type": "SCYTHE"
+  },
+  {
+    "id": 1420,
+    "type": "MACE"
+  },
+  {
+    "id": 1422,
+    "type": "MACE"
+  },
+  {
+    "id": 1424,
+    "type": "MACE"
+  },
+  {
+    "id": 1426,
+    "type": "MACE"
+  },
+  {
+    "id": 1428,
+    "type": "MACE"
+  },
+  {
+    "id": 1430,
+    "type": "MACE"
+  },
+  {
+    "id": 4503,
+    "type": "SWORD"
+  },
+  {
+    "id": 1432,
+    "type": "MACE"
+  },
+  {
+    "id": 1434,
+    "type": "MACE"
+  },
+  {
+    "id": 2460,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4508,
+    "type": "SWORD"
+  },
+  {
+    "id": 2462,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2464,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2466,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6562,
+    "type": "STAFF"
+  },
+  {
+    "id": 6563,
+    "type": "STAFF"
+  },
+  {
+    "id": 2468,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2470,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2472,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2474,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2476,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6587,
+    "type": "CLAWS"
+  },
+  {
+    "id": 6589,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 6591,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6593,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6595,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6597,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6599,
+    "type": "HALBERD",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 6601,
+    "type": "MACE"
+  },
+  {
+    "id": 6603,
+    "type": "STAFF"
+  },
+  {
+    "id": 6605,
+    "type": "SWORD"
+  },
+  {
+    "id": 6607,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 6609,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  },
+  {
+    "id": 466,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6611,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 6613,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4580,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4582,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4584,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4587,
+    "type": "SCIMITAR"
+  },
+  {
+    "id": 7668,
+    "type": "UNARMED"
+  },
+  {
+    "id": 7671,
+    "type": "UNARMED",
+    "model": {
+      "standing": 3677,
+      "walking": 3680,
+      "running": -1
+    }
+  },
+  {
+    "id": 7673,
+    "type": "UNARMED",
+    "model": {
+      "standing": 3677,
+      "walking": 3680,
+      "running": -1
+    }
+  },
+  {
+    "id": 7675,
+    "type": "SWORD"
+  },
+  {
+    "id": 5628,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5629,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5630,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5631,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5632,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5633,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5634,
+    "type": "DART",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5635,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5636,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5637,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5638,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5639,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5640,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5641,
+    "type": "DART",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5642,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5643,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5644,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5645,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5646,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5647,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5648,
+    "type": "UNARMED",
+    "poison": "MELEE_PLUS_PLUS"
+  },
+  {
+    "id": 5649,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5650,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5651,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5652,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5653,
+    "type": "JAVELIN",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5654,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5655,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5656,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5657,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5658,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5659,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5660,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS"
+  },
+  {
+    "id": 5661,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5662,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5663,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5664,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5665,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5666,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5667,
+    "type": "KNIFE",
+    "poison": "RANGED_PLUS_PLUS"
+  },
+  {
+    "id": 5668,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5670,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5672,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5674,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5676,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5678,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5680,
+    "type": "DAGGER",
+    "poison": "MELEE_PLUS"
+  },
+  {
+    "id": 5682,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5684,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5686,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5688,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5690,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5692,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5694,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5696,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5698,
+    "type": "DAGGER",
+    "poison": "MELEE_PLUS_PLUS"
+  },
+  {
+    "id": 4675,
+    "type": "STAFF"
+  },
+  {
+    "id": 5700,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6724,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5702,
+    "type": "DAGGER"
+  },
+  {
+    "id": 5704,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5706,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5708,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5710,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5712,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5714,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6739,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5716,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5718,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5720,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6745,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5722,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6746,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5724,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5726,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5728,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5730,
+    "type": "UNARMED",
+    "poison": "MELEE_PLUS_PLUS"
+  },
+  {
+    "id": 4710,
+    "type": "STAFF",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 5734,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5736,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6760,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6762,
+    "type": "UNARMED"
+  },
+  {
+    "id": 6764,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4718,
+    "type": "BATTLEAXE",
+    "model": {
+      "standing": 2065,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 4726,
+    "type": "SPEAR"
+  },
+  {
+    "id": 7804,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4734,
+    "type": "CROSSBOW",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 7806,
+    "type": "SWORD"
+  },
+  {
+    "id": 7807,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 7808,
+    "type": "MACE"
+  },
+  {
+    "id": 7809,
+    "type": "SPEAR"
+  },
+  {
+    "id": 4747,
+    "type": "WARHAMMER"
+  },
+  {
+    "id": 4755,
+    "type": "WHIP",
+    "model": {
+      "standing": 1832,
+      "walking": 1830,
+      "running": 1831
+    }
+  },
+  {
+    "id": 667,
+    "type": "SWORD"
+  },
+  {
+    "id": 6818,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4827,
+    "type": "UNARMED"
+  },
+  {
+    "id": 746,
+    "type": "DAGGER"
+  },
+  {
+    "id": 747,
+    "type": "DAGGER"
+  },
+  {
+    "id": 6897,
+    "type": "LONGSWORD"
+  },
+  {
+    "id": 6908,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4862,
+    "type": "UNARMED",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 6910,
+    "type": "UNARMED"
+  },
+  {
+    "id": 767,
+    "type": "CROSSBOW"
+  },
+  {
+    "id": 4863,
+    "type": "UNARMED",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 4864,
+    "type": "UNARMED",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 6912,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4865,
+    "type": "UNARMED",
+    "model": {
+      "standing": 809,
+      "walking": 1146,
+      "running": 1210
+    }
+  },
+  {
+    "id": 6914,
+    "type": "UNARMED"
+  },
+  {
+    "id": 772,
+    "type": "STAFF"
+  },
+  {
+    "id": 4886,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2065,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 4887,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2065,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 4888,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2065,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 4889,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2065,
+      "walking": 1663,
+      "running": 1664
+    }
+  },
+  {
+    "id": 800,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 801,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 802,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 803,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 804,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 805,
+    "type": "THROWNAXE"
+  },
+  {
+    "id": 806,
+    "type": "DART"
+  },
+  {
+    "id": 807,
+    "type": "DART"
+  },
+  {
+    "id": 808,
+    "type": "DART"
+  },
+  {
+    "id": 809,
+    "type": "DART"
+  },
+  {
+    "id": 810,
+    "type": "DART"
+  },
+  {
+    "id": 811,
+    "type": "DART"
+  },
+  {
+    "id": 812,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 813,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 814,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 4910,
+    "type": "UNARMED"
+  },
+  {
+    "id": 815,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 4911,
+    "type": "UNARMED"
+  },
+  {
+    "id": 816,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 4912,
+    "type": "UNARMED"
+  },
+  {
+    "id": 817,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 4913,
+    "type": "UNARMED"
+  },
+  {
+    "id": 818,
+    "type": "DART",
+    "poison": "RANGED"
+  },
+  {
+    "id": 825,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 826,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 827,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 3899,
+    "type": "UNARMED"
+  },
+  {
+    "id": 828,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 829,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 830,
+    "type": "JAVELIN"
+  },
+  {
+    "id": 831,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 832,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 833,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 834,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 835,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 2883,
+    "type": "UNARMED"
+  },
+  {
+    "id": 836,
+    "type": "JAVELIN",
+    "poison": "RANGED"
+  },
+  {
+    "id": 837,
+    "type": "CROSSBOW",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 4934,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 839,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4935,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 4936,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 841,
+    "type": "SHORTBOW"
+  },
+  {
+    "id": 4937,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2074,
+      "walking": 2076,
+      "running": 2077
+    }
+  },
+  {
+    "id": 843,
+    "type": "SHORTBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 845,
+    "type": "LONGBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 847,
+    "type": "LONGBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 849,
+    "type": "SHORTBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 851,
+    "type": "LONGBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 853,
+    "type": "SHORTBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 855,
+    "type": "LONGBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 857,
+    "type": "SHORTBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 859,
+    "type": "LONGBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 861,
+    "type": "SHORTBOW",
+    "model": {
+      "standing": 808,
+      "walking": 819,
+      "running": 824
+    }
+  },
+  {
+    "id": 4958,
+    "type": "UNARMED"
+  },
+  {
+    "id": 863,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4959,
+    "type": "UNARMED"
+  },
+  {
+    "id": 864,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4960,
+    "type": "UNARMED"
+  },
+  {
+    "id": 865,
+    "type": "KNIFE"
+  },
+  {
+    "id": 4961,
+    "type": "UNARMED"
+  },
+  {
+    "id": 866,
+    "type": "KNIFE"
+  },
+  {
+    "id": 867,
+    "type": "KNIFE"
+  },
+  {
+    "id": 868,
+    "type": "KNIFE"
+  },
+  {
+    "id": 869,
+    "type": "KNIFE"
+  },
+  {
+    "id": 870,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 871,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 872,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 873,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 874,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 875,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 876,
+    "type": "KNIFE",
+    "poison": "RANGED"
+  },
+  {
+    "id": 4982,
+    "type": "UNARMED",
+    "model": {
+      "standing": 1832,
+      "walking": 1830,
+      "running": 1831
+    }
+  },
+  {
+    "id": 4983,
+    "type": "UNARMED",
+    "model": {
+      "standing": 1832,
+      "walking": 1830,
+      "running": 1831
+    }
+  },
+  {
+    "id": 4984,
+    "type": "UNARMED",
+    "model": {
+      "standing": 1832,
+      "walking": 1830,
+      "running": 1831
+    }
+  },
+  {
+    "id": 4985,
+    "type": "UNARMED",
+    "model": {
+      "standing": 1832,
+      "walking": 1830,
+      "running": 1831
+    }
+  },
+  {
+    "id": 2952,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2961,
+    "type": "UNARMED"
+  },
+  {
+    "id": 2963,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5016,
+    "type": "SPEAR"
+  },
+  {
+    "id": 2997,
+    "type": "UNARMED"
+  },
+  {
+    "id": 5056,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5057,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 5058,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 6082,
+    "type": "UNARMED",
+    "model": {
+      "standing": 2316,
+      "walking": 2317,
+      "running": 2322
+    }
+  },
+  {
+    "id": 5059,
+    "type": "BATTLEAXE"
+  },
+  {
+    "id": 4037,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4039,
+    "type": "UNARMED"
+  },
+  {
+    "id": 4068,
+    "type": "SWORD"
+  },
+  {
+    "id": 3053,
+    "type": "STAFF"
+  },
+  {
+    "id": 3054,
+    "type": "STAFF"
+  },
+  {
+    "id": 7158,
+    "type": "TWO_HANDED_SWORD",
+    "model": {
+      "standing": 2561,
+      "walking": 2064,
+      "running": 2563
+    }
+  }
+]

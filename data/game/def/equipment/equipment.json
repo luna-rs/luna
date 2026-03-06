@@ -5,7 +5,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       20,
       29,
@@ -1335,7 +1340,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2107,7 +2117,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2129,7 +2144,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2178,7 +2198,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2227,7 +2252,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2276,7 +2306,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2881,7 +2916,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2903,7 +2943,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2925,7 +2970,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2947,7 +2997,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2969,7 +3024,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -2991,7 +3051,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -3013,7 +3078,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -3035,7 +3105,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -5098,7 +5173,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -6184,7 +6264,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       12,
       12,
@@ -6206,7 +6291,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       17,
       17,
@@ -6228,7 +6318,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       24,
       24,
@@ -6250,7 +6345,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       36,
       36,
@@ -6272,7 +6372,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       55,
       55,
@@ -7314,7 +7419,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       -4,
       -4,
@@ -7407,7 +7517,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       -2,
       8,
@@ -7429,7 +7544,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       -2,
       12,
@@ -7451,7 +7571,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       -2,
       17,
@@ -7473,7 +7598,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       -2,
       26,
@@ -7495,7 +7625,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       -2,
       10,
@@ -7967,8 +8102,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -7998,8 +8133,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -8029,8 +8164,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -8060,8 +8195,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -8092,6 +8227,10 @@
     "requirements": [
       {
         "name": "Attack",
+        "level": 50
+      },
+      {
+        "name": "Magic",
         "level": 50
       }
     ],
@@ -9378,7 +9517,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -9400,7 +9544,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -9422,7 +9571,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -9821,7 +9975,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -9897,7 +10056,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -9981,7 +10145,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10074,7 +10247,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10096,7 +10274,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10118,7 +10301,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10140,7 +10328,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10162,7 +10355,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10184,7 +10382,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10206,7 +10409,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10228,7 +10436,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10514,7 +10727,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10536,7 +10754,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10558,7 +10781,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10580,7 +10808,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10602,7 +10835,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10624,7 +10862,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10646,7 +10889,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10668,7 +10916,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10690,7 +10943,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10712,7 +10970,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10734,7 +10997,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10756,7 +11024,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10778,7 +11051,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10800,7 +11078,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10822,7 +11105,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10844,7 +11132,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10866,7 +11159,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10888,7 +11186,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10910,7 +11213,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10932,7 +11240,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10954,7 +11267,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10976,7 +11294,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -10998,7 +11321,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11020,7 +11348,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11042,7 +11375,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11064,7 +11402,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11086,7 +11429,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11458,7 +11806,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11588,7 +11941,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -11610,7 +11968,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -12688,7 +13051,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      },
+      {
+        "name": "Magic",
+        "level": 30
+      }
+    ],
     "bonuses": [
       10,
       -1,
@@ -12712,8 +13084,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -13128,7 +13500,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Strength",
+        "level": 50
+      },
+      {
+        "name": "Defence",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13221,7 +13602,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       12,
       12,
@@ -13243,7 +13629,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       17,
       17,
@@ -13265,7 +13656,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       24,
       24,
@@ -13287,7 +13683,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       36,
       36,
@@ -13309,7 +13710,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       55,
       55,
@@ -13734,7 +14140,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13756,7 +14167,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13778,7 +14194,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13800,7 +14221,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13822,7 +14248,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13844,7 +14275,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13893,7 +14329,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13942,7 +14383,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13964,7 +14410,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -13986,7 +14437,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -14008,7 +14464,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -14030,7 +14491,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -14052,7 +14518,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -14074,7 +14545,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 45
+      }
+    ],
     "bonuses": [
       -5,
       -5,
@@ -14096,7 +14572,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 45
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -14118,7 +14599,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 45
+      }
+    ],
     "bonuses": [
       0,
       5,
@@ -14140,7 +14626,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 45
+      }
+    ],
     "bonuses": [
       -5,
       -5,
@@ -14162,7 +14653,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15086,7 +15582,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15108,7 +15609,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15130,7 +15636,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15710,7 +16221,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15732,7 +16248,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15754,7 +16275,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15776,7 +16302,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15798,7 +16329,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15851,10 +16387,6 @@
       {
         "name": "Attack",
         "level": 50
-      },
-      {
-        "name": "Strength",
-        "level": 50
       }
     ],
     "bonuses": [
@@ -15878,7 +16410,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -15900,7 +16437,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 50
+      }
+    ],
     "bonuses": [
       47,
       42,
@@ -15944,7 +16486,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16032,7 +16579,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Magic",
+        "level": 50
+      }
+    ],
     "bonuses": [
       7,
       -1,
@@ -16218,7 +16770,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16240,7 +16797,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16262,7 +16824,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16284,7 +16851,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16306,7 +16878,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16328,7 +16905,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16350,7 +16932,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16372,7 +16959,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16394,7 +16986,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16416,7 +17013,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16438,7 +17040,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16460,7 +17067,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16482,7 +17094,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16504,7 +17121,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16526,7 +17148,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16548,7 +17175,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16570,7 +17202,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16592,7 +17229,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16614,7 +17256,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16636,7 +17283,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16658,7 +17310,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16680,7 +17337,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 70
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -16702,7 +17364,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18000,7 +18667,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       9,
       14,
@@ -18022,7 +18694,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18044,7 +18721,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18066,7 +18748,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       9,
       14,
@@ -18088,7 +18775,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18110,7 +18802,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18220,7 +18917,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18242,7 +18944,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -18291,7 +18998,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       15,
       15,
@@ -18313,7 +19025,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19214,7 +19931,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19236,7 +19958,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19258,7 +19985,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19280,7 +20012,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19302,7 +20039,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19324,7 +20066,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -19472,7 +20219,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       },
       {
@@ -19503,7 +20250,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       },
       {
@@ -19534,7 +20281,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       },
       {
@@ -19565,7 +20312,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       },
       {
@@ -19952,7 +20699,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -19979,7 +20730,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -20006,7 +20761,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -20033,7 +20792,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -20384,7 +21147,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -20411,7 +21174,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -20438,7 +21201,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -20465,7 +21228,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -20832,10 +21595,6 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 70
-      },
-      {
         "name": "Ranged",
         "level": 70
       }
@@ -20862,10 +21621,6 @@
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
-      {
-        "name": "Defence",
-        "level": 70
-      },
       {
         "name": "Ranged",
         "level": 70
@@ -20894,10 +21649,6 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 70
-      },
-      {
         "name": "Ranged",
         "level": 70
       }
@@ -20924,10 +21675,6 @@
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
-      {
-        "name": "Defence",
-        "level": 70
-      },
       {
         "name": "Ranged",
         "level": 70
@@ -21312,7 +22059,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -21339,7 +22090,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -21366,7 +22121,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -21393,7 +22152,11 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
+        "level": 70
+      },
+      {
+        "name": "Strength",
         "level": 70
       }
     ],
@@ -21744,7 +22507,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -21771,7 +22534,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -21798,7 +22561,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -21825,7 +22588,7 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
+        "name": "Attack",
         "level": 70
       }
     ],
@@ -22748,7 +23511,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      },
+      {
+        "name": "Prayer",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22770,7 +23542,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      },
+      {
+        "name": "Prayer",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22792,7 +23573,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22858,7 +23644,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22880,7 +23671,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 20
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22902,7 +23698,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22924,7 +23725,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -22990,7 +23796,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 5
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -23012,7 +23823,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -23034,7 +23850,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -23056,7 +23877,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -23534,7 +24360,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -23681,7 +24512,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -24034,7 +24870,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -24181,7 +25022,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       15,
       8,
@@ -24404,7 +25250,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       15,
       8,
@@ -24573,7 +25424,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       12,
       12,
@@ -24595,7 +25451,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       17,
       17,
@@ -24617,7 +25478,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       24,
       24,
@@ -24639,7 +25505,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       36,
       36,
@@ -24661,7 +25532,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       55,
       55,
@@ -24727,7 +25603,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 5
+      }
+    ],
     "bonuses": [
       12,
       12,
@@ -24749,7 +25630,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 20
+      }
+    ],
     "bonuses": [
       17,
       17,
@@ -24771,7 +25657,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       24,
       24,
@@ -24793,7 +25684,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       36,
       36,
@@ -24815,7 +25711,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       55,
       55,
@@ -24837,7 +25738,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       15,
       15,
@@ -24859,7 +25765,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       15,
       15,
@@ -25233,7 +26144,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25255,7 +26171,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25277,7 +26198,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       -6,
@@ -25299,7 +26229,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25321,7 +26260,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25343,7 +26291,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Magic",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25365,7 +26322,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Magic",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25387,7 +26353,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Magic",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25409,7 +26384,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Magic",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25673,7 +26657,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25695,7 +26684,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25717,7 +26711,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25739,7 +26738,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25761,7 +26765,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25783,7 +26792,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25805,7 +26819,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25827,7 +26846,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25849,7 +26873,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25871,7 +26900,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25893,7 +26927,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25915,7 +26954,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25937,7 +26981,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25959,7 +27008,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -25981,7 +27035,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26003,7 +27062,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26025,7 +27089,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26047,7 +27116,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26069,7 +27143,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26091,7 +27170,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26113,7 +27197,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26135,7 +27224,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26157,7 +27251,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26179,7 +27278,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26201,7 +27305,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26223,7 +27332,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26245,7 +27359,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26267,7 +27386,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26289,7 +27413,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26311,7 +27440,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26333,7 +27467,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26355,7 +27494,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26377,7 +27521,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 25
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26421,7 +27570,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      },
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26443,7 +27601,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      },
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26465,7 +27632,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      },
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -26487,7 +27663,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      },
+      {
+        "name": "Ranged",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -27235,7 +28420,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -27257,7 +28447,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       47,
       38,
@@ -27279,7 +28474,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 60
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -27301,7 +28501,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       16,
       48,
@@ -27323,7 +28528,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      },
+      {
+        "name": "Magic",
+        "level": 60
+      }
+    ],
     "bonuses": [
       15,
       -1,
@@ -27345,7 +28559,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 60
+      }
+    ],
     "bonuses": [
       -4,
       -4,
@@ -27460,7 +28679,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      },
+      {
+        "name": "Magic",
+        "level": 30
+      }
+    ],
     "bonuses": [
       10,
       -1,
@@ -27484,8 +28712,8 @@
     "full_helmet?": false,
     "requirements": [
       {
-        "name": "Defence",
-        "level": 20
+        "name": "Attack",
+        "level": 40
       },
       {
         "name": "Magic",
@@ -27667,7 +28895,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       10,
       14,
@@ -27689,7 +28922,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       -2,
       20,
@@ -27711,7 +28949,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       10,
       5,
@@ -27733,7 +28976,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       10,
       5,
@@ -27755,7 +29003,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       10,
       5,
@@ -27777,7 +29030,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       10,
       5,
@@ -27799,7 +29057,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      },
+      {
+        "name": "Strength",
+        "level": 5
+      }
+    ],
     "bonuses": [
       19,
       25,
@@ -27821,7 +29088,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       8,
       -2,
@@ -27843,7 +29115,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       2,
       -1,
@@ -27865,7 +29142,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       14,
       10,
@@ -27887,7 +29169,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       13,
       18,
@@ -27909,7 +29196,12 @@
     "two_handed?": true,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       -4,
       27,
@@ -27931,7 +29223,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       4,
       19,
@@ -27953,7 +29250,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 10
+      }
+    ],
     "bonuses": [
       -4,
       -4,
@@ -27975,7 +29277,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -27997,7 +29304,12 @@
     "two_handed?": false,
     "full_body?": true,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28019,7 +29331,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28041,7 +29358,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28063,7 +29385,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": true,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28085,7 +29412,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28107,7 +29439,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28129,7 +29466,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28151,7 +29493,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28173,7 +29520,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28327,7 +29679,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -28437,7 +29794,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 61
+      }
+    ],
     "bonuses": [
       -2,
       38,
@@ -28657,7 +30019,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Strength",
+        "level": 50
+      },
+      {
+        "name": "Defence",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29042,7 +30413,7 @@
     "requirements": [
       {
         "name": "Magic",
-        "level": 55
+        "level": 50
       }
     ],
     "bonuses": [
@@ -29808,7 +31179,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29830,7 +31206,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29852,7 +31233,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29874,7 +31260,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29896,7 +31287,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29918,7 +31314,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29940,7 +31341,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29962,7 +31368,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -29984,7 +31395,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30006,7 +31422,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30028,7 +31449,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30050,7 +31476,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30072,7 +31503,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 10
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30094,7 +31530,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30116,7 +31557,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30139,6 +31585,10 @@
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      },
       {
         "name": "Ranged",
         "level": 20
@@ -30166,6 +31616,10 @@
     "full_body?": false,
     "full_helmet?": false,
     "requirements": [
+      {
+        "name": "Defence",
+        "level": 20
+      },
       {
         "name": "Ranged",
         "level": 20
@@ -30246,7 +31700,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30268,7 +31731,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30290,7 +31762,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30312,7 +31793,16 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 40
+      },
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30334,7 +31824,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30356,7 +31851,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 40
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30378,7 +31878,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30400,7 +31905,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Ranged",
+        "level": 50
+      }
+    ],
     "bonuses": [
       0,
       0,
@@ -30647,7 +32157,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 40
+      }
+    ],
     "bonuses": [
       25,
       12,
@@ -31043,7 +32558,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Attack",
+        "level": 30
+      }
+    ],
     "bonuses": [
       -4,
       -4,
@@ -31285,7 +32805,12 @@
     "two_handed?": false,
     "full_body?": false,
     "full_helmet?": false,
-    "requirements": [],
+    "requirements": [
+      {
+        "name": "Defence",
+        "level": 30
+      }
+    ],
     "bonuses": [
       0,
       0,

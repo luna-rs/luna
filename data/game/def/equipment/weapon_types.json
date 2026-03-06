@@ -1,0 +1,1192 @@
+[
+  {
+    "type": "STAFF",
+    "id": 328,
+    "line": 331,
+    "styles": [
+      {
+        "type": "STAFF_BASH",
+        "speed": 5,
+        "animation": 406,
+        "config": 0,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "STAFF_POUND",
+        "speed": 5,
+        "animation": 406,
+        "config": 1,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "STAFF_FOCUS",
+        "speed": 5,
+        "animation": 406,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      },
+      {
+        "type": "STAFF_AUTOCAST",
+        "speed": 5,
+        "animation": -1,
+        "config": 3,
+        "bonus": "MAGIC_ATTACK",
+        "stance": "AUTOCAST",
+        "exp": [
+          "MAGIC"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "WARHAMMER",
+    "id": 425,
+    "line": 428,
+    "styles": [
+      {
+        "type": "WARHAMMER_POUND",
+        "speed": 6,
+        "animation": 401,
+        "config": 0,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "WARHAMMER_PUMMEL",
+        "speed": 6,
+        "animation": 401,
+        "config": 1,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "WARHAMMER_BLOCK",
+        "speed": 6,
+        "animation": 401,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7474,
+      "meter": 7486
+    }
+  },
+  {
+    "type": "SCYTHE",
+    "id": 776,
+    "line": 779,
+    "styles": [
+      {
+        "type": "SCYTHE_REAP",
+        "speed": 6,
+        "animation": 408,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "SCYTHE_CHOP",
+        "speed": 6,
+        "animation": 451,
+        "config": 1,
+        "bonus": "STAB_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SCYTHE_JAB",
+        "speed": 6,
+        "animation": 412,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SCYTHE_BLOCK",
+        "speed": 6,
+        "animation": 408,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "BATTLEAXE",
+    "id": 1698,
+    "line": 1701,
+    "styles": [
+      {
+        "type": "BATTLEAXE_CHOP",
+        "speed": 6,
+        "animation": 1833,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "BATTLEAXE_HACK",
+        "speed": 6,
+        "animation": 1833,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "BATTLEAXE_SMASH",
+        "speed": 6,
+        "animation": 401,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "BATTLEAXE_BLOCK",
+        "speed": 6,
+        "animation": 1833,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7499,
+      "meter": 7511
+    }
+  },
+  {
+    "type": "CROSSBOW",
+    "id": 1749,
+    "line": 1752,
+    "styles": [
+      {
+        "type": "CROSSBOW_ACCURATE",
+        "speed": 6,
+        "animation": 427,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "CROSSBOW_RAPID",
+        "speed": 5,
+        "animation": 427,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "CROSSBOW_LONGRANGE",
+        "speed": 6,
+        "animation": 427,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7524,
+      "meter": 7536
+    }
+  },
+  {
+    "type": "SHORTBOW",
+    "id": 1764,
+    "line": 1767,
+    "styles": [
+      {
+        "type": "SHORTBOW_ACCURATE",
+        "speed": 4,
+        "animation": 426,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "SHORTBOW_RAPID",
+        "speed": 3,
+        "animation": 426,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "SHORTBOW_LONGRANGE",
+        "speed": 4,
+        "animation": 426,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7549,
+      "meter": 7561
+    }
+  },
+  {
+    "type": "LONGBOW",
+    "id": 1764,
+    "line": 1767,
+    "styles": [
+      {
+        "type": "LONGBOW_ACCURATE",
+        "speed": 6,
+        "animation": 426,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "LONGBOW_RAPID",
+        "speed": 5,
+        "animation": 426,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "LONGBOW_LONGRANGE",
+        "speed": 6,
+        "animation": 426,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7549,
+      "meter": 7561
+    }
+  },
+  {
+    "type": "DAGGER",
+    "id": 2276,
+    "line": 2279,
+    "styles": [
+      {
+        "type": "DAGGER_STAB",
+        "speed": 4,
+        "animation": 400,
+        "config": 0,
+        "bonus": "STAB_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "DAGGER_LUNGE",
+        "speed": 4,
+        "animation": 400,
+        "config": 1,
+        "bonus": "STAB_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "DAGGER_SLASH",
+        "speed": 4,
+        "animation": 451,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "DAGGER_BLOCK",
+        "speed": 4,
+        "animation": 400,
+        "config": 3,
+        "bonus": "STAB_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7574,
+      "meter": 7586
+    }
+  },
+  {
+    "type": "SWORD",
+    "id": 2276,
+    "line": 2279,
+    "styles": [
+      {
+        "type": "SWORD_STAB",
+        "speed": 4,
+        "animation": 412,
+        "config": 0,
+        "bonus": "STAB_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "SWORD_LUNGE",
+        "speed": 4,
+        "animation": 412,
+        "config": 1,
+        "bonus": "STAB_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SWORD_SLASH",
+        "speed": 4,
+        "animation": 451,
+        "config": 2,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SWORD_BLOCK",
+        "speed": 4,
+        "animation": 412,
+        "config": 3,
+        "bonus": "STAB_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7574,
+      "meter": 7586
+    }
+  },
+  {
+    "type": "SCIMITAR",
+    "id": 2423,
+    "line": 2426,
+    "styles": [
+      {
+        "type": "SCIMITAR_CHOP",
+        "speed": 4,
+        "animation": 451,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "SCIMITAR_SLASH",
+        "speed": 4,
+        "animation": 451,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SCIMITAR_LUNGE",
+        "speed": 4,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "SCIMITAR_BLOCK",
+        "speed": 4,
+        "animation": 451,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7599,
+      "meter": 7611
+    }
+  },
+  {
+    "type": "SICKLE",
+    "id": 2423,
+    "line": 2426,
+    "styles": [
+      {
+        "type": "SICKLE_CHOP",
+        "speed": 5,
+        "animation": 451,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "SICKLE_SLASH",
+        "speed": 5,
+        "animation": 451,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "SICKLE_LUNGE",
+        "speed": 5,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "SICKLE_BLOCK",
+        "speed": 5,
+        "animation": 451,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7599,
+      "meter": 7611
+    }
+  },
+  {
+    "type": "LONGSWORD",
+    "id": 2423,
+    "line": 2426,
+    "styles": [
+      {
+        "type": "LONGSWORD_CHOP",
+        "speed": 5,
+        "animation": 451,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "LONGSWORD_SLASH",
+        "speed": 5,
+        "animation": 451,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "LONGSWORD_LUNGE",
+        "speed": 5,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "LONGSWORD_BLOCK",
+        "speed": 5,
+        "animation": 451,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7599,
+      "meter": 7611
+    }
+  },
+  {
+    "type": "MACE",
+    "id": 3796,
+    "line": 3799,
+    "styles": [
+      {
+        "type": "MACE_POUND",
+        "speed": 4,
+        "animation": 1833,
+        "config": 0,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "MACE_PUMMEL",
+        "speed": 4,
+        "animation": 401,
+        "config": 1,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "MACE_SPIKE",
+        "speed": 4,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "MACE_BLOCK",
+        "speed": 4,
+        "animation": 401,
+        "config": 3,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7624,
+      "meter": 7636
+    }
+  },
+  {
+    "type": "KNIFE",
+    "id": 4446,
+    "line": 4449,
+    "styles": [
+      {
+        "type": "KNIFE_ACCURATE",
+        "speed": 3,
+        "animation": 806,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "KNIFE_RAPID",
+        "speed": 2,
+        "animation": 806,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "KNIFE_LONGRANGE",
+        "speed": 3,
+        "animation": 806,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7649,
+      "meter": 7661
+    }
+  },
+  {
+    "type": "SPEAR",
+    "id": 4679,
+    "line": 4682,
+    "styles": [
+      {
+        "type": "SPEAR_LUNGE",
+        "speed": 4,
+        "animation": 2080,
+        "config": 0,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "SPEAR_SWIPE",
+        "speed": 4,
+        "animation": 2081,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "SPEAR_POUND",
+        "speed": 4,
+        "animation": 2082,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "SPEAR_BLOCK",
+        "speed": 4,
+        "animation": 2080,
+        "config": 3,
+        "bonus": "STAB_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7674,
+      "meter": 7686
+    }
+  },
+  {
+    "type": "TWO_HANDED_SWORD",
+    "id": 4705,
+    "line": 4708,
+    "styles": [
+      {
+        "type": "TWO_HANDED_SWORD_CHOP",
+        "speed": 7,
+        "animation": 407,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "TWO_HANDED_SWORD_SLASH",
+        "speed": 7,
+        "animation": 407,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "TWO_HANDED_SWORD_SMASH",
+        "speed": 7,
+        "animation": 406,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "TWO_HANDED_SWORD_BLOCK",
+        "speed": 7,
+        "animation": 407,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7699,
+      "meter": 7711
+    }
+  },
+  {
+    "type": "PICKAXE",
+    "id": 5570,
+    "line": 5573,
+    "styles": [
+      {
+        "type": "PICKAXE_SPIKE",
+        "speed": 5,
+        "animation": 412,
+        "config": 0,
+        "bonus": "STAB_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "PICKAXE_IMPALE",
+        "speed": 5,
+        "animation": 412,
+        "config": 1,
+        "bonus": "STAB_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "PICKAXE_SMASH",
+        "speed": 5,
+        "animation": 401,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "PICKAXE_BLOCK",
+        "speed": 5,
+        "animation": 412,
+        "config": 3,
+        "bonus": "STAB_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "CLAWS",
+    "id": 7762,
+    "line": 7765,
+    "styles": [
+      {
+        "type": "CLAWS_CHOP",
+        "speed": 4,
+        "animation": 451,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "CLAWS_SLASH",
+        "speed": 4,
+        "animation": 451,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "CLAWS_LUNGE",
+        "speed": 4,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "CLAWS_BLOCK",
+        "speed": 4,
+        "animation": 451,
+        "config": 3,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7800,
+      "meter": 7812
+    }
+  },
+  {
+    "type": "HALBERD",
+    "id": 8460,
+    "line": 8463,
+    "styles": [
+      {
+        "type": "HALBERD_JAB",
+        "speed": 7,
+        "animation": 412,
+        "config": 0,
+        "bonus": "STAB_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "HALBERD_SWIPE",
+        "speed": 7,
+        "animation": 440,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "HALBERD_FEND",
+        "speed": 7,
+        "animation": 412,
+        "config": 2,
+        "bonus": "STAB_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 8493,
+      "meter": 8505
+    }
+  },
+  {
+    "type": "UNARMED",
+    "id": 5855,
+    "line": 5857,
+    "styles": [
+      {
+        "type": "UNARMED_PUNCH",
+        "speed": 4,
+        "animation": 422,
+        "config": 0,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "UNARMED_KICK",
+        "speed": 4,
+        "animation": 423,
+        "config": 1,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "STRENGTH"
+        ]
+      },
+      {
+        "type": "UNARMED_BLOCK",
+        "speed": 4,
+        "animation": 422,
+        "config": 2,
+        "bonus": "CRUSH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "WHIP",
+    "id": 12290,
+    "line": 12293,
+    "styles": [
+      {
+        "type": "WHIP_FLICK",
+        "speed": 4,
+        "animation": 1658,
+        "config": 0,
+        "bonus": "SLASH_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "ATTACK"
+        ]
+      },
+      {
+        "type": "WHIP_LASH",
+        "speed": 4,
+        "animation": 1658,
+        "config": 1,
+        "bonus": "SLASH_ATTACK",
+        "stance": "CONTROLLED",
+        "exp": [
+          "SHARED"
+        ]
+      },
+      {
+        "type": "WHIP_DEFLECT",
+        "speed": 4,
+        "animation": 1658,
+        "config": 2,
+        "bonus": "SLASH_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 12323,
+      "meter": 12335
+    }
+  },
+  {
+    "type": "THROWN_AXE",
+    "id": 4446,
+    "line": 4449,
+    "styles": [
+      {
+        "type": "THROWN_AXE_ACCURATE",
+        "speed": 5,
+        "animation": 806,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "THROWN_AXE_RAPID",
+        "speed": 5,
+        "animation": 806,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "THROWN_AXE_LONGRANGE",
+        "speed": 5,
+        "animation": 806,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7649,
+      "meter": 7661
+    }
+  },
+  {
+    "type": "DART",
+    "id": 4446,
+    "line": 4449,
+    "styles": [
+      {
+        "type": "DART_ACCURATE",
+        "speed": 3,
+        "animation": 806,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "DART_RAPID",
+        "speed": 2,
+        "animation": 806,
+        "config": 1,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "DART_LONGRANGE",
+        "speed": 3,
+        "animation": 806,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7649,
+      "meter": 7661
+    }
+  },
+  {
+    "type": "JAVELIN",
+    "id": 4446,
+    "line": 4449,
+    "styles": [
+      {
+        "type": "JAVELIN_ACCURATE",
+        "speed": 6,
+        "animation": 806,
+        "config": 0,
+        "bonus": "RANGED_ATTACK",
+        "stance": "ACCURATE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "JAVELIN_RAPID",
+        "speed": 5,
+        "animation": 806,
+        "config": 2,
+        "bonus": "RANGED_ATTACK",
+        "stance": "AGGRESSIVE",
+        "exp": [
+          "RANGED"
+        ]
+      },
+      {
+        "type": "JAVELIN_LONGRANGE",
+        "speed": 6,
+        "animation": 806,
+        "config": 3,
+        "bonus": "RANGED_ATTACK",
+        "stance": "DEFENSIVE",
+        "exp": [
+          "RANGED",
+          "DEFENCE"
+        ]
+      }
+    ],
+    "special": {
+      "bar": 7649,
+      "meter": 7661
+    }
+  }
+]
