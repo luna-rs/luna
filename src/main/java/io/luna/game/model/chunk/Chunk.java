@@ -26,6 +26,8 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class Chunk implements Locatable {
 
+    // TODO Bit pack x,y
+
     /**
      * The dimensions of a chunk in tiles.
      */

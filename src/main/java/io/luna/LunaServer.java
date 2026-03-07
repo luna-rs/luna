@@ -22,6 +22,8 @@ import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
+import io.luna.util.parser.impl.WeaponDefinitionFileParser;
+import io.luna.util.parser.impl.WeaponTypeDefinitionFileParser;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -182,6 +184,8 @@ public final class LunaServer {
         List<Runnable> taskList = new ArrayList<>();
         taskList.add(new MessageRepositoryFileParser(messageRepository));
         taskList.add(new EquipmentDefinitionFileParser());
+        taskList.add(new WeaponDefinitionFileParser());
+        taskList.add(new WeaponTypeDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
 

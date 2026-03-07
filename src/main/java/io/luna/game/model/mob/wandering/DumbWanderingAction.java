@@ -19,7 +19,7 @@ import io.luna.util.Rational;
  *     <li>Moves exactly 1 tile if the destination is inside the wander {@link Area} and is traversable.</li>
  * </ul>
  * <p>
- * This style of wandering is best suited for small wander areas/radii (e.g., tight cages, small rooms, short idle NPCs),
+ * This style of wandering is best suited for small wander areas (e.g., tight cages, small rooms, short idle NPCs),
  * because it can look jittery/aimless over large ranges and does not "path to a goal".
  * </p>
  *

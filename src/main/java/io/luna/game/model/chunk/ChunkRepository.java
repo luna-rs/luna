@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Preconditions.checkState;
 import static io.luna.game.model.chunk.Chunk.SIZE;
 
 /**
@@ -198,7 +197,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void add(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        checkState(entitySet.add(entity), entity + " could not be added to chunk.");
+        entitySet.add(entity);
     }
 
     /**
@@ -211,7 +210,7 @@ public final class ChunkRepository implements Iterable<Entity> {
      */
     public void remove(Entity entity) {
         Set<Entity> entitySet = entities.get(entity.getType());
-        checkState(entitySet.remove(entity), entity + " could not be removed from chunk.");
+        entitySet.remove(entity);
     }
 
     /**

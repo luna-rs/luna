@@ -1,8 +1,6 @@
 package io.luna.game.model.mob.wandering;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.LunaContext;
-import io.luna.game.GameService;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
@@ -194,9 +192,6 @@ public final class PatrolAction extends Action<Mob> {
 
     @Override
     public boolean run() {
-        LunaContext context = world.getContext();
-        GameService game = context.getGame();
-
         // Already moving or still generating path to waypoints.
         if (mob.isLocked() || !mob.getWalking().isEmpty() || !pathJob.isDone()) {
             return false;

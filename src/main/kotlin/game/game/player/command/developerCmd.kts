@@ -95,6 +95,19 @@ cmd("object", RIGHTS_DEV) {
 }
 
 /**
+ * A command that spawns an object.
+ */
+cmd("obj", RIGHTS_DEV) {
+    val pos = plr.position
+    world.addObject(id = asInt(0),
+                    x = pos.x,
+                    y = pos.y,
+                    z = pos.z,
+                    type = ObjectType.DEFAULT,
+                    plr = plr)
+}
+
+/**
  * Simulates drops for whichever table is implemented.
  */
 cmd("roll", RIGHTS_DEV) {

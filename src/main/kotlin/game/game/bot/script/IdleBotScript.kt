@@ -18,9 +18,9 @@ import io.luna.Luna
 import io.luna.game.model.Position
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.bot.Bot
-import io.luna.game.model.mob.bot.script.BotScriptSnapshot
 import io.luna.util.RandomUtils
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A [BotScript] that makes a [Bot] idle for a random period based on [duration]. An idle bot will stand around,
@@ -123,7 +123,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
             if (!player.walking.isEmpty) {
                 bot.log("Trying to follow $player.")
                 // Search through local players, follow a random moving player.
-                if (handler.interactions.interact(3, player) && bot.actions.contains(MobFollowAction::class)) {
+                if (handler.interactions.interact(3, player)) {
                     bot.log("Following $player.")
                     following = true
                     break
@@ -164,7 +164,7 @@ class IdleBotScript(bot: Bot, var data: InputData) : BotScript<InputData>(bot) {
         // Maybe idle.
         if (maybe(UNCOMMON) {
                 bot.log("I'm idling.")
-                delay(1.minutes, 10.minutes)
+                delay(10.seconds, 30.seconds)
             })
             return
 

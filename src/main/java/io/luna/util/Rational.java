@@ -24,9 +24,8 @@ public final class Rational extends Number implements Comparable<Rational> {
     /**
      * Creates a new {@link Rational} from a double value by converting it into a fraction.
      * <p>
-     * This method uses decimal precision to determine the denominator based on the number
-     * of decimal places in the input.
-     * </p>
+     * This method uses decimal precision to determine the denominator based on the number of decimal places in the
+     * input.
      *
      * @param value The double value to convert.
      * @return A {@link Rational} representing the given double value.
@@ -37,6 +36,27 @@ public final class Rational extends Number implements Comparable<Rational> {
         long denominator = (long) Math.pow(10, decimalPlaces);
         long numerator = (long) (value * denominator);
         return new Rational(value < 0 ? -numerator : numerator, value < 0 ? -denominator : denominator);
+    }
+
+    /**
+     * Creates a new {@link Rational} from a string value by converting it into a numerator and denominator.
+     * <p>
+     * {@code value} must be in a format like: "3/10" or it will throw.
+     *
+     * @param value The double value to convert.
+     * @return A {@link Rational} representing the given double value.
+     * @throws IllegalArgumentException If an invalid fraction string is given.
+     */
+    public static Rational fromString(String value) {
+        String[] numbers = value.split("/");
+        if (numbers.length != 2) {
+            throw new IllegalArgumentException("'value' must be in a format like '3/10'");
+        }
+        try {
+            return new Rational(Integer.parseInt(numbers[0]), Integer.parseInt(numbers[1]));
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     /**

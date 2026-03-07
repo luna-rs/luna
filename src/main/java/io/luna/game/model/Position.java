@@ -33,6 +33,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public final class Position implements Locatable {
 
+    // TODO Bit pack x,y,z
+
     /**
      * A {@link Comparator} that sorts {@link Position} values by distance from a base position.
      * <p>

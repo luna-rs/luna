@@ -292,6 +292,7 @@ public final class Bot extends Player {
      */
     public void process() {
         try {
+            // TODO: Dumber bots have delayed processing cycles? Which means slower reaction time, etc.
             scriptStack.process();
             manager.getInjectorManager().injectEvents(this);
         } finally {

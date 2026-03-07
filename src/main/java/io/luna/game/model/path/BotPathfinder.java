@@ -20,11 +20,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class BotPathfinder extends PlayerPathfinder {
 
     /**
-     * The plane paths will be routed on.
-     */
-    private final int plane;
-
-    /**
      * Creates a new {@link BotPathfinder}.
      *
      * @param collisionManager The {@link CollisionManager} used for traversability checks.
@@ -32,7 +27,6 @@ public final class BotPathfinder extends PlayerPathfinder {
      */
     public BotPathfinder(CollisionManager collisionManager, int plane) {
         super(collisionManager, plane);
-        this.plane = plane;
     }
 
     @Override

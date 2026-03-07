@@ -7,7 +7,6 @@ import io.luna.game.action.ActionType;
 import io.luna.game.cache.map.MapIndex;
 import io.luna.game.cache.map.MapIndexTable;
 import io.luna.game.cache.map.MapTile;
-import io.luna.game.cache.map.MapTileGrid;
 import io.luna.game.model.Position;
 import io.luna.game.model.area.Area;
 import io.luna.game.model.mob.Mob;
@@ -18,11 +17,9 @@ import io.luna.util.Rational;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * A "smart" wandering {@link Action} that moves a {@link Mob} around an {@link Area} by:
@@ -131,7 +128,6 @@ public final class SmartWanderingAction extends Action<Mob> {
      * </p>
      */
     private void populateDestinationQueue() {
-        // TODO If nothing found in common areas, sample from zones.
         MapIndexTable indexTable = world.getContext().getCache().getMapIndexTable();
         for (int loop = 0; loop < 50; loop++) {
             Position nextPosition = area.randomPosition();
@@ -141,13 +137,8 @@ public final class SmartWanderingAction extends Action<Mob> {
             if (index == null) {
                 continue;
             }
-            MapTileGrid tileGrid = indexTable.getTileSet().getGrid(index);
-            if (tileGrid == null) {
-                continue;
-            }
-
-            MapTile tile = tileGrid.getTile(nextPosition);
-            if (tile == null || tile.isWater() || tile.isBlocked()) {
+            MapTile tile = indexTable.getTileSet().getGrid(index).getTile(nextPosition);
+            if (tile == null || tile.isBlocked()) {
                 continue;
             }
 
@@ -173,13 +164,10 @@ public final class SmartWanderingAction extends Action<Mob> {
     private CompletableFuture<Void> buildWaypointsAsync(GameService game, Position dest) {
         AStarPathfinder<Position> pf = new PlayerPathfinder(world.getCollisionManager(), mob.getPosition().getZ());
         return mob.getNavigator().findPath(mob.getPosition(), dest, pf, true).thenAcceptAsync(path -> {
-            if (path != null && !path.isEmpty()) {
-                // Convert steps into absolute positions. Z is pinned to the mob's current plane.
-                List<Position> stepList = path.stream().map(step ->
-                        new Position(step.getX(), step.getY(), mob.getZ())).collect(Collectors.toList());
-                waypoints.addAll(stepList);
-            }
-        }, game.getGameExecutor())
+                    if (path != null && !path.isEmpty()) {
+                        waypoints.addAll(path);
+                    }
+                }, game.getGameExecutor())
                 .exceptionally(ex -> {
                     logger.catching(ex);
                     return null;
@@ -199,7 +187,7 @@ public final class SmartWanderingAction extends Action<Mob> {
         stepsLeft = Math.min(stepsLeft, waypoints.size());
 
         Deque<Position> path = new ArrayDeque<>(stepsLeft);
-        for (; ;) {
+        for (; ; ) {
             if (stepsLeft < 1) {
                 break;
             }

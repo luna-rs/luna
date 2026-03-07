@@ -266,4 +266,13 @@ public final class BotScriptStack {
             buffer.add(current);
         }
     }
+
+    /**
+     * The amount of scripts in the buffer awaiting execution.
+     *
+     * @return The amount of scripts in the buffer.
+     */
+    public int size() {
+        return buffer.size();
+    }
 }
