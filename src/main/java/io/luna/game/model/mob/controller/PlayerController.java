@@ -1,11 +1,11 @@
 package io.luna.game.model.mob.controller;
 
+import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.LogoutService;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import game.skill.magic.teleportSpells.TeleportAction;
 
 /**
  * A model containing a set of listeners that can intercept and terminate basic {@link Player} actions before they
@@ -69,7 +69,18 @@ public abstract class PlayerController {
     }
 
     /**
-     * Called every 600ms before player updating .
+     * Called when the {@code player} and {@code other} attempt to enter combat.
+     *
+     * @param player The player.
+     * @param other The other mob.
+     * @return {@code true} if combat can proceed, {@code false} otherwise.
+     */
+    public boolean canFight(Player player, Mob other) {
+        return false;
+    }
+
+    /**
+     * Called every 600ms before player updating.
      *
      * @param player The player.
      */

@@ -4,6 +4,7 @@ import com.google.common.collect.Iterators;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.event.impl.ControllableEvent;
 import io.luna.game.model.Position;
+import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +43,7 @@ public final class ControllerManager implements Iterable<PlayerController> {
      * Processes controllers for this player.
      */
     public void process() {
-        for(PlayerController controller : registered.values()) {
+        for (PlayerController controller : registered.values()) {
             controller.process(player);
         }
     }
@@ -170,6 +171,21 @@ public final class ControllerManager implements Iterable<PlayerController> {
     public boolean checkTeleport(TeleportAction action) {
         for (PlayerController controller : registered.values()) {
             if (!controller.canTeleport(player, action)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Determines if the player is able to enter combat with {@code other}.
+     *
+     * @param other The player attempting to attack/be attacked by the player.
+     * @return {@code true} if the player is able to fight with {@code other}.
+     */
+    public boolean checkCanFight(Mob other) {
+        for (PlayerController controller : registered.values()) {
+            if (!controller.canFight(player, other)) {
                 return false;
             }
         }

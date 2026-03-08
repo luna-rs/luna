@@ -10,6 +10,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.controller.PlayerLocationController
 import io.luna.game.model.mob.overlay.WalkableInterface
 import game.skill.magic.teleportSpells.TeleportAction
+import io.luna.game.model.mob.Mob
 
 /**
  * A [PlayerLocationController] implementation for the wilderness area.
@@ -51,12 +52,12 @@ object WildernessAreaController : PlayerLocationController() {
         return canTeleport(player)
     }
 
-    /*override fun canAttack(player: Player, target: Mob): Boolean {
-        if(target is Player) {
+    override fun canFight(player: Player, other: Mob): Boolean {
+        if(other is Player) {
             val combatLevel = player.combatLevel
             val wildernessLevel = player.wildernessLevel
             val attackRange = combatLevel - wildernessLevel..combatLevel + wildernessLevel
-            val attackable = attackRange.contains(target.asPlr().combatLevel)
+            val attackable = attackRange.contains(other.asPlr().combatLevel)
             if(!attackable) {
                 player.sendMessage("Your level difference is too great!")
                 player.sendMessage("You need to move deeper into the Wilderness.")
@@ -65,7 +66,7 @@ object WildernessAreaController : PlayerLocationController() {
             return true
         }
         return true
-    }*/
+    }
 
     /**
      * Sets and displays the wilderness level for [plr].
