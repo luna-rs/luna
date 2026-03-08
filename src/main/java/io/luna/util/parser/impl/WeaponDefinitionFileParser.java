@@ -40,13 +40,16 @@ public final class WeaponDefinitionFileParser extends JsonFileParser<WeaponDefin
     public WeaponDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
         Weapon type = Weapon.valueOf(token.get("type").getAsString());
-        WeaponPoison poison = WeaponPoison.valueOf(token.get("poison").getAsString());
-        JsonObject modelJson = token.get("model").getAsJsonObject();
-        WeaponModelAnimationDefinition model = new WeaponModelAnimationDefinition(
-                modelJson.get("standing").getAsInt(),
-                modelJson.get("walking").getAsInt(),
-                modelJson.get("running").getAsInt()
-        );
+        WeaponPoison poison = token.has("poison") ? WeaponPoison.valueOf(token.get("poison").getAsString()) : null;
+        WeaponModelAnimationDefinition model = null;
+        if (token.has("model")) {
+            JsonObject modelJson = token.get("model").getAsJsonObject();
+            model = new WeaponModelAnimationDefinition(
+                    modelJson.get("standing").getAsInt(),
+                    modelJson.get("walking").getAsInt(),
+                    modelJson.get("running").getAsInt()
+            );
+        }
         return new WeaponDefinition(id, type, poison, model);
     }
 

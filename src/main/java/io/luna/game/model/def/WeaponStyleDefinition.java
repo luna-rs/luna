@@ -77,6 +77,11 @@ public final class WeaponStyleDefinition {
     private final EquipmentBonus bonus;
 
     /**
+     * The button used by this combat style.
+     */
+    private final int button;
+
+    /**
      * The combat stance used by this combat style.
      */
     private final CombatStance stance;
@@ -94,15 +99,18 @@ public final class WeaponStyleDefinition {
      * @param animation The attack animation id.
      * @param config The interface config value.
      * @param bonus The equipment bonus used for accuracy calculations.
+     * @param button The button used by this combat style.
      * @param stance The combat stance.
      * @param exp The skill ids that receive experience.
      */
-    public WeaponStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, CombatStance stance, ImmutableList<Integer> exp) {
+    public WeaponStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, int button,
+                                 CombatStance stance, ImmutableList<Integer> exp) {
         this.type = type;
         this.speed = speed;
         this.animation = animation;
         this.config = config;
         this.bonus = bonus;
+        this.button = button;
         this.stance = stance;
         this.exp = exp;
     }
@@ -140,6 +148,13 @@ public final class WeaponStyleDefinition {
      */
     public EquipmentBonus getBonus() {
         return bonus;
+    }
+
+    /**
+     * @return The button used by this combat style.
+     */
+    public int getButton() {
+        return button;
     }
 
     /**

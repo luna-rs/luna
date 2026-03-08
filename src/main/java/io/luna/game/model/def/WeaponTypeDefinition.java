@@ -18,6 +18,28 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class WeaponTypeDefinition implements Definition {
 
     /**
+     * Cached {@link WeaponTypeDefinition} for {@link Weapon#UNARMED}.
+     * <p>
+     * This field is initialized lazily on first access through {@link #getUnarmed()} in order to avoid resolving
+     * the definition until it is actually needed.
+     */
+    private static WeaponTypeDefinition unarmed;
+
+    /**
+     * Returns the cached {@link WeaponTypeDefinition} for {@link Weapon#UNARMED}.
+     * <p>
+     * The value is resolved from {@link #ALL} on first access and then reused for all subsequent calls.
+     *
+     * @return The unarmed weapon type definition.
+     */
+    public static WeaponTypeDefinition getUnarmed() {
+        if (unarmed == null) {
+            unarmed = ALL.get(Weapon.UNARMED);
+        }
+        return unarmed;
+    }
+
+    /**
      * Adds a pending {@link WeaponTypeDefinition} to be published when {@link #lock()} is invoked.
      * <p>
      * This also registers all child {@link WeaponStyleDefinition} instances belonging to the weapon type.
@@ -41,6 +63,7 @@ public final class WeaponTypeDefinition implements Definition {
         if (ALL.isEmpty()) {
             ALL = ImmutableMap.copyOf(pending);
             pending.clear();
+            WeaponStyleDefinition.lock();
         }
     }
 

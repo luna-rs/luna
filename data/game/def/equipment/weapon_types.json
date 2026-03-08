@@ -10,6 +10,7 @@
         "animation": 406,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
+        "button": 336,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -21,6 +22,7 @@
         "animation": 406,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
+        "button": 335,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -32,6 +34,7 @@
         "animation": 406,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 334,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -43,6 +46,7 @@
         "animation": -1,
         "config": 3,
         "bonus": "MAGIC_ATTACK",
+        "button": -1,
         "stance": "AUTOCAST",
         "exp": [
           "MAGIC"
@@ -61,6 +65,7 @@
         "animation": 401,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
+        "button": 433,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -72,6 +77,7 @@
         "animation": 401,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
+        "button": 432,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -83,6 +89,7 @@
         "animation": 401,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 431,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -105,6 +112,7 @@
         "animation": 408,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 782,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -116,6 +124,7 @@
         "animation": 451,
         "config": 1,
         "bonus": "STAB_ATTACK",
+        "button": 785,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -127,6 +136,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 784,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -138,6 +148,7 @@
         "animation": 408,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 783,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -156,6 +167,7 @@
         "animation": 1833,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 1704,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -167,6 +179,7 @@
         "animation": 1833,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 1707,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -178,6 +191,7 @@
         "animation": 401,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 1706,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -189,6 +203,7 @@
         "animation": 1833,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 1705,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -211,6 +226,7 @@
         "animation": 427,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 1757,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -222,6 +238,7 @@
         "animation": 427,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 1756,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -233,6 +250,7 @@
         "animation": 427,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 1755,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -256,6 +274,7 @@
         "animation": 426,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 1772,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -267,6 +286,7 @@
         "animation": 426,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 1771,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -278,6 +298,7 @@
         "animation": 426,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 1770,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -301,6 +322,7 @@
         "animation": 426,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 1772,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -312,6 +334,7 @@
         "animation": 426,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 1771,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -323,6 +346,7 @@
         "animation": 426,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 1770,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -346,6 +370,7 @@
         "animation": 400,
         "config": 0,
         "bonus": "STAB_ATTACK",
+        "button": 2282,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -357,6 +382,7 @@
         "animation": 400,
         "config": 1,
         "bonus": "STAB_ATTACK",
+        "button": 2285,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -368,6 +394,7 @@
         "animation": 451,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 2284,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -379,6 +406,7 @@
         "animation": 400,
         "config": 3,
         "bonus": "STAB_ATTACK",
+        "button": 2283,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -401,6 +429,7 @@
         "animation": 412,
         "config": 0,
         "bonus": "STAB_ATTACK",
+        "button": 2282,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -412,6 +441,7 @@
         "animation": 412,
         "config": 1,
         "bonus": "STAB_ATTACK",
+        "button": 2285,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -423,6 +453,7 @@
         "animation": 451,
         "config": 2,
         "bonus": "SLASH_ATTACK",
+        "button": 2284,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -434,6 +465,7 @@
         "animation": 412,
         "config": 3,
         "bonus": "STAB_ATTACK",
+        "button": 2283,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -456,6 +488,7 @@
         "animation": 451,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 2429,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -467,6 +500,7 @@
         "animation": 451,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 2432,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -478,6 +512,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 2431,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -489,6 +524,7 @@
         "animation": 451,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 2430,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -511,6 +547,7 @@
         "animation": 451,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 2429,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -522,6 +559,7 @@
         "animation": 451,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 2432,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -533,6 +571,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 2431,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -544,6 +583,7 @@
         "animation": 451,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 2430,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -566,6 +606,7 @@
         "animation": 451,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 2429,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -577,6 +618,7 @@
         "animation": 451,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 2432,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -588,6 +630,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 2431,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -599,6 +642,7 @@
         "animation": 451,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 2430,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -621,6 +665,7 @@
         "animation": 1833,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
+        "button": 3802,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -632,6 +677,7 @@
         "animation": 401,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
+        "button": 3805,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -643,6 +689,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 3804,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -654,6 +701,7 @@
         "animation": 401,
         "config": 3,
         "bonus": "CRUSH_ATTACK",
+        "button": 3803,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -676,6 +724,7 @@
         "animation": 806,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 4454,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -687,6 +736,7 @@
         "animation": 806,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 4453,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -698,6 +748,7 @@
         "animation": 806,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 4452,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -721,6 +772,7 @@
         "animation": 2080,
         "config": 0,
         "bonus": "STAB_ATTACK",
+        "button": 4685,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -732,6 +784,7 @@
         "animation": 2081,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 4688,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -743,6 +796,7 @@
         "animation": 2082,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 4687,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -754,6 +808,7 @@
         "animation": 2080,
         "config": 3,
         "bonus": "STAB_ATTACK",
+        "button": 4686,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -776,6 +831,7 @@
         "animation": 407,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 4711,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -787,6 +843,7 @@
         "animation": 407,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 4714,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -798,6 +855,7 @@
         "animation": 406,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 4713,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -809,6 +867,7 @@
         "animation": 407,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 4712,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -831,6 +890,7 @@
         "animation": 412,
         "config": 0,
         "bonus": "STAB_ATTACK",
+        "button": 5576,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -842,6 +902,7 @@
         "animation": 412,
         "config": 1,
         "bonus": "STAB_ATTACK",
+        "button": 5579,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -853,6 +914,7 @@
         "animation": 401,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 5578,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -864,6 +926,7 @@
         "animation": 412,
         "config": 3,
         "bonus": "STAB_ATTACK",
+        "button": 5577,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -882,6 +945,7 @@
         "animation": 451,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 7768,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -893,6 +957,7 @@
         "animation": 451,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 7771,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -904,6 +969,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 7770,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -915,6 +981,7 @@
         "animation": 451,
         "config": 3,
         "bonus": "SLASH_ATTACK",
+        "button": 7769,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -937,6 +1004,7 @@
         "animation": 412,
         "config": 0,
         "bonus": "STAB_ATTACK",
+        "button": 8466,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -948,6 +1016,7 @@
         "animation": 440,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 8468,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -959,6 +1028,7 @@
         "animation": 412,
         "config": 2,
         "bonus": "STAB_ATTACK",
+        "button": 8467,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -981,6 +1051,7 @@
         "animation": 422,
         "config": 0,
         "bonus": "CRUSH_ATTACK",
+        "button": 5860,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -992,6 +1063,7 @@
         "animation": 423,
         "config": 1,
         "bonus": "CRUSH_ATTACK",
+        "button": 5862,
         "stance": "AGGRESSIVE",
         "exp": [
           "STRENGTH"
@@ -1003,6 +1075,7 @@
         "animation": 422,
         "config": 2,
         "bonus": "CRUSH_ATTACK",
+        "button": 5861,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -1021,6 +1094,7 @@
         "animation": 1658,
         "config": 0,
         "bonus": "SLASH_ATTACK",
+        "button": 12298,
         "stance": "ACCURATE",
         "exp": [
           "ATTACK"
@@ -1032,6 +1106,7 @@
         "animation": 1658,
         "config": 1,
         "bonus": "SLASH_ATTACK",
+        "button": 12297,
         "stance": "CONTROLLED",
         "exp": [
           "SHARED"
@@ -1043,6 +1118,7 @@
         "animation": 1658,
         "config": 2,
         "bonus": "SLASH_ATTACK",
+        "button": 12296,
         "stance": "DEFENSIVE",
         "exp": [
           "DEFENCE"
@@ -1065,6 +1141,7 @@
         "animation": 806,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 4454,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -1076,6 +1153,7 @@
         "animation": 806,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 4453,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -1087,6 +1165,7 @@
         "animation": 806,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 4452,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -1110,6 +1189,7 @@
         "animation": 806,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 4454,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -1121,6 +1201,7 @@
         "animation": 806,
         "config": 1,
         "bonus": "RANGED_ATTACK",
+        "button": 4453,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -1132,6 +1213,7 @@
         "animation": 806,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 4452,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",
@@ -1155,6 +1237,7 @@
         "animation": 806,
         "config": 0,
         "bonus": "RANGED_ATTACK",
+        "button": 4454,
         "stance": "ACCURATE",
         "exp": [
           "RANGED"
@@ -1166,6 +1249,7 @@
         "animation": 806,
         "config": 2,
         "bonus": "RANGED_ATTACK",
+        "button": 4453,
         "stance": "AGGRESSIVE",
         "exp": [
           "RANGED"
@@ -1177,6 +1261,7 @@
         "animation": 806,
         "config": 3,
         "bonus": "RANGED_ATTACK",
+        "button": 4452,
         "stance": "DEFENSIVE",
         "exp": [
           "RANGED",

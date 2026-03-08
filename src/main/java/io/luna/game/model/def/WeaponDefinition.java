@@ -14,6 +14,30 @@ import io.luna.game.model.mob.combat.WeaponPoison;
 public final class WeaponDefinition implements Definition {
 
     /**
+     * Cached {@link WeaponDefinition} whose {@link #type} is {@link Weapon#UNARMED}.
+     * <p>
+     * This field is initialized lazily on first access through {@link #getUnarmed()} in order to avoid scanning
+     * {@link #ALL} until the definition is actually needed.
+     */
+    private static WeaponDefinition unarmed;
+
+    /**
+     * Returns the cached {@link WeaponDefinition} for {@link Weapon#UNARMED}.
+     * <p>
+     * The value is resolved on first access by locating the first definition in {@link #ALL} whose {@link #type}
+     * matches {@link Weapon#UNARMED}. The resolved definition is then cached and reused for all subsequent calls.
+     *
+     * @return The unarmed weapon definition.
+     */
+    public static WeaponDefinition getUnarmed() {
+        if (unarmed == null) {
+            unarmed = ALL.stream().filter(it ->
+                    it.type == Weapon.UNARMED).findFirst().orElseThrow();
+        }
+        return unarmed;
+    }
+
+    /**
      * The repository containing all loaded {@link WeaponDefinition} instances, keyed by item id.
      */
     public static final MapDefinitionRepository<WeaponDefinition> ALL = new MapDefinitionRepository<>();
@@ -34,7 +58,7 @@ public final class WeaponDefinition implements Definition {
     private final WeaponPoison poison;
 
     /**
-     * The model and animation metadata associated with this weapon.
+     * The model animation metadata associated with this weapon.
      */
     private final WeaponModelAnimationDefinition model;
 
@@ -49,7 +73,7 @@ public final class WeaponDefinition implements Definition {
      * @param id The item id this definition belongs to.
      * @param type The weapon type for the weapon.
      * @param poison The poison type for the weapon.
-     * @param model The model and animation metadata for the weapon.
+     * @param model The model animation metadata for the weapon.
      */
     public WeaponDefinition(int id, Weapon type, WeaponPoison poison, WeaponModelAnimationDefinition model) {
         this.id = id;
@@ -88,7 +112,7 @@ public final class WeaponDefinition implements Definition {
     }
 
     /**
-     * @return The model and animation definition.
+     * @return The model animation definition.
      */
     public WeaponModelAnimationDefinition getModel() {
         return model;

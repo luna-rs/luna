@@ -8,6 +8,7 @@ import io.luna.game.model.def.WeaponSpecialBarDefinition;
 import io.luna.game.model.def.WeaponStyleDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
+import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.combat.CombatStance;
 import io.luna.game.model.mob.combat.CombatStyle;
 import io.luna.game.model.mob.combat.Weapon;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -59,9 +61,11 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             int animation = obj.get("animation").getAsInt();
             int config = obj.get("config").getAsInt();
             EquipmentBonus bonus = EquipmentBonus.valueOf(obj.get("bonus").getAsString());
+            int button = obj.has("button") ? obj.get("button").getAsInt() : -1;
             CombatStance stance = CombatStance.valueOf(obj.get("stance").getAsString());
-            ImmutableList<Integer> exp = ImmutableList.copyOf(GsonUtils.getAsType(obj.get("exp"), Integer[].class));
-            styles.add(new WeaponStyleDefinition(styleType, speed, animation, config, bonus, stance, exp));
+            ImmutableList<Integer> exp = Arrays.stream(GsonUtils.getAsType(obj.get("exp"), String[].class)).
+                    map(Skill::getId).collect(ImmutableList.toImmutableList());
+            styles.add(new WeaponStyleDefinition(styleType, speed, animation, config, bonus, button, stance, exp));
         }
         WeaponSpecialBarDefinition specialBar = GsonUtils.getAsType(token.get("special"), WeaponSpecialBarDefinition.class);
         return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar);
