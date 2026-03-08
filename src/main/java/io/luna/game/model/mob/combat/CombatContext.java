@@ -7,7 +7,7 @@ import io.luna.game.model.mob.Player;
 
 public final class CombatContext {
     private final Mob mob;
-    private final CombatHitStack hitStack;
+    private final CombatDamageStack damageStack;
     private final CombatPrayerSet prayers;
     private final CombatWeapon weapon;
     private final CombatSpecialBar specialBar;
@@ -17,7 +17,7 @@ public final class CombatContext {
 
     public CombatContext(Mob mob) {
         this.mob = mob;
-        hitStack = new CombatHitStack(mob);
+        damageStack = new CombatDamageStack(mob);
         prayers = new CombatPrayerSet(mob);
         if (mob instanceof Player) {
             Player player = (Player) mob;
@@ -43,7 +43,7 @@ public final class CombatContext {
         }
     }
 
-    CombatHit generateHit(Mob target) {
+    CombatAttack generateAttack(Mob target) {
         return null;
     }
 
@@ -72,8 +72,8 @@ public final class CombatContext {
         return attackDelay;
     }
 
-    public CombatHitStack getHitStack() {
-        return hitStack;
+    public CombatDamageStack getDamageStack() {
+        return damageStack;
     }
 
     public CombatPrayerSet getPrayers() {

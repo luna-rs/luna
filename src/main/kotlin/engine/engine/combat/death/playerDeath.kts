@@ -27,7 +27,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.animation(Animations.DEATH, AnimationPriority.HIGH)
         victim.playJingle(Jingles.DEATH_2)
         victim.combat.stopCombatTimer()
-        victim.combat.hitStack.clear()
+        victim.combat.damageStack.clear()
     }
 
     death {
