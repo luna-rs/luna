@@ -421,6 +421,7 @@ public class Player extends Mob {
      * @param action A callback to run if the interaction completes successfully.
      */
     public void handleInteractableEvent(Entity entity, InteractableEvent event, Runnable action) {
+        // todo change to action? redo this when real combat is started
         if (interactionTask == null || interactionTask.getState() == TaskState.CANCELLED) {
             // Cancelled or missing interaction task, create new one.
             interactionTask = new InteractionTask(this, entity, event, action);
@@ -773,7 +774,7 @@ public class Player extends Mob {
      */
     public JsonArray savePotionsToJson() {
         JsonArray array = new JsonArray();
-        for (var timer : actions.getAll(PotionCountdownTimer.class)) {
+        for (PotionCountdownTimer timer : actions.getAll(PotionCountdownTimer.class)) {
             array.add(timer.saveJson());
         }
         return array;
@@ -1022,7 +1023,7 @@ public class Player extends Mob {
      * @param running {@code true} to enable running, {@code false} to disable.
      */
     public void setRunning(boolean running) {
-        if(isRunning() != running) {
+        if (isRunning() != running) {
             sendVarp(PersistentVarp.RUNNING, running);
             walking.setRunning(running);
         }
@@ -1121,11 +1122,13 @@ public class Player extends Mob {
     /**
      * Sets the player model animation set and flags an appearance update.
      *
-     * @param model The new model animation set.
+     * @param newModel The new model animation set.
      */
-    public void setModel(PlayerModelAnimation model) {
-        this.model = model;
-        flags.flag(UpdateFlag.APPEARANCE);
+    public void setModel(PlayerModelAnimation newModel) {
+        if (!Objects.equals(model, newModel)) {
+            model = newModel;
+            flags.flag(UpdateFlag.APPEARANCE);
+        }
     }
 
     /**
@@ -1435,8 +1438,10 @@ public class Player extends Mob {
      * @param prayerIcon The new prayer icon.
      */
     public void setPrayerIcon(PrayerIcon prayerIcon) {
-        this.prayerIcon = prayerIcon;
-        flags.flag(UpdateFlag.APPEARANCE);
+        if (this.prayerIcon != prayerIcon) {
+            this.prayerIcon = prayerIcon;
+            flags.flag(UpdateFlag.APPEARANCE);
+        }
     }
 
     /**

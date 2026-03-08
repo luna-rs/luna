@@ -144,6 +144,6 @@ public final class CombatWeapon {
      * @return The current combat style definition.
      */
     public WeaponStyleDefinition getStyleDef() {
-        return styleDef;
+        return requireNonNull(styleDef, "Combat style definition should never be null.");
     }
 }
