@@ -17,16 +17,14 @@ on(PlayerFirstClickEvent::class,
 }
 
 // Use magic spell on player.
-on(MagicOnPlayerEvent::class,
-   EventPriority.HIGH) {
+on(MagicOnPlayerEvent::class, EventPriority.HIGH) {
     if (plr.contextMenu.contains(OPTION_ATTACK) && targetPlr.hitpoints.level > 0) {
         // start combat
     }
 }
 
 // "Attack" context menu option on npcs.
-on(AttackNpcEvent::class,
-   EventPriority.HIGH) {
+on(AttackNpcEvent::class, EventPriority.HIGH) {
     val def = targetNpc.definition
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         plr.combat.attack(targetNpc)
@@ -34,7 +32,7 @@ on(AttackNpcEvent::class,
 }
 
 // Use magic spell on NPC.
-on(MagicOnNpcEvent::class) {
+on(MagicOnNpcEvent::class, EventPriority.HIGH) {
     val def = targetNpc.definition
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         // start combat
