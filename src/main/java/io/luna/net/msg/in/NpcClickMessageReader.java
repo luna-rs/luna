@@ -1,11 +1,11 @@
 package io.luna.net.msg.in;
 
 import io.luna.game.event.impl.NpcClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcFifthClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.NpcFourthClickEvent;
-import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent;
+import io.luna.game.event.impl.NpcClickEvent.NpcFirstClickEvent;
 import io.luna.game.event.impl.NpcClickEvent.NpcThirdClickEvent;
+import io.luna.game.event.impl.NpcClickEvent.NpcSecondClickEvent;
+import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
 import io.luna.game.model.World;
 import io.luna.game.model.mob.Player;
 import io.luna.net.codec.ByteMessage;
@@ -36,13 +36,13 @@ public final class NpcClickMessageReader extends GameMessageReader<NpcClickEvent
                 return new NpcSecondClickEvent(player, world.getNpcs().get(npcIndex));
             case 67:
                 npcIndex = payload.getShort(ValueType.ADD);
-                return new NpcThirdClickEvent(player, world.getNpcs().get(npcIndex));
+                return new AttackNpcEvent(player, world.getNpcs().get(npcIndex));
             case 42:
                 npcIndex = payload.getShort(ByteOrder.LITTLE);
-                return new NpcFourthClickEvent(player, world.getNpcs().get(npcIndex));
+                return new NpcThirdClickEvent(player, world.getNpcs().get(npcIndex));
             case 8:
                 npcIndex = payload.getShort(ByteOrder.LITTLE);
-                return new NpcFifthClickEvent(player, world.getNpcs().get(npcIndex));
+                return new NpcFourthClickEvent(player, world.getNpcs().get(npcIndex));
         }
         throw new IllegalStateException("invalid opcode");
     }

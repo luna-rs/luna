@@ -74,7 +74,6 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
                          NpcMatcher(NpcSecondClickEvent::class),
                          NpcMatcher(NpcThirdClickEvent::class),
                          NpcMatcher(NpcFourthClickEvent::class),
-                         NpcMatcher(NpcFifthClickEvent::class),
                          ItemMatcher(ItemFirstClickEvent::class),
                          ItemMatcher(ItemSecondClickEvent::class),
                          ItemMatcher(ItemThirdClickEvent::class),

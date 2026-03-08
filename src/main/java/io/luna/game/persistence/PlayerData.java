@@ -12,6 +12,7 @@ import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.Spellbook;
+import io.luna.game.model.mob.combat.CombatStance;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.Duration;
@@ -54,6 +55,8 @@ public class PlayerData {
     public Map<String, Integer> varps;
     public Map<String, Object> attributes;
     public JsonArray potions;
+    public CombatStance lastCombatStance;
+    public int specialAttackEnergy;
 
     /**
      * The username of the player this data belongs to.
@@ -91,11 +94,13 @@ public class PlayerData {
         player.setWeight(weight, true);
         player.getAttributes().load(attributes);
         player.getVarpManager().fromMap(varps);
-        player.updateSpellbook(spellbook, true);
+        player.updateSpellbook(spellbook, false);
         player.setTimePlayed(timePlayed);
         player.setCreatedAt(createdAt);
         player.setPrivacyOptions(privacyOptions);
         player.loadPotionsFromJson(potions);
+        player.getCombat().getWeapon().changeWeapon(lastCombatStance);
+        player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
     }
 
     /**
@@ -141,6 +146,8 @@ public class PlayerData {
         createdAt = player.getCreatedAt();
         privacyOptions = player.getPrivacyOptions();
         potions = player.savePotionsToJson();
+        lastCombatStance = player.getCombat().getWeapon().getStyleDef().getStance();
+        specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
         return this;
     }
 

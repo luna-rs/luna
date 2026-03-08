@@ -69,4 +69,5 @@ on(EquipmentChangeEvent::class) {
 
 on(LoginEvent::class) {
     display(plr, plr.equipment.weapon?.id)
+    plr.sendVarp(Varp(301, 0)) // Deselect special attack bar.
 }

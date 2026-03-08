@@ -83,10 +83,6 @@ fun npc3(id: Int, action: EventAction<NpcThirdClickEvent>) =
 fun npc4(id: Int, action: EventAction<NpcFourthClickEvent>) =
     Matcher.get<NpcFourthClickEvent, Int>().set(id, action)
 
-/** The [NpcFifthClickEvent] matcher function.*/
-fun npc5(id: Int, action: EventAction<NpcFifthClickEvent>) =
-    Matcher.get<NpcFifthClickEvent, Int>().set(id, action)
-
 /**
  * The [GroundItemSecondClickEvent] matcher function.
  */

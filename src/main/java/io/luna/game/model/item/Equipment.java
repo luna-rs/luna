@@ -39,6 +39,95 @@ import java.util.function.IntUnaryOperator;
 public final class Equipment extends ItemContainer {
 
     /**
+     * Represents a single equipment bonus entry and its fixed index in the equipment bonus array.
+     */
+    public enum EquipmentBonus {
+
+        /**
+         * Stab attack bonus (index {@code 0}).
+         */
+        STAB_ATTACK(0),
+
+        /**
+         * Slash attack bonus (index {@code 1}).
+         */
+        SLASH_ATTACK(1),
+
+        /**
+         * Crush attack bonus (index {@code 2}).
+         */
+        CRUSH_ATTACK(2),
+
+        /**
+         * Magic attack bonus (index {@code 3}).
+         */
+        MAGIC_ATTACK(3),
+
+        /**
+         * Ranged attack bonus (index {@code 4}).
+         */
+        RANGED_ATTACK(4),
+
+        /**
+         * Stab defence bonus (index {@code 5}).
+         */
+        STAB_DEFENCE(5),
+
+        /**
+         * Slash defence bonus (index {@code 6}).
+         */
+        SLASH_DEFENCE(6),
+
+        /**
+         * Crush defence bonus (index {@code 7}).
+         */
+        CRUSH_DEFENCE(7),
+
+        /**
+         * Magic defence bonus (index {@code 8}).
+         */
+        MAGIC_DEFENCE(8),
+
+        /**
+         * Ranged defence bonus (index {@code 9}).
+         */
+        RANGED_DEFENCE(9),
+
+        /**
+         * Strength bonus (index {@code 10}).
+         */
+        STRENGTH(10),
+
+        /**
+         * Prayer bonus (index {@code 11}).
+         */
+        PRAYER(11);
+
+        /**
+         * The fixed array index for this bonus type.
+         */
+        private final int index;
+
+        /**
+         * Creates a new {@link EquipmentBonus}.
+         *
+         * @param index The array index for this bonus.
+         */
+        EquipmentBonus(int index) {
+            this.index = index;
+        }
+
+        /**
+         * Returns the fixed array index for this bonus type.
+         *
+         * @return The index in the equipment bonus array.
+         */
+        public int getIndex() {
+            return index;
+        }
+    }
+
+    /**
      * An {@link ItemContainerListener} that:
      * <ul>
      *     <li>keeps {@link #bonuses} in sync with equipment contents</li>
@@ -82,8 +171,8 @@ public final class Equipment extends ItemContainer {
                 updateBonus(oldItem, newItem);
                 writeBonuses();
                 flagAppearance(index);
+                sendEvent(index, oldItem, newItem);
             }
-            sendEvent(index, oldItem, newItem);
         }
 
         /**
@@ -97,8 +186,8 @@ public final class Equipment extends ItemContainer {
             if (isIdUnequal(oldItem, newItem)) {
                 updateBonus(oldItem, newItem);
                 flagAppearance(index);
+                sendEvent(index, oldItem, newItem);
             }
-            sendEvent(index, oldItem, newItem);
         }
 
         /**
@@ -272,66 +361,6 @@ public final class Equipment extends ItemContainer {
      * Equipment slot: ammunition.
      */
     public static final int AMMUNITION = 13;
-
-    /**
-     * Bonus index: stab attack.
-     */
-    public static final int STAB_ATTACK = 0;
-
-    /**
-     * Bonus index: slash attack.
-     */
-    public static final int SLASH_ATTACK = 1;
-
-    /**
-     * Bonus index: crush attack.
-     */
-    public static final int CRUSH_ATTACK = 2;
-
-    /**
-     * Bonus index: magic attack.
-     */
-    public static final int MAGIC_ATTACK = 3;
-
-    /**
-     * Bonus index: ranged attack.
-     */
-    public static final int RANGED_ATTACK = 4;
-
-    /**
-     * Bonus index: stab defence.
-     */
-    public static final int STAB_DEFENCE = 5;
-
-    /**
-     * Bonus index: slash defence.
-     */
-    public static final int SLASH_DEFENCE = 6;
-
-    /**
-     * Bonus index: crush defence.
-     */
-    public static final int CRUSH_DEFENCE = 7;
-
-    /**
-     * Bonus index: magic defence.
-     */
-    public static final int MAGIC_DEFENCE = 8;
-
-    /**
-     * Bonus index: ranged defence.
-     */
-    public static final int RANGED_DEFENCE = 9;
-
-    /**
-     * Bonus index: strength.
-     */
-    public static final int STRENGTH = 10;
-
-    /**
-     * Bonus index: prayer.
-     */
-    public static final int PRAYER = 11;
 
     /**
      * UI labels for each bonus index, in the same order as {@link #bonuses}.
@@ -548,6 +577,16 @@ public final class Equipment extends ItemContainer {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Returns the equipment bonus value stored at the given {@code bonus} index.
+     *
+     * @param bonus The bonus slot.
+     * @return The bonus value at {@code bonus}.
+     */
+    public int getBonus(EquipmentBonus bonus) {
+        return bonuses[bonus.getIndex()];
     }
 
     /**

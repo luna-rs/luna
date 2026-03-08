@@ -32,8 +32,8 @@ class OpenReceiver {
         npc1.forEach { npc1(it, open) }
         npc2.forEach { npc2(it, open) }
         npc3.forEach { npc3(it, open) }
-        npc4.forEach { npc4(it, open) }
-        npc5.forEach { npc5(it, open) }
+        npc4.forEach { npc3(it, open) }
+        npc5.forEach { npc4(it, open) }
         object1.forEach { object1(it, open) }
         object2.forEach { object2(it, open) }
         object3.forEach { object3(it, open) }

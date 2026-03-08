@@ -16,39 +16,41 @@ import java.util.stream.StreamSupport;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Container for all {@link Skill} instances owned by a {@link Mob}.
+ * Holds all {@link Skill} instances for a single {@link Mob}.
+ * <p>
+ * Each skill is stored by its skill id and remains bound to this set for its lifetime unless the set is rebuilt
+ * through {@link #set(Skill[])}. This type also provides shared utility for RuneScape experience and level
+ * calculations, combat level caching, skill restoration scheduling, and skill event suppression during bulk updates.
  *
  * @author lare96
  */
 public final class SkillSet implements Iterable<Skill> {
 
     /**
-     * Cumulative experience thresholds for levels 1..99.
+     * Cumulative experience thresholds for levels {@code 1..99}.
      * <p>
-     * Index 0 is unused (left as 0) so that the level can be used directly as an index.
-     * </p>
+     * Index {@code 0} is unused so level values can be used directly as indices.
      */
     public static final int[] EXPERIENCE_TABLE;
 
     /**
-     * Range of valid skill identifiers.
+     * The valid range of skill identifiers.
      * <p>
-     * This is a closed-open range: {@code [0, 21)} which corresponds to ids 0..20 inclusive.
-     * </p>
+     * This is the half-open range {@code [0, 21)}, meaning valid skill ids are {@code 0..20}.
      */
     public static final Range<Integer> SKILL_IDS = Range.closedOpen(0, 21);
 
     /**
-     * The maximum attainable experience in a single skill.
+     * The maximum amount of experience a single skill may hold.
      */
     public static final int MAXIMUM_EXPERIENCE = 200_000_000;
 
     /**
      * Returns the cumulative experience required to reach {@code level}.
      *
-     * @param level The level to query (1..99).
-     * @return The experience threshold for that level.
-     * @throws IllegalArgumentException if {@code level < 1 || level > 99}.
+     * @param level The level to query.
+     * @return The cumulative experience required for {@code level}.
+     * @throws IllegalArgumentException If {@code level} is not within {@code 1..99}.
      */
     public static int experienceForLevel(int level) {
         checkArgument(level >= 1 && level <= 99, "level < 1 || level > 99");
@@ -56,22 +58,23 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns the total number of valid skills (currently {@code 21}).
+     * Returns the total number of supported skills.
+     *
+     * @return The number of valid skill ids.
      */
     public static int size() {
         return SKILL_IDS.upperEndpoint();
     }
 
     /**
-     * Computes the level for a given total experience amount.
+     * Computes the level for a total experience amount.
      * <p>
-     * This walks the experience table from 99 down to 1 and returns the first level whose threshold is
-     * {@code <= experience}. Runtime is O(99) worst-case and effectively constant.
-     * </p>
+     * The experience table is scanned from level {@code 99} downward until the highest matching threshold is found.
      *
-     * @param experience Total experience (0..{@link #MAXIMUM_EXPERIENCE}).
-     * @return The computed level (1..99).
-     * @throws IllegalArgumentException if {@code experience < 0 || experience > MAXIMUM_EXPERIENCE}.
+     * @param experience The total experience to convert.
+     * @return The corresponding level.
+     * @throws IllegalArgumentException If {@code experience} is negative or exceeds
+     *         {@link #MAXIMUM_EXPERIENCE}.
      */
     public static int levelForExperience(int experience) {
         checkArgument(experience >= 0 && experience <= MAXIMUM_EXPERIENCE,
@@ -90,7 +93,7 @@ public final class SkillSet implements Iterable<Skill> {
         throw new IllegalStateException("unable to compute level for experience amount, " + experience);
     }
 
-    static { /* Initialize experience table cache. */
+    static { /* Initialize the experience table cache. */
         int[] experienceTable = new int[100];
         int points = 0, output = 0;
         for (int lvl = 1; lvl <= 99; lvl++) {
@@ -107,46 +110,38 @@ public final class SkillSet implements Iterable<Skill> {
     private final Mob mob;
 
     /**
-     * Backing array of skills indexed by skill id.
+     * The backing skill array, indexed directly by skill id.
      */
     private final Skill[] skills;
 
     /**
-     * Cached combat level computed from static levels.
+     * Cached combat level for this mob.
      * <p>
-     * Reset to {@code -1} when invalidated so it can be recomputed lazily.
-     * </p>
+     * A value of {@code -1} indicates that the cache is invalid and must be recomputed.
      */
     private int combatLevel = -1;
 
     /**
-     * Custom “skill level” display value (used by the Games Room in RuneScape).
+     * Custom skill-level display value used by special client interactions such as the Games Room.
      * <p>
-     * If non-zero, some clients show this value instead of combat level on right-click/player examine.
-     * </p>
+     * When non-zero, players may display this value instead of combat level in certain client views.
      */
     private int skillLevel;
 
     /**
-     * Whether this skill set should post skill-related events (see {@link SkillChangeEvent}).
+     * Whether skill-related events should currently be fired.
      * <p>
-     * Temporarily disabled during bulk operations like {@link #set(Skill[])} to avoid spamming events.
-     * </p>
+     * This is temporarily disabled during bulk updates such as {@link #set(Skill[])} to avoid emitting redundant
+     * {@link SkillChangeEvent}s.
      */
     private boolean firingEvents = true;
 
     /**
-     * Whether a {@link SkillRestorationTask} is currently active for this skill set.
+     * Creates a new {@link SkillSet} for {@code mob}.
      * <p>
-     * This acts as a guard flag to prevent scheduling multiple restoration tasks concurrently.
-     * </p>
-     */
-    private boolean restoring;
-
-    /**
-     * Creates a new {@link SkillSet} for {@code mob}, initializing all skills.
+     * All supported skills are initialized immediately and stored at their matching skill ids.
      *
-     * @param mob The owning mob.
+     * @param mob The mob that owns this skill set.
      */
     public SkillSet(Mob mob) {
         this.mob = mob;
@@ -164,28 +159,30 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Invalidates the cached combat level so it will be recomputed on next {@link #getCombatLevel()} call.
+     * Invalidates the cached combat level.
+     * <p>
+     * The combat level will be recomputed the next time {@link #getCombatLevel()} is called.
      */
     public void resetCombatLevel() {
         combatLevel = -1;
     }
 
     /**
-     * Retrieves the {@link Skill} for the given skill id.
+     * Returns the skill for {@code id}.
      *
-     * @param id The skill identifier.
-     * @return The skill instance.
-     * @throws ArrayIndexOutOfBoundsException if {@code id} is not a valid skill id.
+     * @param id The skill id.
+     * @return The skill stored at {@code id}.
+     * @throws ArrayIndexOutOfBoundsException If {@code id} is not a valid skill id.
      */
     public Skill getSkill(int id) {
         return skills[id];
     }
 
     /**
-     * Resets the dynamic level of a single skill back to its static level.
+     * Resets a single skill's dynamic level back to its static level.
      *
      * @param id The skill id to reset.
-     * @return {@code true} if the skill changed, otherwise {@code false}.
+     * @return {@code true} if the dynamic level changed, otherwise {@code false}.
      */
     public boolean reset(int id) {
         var resetSkill = skills[id];
@@ -200,7 +197,7 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * Resets all skills' dynamic levels back to their static levels.
      *
-     * @return {@code true} if at least one skill changed.
+     * @return {@code true} if at least one skill changed, otherwise {@code false}.
      */
     public boolean resetAll() {
         var changed = false;
@@ -213,28 +210,26 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns a <b>shallow</b> copy of the backing skill array.
+     * Returns a shallow copy of the backing skill array.
+     * <p>
+     * The returned array is new, but the contained {@link Skill} instances are the same references held by this set.
+     *
+     * @return A shallow copy of the skill array.
      */
     public Skill[] toArray() {
         return Arrays.copyOf(skills, skills.length);
     }
 
     /**
-     * Replaces the skill data in this set with data from {@code newSkills}.
+     * Replaces this set's skill data with values copied from {@code newSkills}.
      * <p>
-     * This performs a value-copy:
-     * </p>
-     * <ul>
-     *     <li>Creates new {@link Skill} instances bound to this {@link SkillSet}.</li>
-     *     <li>Copies experience and dynamic level from the corresponding element in {@code newSkills}.</li>
-     *     <li>Temporarily disables {@link #isFiringEvents()} to avoid emitting events during the bulk update.</li>
-     * </ul>
+     * This method does not retain the incoming {@link Skill} instances. Instead, it creates new skills bound to this
+     * {@link SkillSet}, then copies each source skill's experience and dynamic level into the new instance.
      * <p>
-     * The incoming array must have the same length as this set ({@link #size()}).
-     * </p>
+     * Skill-related events are temporarily suppressed for the duration of the bulk update.
      *
-     * @param newSkills The source skill data.
-     * @throws IllegalArgumentException if {@code newSkills.length != skills.length}.
+     * @param newSkills The source skill data to copy from.
+     * @throws IllegalArgumentException If {@code newSkills.length} does not equal {@link #size()}.
      */
     public void set(Skill[] newSkills) {
         checkArgument(newSkills.length == skills.length, "newSkills.length [" + newSkills.length + "] must equal skills.length [" + skills.length + "].");
@@ -254,17 +249,18 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns the owning mob.
+     * Returns the mob that owns this skill set.
+     *
+     * @return The owning mob.
      */
     public Mob getMob() {
         return mob;
     }
 
     /**
-     * Returns the combat level for this mob, computing and caching it if needed.
+     * Returns this mob's combat level.
      * <p>
-     * Uses static levels only (experience-based levels). The result is cached until invalidated with {@link #resetCombatLevel()}.
-     * </p>
+     * The value is computed from static skill levels and cached until invalidated through {@link #resetCombatLevel()}.
      *
      * @return The combat level.
      */
@@ -300,22 +296,21 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns the custom “skill level” display value (Games Room style).
+     * Returns the custom skill-level display value.
      *
-     * @return The skill level display value.
+     * @return The custom display value.
      */
     public int getSkillLevel() {
         return skillLevel;
     }
 
     /**
-     * Sets a custom “skill level” display value (Games Room style).
+     * Sets the custom skill-level display value.
      * <p>
-     * If {@code skillLevel != 0},  clients will display it instead of combat level in  the right-click player menu.
-     * This only applies to {@link Player}s; for other {@link Mob} types, the call is ignored.
-     * </p>
+     * When non-zero, some clients will display this value instead of combat level in player interaction menus. This
+     * only applies to {@link Player} instances. For other {@link Mob} types, the call is ignored.
      *
-     * @param skillLevel The custom skill level value.
+     * @param skillLevel The custom display value to set.
      */
     public void setSkillLevel(int skillLevel) {
         if (mob instanceof Player) {
@@ -325,16 +320,28 @@ public final class SkillSet implements Iterable<Skill> {
     }
 
     /**
-     * Returns a sequential stream over all skills in this set.
+     * Ensures skill restoration is running when a skill has diverged from its static level.
+     * <p>
+     * If {@code trigger}'s dynamic level differs from its static level and the owning mob does not already have an
+     * active {@link SkillRestorationAction}, one is submitted.
+     *
+     * @param trigger The skill change that may require restoration scheduling.
+     */
+    void restoreSkills(Skill trigger) {
+        if (trigger.getLevel() != trigger.getStaticLevel() && !mob.getActions().contains(SkillRestorationAction.class)) {
+            mob.submitAction(new SkillRestorationAction(mob));
+        }
+    }
+
+    /**
+     * @return A sequential stream of skills.
      */
     public Stream<Skill> stream() {
         return StreamSupport.stream(spliterator(), false);
     }
 
     /**
-     * Returns whether this skill set should fire skill-related events.
-     *
-     * @return {@code true} if events are enabled.
+     * @return {@code true} if skill events are enabled.
      */
     public boolean isFiringEvents() {
         return firingEvents;
@@ -343,27 +350,9 @@ public final class SkillSet implements Iterable<Skill> {
     /**
      * Enables or disables skill-related event firing for this set.
      *
-     * @param firingEvents {@code true} to enable event firing, {@code false} to disable it.
+     * @param firingEvents {@code true} to enable event firing, otherwise {@code false}.
      */
     public void setFiringEvents(boolean firingEvents) {
         this.firingEvents = firingEvents;
-    }
-
-    /**
-     * Returns whether a restoration task is currently active for this skill set.
-     *
-     * @return {@code true} if currently restoring, otherwise {@code false}.
-     */
-    public boolean isRestoring() {
-        return restoring;
-    }
-
-    /**
-     * Sets whether a restoration task is currently active for this skill set.
-     *
-     * @param restoring The new restoring state.
-     */
-    public void setRestoring(boolean restoring) {
-        this.restoring = restoring;
     }
 }

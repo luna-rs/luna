@@ -14,24 +14,13 @@ import java.util.stream.IntStream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Represents a single skill within a {@link SkillSet}, tracking both the <b>static</b> (experience-based) level and
- * the <b>dynamic</b> (temporarily modified) level.
- *
- * <h2>Static vs dynamic levels</h2>
+ * Represents a single skill within a {@link SkillSet}.
+ * <p>
+ * Each skill tracks three related values:
  * <ul>
- *     <li><b>Static level</b> – the level derived from total {@link #experience}. This is what players “really” are,
- *     and is recalculated via {@link SkillSet#levelForExperience(int)}. This value is cached in {@link #staticLevel}
- *     and invalidated whenever experience changes.</li>
- *     <li><b>Dynamic level</b> – the current, temporary level shown/used by game logic when boosts or drains apply
- *     (potions, prayers, debuffs, etc). This is stored in {@link #level} and may differ from the static level.</li>
- * </ul>
- *
- * <h2>Events and restoration</h2>
- * <ul>
- *     <li>Whenever experience or the dynamic level changes, a {@link SkillChangeEvent} may be posted if the owning
- *     {@link SkillSet} is configured to fire events (see {@link SkillSet#isFiringEvents()}).</li>
- *     <li>If the dynamic level changes away from the static level, a {@link SkillRestorationTask} may be scheduled
- *     to gradually restore skills back toward their static level (see {@link SkillSet#isRestoring()}).</li>
+ *     <li>Its immutable skill {@link #id}</li>
+ *     <li>Its current dynamic {@link #level}, which may be temporarily boosted or drained</li>
+ *     <li>Its total {@link #experience}, from which the static level is derived</li>
  * </ul>
  *
  * @author lare96
@@ -56,7 +45,6 @@ public final class Skill {
      * Maps skill name -> skill identifier.
      * <p>
      * Built from {@link #NAMES} in the static initializer.
-     * </p>
      */
     public static final ImmutableMap<String, Integer> NAME_TO_ID;
 
@@ -64,7 +52,6 @@ public final class Skill {
      * Immutable list of all skill identifiers.
      * <p>
      * This is effectively {@code 0..NAMES.size()-1} but derived from {@link #NAME_TO_ID} for convenience.
-     * </p>
      */
     public static final ImmutableList<Integer> IDS;
 
@@ -188,7 +175,6 @@ public final class Skill {
      * Retrieves the skill identifier for {@code name}, or {@code -1} if none were found.
      * <p>
      * Matching is exact and case-sensitive.
-     * </p>
      *
      * @param name The skill name (must match an entry in {@link #NAMES}).
      * @return The skill identifier, {@code -1} if none were found.
@@ -231,16 +217,14 @@ public final class Skill {
      * <p>
      * This is computed lazily from {@link #experience} and cached to avoid repeated {@link SkillSet#levelForExperience(int)}
      * calls. It is invalidated by setting {@code staticLevel = -1} whenever experience changes.
-     * </p>
      */
     private transient int staticLevel = -1;
 
     /**
      * The dynamic (temporarily modified) level.
      * <p>
-     * This may be higher or lower than the static level due to buffs/drains. Restoration may move this back
-     * toward {@link #getStaticLevel()} over time.
-     * </p>
+     * This may be higher or lower than the static level due to buffs/drains. Restoration may move this back toward
+     * {@link #getStaticLevel()} over time.
      */
     private int level = 1;
 
@@ -248,7 +232,6 @@ public final class Skill {
      * Total accumulated experience for this skill.
      * <p>
      * Bounded to {@code [0, SkillSet.MAXIMUM_EXPERIENCE]} by {@link #setExperience(double)}.
-     * </p>
      */
     private double experience;
 
@@ -257,7 +240,6 @@ public final class Skill {
      * <p>
      * Hitpoints starts at level 10 with 1300 experience (classic RuneScape default), while other skills start at
      * level 1 with 0 experience.
-     * </p>
      *
      * @param id The skill identifier.
      * @param set The owning skill set.
@@ -278,30 +260,10 @@ public final class Skill {
     }
 
     /**
-     * Schedules restoration if the dynamic level differs from the static level and restoration is enabled.
-     * <p>
-     * This method is intentionally conservative: it only schedules restoration when:
-     * </p>
-     * <ul>
-     *     <li>The {@link SkillSet} is not currently restoring ({@link SkillSet#isRestoring()} is {@code false}).</li>
-     *     <li>The dynamic {@link #level} differs from {@link #staticLevel}.</li>
-     * </ul>
-     */
-    private void restoreSkills() {
-        if (!set.isRestoring()) {
-            if (level != getStaticLevel()) {
-                var world = set.getMob().getWorld();
-                world.schedule(new SkillRestorationTask(set));
-            }
-        }
-    }
-
-    /**
      * Adds experience to this skill.
      * <p>
      * For non-bot mobs, experience is multiplied by the configured game experience multiplier. Bots receive experience
      * at a fixed multiplier of {@code 1.0} (no bonus).
-     * </p>
      *
      * @param amount The raw amount of experience to add.
      * @throws IllegalArgumentException if {@code amount <= 0}.
@@ -316,7 +278,6 @@ public final class Skill {
      * Posts a {@link SkillChangeEvent} to plugins if event firing is enabled.
      * <p>
      * The event includes the previous values so listeners can compute deltas or react to level-ups.
-     * </p>
      *
      * @param oldExperience The previous experience value.
      * @param oldStaticLevel The previous static level.
@@ -331,8 +292,6 @@ public final class Skill {
     }
 
     /**
-     * Returns the name of this skill.
-     *
      * @return The skill name (from {@link #NAMES}).
      */
     public String getName() {
@@ -340,8 +299,6 @@ public final class Skill {
     }
 
     /**
-     * Returns the identifier of this skill.
-     *
      * @return The skill identifier.
      */
     public int getId() {
@@ -352,7 +309,6 @@ public final class Skill {
      * Returns the static (experience-based) skill level.
      * <p>
      * This is computed lazily and cached. The cache is invalidated whenever experience changes.
-     * </p>
      *
      * @return The experience-based level.
      */
@@ -375,8 +331,6 @@ public final class Skill {
     }
 
     /**
-     * Returns the dynamic (temporarily modified) skill level.
-     *
      * @return The current dynamic level.
      */
     public int getLevel() {
@@ -388,7 +342,6 @@ public final class Skill {
      * <p>
      * The level is clamped to a minimum of {@code 0}. If the value does not change, no events are fired and restoration
      * is not scheduled.
-     * </p>
      *
      * @param newLevel The new dynamic level.
      */
@@ -403,7 +356,7 @@ public final class Skill {
         if (oldLevel == level) {
             return;
         }
-        restoreSkills();
+        set.restoreSkills(this);
         notifyListeners(experience, getStaticLevel(), oldLevel);
     }
 
@@ -411,8 +364,8 @@ public final class Skill {
      * Increases the dynamic skill level by {@code amount}.
      * <p>
      * If {@code exceedStaticLevel} is {@code false}, the result is capped at {@link #getStaticLevel()}.
+     * <p>
      * If {@code exceedStaticLevel} is {@code true}, the result is capped at {@code getStaticLevel() + amount}.
-     * </p>
      *
      * @param amount The amount to increase by.
      * @param exceedStaticLevel If {@code true}, allow the boost above the static level (up to {@code static + amount});
@@ -430,7 +383,6 @@ public final class Skill {
      * Decreases the dynamic skill level by {@code amount}.
      * <p>
      * The result is clamped to a minimum of {@code 0}.
-     * </p>
      *
      * @param amount The amount to remove.
      */
@@ -453,10 +405,8 @@ public final class Skill {
      * Sets total accumulated experience for this skill.
      * <p>
      * The value is clamped into {@code [0, SkillSet.MAXIMUM_EXPERIENCE]}. If the value does not change, nothing happens.
-     * </p>
      * <p>
      * If the value changes, the cached static level is invalidated and listeners may be notified.
-     * </p>
      *
      * @param newExperience The new experience value.
      */

@@ -42,6 +42,21 @@ public class NpcClickEvent extends PlayerEvent implements ControllableEvent, Int
     }
 
     /**
+     * An event sent when a player clicks an npc's "Attack" option index.
+     *
+     * @author lare96
+     */
+    public static final class AttackNpcEvent extends NpcClickEvent {
+
+        /**
+         * Creates a new {@link AttackNpcEvent}.
+         */
+        public AttackNpcEvent(Player player, Npc npc) {
+            super(player, npc);
+        }
+    }
+
+    /**
      * An event sent when a player clicks an npc's third index.
      *
      * @author lare96
@@ -49,7 +64,7 @@ public class NpcClickEvent extends PlayerEvent implements ControllableEvent, Int
     public static final class NpcThirdClickEvent extends NpcClickEvent {
 
         /**
-         * Creates a new {@link NpcClickEvent}.
+         * Creates a new {@link NpcThirdClickEvent}.
          */
         public NpcThirdClickEvent(Player player, Npc npc) {
             super(player, npc);
@@ -64,24 +79,9 @@ public class NpcClickEvent extends PlayerEvent implements ControllableEvent, Int
     public static final class NpcFourthClickEvent extends NpcClickEvent {
 
         /**
-         * Creates a new {@link NpcClickEvent}.
+         * Creates a new {@link NpcFourthClickEvent}.
          */
         public NpcFourthClickEvent(Player player, Npc npc) {
-            super(player, npc);
-        }
-    }
-
-    /**
-     * An event sent when a player clicks an npc's fifth index.
-     *
-     * @author lare96
-     */
-    public static final class NpcFifthClickEvent extends NpcClickEvent {
-
-        /**
-         * Creates a new {@link NpcClickEvent}.
-         */
-        public NpcFifthClickEvent(Player player, Npc npc) {
             super(player, npc);
         }
     }

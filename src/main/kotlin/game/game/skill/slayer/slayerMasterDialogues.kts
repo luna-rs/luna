@@ -7,7 +7,7 @@ for(master in SlayerMaster.VALUES) {
     npc1(master.id) {
         Slayer.openDialogue(plr, master)
     }
-    npc4(master.id) {
+    npc3(master.id) {
         Slayer.openShop(plr)
     }
 }

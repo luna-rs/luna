@@ -17,6 +17,7 @@ import io.luna.game.model.mob.block.UpdateBlockData;
 import io.luna.game.model.mob.block.UpdateBlockData.Builder;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.combat.CombatContext;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 import io.luna.net.codec.ByteMessage;
@@ -40,7 +41,6 @@ public abstract class Mob extends Entity {
      * The set of update flags indicating which update blocks need to be encoded for this mob.
      * <p>
      * This is tick-local state and must only be mutated from the game thread.
-     * </p>
      */
     protected final UpdateFlagSet flags = new UpdateFlagSet();
 
@@ -63,6 +63,11 @@ public abstract class Mob extends Entity {
      * The movement navigator used for routing and generating paths.
      */
     protected final WalkingNavigator navigator = new WalkingNavigator(this);
+
+    /**
+     * The combat context holding important combat data.
+     */
+    protected final CombatContext combat = new CombatContext(this);
 
     /**
      * Index into the global {@link MobList}. {@code -1} indicates "not registered".
@@ -362,8 +367,8 @@ public abstract class Mob extends Entity {
         int levelBefore = hp.getLevel();
         hp.setLevel(Math.max(amount, 0));
         if (levelBefore > 0 && hp.getLevel() <= 0) {
-            // TODO Determine the true killer/source after combat system is implemented.
-            Mob source = null;
+            Mob source = combat.getHitStack().getHighestDamage();
+
             world.schedule(new MobDeathTask(this, source));
         }
     }
@@ -936,5 +941,14 @@ public abstract class Mob extends Entity {
      */
     public int getTransformId() {
         return transformId;
+    }
+
+    /**
+     * The combat context holding all important data and sub-systems related to combat.
+     *
+     * @return The combat context holding important combat data.
+     */
+    public CombatContext getCombat() {
+        return combat;
     }
 }

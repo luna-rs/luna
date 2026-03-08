@@ -20,7 +20,7 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
      * Creates a new {@link EquipmentDefinitionFileParser}.
      */
     public EquipmentDefinitionFileParser() {
-        super(Paths.get("data", "game", "def", "equipment.json"));
+        super(Paths.get("data", "game", "def", "equipment", "equipment.json"));
     }
 
     @Override

@@ -2,7 +2,6 @@ package engine.combat.weapon
 
 import api.predef.*
 import io.luna.game.model.def.WeaponStyleDefinition
-import io.luna.game.model.mob.combat.CombatStance
 
 val AUTOCAST_BUTTONS = setOf(1093, 1094, 1097)
 

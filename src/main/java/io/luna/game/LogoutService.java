@@ -141,8 +141,8 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
             return true;
         }
 
-        // TODO: combat timer gate can be added here.
-        return (player.getControllers().checkLogout() && !player.isLocked()) || request.isTimeout();
+        return (player.getControllers().checkLogout() && !player.isLocked() && !player.getCombat().inCombat())
+                || request.isTimeout();
     }
 
     @Override
