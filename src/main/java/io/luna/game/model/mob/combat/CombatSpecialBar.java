@@ -32,7 +32,6 @@ public final class CombatSpecialBar {
      */
     private static final int SPECIAL_BAR_EMPTY = 0;
 
-
     /**
      * An {@link Action} that periodically restores special attack energy until it reaches full.
      */
@@ -45,15 +44,10 @@ public final class CombatSpecialBar {
             super(player, ActionType.SOFT, false, 50);
         }
 
-        /**
-         * Restores special attack energy each execution cycle until the bar is full.
-         *
-         * @return {@code true} if restoration is complete and the action should stop.
-         */
         @Override
         public boolean run() {
             restore(10);
-            return specialEnergy >= 100;
+            return energy >= 100;
         }
     }
 
@@ -70,7 +64,7 @@ public final class CombatSpecialBar {
     /**
      * The current special attack energy, from {@code 0} to {@code 100}.
      */
-    private int specialEnergy;
+    private int energy;
 
     /**
      * {@code true} if special attack mode is currently enabled.
@@ -105,6 +99,15 @@ public final class CombatSpecialBar {
      * @return {@code true} if the special attack mode changed state.
      */
     public boolean toggleOn() {
+        if (energy == 0) {
+            // TODO Does it only short-circuit here on 0 special energy? Or if you don't have enough for the weapon
+            //  regardless?
+            // TODO Instant special attacks sent from here? Or do they just ignore the attack delay in the combat loop?
+            //  test which feels better.
+            player.sendMessage("You do not have enough special energy left.");
+            player.sendVarp(new Varp(301, 0));
+            return false;
+        }
         if (!activated) {
             player.sendVarp(new Varp(301, 1));
             activated = true;
@@ -128,7 +131,7 @@ public final class CombatSpecialBar {
     }
 
     /**
-     * Updates the client-side special attack meter for the currently equipped weapon.
+     * Updates the visual special attack meter for the currently equipped weapon.
      *
      * @return {@code true} if a special attack bar was present and updated.
      */
@@ -140,7 +143,7 @@ public final class CombatSpecialBar {
 
         int segment = SPECIAL_BAR_SEGMENTS;
         int segmentId = specialDef.getMeter();
-        int fillSegments = specialEnergy / SPECIAL_BAR_SEGMENTS;
+        int fillSegments = energy / SPECIAL_BAR_SEGMENTS;
 
         for (int i = 0; i < SPECIAL_BAR_SEGMENTS; i++) {
             player.queue(new WidgetPositionMessageWriter(--segmentId, fillSegments >= segment ?
@@ -158,8 +161,8 @@ public final class CombatSpecialBar {
      * @return {@code true} if the drain succeeded.
      */
     public boolean drain(int amount, boolean toggleOff) {
-        if (specialEnergy >= amount) {
-            specialEnergy -= amount;
+        if (energy >= amount) {
+            energy -= amount;
             update();
             if (toggleOff) {
                 toggleOff();
@@ -176,9 +179,9 @@ public final class CombatSpecialBar {
      * @param amount the amount of special energy to restore.
      */
     public void restore(int amount) {
-        specialEnergy += amount;
-        if (specialEnergy > 100) {
-            specialEnergy = 100;
+        energy += amount;
+        if (energy > 100) {
+            energy = 100;
         }
         update();
     }
@@ -188,7 +191,7 @@ public final class CombatSpecialBar {
      * restoration action is currently active.
      */
     public void startRestoration() {
-        if (specialEnergy < 100 && !player.getActions().contains(SpecialBarRestorationAction.class)) {
+        if (energy < 100 && !player.getActions().contains(SpecialBarRestorationAction.class)) {
             player.getActions().submit(new SpecialBarRestorationAction());
         }
     }
@@ -198,22 +201,29 @@ public final class CombatSpecialBar {
      *
      * @return the special attack energy, from {@code 0} to {@code 100}.
      */
-    public int getSpecialEnergy() {
-        return specialEnergy;
+    public int getEnergy() {
+        return energy;
     }
 
     /**
-     * Sets the current special attack energy, clamping the value to the range {@code 0..100}.
+     * Sets the current special attack energy, clamping the value to the range {@code 0..100}. <strong>This only changes
+     * the internal value. The bar still needs to be visually updated using {@link #update()}.</strong>
      *
-     * @param specialEnergy the special attack energy to set.
+     * @param specialEnergy The special attack energy to set.
      */
-    public void setSpecialEnergy(int specialEnergy) {
+    public void setEnergy(int specialEnergy) {
         if (specialEnergy > 100) {
             specialEnergy = 100;
         } else if (specialEnergy < 0) {
             specialEnergy = 0;
         }
-        this.specialEnergy = specialEnergy;
-        update();
+        energy = specialEnergy;
+    }
+
+    /**
+     * @return {@code true} if special attack mode is currently enabled.
+     */
+    public boolean isActivated() {
+        return activated;
     }
 }
