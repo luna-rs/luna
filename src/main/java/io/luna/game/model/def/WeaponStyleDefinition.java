@@ -87,6 +87,11 @@ public final class WeaponStyleDefinition {
     private final CombatStance stance;
 
     /**
+     * The effective range of this combat style.
+     */
+    private final int range;
+
+    /**
      * The skill ids that receive experience from this combat style.
      */
     private final ImmutableList<Integer> exp;
@@ -101,10 +106,11 @@ public final class WeaponStyleDefinition {
      * @param bonus The equipment bonus used for accuracy calculations.
      * @param button The button used by this combat style.
      * @param stance The combat stance.
+     * @param range The effective range of this combat style.
      * @param exp The skill ids that receive experience.
      */
     public WeaponStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, int button,
-                                 CombatStance stance, ImmutableList<Integer> exp) {
+                                 CombatStance stance, int range, ImmutableList<Integer> exp) {
         this.type = type;
         this.speed = speed;
         this.animation = animation;
@@ -112,6 +118,7 @@ public final class WeaponStyleDefinition {
         this.bonus = bonus;
         this.button = button;
         this.stance = stance;
+        this.range = range;
         this.exp = exp;
     }
 
@@ -162,6 +169,13 @@ public final class WeaponStyleDefinition {
      */
     public CombatStance getStance() {
         return stance;
+    }
+
+    /**
+     * @return The effective range.
+     */
+    public int getRange() {
+        return range;
     }
 
     /**

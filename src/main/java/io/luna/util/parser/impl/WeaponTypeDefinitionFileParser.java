@@ -63,9 +63,10 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             EquipmentBonus bonus = EquipmentBonus.valueOf(obj.get("bonus").getAsString());
             int button = obj.has("button") ? obj.get("button").getAsInt() : -1;
             CombatStance stance = CombatStance.valueOf(obj.get("stance").getAsString());
+            int range = obj.get("range").getAsInt();
             ImmutableList<Integer> exp = Arrays.stream(GsonUtils.getAsType(obj.get("exp"), String[].class)).
                     map(Skill::getId).collect(ImmutableList.toImmutableList());
-            styles.add(new WeaponStyleDefinition(styleType, speed, animation, config, bonus, button, stance, exp));
+            styles.add(new WeaponStyleDefinition(styleType, speed, animation, config, bonus, button, stance, range, exp));
         }
         WeaponSpecialBarDefinition specialBar = GsonUtils.getAsType(token.get("special"), WeaponSpecialBarDefinition.class);
         return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar);
