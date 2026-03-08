@@ -1,5 +1,6 @@
 package io.luna.game.model.mob.block;
 
+import com.google.common.base.Objects;
 import io.luna.game.model.mob.Player;
 
 /**
@@ -209,6 +210,23 @@ public final class PlayerModelAnimation {
         this.turningRightId = turningRightId;
         this.turningLeftId = turningLeftId;
         this.runningId = runningId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PlayerModelAnimation)) return false;
+        PlayerModelAnimation that = (PlayerModelAnimation) o;
+        return standingId == that.standingId && standingTurnId == that.standingTurnId &&
+                walkingId == that.walkingId && turning180DegreesId == that.turning180DegreesId &&
+                turningRightId == that.turningRightId && turningLeftId == that.turningLeftId &&
+                runningId == that.runningId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(standingId, standingTurnId, walkingId, turning180DegreesId,
+                turningRightId, turningLeftId, runningId);
     }
 
     /**
