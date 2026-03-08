@@ -59,9 +59,9 @@ DeathHookHandler.setDefaultHook(Player::class) {
                         iterator.set(item.addAmount(-1))
                     } else {
                         keepItems += item
+                        iterator.remove()
                     }
                     keepAmount--
-                    iterator.remove()
                 }
                 victim.inventory.addAll(keepItems)
             }
