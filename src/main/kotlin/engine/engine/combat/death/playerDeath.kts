@@ -3,6 +3,7 @@ package engine.combat.death
 import api.combat.death.DeathHookHandler
 import api.predef.*
 import api.predef.ext.*
+import engine.combat.prayer.CombatPrayer
 import game.player.Animations
 import game.player.Jingles
 import io.luna.Luna
@@ -25,6 +26,8 @@ DeathHookHandler.setDefaultHook(Player::class) {
         victim.sendMessage("Oh dear, you have died!")
         victim.animation(Animations.DEATH, AnimationPriority.HIGH)
         victim.playJingle(Jingles.DEATH_2)
+        victim.combat.stopCombatTimer()
+        victim.combat.hitStack.clear()
     }
 
     death {
@@ -38,6 +41,9 @@ DeathHookHandler.setDefaultHook(Player::class) {
             var keepAmount = 3
             if (victim.skullIcon == SkullIcon.WHITE) {
                 keepAmount = 0
+            }
+            if(victim.combat.prayers.isActive(CombatPrayer.PROTECT_ITEM)) {
+                keepAmount++
             }
             if (keepAmount > 0) {
                 val keepItems = ArrayList<Item>()
