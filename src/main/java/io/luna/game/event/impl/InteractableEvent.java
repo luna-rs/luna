@@ -1,15 +1,18 @@
 package io.luna.game.event.impl;
 
 import io.luna.game.event.Event;
+import io.luna.game.event.EventListener;
 import io.luna.game.model.Entity;
-import io.luna.game.model.mob.InteractionTask;
+import io.luna.game.model.mob.interact.InteractionAction;
 
 /**
  * Represents an {@link Event} type that require a target to be interacted with, before they are posted.
  * <p>
  * Events implementing this interface are not dispatched immediately. Instead, they are wrapped in an
- * {@link InteractionTask}, which handles movement and distance checks. The event is only posted once the
- * interaction requirements (such as proximity) are successfully satisfied.
+ * {@link InteractionAction}, which handles movement and distance checks. The event is only posted once the interaction
+ * requirements (such as proximity) are successfully satisfied.
+ * <p>
+ * Interaction requirements are determined by {@link EventListener} types within scripts.
  * <p>
  * Typical use cases include:
  * <ul>
@@ -25,24 +28,10 @@ public interface InteractableEvent {
     /**
      * Returns the interaction target for this event.
      * <p>
-     * The returned {@link Entity} is used by the {@link InteractionTask} to determine pathfinding, proximity checks,
+     * The returned {@link Entity} is used by the {@link InteractionAction} to determine pathfinding, proximity checks,
      * and completion conditions.
      *
      * @return The target entity of the interaction.
      */
     Entity target();
-
-    /**
-     * Returns the required interaction distance.
-     * <p>
-     * This represents the maximum allowed tile distance between the actor and the {@link #target()} before the
-     * interaction is considered valid.
-     * <p>
-     * The default value is {@code 1}, meaning the actor must stand adjacent to the target.
-     *
-     * @return The required interaction distance.
-     */
-    default int distance() {
-        return 1;
-    }
 }

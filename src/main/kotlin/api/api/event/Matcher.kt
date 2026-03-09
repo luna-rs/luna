@@ -109,8 +109,8 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
     /**
      * Adds an optimized listener key -> value pair.
      */
-    operator fun set(key: K, value: E.() -> Unit) {
-        val matcherListener = EventMatcherListener(value)
+    fun set(key: K, value: E.() -> Unit, interaction: InteractionPolicyListener) {
+        val matcherListener = EventMatcherListener(value, interaction)
         actions.put(key, matcherListener)
         scriptMatchers += matcherListener
     }

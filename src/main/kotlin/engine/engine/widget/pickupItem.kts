@@ -6,6 +6,7 @@ import game.player.Sounds
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent
 import io.luna.game.model.EntityState
+import io.luna.game.model.mob.interact.InteractionPolicy
 import io.luna.util.logging.LoggingSettings.FileOutputType
 import org.apache.logging.log4j.util.Unbox.box
 
@@ -22,7 +23,7 @@ val itemPickup = FileOutputType.ITEM_PICKUP.level
 /**
  * Pickup the item.
  */
-on(PickupItemEvent::class, EventPriority.HIGH) {
+on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_SIZE) {
     val pickupItem = groundItem.toItem()
     when {
         !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.INVENTORY_FULL)

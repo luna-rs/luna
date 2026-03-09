@@ -4,6 +4,7 @@ import api.predef.*
 import io.luna.game.event.Event
 import io.luna.game.event.EventListener
 import io.luna.game.event.EventPriority
+import io.luna.game.model.mob.interact.InteractionPolicy
 import kotlin.reflect.KClass
 
 /**
@@ -14,7 +15,8 @@ import kotlin.reflect.KClass
  */
 class InterceptFilter<E : Event>(private val eventType: KClass<E>,
                                  private val condition: E.() -> Boolean,
-                                 private val testValue: Boolean) {
+                                 private val testValue: Boolean,
+                                 private val interaction: InteractionPolicyListener) {
 
     /**
      * Test condition, and run if satisfied!
@@ -25,6 +27,6 @@ class InterceptFilter<E : Event>(private val eventType: KClass<E>,
                 action(it)
             }
         }
-        scriptListeners += EventListener(eventType.java, wrappedAction, EventPriority.NORMAL)
+        scriptListeners += EventListener(eventType.java, wrappedAction, EventPriority.NORMAL, interaction)
     }
 }

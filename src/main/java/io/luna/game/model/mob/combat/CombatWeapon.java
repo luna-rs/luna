@@ -121,6 +121,15 @@ public final class CombatWeapon {
     }
 
     /**
+     * Returns the range of the currently equipped weapon and combat style in use.
+     *
+     * @return The current attack range.
+     */
+    public int getRange() {
+        return styleDef.getRange();
+    }
+
+    /**
      * Returns the resolved weapon definition for the currently equipped weapon.
      *
      * @return The current weapon definition.
