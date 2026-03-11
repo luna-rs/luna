@@ -13,6 +13,7 @@ on(WalkingEvent::class, EventPriority.HIGH) {
         plr.resetInteractingWith()
         plr.resetInteractionTask()
     }
+    plr.overlays.closeWindows()
     plr.walking.clear()
     plr.walking.addPath(steps)
 }
