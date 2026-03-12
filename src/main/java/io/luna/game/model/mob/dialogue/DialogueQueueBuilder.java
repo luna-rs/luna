@@ -297,8 +297,11 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder give(Item item, String displayText) {
+    public DialogueQueueBuilder give(Item item, String displayText, boolean addItem) {
         checkLocked();
+        if(addItem) {
+            player.giveItem(item);
+        }
         dialogues.add(new GiveItemDialogue(item, displayText));
         return this;
     }
@@ -308,8 +311,11 @@ public final class DialogueQueueBuilder {
      *
      * @return This builder, for chaining.
      */
-    public DialogueQueueBuilder give(Item item) {
+    public DialogueQueueBuilder give(Item item, boolean addItem) {
         checkLocked();
+        if(addItem) {
+            player.giveItem(item);
+        }
         dialogues.add(new GiveItemDialogue(item));
         return this;
     }
@@ -351,7 +357,7 @@ public final class DialogueQueueBuilder {
             DialogueInterface lastDialogue = dialogues.peekLast();
 
             checkState(lastDialogue != null, "No last dialogue to attach action to.");
-            lastDialogue.setCloseAction(action);
+            lastDialogue.setContinueAction(action);
         }
         locked = true;
         return this;
