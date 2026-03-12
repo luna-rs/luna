@@ -59,7 +59,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
         }
 
         // Check if we're movement or action locked, or if no steps were recorded.
-        if (player.getWalking().isLocked() || player.isLocked() || event.getSteps().isEmpty()) {
+        if (player.getWalking().isLocked() || event.getSteps().isEmpty()) {
             return false;
         }
 

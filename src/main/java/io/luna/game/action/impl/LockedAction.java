@@ -44,7 +44,7 @@ public abstract class LockedAction extends Action<Player> {
     }
 
     @Override
-    public void onFinished() {
+    public final void onFinished() {
         mob.unlock();
         onUnlock();
     }

@@ -81,7 +81,7 @@ public final class WalkingQueue {
      */
     public void process() {
         // Ignore processing and clear queue for stationary NPCs and locked mobs.
-        if ((mob instanceof Npc && mob.asNpc().isStationary()) || locked || mob.isLocked()) {
+        if ((mob instanceof Npc && mob.asNpc().isStationary()) || locked) {
             clear();
             mob.setWalkingDirection(Direction.NONE);
             mob.setRunningDirection(Direction.NONE);

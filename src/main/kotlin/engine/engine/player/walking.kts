@@ -9,10 +9,6 @@ import io.luna.game.event.impl.WalkingEvent.WalkingOrigin
  * Adds the path from the client to the walking queue.
  */
 on(WalkingEvent::class, EventPriority.HIGH) {
-    if (origin == WalkingOrigin.MINIMAP || origin == WalkingOrigin.MAIN_SCREEN) {
-        plr.resetInteractingWith()
-        plr.resetInteractionTask()
-    }
     plr.walking.clear()
     plr.walking.addPath(steps)
 }

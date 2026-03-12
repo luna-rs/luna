@@ -49,9 +49,8 @@ open class TeleportAction(plr: Player,
 
     override fun run(): Boolean = !style.action(this)
 
-    override fun onFinished() {
-        mob.unlock()
-        mob.teleportDelay.reset()
+    override fun onUnlock() {
+         mob.teleportDelay.reset()
     }
 
     /**
