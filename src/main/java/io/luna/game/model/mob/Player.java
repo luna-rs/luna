@@ -10,7 +10,6 @@ import game.player.Sounds;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
-import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.LoginEvent;
 import io.luna.game.event.impl.LogoutEvent;
 import io.luna.game.model.Entity;
@@ -41,7 +40,6 @@ import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
-import io.luna.game.task.TaskState;
 import io.luna.net.LunaChannelFilter;
 import io.luna.net.client.GameClient;
 import io.luna.net.msg.GameMessageWriter;
@@ -261,11 +259,6 @@ public class Player extends Mob {
     private final Stopwatch timeOnline = Stopwatch.createUnstarted();
 
     /**
-     * The current interaction task (e.g., walking to an entity and performing an action), or {@code null}.
-     */
-    private InteractionTask interactionTask;
-
-    /**
      * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
      * @param context The global context instance.
@@ -407,39 +400,6 @@ public class Player extends Mob {
             if (isBot()) {
                 rights = PlayerRights.PLAYER;
             }
-        }
-    }
-
-    /**
-     * Schedules an {@link InteractableEvent} to be executed once this player reaches the target {@link Entity}.
-     * <p>
-     * If an existing {@link InteractionTask} is running, it is cancelled and replaced.
-     * </p>
-     *
-     * @param entity The entity to interact with.
-     * @param event The event to post once the entity is reached.
-     * @param action A callback to run if the interaction completes successfully.
-     */
-    public void handleInteractableEvent(Entity entity, InteractableEvent event, Runnable action) {
-        // todo change to action? redo this when real combat is started
-        if (interactionTask == null || interactionTask.getState() == TaskState.CANCELLED) {
-            // Cancelled or missing interaction task, create new one.
-            interactionTask = new InteractionTask(this, entity, event, action);
-            world.schedule(interactionTask);
-        } else if (interactionTask.getState() == TaskState.RUNNING) {
-            // We have an interaction pending, cancel old task and create new one.
-            interactionTask.cancel();
-            interactionTask = new InteractionTask(this, entity, event, action);
-            world.schedule(interactionTask);
-        }
-    }
-
-    /**
-     * Cancels the current {@link InteractionTask}, if present.
-     */
-    public void resetInteractionTask() {
-        if (interactionTask != null) {
-            interactionTask.cancel();
         }
     }
 
@@ -1280,24 +1240,6 @@ public class Player extends Mob {
      */
     public Stopwatch getTimeOnline() {
         return timeOnline;
-    }
-
-    /**
-     * Returns the current {@link InteractionTask}, if any.
-     *
-     * @return The interaction task, or {@code null}.
-     */
-    public InteractionTask getInteractionTask() {
-        return interactionTask;
-    }
-
-    /**
-     * Sets the current {@link InteractionTask}.
-     *
-     * @param interactionTask The new interaction task, or {@code null}.
-     */
-    public void setInteractionTask(InteractionTask interactionTask) {
-        this.interactionTask = interactionTask;
     }
 
     /**

@@ -3,8 +3,6 @@ package api.event.dsl
 import api.event.Matcher
 import api.predef.*
 import io.luna.game.event.Event
-import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.interact.InteractionType
 import javax.script.ScriptException
 import kotlin.reflect.KClass
 
@@ -13,7 +11,7 @@ import kotlin.reflect.KClass
  *
  * @author lare96
  */
-class InterceptBy<E : Event>(private val eventType: KClass<E>, private val interaction: InteractionPolicyListener) {
+class InterceptBy<E : Event>(private val eventType: KClass<E>, private val interaction: InteractionPolicySupplier) {
 
     /**
      * Filtering function that executes the event listener if the condition is `true`. Forwards to

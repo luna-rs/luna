@@ -20,11 +20,12 @@ import io.luna.game.model.chunk.Chunk;
 import io.luna.game.model.chunk.ChunkManager;
 import io.luna.game.model.chunk.ChunkRepository;
 import io.luna.game.model.collision.CollisionUpdate.DirectionFlag;
-import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Mob;
-import io.luna.game.model.mob.Npc;
-import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.object.GameObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -35,20 +36,13 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
- * Central manager for all collision data in the game world, responsible for
- * <ul>
- *     <li>Applying {@link CollisionUpdate}s to the appropriate {@link CollisionMatrix} instances.</li>
- *     <li>Tracking globally blocked tiles (e.g., pre-blocked regions or runtime modifications).</li>
- *     <li>Tracking tiles that participate in “bridged” structures (where height handling differs).</li>
- *     <li>Providing high-level APIs for traversability checks and “reached” queries.</li>
- * </ul>
- *
+ * Central manager for world collision data.
  * <p>
- * Collision data is stored per chunk in one or more {@link CollisionMatrix} layers (one per plane), and are
- * snapshotted for safe reads during asynchronous operations.
- * </p>
+ * Collision is stored per {@link ChunkRepository} in one or more {@link CollisionMatrix} layers, one for each height
+ * level. Repositories may also maintain collision snapshots for safe concurrent reads.
  *
  * @author Major
  * @author lare96
@@ -56,38 +50,43 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class CollisionManager {
 
     /**
-     * A thread-safe multimap of {@link Chunk} → {@link Position} for tiles that are completely blocked (untraversable
-     * in all directions).
+     * The asynchronous logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * Globally blocked tiles keyed by chunk.
+     * <p>
+     * Positions stored here are treated as fully blocked in all directions when collision is built.
      */
     private final Multimap<Chunk, Position> blocked = Multimaps.synchronizedMultimap(HashMultimap.create());
 
     /**
-     * A thread-safe set of positions that belong to “bridged” structures (e.g., bridges or raised tiles).
+     * Tiles that belong to bridged structures.
      * <p>
-     * These tiles require special handling when computing the effective height used for collision.
-     * </p>
+     * These positions require special height handling when collision is applied or queried.
      */
     private final Set<Position> bridges = Sets.newConcurrentHashSet();
 
     /**
-     * A set of chunks that require a snapshot this ticks.
+     * The repositories that need their collision snapshots refreshed this tick.
      */
     private final Set<ChunkRepository> pendingSnapshots = new HashSet<>();
 
     /**
-     * The game world this manager belongs to.
+     * The world that owns this collision manager.
      */
     private final World world;
 
     /**
-     * The chunk manager used to locate {@link CollisionMatrix} instances.
+     * The chunk manager used to load collision repositories.
      */
     private final ChunkManager chunks;
 
     /**
-     * Creates a new {@code CollisionManager}.
+     * Creates a new {@link CollisionManager}.
      *
-     * @param world The backing {@link World} instance.
+     * @param world The backing world.
      */
     public CollisionManager(World world) {
         this.world = world;
@@ -95,12 +94,10 @@ public final class CollisionManager {
     }
 
     /**
-     * Applies all pending collision snapshots in a single, batched pass.
+     * Applies all pending collision snapshot refreshes.
      * <p>
-     * Whenever {@link #apply(CollisionUpdate, boolean)} is invoked with {@code building = false}, any affected
-     * {@link ChunkRepository}s are queued in {@link #pendingSnapshots}. This method iterates that set, calling
-     * {@link ChunkRepository#snapshotCollisionMap()} on each one and then clearing the queue.
-     * </p>
+     * Repositories are queued here when live collision is modified through {@link #apply(CollisionUpdate, boolean)}
+     * with {@code building = false}. Each queued repository is snapshot once and then removed from the pending set.
      */
     public void handleSnapshots() {
         Iterator<ChunkRepository> it = pendingSnapshots.iterator();
@@ -111,19 +108,13 @@ public final class CollisionManager {
     }
 
     /**
-     * Performs the initial construction (or reconstruction) of all collision matrices.
+     * Builds or rebuilds all world collision data.
      * <p>
-     * This method:
-     * </p>
+     * This method optionally clears existing matrices, imports blocked and bridged tile data from the cache, registers
+     * static map objects into the world, applies global blocked tiles as collision, and then snapshots the final
+     * repository state.
      *
-     * <ol>
-     *     <li>Optionally clears all existing {@link CollisionMatrix}es if {@code rebuilding} is {@code true}.</li>
-     *     <li>Applies collision from global pre-blocked tiles (see {@link #block(Position)}).</li>
-     *     <li>Applies collision from all static {@link GameObject}s loaded from the cache.</li>
-     *     <li>Snapshots each {@link ChunkRepository}'s collision state for subsequent safe reads.</li>
-     * </ol>
-     *
-     * @param rebuilding {@code true} if matrices should be reset before rebuilding, otherwise {@code false}.
+     * @param rebuilding {@code true} to reset existing matrices before rebuilding, otherwise {@code false}.
      */
     public void build(boolean rebuilding) {
         if (rebuilding) {
@@ -178,23 +169,13 @@ public final class CollisionManager {
     }
 
     /**
-     * Applies or removes collision for a dynamic {@link Entity} that affects movement.
-     *
+     * Applies or removes collision for a runtime entity.
      * <p>
-     * This is a convenience helper for runtime changes (e.g. spawned/despawned objects or
-     * NPCs that occupy tiles). Players are explicitly ignored because their collision is
-     * handled via movement and pathing rules rather than static tiles.
-     * </p>
-     *
-     * <ul>
-     *     <li>If {@code removal} is {@code false}, a {@link CollisionUpdateType#ADDING} update is built.</li>
-     *     <li>If {@code removal} is {@code true}, a {@link CollisionUpdateType#REMOVING} update is built.</li>
-     *     <li>{@link GameObject}s delegate to {@link CollisionUpdate.Builder#object(GameObject)}.</li>
-     *     <li>{@link Npc}s simply block their current tile in all directions.</li>
-     * </ul>
+     * This is used for dynamic world changes such as spawned or removed objects and NPCs. Players are ignored because
+     * their blocking behavior is handled through movement and pathing rather than static tile collision.
      *
      * @param entity The entity whose collision should be updated.
-     * @param removal {@code true} to remove collision for this entity, {@code false} to add it.
+     * @param removal {@code true} to remove collision, {@code false} to add it.
      */
     public void updateEntity(Entity entity, boolean removal) {
         if (entity.getType() == EntityType.PLAYER) {
@@ -216,15 +197,14 @@ public final class CollisionManager {
     }
 
     /**
-     * Applies a {@link CollisionUpdate} to the game world.
+     * Applies a {@link CollisionUpdate} to the world.
      * <p>
-     * This method translates the per-tile, per-direction flags in {@code update} into {@link CollisionFlag}s on
-     * the appropriate {@link CollisionMatrix} instances, taking into account bridged structures and chunk boundaries.
-     * </p>
+     * Each flagged tile in the update is translated into one or more {@link CollisionFlag}s on the appropriate
+     * {@link CollisionMatrix}, with bridge height adjustments applied where necessary. When the world is live, the
+     * modified repositories are queued for snapshot refresh.
      *
      * @param update The collision update to apply.
-     * @param building {@code true} if this is part of the initial build process (no snapshots needed per-update),
-     * {@code false} if the server is live and per-repository snapshots should be refreshed for the affected matrices.
+     * @param building {@code true} if this update is part of the initial build process, otherwise {@code false}.
      */
     public void apply(CollisionUpdate update, boolean building) {
         ChunkRepository prev = null;
@@ -278,33 +258,32 @@ public final class CollisionManager {
     }
 
     /**
-     * Casts a ray between two tiles, returning {@code false} if an impenetrable obstacle is found. This is a
-     * convenience overload that uses projectile traversability ({@link EntityType#PROJECTILE}) as the blocking
-     * condition.
+     * Casts a projectile-style line-of-sight ray between two positions.
+     * <p>
+     * This is a convenience overload of {@link #raycast(Position, Position, BiFunction)} that treats projectile
+     * collision as the blocking condition.
      *
-     * @param start The start position of the ray.
-     * @param end The end position of the ray.
-     * @return {@code true} if there is a clear line-of-sight between the two tiles, {@code false} if a blocking
-     * tile is encountered.
+     * @param start The ray start position.
+     * @param end The ray end position.
+     * @return {@code true} if the ray reaches {@code end} without hitting an impenetrable obstacle,
+     *         otherwise {@code false}.
      */
     public boolean raycast(Position start, Position end) {
         return raycast(start, end, (last, dir) -> !traversable(last, EntityType.PROJECTILE, dir));
     }
 
     /**
-     * Casts a ray into the world between {@code start} and {@code end} using Bresenham's line algorithm.
+     * Casts a ray between {@code start} and {@code end} using Bresenham's line algorithm.
      * <p>
-     * At each step, a {@link Direction} from the previous tile to the current one is computed and passed to
-     * {@code cond}. If {@code cond} returns {@code true} for any segment, the raycast is considered blocked and
-     * this method returns {@code false}. If the end is reached without {@code cond} being satisfied, the raycast
-     * is considered clear and this method returns {@code true}.
-     * </p>
+     * For each step in the line, the direction from the previous tile to the current tile is passed to {@code cond}.
+     * If {@code cond} returns {@code true} for any step, the ray is considered blocked and this method returns
+     * {@code false}. Otherwise, the ray reaches its endpoint and this method returns {@code true}.
      *
-     * @param start The start position of the ray.
-     * @param end The end position of the ray.
-     * @param cond A condition that tests whether the step between two tiles is considered blocked.
-     * @return {@code true} if the ray reaches {@code end} without the condition being satisfied, {@code false} if
-     * the condition is satisfied at any intermediate step.
+     * @param start The ray start position.
+     * @param end The ray end position.
+     * @param cond The blocking condition applied to each traversed segment.
+     * @return {@code true} if the ray reaches {@code end}, otherwise {@code false}.
+     * @throws IllegalArgumentException If the positions are not on the same height level.
      */
     public boolean raycast(Position start,
                            Position end,
@@ -415,16 +394,14 @@ public final class CollisionManager {
         return true;
     }
 
-
     /**
-     * Applies a single {@link CollisionFlag} to the given {@link CollisionMatrix}. This helper respects the
-     * {@link CollisionUpdateType}: flags are either added or cleared.
+     * Applies or clears a single {@link CollisionFlag} on a {@link CollisionMatrix}.
      *
-     * @param type The type of update (adding or removing).
+     * @param type The update type.
      * @param matrix The matrix to modify.
-     * @param localX The local X coordinate within the chunk (0–{@link Chunk#SIZE}).
-     * @param localY The local Y coordinate within the chunk (0–{@link Chunk#SIZE}).
-     * @param flag The collision flag to modify.
+     * @param localX The local X coordinate within the chunk.
+     * @param localY The local Y coordinate within the chunk.
+     * @param flag The collision flag to apply or clear.
      */
     private void flag(CollisionUpdateType type,
                       CollisionMatrix matrix,
@@ -440,42 +417,39 @@ public final class CollisionManager {
     }
 
     /**
-     * Marks a tile as fully blocked from all directions at its current height. These tiles are applied during
-     * {@link #build(boolean)} via a collision update for all pre-blocked positions.
+     * Marks {@code position} as globally blocked.
+     * <p>
+     * Blocked positions are applied as fully blocked tiles during {@link #build(boolean)}.
      *
-     * @param position The position of the tile to block.
+     * @param position The tile to block.
      */
     public void block(Position position) {
         blocked.put(position.getChunk(), position);
     }
 
     /**
-     * Marks a tile as part of a bridged structure.
+     * Marks {@code position} as bridged.
      * <p>
-     * Bridges affect how collision height is resolved when applying updates, typically causing collision to be
-     * applied one level below the visually raised tile.
-     * </p>
+     * Bridged tiles affect effective collision height when updates are applied and when certain traversability
+     * checks are performed.
      *
-     * @param position The position that is part of a bridge.
+     * @param position The bridged position.
      */
     public void markBridged(Position position) {
         bridges.add(position);
     }
 
     /**
-     * Checks if an entity of the given {@link EntityType} can move from {@code position} one step in the
-     * given {@code direction}.
+     * Returns whether an entity of {@code type} may move one step from {@code position} in {@code direction}.
      * <p>
-     * This method performs a collision lookup in the appropriate {@link ChunkRepository} and, for diagonal movement,
-     * validates both cardinal components of the diagonal to prevent corner-clipping.
-     * </p>
+     * This method performs a collision lookup in the appropriate {@link ChunkRepository}. For diagonal movement, both
+     * orthogonal components are also checked to prevent corner clipping.
      *
      * @param position The starting position.
-     * @param type The type of entity attempting to move.
-     * @param direction The direction to move in.
-     * @param safe If {@code true}, uses snapshot matrices instead of live matrices, which is safer
-     * for concurrent reads but may be slightly stale.
-     * @return {@code true} if the destination tile is traversable, otherwise {@code false}.
+     * @param type The entity type attempting the move.
+     * @param direction The direction being attempted.
+     * @param safe {@code true} to use snapshot matrices, otherwise {@code false} to use live matrices.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
      */
     public boolean traversable(Position position,
                                EntityType type,
@@ -504,29 +478,27 @@ public final class CollisionManager {
                 }
             }
         }
-
         return true;
     }
 
     /**
-     * Convenience overload of {@link #traversable(Position, EntityType, Direction, boolean)} that always uses
-     * live matrices (safe mode off).
+     * Convenience overload of {@link #traversable(Position, EntityType, Direction, boolean)} that uses live matrices.
      *
      * @param position The starting position.
      * @param type The entity type.
-     * @param direction The direction to move in.
-     * @return {@code true} if the next tile is traversable, otherwise {@code false}.
+     * @param direction The attempted direction.
+     * @return {@code true} if the move is traversable, otherwise {@code false}.
      */
     public boolean traversable(Position position, EntityType type, Direction direction) {
         return traversable(position, type, direction, false);
     }
 
     /**
-     * Returns whether a tile is blocked for player movement, optionally using the snapshot matrix.
+     * Returns whether {@code position} is blocked for player movement.
      *
-     * @param position The tile position to test.
-     * @param safe {@code true} to query the snapshot (safe, read-only), {@code false} to query the live matrix.
-     * @return {@code true} if the tile is blocked, {@code false} otherwise.
+     * @param position The tile to test.
+     * @param safe {@code true} to query the snapshot matrix, otherwise {@code false} to query the live matrix.
+     * @return {@code true} if the tile is blocked, otherwise {@code false}.
      */
     public boolean isBlocked(Position position, boolean safe) {
         int z = position.getZ();
@@ -541,77 +513,103 @@ public final class CollisionManager {
     }
 
     /**
-     * Determines if {@code start} is within the requested interaction {@code distance} of the target and that the
-     * path between them is valid according to the type of {@link Entity}.
+     * Returns whether {@code start} has satisfied the supplied interaction policy against {@code target}.
      * <p>
-     * This method delegates to specialized reach checks based on the runtime type of {@code target}
-     * (e.g., {@link GameObject}, {@link Mob}, {@link GroundItem}), and may also perform a
-     * {@link #raycast(Position, Position)} for larger distances.
-     * </p>
+     * This is the main high-level reach check used by the interaction system. The exact rule depends on the
+     * {@link InteractionType}:
+     * <ul>
+     *     <li>{@link InteractionType#UNSPECIFIED}: always succeeds</li>
+     *     <li>{@link InteractionType#LINE_OF_SIGHT}: requires view range, distance, and a clear
+     *     {@link #raycast(Position, Position)}</li>
+     *     <li>{@link InteractionType#SIZE}: uses size-aware reach logic for mobs and objects, with
+     *     distance-based fallbacks where appropriate</li>
+     * </ul>
      *
-     * @param start The starting position.
-     * @param target The target entity to interact with.
-     * @param distance The interaction distance (must not exceed {@link Position#VIEWING_DISTANCE}).
-     * @return {@code true} if the start position has successfully “reached” the target for interaction,
-     * otherwise {@code false}.
+     * @param start The interacting position.
+     * @param target The target entity.
+     * @param policy The interaction policy to test.
+     * @return {@code true} if {@code start} has reached {@code target} under {@code policy},
+     *         otherwise {@code false}.
+     * @throws IllegalArgumentException If the policy distance exceeds
+     *         {@link Position#VIEWING_DISTANCE}.
      */
-    public boolean reached(Position start,
-                           Entity target,
-                           int distance) {
+    public boolean reached(Position start, Entity target, InteractionPolicy policy) {
+        int distance = policy.getDistance();
+        checkArgument(distance <= Position.VIEWING_DISTANCE, "Distance must be below max viewable range.");
 
-        checkArgument(distance <= Position.VIEWING_DISTANCE, "distance must be below max viewable range");
-        if (!start.isViewable(target)) {
+        Position end = target.getPosition();
+        if (policy.getType() == InteractionType.UNSPECIFIED) {
+            // No checks.
+            return true;
+        } else if (distance == 0) {
+            // Distance of 0 always requires player to occupy tile.
+            return start.equals(end);
+        } else if (!start.isViewable(target)) {
             // Can't interact if the entity isn't visible.
             return false;
         }
 
-        Position end = target.getPosition();
         CollisionMatrix matrices = target.getChunkRepository().getMatrices()[start.getZ()];
-
-        if (distance > 1) {
-            // For extended range, as long as we have LOS and are in distance, we can interact.
-            return start.isWithinDistance(end, distance) && raycast(start, end);
-        } else if (target instanceof Mob) {
-            // In the client, NPC sizes are all assumed 1x1.
-            return matrices.reachedFacingEntity(start, target, 1, 1, OptionalInt.empty());
-        } else if (target instanceof GameObject) {
-            // Normal object, wall, or decoration.
-            return matrices.reachedObject(start, (GameObject) target);
-        } else if (target instanceof GroundItem) {
-            // Items are only “reached” when standing directly on them.
-            return start.equals(end);
-        } else {
-            // Fallback: reach within the target's size radius.
-            return start.isWithinDistance(target.getPosition(), target.size());
+        switch (policy.getType()) {
+            case LINE_OF_SIGHT:
+                // Line of sight requires raycast and being within the distance.
+                return start.isWithinDistance(end, distance) && raycast(start, end);
+            case SIZE:
+                if (distance == 1) {
+                    if (target instanceof Mob) {
+                        // Check if we're right beside a mob.
+                        return matrices.reachedFacingEntity(start, target, 1, 1, OptionalInt.empty());
+                    } else if (target instanceof GameObject) {
+                        // Check if we're right beside an object.
+                        return matrices.reachedObject(start, (GameObject) target);
+                    }
+                } else if (target instanceof GameObject) {
+                    // Check if we're within box distance of an object (based on its size).
+                    return isWithinBoxDistance(start, target, distance);
+                }
+                // Otherwise, fall back to if we're within distance of the target.
+                return start.isWithinDistance(target.getPosition(), distance);
         }
+        // Exhaustive code here, realistically should never be reached unless arguments are invalid.
+        logger.warn("This section should not be reached! Invalid config [{}, {}, {}].", policy.getType(),
+                box(policy.getDistance()), target);
+        return start.isWithinDistance(target.getPosition(), distance);
     }
 
     /**
-     * Convenience overload of {@link #reached(Mob, Entity, int)} with an interaction distance of {@code 1}.
-     *
-     * @param player The player attempting to reach the target.
-     * @param target The target entity.
-     * @return {@code true} if the player has reached the target, otherwise {@code false}.
-     */
-    public boolean reached(Player player, Entity target) {
-        return reached(player, target, 1);
-    }
-
-    /**
-     * Determines if a {@link Mob} has reached an {@link Entity} at the specified interaction distance.
+     * Returns whether {@code start} lies within the expanded size bounds of {@code target}.
      * <p>
-     * This method uses the mob's current position and, if the mob is a player, its last region position to compute
-     * local coordinates for collision checks.
-     * </p>
+     * This performs a box-distance check against the square footprint occupied by {@code target},
+     * expanded outward by {@code distance}. It is mainly used for size-aware interaction checks
+     * against objects.
      *
-     * @param mob The mob attempting to reach the target.
-     * @param target The target entity.
-     * @param distance The interaction distance.
-     * @return {@code true} if the mob has reached the target, otherwise {@code false}.
+     * @param start The position being tested.
+     * @param target The target entity whose footprint defines the box.
+     * @param distance The allowed distance outside that footprint.
+     * @return {@code true} if {@code start} is within the box-distance, otherwise {@code false}.
      */
-    public boolean reached(Mob mob, Entity target, int distance) {
-        return reached(mob.getPosition(),
-                target,
-                distance);
+    private boolean isWithinBoxDistance(Position start, Entity target, int distance) {
+        Position end = target.getPosition();
+
+        int minX = end.getX();
+        int minY = end.getY();
+        int maxX = minX + target.size() - 1;
+        int maxY = minY + target.size() - 1;
+
+        int dx = 0;
+        if (start.getX() < minX) {
+            dx = minX - start.getX();
+        } else if (start.getX() > maxX) {
+            dx = start.getX() - maxX;
+        }
+
+        int dy = 0;
+        if (start.getY() < minY) {
+            dy = minY - start.getY();
+        } else if (start.getY() > maxY) {
+            dy = start.getY() - maxY;
+        }
+
+        return Math.max(dx, dy) <= distance;
     }
 }

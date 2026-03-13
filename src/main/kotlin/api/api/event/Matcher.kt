@@ -15,14 +15,18 @@ import io.luna.game.event.impl.NpcClickEvent.*
 import io.luna.game.event.impl.ObjectClickEvent
 import io.luna.game.event.impl.ObjectClickEvent.*
 import io.luna.game.event.impl.UseItemEvent.*
+import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.interact.InteractionActionListener
 import kotlin.reflect.KClass
 
 /**
- * A model that will be used to match arbitrary arguments against events of type [E]. Matchers obtain a [K]ey
- * from an event message and use the key to lookup the appropriate action to run.
- *
- * This provides a performance increase when there are a large amount of event listeners in a pipeline. For
- * more information, see [issue #68](https://github.com/luna-rs/luna/issues/68).
+ * A matcher that routes events of type [E] by deriving a lookup key of type [K].
+ * 
+ * Matchers provide an optimized alternative to scanning every listener in an event pipeline. Each incoming event is
+ * transformed into a key via [key], and that key is then used to find the matching listeners directly.
+ * 
+ * Matchers may also produce [InteractionActionListener] instances for interaction-driven events so listener execution
+ * can be deferred until movement and reach requirements are satisfied.
  *
  * @author lare96
  */
@@ -31,12 +35,15 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
     companion object {
 
         /**
-         * Mappings of all matchers. The event type is the key.
+         * All registered matchers keyed by their event type.
          */
         val ALL: Map<KClass<out Event>, Matcher<*, *>>
 
         /**
-         * Retrieves a [Matcher] from the backing map that is matching on events with [E].
+         * Returns the matcher responsible for events of type [E].
+         *
+         * @return The matcher for [E].
+         * @throws NoSuchElementException If no matcher exists for [E].
          */
         @Suppress("UNCHECKED_CAST")
         inline fun <reified E : Event, K : Any> get(): Matcher<E, K> {
@@ -44,7 +51,11 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
         }
 
         /**
-         * Retrieves a [Matcher] from the backing map that is matching on events with [eventType].
+         * Returns the matcher responsible for [eventType].
+         *
+         * @param eventType The event type to look up.
+         * @return The matcher for [eventType].
+         * @throws NoSuchElementException If no matcher exists for [eventType].
          */
         @Suppress("UNCHECKED_CAST")
         fun <E : Event, K : Any> get(eventType: KClass<E>): Matcher<E, K> {
@@ -56,7 +67,10 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
         }
 
         /**
-         * Determines if the [eventType] has a dedicated matcher.
+         * Returns whether [eventType] has a dedicated matcher.
+         *
+         * @param eventType The event type to check.
+         * @return `true` if a matcher exists for [eventType].
          */
         fun <E : Event> has(eventType: KClass<E>) = ALL.containsKey(eventType)
 
@@ -90,47 +104,70 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
     }
 
     /**
-     * The map of event keys to action function instances. Will be used to match arguments.
+     * The mapping of computed event keys to registered matcher listeners.
      */
     private val actions = ArrayListMultimap.create<K, EventMatcherListener<E>>()
 
     /**
-     * Computes a lookup key from the event instance.
+     * Computes the lookup key for [msg].
+     *
+     * @param msg The event being routed.
+     * @return The key used to look up listeners for [msg].
      */
     abstract fun key(msg: E): K
 
     /**
-     * A set containing all keys in this matcher.
+     * Returns all keys currently registered in this matcher.
+     *
+     * @return The registered matcher keys.
      */
     fun keys(): Set<K> {
         return HashSet(actions.keys())
     }
 
     /**
-     * Adds an optimized listener key -> value pair.
+     * Registers an optimized listener for [key].
+     * 
+     * The listener will only be considered for events whose computed key matches [key].
+     *
+     * @param key The matcher key.
+     * @param value The listener to execute when [key] is matched.
+     * @param interaction The interaction policy supplier used when this listener participates in an
+     *        interaction-based event flow.
      */
-    fun set(key: K, value: E.() -> Unit, interaction: InteractionPolicyListener) {
+    fun set(key: K, value: E.() -> Unit, interaction: InteractionPolicySupplier) {
         val matcherListener = EventMatcherListener(value, interaction)
         actions.put(key, matcherListener)
         scriptMatchers += matcherListener
     }
 
     /**
-     * Determines if this matcher has a listener for [msg].
+     * Returns whether this matcher has at least one listener for [msg].
+     *
+     * @param msg The event to check.
+     * @return `true` if a listener exists for [msg].
      */
     fun has(msg: E) = actions.containsKey(key(msg))
 
     /**
-     * Adds a listener for this matcher to the backing pipeline set.
+     * Registers this matcher with the backing event pipeline for [eventType].
+     * 
+     * The pipeline receives an [EventMatcher] that delegates matching, existence checks, and interaction listener
+     * creation back to this matcher.
      */
     private fun addListener() {
         val type = eventType.java
         val pipeline = pipelines.get(type)
-        pipeline.setMatcher(EventMatcher(this::match, this::has, actions.size()))
+        pipeline.matcher = EventMatcher(this::match, this::has, this::interactions)
     }
 
     /**
-     * Matches [msg] to an event listener within this matcher.
+     * Attempts to match [msg] against listeners registered under its computed key.
+     * 
+     * If one or more listeners are found, they are executed in registration order.
+     *
+     * @param msg The event to match.
+     * @return `true` if at least one listener was matched and invoked, otherwise {@code false}.
      */
     private fun match(msg: E): Boolean {
         val listeners = actions[key(msg)]
@@ -144,78 +181,122 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
     }
 
     /**
-     * A base [Matcher] for [NpcClickEvent]s.
+     * Creates interaction listeners for [msg] using the listeners registered under its computed key.
+     * 
+     * Each matched listener is wrapped as an [InteractionActionListener] so it can be executed later by the 
+     * interaction system once the player has satisfied the required reach policy.
+     *
+     * @param plr The player attempting the interaction.
+     * @param msg The event being converted into interaction listeners.
+     * @return The interaction listeners created for [msg], or an empty list if none were matched.
+     */
+    fun interactions(plr: Player, msg: E): List<InteractionActionListener> {
+        val listeners = actions[key(msg)]
+        val list = ArrayList<InteractionActionListener>()
+        if (listeners.isEmpty()) {
+            return emptyList()
+        }
+        for (it in listeners) {
+            list.add(InteractionActionListener(it.interaction.apply(plr)) { it.apply(msg) })
+        }
+        return list
+    }
+
+    /**
+     * A base [Matcher] for [NpcClickEvent] types.
+     *
+     * NPC click events are matched by target NPC id.
      */
     class NpcMatcher<E : NpcClickEvent>(matchClass: KClass<E>) : Matcher<E, Int>(matchClass) {
         override fun key(msg: E) = msg.targetNpc.id
     }
 
     /**
-     * A base [Matcher] for [ItemClickEvent]s.
+     * A base [Matcher] for [ItemClickEvent] types.
+     *
+     * Item click events are matched by item id.
      */
     class ItemMatcher<E : ItemClickEvent>(matchClass: KClass<E>) : Matcher<E, Int>(matchClass) {
         override fun key(msg: E) = msg.id
     }
 
     /**
-     * A base [Matcher] for [ObjectClickEvent]s.
+     * A base [Matcher] for [ObjectClickEvent] types.
+     *
+     * Object click events are matched by object id.
      */
     class ObjectMatcher<E : ObjectClickEvent>(matchClass: KClass<E>) : Matcher<E, Int>(matchClass) {
         override fun key(msg: E) = msg.id
     }
 
     /**
-     * A singleton [Matcher] instance for [GroundItemSecondClickEvent]s.
+     * A singleton matcher for [GroundItemSecondClickEvent]s.
+     *
+     * Events are matched by ground item id.
      */
     object GroundItemSecondClickMatcher : Matcher<GroundItemSecondClickEvent, Int>(GroundItemSecondClickEvent::class) {
         override fun key(msg: GroundItemSecondClickEvent): Int = msg.groundItem.id
     }
 
     /**
-     * A singleton [Matcher] instance for [ButtonClickEvent]s.
+     * A singleton matcher for [ButtonClickEvent]s.
+     *
+     * Events are matched by button id.
      */
     object ButtonMatcher : Matcher<ButtonClickEvent, Int>(ButtonClickEvent::class) {
         override fun key(msg: ButtonClickEvent) = msg.id
     }
 
     /**
-     * A singleton [Matcher] instance for [CommandEvent]s.
+     * A singleton matcher for [CommandEvent]s.
+     *
+     * Commands are matched by [CommandKey]. The rights value is included in the key type, although command name is
+     * the primary lookup component.
      */
     object CommandMatcher : Matcher<CommandEvent, CommandKey>(CommandEvent::class) {
-        // Note: The rights value is ignored, the real key is 'msg.name'.
         override fun key(msg: CommandEvent) = CommandKey(msg.name, msg.plr.rights)
     }
 
     /**
-     * A singleton [Matcher] instance for [ItemOnItemEvent]s.
+     * A singleton matcher for [ItemOnItemEvent]s.
+     *
+     * Events are matched by the pair of used item id and target item id.
      */
     object ItemOnItemMatcher : Matcher<ItemOnItemEvent, Pair<Int, Int>>(ItemOnItemEvent::class) {
         override fun key(msg: ItemOnItemEvent) = Pair(msg.usedItemId, msg.targetItemId)
     }
 
     /**
-     * A singleton [Matcher] instance for [ItemOnObjectEvent]s.
+     * A singleton matcher for [ItemOnObjectEvent]s.
+     *
+     * Events are matched by the pair of used item id and object id.
      */
     object ItemOnObjectMatcher : Matcher<ItemOnObjectEvent, Pair<Int, Int>>(ItemOnObjectEvent::class) {
         override fun key(msg: ItemOnObjectEvent) = Pair(msg.usedItemId, msg.objectId)
     }
 
     /**
-     * A singleton [Matcher] instance for [ItemOnNpcEvent]s.
+     * A singleton matcher for [ItemOnNpcEvent]s.
+     *
+     * Events are matched by the pair of used item id and target NPC id.
      */
     object ItemOnNpcMatcher : Matcher<ItemOnNpcEvent, Pair<Int, Int>>(ItemOnNpcEvent::class) {
         override fun key(msg: ItemOnNpcEvent) = Pair(msg.usedItemId, msg.targetNpc.id)
     }
 
     /**
-     * A singleton [Matcher] instance for [ItemOnPlayerEvent]s.
+     * A singleton matcher for [ItemOnPlayerEvent]s.
+     *
+     * Events are matched by used item id.
      */
     object ItemOnPlayerMatcher : Matcher<ItemOnPlayerEvent, Int>(ItemOnPlayerEvent::class) {
         override fun key(msg: ItemOnPlayerEvent) = msg.usedItemId
     }
 
     /**
-     * A singleton [Matcher] instance for [ItemOnGroundItemEvent]s.
+     * A singleton matcher for [ItemOnGroundItemEvent]s.
+     *
+     * Events are matched by the pair of used item id and target ground item id.
      */
     object ItemOnGroundItemMatcher : Matcher<ItemOnGroundItemEvent, Pair<Int, Int>>(ItemOnGroundItemEvent::class) {
         override fun key(msg: ItemOnGroundItemEvent) = Pair(msg.usedItemId, msg.groundItem.id)

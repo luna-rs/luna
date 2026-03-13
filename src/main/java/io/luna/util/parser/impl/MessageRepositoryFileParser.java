@@ -2,7 +2,7 @@ package io.luna.util.parser.impl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonObject;
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.VoidEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -22,11 +22,11 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     /**
      * A default implementation of a {@link GameMessageReader} that does nothing.
      */
-    private static final class DefaultMessageReader extends GameMessageReader<NullEvent> {
+    private static final class DefaultMessageReader extends GameMessageReader<VoidEvent> {
 
         @Override
-        public NullEvent decode(Player player, GameMessage msg) {
-            return NullEvent.INSTANCE;
+        public VoidEvent decode(Player player, GameMessage msg) {
+            return VoidEvent.INSTANCE;
         }
     }
 

@@ -1,6 +1,8 @@
 package io.luna.game.event;
 
 import com.google.common.base.MoreObjects;
+import io.luna.game.model.Entity;
+import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.plugin.Script;
@@ -51,7 +53,7 @@ public final class EventListener<E extends Event> {
     /**
      * The interaction policy generator for this listener.
      */
-    private final Function<Player, InteractionPolicy> interaction;
+    private final Function<Player, InteractionPolicy> policy;
 
     /**
      * Creates a new {@link EventListener}.
@@ -59,13 +61,13 @@ public final class EventListener<E extends Event> {
      * @param eventType The event type this listener accepts.
      * @param listener The callback to run when the event is dispatched.
      * @param priority The dispatch priority.
-     * @param interaction The interaction policy generator for this listener.
+     * @param policy The interaction policy generator for this listener.
      */
-    public EventListener(Class<E> eventType, Consumer<E> listener, EventPriority priority, Function<Player, InteractionPolicy> interaction) {
+    public EventListener(Class<E> eventType, Consumer<E> listener, EventPriority priority, Function<Player, InteractionPolicy> policy) {
         this.eventType = eventType;
         this.listener = listener;
         this.priority = priority;
-        this.interaction = interaction;
+        this.policy = policy;
 
         // Value injected with reflection.
         script = null;
@@ -137,7 +139,7 @@ public final class EventListener<E extends Event> {
     /**
      * @return The interaction policy generator for this listener.
      */
-    public Function<Player, InteractionPolicy> getInteraction() {
-        return interaction;
+    public Function<Player, InteractionPolicy> getPolicy() {
+        return policy;
     }
 }

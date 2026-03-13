@@ -30,7 +30,7 @@ typealias EventAction<E> = E.() -> Unit
 /**
  * The player dedicated interaction policy function alias.
  */
-typealias InteractionPolicyListener = java.util.function.Function<Player, InteractionPolicy>
+typealias InteractionPolicySupplier = java.util.function.Function<Player, InteractionPolicy>
 
 /**
  * The command key, used to match [CommandEvent]s.
@@ -47,14 +47,14 @@ class CommandKey(val name: String, val rights: PlayerRights) {
 /**
  * The main event interception function. Forwards to [InterceptBy].
  */
-fun <E : Event> on(eventClass: KClass<E>, interaction: InteractionPolicyListener = InteractionPolicy.UNSPECIFIED) =
+fun <E : Event> on(eventClass: KClass<E>, interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED) =
     InterceptBy(eventClass, interaction)
 
 /**
  * The main event interception function. Runs the action without any forwarding.
  */
 fun <E : Event> on(eventClass: KClass<E>, priority: EventPriority = EventPriority.LOW,
-                   interaction: InteractionPolicyListener = InteractionPolicy.UNSPECIFIED,
+                   interaction: InteractionPolicySupplier = InteractionPolicy.UNSPECIFIED,
                    action: EventAction<E>) {
     scriptListeners += EventListener(eventClass.java, action, priority, interaction)
 }
@@ -78,7 +78,7 @@ fun button(id: Int,
 
 /** The [NpcFirstClickEvent] matcher function. */
 fun npc1(id: Int,
-         interaction: InteractionPolicyListener,
+         interaction: InteractionPolicySupplier,
          action: EventAction<NpcFirstClickEvent>) =
     Matcher.get<NpcFirstClickEvent, Int>().set(id, action, interaction)
 
@@ -88,7 +88,7 @@ fun npc1(id: Int,
 
 /** The [NpcSecondClickEvent] matcher function. */
 fun npc2(id: Int,
-         interaction: InteractionPolicyListener,
+         interaction: InteractionPolicySupplier,
          action: EventAction<NpcSecondClickEvent>) =
     Matcher.get<NpcSecondClickEvent, Int>().set(id, action, interaction)
 
@@ -98,7 +98,7 @@ fun npc2(id: Int,
 
 /** The [NpcThirdClickEvent] matcher function. */
 fun npc3(id: Int,
-         interaction: InteractionPolicyListener,
+         interaction: InteractionPolicySupplier,
          action: EventAction<NpcThirdClickEvent>) =
     Matcher.get<NpcThirdClickEvent, Int>().set(id, action, interaction)
 
@@ -108,7 +108,7 @@ fun npc3(id: Int,
 
 /** The [NpcFourthClickEvent] matcher function. */
 fun npc4(id: Int,
-         interaction: InteractionPolicyListener,
+         interaction: InteractionPolicySupplier,
          action: EventAction<NpcFourthClickEvent>) =
     Matcher.get<NpcFourthClickEvent, Int>().set(id, action, interaction)
 
@@ -120,7 +120,7 @@ fun npc4(id: Int,
  * The [GroundItemSecondClickEvent] matcher function.
  */
 fun groundItem2(id: Int,
-                interaction: InteractionPolicyListener,
+                interaction: InteractionPolicySupplier,
                 action: EventAction<GroundItemSecondClickEvent>) =
     Matcher.get<GroundItemSecondClickEvent, Int>().set(id, action, interaction)
 
@@ -155,7 +155,7 @@ fun item5(id: Int,
 
 /** The [ObjectFirstClickEvent] matcher function. */
 fun object1(id: Int,
-            interaction: InteractionPolicyListener,
+            interaction: InteractionPolicySupplier,
             action: EventAction<ObjectFirstClickEvent>) =
     Matcher.get<ObjectFirstClickEvent, Int>().set(id, action, interaction)
 
@@ -165,7 +165,7 @@ fun object1(id: Int,
 
 /** The [ObjectSecondClickEvent] matcher function. */
 fun object2(id: Int,
-            interaction: InteractionPolicyListener,
+            interaction: InteractionPolicySupplier,
             action: EventAction<ObjectSecondClickEvent>) =
     Matcher.get<ObjectSecondClickEvent, Int>().set(id, action, interaction)
 
@@ -175,7 +175,7 @@ fun object2(id: Int,
 
 /** The [ObjectThirdClickEvent] matcher function. */
 fun object3(id: Int,
-            interaction: InteractionPolicyListener,
+            interaction: InteractionPolicySupplier,
             action: EventAction<ObjectThirdClickEvent>) =
     Matcher.get<ObjectThirdClickEvent, Int>().set(id, action, interaction)
 

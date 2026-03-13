@@ -24,7 +24,7 @@ class InterceptUseItem(private val id: Int) {
     /**
      * Intercepts an [ItemOnObjectEvent].
      */
-    fun onObject(objectId: Int, interaction: InteractionPolicyListener, action: ItemOnObjectEvent.() -> Unit) {
+    fun onObject(objectId: Int, interaction: InteractionPolicySupplier, action: ItemOnObjectEvent.() -> Unit) {
         val matcher = Matcher.get<ItemOnObjectEvent, Pair<Int, Int>>()
         matcher.set(id to objectId, { action(this) }, interaction)
     }
@@ -38,7 +38,7 @@ class InterceptUseItem(private val id: Int) {
     /**
      * Intercepts an [ItemOnNpcEvent].
      */
-    fun onNpc(npcId: Int, interaction: InteractionPolicyListener, action: ItemOnNpcEvent.() -> Unit) {
+    fun onNpc(npcId: Int, interaction: InteractionPolicySupplier, action: ItemOnNpcEvent.() -> Unit) {
         val matcher = Matcher.get<ItemOnNpcEvent, Pair<Int, Int>>()
         matcher.set(id to npcId, { action(this) }, interaction)
     }
@@ -52,7 +52,7 @@ class InterceptUseItem(private val id: Int) {
     /**
      * Intercepts an [ItemOnPlayerEvent].
      */
-    fun onPlayer(interaction: InteractionPolicyListener,
+    fun onPlayer(interaction: InteractionPolicySupplier,
                  action: ItemOnPlayerEvent.() -> Unit) {
         val matcher = Matcher.get<ItemOnPlayerEvent, Int>()
         matcher.set(id, { action(this) }, interaction)
@@ -66,7 +66,7 @@ class InterceptUseItem(private val id: Int) {
     /**
      * Intercepts an [ItemOnGroundItemEvent].
      */
-    fun onGroundItem(itemId: Int, interaction: InteractionPolicyListener,
+    fun onGroundItem(itemId: Int, interaction: InteractionPolicySupplier,
                      action: ItemOnGroundItemEvent.() -> Unit) {
         val matcher = Matcher.get<ItemOnGroundItemEvent, Pair<Int, Int>>()
         matcher.set(id to itemId, { action(this) }, interaction)

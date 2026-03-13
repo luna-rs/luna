@@ -10,17 +10,17 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class NullEvent extends Event {
+public final class VoidEvent extends Event {
 
     /**
-     * A singleton instance of this class, should be used instead of {@code null} when there is no valid event to
+     * A singleton instance of this class, should be used instead of {@code null} when there is no event to
      * return from {@link GameMessageReader#decode(Player, GameMessage)}.
      */
-    public static final NullEvent INSTANCE = new NullEvent();
+    public static final VoidEvent INSTANCE = new VoidEvent();
 
     /**
      * Private constructor to discourage instantiation.
      */
-    private NullEvent() {
+    private VoidEvent() {
     }
 }

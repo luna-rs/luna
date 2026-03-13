@@ -1,6 +1,6 @@
 package io.luna.net.msg.in;
 
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.VoidEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -10,11 +10,11 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class SpamDataMessageReader extends GameMessageReader<NullEvent> {
+public final class SpamDataMessageReader extends GameMessageReader<VoidEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
+    public VoidEvent decode(Player player, GameMessage msg) {
         byte[] spamData = msg.getPayload().getBytes(msg.getSize());
-        return NullEvent.INSTANCE;
+        return VoidEvent.INSTANCE;
     }
 }

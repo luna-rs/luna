@@ -1,7 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.Luna;
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.VoidEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -11,14 +11,14 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class AudioErrorMessageReader extends GameMessageReader<NullEvent> {
+public final class AudioErrorMessageReader extends GameMessageReader<VoidEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
+    public VoidEvent decode(Player player, GameMessage msg) {
         int soundId = msg.getPayload().getShort();
         if (Luna.settings().game().betaMode()) {
             player.sendMessage("[AudioErrorMessageReader] soundId: " + soundId);
         }
-        return NullEvent.INSTANCE;
+        return VoidEvent.INSTANCE;
     }
 }

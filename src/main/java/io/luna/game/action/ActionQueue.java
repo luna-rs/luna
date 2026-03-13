@@ -1,16 +1,17 @@
 package io.luna.game.action;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multiset;
 import io.luna.game.model.EntityType;
 import io.luna.game.model.mob.Mob;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 /**
  * Per-mob action scheduler responsible for registering and processing {@link Action}s each game cycle.
@@ -64,7 +65,7 @@ public final class ActionQueue {
      * This set exists purely as an O(1) {@link #contains(Class)} shortcut for “is an action of type X currently
      * queued?”, avoiding a linear scan across {@link #processing} and {@link #executing}.
      */
-    private final Set<Class<?>> types = new HashSet<>();
+    private final Multiset<Class<?>> types = HashMultiset.create();
 
     /**
      * Creates a new {@link ActionQueue} for {@code mob}.
@@ -117,6 +118,22 @@ public final class ActionQueue {
         }
         for (Action<?> action : executing) {
             if (type.isAssignableFrom(action.getClass())) {
+                filtered.add((T) action);
+            }
+        }
+        return filtered;
+    }
+
+    /**
+     * Returns all processing and executing actions assignable to {@code type}.
+     *
+     * @param type The action base type.
+     * @return All matching actions.
+     */
+    public <T extends Action<?>> List<T> getAll(ActionType type) {
+        List<T> filtered = new ArrayList<>((Collection<? extends T>) processing.get(type));
+        for (Action<?> action : executing) {
+            if (action.getActionType() == type) {
                 filtered.add((T) action);
             }
         }

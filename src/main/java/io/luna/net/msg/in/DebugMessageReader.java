@@ -1,7 +1,7 @@
 package io.luna.net.msg.in;
 
 import io.luna.Luna;
-import io.luna.game.event.impl.NullEvent;
+import io.luna.game.event.impl.VoidEvent;
 import io.luna.game.model.mob.Player;
 import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
@@ -11,13 +11,13 @@ import io.luna.net.msg.GameMessageReader;
  *
  * @author lare96
  */
-public final class DebugMessageReader extends GameMessageReader<NullEvent> {
+public final class DebugMessageReader extends GameMessageReader<VoidEvent> {
 
     @Override
-    public NullEvent decode(Player player, GameMessage msg) {
+    public VoidEvent decode(Player player, GameMessage msg) {
         if (Luna.settings().game().betaMode()) {
             player.sendMessage("[DebugMessageReader] Opcode " + msg.getOpcode() + ", size " + msg.getSize());
         }
-        return NullEvent.INSTANCE;
+        return VoidEvent.INSTANCE;
     }
 }

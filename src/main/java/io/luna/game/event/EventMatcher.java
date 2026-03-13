@@ -1,84 +1,99 @@
 package io.luna.game.event;
 
+import io.luna.game.model.mob.Player;
+import io.luna.game.model.mob.interact.InteractionActionListener;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * Lightweight routing layer used by {@link EventListenerPipeline} to dispatch keyed/filtered events.
+ * Lightweight routing layer used by {@link EventListenerPipeline} to dispatch keyed or filtered events.
  * <p>
- * This is primarily used as an optimization: rather than iterating all listeners, the matcher can route an event
- * directly to the subset of listeners using a key and hash table.
- * <p>
- * The matcher is represented by two functions:
- * <ul>
- *   <li>{@code match}: attempts dispatch and returns whether a match occurred</li>
- *   <li>{@code has}: checks if any listener exists for this event (without dispatch)</li>
- * </ul>
+ * This is primarily used as an optimization. Rather than iterating every listener in a pipeline, the matcher can
+ * route an event directly to the relevant subset of listeners using a key-based hash lookup.
  *
  * @param <E> The event type being routed.
+ * @author lare96
  */
 public final class EventMatcher<E extends Event> {
 
     /**
      * Creates a matcher that performs no routing and never short-circuits.
      * <p>
-     * {@link #match(Event)} always returns {@code false} and {@link #has(Event)} always returns {@code false}.
+     * {@link #match(Event)} always returns {@code false}, {@link #has(Event)} always returns
+     * {@code false}, and {@link #interactions(Player, Event)} always returns an empty list.
+     *
+     * @param <E> The event type handled by the matcher.
+     * @return A no-op matcher.
      */
     public static <E extends Event> EventMatcher<E> defaultMatcher() {
-        return new EventMatcher<>(msg -> false, msg -> false, 0);
+        return new EventMatcher<>(msg -> false, msg -> false, (plr, msg) -> Collections.emptyList());
     }
 
     /**
-     * Routing function (dispatch attempt).
+     * The routing function used to attempt matcher-backed dispatch.
      */
     private final Function<E, Boolean> matchFunction;
 
     /**
-     * Existence check function.
+     * The function used to determine whether matcher-backed listeners exist for an event.
      */
     private final Function<E, Boolean> hasFunction;
 
     /**
-     * Total number of matcher listeners registered behind this matcher.
+     * The function used to create deferred interaction listeners for an event.
      */
-    private final int size;
+    private final BiFunction<Player, E, List<InteractionActionListener>> interactionsFunction;
 
     /**
      * Creates a new {@link EventMatcher}.
      *
-     * @param matchFunction Dispatch attempt function.
-     * @param hasFunction Existence check function.
-     * @param size Number of matcher listeners registered.
+     * @param matchFunction The dispatch attempt function.
+     * @param hasFunction The existence-check function.
+     * @param interactionsFunction The interaction listener creation function.
      */
-    public EventMatcher(Function<E, Boolean> matchFunction, Function<E, Boolean> hasFunction, int size) {
+    public EventMatcher(Function<E, Boolean> matchFunction, Function<E, Boolean> hasFunction,
+                        BiFunction<Player, E, List<InteractionActionListener>> interactionsFunction) {
         this.matchFunction = matchFunction;
         this.hasFunction = hasFunction;
-        this.size = size;
+        this.interactionsFunction = interactionsFunction;
     }
 
     /**
-     * Attempts to route/dispatch {@code msg} to matcher-backed listeners.
+     * Attempts to route and dispatch {@code msg} to matcher-backed listeners.
      *
-     * @param msg The event.
-     * @return {@code true} if at least one listener was matched/handled.
+     * @param msg The event to route.
+     * @return {@code true} if at least one listener was matched and handled, otherwise
+     *         {@code false}.
      */
     public boolean match(E msg) {
         return matchFunction.apply(msg);
     }
 
     /**
-     * Checks whether matcher-backed listeners exist for {@code msg}.
+     * Returns whether matcher-backed listeners exist for {@code msg}.
      *
-     * @param msg The event.
-     * @return {@code true} if at least one listener exists, otherwise {@code false}.
+     * @param msg The event to check.
+     * @return {@code true} if at least one listener exists for {@code msg}, otherwise
+     *         {@code false}.
      */
     public boolean has(E msg) {
         return hasFunction.apply(msg);
     }
 
     /**
-     * @return The number of matcher listeners registered behind this matcher.
+     * Creates deferred interaction listeners for {@code msg}.
+     * <p>
+     * These listeners are used by the interaction system to delay execution until the player has satisfied the
+     * interaction policy.
+     *
+     * @param player The player attempting the interaction.
+     * @param msg The interaction event being converted.
+     * @return The deferred interaction listeners for {@code msg}.
      */
-    public int getSize() {
-        return size;
+    public List<InteractionActionListener> interactions(Player player, E msg) {
+        return interactionsFunction.apply(player, msg);
     }
 }
