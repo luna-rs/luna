@@ -104,7 +104,7 @@ object DeathHookHandler {
      * @param source The [Mob] responsible for the kill.
      * @param stage The current [DeathStage] of the death sequence.
      */
-    fun onDeath(victim: Mob, source: Mob, stage: DeathStage) {
+    fun onDeath(victim: Mob, source: Mob?, stage: DeathStage) {
         if (victim is Npc) {
             val receiver = DeathHookReceiver(victim, source, stage)
             val lookup = npcHooks[victim.id]

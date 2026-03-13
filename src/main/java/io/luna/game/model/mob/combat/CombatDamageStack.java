@@ -48,7 +48,7 @@ public final class CombatDamageStack {
      * @param damage The damage entry to buffer.
      */
     public void push(Mob source, CombatDamage damage) {
-        if (mob.equals(source)) {
+        if (!mob.equals(source)) {
             buffer.put(source, damage);
         }
     }
