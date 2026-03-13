@@ -6,6 +6,7 @@ import io.luna.game.model.mob.overlay.StandardInterface
 /**
  * Handles the interface where the player selects which skill to gain experience in,
  * from a lamp.
+ * @author hydrozoa
  */
 class ExperienceLampInterface : StandardInterface(2808) {
 
