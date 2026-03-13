@@ -142,8 +142,7 @@ public abstract class GameMessageReader<E extends Event> {
 
         Iterator<InteractionAction> actions = player.getActions().getAll(InteractionAction.class).iterator();
         Entity target = ((InteractableEvent) event).target();
-        // todo spam click fix: try removing and interrupting regardless instead of setting listeners and target to
-        //  avoid weird behaviour
+
         if (!actions.hasNext()) {
             // We have no interaction action, submit a new one.
             player.submitAction(new InteractionAction(player, listeners, target, (InteractableEvent) event));
@@ -155,7 +154,7 @@ public abstract class GameMessageReader<E extends Event> {
             first.setListeners(listeners);
             first.setTarget(target);
 
-            // Remove any potential duplicate actions (just in case).
+            // Remove any potential duplicate actions (shouldn't happen, but just in case).
             while (actions.hasNext()) {
                 actions.next().interrupt();
                 actions.remove();

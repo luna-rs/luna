@@ -21,10 +21,10 @@ import kotlin.reflect.KClass
 
 /**
  * A matcher that routes events of type [E] by deriving a lookup key of type [K].
- * 
+ *
  * Matchers provide an optimized alternative to scanning every listener in an event pipeline. Each incoming event is
  * transformed into a key via [key], and that key is then used to find the matching listeners directly.
- * 
+ *
  * Matchers may also produce [InteractionActionListener] instances for interaction-driven events so listener execution
  * can be deferred until movement and reach requirements are satisfied.
  *
@@ -45,7 +45,6 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
          * @return The matcher for [E].
          * @throws NoSuchElementException If no matcher exists for [E].
          */
-        @Suppress("UNCHECKED_CAST")
         inline fun <reified E : Event, K : Any> get(): Matcher<E, K> {
             return get(E::class)
         }
@@ -59,8 +58,7 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
          */
         @Suppress("UNCHECKED_CAST")
         fun <E : Event, K : Any> get(eventType: KClass<E>): Matcher<E, K> {
-            val matcher = ALL[eventType]
-            return when (matcher) {
+            return when (val matcher = ALL[eventType]) {
                 null -> throw NoSuchElementException("Matcher for event type $eventType was not found.")
                 else -> matcher as Matcher<E, K>
             }
@@ -127,7 +125,7 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
 
     /**
      * Registers an optimized listener for [key].
-     * 
+     *
      * The listener will only be considered for events whose computed key matches [key].
      *
      * @param key The matcher key.
@@ -151,19 +149,19 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
 
     /**
      * Registers this matcher with the backing event pipeline for [eventType].
-     * 
+     *
      * The pipeline receives an [EventMatcher] that delegates matching, existence checks, and interaction listener
      * creation back to this matcher.
      */
     private fun addListener() {
         val type = eventType.java
         val pipeline = pipelines.get(type)
-        pipeline.matcher = EventMatcher(this::match, this::has, this::interactions)
+        pipeline.setMatcher(EventMatcher(this::match, this::has, this::interactions))
     }
 
     /**
      * Attempts to match [msg] against listeners registered under its computed key.
-     * 
+     *
      * If one or more listeners are found, they are executed in registration order.
      *
      * @param msg The event to match.
@@ -182,8 +180,8 @@ abstract class Matcher<E : Event, K : Any>(private val eventType: KClass<E>) {
 
     /**
      * Creates interaction listeners for [msg] using the listeners registered under its computed key.
-     * 
-     * Each matched listener is wrapped as an [InteractionActionListener] so it can be executed later by the 
+     *
+     * Each matched listener is wrapped as an [InteractionActionListener] so it can be executed later by the
      * interaction system once the player has satisfied the required reach policy.
      *
      * @param plr The player attempting the interaction.

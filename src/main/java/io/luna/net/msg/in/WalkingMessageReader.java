@@ -80,6 +80,7 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
 
     @Override
     public void handle(Player player, WalkingEvent event) {
-        player.getOverlays().closeWindows();
+        // Only interrupt actions for non-interaction clicks.
+        player.getOverlays().closeWindows(event.getOrigin() != WalkingOrigin.INTERACTION);
     }
 }

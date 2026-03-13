@@ -224,11 +224,9 @@ public final class ActionQueue {
     }
 
     /**
-     * Returns the total number of actions currently registered in the processing set.
-     *
-     * @return The processing action count.
+     * @return The active action count.
      */
     public int size() {
-        return processing.size();
+        return executing.size() + processing.size();
     }
 }
