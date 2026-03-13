@@ -20,7 +20,7 @@ public abstract class AbstractOverlay {
     /**
      * Current lifecycle state of this overlay.
      */
-    private InterfaceState state = InterfaceState.IDLE;
+    private OverlayState state = OverlayState.IDLE;
 
     /**
      * Creates a new {@link AbstractOverlay} with the given type.
@@ -35,14 +35,14 @@ public abstract class AbstractOverlay {
      * Sends the client packets required to present this overlay to {@code player}.
      * <p>
      * This is invoked by {@link #setOpened(Player)} after {@link #onOpen(Player)}. Implementations should assume
-     * they are called only when the overlay is transitioning from a non-open state to {@link InterfaceState#OPEN}.
+     * they are called only when the overlay is transitioning from a non-open state to {@link OverlayState#OPEN}.
      *
      * @param player The player receiving the overlay.
      */
     public abstract void open(Player player);
 
     /**
-     * Hook invoked after the overlay has transitioned to {@link InterfaceState#CLOSED}.
+     * Hook invoked after the overlay has transitioned to {@link OverlayState#CLOSED}.
      * <p>
      * Use this to release resources, clear server-side flags, or send additional cleanup packets.
      * Called by {@link #setClosed(Player, AbstractOverlay)} regardless of whether a replacement exists.
@@ -53,7 +53,7 @@ public abstract class AbstractOverlay {
     }
 
     /**
-     * Hook invoked just before {@link #open(Player)} when transitioning to {@link InterfaceState#OPEN}.
+     * Hook invoked just before {@link #open(Player)} when transitioning to {@link OverlayState#OPEN}.
      * <p>
      * Use this to prepare dynamic content (e.g., strings, config vars) or to perform access checks.
      *
@@ -76,14 +76,14 @@ public abstract class AbstractOverlay {
     }
 
     /**
-     * Transitions this overlay to {@link InterfaceState#CLOSED} and fires the appropriate hooks.
+     * Transitions this overlay to {@link OverlayState#CLOSED} and fires the appropriate hooks.
      *
      * @param player  The player for whom the overlay is closing.
      * @param replace The replacement overlay, or {@code null} if the overlay is simply closing.
      */
     final void setClosed(Player player, AbstractOverlay replace) {
         if (isOpen()) {
-            state = InterfaceState.CLOSED;
+            state = OverlayState.CLOSED;
             if (replace != null) {
                 onReplace(player, replace);
             }
@@ -92,13 +92,13 @@ public abstract class AbstractOverlay {
     }
 
     /**
-     * Transitions this overlay to {@link InterfaceState#OPEN} and fires the appropriate hooks.
+     * Transitions this overlay to {@link OverlayState#OPEN} and fires the appropriate hooks.
      *
      * @param player The player for whom the overlay is opening.
      */
     final void setOpened(Player player) {
         if (!isOpen()) {
-            state = InterfaceState.OPEN;
+            state = OverlayState.OPEN;
             onOpen(player);
             open(player);
         }
@@ -110,7 +110,7 @@ public abstract class AbstractOverlay {
      * @return {@code true} if this interface is open.
      */
     public final boolean isOpen() {
-        return state == InterfaceState.OPEN;
+        return state == OverlayState.OPEN;
     }
 
     /**
@@ -123,7 +123,7 @@ public abstract class AbstractOverlay {
     /**
      * @return The interface state.
      */
-    public final InterfaceState getState() {
+    public final OverlayState getState() {
         return state;
     }
 }

@@ -1,7 +1,7 @@
 package io.luna.game.model.mob.overlay;
 
 /**
- * Represents the lifecycle state of an {@link AbstractOverlay} (interface) instance.
+ * Represents the lifecycle state of an {@link AbstractOverlay} instance.
  * <p>
  * Each overlay transitions through these states as it is opened or closed on a player's screen.
  * The state is managed internally by {@link AbstractOverlaySet} to ensure correct invocation
@@ -19,7 +19,7 @@ package io.luna.game.model.mob.overlay;
  *
  * @author lare96
  */
-public enum InterfaceState {
+public enum OverlayState {
 
     /**
      * The default state for all overlay instances when first constructed.

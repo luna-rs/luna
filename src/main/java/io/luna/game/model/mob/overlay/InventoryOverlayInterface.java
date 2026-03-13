@@ -6,11 +6,11 @@ import io.luna.net.msg.out.InventoryOverlayMessageWriter;
 /**
  * A {@link StandardInterface} that opens both a main interface and a corresponding inventory overlay.
  * <p>
- * This is used for interfaces that temporarily replace the player’s inventory container with a custom
- * layout (such as banking, trading, or shop screens), while a primary fixed interface is displayed.
+ * This is used for interfaces that temporarily replace the player’s inventory container with a custom layout
+ * (such as banking, trading, or shop screens), while a primary fixed interface is displayed.
  * <p>
- * The overlay is opened via {@link InventoryOverlayMessageWriter}, which takes both the main interface id
- * and the replacement inventory interface id.
+ * The overlay is opened via {@link InventoryOverlayMessageWriter}, which takes both the main interface id and the
+ * replacement inventory interface id.
  *
  * @author lare96
  */
