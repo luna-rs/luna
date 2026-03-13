@@ -9,28 +9,28 @@ import io.luna.game.model.mob.overlay.StandardInterface
  */
 class ExperienceLampInterface : StandardInterface(2808) {
 
-    enum class InterfaceSkill(val varpValue: Int, val button: Int) {
-        ATTACK(1, 2812),
-        STRENGTH(2, 2813),
-        RANGED(3, 2814),
-        MAGIC(4, 2815),
-        DEFENCE(5, 2816),
-        HITPOINTS(6, 2817),
-        PRAYER(7, 2818),
-        AGILITY(8, 2819),
-        HERBLORE(9, 2820),
-        THIEVING(10, 2821),
-        CRAFTING(11, 2822),
-        RUNECRAFTING(12, 2823),
-        MINING(13, 2824),
-        SMITHING(14, 2825),
-        FISHING(15, 2826),
-        COOKING(16, 2827),
-        FIREMAKING(17, 2828),
-        WOODCUTTING(18, 2829),
-        FLETCHING(19, 2830),
-        SLAYER(20, 12034),
-        FARMING(21, 13914),
+    enum class InterfaceSkill(val varpValue: Int, val button: Int, val skill: Int) {
+        ATTACK(1, 2812, SKILL_ATTACK),
+        STRENGTH(2, 2813, SKILL_STRENGTH),
+        RANGED(3, 2814, SKILL_RANGED),
+        MAGIC(4, 2815, SKILL_MAGIC),
+        DEFENCE(5, 2816, SKILL_DEFENCE),
+        HITPOINTS(6, 2817, SKILL_HITPOINTS),
+        PRAYER(7, 2818, SKILL_PRAYER),
+        AGILITY(8, 2819, SKILL_AGILITY),
+        HERBLORE(9, 2820, SKILL_HERBLORE),
+        THIEVING(10, 2821, SKILL_THIEVING),
+        CRAFTING(11, 2822, SKILL_CRAFTING),
+        RUNECRAFTING(12, 2823, SKILL_RUNECRAFTING),
+        MINING(13, 2824, SKILL_MINING),
+        SMITHING(14, 2825, SKILL_SMITHING),
+        FISHING(15, 2826, SKILL_FISHING),
+        COOKING(16, 2827, SKILL_COOKING),
+        FIREMAKING(17, 2828, SKILL_FIREMAKING),
+        WOODCUTTING(18, 2829, SKILL_WOODCUTTING),
+        FLETCHING(19, 2830, SKILL_FLETCHING),
+        SLAYER(20, 12034, SKILL_SLAYER),
+        FARMING(21, 13914, SKILL_FARMING),
         ;
 
         companion object {
@@ -39,30 +39,8 @@ class ExperienceLampInterface : StandardInterface(2808) {
              * Returns null if no match is found.
              */
             fun getSkillByVarp(value: Int): Int {
-                when (value) {
-                    1 -> return SKILL_ATTACK
-                    2 -> return SKILL_STRENGTH
-                    3 -> return SKILL_RANGED
-                    4 -> return SKILL_MAGIC
-                    5 -> return SKILL_DEFENCE
-                    6 -> return SKILL_HITPOINTS
-                    7 -> return SKILL_PRAYER
-                    8 -> return SKILL_AGILITY
-                    9 -> return SKILL_HERBLORE
-                    10 -> return SKILL_THIEVING
-                    11 -> return SKILL_CRAFTING
-                    12 -> return SKILL_RUNECRAFTING
-                    13 -> return SKILL_MINING
-                    14 -> return SKILL_SMITHING
-                    15 -> return SKILL_FISHING
-                    16 -> return SKILL_COOKING
-                    17 -> return SKILL_FIREMAKING
-                    18 -> return SKILL_WOODCUTTING
-                    19 -> return SKILL_FLETCHING
-                    20 -> return SKILL_SLAYER
-                    21 -> return SKILL_FARMING
-                    else -> return SKILL_HITPOINTS
-                }
+                val map = InterfaceSkill.values().associateBy({i -> i.varpValue})
+                return map.get(value)?.skill ?: SKILL_HITPOINTS
             }
         }
     }
