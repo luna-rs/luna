@@ -18,6 +18,7 @@ public enum PersistentVarp {
     CHAT_EFFECTS(171),
     AUTO_RETALIATE(172),
     RUNNING(173),
+    XP_LAMP(261),
     SPLIT_PRIVATE_CHAT(287),
     ACCEPT_AID(427);
 
