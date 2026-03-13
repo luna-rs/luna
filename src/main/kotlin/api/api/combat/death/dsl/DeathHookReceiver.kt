@@ -41,7 +41,7 @@ import io.luna.game.model.mob.MobDeathTask.DeathStage
  * @property source The entity responsible for causing the death.
  * @property stage The current death stage ([DeathStage.PRE_DEATH], [DeathStage.DEATH], [DeathStage.POST_DEATH]).
  */
-class DeathHookReceiver<T : Mob>(val victim: T, val source: Mob, private val stage: DeathStage) {
+class DeathHookReceiver<T : Mob>(val victim: T, val source: Mob?, private val stage: DeathStage) {
 
     /**
      * Executes logic during the pre-death stage. This block runs before the entity officially dies.
