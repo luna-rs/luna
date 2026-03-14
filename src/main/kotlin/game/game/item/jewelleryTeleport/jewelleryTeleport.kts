@@ -10,7 +10,6 @@ import io.luna.game.model.mob.dialogue.DialogueQueueBuilder.DialogueOption
 import io.luna.util.StringUtils
 import game.skill.magic.Magic.teleport
 
-
 /**
  * Invoked when the player initially rubs the jewellery. Forwards to [openDialogue].
  */
@@ -66,7 +65,7 @@ fun teleport(plr: Player, destination: Pair<String, Position>, event: ItemClickE
     plr.inventory[event.index] = Item(nextId)
 }
 
-for (jewellery in TeleportJewellery.VALUES) {
+for (jewellery in TeleportJewellery.values()) {
     for (index in 0 until jewellery.items.size) {
         item4(jewellery.items[index]) { rub(plr, this, index, jewellery) }
     }
