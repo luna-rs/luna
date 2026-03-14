@@ -109,7 +109,7 @@ class StealFromAction(plr: Player, val obj: GameObject, val thievable: Thievable
             if (!world.collisionManager.raycast(guard.position, mob.position) && guard.inViewCone(mob)) {
                 // The guard can see the player.
                 guard.speak("Hey! Get your hands off there!")
-                guard.follow(mob)
+                guard.combat.attack(mob)
                 break
             }
         }
