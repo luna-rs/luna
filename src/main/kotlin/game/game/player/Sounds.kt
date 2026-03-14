@@ -19,6 +19,7 @@ enum class Sounds(val id: Int) {
     CHARGE_WATER_ORB(215),
     CHARGE_FIRE_ORB(216),
     SUPERHEAT(217),
+    MAGIC_SPLASH(218),
     TELEOTHER(219),
     LOW_ALCHEMY(224),
     BONES_TO_ITEMS(227),

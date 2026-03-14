@@ -12,10 +12,12 @@ import io.luna.game.model.area.Area;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.game.model.def.NpcDefinition;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
+import io.luna.game.model.mob.combat.NpcCombatContext;
 import io.luna.game.model.mob.wandering.DumbWanderingAction;
 import io.luna.game.model.mob.wandering.PatrolAction;
 import io.luna.game.model.mob.wandering.SmartWanderingAction;
 import io.luna.game.model.mob.wandering.WanderingFrequency;
+import io.luna.game.model.path.SimplePathfinder;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -79,6 +81,11 @@ public class Npc extends Mob {
      * behaviour, or analytics.
      */
     private final Set<Player> localHumans = Sets.newConcurrentHashSet();
+
+    /**
+     * The combat context holding important combat data.
+     */
+    protected final NpcCombatContext combat = new NpcCombatContext(this);
 
     /**
      * Creates a new {@link Npc}.
@@ -171,6 +178,17 @@ public class Npc extends Mob {
     @Override
     public void resetTransform() {
         transform(id);
+    }
+
+    @Override
+    public NpcCombatContext getCombat() {
+        return combat;
+    }
+
+    @Override
+    public SimplePathfinder getInteractionPf() {
+        // TODO Some NPCs should use the player's intelligent pathfinder.
+        return new SimplePathfinder(world.getCollisionManager());
     }
 
     /**
@@ -289,8 +307,8 @@ public class Npc extends Mob {
      *
      * @return An {@link Optional} containing the combat definition, or empty if none exists.
      */
-    public Optional<NpcCombatDefinition> getCombatDef() {
-        return combatDefinition;
+    public NpcCombatDefinition getCombatDef() {
+        return combatDefinition.orElse(NpcCombatDefinition.ALL.retrieve(1));
     }
 
     /**
@@ -392,4 +410,5 @@ public class Npc extends Mob {
     public Set<Player> getLocalHumans() {
         return localHumans;
     }
+
 }

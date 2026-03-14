@@ -103,10 +103,35 @@ public final class Equipment extends ItemContainer {
          */
         PRAYER(11);
 
+        static {
+            STAB_ATTACK.opposite = STAB_DEFENCE;
+            SLASH_ATTACK.opposite = SLASH_DEFENCE;
+            CRUSH_ATTACK.opposite = CRUSH_DEFENCE;
+            MAGIC_ATTACK.opposite = MAGIC_DEFENCE;
+            RANGED_ATTACK.opposite = RANGED_DEFENCE;
+
+            STAB_DEFENCE.opposite = STAB_ATTACK;
+            SLASH_DEFENCE.opposite = SLASH_ATTACK;
+            CRUSH_DEFENCE.opposite = CRUSH_ATTACK;
+            MAGIC_DEFENCE.opposite = MAGIC_ATTACK;
+            RANGED_DEFENCE.opposite = RANGED_ATTACK;
+
+            STRENGTH.opposite = STRENGTH;
+            PRAYER.opposite = PRAYER;
+        }
+
         /**
          * The fixed array index for this bonus type.
          */
         private final int index;
+
+        /**
+         * The logical opposite of this bonus.
+         * <p>
+         * Attack bonuses map to their corresponding defence bonuses, and vice versa. Bonus types that
+         * do not have a natural opposite return themselves.
+         */
+        private EquipmentBonus opposite;
 
         /**
          * Creates a new {@link EquipmentBonus}.
@@ -124,6 +149,31 @@ public final class Equipment extends ItemContainer {
          */
         public int getIndex() {
             return index;
+        }
+
+        /**
+         * Returns the logical opposite of this bonus type.
+         * <p>
+         * Examples:
+         * <ul>
+         *     <li>{@link #STAB_ATTACK} returns {@link #STAB_DEFENCE}</li>
+         *     <li>{@link #STAB_DEFENCE} returns {@link #STAB_ATTACK}</li>
+         *     <li>{@link #STRENGTH} returns {@link #STRENGTH}</li>
+         * </ul>
+         *
+         * @return The opposite bonus type, or this bonus itself if no paired opposite exists.
+         */
+        public EquipmentBonus getOpposite() {
+            return opposite;
+        }
+
+        /**
+         * Returns whether this bonus has a distinct opposite bonus rather than mapping to itself.
+         *
+         * @return {@code true} if this bonus maps to a different bonus type, otherwise {@code false}.
+         */
+        public boolean hasDistinctOpposite() {
+            return opposite != this;
         }
     }
 

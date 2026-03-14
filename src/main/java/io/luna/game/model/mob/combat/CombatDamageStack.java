@@ -44,12 +44,12 @@ public final class CombatDamageStack {
     /**
      * Pushes a new {@link CombatDamage} entry from {@code source} into this stack.
      *
-     * @param source The mob that caused the damage.
      * @param damage The damage entry to buffer.
      */
-    public void push(Mob source, CombatDamage damage) {
-        if (!mob.equals(source)) {
-            buffer.put(source, damage);
+    public void push(CombatDamage damage) {
+        Mob attacker = damage.getAttacker();
+        if (attacker != null && !mob.equals(attacker)) {
+            buffer.put(attacker, damage);
         }
     }
 
@@ -62,7 +62,7 @@ public final class CombatDamageStack {
     public int getTotal(Mob mob) {
         int total = 0;
         for (CombatDamage damage : buffer.get(mob)) {
-            total += damage.getAmount();
+            total += damage.getAmount().orElse(0);
         }
         return total;
     }
@@ -103,7 +103,7 @@ public final class CombatDamageStack {
             Multiset<Mob> totals = HashMultiset.create();
             for (Map.Entry<Mob, Collection<CombatDamage>> entry : buffer.asMap().entrySet()) {
                 for (CombatDamage damage : entry.getValue()) {
-                    totals.add(entry.getKey(), damage.getAmount());
+                    totals.add(entry.getKey(), damage.getAmount().orElse(0));
                 }
             }
             Mob lastMob = null;

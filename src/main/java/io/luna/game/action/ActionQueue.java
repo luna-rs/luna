@@ -92,6 +92,25 @@ public final class ActionQueue {
     }
 
     /**
+     * Submits {@code action} only if no other action of the same concrete type is currently being processed.
+     * <p>
+     * This method uses the action's runtime class as a uniqueness key. If that type has not already been registered,
+     * the action is submitted as normal.
+     * <p>
+     * If an action of the same class is already present, this method does nothing.
+     *
+     * @param action The action to submit if its concrete type is not already active.
+     */
+    public void submitIfAbsent(Action<?> action) {
+        Class<?> type = action.getClass();
+        if (types.add(type)) {
+            processing.put(action.actionType, action);
+            action.setState(ActionState.PROCESSING);
+            action.onSubmit();
+        }
+    }
+
+    /**
      * Returns whether this queue currently contains an action whose concrete class is exactly {@code type}.
      * <p>
      * This checks both the processing set and the per-cycle execution queue.
@@ -101,6 +120,26 @@ public final class ActionQueue {
      */
     public boolean contains(Class<? extends Action<?>> type) {
         return types.contains(type);
+    }
+
+    /**
+     * Returns all processing and executing actions assignable to {@code type}.
+     *
+     * @param type The action base type.
+     * @return All matching actions.
+     */
+    public <T extends Action<?>> T first(Class<T> type) {
+        for (Action<?> action : processing.values()) {
+            if (type.isAssignableFrom(action.getClass())) {
+                return (T) action;
+            }
+        }
+        for (Action<?> action : executing) {
+            if (type.isAssignableFrom(action.getClass())) {
+                return (T) action;
+            }
+        }
+        return null;
     }
 
     /**

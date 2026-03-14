@@ -59,7 +59,7 @@ public final class CombatSpecialBar {
     /**
      * The combat context owning this special attack bar.
      */
-    private final CombatContext combat;
+    private final PlayerCombatContext combat;
 
     /**
      * The current special attack energy, from {@code 0} to {@code 100}.
@@ -77,7 +77,7 @@ public final class CombatSpecialBar {
      * @param player the player this special bar belongs to.
      * @param combat the owning combat context.
      */
-    public CombatSpecialBar(Player player, CombatContext combat) {
+    public CombatSpecialBar(Player player, PlayerCombatContext combat) {
         this.player = player;
         this.combat = combat;
     }
@@ -191,8 +191,8 @@ public final class CombatSpecialBar {
      * restoration action is currently active.
      */
     public void startRestoration() {
-        if (energy < 100 && !player.getActions().contains(SpecialBarRestorationAction.class)) {
-            player.getActions().submit(new SpecialBarRestorationAction());
+        if (energy < 100) {
+            player.getActions().submitIfAbsent(new SpecialBarRestorationAction());
         }
     }
 

@@ -3,6 +3,10 @@ package io.luna.game.model.mob.interact;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
 import io.luna.game.event.impl.InteractableEvent;
+import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
+import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent;
+import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent;
+import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent;
 import io.luna.game.model.Direction;
 import io.luna.game.model.Entity;
 import io.luna.game.model.Position;
@@ -35,6 +39,49 @@ import java.util.Set;
  * @author lare96
  */
 public final class InteractionAction extends Action<Player> {
+
+    /**
+     * A one-tick action that executes deferred interaction listeners after the parent interaction has been prepared.
+     * <p>
+     * This action is used to finalize an interaction on the next cycle, optionally preserving or clearing the
+     * player's walking queue beforehand.
+     */
+    private final class DelayedInteractionAction extends Action<Player> {
+
+        /**
+         * The interaction listeners waiting to be executed.
+         */
+        private final List<InteractionActionListener> pending;
+
+        /**
+         * Indicates whether the player moved as part of reaching the interaction.
+         * <p>
+         * When {@code false}, the walking queue is cleared before the interaction listeners are executed.
+         */
+        private final boolean moved;
+
+        /**
+         * Creates a new delayed interaction action.
+         *
+         * @param pending The interaction listeners to execute when this action runs.
+         * @param moved {@code true} if the player moved before the interaction was performed, otherwise {@code false}.
+         */
+        public DelayedInteractionAction(List<InteractionActionListener> pending, boolean moved) {
+            super(InteractionAction.this.mob, ActionType.STRONG, true, 1);
+            this.pending = pending;
+            this.moved = moved;
+        }
+
+        @Override
+        public boolean run() {
+            if (!moved) {
+                mob.getWalking().clear();
+            }
+            mob.interact(target);
+            pending.forEach(listener -> listener.getAction().run());
+            return true;
+        }
+    }
 
     /**
      * The interaction event that created this action.
@@ -94,7 +141,7 @@ public final class InteractionAction extends Action<Player> {
      *     <li>reachable listeners are queued and removed for post-reach execution</li>
      * </ul>
      * <p>
-     * If one or more listeners are reached, they are handled with {@link #onReached(boolean, InteractionPolicy, List)}.
+     * If one or more listeners are reached, they are handled with {@link #onReached(boolean, boolean, InteractionPolicy, List)}.
      * If nothing is reached and the player is no longer walking, the interaction fails through {@link #onStanding()}.
      *
      * @return {@code true} if this action has completed, otherwise {@code false}.
@@ -126,7 +173,9 @@ public final class InteractionAction extends Action<Player> {
         }
 
         if (!pending.isEmpty()) {
-            onReached(target instanceof Mob, trigger, pending);
+            boolean combatEvent = event instanceof AttackNpcEvent || event instanceof PlayerFirstClickEvent ||
+                    event instanceof MagicOnNpcEvent || event instanceof MagicOnPlayerEvent;
+            onReached(target instanceof Mob, combatEvent, trigger, pending);
             return true;
         } else if (mob.getWalking().isEmpty()) {
             onStanding();
@@ -145,19 +194,13 @@ public final class InteractionAction extends Action<Player> {
      * @param trigger The authoritative interaction policy that was satisfied first for this reach cycle.
      * @param pending The listeners to execute once the interaction is finalized.
      */
-    private void onReached(boolean isMob, InteractionPolicy trigger, List<InteractionActionListener> pending) {
-        boolean moved = moveBeforeInteract(isMob, trigger);
-        mob.getActions().submit(new Action<>(mob, ActionType.WEAK, true, 1) {
-            @Override
-            public boolean run() {
-                if (!moved) {
-                    mob.getWalking().clear();
-                }
-                mob.interact(target);
-                pending.forEach(listener -> listener.getAction().run());
-                return true;
-            }
-        });
+    private void onReached(boolean isMob, boolean combatEvent, InteractionPolicy trigger, List<InteractionActionListener> pending) {
+        boolean moved = moveBeforeInteract(isMob, combatEvent, trigger);
+        if (combatEvent) {
+            pending.forEach(listener -> listener.getAction().run());
+        } else {
+            mob.getActions().submitIfAbsent(new DelayedInteractionAction(pending, moved));
+        }
     }
 
     /**
@@ -174,7 +217,7 @@ public final class InteractionAction extends Action<Player> {
      * @param trigger The interaction policy that triggered the reach.
      * @return {@code true} if corrective movement was started, otherwise {@code false}.
      */
-    private boolean moveBeforeInteract(boolean isMob, InteractionPolicy trigger) {
+    private boolean moveBeforeInteract(boolean isMob, boolean combatEvent, InteractionPolicy trigger) {
         boolean moved = false;
         if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
@@ -200,7 +243,7 @@ public final class InteractionAction extends Action<Player> {
                 moved = true;
             }
 
-            if (target instanceof Npc) {
+            if (target instanceof Npc && !combatEvent) {
                 // If target is a NPC, make them look at and track the player.
                 Npc npc = (Npc) target;
                 npc.submitAction(new NpcFocusAction(npc, mob));

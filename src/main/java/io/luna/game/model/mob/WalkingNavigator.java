@@ -172,7 +172,7 @@ public class WalkingNavigator {
         }
 
         Position destination = new Position(targetX + offsetX, targetY + offsetY, height);
-        return walk(destination, new PlayerPathfinder(collisionManager, height), async);
+        return walk(destination, mob.getInteractionPf(), async);
     }
 
     /**

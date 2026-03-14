@@ -23,11 +23,13 @@ import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.block.Chat;
 import io.luna.game.model.mob.block.ExactMovement;
+import io.luna.game.model.mob.block.Hit;
 import io.luna.game.model.mob.block.LocalMobRepository;
 import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.combat.PlayerCombatContext;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
 import io.luna.game.model.mob.dialogue.DialogueQueueBuilder;
@@ -38,6 +40,7 @@ import io.luna.game.model.mob.varp.PersistentVarp;
 import io.luna.game.model.mob.varp.PersistentVarpManager;
 import io.luna.game.model.mob.varp.Varbit;
 import io.luna.game.model.mob.varp.Varp;
+import io.luna.game.model.path.PlayerPathfinder;
 import io.luna.game.persistence.PersistenceService;
 import io.luna.game.persistence.PlayerData;
 import io.luna.net.LunaChannelFilter;
@@ -259,6 +262,11 @@ public class Player extends Mob {
     private final Stopwatch timeOnline = Stopwatch.createUnstarted();
 
     /**
+     * The combat context holding important combat data.
+     */
+    private final PlayerCombatContext combat = new PlayerCombatContext(this);
+
+    /**
      * Creates a new {@link Player} for the given {@link PlayerCredentials}.
      *
      * @param context The global context instance.
@@ -358,6 +366,32 @@ public class Player extends Mob {
     @Override
     public int getCombatLevel() {
         return skills.getCombatLevel();
+    }
+
+    @Override
+    public PlayerCombatContext getCombat() {
+        return combat;
+    }
+
+    @Override
+    public PlayerPathfinder getInteractionPf() {
+        return new PlayerPathfinder(world.getCollisionManager(), getZ());
+    }
+
+    @Override
+    public void onHit(Hit hit) {
+        // TODO Do more research into combat sounds.
+        if (hit.getDamage() > 0) {
+            // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
+            playRandomSound(
+                    Sounds.TAKE_DAMAGE,
+                    Sounds.TAKE_DAMAGE_2,
+                    Sounds.TAKE_DAMAGE_3,
+                    Sounds.TAKE_DAMAGE_4
+            );
+        } else {
+            playSound(Sounds.UNARMED_BLOCK);
+        }
     }
 
     /**

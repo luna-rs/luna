@@ -8,7 +8,7 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * An enum representing movement directions.
+ * Represents a cardinal, diagonal, or stationary movement direction.
  *
  * @author lare96
  * @author Graham
@@ -25,7 +25,9 @@ public enum Direction {
     SOUTH_EAST(7, 1, -1);
 
     /**
-     * A list of directions representing all possible directions of the NPC view cone, in order.
+     * Ordered directions used when evaluating the NPC view cone.
+     * <p>
+     * The order is significant, as adjacent entries represent neighboring directions in the cone calculation.
      */
     public static final ImmutableList<Direction> VIEW_CONE = ImmutableList.of(
             Direction.NORTH,
@@ -37,44 +39,76 @@ public enum Direction {
             Direction.EAST,
             Direction.NORTH_EAST
     );
-    /**
-     * An array of directions without any diagonal directions.
-     */
-    public final static ImmutableList<Direction> NESW = ImmutableList.of(NORTH, EAST, SOUTH, WEST);
 
     /**
-     * An array of directions without any diagonal directions, and one step counter-clockwise, as used by
-     * the clients collision mapping.
+     * The four cardinal directions in north-east-south-west order.
      */
-    public final static ImmutableList<Direction> WNES = ImmutableList.of(WEST, NORTH, EAST, SOUTH);
+    public static final ImmutableList<Direction> NESW = ImmutableList.of(NORTH, EAST, SOUTH, WEST);
 
     /**
-     * An array of diagonal directions, and one step counter-clockwise, as used by the clients collision
-     * mapping.
+     * The four cardinal directions in west-north-east-south order.
+     * <p>
+     * This ordering matches the client collision mapping layout.
      */
-    public final static ImmutableList<Direction> WNES_DIAGONAL = ImmutableList.of(NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST);
+    public static final ImmutableList<Direction> WNES = ImmutableList.of(WEST, NORTH, EAST, SOUTH);
+
+    /**
+     * The four diagonal directions in the ordering used by the client collision mapping.
+     */
+    public static final ImmutableList<Direction> WNES_DIAGONAL = ImmutableList.of(NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST);
+
+    /**
+     * All defined directions, including {@link #NONE}.
+     */
     public static final ImmutableList<Direction> ALL = ImmutableList.copyOf(values());
+
+    /**
+     * All defined directions except {@link #NONE}.
+     */
     public static final ImmutableList<Direction> ALL_EXCEPT_NONE = ImmutableList.copyOf(values()).stream().
             filter(it -> it != Direction.NONE).collect(ImmutableList.toImmutableList());
 
-
+    /**
+     * Cardinal components for {@link #NORTH_EAST}.
+     */
     private static final ImmutableList<Direction> NORTH_EAST_COMPONENTS = ImmutableList.of(NORTH, EAST);
-    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST);
-    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST);
-    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST);
-
 
     /**
-     * The direction identifier.
+     * Cardinal components for {@link #NORTH_WEST}.
+     */
+    private static final ImmutableList<Direction> NORTH_WEST_COMPONENTS = ImmutableList.of(NORTH, WEST);
+
+    /**
+     * Cardinal components for {@link #SOUTH_EAST}.
+     */
+    private static final ImmutableList<Direction> SOUTH_EAST_COMPONENTS = ImmutableList.of(SOUTH, EAST);
+
+    /**
+     * Cardinal components for {@link #SOUTH_WEST}.
+     */
+    private static final ImmutableList<Direction> SOUTH_WEST_COMPONENTS = ImmutableList.of(SOUTH, WEST);
+
+    /**
+     * The client-facing direction identifier.
      */
     private final int id;
+
+    /**
+     * The x-axis translation applied by this direction.
+     */
     private final int translateX;
+
+    /**
+     * The y-axis translation applied by this direction.
+     */
     private final int translateY;
 
     /**
-     * Creates a new {@link Direction}.
+     * Creates a new direction.
      *
-     * @param id The direction identifier.
+     * @param id The client-facing direction identifier.
+     * @param translateX The x-axis translation for this direction.
+     * @param translateY The y-axis translation for this direction.
      */
     Direction(int id, int translateX, int translateY) {
         this.id = id;
@@ -82,6 +116,14 @@ public enum Direction {
         this.translateY = translateY;
     }
 
+    /**
+     * Selects a random non-biased movement direction.
+     * <p>
+     * If {@link #NONE} is initially selected, a second roll is performed against either the cardinal or diagonal
+     * direction groups so that a movement direction is always returned.
+     *
+     * @return A random direction other than {@link #NONE}.
+     */
     public static Direction random() {
         Direction selected = RandomUtils.random(ALL);
         if (selected == Direction.NONE) {
@@ -95,9 +137,13 @@ public enum Direction {
     }
 
     /**
-     * Gets the direction as an integer as used orientation in the client maps (WNES as opposed to NESW).
+     * Converts this direction into the forced movement orientation value used by the client.
+     * <p>
+     * This mapping uses the client's west-north-east-south orientation scheme rather than the direction enum ordinal
+     * ordering.
      *
-     * @return The direction as an integer.
+     * @return The forced movement orientation identifier.
+     * @throws IllegalStateException If called for {@link #NONE}.
      */
     public int toForcedMovementId() {
         switch (this) {
@@ -119,15 +165,29 @@ public enum Direction {
 
     }
 
-
+    /**
+     * @return The x translation.
+     */
     public int getTranslateX() {
         return translateX;
     }
 
+    /**
+     * @return The y translation.
+     */
     public int getTranslateY() {
         return translateY;
     }
 
+    /**
+     * Gets all directions visible from the supplied facing direction within the three-direction NPC view cone.
+     * <p>
+     * The returned set contains the supplied direction and its two adjacent directions in {@link #VIEW_CONE}.
+     *
+     * @param from The base facing direction.
+     * @return The visible directions for that facing direction.
+     * @throws IllegalStateException If the supplied direction does not exist in {@link #VIEW_CONE}.
+     */
     public static Set<Direction> getAllVisible(Direction from) {
         int baseIndex = -1;
         for (int index = 0; index < VIEW_CONE.size(); index++) {
@@ -147,10 +207,13 @@ public enum Direction {
     }
 
     /**
-     * Get the 2 directions which make up a diagonal direction (i.e., NORTH and EAST for NORTH_EAST).
+     * Gets the two cardinal directions that compose a diagonal direction.
+     * <p>
+     * For example, {@link #NORTH_EAST} resolves to {@link #NORTH} and {@link #EAST}.
      *
-     * @param direction The direction to get the components for.
-     * @return The components for the given direction.
+     * @param direction The diagonal direction to decompose.
+     * @return The two cardinal component directions.
+     * @throws IllegalArgumentException If {@code direction} is not diagonal.
      */
     public static ImmutableList<Direction> diagonalComponents(Direction direction) {
         switch (direction) {
@@ -167,6 +230,11 @@ public enum Direction {
         throw new IllegalArgumentException("Must provide a diagonal direction.");
     }
 
+    /**
+     * Gets the opposite of this direction.
+     *
+     * @return The opposite direction, or {@link #NONE} if this direction is {@link #NONE}.
+     */
     public Direction opposite() {
         switch (this) {
             case NORTH_WEST:
@@ -191,13 +259,19 @@ public enum Direction {
     }
 
     /**
-     * Returns the direction between two sets of coordinates.
+     * Resolves the direction from one coordinate pair to another.
+     * <p>
+     * Both coordinate differences must normalize to the range {@code [-1, 1]}. This is intended for adjacent-tile
+     * movement and stationary comparisons.
      *
-     * @param currentX The current x coordinate.
-     * @param currentY The current y coordinate.
-     * @param nextX The next x coordinate.
-     * @param nextY The next y coordinate.
-     * @return The direction between the current and next coordinates.
+     * @param currentX The starting x coordinate.
+     * @param currentY The starting y coordinate.
+     * @param nextX The destination x coordinate.
+     * @param nextY The destination y coordinate.
+     * @return The direction from the starting coordinates to the destination
+     * coordinates.
+     * @throws IllegalArgumentException If the normalized difference falls outside the valid adjacent-step
+     * range.
      */
     @SuppressWarnings("Duplicates")
     public static Direction between(int currentX, int currentY, int nextX, int nextY) {
@@ -233,11 +307,11 @@ public enum Direction {
     }
 
     /**
-     * Returns the direction between two positions.
+     * Resolves the direction from one position to another.
      *
-     * @param current The current step.
-     * @param next The next step.
-     * @return The direction between the current and next steps.
+     * @param current The starting position.
+     * @param next The destination position.
+     * @return The direction from {@code current} to {@code next}.
      */
     public static Direction between(Position current, Position next) {
         return between(current.getX(), current.getY(), next.getX(), next.getY());
@@ -250,6 +324,9 @@ public enum Direction {
         return id;
     }
 
+    /**
+     * @return {@code true} if this direction is diagonal, otherwise {@code false}.
+     */
     public boolean isDiagonal() {
         switch (this) {
             case NORTH_EAST:

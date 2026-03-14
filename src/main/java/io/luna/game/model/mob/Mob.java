@@ -1,7 +1,6 @@
 package io.luna.game.model.mob;
 
 import com.google.common.collect.ImmutableSet;
-import game.player.Sounds;
 import io.luna.LunaContext;
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionQueue;
@@ -18,6 +17,7 @@ import io.luna.game.model.mob.block.UpdateBlockData.Builder;
 import io.luna.game.model.mob.block.UpdateFlagSet;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.combat.CombatContext;
+import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.task.Task;
 import io.luna.game.task.TaskState;
 import io.luna.net.codec.ByteMessage;
@@ -63,11 +63,6 @@ public abstract class Mob extends Entity {
      * The movement navigator used for routing and generating paths.
      */
     protected final WalkingNavigator navigator = new WalkingNavigator(this);
-
-    /**
-     * The combat context holding important combat data.
-     */
-    protected final CombatContext combat = new CombatContext(this);
 
     /**
      * Index into the global {@link MobList}. {@code -1} indicates "not registered".
@@ -199,6 +194,16 @@ public abstract class Mob extends Entity {
 
     @Override
     public abstract int hashCode();
+
+    /**
+     * @return The pathfinder to be used for interactions.
+     */
+    public abstract GamePathfinder<Position> getInteractionPf();
+
+    /**
+     * @return The combat context holding important combat data.
+     */
+    public abstract CombatContext getCombat();
 
     /**
      * Resets all mob-specific state for the next tick.
@@ -367,7 +372,7 @@ public abstract class Mob extends Entity {
         int levelBefore = hp.getLevel();
         hp.setLevel(Math.max(amount, 0));
         if (levelBefore > 0 && hp.getLevel() <= 0) {
-            Mob source = combat.getDamageStack().getHighestDamage();
+            Mob source = getCombat().getDamageStack().getHighestDamage();
 
             world.schedule(new MobDeathTask(this, source));
         }
@@ -399,7 +404,7 @@ public abstract class Mob extends Entity {
      *
      * @param ticks The number of ticks to remain locked.
      */
-    public void lock(int ticks) {
+    public final void lock(int ticks) {
         lock(ticks, () -> {
         });
     }
@@ -419,7 +424,7 @@ public abstract class Mob extends Entity {
      * @param ticks The number of ticks to remain locked.
      * @param onUnlock A callback executed when the lock naturally expires.
      */
-    public void lock(int ticks, Runnable onUnlock) {
+    public final void lock(int ticks, Runnable onUnlock) {
         if (!locked) {
             if (lockTask != null && lockTask.getState() == TaskState.RUNNING) {
                 int elapsed = lockTask.getExecutionCounter();
@@ -450,7 +455,7 @@ public abstract class Mob extends Entity {
      * including logout.</strong>
      * </p>
      */
-    public void lock() {
+    public final void lock() {
         if (lockTask != null) {
             // Cancel timed lock so it does not interfere with hard lock semantics.
             lockTask.cancel();
@@ -464,7 +469,7 @@ public abstract class Mob extends Entity {
      * Cancels any outstanding timed lock task and sets {@link #locked} to {@code false}.
      * </p>
      */
-    public void unlock() {
+    public final void unlock() {
         if (lockTask != null) {
             lockTask.cancel();
         }
@@ -473,16 +478,6 @@ public abstract class Mob extends Entity {
 
     /**
      * Applies a single hit to this mob with an explicit {@link HitType}.
-     * <p>
-     * This method:
-     * </p>
-     * <ul>
-     *     <li>Normalizes negative damage to zero.</li>
-     *     <li>Converts {@link HitType#BLOCKED} to {@link HitType#NORMAL} if damage is non-zero.</li>
-     *     <li>Reduces this mob's hitpoints via {@link #addHealth(int)} / {@link #setHealth(int)}.</li>
-     *     <li>Builds and enqueues a {@link Hit} into the first or second hitsplat slot for this tick.</li>
-     *     <li>Triggers basic player damage/block sounds when this mob is a {@link Player}.</li>
-     * </ul>
      *
      * @param amount The damage amount (negative values will be treated as zero).
      * @param type The hit type to use.
@@ -491,9 +486,9 @@ public abstract class Mob extends Entity {
         if (amount < 0) {
             amount = 0;
         }
-        if (amount == 0) {
+        if (amount == 0 && type == HitType.NORMAL) {
             type = HitType.BLOCKED;
-        } else if (type == HitType.BLOCKED) {
+        } else if (amount > 0 && type == HitType.BLOCKED) {
             type = HitType.NORMAL;
         }
 
@@ -510,27 +505,13 @@ public abstract class Mob extends Entity {
         } else {
             hit1(hit);
         }
-
-        if (this instanceof Player) {
-            if (hit.getDamage() > 0) {
-                // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
-                asPlr().playRandomSound(
-                        Sounds.TAKE_DAMAGE,
-                        Sounds.TAKE_DAMAGE_2,
-                        Sounds.TAKE_DAMAGE_3,
-                        Sounds.TAKE_DAMAGE_4
-                );
-            } else {
-                asPlr().playSound(Sounds.UNARMED_BLOCK);
-            }
-        }
+        onHit(hit);
     }
 
     /**
      * Applies a single normal hit to this mob.
      * <p>
      * Convenience overload for {@link #damage(int, HitType)} using {@link HitType#NORMAL}.
-     * </p>
      *
      * @param amount The damage amount.
      */
@@ -648,8 +629,17 @@ public abstract class Mob extends Entity {
      * @param entity The entity to test.
      * @return {@code true} if the current interaction target equals {@code entity}.
      */
-    public boolean isInteractingWith(Entity entity) {
+    public final boolean isInteractingWith(Entity entity) {
         return Objects.equals(interactingWith, entity);
+    }
+
+    /**
+     * Invoked on a successful application of {@link #damage(int, HitType)}.
+     *
+     * @param hit The hit that was applied.
+     */
+    public void onHit(Hit hit) {
+
     }
 
     /**
@@ -941,14 +931,5 @@ public abstract class Mob extends Entity {
      */
     public int getTransformId() {
         return transformId;
-    }
-
-    /**
-     * The combat context holding all important data and sub-systems related to combat.
-     *
-     * @return The combat context holding important combat data.
-     */
-    public CombatContext getCombat() {
-        return combat;
     }
 }
