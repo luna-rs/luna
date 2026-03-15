@@ -9,6 +9,7 @@ import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.task.Task;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -139,7 +140,13 @@ public final class CombatAction extends Action<Mob> {
 
         mob.animation(combat.getAttackAnimation());
 
-        damage.apply();
+        world.schedule(new Task(false, 1) {
+            @Override
+            protected void execute() {
+                damage.apply();
+                cancel();
+            }
+        });
         victim.animation(combat.getDefenceAnimation());
         victim.getCombat().resetCombatTimer();
         retaliate();
