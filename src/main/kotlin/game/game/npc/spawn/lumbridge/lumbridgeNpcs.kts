@@ -1,4 +1,4 @@
-package game.location.lumbridge
+package game.npc.spawn.lumbridge
 
 import api.predef.*
 import api.predef.ext.*

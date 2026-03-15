@@ -1,4 +1,4 @@
-package game.npc.spawn.location.varrock
+package game.npc.spawn.varrock
 
 import api.predef.*
 import api.predef.ext.*

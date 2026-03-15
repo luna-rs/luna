@@ -1,4 +1,4 @@
-package game.shop.generalStore
+package game.npc.spawn.draynor
 
 import api.predef.*
 import api.predef.ext.*

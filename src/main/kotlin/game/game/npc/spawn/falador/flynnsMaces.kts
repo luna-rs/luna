@@ -1,4 +1,4 @@
-package game.npc.spawn.location.falador
+package game.npc.spawn.falador
 
 import api.predef.*
 import api.predef.ext.*

@@ -165,13 +165,12 @@ public final class CombatAction extends Action<Mob> {
      */
     private void retaliate() {
         Mob victim = combat.getTarget();
-        // TODO How does auto-retaliate work? Does it change focus for you if you're already fighting and someone else
-        //  attacks you? Or does it stay with the person you were initially fighting?
-        //  For now, we just make it change who we're fighting everytime.
-
+        // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
         // TODO For some reason, swapping weapons will make it so the player stops auto retaliating? Or ending the
-        //  action at all?
-        if (victim.getCombat().isAutoRetaliate()) {
+        //  action at all does as well?
+
+        if (victim.getCombat().isAutoRetaliate() && (victim.getWalking().isEmpty() || victim instanceof Npc)) {
+            // TODO Almost positive auto-retaliate doesn't go off when moving. But more testing is needed.
             victim.getActions().submitIfAbsent(new CombatRetaliateAction(mob, victim));
         }
     }
