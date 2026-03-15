@@ -45,6 +45,12 @@ object Magic {
                     return null
                 }
                 removeItems += item
+            } else if(req is EquipmentRequirement) {
+                if (!plr.equipment.contains(req.id)) {
+                    val articleName = addArticle(itemName(req.id))
+                    plr.sendMessage("You need $articleName equipped to cast this spell.")
+                    return null
+                }
             }
         }
 

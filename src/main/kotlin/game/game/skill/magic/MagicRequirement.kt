@@ -16,3 +16,8 @@ class ItemRequirement(val id: Int, val amount: Int = 1) : SpellRequirement
  * A [SpellRequirement] requirement implementation for runes.
  */
 class RuneRequirement(val rune: Rune, val amount: Int) : SpellRequirement
+
+/**
+ * A [SpellRequirement] requirement implementation for equipment.
+ */
+class EquipmentRequirement(val id: Int) : SpellRequirement
