@@ -43,7 +43,7 @@
   {
     "id": 1153,
     "spell": "CONFUSE",
-    "spell_type": "CONFUSE",
+    "spell_type": "CURSE",
     "level": 3,
     "max_hit": null,
     "exp": 13,
@@ -178,7 +178,7 @@
   {
     "id": 1157,
     "spell": "WEAKEN",
-    "spell_type": "DEBUFF",
+    "spell_type": "CURSE",
     "level": 11,
     "max_hit": null,
     "exp": 21,
@@ -354,7 +354,7 @@
   {
     "id": 1572,
     "spell": "BIND",
-    "spell_type": "BIND",
+    "spell_type": "CURSE",
     "level": 20,
     "max_hit": null,
     "exp": 30,
@@ -711,7 +711,7 @@
   {
     "id": 1582,
     "spell": "SNARE",
-    "spell_type": "SNARE",
+    "spell_type": "CURSE",
     "level": 50,
     "max_hit": null,
     "exp": 60,
@@ -1095,7 +1095,7 @@
   {
     "id": 1542,
     "spell": "VULNERABILITY",
-    "spell_type": "VULNERABILITY",
+    "spell_type": "CURSE",
     "level": 66,
     "max_hit": null,
     "exp": 76,
@@ -1185,7 +1185,7 @@
   {
     "id": 1543,
     "spell": "ENFEEBLE",
-    "spell_type": "ENFEEBLE",
+    "spell_type": "CURSE",
     "level": 73,
     "max_hit": null,
     "exp": 83,
@@ -1275,7 +1275,7 @@
   {
     "id": 1592,
     "spell": "ENTANGLE",
-    "spell_type": "ENTANGLE",
+    "spell_type": "CURSE",
     "level": 79,
     "max_hit": null,
     "exp": 91,
@@ -1320,7 +1320,7 @@
   {
     "id": 1562,
     "spell": "STUN",
-    "spell_type": "STUN",
+    "spell_type": "CURSE",
     "level": 80,
     "max_hit": null,
     "exp": 90,
@@ -1365,7 +1365,7 @@
   {
     "id": 12445,
     "spell": "TELEBLOCK",
-    "spell_type": "TELEBLOCK",
+    "spell_type": "CURSE",
     "level": 85,
     "max_hit": null,
     "exp": 65,
