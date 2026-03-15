@@ -8,6 +8,7 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
 import java.util.Objects;
@@ -102,6 +103,11 @@ public final class CombatAction extends Action<Mob> {
     @Override
     public boolean run() {
         Mob target = combat.getTarget();
+        Position position = mob.getPosition();
+        CollisionManager collisionManager = mob.getWorld().getCollisionManager();
+        InteractionPolicy interactionPolicy = combat.computeInteractionPolicy();
+
+        // Ensure attacker and the target are both valid and active.
         if (target == null ||
                 mob.getState() == EntityState.INACTIVE ||
                 target.getState() == EntityState.INACTIVE ||
@@ -110,29 +116,31 @@ public final class CombatAction extends Action<Mob> {
             return true;
         }
         // todo npc retreating
-        // todo npc dancing around player when within 1 square? maybe clear walking queue when within reach?
 
-        Position position = mob.getPosition();
-        CollisionManager collisionManager = mob.getWorld().getCollisionManager();
-        InteractionPolicy interactionPolicy = combat.computeInteractionPolicy();
-        boolean reachedTarget = collisionManager.reached(position, target, interactionPolicy);
-        if (!reachedTarget) {
+        // Check if we've reached the target before proceeding. If we have, stop moving.
+        if (!collisionManager.reached(position, target, interactionPolicy)) {
             if (mob.getWalking().isEmpty()) {
+                // We haven't reached the target, and we're stationary. Move towards interaction range.
                 mob.getNavigator().walkTo(target, Optional.empty(), false);
             }
             return false;
-        }        
+        }
         mob.getWalking().clear();
 
-        // TODO Players shouldn't be allowed to attack at all if on the same position? Unless it's magic/ranged?
-        if (position.equals(target.getPosition()) && mob instanceof Npc) {
-            if (mob.getWalking().isEmpty()) {
+        // Ensure proper semantics when we're on the same tile as our target.
+        if (target.getPosition().equals(position)) {
+            if (mob instanceof Player) {
+                // TODO Is this just for melee? Or can you attack with magic/ranged?
+                // Players cannot attack when on the same position.
+                return false;
+            } else if (mob.getWalking().isEmpty()) {
                 Direction dir = target.getLastDirection().opposite();
                 if (!mob.getNavigator().step(dir)) {
                     mob.getNavigator().stepRandom(false);
                 }
             }
         }
+
         if (combat.isAttackReady() && Objects.equals(mob.getInteractingWith(), combat.getTarget())) {
             combat.resetAttackDelay();
             combat.resetCombatTimer();
@@ -155,8 +163,6 @@ public final class CombatAction extends Action<Mob> {
         Mob victim = combat.getTarget();
         CombatDamage damage = CombatDamage.computed(mob, victim, CombatDamageType.MELEE);
         // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
-        // TODO For some reason, swapping weapons will make it so the player stops auto retaliating? Or ending the
-        //  action at all does as well?
 
         mob.animation(combat.getAttackAnimation());
         victim.animation(combat.getDefenceAnimation());
