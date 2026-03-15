@@ -4,6 +4,7 @@ import api.predef.*
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Mob
+import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.Skill
 
 /**
@@ -12,18 +13,18 @@ import io.luna.game.model.mob.Skill
  * This action runs every game tick but only performs its restoration effect every 100 executions (see [run]). It
  * automatically stops when the associated [prayer] is no longer active.
  *
- * @param mob The mob whose stats may be restored.
+ * @param player The mob whose stats may be restored.
  * @param prayer The prayer that must remain active for this action to keep running.
  */
-abstract class PrayerRestorationAction(private val mob: Mob, private val prayer: CombatPrayer) :
-    Action<Mob>(mob, ActionType.SOFT, false, 1) {
+abstract class PrayerRestorationAction(private val player: Player, private val prayer: CombatPrayer) :
+    Action<Player>(player, ActionType.SOFT, false, 1) {
 
     /**
      * Periodic hitpoints restoration for [CombatPrayer.RAPID_HEAL].
      *
      * Every time [execute] triggers, restores 1 hitpoint level up to the mob's static level.
      */
-    class RapidHealAction(mob: Mob) : PrayerRestorationAction(mob, CombatPrayer.RAPID_HEAL) {
+    class RapidHealAction(player: Player) : PrayerRestorationAction(player, CombatPrayer.RAPID_HEAL) {
 
         override fun execute() {
             val hp = mob.hitpoints
@@ -38,7 +39,7 @@ abstract class PrayerRestorationAction(private val mob: Mob, private val prayer:
      *
      * Every time [execute] triggers, restores non-prayer, non-hitpoints skills by 1 level up to their static level.
      */
-    class RapidRestoreAction(mob: Mob) : PrayerRestorationAction(mob, CombatPrayer.RAPID_RESTORE) {
+    class RapidRestoreAction(player: Player) : PrayerRestorationAction(player, CombatPrayer.RAPID_RESTORE) {
 
         override fun execute() {
             for (skill in mob.skills) {

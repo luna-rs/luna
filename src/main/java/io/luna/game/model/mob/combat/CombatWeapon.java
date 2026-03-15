@@ -4,6 +4,7 @@ import io.luna.game.model.def.WeaponDefinition;
 import io.luna.game.model.def.WeaponStyleDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment;
+import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.varp.Varp;
@@ -127,6 +128,20 @@ public final class CombatWeapon {
      */
     public int getRange() {
         return styleDef.getRange();
+    }
+
+    public Weapon getType() {
+        return typeDef.getType();
+    }
+
+    public CombatDamageType getDamageType() {
+        if (styleDef.getType() == CombatStyle.STAFF_AUTOCAST) {
+            // todo or if we have a spell selected and we're attacking
+            return CombatDamageType.MAGIC;
+        } else if (styleDef.getBonus() == EquipmentBonus.RANGED_ATTACK) {
+            return CombatDamageType.RANGED;
+        }
+        return CombatDamageType.MELEE;
     }
 
     /**

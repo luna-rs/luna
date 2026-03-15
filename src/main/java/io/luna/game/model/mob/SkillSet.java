@@ -73,8 +73,7 @@ public final class SkillSet implements Iterable<Skill> {
      *
      * @param experience The total experience to convert.
      * @return The corresponding level.
-     * @throws IllegalArgumentException If {@code experience} is negative or exceeds
-     *         {@link #MAXIMUM_EXPERIENCE}.
+     * @throws IllegalArgumentException If {@code experience} is negative or exceeds {@link #MAXIMUM_EXPERIENCE}.
      */
     public static int levelForExperience(int experience) {
         checkArgument(experience >= 0 && experience <= MAXIMUM_EXPERIENCE,
@@ -328,8 +327,8 @@ public final class SkillSet implements Iterable<Skill> {
      * @param trigger The skill change that may require restoration scheduling.
      */
     void restoreSkills(Skill trigger) {
-        if (trigger.getLevel() != trigger.getStaticLevel() && !mob.getActions().contains(SkillRestorationAction.class)) {
-            mob.submitAction(new SkillRestorationAction(mob));
+        if (trigger.getLevel() != trigger.getStaticLevel()) {
+            mob.getActions().submitIfAbsent(new SkillRestorationAction(mob));
         }
     }
 

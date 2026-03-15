@@ -6,24 +6,11 @@ import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent
 import io.luna.game.event.impl.PlayerClickEvent.PlayerFirstClickEvent
 import io.luna.game.event.impl.UseSpellEvent.MagicOnNpcEvent
 import io.luna.game.event.impl.UseSpellEvent.MagicOnPlayerEvent
-import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.interact.InteractionPolicy
-import io.luna.game.model.mob.interact.InteractionType
 
-/**
- * Dynamically determines the interaction range when attacking.
- */
-fun getRange(plr: Player): InteractionPolicy {
-    val range = plr.combat.weapon.range
-    return if (range < 2) {
-        InteractionPolicy(InteractionType.SIZE, 1)
-    } else {
-        InteractionPolicy(InteractionType.LINE_OF_SIGHT, range)
-    }
-}
 
 // "Attack" context menu option on players.
-on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { getRange(it) }) {
+on(PlayerFirstClickEvent::class, EventPriority.HIGH, interaction = { it.combat.computeInteractionPolicy() }) {
     if (plr.contextMenu.contains(OPTION_ATTACK) && targetPlr.hitpoints.level > 0) {
         plr.combat.attack(targetPlr)
     }
@@ -37,7 +24,7 @@ on(MagicOnPlayerEvent::class, EventPriority.HIGH, InteractionPolicy.STANDARD_LIN
 }
 
 // "Attack" context menu option on npcs.
-on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { getRange(it) }) {
+on(AttackNpcEvent::class, EventPriority.HIGH, interaction = { it.combat.computeInteractionPolicy() }) {
     val def = targetNpc.definition
     if (def.combatLevel > 0 && def.actions.contains("Attack")) {
         plr.combat.attack(targetNpc)

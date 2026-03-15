@@ -24,7 +24,7 @@ DeathHookHandler.setDefaultHook(Player::class) {
     preDeath {
         victim.lock()
         victim.sendMessage("Oh dear, you have died!")
-        victim.animation(Animations.DEATH, AnimationPriority.HIGH)
+        victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
         victim.combat.stopCombatTimer()
         victim.combat.damageStack.clear()

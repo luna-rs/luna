@@ -1,6 +1,7 @@
 package io.luna.net.msg.out;
 
 import io.luna.game.model.Direction;
+import io.luna.game.model.EntityState;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.AbstractUpdateBlockSet;
@@ -90,7 +91,8 @@ public final class NpcUpdateMessageWriter extends GameMessageWriter {
 
             // Update existing local NPCs: movement, visibility and update blocks.
             localMobs.forUpdatingNpcs(other -> {
-                if (other.isViewableFrom(player) && !other.isPendingPlacement()) {
+                if (other.isViewableFrom(player) && !other.isPendingPlacement() &&
+                        other.getState() == EntityState.ACTIVE) {
                     handleMovement(other, msg);
                     blockSet.encode(other, blockMsg, UpdateState.UPDATE_LOCAL);
                     return false;

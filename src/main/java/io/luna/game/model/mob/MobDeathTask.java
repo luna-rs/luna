@@ -76,7 +76,7 @@ public final class MobDeathTask extends Task {
      * @param source The killer, or {@code null} if the cause is environmental or unknown.
      */
     public MobDeathTask(Mob victim, Mob source) {
-        super(true, 1);
+        super(false, 1);
         this.victim = victim;
         this.source = source;
     }
@@ -84,6 +84,7 @@ public final class MobDeathTask extends Task {
     @Override
     protected boolean onSchedule() {
         victim.getWalking().clear();
+        victim.interact(null);
         return true;
     }
 
