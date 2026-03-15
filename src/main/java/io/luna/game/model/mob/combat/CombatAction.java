@@ -93,6 +93,7 @@ public final class CombatAction extends Action<Mob> {
             return true;
         }
         // todo npc retreating
+        // todo npc dancing around player when within 1 square? maybe clear walking queue when within reach?
 
         Position position = mob.getPosition();
         CollisionManager collisionManager = mob.getWorld().getCollisionManager();
@@ -167,6 +168,9 @@ public final class CombatAction extends Action<Mob> {
         // TODO How does auto-retaliate work? Does it change focus for you if you're already fighting and someone else
         //  attacks you? Or does it stay with the person you were initially fighting?
         //  For now, we just make it change who we're fighting everytime.
+
+        // TODO For some reason, swapping weapons will make it so the player stops auto retaliating? Or ending the
+        //  action at all?
         if (victim.getCombat().isAutoRetaliate()) {
             victim.getActions().submitIfAbsent(new CombatRetaliateAction(mob, victim));
         }
