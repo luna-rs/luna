@@ -22,10 +22,10 @@ ShopHandler.create("Cassie's Shield Shop.") {
         "Bronze sq shield" x 3
         "Bronze kiteshield" x 3
         "Iron sq shield" x 2
-        "Iron kiteshield" x 0
-        "Steel sq shield" x 0
-        "Steel kiteshield" x 0
-        "Mithril sq shield" x 0
+        "Iron kiteshield" zero 10
+        "Steel sq shield" zero 10
+        "Steel kiteshield" zero 10
+        "Mithril sq shield" zero 10
     }
 
     open {

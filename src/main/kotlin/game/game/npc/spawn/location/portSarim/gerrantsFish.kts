@@ -22,16 +22,16 @@ ShopHandler.create("Gerrant's Fishy Business.") {
         "Lobster pot" x 5
         "Fishing bait" x 1500
         "Feather" x 1000
-        "Raw shrimps" x 0
-        "Raw sardine" x 0
-        "Raw herring" x 0
-        "Raw anchovies" x 0
-        "Raw trout" x 0
-        "Raw pike" x 0
-        "Raw salmon" x 0
-        "Raw tuna" x 0
-        "Raw lobster" x 0
-        "Raw swordfish" x 0
+        "Raw shrimps" zero 200
+        "Raw sardine" zero 200
+        "Raw herring" zero 200
+        "Raw anchovies" zero 200
+        "Raw trout" zero 200
+        "Raw pike" zero 200
+        "Raw salmon" zero 200
+        "Raw tuna" zero 200
+        "Raw lobster" zero 200
+        "Raw swordfish" zero 200
     }
 
     open {
