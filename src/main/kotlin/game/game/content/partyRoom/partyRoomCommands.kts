@@ -1,8 +1,8 @@
-package game.minigame.partyRoom
+package game.content.partyRoom
 
 import api.predef.*
-import game.minigame.partyRoom.dropParty.DropPartyInterface
-import game.minigame.partyRoom.dropParty.DropPartyOption
+import game.content.partyRoom.dropParty.DropPartyInterface
+import game.content.partyRoom.dropParty.DropPartyOption
 import io.luna.game.model.mob.Player
 
 /**

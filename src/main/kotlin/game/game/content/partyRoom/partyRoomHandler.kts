@@ -1,8 +1,8 @@
-package game.minigame.partyRoom
+package game.content.partyRoom
 
 import api.predef.*
 import api.predef.ext.*
-import game.minigame.partyRoom.dropParty.DropPartyOption
+import game.content.partyRoom.dropParty.DropPartyOption
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent

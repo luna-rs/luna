@@ -1,9 +1,9 @@
-package game.minigame.partyRoom.dropParty
+package game.content.partyRoom.dropParty
 
 import api.predef.*
 import api.predef.ext.*
-import game.minigame.partyRoom.dropParty.DropPartyOption.BalloonObject
-import game.minigame.partyRoom.dropParty.DropPartyOption.depositItems
+import game.content.partyRoom.dropParty.DropPartyOption.BalloonObject
+import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import io.luna.game.event.impl.WidgetItemClickEvent
 import io.luna.game.event.impl.WidgetItemClickEvent.*
 import io.luna.game.model.EntityState

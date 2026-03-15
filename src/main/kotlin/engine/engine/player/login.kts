@@ -3,7 +3,7 @@ package engine.player
 import api.predef.*
 import engine.combat.prayer.CombatPrayer
 import engine.player.punishment.PunishmentHandler
-import game.minigame.partyRoom.dropParty.DropPartyOption.depositItems
+import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import io.luna.Luna
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.LoginEvent

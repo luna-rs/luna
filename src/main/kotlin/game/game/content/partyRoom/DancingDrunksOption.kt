@@ -1,4 +1,4 @@
-package game.minigame.partyRoom
+package game.content.partyRoom
 
 import api.predef.*
 import api.predef.ext.*

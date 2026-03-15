@@ -1,4 +1,4 @@
-package game.obj.crystalChest
+package game.content.crystalChest
 
 import api.drops.DropTable
 import api.drops.DropTableHandler

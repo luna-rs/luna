@@ -1,20 +1,8 @@
-package game.obj.crystalChest
+package game.content.crystalChest
 
 import api.predef.*
-import api.predef.ext.*
-import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.dialogue.MakeItemDialogue
-
-/**
- * Spawn crystal chest object at home area.
- */
-on(ServerLaunchEvent::class) {
-    world.addObject(id = 172,
-                    x = 3095,
-                    y = 3247,
-                    z = 0)
-}
 
 /**
  * Use all crystal keys when the chest is clicked on.

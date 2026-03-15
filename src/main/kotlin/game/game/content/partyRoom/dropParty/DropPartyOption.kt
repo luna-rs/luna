@@ -1,4 +1,4 @@
-package game.minigame.partyRoom.dropParty
+package game.content.partyRoom.dropParty
 
 import api.attr.Attr
 import api.attr.getValue
@@ -8,8 +8,8 @@ import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableList
 import com.google.common.math.IntMath
 import com.google.common.primitives.Ints
-import game.minigame.partyRoom.PartyRoom
-import game.minigame.partyRoom.PartyRoomOption
+import game.content.partyRoom.PartyRoom
+import game.content.partyRoom.PartyRoomOption
 import game.skill.cooking.cookFood.Food
 import io.luna.Luna
 import io.luna.game.model.EntityState

@@ -1,4 +1,4 @@
-package game.minigame.partyRoom
+package game.content.partyRoom
 
 import api.plugin.dsl.plugin
 

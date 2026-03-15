@@ -1,8 +1,8 @@
-package game.minigame.partyRoom
+package game.content.partyRoom
 
 import api.predef.*
 import com.google.common.collect.ImmutableList
-import game.minigame.partyRoom.dropParty.DropPartyOption
+import game.content.partyRoom.dropParty.DropPartyOption
 import io.luna.game.model.Position
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player

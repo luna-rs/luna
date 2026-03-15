@@ -1,4 +1,4 @@
-package game.obj.crystalChest
+package game.content.crystalChest
 
 import api.predef.ext.*
 import io.luna.game.action.Action

@@ -1,4 +1,4 @@
-package game.obj.crystalChest
+package game.content.crystalChest
 
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item

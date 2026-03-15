@@ -1,6 +1,6 @@
-package game.minigame.partyRoom.dropParty
+package game.content.partyRoom.dropParty
 
-import game.minigame.partyRoom.dropParty.DropPartyOption.depositItems
+import game.content.partyRoom.dropParty.DropPartyOption.depositItems
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.overlay.InventoryOverlayInterface
 
