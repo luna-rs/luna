@@ -1,12 +1,12 @@
-package game.location.portSarim
+package game.npc.spawn.location.falador
 
 import api.plugin.dsl.plugin
 
 plugin {
-    name = "Port Sarim"
+    name = "Falador"
     description =
         """
-        A plugin that populates Port Sarim with NPCs.
+        A plugin that populates Falador with NPC shops.
         """
     version = "1.0"
     authors += "hydrozoa"

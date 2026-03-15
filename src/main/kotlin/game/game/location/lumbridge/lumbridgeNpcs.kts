@@ -199,68 +199,11 @@ fun womenDialogue(plr: Player, targetNpc: Npc) {
 }
 
 on(ServerLaunchEvent::class) {
-    // General store npcs
-    world.addNpc(
-        id = 520,
-        x = 3212,
-        y = 3245)
-        .startWandering(8, WanderingFrequency.NORMAL)
-    world.addNpc(
-        id = 521,
-        x = 3212,
-        y = 3248)
-        .startWandering(8, WanderingFrequency.NORMAL)
-
     // Hans
+    // TODO make him run around the castle
     world.addNpc(
         id = 0,
         x = 3221,
         y = 3224)
         .startWandering(10, WanderingFrequency.NORMAL)
-
-    // Men
-    world.addNpc(
-        id = 1,
-        x = 3222,
-        y = 3215)
-    world.addNpc(
-        id = 2,
-        x = 3235,
-        y = 3219)
-    world.addNpc(
-        id = 1,
-        x = 3236,
-        y = 3199)
-
-    // Women
-    world.addNpc(
-        id = 4,
-        x = 3236,
-        y = 3207)
-    world.addNpc(
-        id = 5,
-        x = 3240,
-        y = 3218)
-    world.addNpc(
-        id = 5,
-        x = 3236,
-        y = 3203)
-
-    // goblins east of river
-    world.addNpc(
-        id = 100,
-        x = 3255,
-        y = 3230)
-
-    // spiders east of river
-    world.addNpc(
-        id = 59,
-        x = 3249,
-        y = 3229)
-
-    // cow
-    world.addNpc(
-        id = 81,
-        x = 3257,
-        y = 3259)
 }

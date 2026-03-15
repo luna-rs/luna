@@ -1,4 +1,4 @@
-package game.npc.wanderingBob
+package game.npc.spawn.wanderingBob
 
 import api.predef.*
 import io.luna.game.event.impl.ServerStateChangedEvent.ServerLaunchEvent

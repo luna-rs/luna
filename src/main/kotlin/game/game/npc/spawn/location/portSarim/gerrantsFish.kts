@@ -1,4 +1,4 @@
-package game.location.portSarim
+package game.npc.spawn.location.portSarim
 
 import api.predef.*
 import api.predef.ext.*

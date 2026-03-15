@@ -1,4 +1,4 @@
-package game.location.falador
+package game.npc.spawn.location.falador
 
 import api.predef.*
 import api.predef.ext.*
@@ -32,14 +32,14 @@ ShopHandler.create("Falador General Store") {
     }
 
     open {
-        shopkeeperId.forEach({npc2 += it})
+        shopkeeperId.forEach({ npc2 += it })
     }
 }
 
 /**
  * Dialogue for "Talk" option.
  */
-shopkeeperId.forEach({npcId ->
+shopkeeperId.forEach({ npcId ->
     npc1(npcId) {
         plr.newDialogue()
             .npc(targetNpc.id, "Can I help you at all?")
@@ -56,12 +56,15 @@ shopkeeperId.forEach({npcId ->
  * Spawn general store NPC.
  */
 on(ServerLaunchEvent::class) {
-    world.addNpc(id = shopkeeperId.get(0),
-                 x = 2959,
-                 y = 3388)
+    world.addNpc(
+        id = shopkeeperId.get(0),
+        x = 2959,
+        y = 3388
+    )
         .startWandering(3, WanderingFrequency.NORMAL)
-    world.addNpc(id = shopkeeperId.get(1),
+    world.addNpc(
+        id = shopkeeperId.get(1),
         x = 2958,
-        y = 3388)
-        .startWandering(3, WanderingFrequency.NORMAL)
+        y = 3388
+    ).startWandering(3, WanderingFrequency.NORMAL)
 }

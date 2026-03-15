@@ -1,4 +1,4 @@
-package game.npc.makeOverMage
+package game.npc.spawn.makeOverMage
 
 import api.plugin.dsl.plugin
 

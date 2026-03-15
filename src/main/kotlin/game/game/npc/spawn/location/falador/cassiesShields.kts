@@ -1,4 +1,4 @@
-package game.location.falador
+package game.npc.spawn.location.falador
 
 import api.predef.*
 import api.predef.ext.*
@@ -51,8 +51,9 @@ npc1(shopkeeperId) {
  * Spawn Flynn NPC.
  */
 on(ServerLaunchEvent::class) {
-    world.addNpc(id = shopkeeperId,
+    world.addNpc(
+        id = shopkeeperId,
         x = 2975,
-        y = 3383)
-        .startWandering(3, WanderingFrequency.NORMAL)
+        y = 3383
+    ).startWandering(3, WanderingFrequency.NORMAL)
 }

@@ -1,1 +1,362 @@
-[]
+[
+  {
+    "note": "VARROCK WEST BANK BANKERS",
+    "id": 494,
+    "position": {
+      "x": 3187,
+      "y": 3446,
+      "z": 0
+    },
+    "default_direction": "WEST"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3187,
+      "y": 3444,
+      "z": 0
+    },
+    "default_direction": "WEST"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3187,
+      "y": 3442,
+      "z": 0
+    },
+    "default_direction": "WEST"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3187,
+      "y": 3438,
+      "z": 0
+    },
+    "default_direction": "WEST"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3187,
+      "y": 3436,
+      "z": 0
+    },
+    "default_direction": "WEST"
+  },
+  {
+    "note": "VARROCK EAST BANK BANKERS",
+    "id": 494,
+    "position": {
+      "x": 3252,
+      "y": 3418,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3253,
+      "y": 3418,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3254,
+      "y": 3418,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3256,
+      "y": 3418,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "note": "FALADOR WEST BANK BANKERS",
+    "id": 494,
+    "position": {
+      "x": 2945,
+      "y": 3366,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 2946,
+      "y": 3366,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 2947,
+      "y": 3366,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 2948,
+      "y": 3366,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 2949,
+      "y": 3366,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "note": "FALADOR EAST BANK BANKERS",
+    "id": 494,
+    "position": {
+      "x": 3010,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3011,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3012,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3013,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3014,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "id": 494,
+    "position": {
+      "x": 3015,
+      "y": 3353,
+      "z": 0
+    },
+    "default_direction": "NORTH"
+  },
+  {
+    "note": "DRAYNOR VILLAGE BANK BANKERS",
+    "id": 494,
+    "position": { "x": 3090, "y": 3245, "z": 0 },
+    "default_direction": "EAST"
+  },
+  {
+    "id": 494,
+    "position": { "x": 3090, "y": 3243, "z": 0 },
+    "default_direction": "EAST"
+  },
+  {
+    "id": 494,
+    "position": { "x": 3090, "y": 3242, "z": 0 },
+    "default_direction": "EAST"
+  },
+  {
+    "note": "DRAYNOR VILLAGE DARK WIZARDS",
+    "id": 174,
+    "position": { "x": 3086, "y": 3238, "z": 0 },
+    "respawn_ticks": 50,
+    "wander": { "radius": 4, "frequency": "NORMAL" }
+  },
+  {
+    "id": 174,
+    "position": { "x": 3084, "y": 3235, "z": 0 },
+    "respawn_ticks": 50,
+    "wander": { "radius": 4, "frequency": "NORMAL" }
+  },
+  {
+    "note": "LUMBRIDGE GENERAL STORE CLERKS",
+    "id": 520,
+    "position": {
+      "x": 3212,
+      "y": 3245,
+      "z": 0
+    },
+    "wander": {
+      "radius": 8,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 521,
+    "position": {
+      "x": 3212,
+      "y": 3248,
+      "z": 0
+    },
+    "wander": {
+      "radius": 8,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "note": "LUMBRIDGE MEN",
+    "id": 1,
+    "position": {
+      "x": 3222,
+      "y": 3215,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 2,
+    "position": {
+      "x": 3235,
+      "y": 3219,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 1,
+    "position": {
+      "x": 3236,
+      "y": 3199,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "note": "LUMBRIDGE WOMEN",
+    "id": 4,
+    "position": {
+      "x": 3236,
+      "y": 3207,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 5,
+    "position": {
+      "x": 3240,
+      "y": 3218,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "id": 5,
+    "position": {
+      "x": 3236,
+      "y": 3203,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "note": "LUMBRIDGE GOBLIN",
+    "id": 100,
+    "position": {
+      "x": 3255,
+      "y": 3230,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 5,
+      "frequency": "RAPID"
+    }
+  },
+  {
+    "note": "LUMBRIDGE SPIDER",
+    "id": 59,
+    "position": {
+      "x": 3249,
+      "y": 3229,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  },
+  {
+    "note": "LUMBRIDGE COW",
+    "id": 81,
+    "position": {
+      "x": 3257,
+      "y": 3259,
+      "z": 0
+    },
+    "respawn_ticks": 50,
+    "wander": {
+      "radius": 3,
+      "frequency": "NORMAL"
+    }
+  }
+]

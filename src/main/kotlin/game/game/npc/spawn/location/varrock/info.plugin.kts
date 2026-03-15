@@ -1,4 +1,4 @@
-package game.location.varrock
+package game.npc.spawn.location.varrock
 
 import api.plugin.dsl.plugin
 
