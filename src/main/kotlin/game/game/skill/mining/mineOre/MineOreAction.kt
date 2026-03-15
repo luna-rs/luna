@@ -8,7 +8,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.`object`.GameObject
-import game.player.Sounds
+import game.player.Sound
 import game.skill.Skills
 import game.skill.mining.Mining
 import game.skill.mining.Ore
@@ -57,7 +57,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
                 // Ore roll was successful.
                 mob.sendMessage("You manage to mine some ${ore.typeName.lowercase()}.")
                 mob.mining.addExperience(ore.exp)
-                mob.playSound(Sounds.MINING_COMPLETED)
+                mob.playSound(Sound.MINING_COMPLETED)
                 deleteAndRespawnRock()
                 complete()
             }
@@ -65,7 +65,7 @@ class MineOreAction(plr: Player, val pick: Pickaxe, val ore: Ore, val rockObj: G
     }
 
     override fun animation(): Animation {
-        mob.playSound(Sounds.MINE_ROCK)
+        mob.playSound(Sound.MINE_ROCK)
         return pick.animation
     }
 

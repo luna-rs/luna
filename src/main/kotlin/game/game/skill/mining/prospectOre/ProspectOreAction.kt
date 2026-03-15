@@ -3,7 +3,7 @@ package game.skill.mining.prospectOre
 import api.predef.*
 import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.mob.Player
-import game.player.Sounds
+import game.player.Sound
 import game.skill.mining.Ore
 
 /**
@@ -30,7 +30,7 @@ class ProspectOreAction(plr: Player, private val ore: Ore?) : LockedAction(plr) 
                     null -> mob.sendMessage("There is no ore left in the rock.")
                     else -> mob.sendMessage("This rock contains ${ore.typeName.lowercase()}.")
                 }
-                mob.playSound(Sounds.PROSPECT_ORE)
+                mob.playSound(Sound.PROSPECT_ORE)
                 true
             }
 

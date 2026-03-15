@@ -2,7 +2,7 @@ package game.skill.magic.telekineticGrab
 
 import api.predef.*
 import game.player.Messages
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Magic
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
@@ -55,7 +55,7 @@ class TelekineticGrabAction(plr: Player, private val groundItem: GroundItem) : L
             0 -> {
                 mob.graphic(Graphic(142, 100))
                 mob.animation(Animation(791))
-                mob.playSound(Sounds.TELEGRAB)
+                mob.playSound(Sound.TELEGRAB)
                 false
             }
 

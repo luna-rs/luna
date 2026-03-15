@@ -6,7 +6,7 @@ import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 
 /**
  * An [Action] that allows a player to perform a generic firemaking based light action, where the end result
@@ -64,7 +64,7 @@ abstract class LightAction(plr: Player, val originalDelayTicks: Int) : Action<Pl
     private fun handleLightAnimation() {
         if (--animationDelay <= 0) {
             mob.animation(Animations.FIREMAKING)
-            mob.playSound(Sounds.LIGHT_FIRE)
+            mob.playSound(Sound.LIGHT_FIRE)
             animationDelay = 3
         }
     }

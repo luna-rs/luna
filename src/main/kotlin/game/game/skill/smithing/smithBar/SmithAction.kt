@@ -3,7 +3,7 @@ package game.skill.smithing.smithBar
 import api.predef.*
 import api.predef.ext.*
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.smithing.Smithing
 import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
@@ -42,7 +42,7 @@ class SmithAction(plr: Player, val table: SmithingTable, val makeItem: SmithingI
     }
 
     override fun execute() {
-        mob.playSound(Sounds.SMITHING)
+        mob.playSound(Sound.SMITHING)
         mob.animation(Animations.SMITH)
         mob.sendMessage("You make the ${makeItem.item.itemDef.name}.")
         mob.smithing.addExperience(barType.xp * table.bars)

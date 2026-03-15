@@ -1,7 +1,7 @@
 package io.luna.game.model;
 
 import com.google.common.base.MoreObjects;
-import game.player.Sounds;
+import game.player.Sound;
 import io.luna.LunaContext;
 import io.luna.game.model.chunk.ChunkUpdatableMessage;
 import io.luna.game.model.chunk.ChunkUpdatableView;
@@ -34,12 +34,12 @@ public final class LocalSound extends LocalEntity {
      * audible to nearby players.
      *
      * @param context The active {@link LunaContext}.
-     * @param sound The {@link Sounds} enum value representing the sound.
+     * @param sound The {@link Sound} enum value representing the sound.
      * @param position The world position where the sound originates.
      * @param view The chunk update view used to determine visibility.
      * @return A new {@link LocalSound} instance.
      */
-    public static LocalSound of(LunaContext context, Sounds sound,
+    public static LocalSound of(LunaContext context, Sound sound,
                                 Position position, ChunkUpdatableView view) {
         return new LocalSound(
                 context,
@@ -55,14 +55,14 @@ public final class LocalSound extends LocalEntity {
      * Creates a {@link LocalSound} with a custom radius and volume.
      *
      * @param context The active {@link LunaContext}.
-     * @param sound The {@link Sounds} enum value representing the sound.
+     * @param sound The {@link Sound} enum value representing the sound.
      * @param position The world position where the sound originates.
      * @param view The chunk update view used to determine visibility.
      * @param radius The audible radius (must be > 0).
      * @param volume The playback volume (0–100 inclusive).
      * @return A new {@link LocalSound} instance.
      */
-    public static LocalSound of(LunaContext context, Sounds sound,
+    public static LocalSound of(LunaContext context, Sound sound,
                                 Position position, ChunkUpdatableView view,
                                 int radius, int volume) {
         return new LocalSound(context, sound.getId(), position, view, radius, volume);
@@ -71,7 +71,7 @@ public final class LocalSound extends LocalEntity {
     /**
      * Creates a {@link LocalSound} using a raw sound id.
      * <p>
-     * This method is useful when the sound id does not correspond to a predefined {@link Sounds} enum value.
+     * This method is useful when the sound id does not correspond to a predefined {@link Sound} enum value.
      *
      * @param context The active {@link LunaContext}.
      * @param soundId The raw sound identifier.

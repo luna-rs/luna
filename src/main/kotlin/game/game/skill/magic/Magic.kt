@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import io.luna.util.StringUtils
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.teleportSpells.TeleportAction
 import game.skill.magic.teleportSpells.TeleportStyle
 
@@ -115,9 +115,9 @@ object Magic {
         return when (action.executions) {
             0 -> {
                 val sound = LocalSound.of(ctx,
-                                       Sounds.TELEPORT_REGULAR,
-                                       plr.position,
-                                       ChunkUpdatableView.globalView())
+                                          Sound.TELEPORT_REGULAR,
+                                          plr.position,
+                                          ChunkUpdatableView.globalView())
                 sound.display()
                 true
             }
@@ -149,9 +149,9 @@ object Magic {
             0 -> {
                 plr.animation(Animation(1979))
                 val sound = LocalSound.of(ctx,
-                                       Sounds.TELEPORT_ANCIENT,
-                                       plr.position,
-                                       ChunkUpdatableView.globalView())
+                                          Sound.TELEPORT_ANCIENT,
+                                          plr.position,
+                                          ChunkUpdatableView.globalView())
                 sound.display()
                 true
             }

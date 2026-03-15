@@ -5,7 +5,7 @@ package game.player
  *
  * @author lare96
  */
-enum class Sounds(val id: Int) {
+enum class Sound(val id: Int) {
     TELEGRAB(200),
     TELEPORT_REGULAR(202),
     ENCHANT_LVL_6(203),

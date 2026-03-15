@@ -7,7 +7,7 @@ import io.luna.game.action.impl.QueuedAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Magic
 
 /**
@@ -39,7 +39,7 @@ class BonesToItemsAction(plr: Player, val type: BonesToItemsType) :
                 return
             }
             mob.lock()
-            mob.playSound(Sounds.BONES_TO_ITEMS)
+            mob.playSound(Sound.BONES_TO_ITEMS)
             world.scheduleOnce(1) {
                 mob.inventory.removeAll(removeItems)
                 mob.inventory.replaceAll(BONES, type.id)

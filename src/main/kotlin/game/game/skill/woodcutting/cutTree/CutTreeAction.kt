@@ -2,7 +2,7 @@ package game.skill.woodcutting.cutTree
 
 import api.predef.*
 import api.predef.ext.*
-import game.player.Sounds
+import game.player.Sound
 import game.skill.woodcutting.Woodcutting
 import game.skill.woodcutting.Woodcutting.treeHealth
 import game.skill.woodcutting.searchNest.Nest
@@ -50,7 +50,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
         else -> {
             if (start) {
-                mob.playSound(Sounds.CUT_TREE_1, 40)
+                mob.playSound(Sound.CUT_TREE_1, 40)
                 mob.sendMessage("You swing your axe at the tree.")
             }
             true
@@ -91,7 +91,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
     }
 
     override fun animation(): Animation {
-        mob.playSound(Sounds.CUT_TREE_2)
+        mob.playSound(Sound.CUT_TREE_2)
         soundDelay = 2
         return axe.animation
     }
@@ -105,7 +105,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
 
     override fun onProcessAnimation() {
         if (soundDelay-- == 0) {
-            mob.playSound(Sounds.CUT_TREE_2)
+            mob.playSound(Sound.CUT_TREE_2)
         }
     }
 
@@ -114,7 +114,7 @@ class CutTreeAction(plr: Player, val axe: Axe, val tree: Tree, val treeObj: Game
      */
     private fun deleteAndRespawnTree() {
         if (world.removeObject(treeObj)) {
-            mob.playSound(Sounds.TREE_FALLEN)
+            mob.playSound(Sound.TREE_FALLEN)
             val stumpId = TreeStump.TREE_ID_MAP[treeObj.id]?.stumpId
             if (stumpId != null) {
                 world.addObject(

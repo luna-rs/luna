@@ -3,7 +3,7 @@ package game.skill.magic.enchantJewellery
 import com.google.common.collect.ImmutableList
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
 import game.skill.magic.SpellRequirement
@@ -16,7 +16,7 @@ import game.skill.magic.SpellRequirement
 enum class EnchantJewelleryType(val spellId: Int,
                                 val level: Int,
                                 val xp: Double,
-                                val sound: Sounds,
+                                val sound: Sound,
                                 val requirements: List<SpellRequirement>,
                                 val enchantMap: Map<Int, EnchantItem>) {
 
@@ -27,7 +27,7 @@ enum class EnchantJewelleryType(val spellId: Int,
               RuneRequirement(Rune.WATER, 1),
               RuneRequirement(Rune.COSMIC, 1)
           ),
-          sound = Sounds.ENCHANT_LVL_1,
+          sound = Sound.ENCHANT_LVL_1,
           enchantMap = mapOf(
               1637 to EnchantItem(2550, Animation(718), Graphic(238)), // Sapphire ring
               1656 to EnchantItem(3858, Animation(719), Graphic(114, 100)), // Sapphire necklace
@@ -36,7 +36,7 @@ enum class EnchantJewelleryType(val spellId: Int,
     LVL_2(spellId = 1165,
           level = 27,
           xp = 37.0,
-          sound = Sounds.ENCHANT_LVL_2,
+          sound = Sound.ENCHANT_LVL_2,
           requirements = listOf(
               RuneRequirement(Rune.AIR, 3),
               RuneRequirement(Rune.COSMIC, 1)
@@ -50,7 +50,7 @@ enum class EnchantJewelleryType(val spellId: Int,
     LVL_3(spellId = 1176,
           level = 49,
           xp = 59.0,
-          sound = Sounds.ENCHANT_LVL_3,
+          sound = Sound.ENCHANT_LVL_3,
           requirements = listOf(
               RuneRequirement(Rune.FIRE, 5),
               RuneRequirement(Rune.COSMIC, 1)
@@ -62,7 +62,7 @@ enum class EnchantJewelleryType(val spellId: Int,
     LVL_4(spellId = 1180,
           level = 57,
           xp = 67.0,
-          sound = Sounds.ENCHANT_LVL_4,
+          sound = Sound.ENCHANT_LVL_4,
           requirements = listOf(
               RuneRequirement(Rune.EARTH, 10),
               RuneRequirement(Rune.COSMIC, 1)
@@ -74,7 +74,7 @@ enum class EnchantJewelleryType(val spellId: Int,
     LVL_5(spellId = 1187,
           level = 68,
           xp = 78.0,
-          sound = Sounds.ENCHANT_LVL_5,
+          sound = Sound.ENCHANT_LVL_5,
           requirements = listOf(
               RuneRequirement(Rune.EARTH, 15),
               RuneRequirement(Rune.WATER, 15),
@@ -87,7 +87,7 @@ enum class EnchantJewelleryType(val spellId: Int,
     LVL_6(spellId = 6003,
           level = 87,
           xp = 97.0,
-          sound = Sounds.ENCHANT_LVL_6,
+          sound = Sound.ENCHANT_LVL_6,
           requirements = listOf(
               RuneRequirement(Rune.FIRE, 20),
               RuneRequirement(Rune.EARTH, 20),

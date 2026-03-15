@@ -6,7 +6,7 @@ import io.luna.game.event.impl.NpcClickEvent
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.block.Animation
-import game.player.Sounds
+import game.player.Sound
 import game.skill.Skills
 import game.skill.fishing.Tool
 
@@ -57,7 +57,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
                     if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
                         mob.sendMessage("You attempt to catch a fish.")
                     }
-                    playSound(Sounds.START_ROD_FISHING, Sounds.START_FISHING)
+                    playSound(Sound.START_ROD_FISHING, Sound.START_FISHING)
                 }
                 true
             }
@@ -68,7 +68,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
             messages.removeAll { mob.sendMessage(it); true }
             mob.fishing.addExperience(exp)
             exp = 0.0
-            playSound(Sounds.CATCH_ROD_FISH, Sounds.CATCH_FISH)
+            playSound(Sound.CATCH_ROD_FISH, Sound.CATCH_FISH)
         }
     }
 
@@ -107,7 +107,7 @@ class CatchFishAction(msg: NpcClickEvent, private val tool: Tool) :
     /**
      * Plays one of the argued sounds based on the tool the player is fishing with.
      */
-    private fun playSound(rodSound: Sounds, otherSound: Sounds) {
+    private fun playSound(rodSound: Sound, otherSound: Sound) {
         if(tool == Tool.FISHING_ROD || tool == Tool.FLY_FISHING_ROD) {
             mob.playSound(rodSound)
         } else {

@@ -179,7 +179,6 @@ public final class SmartWanderingAction extends Action<Mob> {
      * then submits that slice to the mob's walking queue.
      * <p>
      * The slice size is randomized to avoid robotic "perfect chunks" while still bounding the work per tick.
-     * </p>
      */
     private void queueNextWaypointSlice() {
         int minSteps = RandomUtils.nextBoolean() ? 1 : Position.VIEWING_DISTANCE / 2;

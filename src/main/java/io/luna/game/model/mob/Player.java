@@ -6,7 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import game.item.consumable.potion.PotionCountdownTimer;
 import game.player.Messages;
-import game.player.Sounds;
+import game.player.Sound;
 import io.luna.Luna;
 import io.luna.LunaContext;
 import io.luna.game.LogoutService;
@@ -384,13 +384,13 @@ public class Player extends Mob {
         if (hit.getDamage() > 0) {
             // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
             playRandomSound(
-                    Sounds.TAKE_DAMAGE,
-                    Sounds.TAKE_DAMAGE_2,
-                    Sounds.TAKE_DAMAGE_3,
-                    Sounds.TAKE_DAMAGE_4
+                    Sound.TAKE_DAMAGE,
+                    Sound.TAKE_DAMAGE_2,
+                    Sound.TAKE_DAMAGE_3,
+                    Sound.TAKE_DAMAGE_4
             );
         } else {
-            playSound(Sounds.UNARMED_BLOCK);
+            playSound(Sound.UNARMED_BLOCK);
         }
     }
 
@@ -728,11 +728,11 @@ public class Player extends Mob {
     }
 
     /**
-     * Plays a random sound from the given set of {@link Sounds}.
+     * Plays a random sound from the given set of {@link Sound}.
      *
      * @param sounds One or more possible sounds to choose from.
      */
-    public void playRandomSound(Sounds... sounds) {
+    public void playRandomSound(Sound... sounds) {
         if (sounds.length == 1) {
             playSound(sounds[0]);
         } else if (sounds.length > 1) {
@@ -741,21 +741,21 @@ public class Player extends Mob {
     }
 
     /**
-     * Plays a {@link Sounds} enum value immediately.
+     * Plays a {@link Sound} enum value immediately.
      *
      * @param sound The sound to play.
      */
-    public void playSound(Sounds sound) {
+    public void playSound(Sound sound) {
         playSound(sound, 0);
     }
 
     /**
-     * Plays a {@link Sounds} enum value with a delay in game ticks.
+     * Plays a {@link Sound} enum value with a delay in game ticks.
      *
      * @param sound The sound to play.
      * @param delayTicks The delay in game ticks before the sound is played.
      */
-    public void playSound(Sounds sound, int delayTicks) {
+    public void playSound(Sound sound, int delayTicks) {
         int delay = (delayTicks * 600) / 30;
         int volume = varpManager.getValue(PersistentVarp.EFFECTS_VOLUME);
         queue(new SoundMessageWriter(sound.getId(), volume, delay));

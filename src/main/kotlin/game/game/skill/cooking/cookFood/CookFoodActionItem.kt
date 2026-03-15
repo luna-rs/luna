@@ -8,7 +8,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.Skills
 
 /**
@@ -54,7 +54,7 @@ class CookFoodActionItem(plr: Player,
         } else {
             mob.sendMessage("You accidentally burn the ${food.formattedName}.")
         }
-        mob.playSound(Sounds.COOK_FOOD)
+        mob.playSound(Sound.COOK_FOOD)
     }
 
     override fun remove() = listOf(food.rawItem)

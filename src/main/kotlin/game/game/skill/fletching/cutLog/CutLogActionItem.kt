@@ -6,7 +6,7 @@ import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.fletching.attachArrow.Arrow
 import game.skill.fletching.stringBow.Bow
 
@@ -45,7 +45,7 @@ class CutLogActionItem(plr: Player,
         val unstrungName = itemName(bow.unstrung)
         mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
 
-        mob.playSound(Sounds.LIGHT_FIRE)
+        mob.playSound(Sound.LIGHT_FIRE)
         mob.animation(Animations.CUT_LOG)
         mob.fletching.addExperience(bow.exp)
     }
