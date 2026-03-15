@@ -104,11 +104,8 @@ public final class CombatAction extends Action<Mob> {
                 mob.getNavigator().walkTo(target, Optional.empty(), false);
             }
             return false;
-        } else {
-            if (!mob.getWalking().isEmpty()) {
-                mob.getWalking().clear();
-            }
-        }
+        }        
+        mob.getWalking().clear();
 
         // TODO Players shouldn't be allowed to attack at all if on the same position? Unless it's magic/ranged?
         if (position.equals(target.getPosition()) && mob instanceof Npc) {
@@ -120,7 +117,6 @@ public final class CombatAction extends Action<Mob> {
             }
         }
         if (combat.isAttackReady() && Objects.equals(mob.getInteractingWith(), combat.getTarget())) {
-            mob.getWalking().clear();
             combat.resetAttackDelay();
             combat.resetCombatTimer();
             launchMeleeAttack();
