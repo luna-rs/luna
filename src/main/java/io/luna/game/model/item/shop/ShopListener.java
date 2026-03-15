@@ -6,7 +6,6 @@ import io.luna.game.model.item.RefreshListener;
 import io.luna.net.msg.out.WidgetIndexedItemsMessageWriter;
 
 import java.util.List;
-import java.util.OptionalInt;
 
 /**
  * A {@link RefreshListener} implementation responsible for synchronizing shop state with its visual representation
@@ -28,20 +27,6 @@ public final class ShopListener extends RefreshListener {
      */
     public ShopListener(Shop shop) {
         this.shop = shop;
-    }
-
-    @Override
-    public void onInit(ItemContainer items) {
-        // Initialize original shop item amounts.
-        OptionalInt[] amountMap = shop.getAmountMap();
-        for (int index = 0; index < items.capacity(); index++) {
-            int amount = items.computeAmountForIndex(index);
-            if (amount == 0) {
-                amountMap[index] = OptionalInt.empty();
-            } else {
-                amountMap[index] = OptionalInt.of(amount);
-            }
-        }
     }
 
     @Override

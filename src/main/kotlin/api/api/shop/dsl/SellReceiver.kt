@@ -24,7 +24,18 @@ class SellReceiver(private val shop: ShopReceiver, private val noted: Boolean) {
     /**
      * Adds an item to the shop.
      */
-    infix fun Int.x(amount: Int) {
-        shop.addItem(this, amount)
-    }
+    infix fun Int.x(amount: Int) =
+        shop.addItem(this, amount, amount)
+
+    /**
+     * Adds an item to the shop.
+     */
+    infix fun String.zero(amount: Int) =
+        Item.findId(this, noted).zero(amount)
+
+    /**
+     * Adds an item to the shop.
+     */
+    infix fun Int.zero(amount: Int) =
+        shop.addItem(this, 0, amount)
 }

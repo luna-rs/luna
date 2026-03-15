@@ -1,9 +1,9 @@
 package io.luna.game.model.item.shop;
 
+import api.shop.dsl.ShopHandler.PendingShopItem;
 import com.google.common.base.Preconditions;
 import io.luna.game.model.World;
 import io.luna.game.model.def.ItemDefinition;
-import io.luna.game.model.item.IndexedItem;
 import io.luna.game.model.item.Inventory;
 import io.luna.game.model.item.Item;
 import io.luna.game.model.item.ItemContainer;
@@ -11,6 +11,7 @@ import io.luna.game.model.item.ItemContainer.StackPolicy;
 import io.luna.game.model.mob.Player;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -549,8 +550,16 @@ public final class Shop {
      *
      * @param shopItems The initial items for this shop.
      */
-    public void init(List<IndexedItem> shopItems) {
-        items.load(shopItems);
+    public void init(List<PendingShopItem> shopItems) {
+        items.load(new ArrayList<>(shopItems));
+        for (PendingShopItem item : shopItems) {
+            int current = item.getAmount();
+            if (current == 0) {
+                restockItems.add(item.getIndex());
+            }
+            amountMap[item.getIndex()] = OptionalInt.of(item.getMaxStockAmount());
+        }
+        restockItems();
     }
 
     /**
@@ -560,7 +569,7 @@ public final class Shop {
      * running, this method performs no action.
      */
     void restockItems() {
-        if (restockPolicy != null) {
+        if (restockPolicy != null && !restockItems.isEmpty()) {
             switch (restockTask.getState()) {
                 case RUNNING:
                     return;
