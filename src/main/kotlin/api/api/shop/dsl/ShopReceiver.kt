@@ -37,7 +37,7 @@ class ShopReceiver(val name: String) {
     /**
      * The added items.
      */
-    private val items = ArrayList<IndexedItem>()
+    private val items = ArrayList<ShopHandler.PendingShopItem>()
 
     /**
      * The [SellReceiver] instance.
@@ -82,7 +82,7 @@ class ShopReceiver(val name: String) {
     /**
      * Adds an item to this shop. Is invoked implicitly through [sell].
      */
-    fun addItem(id: Int, amount: Int) {
-        items += IndexedItem(index++, id, amount)
+    fun addItem(id: Int, amount: Int, maxAmount: Int) {
+        items += ShopHandler.PendingShopItem(index++, id, amount, maxAmount)
     }
 }
