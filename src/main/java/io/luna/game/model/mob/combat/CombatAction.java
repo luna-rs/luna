@@ -98,11 +98,16 @@ public final class CombatAction extends Action<Mob> {
         Position position = mob.getPosition();
         CollisionManager collisionManager = mob.getWorld().getCollisionManager();
         InteractionPolicy interactionPolicy = combat.computeInteractionPolicy();
-        if (!collisionManager.reached(position, target, interactionPolicy)) {
+        boolean reachedTarget = collisionManager.reached(position, target, interactionPolicy);
+        if (!reachedTarget) {
             if (mob.getWalking().isEmpty()) {
                 mob.getNavigator().walkTo(target, Optional.empty(), false);
             }
             return false;
+        } else {
+            if (!mob.getWalking().isEmpty()) {
+                mob.getWalking().clear();
+            }
         }
 
         // TODO Players shouldn't be allowed to attack at all if on the same position? Unless it's magic/ranged?
