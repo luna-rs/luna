@@ -38,6 +38,11 @@ public enum CombatSpellType {
     SHADOW,
 
     /**
+     * Blood Ancient Magicks combat spell type.
+     */
+    BLOOD,
+
+    /**
      * Ice Ancient Magicks combat spell type.
      */
     ICE,
