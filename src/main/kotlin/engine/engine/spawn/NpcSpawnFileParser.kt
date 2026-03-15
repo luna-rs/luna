@@ -3,12 +3,14 @@ package engine.spawn
 import api.predef.*
 import com.google.common.collect.ImmutableList
 import com.google.gson.JsonObject
+import io.luna.game.model.Direction
 import io.luna.game.model.Position
 import io.luna.game.model.def.NpcDefinition
 import io.luna.game.model.mob.wandering.WanderingFrequency
 import io.luna.util.GsonUtils
 import io.luna.util.parser.JsonFileParser
 import java.nio.file.Paths
+import java.util.*
 
 /**
  * Loads the global [PersistentNpc] spawn JSON file.
@@ -33,6 +35,7 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
         }?.id
         val respawn = if (token.has("respawn_ticks")) token["respawn_ticks"].asInt else 50
         val wander = if (token.has("wander")) token["wander"] else null
+        val direction: Direction? = if (token.has("default_direction")) Direction.valueOf(token["default_direction"].asString) else null
         var radius: Int? = null
         var frequency: WanderingFrequency? = null
         if (wander != null) {
@@ -51,7 +54,9 @@ internal class NpcSpawnFileParser : JsonFileParser<PersistentNpc>(PATH) {
         if (id == null) {
             throw IllegalStateException("No NPC found for ID/name [$nameOrId].")
         }
-        return PersistentNpc(id, position, respawn, radius, frequency)
+        val result = PersistentNpc(id, position, respawn, radius, frequency)
+        result.defaultDirection = if (direction != null) Optional.of(direction) else Optional.empty();
+        return result
     }
 
     override fun onCompleted(tokenObjects: ImmutableList<PersistentNpc>) {
