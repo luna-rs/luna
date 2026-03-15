@@ -1,0 +1,2047 @@
+[
+  {
+    "id": 1152,
+    "spell": "WIND_STRIKE",
+    "spell_type": "WIND",
+    "level": 1,
+    "max_hit": 2,
+    "exp": 5,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 90,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 91,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 92,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 558,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WIND_STRIKE_CAST",
+    "end_sound": "WIND_STRIKE_IMPACT"
+  },
+  {
+    "id": 1153,
+    "spell": "CONFUSE",
+    "spell_type": "CONFUSE",
+    "level": 3,
+    "max_hit": null,
+    "exp": 13,
+    "spellbook": "REGULAR",
+    "cast_animation": 716,
+    "start_graphic": {
+      "id": 102,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 103,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 104,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 557,
+        "amount": 2
+      },
+      {
+        "id": 559,
+        "amount": 1
+      }
+    ],
+    "start_sound": "CONFUSE_CAST",
+    "end_sound": "CONFUSE_IMPACT"
+  },
+  {
+    "id": 1154,
+    "spell": "WATER_STRIKE",
+    "spell_type": "WATER",
+    "level": 5,
+    "max_hit": 4,
+    "exp": 7,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 93,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 94,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 95,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 1
+      },
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 558,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WATER_STRIKE_CAST",
+    "end_sound": "WATER_STRIKE_IMPACT"
+  },
+  {
+    "id": 1156,
+    "spell": "EARTH_STRIKE",
+    "spell_type": "EARTH",
+    "level": 9,
+    "max_hit": 6,
+    "exp": 9,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 96,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 97,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 98,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 558,
+        "amount": 1
+      },
+      {
+        "id": 557,
+        "amount": 2
+      }
+    ],
+    "start_sound": "EARTH_STRIKE_CAST",
+    "end_sound": "EARTH_STRIKE_IMPACT"
+  },
+  {
+    "id": 1157,
+    "spell": "WEAKEN",
+    "spell_type": "DEBUFF",
+    "level": 11,
+    "max_hit": null,
+    "exp": 21,
+    "spellbook": "REGULAR",
+    "cast_animation": 716,
+    "start_graphic": {
+      "id": 105,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 106,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 107,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 557,
+        "amount": 2
+      },
+      {
+        "id": 559,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WEAKEN_CAST",
+    "end_sound": "WEAKEN_IMPACT"
+  },
+  {
+    "id": 1158,
+    "spell": "FIRE_STRIKE",
+    "spell_type": "FIRE",
+    "level": 13,
+    "max_hit": 8,
+    "exp": 11,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 99,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 100,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 101,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 558,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 3
+      }
+    ],
+    "start_sound": "FIRE_STRIKE_CAST",
+    "end_sound": "FIRE_STRIKE_IMPACT"
+  },
+  {
+    "id": 1160,
+    "spell": "WIND_BOLT",
+    "spell_type": "WIND",
+    "level": 17,
+    "max_hit": 9,
+    "exp": 13,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 117,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 118,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 119,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WIND_BOLT_CAST",
+    "end_sound": "WIND_BOLT_IMPACT"
+  },
+  {
+    "id": 1161,
+    "spell": "CURSE",
+    "spell_type": "CURSE",
+    "level": 19,
+    "max_hit": null,
+    "exp": 29,
+    "spellbook": "REGULAR",
+    "cast_animation": 710,
+    "start_graphic": {
+      "id": 108,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 109,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 110,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 2
+      },
+      {
+        "id": 557,
+        "amount": 3
+      },
+      {
+        "id": 559,
+        "amount": 1
+      }
+    ],
+    "start_sound": "CURSE_CAST",
+    "end_sound": "CURSE_IMPACT"
+  },
+  {
+    "id": 1572,
+    "spell": "BIND",
+    "spell_type": "BIND",
+    "level": 20,
+    "max_hit": null,
+    "exp": 30,
+    "spellbook": "REGULAR",
+    "cast_animation": 710,
+    "start_graphic": {
+      "id": 177,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 178,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 181,
+      "height": 6553600,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 557,
+        "amount": 3
+      },
+      {
+        "id": 561,
+        "amount": 2
+      }
+    ],
+    "start_sound": "BIND_CAST",
+    "end_sound": "BIND_IMPACT"
+  },
+  {
+    "id": 1163,
+    "spell": "WATER_BOLT",
+    "spell_type": "WATER",
+    "level": 23,
+    "max_hit": 10,
+    "exp": 16,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 120,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 121,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 122,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 1
+      },
+      {
+        "id": 555,
+        "amount": 2
+      }
+    ],
+    "start_sound": "WATER_BOLT_CAST",
+    "end_sound": "WATER_BOLT_IMPACT"
+  },
+  {
+    "id": 1166,
+    "spell": "EARTH_BOLT",
+    "spell_type": "EARTH",
+    "level": 29,
+    "max_hit": 11,
+    "exp": 19,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 123,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 124,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 125,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 1
+      },
+      {
+        "id": 557,
+        "amount": 3
+      }
+    ],
+    "start_sound": "EARTH_BOLT_CAST",
+    "end_sound": "EARTH_BOLT_IMPACT"
+  },
+  {
+    "id": 1169,
+    "spell": "FIRE_BOLT",
+    "spell_type": "FIRE",
+    "level": 35,
+    "max_hit": 12,
+    "exp": 22,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 126,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 127,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 128,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 3
+      },
+      {
+        "id": 562,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 4
+      }
+    ],
+    "start_sound": "FIRE_BOLT_CAST",
+    "end_sound": "FIRE_BOLT_IMPACT"
+  },
+  {
+    "id": 1171,
+    "spell": "CRUMBLE_UNDEAD",
+    "spell_type": "OTHER",
+    "level": 39,
+    "max_hit": 15,
+    "exp": 24,
+    "spellbook": "REGULAR",
+    "cast_animation": 724,
+    "start_graphic": {
+      "id": 145,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 146,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 147,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 1
+      },
+      {
+        "id": 557,
+        "amount": 2
+      }
+    ],
+    "start_sound": "CRUMBLE_UNDEAD_CAST",
+    "end_sound": "CRUMBLE_UNDEAD_IMPACT"
+  },
+  {
+    "id": 1172,
+    "spell": "WIND_BLAST",
+    "spell_type": "WIND",
+    "level": 41,
+    "max_hit": 13,
+    "exp": 25,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 132,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 133,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 134,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 3
+      },
+      {
+        "id": 560,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WIND_BLAST_CAST",
+    "end_sound": "WIND_BLAST_IMPACT"
+  },
+  {
+    "id": 1175,
+    "spell": "WATER_BLAST",
+    "spell_type": "WATER",
+    "level": 47,
+    "max_hit": 14,
+    "exp": 28,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 135,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 136,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 137,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 556,
+        "amount": 3
+      },
+      {
+        "id": 560,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WATER_BLAST_CAST",
+    "end_sound": "WATER_BLAST_IMPACT"
+  },
+  {
+    "id": 1539,
+    "spell": "IBAN_BLAST",
+    "spell_type": "OTHER",
+    "level": 50,
+    "max_hit": 25,
+    "exp": 30,
+    "spellbook": "REGULAR",
+    "cast_animation": 708,
+    "start_graphic": {
+      "id": 87,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 88,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 89,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [
+      {
+        "id": 1409,
+        "amount": 1
+      }
+    ],
+    "required_inventory": [
+      {
+        "id": 560,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 5
+      }
+    ],
+    "start_sound": "IBAN_BLAST_CAST",
+    "end_sound": "IBAN_BLAST_IMPACT"
+  },
+  {
+    "id": 1582,
+    "spell": "SNARE",
+    "spell_type": "SNARE",
+    "level": 50,
+    "max_hit": null,
+    "exp": 60,
+    "spellbook": "REGULAR",
+    "cast_animation": 710,
+    "start_graphic": {
+      "id": 177,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 178,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 180,
+      "height": 6553600,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 557,
+        "amount": 4
+      },
+      {
+        "id": 561,
+        "amount": 3
+      }
+    ],
+    "start_sound": "SNARE_CAST",
+    "end_sound": "SNARE_IMPACT"
+  },
+  {
+    "id": 12037,
+    "spell": "MAGIC_DART",
+    "spell_type": "OTHER",
+    "level": 50,
+    "max_hit": 19,
+    "exp": 30,
+    "spellbook": "REGULAR",
+    "cast_animation": 1576,
+    "start_graphic": {
+      "id": 327,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 328,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 329,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [
+      {
+        "id": 4170,
+        "amount": 1
+      }
+    ],
+    "required_inventory": [
+      {
+        "id": 558,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 1
+      }
+    ],
+    "start_sound": "MAGIC_DART_CAST",
+    "end_sound": "MAGIC_DART_IMPACT"
+  },
+  {
+    "id": 1177,
+    "spell": "EARTH_BLAST",
+    "spell_type": "EARTH",
+    "level": 53,
+    "max_hit": 15,
+    "exp": 31,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 138,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 139,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 140,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 3
+      },
+      {
+        "id": 560,
+        "amount": 1
+      },
+      {
+        "id": 557,
+        "amount": 4
+      }
+    ],
+    "start_sound": "EARTH_BLAST_CAST",
+    "end_sound": "EARTH_BLAST_IMPACT"
+  },
+  {
+    "id": 1181,
+    "spell": "FIRE_BLAST",
+    "spell_type": "FIRE",
+    "level": 59,
+    "max_hit": 16,
+    "exp": 34,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 129,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 130,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 131,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 5
+      }
+    ],
+    "start_sound": "FIRE_BLAST_CAST",
+    "end_sound": "FIRE_BLAST_IMPACT"
+  },
+  {
+    "id": 1190,
+    "spell": "SARADOMIN_STRIKE",
+    "spell_type": "GOD",
+    "level": 60,
+    "max_hit": 20,
+    "exp": 35,
+    "spellbook": "REGULAR",
+    "cast_animation": 811,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 76,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [
+      {
+        "id": 2415,
+        "amount": 1
+      }
+    ],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 554,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SARADOMIN_STRIKE_CAST",
+    "end_sound": "SARADOMIN_STRIKE_IMPACT"
+  },
+  {
+    "id": 1191,
+    "spell": "CLAWS_OF_GUTHIX",
+    "spell_type": "GOD",
+    "level": 60,
+    "max_hit": 20,
+    "exp": 35,
+    "spellbook": "REGULAR",
+    "cast_animation": 811,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 77,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [
+      {
+        "id": 2416,
+        "amount": 1
+      }
+    ],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 554,
+        "amount": 2
+      }
+    ],
+    "start_sound": "CLAWS_OF_GUTHIX_CAST",
+    "end_sound": "CLAWS_OF_GUTHIX_IMPACT"
+  },
+  {
+    "id": 1192,
+    "spell": "FLAMES_OF_ZAMORAK",
+    "spell_type": "GOD",
+    "level": 60,
+    "max_hit": 20,
+    "exp": 35,
+    "spellbook": "REGULAR",
+    "cast_animation": 811,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 78,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [
+      {
+        "id": 2417,
+        "amount": 1
+      }
+    ],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 554,
+        "amount": 2
+      }
+    ],
+    "start_sound": "FLAMES_OF_ZAMORAK_CAST",
+    "end_sound": "FLAMES_OF_ZAMORAK_IMPACT"
+  },
+  {
+    "id": 1183,
+    "spell": "WIND_WAVE",
+    "spell_type": "WIND",
+    "level": 62,
+    "max_hit": 17,
+    "exp": 36,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 158,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 159,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 160,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 5
+      },
+      {
+        "id": 565,
+        "amount": 1
+      }
+    ],
+    "start_sound": "WIND_WAVE_CAST",
+    "end_sound": "WIND_WAVE_IMPACT"
+  },
+  {
+    "id": 1185,
+    "spell": "WATER_WAVE",
+    "spell_type": "WATER",
+    "level": 65,
+    "max_hit": 18,
+    "exp": 37,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 161,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 162,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 163,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 5
+      },
+      {
+        "id": 565,
+        "amount": 1
+      },
+      {
+        "id": 555,
+        "amount": 7
+      }
+    ],
+    "start_sound": "WATER_WAVE_CAST",
+    "end_sound": "WATER_WAVE_IMPACT"
+  },
+  {
+    "id": 1542,
+    "spell": "VULNERABILITY",
+    "spell_type": "VULNERABILITY",
+    "level": 66,
+    "max_hit": null,
+    "exp": 76,
+    "spellbook": "REGULAR",
+    "cast_animation": 729,
+    "start_graphic": {
+      "id": 167,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 168,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 169,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 557,
+        "amount": 5
+      },
+      {
+        "id": 555,
+        "amount": 5
+      },
+      {
+        "id": 566,
+        "amount": 1
+      }
+    ],
+    "start_sound": "VULNERABILITY_CAST",
+    "end_sound": "VULNERABILITY_IMPACT"
+  },
+  {
+    "id": 1188,
+    "spell": "EARTH_WAVE",
+    "spell_type": "EARTH",
+    "level": 70,
+    "max_hit": 19,
+    "exp": 40,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 164,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 165,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 166,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 5
+      },
+      {
+        "id": 565,
+        "amount": 1
+      },
+      {
+        "id": 557,
+        "amount": 7
+      }
+    ],
+    "start_sound": "EARTH_WAVE_CAST",
+    "end_sound": "EARTH_WAVE_IMPACT"
+  },
+  {
+    "id": 1543,
+    "spell": "ENFEEBLE",
+    "spell_type": "ENFEEBLE",
+    "level": 73,
+    "max_hit": null,
+    "exp": 83,
+    "spellbook": "REGULAR",
+    "cast_animation": 729,
+    "start_graphic": {
+      "id": 170,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 171,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 172,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 557,
+        "amount": 8
+      },
+      {
+        "id": 555,
+        "amount": 8
+      },
+      {
+        "id": 566,
+        "amount": 1
+      }
+    ],
+    "start_sound": "ENFEEBLE_CAST",
+    "end_sound": "ENFEEBLE_IMPACT"
+  },
+  {
+    "id": 1189,
+    "spell": "FIRE_WAVE",
+    "spell_type": "FIRE",
+    "level": 75,
+    "max_hit": 20,
+    "exp": 42,
+    "spellbook": "REGULAR",
+    "cast_animation": 711,
+    "start_graphic": {
+      "id": 155,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 156,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 157,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 5
+      },
+      {
+        "id": 565,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 7
+      }
+    ],
+    "start_sound": "FIRE_WAVE_CAST",
+    "end_sound": "FIRE_WAVE_IMPACT"
+  },
+  {
+    "id": 1592,
+    "spell": "ENTANGLE",
+    "spell_type": "ENTANGLE",
+    "level": 79,
+    "max_hit": null,
+    "exp": 91,
+    "spellbook": "REGULAR",
+    "cast_animation": 710,
+    "start_graphic": {
+      "id": 177,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 178,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 179,
+      "height": 6553600,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 5
+      },
+      {
+        "id": 557,
+        "amount": 5
+      },
+      {
+        "id": 561,
+        "amount": 4
+      }
+    ],
+    "start_sound": "ENTANGLE_CAST",
+    "end_sound": "ENTANGLE_IMPACT"
+  },
+  {
+    "id": 1562,
+    "spell": "STUN",
+    "spell_type": "STUN",
+    "level": 80,
+    "max_hit": null,
+    "exp": 90,
+    "spellbook": "REGULAR",
+    "cast_animation": 729,
+    "start_graphic": {
+      "id": 173,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 174,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 107,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 557,
+        "amount": 12
+      },
+      {
+        "id": 555,
+        "amount": 12
+      },
+      {
+        "id": 556,
+        "amount": 1
+      }
+    ],
+    "start_sound": "STUN_CAST",
+    "end_sound": "STUN_IMPACT"
+  },
+  {
+    "id": 12445,
+    "spell": "TELEBLOCK",
+    "spell_type": "TELEBLOCK",
+    "level": 85,
+    "max_hit": null,
+    "exp": 65,
+    "spellbook": "REGULAR",
+    "cast_animation": 1819,
+    "start_graphic": null,
+    "projectile": {
+      "id": 344,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 345,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 563,
+        "amount": 1
+      },
+      {
+        "id": 562,
+        "amount": 1
+      },
+      {
+        "id": 560,
+        "amount": 1
+      }
+    ],
+    "start_sound": "TELEBLOCK_CAST",
+    "end_sound": "TELEBLOCK_IMPACT"
+  },
+  {
+    "id": 12939,
+    "spell": "SMOKE_RUSH",
+    "spell_type": "SMOKE",
+    "level": 50,
+    "max_hit": 13,
+    "exp": 30,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 384,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 385,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 554,
+        "amount": 1
+      },
+      {
+        "id": 562,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SMOKE_RUSH_CAST",
+    "end_sound": "SMOKE_RUSH_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12987,
+    "spell": "SHADOW_RUSH",
+    "spell_type": "SHADOW",
+    "level": 52,
+    "max_hit": 14,
+    "exp": 31,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 378,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 379,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 566,
+        "amount": 1
+      },
+      {
+        "id": 562,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SHADOW_RUSH_CAST",
+    "end_sound": "SHADOW_RUSH_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12901,
+    "spell": "BLOOD_RUSH",
+    "spell_type": "BLOOD",
+    "level": 56,
+    "max_hit": 15,
+    "exp": 33,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 372,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 373,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 565,
+        "amount": 1
+      },
+      {
+        "id": 562,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "BLOOD_RUSH_CAST",
+    "end_sound": "BLOOD_RUSH_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12861,
+    "spell": "ICE_RUSH",
+    "spell_type": "ICE",
+    "level": 58,
+    "max_hit": 18,
+    "exp": 34,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 360,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 361,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "ICE_RUSH_CAST",
+    "end_sound": "ICE_RUSH_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12963,
+    "spell": "SMOKE_BURST",
+    "spell_type": "SMOKE",
+    "level": 62,
+    "max_hit": 13,
+    "exp": 36,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 389,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 554,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SMOKE_BURST_CAST",
+    "end_sound": "SMOKE_BURST_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 13011,
+    "spell": "SHADOW_BURST",
+    "spell_type": "SHADOW",
+    "level": 64,
+    "max_hit": 18,
+    "exp": 37,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 382,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 1
+      },
+      {
+        "id": 566,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SHADOW_BURST_CAST",
+    "end_sound": "SHADOW_BURST_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 12919,
+    "spell": "BLOOD_BURST",
+    "spell_type": "BLOOD",
+    "level": 68,
+    "max_hit": 21,
+    "exp": 39,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 376,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 562,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "BLOOD_BURST_CAST",
+    "end_sound": "BLOOD_BURST_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 12881,
+    "spell": "ICE_BURST",
+    "spell_type": "ICE",
+    "level": 70,
+    "max_hit": 22,
+    "exp": 40,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 363,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 4
+      },
+      {
+        "id": 562,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "ICE_BURST_CAST",
+    "end_sound": "ICE_BURST_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 12951,
+    "spell": "SMOKE_BLITZ",
+    "spell_type": "SMOKE",
+    "level": 74,
+    "max_hit": 23,
+    "exp": 42,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 386,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 387,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 554,
+        "amount": 2
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SMOKE_BLITZ_CAST",
+    "end_sound": "SMOKE_BLITZ_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12999,
+    "spell": "SHADOW_BLITZ",
+    "spell_type": "SHADOW",
+    "level": 76,
+    "max_hit": 24,
+    "exp": 43,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 380,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 381,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 2
+      },
+      {
+        "id": 566,
+        "amount": 2
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "SHADOW_BLITZ_CAST",
+    "end_sound": "SHADOW_BLITZ_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12911,
+    "spell": "BLOOD_BLITZ",
+    "spell_type": "BLOOD",
+    "level": 80,
+    "max_hit": 25,
+    "exp": 45,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": null,
+    "projectile": {
+      "id": 374,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "end_graphic": {
+      "id": 375,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 565,
+        "amount": 4
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "BLOOD_BLITZ_CAST",
+    "end_sound": "BLOOD_BLITZ_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12871,
+    "spell": "ICE_BLITZ",
+    "spell_type": "ICE",
+    "level": 82,
+    "max_hit": 26,
+    "exp": 46,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1978,
+    "start_graphic": {
+      "id": 366,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": null,
+    "end_graphic": {
+      "id": 367,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 3
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 2
+      }
+    ],
+    "start_sound": "ICE_BLITZ_CAST",
+    "end_sound": "ICE_BLITZ_IMPACT",
+    "radius": 0
+  },
+  {
+    "id": 12975,
+    "spell": "SMOKE_BARRAGE",
+    "spell_type": "SMOKE",
+    "level": 86,
+    "max_hit": 27,
+    "exp": 48,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 391,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 554,
+        "amount": 4
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 4
+      }
+    ],
+    "start_sound": "SMOKE_BARRAGE_CAST",
+    "end_sound": "SMOKE_BARRAGE_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 13023,
+    "spell": "SHADOW_BARRAGE",
+    "spell_type": "SHADOW",
+    "level": 88,
+    "max_hit": 28,
+    "exp": 49,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 383,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 556,
+        "amount": 4
+      },
+      {
+        "id": 566,
+        "amount": 3
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 4
+      }
+    ],
+    "start_sound": "SHADOW_BARRAGE_CAST",
+    "end_sound": "SHADOW_BARRAGE_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 12929,
+    "spell": "BLOOD_BARRAGE",
+    "spell_type": "BLOOD",
+    "level": 92,
+    "max_hit": 29,
+    "exp": 51,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 377,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 560,
+        "amount": 4
+      },
+      {
+        "id": 566,
+        "amount": 1
+      },
+      {
+        "id": 565,
+        "amount": 4
+      }
+    ],
+    "start_sound": "BLOOD_BARRAGE_CAST",
+    "end_sound": "BLOOD_BARRAGE_IMPACT",
+    "radius": 1
+  },
+  {
+    "id": 12891,
+    "spell": "ICE_BARRAGE",
+    "spell_type": "ICE",
+    "level": 94,
+    "max_hit": 30,
+    "exp": 52,
+    "spellbook": "ANCIENT",
+    "cast_animation": 1979,
+    "start_graphic": null,
+    "projectile": null,
+    "end_graphic": {
+      "id": 369,
+      "height": 0,
+      "delay": 0
+    },
+    "required_equipment": [],
+    "required_inventory": [
+      {
+        "id": 555,
+        "amount": 6
+      },
+      {
+        "id": 565,
+        "amount": 2
+      },
+      {
+        "id": 560,
+        "amount": 4
+      }
+    ],
+    "start_sound": "ICE_BARRAGE_CAST",
+    "end_sound": "ICE_BARRAGE_IMPACT",
+    "radius": 1
+  }
+]
