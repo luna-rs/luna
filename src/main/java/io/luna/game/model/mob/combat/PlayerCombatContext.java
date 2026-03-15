@@ -68,7 +68,7 @@ public final class PlayerCombatContext extends CombatContext {
 
     @Override
     public boolean isAutoRetaliate() {
-        return player.getVarpManager().getValue(PersistentVarp.AUTO_RETALIATE) == 1;
+        return player.getVarpManager().getValue(PersistentVarp.AUTO_RETALIATE) == 0;
     }
 
     public EquipmentBonus getAttackStyleBonus() {

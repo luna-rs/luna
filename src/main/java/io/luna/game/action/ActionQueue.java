@@ -192,14 +192,13 @@ public final class ActionQueue {
      * </ol>
      */
     public void process() {
+        // 1) Remove actions that are no longer actively processing.
+        processing.values().removeIf(action -> action.getState() != ActionState.PROCESSING);
 
-        // 1) Strong actions suppress weak actions.
+        // 2) Strong actions suppress weak actions.
         if (processing.containsKey(ActionType.STRONG)) {
             interruptWeak();
         }
-
-        // 2) Remove actions that are no longer actively processing.
-        processing.values().removeIf(action -> action.getState() != ActionState.PROCESSING);
 
         // 3) Processing stage: per-tick hooks + enqueue for execution stage.
         for (Action<?> action : processing.values()) {

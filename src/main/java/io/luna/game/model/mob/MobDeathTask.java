@@ -105,6 +105,7 @@ public final class MobDeathTask extends Task {
     public void execute() {
         try {
             if (currentLoop == 0) {
+                victim.interact(null);
                 DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.PRE_DEATH);
             } else if (currentLoop == 4) {
                 DeathHookHandler.INSTANCE.onDeath(victim, source, DeathStage.DEATH);

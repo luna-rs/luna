@@ -9,7 +9,6 @@ import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.interact.InteractionPolicy;
-import io.luna.game.task.Task;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -27,15 +26,13 @@ import java.util.Optional;
 public final class CombatAction extends Action<Mob> {
 
     /**
-     * A one-tick action that triggers auto-retaliation for a victim after being attacked.
+     * An {@link Action} that applies {@link CombatDamage} on the first execution, and attempts to auto-retaliate on
+     * the second execution.
      * <p>
-     * This is queued onto the victim rather than executed immediately so retaliation happens through the normal
-     * action system.
-     * <p>
-     * The {@code attacker} is the mob that initiated the hit, and the {@code victim} is the mob that may
-     * retaliate against that attacker.
+     * The {@code attacker} is the mob that initiated the hit, and the {@code victim} is the mob that may retaliate
+     * against that attacker.
      */
-    private static final class CombatRetaliateAction extends Action<Mob> {
+    private static final class CombatDamageAction extends Action<Mob> {
 
         /**
          * The mob that originally attacked the victim and will become the retaliation target.
@@ -50,21 +47,40 @@ public final class CombatAction extends Action<Mob> {
         private final Mob victim;
 
         /**
-         * Creates a new retaliation action.
+         * The combat damage to apply.
+         */
+        private final CombatDamage damage;
+
+        /**
+         * Creates a new {@link CombatDamageAction}.
          *
          * @param attacker The mob that initiated the attack.
          * @param victim The mob that will retaliate.
+         * @param damage The combat damage to apply.
          */
-        public CombatRetaliateAction(Mob attacker, Mob victim) {
-            super(victim, ActionType.WEAK, false, 1);
+        public CombatDamageAction(Mob attacker, Mob victim, CombatDamage damage) {
+            super(victim, ActionType.SOFT, true, 1);
             this.attacker = attacker;
             this.victim = victim;
+            this.damage = damage;
         }
 
         @Override
         public boolean run() {
-            victim.getCombat().attack(attacker);
-            return true;
+            if (getExecutions() == 0) {
+                // First execution: apply damage.
+                damage.apply();
+            } else if (getExecutions() == 1 && victim.getCombat().isAutoRetaliate() &&
+                    (victim.getWalking().isEmpty() || victim instanceof Npc)) {
+                // TODO Maybe a "shouldAutoRetaliate" is needed? A retreating NPC should no longer retaliate.
+                //  Retreating should be done in a STRONG action.
+                // TODO Can then do cool things like loop the world when NPC spawn dumps are added, and make all
+                //  spawned guards retreat when leashed too far (along with all other relevant world NPCs).
+
+                // Second execution: if the victim retaliates, and is an NPC or stationary, attack back.
+                victim.getCombat().attack(attacker);
+            }
+            return getExecutions() == 1;
         }
     }
 
@@ -137,19 +153,14 @@ public final class CombatAction extends Action<Mob> {
     private void launchMeleeAttack() {
         Mob victim = combat.getTarget();
         CombatDamage damage = CombatDamage.computed(mob, victim, CombatDamageType.MELEE);
+        // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
+        // TODO For some reason, swapping weapons will make it so the player stops auto retaliating? Or ending the
+        //  action at all does as well?
 
         mob.animation(combat.getAttackAnimation());
-
-        world.schedule(new Task(false, 1) {
-            @Override
-            protected void execute() {
-                damage.apply();
-                cancel();
-            }
-        });
         victim.animation(combat.getDefenceAnimation());
         victim.getCombat().resetCombatTimer();
-        retaliate();
+        victim.submitAction(new CombatDamageAction(mob, victim, damage));
     }
 
     /**
@@ -162,23 +173,5 @@ public final class CombatAction extends Action<Mob> {
      * Resolves a magic attack against the current target.
      */
     private void launchMagicAttack() {
-    }
-
-    /**
-     * Queues auto-retaliation for the current target when enabled.
-     * <p>
-     * Retaliation is deferred through a one-tick weak action rather than being executed inline with the current
-     * attack cycle.
-     */
-    private void retaliate() {
-        Mob victim = combat.getTarget();
-        // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
-        // TODO For some reason, swapping weapons will make it so the player stops auto retaliating? Or ending the
-        //  action at all does as well?
-
-        if (victim.getCombat().isAutoRetaliate() && (victim.getWalking().isEmpty() || victim instanceof Npc)) {
-            // TODO Almost positive auto-retaliate doesn't go off when moving. But more testing is needed.
-            victim.getActions().submitIfAbsent(new CombatRetaliateAction(mob, victim));
-        }
     }
 }
