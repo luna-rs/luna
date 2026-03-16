@@ -74,10 +74,8 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
 
     @Override
     public void onCompleted(ImmutableList<WeaponTypeDefinition> tokenObjects) {
-        if (!tokenObjects.isEmpty()) {
-            tokenObjects.forEach(WeaponTypeDefinition::addWeaponType);
-            WeaponTypeDefinition.lock();
-            logger.debug("Loaded {} weapon type definitions!", box(tokenObjects.size()));
-        }
+        tokenObjects.forEach(WeaponTypeDefinition::addWeaponType);
+        WeaponTypeDefinition.lock();
+        logger.debug("Loaded {} weapon type definitions!", box(tokenObjects.size()));
     }
 }

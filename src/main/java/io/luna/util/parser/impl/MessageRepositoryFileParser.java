@@ -8,9 +8,13 @@ import io.luna.net.msg.GameMessage;
 import io.luna.net.msg.GameMessageReader;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.parser.JsonFileParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
+
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link JsonFileParser} implementation that parses incoming message listener metadata.
@@ -18,6 +22,16 @@ import java.nio.file.Paths;
  * @author lare96
  */
 public final class MessageRepositoryFileParser extends JsonFileParser<GameMessageReader<?>> {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
+
+    /**
+     * The directory of incoming message listeners.
+     */
+    private static final String DIR = "io.luna.net.msg.in.";
 
     /**
      * A default implementation of a {@link GameMessageReader} that does nothing.
@@ -29,11 +43,6 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
             return VoidEvent.INSTANCE;
         }
     }
-
-    /**
-     * The directory of incoming message listeners.
-     */
-    private static final String DIR = "io.luna.net.msg.in.";
 
     /**
      * The message repository.
@@ -62,6 +71,7 @@ public final class MessageRepositoryFileParser extends JsonFileParser<GameMessag
     public void onCompleted(ImmutableList<GameMessageReader<?>> tokenObjects) {
         tokenObjects.forEach(repository::put);
         repository.lock();
+        logger.debug("Loaded {} message listeners!", box(tokenObjects.size()));
     }
 
     /**

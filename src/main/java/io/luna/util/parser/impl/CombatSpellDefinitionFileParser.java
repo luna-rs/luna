@@ -21,9 +21,13 @@ import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.CombatSpellType;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
 import java.util.function.BiFunction;
+
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * Parses combat spell definitions from {@code data/game/def/spells.json}.
@@ -31,6 +35,11 @@ import java.util.function.BiFunction;
  * @author lare96
  */
 public final class CombatSpellDefinitionFileParser extends JsonFileParser<CombatSpellDefinition> {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Creates a new {@link CombatSpellDefinitionFileParser}.
@@ -68,6 +77,12 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
                 new Animation(castAnimation), startGraphic, projectile, endGraphic, required,
                 startSound, endSound
         );
+    }
+
+    @Override
+    public void onCompleted(ImmutableList<CombatSpellDefinition> tokenObjects) {
+        CombatSpellDefinition.ALL.storeAndLock(tokenObjects);
+        logger.debug("Loaded {} spell definitions!", box(tokenObjects.size()));
     }
 
     /**
@@ -122,8 +137,6 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
                         .setSourceEntity(source)
                         .setTargetEntity(target)
                         .setId(id)
-                        // Verify these mappings are intentional: "speed" is applied to start ticks,
-                        // while "delay" is applied to end ticks.
                         .setTicksToStart(speed)
                         .setTicksToEnd(delay)
                         .setStartHeight(startHeight)

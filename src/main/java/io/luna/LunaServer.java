@@ -138,6 +138,7 @@ public final class LunaServer {
                 new VarBitDefinitionDecoder(),
                 new VarpDefinitionDecoder(),
                 new MapDecoder());
+        logger.info("The #377 cache has been loaded into memory.");
     }
 
     /**

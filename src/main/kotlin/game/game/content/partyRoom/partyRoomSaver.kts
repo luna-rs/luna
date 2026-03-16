@@ -23,7 +23,7 @@ fun loadItems() {
             val loadedItems = Attribute.getGsonInstance()
                 .fromJson(Files.readString(ITEMS_FILE), ItemContainer::class.java)
             DropPartyOption.chest.items.addAll(loadedItems)
-            logger.info("Recovered ${loadedItems.size()} previously stored drop party items")
+            logger.debug("Recovered ${loadedItems.size()} previously stored drop party items.")
             Files.deleteIfExists(ITEMS_FILE)
         } catch (e: Exception) {
             e.printStackTrace()

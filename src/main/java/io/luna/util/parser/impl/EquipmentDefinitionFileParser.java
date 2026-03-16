@@ -6,8 +6,12 @@ import io.luna.game.model.def.EquipmentDefinition;
 import io.luna.game.model.def.EquipmentDefinition.Requirement;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
+
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link JsonFileParser} implementation that reads equipment definitions.
@@ -15,6 +19,11 @@ import java.nio.file.Paths;
  * @author lare96
  */
 public final class EquipmentDefinitionFileParser extends JsonFileParser<EquipmentDefinition> {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Creates a new {@link EquipmentDefinitionFileParser}.
@@ -38,5 +47,6 @@ public final class EquipmentDefinitionFileParser extends JsonFileParser<Equipmen
     @Override
     public void onCompleted(ImmutableList<EquipmentDefinition> tokenObjects) {
         EquipmentDefinition.ALL.storeAndLock(tokenObjects);
+        logger.debug("Loaded {} equipment definitions!", box(tokenObjects.size()));
     }
 }

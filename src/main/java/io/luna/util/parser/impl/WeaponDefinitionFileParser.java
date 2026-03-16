@@ -56,6 +56,6 @@ public final class WeaponDefinitionFileParser extends JsonFileParser<WeaponDefin
     @Override
     public void onCompleted(ImmutableList<WeaponDefinition> tokenObjects) {
         WeaponDefinition.ALL.storeAndLock(tokenObjects);
-        logger.info("Loaded {} weapon definitions!", box(tokenObjects.size()));
+        logger.debug("Loaded {} weapon definitions!", box(tokenObjects.size()));
     }
 }

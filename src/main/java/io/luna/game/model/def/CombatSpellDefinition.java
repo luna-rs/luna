@@ -23,6 +23,11 @@ import java.util.function.BiFunction;
 public final class CombatSpellDefinition implements Definition {
 
     /**
+     * The repository containing all loaded {@link CombatSpellDefinition} instances, keyed by spell id.
+     */
+    public static final MapDefinitionRepository<CombatSpellDefinition> ALL = new MapDefinitionRepository<>();
+
+    /**
      * The id for this spell.
      */
     private final int id;

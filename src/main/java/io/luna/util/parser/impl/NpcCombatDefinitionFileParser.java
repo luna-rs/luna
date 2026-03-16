@@ -5,8 +5,12 @@ import com.google.gson.JsonObject;
 import io.luna.game.model.def.NpcCombatDefinition;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
+
+import static org.apache.logging.log4j.util.Unbox.box;
 
 /**
  * A {@link JsonFileParser} implementation that reads NPC combat definitions.
@@ -14,6 +18,11 @@ import java.nio.file.Paths;
  * @author lare96
  */
 public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcCombatDefinition> {
+
+    /**
+     * The logger.
+     */
+    private static final Logger logger = LogManager.getLogger();
 
     /**
      * Creates a new {@link NpcCombatDefinitionFileParser}.
@@ -44,5 +53,6 @@ public final class NpcCombatDefinitionFileParser extends JsonFileParser<NpcComba
     @Override
     public void onCompleted(ImmutableList<NpcCombatDefinition> tokenObjects) {
         NpcCombatDefinition.ALL.storeAndLock(tokenObjects);
+        logger.debug("Loaded {} NPC combat definitions!", box(tokenObjects.size()));
     }
 }
