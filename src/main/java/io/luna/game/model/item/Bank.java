@@ -306,14 +306,15 @@ public final class Bank extends ItemContainer {
         /*
          * For stackables, ensure there's enough space to withdraw at 0 inventory capacity.
          */
-        Item withdrawItem = item.withId(id).withAmount(amount);
-        if (remaining == 0 && !inventory.hasSpaceFor(withdrawItem)) {
+        Item depositItem = item.withId(id).withAmount(amount);
+        if (remaining == 0 && !inventory.hasSpaceFor(depositItem)) {
             inventory.onCapacityExceeded();
             return false;
         }
 
+        item = item.withAmount(amount);
         if (remove(item)) {
-            return inventory.add(withdrawItem);
+            return inventory.add(depositItem);
         }
         return false;
     }
