@@ -162,11 +162,7 @@ public final class GameMessageDecoder extends ProgressiveMessageDecoder<GameMess
 
             // Create payload using decoded size.
             ByteBuf newBuffer = in.readBytes(size);
-            try {
-                return createDecodedMessage(newBuffer);
-            } finally {
-                in.release();
-            }
+            return createDecodedMessage(newBuffer);
         }
         return null;
     }
