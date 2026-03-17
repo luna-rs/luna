@@ -127,7 +127,6 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
             logger.warn("A persistence worker is already saving data for {}, dropping logout request...", username);
             return false;
         }
-        logger.trace("Adding {}'s logout request to the pending logout map.", username);
         request.setTimeout();
         return true;
     }
@@ -169,7 +168,6 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
 
     @Override
     protected void shutDown() {
-        logger.trace("A shutdown of the logout service has been requested.");
         workers.shutdown();
         awaitTerminationUninterruptibly(workers);
         logger.fatal("The logout service has been shutdown.");
@@ -186,7 +184,6 @@ public final class LogoutService extends AuthenticationService<LogoutRequest> {
      * @param saveData Snapshot of persistence data to write.
      */
     private void startWorker(String username, LogoutRequest request, PlayerData saveData) {
-        logger.trace("Servicing {}'s logout request...", username);
         workers.submit(() -> {
             try {
                 Stopwatch timer = Stopwatch.createStarted();

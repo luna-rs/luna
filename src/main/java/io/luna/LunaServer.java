@@ -19,6 +19,7 @@ import io.luna.net.LunaChannelFilter;
 import io.luna.net.LunaChannelInitializer;
 import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.ExecutorUtils;
+import io.luna.util.parser.impl.CombatSpellDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
@@ -137,6 +138,7 @@ public final class LunaServer {
                 new VarBitDefinitionDecoder(),
                 new VarpDefinitionDecoder(),
                 new MapDecoder());
+        logger.info("The #377 cache has been loaded into memory.");
     }
 
     /**
@@ -187,6 +189,7 @@ public final class LunaServer {
         taskList.add(new WeaponDefinitionFileParser());
         taskList.add(new WeaponTypeDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
+        taskList.add(new CombatSpellDefinitionFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");

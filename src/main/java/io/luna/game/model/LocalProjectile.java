@@ -157,8 +157,9 @@ public class LocalProjectile extends LocalEntity {
          *
          * @param view Who can see this projectile.
          */
-        public void setView(ChunkUpdatableView view) {
+        public TargetBuilder setView(ChunkUpdatableView view) {
             this.view = view;
+            return this;
         }
 
         /**

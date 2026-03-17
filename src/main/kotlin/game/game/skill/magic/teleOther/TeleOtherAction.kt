@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Magic
 
 /**
@@ -43,8 +43,8 @@ class TeleOtherAction(private val source: Player, private val target: Player, pr
     override fun run(): Boolean {
         return when (executions) {
             0 -> {
-                val sound = LocalSound.of(ctx, Sounds.TELEOTHER, source.position,
-                                       ChunkUpdatableView.globalView())
+                val sound = LocalSound.of(ctx, Sound.TELEOTHER, source.position,
+                                          ChunkUpdatableView.globalView())
                 sound.display()
                 source.animation(Animations.CAST_TELEOTHER)
                 source.graphic(Graphic(343, 50))

@@ -1,7 +1,7 @@
 package game.skill.magic.chargeOrb
 
 import com.google.common.collect.ImmutableList
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.chargeOrb.ChargeOrbAction.Companion.UNPOWERED_ORB
 import game.skill.magic.ItemRequirement
 import game.skill.magic.Rune
@@ -19,7 +19,7 @@ enum class ChargeOrbType(val spellId: Int,
                          val objectId: Int,
                          val chargedOrb: Int,
                          val graphic: Int,
-                         val sound: Sounds,
+                         val sound: Sound,
                          val requirements: List<SpellRequirement>) {
     WATER(spellId = 1179,
           level = 56,
@@ -27,7 +27,7 @@ enum class ChargeOrbType(val spellId: Int,
           objectId = 2151,
           chargedOrb = 571,
           graphic = 149,
-          sound = Sounds.CHARGE_WATER_ORB,
+          sound = Sound.CHARGE_WATER_ORB,
           requirements = listOf(
               ItemRequirement(UNPOWERED_ORB),
               RuneRequirement(Rune.WATER, 30),
@@ -40,7 +40,7 @@ enum class ChargeOrbType(val spellId: Int,
           objectId = 2150,
           chargedOrb = 575,
           graphic = 151,
-          sound = Sounds.CHARGE_EARTH_ORB,
+          sound = Sound.CHARGE_EARTH_ORB,
           requirements = listOf(
               ItemRequirement(UNPOWERED_ORB),
               RuneRequirement(Rune.WATER, 30),
@@ -53,7 +53,7 @@ enum class ChargeOrbType(val spellId: Int,
          objectId = 2153,
          chargedOrb = 569,
          graphic = 152,
-         sound = Sounds.CHARGE_FIRE_ORB,
+         sound = Sound.CHARGE_FIRE_ORB,
          requirements = listOf(
              ItemRequirement(UNPOWERED_ORB),
              RuneRequirement(Rune.WATER, 30),
@@ -66,7 +66,7 @@ enum class ChargeOrbType(val spellId: Int,
         objectId = 2152,
         chargedOrb = 573,
         graphic = 150,
-        sound = Sounds.CHARGE_AIR_ORB,
+        sound = Sound.CHARGE_AIR_ORB,
         requirements = listOf(
             ItemRequirement(UNPOWERED_ORB),
             RuneRequirement(Rune.WATER, 30),

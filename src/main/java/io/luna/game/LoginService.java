@@ -116,8 +116,6 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             return false;
         }
 
-        logger.trace("Sending {}'s login request to a worker...", username);
-
         // Schedules the load in the worker pool and records the future so finishRequests() can finalize later.
         loadMap.computeIfAbsent(username,
                 key -> CompletableFuture.supplyAsync(startWorker(username, request), workers));
@@ -138,8 +136,6 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
             return;
         }
 
-        logger.trace("Sending {}'s final login response.", username);
-
         var player = request.player;
         var client = request.client;
 
@@ -153,7 +149,6 @@ public final class LoginService extends AuthenticationService<LoginRequest> {
 
     @Override
     protected void shutDown() {
-        logger.trace("A shutdown of the login service has been requested.");
         workers.shutdownNow();
         awaitTerminationUninterruptibly(workers);
         logger.fatal("The login service has been shutdown.");

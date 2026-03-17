@@ -5,7 +5,7 @@ import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import game.player.Sounds
+import game.player.Sound
 
 /**
  * The rune essence identifier.
@@ -63,7 +63,7 @@ fun craft(plr: Player, rune: CraftableRune) {
 
         plr.animation(craftAnimation)
         plr.graphic(craftGraphic)
-        plr.playSound(Sounds.CRAFT_RUNES)
+        plr.playSound(Sound.CRAFT_RUNES)
         plr.overlays.closeWindows()
 
         plr.runecrafting.addExperience(rune.exp * essenceAmt)

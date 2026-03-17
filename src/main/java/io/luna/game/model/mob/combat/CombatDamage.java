@@ -1,6 +1,6 @@
 package io.luna.game.model.mob.combat;
 
-import game.player.Sounds;
+import game.player.Sound;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Graphic;
@@ -86,11 +86,10 @@ public final class CombatDamage {
          *     <li>non-magic styles produce {@code 0}</li>
          * </ul>
          * <p>
-         * If the attack is accurate, the supplied damage is used when present;
-         * otherwise a hit is rolled from the combat formulas.
+         * If the attack is accurate, the supplied damage is used when present; otherwise a hit is rolled from the
+         * combat formulas.
          *
-         * @param damage The forced damage value, or an empty optional to roll damage
-         * automatically.
+         * @param damage The forced damage value, or an empty optional to roll damage automatically.
          * @return The fully resolved combat damage result.
          */
         public CombatDamage computeDamage(OptionalInt damage) {
@@ -226,11 +225,13 @@ public final class CombatDamage {
         } else if (type == CombatDamageType.MAGIC) {
             victim.graphic(new Graphic(85));
             if (victim instanceof Player) {
-                ((Player) victim).playSound(Sounds.MAGIC_SPLASH);
+                ((Player) victim).playSound(Sound.MAGIC_SPLASH);
             }
         }
         victim.getCombat().getDamageStack().push(this);
         // TODO Any on-hit effects can go here as well?
+        // TODO Apply experience?
+        // TODO Apply protection prayers here?
     }
 
     /**

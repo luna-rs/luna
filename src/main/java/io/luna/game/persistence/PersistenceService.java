@@ -73,12 +73,10 @@ public final class PersistenceService extends AbstractIdleService {
 
     @Override
     protected void startUp() throws Exception {
-        logger.trace("Starting the persistence service.");
     }
 
     @Override
     protected void shutDown() throws Exception {
-        logger.trace("A shutdown of the persistence service has been requested.");
         worker.shutdown();
         awaitTerminationUninterruptibly(worker);
         logger.warn("The persistence service has been shutdown.");
@@ -125,7 +123,6 @@ public final class PersistenceService extends AbstractIdleService {
             logger.debug("Finished transforming {}'s data while offline (took {}ms).", username,
                     box(timer.elapsed().toMillis()));
         };
-        logger.trace("Sending data transformation request for {} to a worker...", username);
         return CompletableFuture.runAsync(() -> {
             // Wait for any pending saves to finish.
             world.getLogoutService().waitForSave(username);
@@ -152,7 +149,6 @@ public final class PersistenceService extends AbstractIdleService {
         if (player != null) {
             return context.getGame().sync(player::createSaveData);
         }
-        logger.trace("Sending load request for {} to a worker...", username);
         return CompletableFuture.supplyAsync(() -> {
             var timer = Stopwatch.createStarted();
             var data = world.getSerializerManager().getSerializer().loadPlayer(world, username);
@@ -189,7 +185,6 @@ public final class PersistenceService extends AbstractIdleService {
             // The LogoutService will handle the saving.
             return CompletableFuture.failedFuture(ex);
         }
-        logger.trace("Sending save request for {} to a worker...", username);
         return CompletableFuture.runAsync(() -> {
             if (world.getLogoutService().hasRequest(username)) {
                 throw ex;
@@ -211,7 +206,6 @@ public final class PersistenceService extends AbstractIdleService {
      * @return A future that completes when the mass save finishes.
      */
     public CompletableFuture<Void> saveAll() {
-        logger.trace("Sending mass save request to a worker...");
         return CompletableFuture.runAsync(() -> {
             // Send all requests to a worker.
             var timer = Stopwatch.createStarted();
@@ -224,7 +218,6 @@ public final class PersistenceService extends AbstractIdleService {
                 try {
                     PlayerData data = context.getGame().sync(player::createSaveData).join();
                     world.getSerializerManager().getSerializer().savePlayer(world, username, data);
-                    logger.trace("Saved {}'s data.", username);
                 } catch (Exception e) {
                     logger.error("Issue saving {}'s data during mass save.", username, e);
                 }

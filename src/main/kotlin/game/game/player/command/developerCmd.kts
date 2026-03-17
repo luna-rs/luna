@@ -2,7 +2,7 @@ package game.player.command
 
 import api.predef.*
 import api.predef.ext.*
-import game.obj.crystalChest.CrystalChestDropTable
+import game.content.crystalChest.CrystalChestDropTable
 import io.luna.game.model.Position
 import io.luna.game.model.item.Bank.DynamicBankInterface
 import io.luna.game.model.item.Item

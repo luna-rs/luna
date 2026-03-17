@@ -2,7 +2,7 @@ package engine.widget
 
 import api.predef.*
 import game.player.Messages
-import game.player.Sounds
+import game.player.Sound
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.GroundItemClickEvent.PickupItemEvent
 import io.luna.game.model.EntityState
@@ -29,7 +29,7 @@ on(PickupItemEvent::class, EventPriority.HIGH, InteractionPolicy.EQUAL_POSITION_
         !plr.inventory.hasSpaceFor(pickupItem) -> plr.sendMessage(Messages.INVENTORY_FULL)
 
         groundItem.state == EntityState.ACTIVE && world.items.unregister(groundItem) -> {
-            plr.playSound(Sounds.PICKUP_ITEM)
+            plr.playSound(Sound.PICKUP_ITEM)
             plr.inventory.add(pickupItem)
             logger.log(itemPickup, "{}: {}(x{})", plr.username, groundItem.def().name, box(groundItem.amount))
         }

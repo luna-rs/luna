@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Magic
 import game.skill.magic.Rune
 import game.skill.magic.RuneRequirement
@@ -54,7 +54,7 @@ class SuperheatItemAction(plr: Player, private val index: Int) : QueuedAction<Pl
             val barType = computeBarType()
             if (barType != null) {
                 mob.lock()
-                mob.playSound(Sounds.SUPERHEAT)
+                mob.playSound(Sound.SUPERHEAT)
                 world.scheduleOnce(2) {
                     mob.inventory.removeAll(barType.oreList)
                     mob.inventory.removeAll(removeItems)

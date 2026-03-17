@@ -1,11 +1,10 @@
 package engine.combat.prayer
 
 import api.predef.*
-import game.player.Sounds
+import game.player.Sound
 import io.luna.game.action.Action
 import io.luna.game.action.ActionType
 import io.luna.game.model.mob.Player
-import java.util.*
 
 /**
  * An [Action] that handles prayer-point drain while any [CombatPrayer] is active.
@@ -33,7 +32,7 @@ class CombatPrayerDrainAction(private val plr: Player) : Action<Player>(plr, Act
                     if (--plr.prayer.level < 1) {
                         // We've run out of prayer points.
                         plr.prayer.level = 0
-                        plr.playSound(Sounds.RAN_OUT_OF_PRAYER)
+                        plr.playSound(Sound.RAN_OUT_OF_PRAYER)
                         plr.sendMessage("You've run out of prayer points.")
                         prayerSet.deactivateAll()
                         return true

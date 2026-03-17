@@ -10,7 +10,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.`object`.GameObject
 import game.player.Animations
 import game.player.Messages
-import game.player.Sounds
+import game.player.Sound
 import game.skill.thieving.Thieving
 
 /**
@@ -89,7 +89,7 @@ class SearchForTrapsAction(plr: Player, val obj: GameObject, val thievable: Thie
             mob.thieving.addExperience(thievable.xp)
             if (loot.isNotEmpty()) {
                 mob.inventory.addAll(loot)
-                mob.playSound(Sounds.PICK_LOCK)
+                mob.playSound(Sound.PICK_LOCK)
             }
             Thieving.rollRogueEquipment(mob, obj, UNCOMMON)
         } else {

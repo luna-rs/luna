@@ -6,7 +6,7 @@ import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.smithing.BarType
 
 /**
@@ -30,7 +30,7 @@ class CraftJewelleryAction(plr: Player, private val barType: BarType,
         }
 
     override fun execute() {
-        mob.playSound(Sounds.SMELTING)
+        mob.playSound(Sound.SMELTING)
         mob.animation(Animations.SMELT)
         mob.crafting.addExperience(jewellery.xp)
     }

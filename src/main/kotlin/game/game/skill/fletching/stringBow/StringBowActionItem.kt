@@ -5,7 +5,7 @@ import io.luna.game.action.impl.ItemContainerAction.InventoryAction
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.player.Sounds
+import game.player.Sound
 
 /**
  * An [InventoryAction] implementation that strings bows.
@@ -38,7 +38,7 @@ class StringBowActionItem(plr: Player,
         }
 
     override fun execute() {
-        mob.playSound(Sounds.STRING_BOW)
+        mob.playSound(Sound.STRING_BOW)
         mob.sendMessage("You add a string to the bow.")
         mob.animation(ANIMATION)
         mob.fletching.addExperience(bow.exp)

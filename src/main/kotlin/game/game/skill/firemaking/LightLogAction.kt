@@ -2,7 +2,7 @@ package game.skill.firemaking
 
 import api.predef.*
 import api.predef.ext.*
-import game.player.Sounds
+import game.player.Sound
 import io.luna.game.model.Direction
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
@@ -73,8 +73,8 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
         if (logGroundItem != null && world.removeItem(logGroundItem!!)) {
             val firePosition = mob.position
             when {
-                originalDelayTicks < 2 -> mob.playSound(Sounds.BURN_LOG_QUICK)
-                else -> mob.playSound(Sounds.BURN_LOG)
+                originalDelayTicks < 2 -> mob.playSound(Sound.BURN_LOG_QUICK)
+                else -> mob.playSound(Sound.BURN_LOG)
             }
             mob.firemaking.addExperience(log.exp)
 

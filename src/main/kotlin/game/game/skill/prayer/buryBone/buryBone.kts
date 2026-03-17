@@ -5,7 +5,7 @@ import api.predef.*
 import io.luna.game.action.impl.ThrottledAction
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
-import game.player.Sounds
+import game.player.Sound
 import game.skill.prayer.Bone
 
 /**
@@ -28,7 +28,7 @@ fun bury(plr: Player, bone: Bone) {
 
             mob.prayer.addExperience(bone.exp)
             mob.inventory.remove(bone.boneItem)
-            mob.playSound(Sounds.BURY_BONE)
+            mob.playSound(Sound.BURY_BONE)
 
             mob.sendMessage("You dig a hole in the ground...")
             mob.sendMessage("You bury the bones.")

@@ -10,10 +10,9 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.model.mob.block.Graphic
-import io.luna.game.model.mob.block.Hit
 import game.player.Animations
 import game.player.Messages
-import game.player.Sounds
+import game.player.Sound
 import game.skill.thieving.Thieving
 import java.time.Duration
 
@@ -59,13 +58,13 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                     mob.animation(Animations.PICKPOCKET)
                     mob.inventory.addAll(loot)
                     if (loot.isNotEmpty()) {
-                        mob.playSound(Sounds.PICKUP_ITEM)
+                        mob.playSound(Sound.PICKUP_ITEM)
                     }
                     Thieving.rollRogueEquipment(mob, target)
                 } else {
                     val stunDuration = Duration.ofSeconds(thievable.stun).toTicks()
 
-                    mob.playSound(Sounds.PICKPOCKET_FAILED)
+                    mob.playSound(Sound.PICKPOCKET_FAILED)
                     mob.sendMessage("You have been stunned.");
                     mob.animation(Animation(424))
                     mob.graphic(Graphic(80, 5, 60))

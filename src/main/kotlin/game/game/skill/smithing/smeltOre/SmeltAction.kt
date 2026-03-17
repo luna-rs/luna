@@ -7,7 +7,7 @@ import io.luna.game.model.item.Equipment
 import io.luna.game.model.item.Item
 import io.luna.game.model.mob.Player
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.smithing.BarType
 
 /**
@@ -31,7 +31,7 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         val wearingGoldsmithGauntlet = mob.equipment.computeIdForIndex(Equipment.HANDS) == 776
         val xp = if (wearingGoldsmithGauntlet) barType.xp * 2.5 else barType.xp
 
-        mob.playSound(Sounds.SMELTING)
+        mob.playSound(Sound.SMELTING)
         mob.animation(Animations.SMELT)
         if (currentAdd.isNotEmpty()) { // Only add XP if we're getting a bar (for Iron ore).
             val oreRequired = barType.oreRequired

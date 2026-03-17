@@ -9,7 +9,7 @@ import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Graphic
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
 import game.player.Animations
-import game.player.Sounds
+import game.player.Sound
 import game.skill.magic.Magic
 
 /**
@@ -49,7 +49,7 @@ class AlchemyAction(plr: Player, private val type: AlchemyType, private val inve
             mob.magic.addExperience(type.xp)
             mob.animation(if (lowAlch) Animations.LOW_ALCHEMY else Animations.HIGH_ALCHEMY)
             mob.graphic(if (lowAlch) Graphic(112, 75) else Graphic(113, 75))
-            mob.playSound(if (lowAlch) Sounds.LOW_ALCHEMY else Sounds.HIGH_ALCHEMY)
+            mob.playSound(if (lowAlch) Sound.LOW_ALCHEMY else Sound.HIGH_ALCHEMY)
 
             mob.inventory.add(Item(995, if (goldAmount == 0) 1 else goldAmount))
             mob.tabs.show(TabIndex.MAGIC)
