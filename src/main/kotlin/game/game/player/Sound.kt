@@ -4,6 +4,7 @@ package game.player
  * A collection of sound constants.
  *
  * @author lare96
+ * @author hydrozoa
  */
 enum class Sound(val id: Int) {
     BAT_DEATH(0),
