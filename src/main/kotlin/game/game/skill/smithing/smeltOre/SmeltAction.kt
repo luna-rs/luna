@@ -31,7 +31,8 @@ class SmeltAction(plr: Player, val barType: BarType, times: Int) : InventoryActi
         val wearingGoldsmithGauntlet = mob.equipment.computeIdForIndex(Equipment.HANDS) == 776
         val xp = if (wearingGoldsmithGauntlet) barType.xp * 2.5 else barType.xp
 
-        mob.playSound(Sound.SMELTING)
+        // todo decide on sound
+        //mob.playSound(Sound.SMELTING)
         mob.animation(Animations.SMELT)
         if (currentAdd.isNotEmpty()) { // Only add XP if we're getting a bar (for Iron ore).
             val oreRequired = barType.oreRequired

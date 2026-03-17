@@ -32,7 +32,9 @@ class CombatPrayerDrainAction(private val plr: Player) : Action<Player>(plr, Act
                     if (--plr.prayer.level < 1) {
                         // We've run out of prayer points.
                         plr.prayer.level = 0
-                        plr.playSound(Sound.RAN_OUT_OF_PRAYER)
+                        // todo decide on sound
+                        plr.playSound(Sound.PRAYER_OFF)
+                        //plr.playSound(Sound.RAN_OUT_OF_PRAYER)
                         plr.sendMessage("You've run out of prayer points.")
                         prayerSet.deactivateAll()
                         return true
