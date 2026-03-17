@@ -71,7 +71,7 @@ public final class EventListenerPipeline<E extends Event> {
      * <p>
      * Defaults to {@link EventMatcher#defaultMatcher()}.
      */
-    private EventMatcher<E> matcher;
+    public EventMatcher<E> matcher;
 
     /**
      * Creates a new {@link EventListenerPipeline} for a specific event type.

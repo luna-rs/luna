@@ -384,13 +384,17 @@ public class Player extends Mob {
         if (hit.getDamage() > 0) {
             // TODO Refine per-hit sound selection once a proper combat sound system is implemented.
             playRandomSound(
-                    Sound.TAKE_DAMAGE,
-                    Sound.TAKE_DAMAGE_2,
-                    Sound.TAKE_DAMAGE_3,
-                    Sound.TAKE_DAMAGE_4
+                    // todo sound
+                    //Sound.TAKE_DAMAGE,
+                    //Sound.TAKE_DAMAGE_2,
+                    //Sound.TAKE_DAMAGE_3,
+                    //Sound.TAKE_DAMAGE_4
+                    Sound.ABYSSAL_HIT
             );
         } else {
-            playSound(Sound.UNARMED_BLOCK);
+            // todo sound
+            //playSound(Sound.UNARMED_BLOCK);
+            playSound(Sound.HUMAN_BLOCK_1);
         }
     }
 
