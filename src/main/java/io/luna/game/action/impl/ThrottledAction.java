@@ -5,8 +5,14 @@ import io.luna.game.action.ActionType;
 import io.luna.game.action.TimeSource;
 import io.luna.game.model.mob.Mob;
 
-
-
+/**
+ * An {@link Action} implementation that is throttled for a period of time. Throttling restricts how many times an action
+ * can run, ignoring actions from the same {@link TimeSource} until the delay is over. Some examples of throttled actions
+ * include burying bones and identifying herbs.
+ *
+ * @param <T> The mob that this Action is dedicated to.
+ * @author lare96
+ */
 public abstract class ThrottledAction<T extends Mob> extends Action<T> {
 
     /**

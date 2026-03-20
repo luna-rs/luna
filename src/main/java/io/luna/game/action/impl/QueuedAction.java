@@ -11,12 +11,12 @@ import io.luna.game.task.Task;
 /**
  * An {@link Action} that enforces a cooldown via {@link TimeSource} while allowing exactly one buffered execution
  * to be scheduled during the cooldown window.
- * <p>This differs from {@link ThrottledAction}:
+ * <p>
+ * This differs from {@link ThrottledAction}:
  * <ul>
  *   <li>{@link ThrottledAction}: ignores triggers during cooldown.</li>
  *   <li>{@link QueuedAction}: buffers one trigger and runs it as soon as allowed.</li>
  * </ul>
- * <p>
  * Used for content where players commonly spam the interaction and expect one extra input to be buffered
  * (e.g., alchemy, thieving).
  * <p>
