@@ -57,6 +57,8 @@ public class PlayerData {
     public JsonArray potions;
     public CombatStance lastCombatStance;
     public int specialAttackEnergy;
+    public int poisonSeverity;
+    public int teleBlock;
 
     /**
      * The username of the player this data belongs to.
@@ -101,6 +103,8 @@ public class PlayerData {
         player.loadPotionsFromJson(potions);
         player.getCombat().getWeapon().changeWeapon(lastCombatStance);
         player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
+        player.getCombat().setPoisonSeverity(poisonSeverity, false);
+        player.getCombat().setTeleBlock(teleBlock, false);
     }
 
     /**
@@ -148,6 +152,8 @@ public class PlayerData {
         potions = player.savePotionsToJson();
         lastCombatStance = player.getCombat().getWeapon().getStyleDef().getStance();
         specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
+        poisonSeverity = player.getCombat().getPoisonSeverity();
+        teleBlock = player.getCombat().getTeleBlock();
         return this;
     }
 
