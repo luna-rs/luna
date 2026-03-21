@@ -22,12 +22,9 @@ val loseItemsBelow = RIGHTS_ADMIN
  */
 DeathHookHandler.setDefaultHook(Player::class) {
     preDeath {
-        victim.lock()
         victim.sendMessage("Oh dear, you have died!")
         victim.animation(Animations.DEATH, AnimationPriority.IMMUTABLE)
         victim.playJingle(Jingles.DEATH_2)
-        victim.combat.stopCombatTimer()
-        victim.combat.damageStack.clear()
     }
 
     death {
@@ -75,6 +72,5 @@ DeathHookHandler.setDefaultHook(Player::class) {
     postDeath {
         val respawnPosition = Luna.settings().game().startingPosition()
         victim.move(respawnPosition)
-        victim.unlock()
     }
 }
