@@ -1,8 +1,6 @@
 package io.luna.game.model.mob.wandering;
 
 import com.google.common.collect.ImmutableList;
-import io.luna.game.action.Action;
-import io.luna.game.action.ActionType;
 import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.WalkingNavigator;
@@ -17,7 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * An {@link Action} that causes a {@link Mob} to patrol between a fixed set of waypoints.
+ * A {@link WanderingAction} that causes a {@link Mob} to patrol between a fixed set of waypoints.
  * <p>
  * The patrol behaviour is controlled by:
  * <ul>
@@ -29,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author lare96
  */
-public final class PatrolAction extends Action<Mob> {
+public final class PatrolAction extends WanderingAction {
 
     /**
      * Builder for {@link PatrolAction} instances.
@@ -143,11 +141,6 @@ public final class PatrolAction extends Action<Mob> {
     private final ImmutableList<Position> waypoints;
 
     /**
-     * How often to attempt a patrol step.
-     */
-    private final WanderingFrequency frequency;
-
-    /**
      * If {@code true}, waypoints are picked in random order instead of sequentially.
      */
     private final boolean scrambleRoute;
@@ -183,26 +176,20 @@ public final class PatrolAction extends Action<Mob> {
                          ImmutableList<Position> waypoints,
                          WanderingFrequency frequency,
                          boolean scrambleRoute) {
-        super(mob, ActionType.SOFT, true, 3);
+        super(mob, frequency);
         this.waypoints = waypoints;
-        this.frequency = frequency;
         this.scrambleRoute = scrambleRoute;
     }
 
     @Override
-    public boolean run() {
+    public void wander() {
         // Already moving, in combat, interacting, or still generating path to waypoints.
-        if (mob.getCombat().inCombat() ||  mob.isLocked() || !mob.getWalking().isEmpty() ||
-                !pathJob.isDone() || mob.getInteractingWith() != null) {
-            return false;
-        }
-
         Rational chance = frequency.getChance();
-        if (RandomUtils.roll(chance)) {
+        if (pathJob.isDone() && RandomUtils.roll(chance)) {
             int targetIndex = scrambleRoute ? RandomUtils.exclusive(0, waypoints.size()) : nextWaypointIndex;
             if (scrambleRoute && targetIndex == lastWaypointIndex) {
                 // If we've already pathed to this waypoint last, re-roll on next execution.
-                return false;
+                return;
             }
             pathJob = computeAndQueuePathAsync(waypoints.get(targetIndex));
             lastWaypointIndex = targetIndex;
@@ -214,7 +201,6 @@ public final class PatrolAction extends Action<Mob> {
                 }
             }
         }
-        return false;
     }
 
     /**

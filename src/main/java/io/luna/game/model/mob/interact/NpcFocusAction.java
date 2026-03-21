@@ -5,8 +5,6 @@ import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 
-import java.util.Objects;
-
 /**
  * A weak {@link Action} that keeps an {@link Npc} focused on a specific {@link Player} while both sides remain in
  * the same interaction.
@@ -39,21 +37,19 @@ final class NpcFocusAction extends Action<Npc> {
 
     @Override
     public boolean run() {
-        // Interact with player on first iteration.
         if (getExecutions() == 0) {
+            // Interact with player on first execution.
             mob.interact(player);
         }
 
-        // If the NPC is not interacting with anyone, or not with this player, stop.
-        if (mob.getInteractingWith() == null ||
-                !Objects.equals(mob.getInteractingWith(), player)) {
+        // NPC has broken focus with the player, or is in combat.
+        if (mob.getCombat().inCombat() || !mob.isInteractingWith(player)) {
             return true;
         }
 
-        // If the player is no longer interacting with this NPC, reset and stop.
-        if (player.getInteractingWith() == null ||
-                !Objects.equals(player.getInteractingWith(), mob)) {
-            mob.resetInteractingWith();
+        // Player has broken focus with the NPC, reset interaction state.
+        if (!player.isInteractingWith(mob)) {
+            mob.interact(null);
             return true;
         }
         return false;

@@ -9,7 +9,7 @@ import io.luna.game.event.impl.WidgetItemClickEvent.WidgetItemFirstClickEvent
  * Equips the item.
  */
 on(EquipItemEvent::class, EventPriority.HIGH) {
-    plr.resetInteractingWith()
+    plr.interact(null)
     plr.overlays.closeWindows()
     plr.equipment.equip(index)
 }

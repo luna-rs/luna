@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.combat;
 
 import io.luna.game.action.impl.NpcRetreatAction;
+import io.luna.game.action.impl.NpcRetreatAction.RetreatPolicy;
 import io.luna.game.model.Direction;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
@@ -23,6 +24,11 @@ public final class NpcCombatContext extends CombatContext {
      * The owning NPC.
      */
     private final Npc npc;
+
+    /**
+     * The retreating policy of this NPC.
+     */
+    private RetreatPolicy retreatPolicy = RetreatPolicy.NONE;
 
     /**
      * Creates a new {@link NpcCombatContext}.
@@ -68,9 +74,9 @@ public final class NpcCombatContext extends CombatContext {
     @Override
     public boolean onCombatHook(boolean reached) {
         boolean retreat = false;
-        switch (npc.getRetreatPolicy()) {
+        switch (retreatPolicy) {
             case LOW_HEALTH:
-                if (npc.getHealthPercent() <= 0.25) {
+                if (npc.getHealthPercent() <= 25) {
                     retreat = true;
                 }
                 break;
@@ -93,5 +99,39 @@ public final class NpcCombatContext extends CombatContext {
             }
         }
         return true;
+    }
+
+    /**
+     * Returns whether this NPC is currently retreating.
+     * <p>
+     * An NPC is considered retreating if its action queue currently contains an active {@link NpcRetreatAction}.
+     *
+     * @return {@code true} if this NPC is retreating, otherwise {@code false}.
+     */
+    public boolean isRetreating() {
+        return npc.getActions().contains(NpcRetreatAction.class);
+    }
+
+    /**
+     * Returns the retreat policy assigned to this NPC.
+     * <p>
+     * The retreat policy determines how this NPC behaves when retreat conditions are met, such as whether it flees,
+     * resets, or continues fighting.
+     *
+     * @return The current retreat policy.
+     */
+    public RetreatPolicy getRetreatPolicy() {
+        return retreatPolicy;
+    }
+
+    /**
+     * Sets the retreat policy for this NPC.
+     * <p>
+     * The retreat policy controls how this NPC should respond when its retreat logic is triggered.
+     *
+     * @param retreatPolicy The retreat policy to assign.
+     */
+    public void setRetreatPolicy(RetreatPolicy retreatPolicy) {
+        this.retreatPolicy = retreatPolicy;
     }
 }
