@@ -45,7 +45,7 @@ object Magic {
                     return null
                 }
                 removeItems += item
-            } else if(req is EquipmentRequirement) {
+            } else if (req is EquipmentRequirement) {
                 if (!plr.equipment.contains(req.id)) {
                     val articleName = addArticle(itemName(req.id))
                     plr.sendMessage("You need $articleName equipped to cast this spell.")
@@ -120,10 +120,14 @@ object Magic {
         val plr = action.mob
         return when (action.executions) {
             0 -> {
-                val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_REGULAR,
-                                          plr.position,
-                                          ChunkUpdatableView.globalView())
+                val sound = LocalSound.of(
+                    ctx,
+                    // todo sound
+                    Sound.TELEPORT_ALL,
+                    //Sound.TELEPORT_REGULAR,
+                    plr.position,
+                    ChunkUpdatableView.globalView()
+                )
                 sound.display()
                 true
             }
@@ -154,10 +158,14 @@ object Magic {
         return when (action.executions) {
             0 -> {
                 plr.animation(Animation(1979))
-                val sound = LocalSound.of(ctx,
-                                          Sound.TELEPORT_ANCIENT,
-                                          plr.position,
-                                          ChunkUpdatableView.globalView())
+                val sound = LocalSound.of(
+                    ctx,
+                    // todo sound
+                    Sound.TELEPORT_ALL,
+                    //Sound.TELEPORT_ANCIENT,
+                    plr.position,
+                    ChunkUpdatableView.globalView()
+                )
                 sound.display()
                 true
             }
@@ -181,9 +189,11 @@ object Magic {
     /**
      * An extension function that enables the underlying player to teleport somewhere.
      */
-    fun Player.teleport(destination: Position,
-                        style: TeleportStyle = TeleportStyle.REGULAR,
-                        onTeleport: () -> Unit = {}) {
+    fun Player.teleport(
+        destination: Position,
+        style: TeleportStyle = TeleportStyle.REGULAR,
+        onTeleport: () -> Unit = {}
+    ) {
         submitAction(object : TeleportAction(this@teleport, destination = destination, style = style) {
             override fun onTeleport() {
                 onTeleport()

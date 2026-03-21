@@ -42,7 +42,9 @@ class SmithAction(plr: Player, val table: SmithingTable, val makeItem: SmithingI
     }
 
     override fun execute() {
-        mob.playSound(Sound.SMITHING)
+
+        // todo decide on sound
+        // mob.playSound(Sound.SMITHING)
         mob.animation(Animations.SMITH)
         mob.sendMessage("You make the ${makeItem.item.itemDef.name}.")
         mob.smithing.addExperience(barType.xp * table.bars)
