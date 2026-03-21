@@ -190,9 +190,9 @@ enum class SlayerMaster(val id: Int,
         fun computeNextBestMaster(other: SlayerMaster): SlayerMaster {
             return when (other) {
                 TURAEL -> MAZCHNA
-                MAZCHNA -> CHAELDAR
-                CHAELDAR -> VANNAKA
-                VANNAKA -> DURADEL
+                MAZCHNA -> VANNAKA
+                VANNAKA -> CHAELDAR
+                CHAELDAR -> DURADEL
                 DURADEL -> DURADEL
             }
         }
