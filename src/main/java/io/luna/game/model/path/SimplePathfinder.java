@@ -52,7 +52,6 @@ public final class SimplePathfinder extends GamePathfinder<Position> {
      * <p>
      * Once horizontal alignment is reached or a horizontal step becomes blocked, the method will attempt to walk
      * vertically if possible. Horizontal and vertical calls alternate recursively until progress is no longer possible.
-     * </p>
      *
      * @param start The starting position for this segment.
      * @param target The goal position.

@@ -109,7 +109,10 @@ public final class PlayerCombatContext extends CombatContext {
     @Override
     public boolean onCombatHook(boolean reached) {
         Mob target = getTarget();
-        return target == null || target.getPosition().equals(player.getPosition()) || !reached;
+        if(target == null || (target.getPosition().equals(player.getPosition()) && reached)) {
+            return false;
+        }
+        return true;
     }
 
     /**

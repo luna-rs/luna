@@ -644,8 +644,19 @@ public class Player extends Mob {
      * <p>
      * This is the normal way to log a player out and will be handled via {@link LogoutService}.
      * </p>
+     *
+     * @param force If the player should be forced to return to the login screen (whether the game thinks they're
+     * online or not).
      */
-    public void logout() {
+    public void logout(boolean force) {
+        if (!force) {
+            if (!controllers.checkLogout()) {
+                return;
+            } else if (combat.inCombat()) {
+                sendMessage("You must wait 15 seconds after combat before logging out.");
+                return;
+            }
+        }
         var channel = client.getChannel();
         if (channel.isActive()) {
             queue(new LogoutMessageWriter());
@@ -657,7 +668,7 @@ public class Player extends Mob {
      */
     public void forceLogout() {
         client.setForcedLogout(true);
-        logout();
+        logout(true);
     }
 
     /**

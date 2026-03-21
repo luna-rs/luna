@@ -36,12 +36,12 @@ import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFacto
  * <p>
  * Pathfinding can be performed synchronously or asynchronously. When asynchronous, path computation is offloaded to
  * a lightweight, efficient, shared fork-join pool to avoid blocking the game thread.
- * </p>
  *
  * @author lare96
  */
 public class WalkingNavigator {
 
+    // TODO Don't even compute a path if player is locked, frozen, etc.
     /**
      * The logger instance.
      */
@@ -51,7 +51,6 @@ public class WalkingNavigator {
      * Shared pathfinding pool.
      * <p>
      * Uses 2 threads to limit CPU usage. Asynchronous-mode {@link ForkJoinPool} helps with throughput under load.
-     * </p>
      */
     private static final ForkJoinPool pool = new ForkJoinPool(2, defaultForkJoinWorkerThreadFactory, null, true);
 
@@ -80,7 +79,6 @@ public class WalkingNavigator {
      * <p>
      * This does <b>not</b> invoke a pathfinder. It is a single-step "nudge" that only succeeds if the target tile
      * is traversable.
-     * </p>
      *
      * @param direction The direction to step.
      * @return {@code true} if the step was queued, {@code false} if blocked.
@@ -125,7 +123,6 @@ public class WalkingNavigator {
      * consistent "stand next to target" behavior for large NPCs/objects.
      * <p>
      * <b>Implementation note:</b> This method always uses {@link PlayerPathfinder}.
-     * </p>
      *
      * @param target The entity to approach.
      * @param offsetDir Optional direction indicating which side of the target to approach from.
@@ -147,6 +144,8 @@ public class WalkingNavigator {
         Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
         int dx = direction.getTranslateX();
         int dy = direction.getTranslateY();
+
+        // TODO NPC size should always be 1 for interactions? More testing needed.
 
         // Pick the "near edge" of the target rectangle based on approach direction.
         int targetX = dx <= 0 ? targetPosition.getX() : targetPosition.getX() + targetSizeX - 1;
@@ -267,8 +266,8 @@ public class WalkingNavigator {
 
     /**
      * Wraps a future with logging and a fallback value when errors occur.
-     *
-     * <p>Cancellation is treated as normal control flow and is not logged.</p>
+     * <p>
+     * Cancellation is treated as normal control flow and is not logged.
      *
      * @param target The intended navigation target (used for logging context).
      * @param result The future to wrap.
