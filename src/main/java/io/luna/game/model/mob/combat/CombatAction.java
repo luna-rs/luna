@@ -2,13 +2,11 @@ package io.luna.game.model.mob.combat;
 
 import io.luna.game.action.Action;
 import io.luna.game.action.ActionType;
-import io.luna.game.model.Direction;
 import io.luna.game.model.EntityState;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
-import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
 import java.util.Objects;
@@ -25,6 +23,30 @@ import java.util.Optional;
  * @author lare96
  */
 public final class CombatAction extends Action<Mob> {
+
+    /**
+     * An {@link Action} that performs a single chase step toward the mob's current combat target.
+     * <p>
+     * This action is intended as a lightweight movement trigger for combat pursuit. When processed, it asks the mob's
+     * navigator to path toward the active {@link CombatContext#getTarget() combat target}, then immediately completes.
+     */
+    private static final class ChaseAction extends Action<Mob> {
+
+        /**
+         * Creates a new {@link ChaseAction}.
+         *
+         * @param mob The mob that should chase its current combat target.
+         */
+        public ChaseAction(Mob mob) {
+            super(mob, ActionType.WEAK, true, 1);
+        }
+
+        @Override
+        public boolean run() {
+            mob.getNavigator().walkTo(mob.getCombat().getTarget(), Optional.empty(), false);
+            return true;
+        }
+    }
 
     /**
      * An {@link Action} that applies {@link CombatDamage} on the first execution, and attempts to auto-retaliate on
@@ -73,11 +95,7 @@ public final class CombatAction extends Action<Mob> {
                 damage.apply();
             } else if (getExecutions() == 1 && victim.getCombat().isAutoRetaliate() &&
                     (victim.getWalking().isEmpty() || victim instanceof Npc)) {
-                // TODO Maybe a "shouldAutoRetaliate" is needed? A retreating NPC should no longer retaliate.
-                //  Retreating should be done in a STRONG action.
-                // TODO Can then do cool things like loop the world when NPC spawn dumps are added, and make all
-                //  spawned guards retreat when leashed too far (along with all other relevant world NPCs).
-
+                // TODO getRetaliationTarget() function might be needed? https://i.imgur.com/Sv21DM3.png
                 // Second execution: if the victim retaliates, and is an NPC or stationary, attack back.
                 victim.getCombat().attack(attacker);
             }
@@ -115,30 +133,25 @@ public final class CombatAction extends Action<Mob> {
                 target.getHealth() == 0) {
             return true;
         }
-        // todo npc retreating
 
-        // Check if we've reached the target before proceeding. If we have, stop moving.
-        if (!collisionManager.reached(position, target, interactionPolicy)) {
-            if (mob.getWalking().isEmpty()) {
-                // We haven't reached the target, and we're stationary. Move towards interaction range.
-                mob.getNavigator().walkTo(target, Optional.empty(), false);
-            }
+        boolean reached = collisionManager.reached(position, target, interactionPolicy);
+        if(reached) {
+            // Clear walking queue as soon as we've reached the target, regardless of side effects.
+            mob.getWalking().clear();
+        }
+
+        // Apply hook from context and short-circuit if necessary.
+        if (!combat.onCombatHook(reached)) {
             return false;
         }
-        mob.getWalking().clear();
 
-        // Ensure proper semantics when we're on the same tile as our target.
-        if (target.getPosition().equals(position)) {
-            if (mob instanceof Player) {
-                // TODO Is this just for melee? Or can you attack with magic/ranged?
-                // Players cannot attack when on the same position.
-                return false;
-            } else if (mob.getWalking().isEmpty()) {
-                Direction dir = target.getLastDirection().opposite();
-                if (!mob.getNavigator().step(dir)) {
-                    mob.getNavigator().stepRandom(false);
-                }
+        // Check if we've reached the target before proceeding. If we have, stop moving.
+        if (!reached) {
+            if (mob.getWalking().isEmpty()) {
+                // We haven't reached the target, and we're stationary. Move towards interaction range.
+                mob.getActions().submitIfAbsent(new ChaseAction(mob));
             }
+            return false;
         }
 
         if (combat.isAttackReady() && Objects.equals(mob.getInteractingWith(), combat.getTarget())) {
@@ -152,8 +165,9 @@ public final class CombatAction extends Action<Mob> {
 
     @Override
     public void onFinished() {
-        // todo npc retreat back to home if needed
+        // todo NPC that has drifted too far, start wandering back to home? Specialized wandering action for this?
         combat.setTarget(null);
+        mob.interact(null);
     }
 
     /**
@@ -162,7 +176,6 @@ public final class CombatAction extends Action<Mob> {
     private void launchMeleeAttack() {
         Mob victim = combat.getTarget();
         CombatDamage damage = CombatDamage.computed(mob, victim, CombatDamageType.MELEE);
-        // TODO Maybe we need a getRetaliationTarget() or something? https://i.imgur.com/Sv21DM3.png
 
         mob.animation(combat.getAttackAnimation());
         victim.animation(combat.getDefenceAnimation());
@@ -174,11 +187,15 @@ public final class CombatAction extends Action<Mob> {
      * Resolves a ranged attack against the current target.
      */
     private void launchRangedAttack() {
+        // todo ammo defs (projectiles, etc)
     }
 
     /**
      * Resolves a magic attack against the current target.
      */
     private void launchMagicAttack() {
+        // todo radius spells won't target if player occupies same pos as caster
+        // todo autocasting interfaces, use <x> spell on <x> setup, current spell vs weapon?
+        // todo apply spells effects from CombatSpellHandler#effect
     }
 }

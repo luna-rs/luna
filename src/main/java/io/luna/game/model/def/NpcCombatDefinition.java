@@ -19,6 +19,8 @@ import java.util.Arrays;
  */
 public final class NpcCombatDefinition implements Definition {
 
+    // TODO npc attack/defence/death sounds
+
     /* -------- Skill index constants -------- */
 
     /**
