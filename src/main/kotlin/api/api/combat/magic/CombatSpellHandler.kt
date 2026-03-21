@@ -22,7 +22,7 @@ object CombatSpellHandler {
      *
      * Each listener executes in the context of the resulting [CombatDamage] instance for that spell hit.
      */
-    val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
+    private val spells = HashMap<CombatSpell, CombatDamage.() -> Unit>()
 
     /**
      * Applies a weakening effect to a mob's skill level.
@@ -65,5 +65,17 @@ object CombatSpellHandler {
         if (spells.putIfAbsent(spell, damageListener) != null) {
             throw IllegalStateException("A listener already exists for spell $spell.")
         }
+    }
+
+    /**
+     * Executes the registered side effect listener for a combat spell, if one exists.
+     *
+     * If no listener has been registered for the supplied spell, this method does nothing.
+     *
+     * @param spell The spell whose side effect handler should be executed.
+     * @param damage The combat damage context passed into the spell effect listener.
+     */
+    fun effect(spell: CombatSpell, damage: CombatDamage) {
+        spells[spell]?.invoke(damage)
     }
 }
