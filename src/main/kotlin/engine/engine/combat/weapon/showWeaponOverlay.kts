@@ -1,6 +1,6 @@
 package engine.combat.weapon
 
-import api.combat.weapon.SpecialAttackHandler
+import api.combat.weapons.SpecialAttackHandler
 import api.predef.*
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent

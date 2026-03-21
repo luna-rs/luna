@@ -230,6 +230,7 @@ enum class Potion(val fourDose: Int,
             val potionTimer =
                 PotionCountdownTimer(this, potion, PotionEffect.ANTIPOISON, immunityDuration.toLong())
             submitAction(potionTimer)
+            combat.poisonSeverity = 0
         }
 
         /**
