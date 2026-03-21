@@ -74,7 +74,7 @@ public final class SmartWanderingAction extends Action<Mob> {
      * @param frequency How often to enqueue movement slices when idle.
      */
     public SmartWanderingAction(Mob mob, Area area, WanderingFrequency frequency) {
-        super(mob, ActionType.WEAK, true, 3);
+        super(mob, ActionType.SOFT, true, 3);
         this.area = area;
         this.frequency = frequency;
     }
@@ -84,8 +84,9 @@ public final class SmartWanderingAction extends Action<Mob> {
         LunaContext context = world.getContext();
         GameService game = context.getGame();
 
-        // Already moving or still generating waypoints.
-        if (mob.isLocked() || !mob.getWalking().isEmpty() || !waypointFuture.isDone()) {
+        // Already moving, in combat, or still generating waypoints.
+        if (mob.isLocked() || mob.getCombat().inCombat() || mob.getInteractingWith() != null ||
+                !mob.getWalking().isEmpty() || !waypointFuture.isDone()) {
             return false;
         }
 

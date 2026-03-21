@@ -98,8 +98,8 @@ public final class PatrolAction extends Action<Mob> {
         }
 
         /**
-         * Enables scrambled routing, causing the patrol to pick random waypoints instead of
-         * following the list sequentially.
+         * Enables scrambled routing, causing the patrol to pick random waypoints instead of following the list
+         * sequentially.
          * <p>
          * When scrambled, the same waypoint will not be selected twice in a row.
          *
@@ -111,8 +111,7 @@ public final class PatrolAction extends Action<Mob> {
         }
 
         /**
-         * Sets the {@link WanderingFrequency} that controls how often the mob attempts to move
-         * to its next waypoint.
+         * Sets the {@link WanderingFrequency} that controls how often the mob attempts to move to its next waypoint.
          *
          * @param frequency The desired wandering frequency.
          * @return This builder, for chaining.
@@ -184,7 +183,7 @@ public final class PatrolAction extends Action<Mob> {
                          ImmutableList<Position> waypoints,
                          WanderingFrequency frequency,
                          boolean scrambleRoute) {
-        super(mob, ActionType.WEAK, true, 3);
+        super(mob, ActionType.SOFT, true, 3);
         this.waypoints = waypoints;
         this.frequency = frequency;
         this.scrambleRoute = scrambleRoute;
@@ -192,8 +191,9 @@ public final class PatrolAction extends Action<Mob> {
 
     @Override
     public boolean run() {
-        // Already moving or still generating path to waypoints.
-        if (mob.isLocked() || !mob.getWalking().isEmpty() || !pathJob.isDone()) {
+        // Already moving, in combat, interacting, or still generating path to waypoints.
+        if (mob.getCombat().inCombat() ||  mob.isLocked() || !mob.getWalking().isEmpty() ||
+                !pathJob.isDone() || mob.getInteractingWith() != null) {
             return false;
         }
 

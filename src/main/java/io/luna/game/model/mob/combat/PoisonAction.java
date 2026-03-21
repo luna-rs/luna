@@ -29,13 +29,13 @@ public final class PoisonAction extends Action<Mob> {
      * @param instant {@code true} if the action should begin immediately, otherwise {@code false}.
      */
     public PoisonAction(Mob mob, boolean instant) {
-        super(mob, ActionType.SOFT, instant, 30);
+        super(mob, ActionType.NORMAL, instant, 30);
         combat = mob.getCombat();
     }
 
     @Override
     public void onSubmit() {
-        if (mob instanceof Player) {
+        if (mob instanceof Player && isInstant()) {
             ((Player) mob).sendMessage("You have been poisoned!");
         }
     }

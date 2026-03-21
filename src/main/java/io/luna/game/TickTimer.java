@@ -11,17 +11,6 @@ import java.time.Duration;
  * Use this for gameplay timing (cooldowns, throttles, “X ticks since…”, etc.). For real wall-clock timing
  * (profiling, IO latency, external services), prefer {@link Stopwatch}.
  *
- * <h3>Lifecycle</h3>
- * <ul>
- *   <li>{@link #start()} captures the current world tick as the baseline.</li>
- *   <li>{@link #getDurationTicks()} returns {@code worldTick - baselineTick}.</li>
- *   <li>{@link #reset()} clears the baseline (timer becomes “not started”).</li>
- * </ul>
- * <p>
- * <strong>Threading:</strong> This reads {@link World#getCurrentTick()}. It’s intended to be used on the game thread
- * where the tick counter is advanced. If you read it from other threads, you’ll get whatever visibility guarantees
- * {@code currentTick} provides.
- *
  * @author lare96
  */
 public class TickTimer implements Comparable<Long> {

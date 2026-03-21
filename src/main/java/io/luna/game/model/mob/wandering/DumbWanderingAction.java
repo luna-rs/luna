@@ -45,7 +45,7 @@ public final class DumbWanderingAction extends Action<Mob> {
      * @param frequency How often to attempt movement.
      */
     public DumbWanderingAction(Mob mob, Area area, WanderingFrequency frequency) {
-        super(mob, ActionType.WEAK, true, 3);
+        super(mob, ActionType.SOFT, true, 3);
         this.area = area;
         this.frequency = frequency;
     }
@@ -53,7 +53,8 @@ public final class DumbWanderingAction extends Action<Mob> {
     @Override
     public boolean run() {
         Rational chance = frequency.getChance();
-        if (!mob.isLocked() && RandomUtils.roll(chance)) {
+        if (!mob.getCombat().inCombat() && mob.getInteractingWith() != null &&
+                !mob.isLocked() && RandomUtils.roll(chance)) {
             // Try a few times to find a valid 1-tile step without over-spending CPU.
             for (int loop = 0; loop < 5; loop++) {
                 Direction nextDirection = Direction.random();

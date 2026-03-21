@@ -3,15 +3,15 @@ package game.player.command
 import api.event.Matcher
 import api.predef.*
 import com.google.common.collect.HashMultimap
+import game.player.QuestJournalInterface
+import game.skill.magic.Magic.teleport
+import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
+import game.skill.magic.teleportSpells.TeleportStyle
 import io.luna.Luna
 import io.luna.game.event.impl.CommandEvent
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.PlayerRights
 import io.luna.game.model.mob.overlay.TextInput
-import game.player.QuestJournalInterface
-import game.skill.magic.Magic.teleport
-import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
-import game.skill.magic.teleportSpells.TeleportStyle
 
 /**
  * A command that changes the password of a player.
@@ -66,7 +66,7 @@ cmd("players") {
  * A command that teleports the player home.
  */
 cmd("home") {
-    if (plr.teleportDelay.ready(2)) {
+    if (!plr.combat.isTeleBlocked && plr.teleportDelay.ready(2)) {
         plr.teleport(Luna.settings().game().startingPosition(), TeleportStyle.REGULAR)
     }
 }
