@@ -39,10 +39,16 @@ public final class CombatDelayAction extends Action<Mob> {
     }
 
     @Override
-    public boolean run() {
+    public void onProcess() {
+        // Decrement the attack timer during the process phase so attack readiness is resolved before any combat
+        // execution happens this tick.
         if (combat.decrementAttackDelay() < 1) {
             ready = true;
         }
+    }
+
+    @Override
+    public boolean run() {
         return !combat.inCombat();
     }
 
