@@ -63,13 +63,23 @@ public final class WalkingMessageReader extends GameMessageReader<WalkingEvent> 
             return false;
         }
 
+        // If we're immobilized, short-circuit here.
+        if (player.getCombat().isImmobilized()) {
+            player.sendMessage("You cannot move.");
+            if(event.getOrigin() != WalkingOrigin.INTERACTION) {
+                return false;
+            }
+            // Clear steps either way, so InteractionAction can proceed (if we're in range).
+            event.getSteps().clear();
+        }
+
         // Check if all steps in the path are valid. A path is considered invalid if it paths through non-traversable
         // areas. Disabled in non-production modes so ::noclip can be used.
         CollisionManager collisionManager = player.getWorld().getCollisionManager();
         Position lastStep = player.getPosition();
-        for(Position step : event.getSteps()) {
+        for (Position step : event.getSteps()) {
             Direction stepDir = Direction.between(lastStep, step);
-            if(stepDir != Direction.NONE && !collisionManager.traversable(lastStep, player.getType(), stepDir)) {
+            if (stepDir != Direction.NONE && !collisionManager.traversable(lastStep, player.getType(), stepDir)) {
                 // A step in the path was not traversable.
                 return false;
             }

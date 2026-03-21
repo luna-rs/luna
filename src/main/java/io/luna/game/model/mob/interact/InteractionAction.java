@@ -1,6 +1,7 @@
 package io.luna.game.model.mob.interact;
 
 import io.luna.game.action.Action;
+import io.luna.game.action.ActionState;
 import io.luna.game.action.ActionType;
 import io.luna.game.event.impl.InteractableEvent;
 import io.luna.game.event.impl.NpcClickEvent.AttackNpcEvent;
@@ -196,6 +197,12 @@ public final class InteractionAction extends Action<Player> {
      */
     private void onReached(boolean isMob, boolean combatEvent, InteractionPolicy trigger, List<InteractionActionListener> pending) {
         boolean moved = moveBeforeInteract(isMob, combatEvent, trigger);
+
+        if(getState() == ActionState.INTERRUPTED) {
+            // We're immobilized but need movement to interact, end the action and short-circuit.
+            return;
+        }
+
         if (combatEvent) {
             pending.forEach(listener -> listener.getAction().run());
         } else {
@@ -221,6 +228,11 @@ public final class InteractionAction extends Action<Player> {
         boolean moved = false;
         if ((isMob || target.size() == 1) && trigger.getType() == InteractionType.SIZE &&
                 trigger.getDistance() == 1) {
+            if(mob.getCombat().isImmobilized()) {
+                // We need to move in order to interact, but we're immobilized.
+                interrupt();
+                return false;
+            }
             Position current = mob.getPosition();
             Set<Direction> directions = getClosestNESW();
             if (!directions.isEmpty() && target.isWithinDistance(mob, 1)) {
