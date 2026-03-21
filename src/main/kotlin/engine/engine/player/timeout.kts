@@ -24,9 +24,8 @@ on(PlayerTimeoutEvent::class, EventPriority.HIGH) {
     if (!plr.idleTimer.isRunning) {
         plr.idleTimer.start()
     }
-    if (plr.idleTimer.duration.toMinutes() >= 5) {
-        // TODO Ensure not in combat.
-        plr.logout()
+    if (plr.idleTimer.duration.toMinutes() >= 5 && !plr.combat.inCombat()) {
+        plr.logout(false)
     }
 }
 
