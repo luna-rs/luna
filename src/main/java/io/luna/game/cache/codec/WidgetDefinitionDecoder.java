@@ -16,6 +16,8 @@ import java.util.List;
 
 /**
  * A {@link CacheDecoder} that decodes widget definitions.
+ *
+ * @author lare96
  */
 public final class WidgetDefinitionDecoder extends CacheDecoder<WidgetDefinition> {
 

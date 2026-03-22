@@ -42,7 +42,6 @@ import static java.util.concurrent.ForkJoinPool.defaultForkJoinWorkerThreadFacto
  */
 public class WalkingNavigator {
 
-    // TODO Don't even compute a path if player is locked, frozen, etc.
     /**
      * The logger instance.
      */
@@ -113,6 +112,20 @@ public class WalkingNavigator {
         return true;
     }
 
+    /**
+     * Walks this mob toward {@code target} until the supplied {@link InteractionPolicy} is satisfied.
+     * <p>
+     * This method first computes a full path to an offset position adjacent to the target, then trims that path so
+     * movement stops as soon as the target is considered reached by the interaction policy. The sliced path is finally
+     * submitted to the walking queue.
+     * <p>
+     * Pathfinding may run either synchronously or asynchronously depending on {@code async}.
+     *
+     * @param target The target entity to walk toward.
+     * @param policy The interaction policy that determines when the target has been reached.
+     * @param async {@code true} to compute the path asynchronously, otherwise {@code false}.
+     * @return A future that completes once the path has been computed and queued for walking.
+     */
     public CompletableFuture<Void> walkUntilReached(Entity target, InteractionPolicy policy, boolean async) {
         // Compute the full path.
         CompletableFuture<Deque<Position>> pathResult = findPath(mob.getPosition(),
@@ -131,7 +144,7 @@ public class WalkingNavigator {
             }
             // Add sliced path to walking queue.
             mob.getWalking().addPath(slicedPath);
-        });
+        }, mob.getService().getGameExecutor());
     }
 
     /**
