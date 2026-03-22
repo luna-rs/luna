@@ -1,0 +1,970 @@
+[
+  {
+    "ids": [
+      882,
+      883,
+      5616,
+      5622
+    ],
+    "type": "BRONZE_ARROW",
+    "strength": 7,
+    "start_graphic": {
+      "id": 19,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 10,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      841,
+      839,
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [
+      884,
+      885,
+      5617,
+      5623
+    ],
+    "type": "IRON_ARROW",
+    "strength": 10,
+    "start_graphic": {
+      "id": 18,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 9,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      841,
+      839,
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [
+      886,
+      887,
+      5618,
+      5624
+    ],
+    "type": "STEEL_ARROW",
+    "strength": 16,
+    "start_graphic": {
+      "id": 20,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 11,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      843,
+      845,
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [
+      888,
+      7552,
+      7553,
+      889,
+      5619,
+      5625
+    ],
+    "type": "MITHRIL_ARROW",
+    "strength": 22,
+    "start_graphic": {
+      "id": 21,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 12,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      849,
+      847,
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [
+      890,
+      891,
+      5620,
+      5626
+    ],
+    "type": "ADAMANT_ARROW",
+    "strength": 31,
+    "start_graphic": {
+      "id": 22,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 13,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      853,
+      851,
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [
+      892,
+      893,
+      5621,
+      5627
+    ],
+    "type": "RUNE_ARROW",
+    "strength": 49,
+    "start_graphic": {
+      "id": 24,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 15,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      857,
+      855,
+      861,
+      859
+    ]
+  },
+  {
+    "ids": [],
+    "type": "CRYSTAL_ARROW",
+    "strength": 58,
+    "start_graphic": {
+      "id": 250,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 249,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": [
+      4212,
+      4214,
+      4215,
+      4216,
+      4217,
+      4218,
+      4219,
+      4220,
+      4221,
+      4222,
+      4223
+    ]
+  },
+  {
+    "ids": [
+      877,
+      878,
+      6061,
+      6062
+    ],
+    "type": "BOLTS",
+    "strength": 10,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      881
+    ],
+    "type": "BARBED_BOLTS",
+    "strength": 12,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      879
+    ],
+    "type": "OPAL_BOLTS",
+    "strength": 14,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      880
+    ],
+    "type": "PEARL_BOLTS",
+    "strength": 48,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      4740
+    ],
+    "type": "BOLT_RACK",
+    "strength": 55,
+    "start_graphic": {
+      "id": 28,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 27,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      864,
+      870,
+      5654,
+      5661
+    ],
+    "type": "BRONZE_KNIFE",
+    "strength": 3,
+    "start_graphic": {
+      "id": 219,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 212,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      863,
+      871,
+      5655,
+      5662
+    ],
+    "type": "IRON_KNIFE",
+    "strength": 4,
+    "start_graphic": {
+      "id": 220,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 213,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      865,
+      872,
+      5656,
+      5663
+    ],
+    "type": "STEEL_KNIFE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 221,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 214,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      869,
+      874,
+      5658,
+      5665
+    ],
+    "type": "BLACK_KNIFE",
+    "strength": 8,
+    "start_graphic": {
+      "id": 222,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 215,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      866,
+      873,
+      5657,
+      5664
+    ],
+    "type": "MITHRIL_KNIFE",
+    "strength": 10,
+    "start_graphic": {
+      "id": 223,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 216,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      867,
+      875,
+      5659,
+      5666
+    ],
+    "type": "ADAMANT_KNIFE",
+    "strength": 14,
+    "start_graphic": {
+      "id": 224,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 217,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      868,
+      876,
+      5660,
+      5667
+    ],
+    "type": "RUNE_KNIFE",
+    "strength": 24,
+    "start_graphic": {
+      "id": 225,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 218,
+      "delay": 33,
+      "speed": 3,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      806,
+      812,
+      5628,
+      5635
+    ],
+    "type": "BRONZE_DART",
+    "strength": 1,
+    "start_graphic": {
+      "id": 232,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 226,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      807,
+      813,
+      5629,
+      5636
+    ],
+    "type": "IRON_DART",
+    "strength": 3,
+    "start_graphic": {
+      "id": 233,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 227,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      808,
+      814,
+      5630,
+      5637
+    ],
+    "type": "STEEL_DART",
+    "strength": 4,
+    "start_graphic": {
+      "id": 234,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 228,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      3093,
+      3094,
+      5631,
+      5638
+    ],
+    "type": "BLACK_DART",
+    "strength": 6,
+    "start_graphic": {
+      "id": 273,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 273,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      809,
+      815,
+      5632,
+      5639
+    ],
+    "type": "MITHRIL_DART",
+    "strength": 7,
+    "start_graphic": {
+      "id": 235,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 229,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      810,
+      816,
+      5633,
+      5640
+    ],
+    "type": "ADAMANT_DART",
+    "strength": 10,
+    "start_graphic": {
+      "id": 236,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 230,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      811,
+      817,
+      5634,
+      5641
+    ],
+    "type": "RUNE_DART",
+    "strength": 14,
+    "start_graphic": {
+      "id": 237,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 231,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      825,
+      831,
+      5642,
+      5648
+    ],
+    "type": "BRONZE_JAVELIN",
+    "strength": 6,
+    "start_graphic": {
+      "id": 206,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 200,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      826,
+      832,
+      5643,
+      5649
+    ],
+    "type": "IRON_JAVELIN",
+    "strength": 10,
+    "start_graphic": {
+      "id": 207,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 201,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      827,
+      833,
+      5644,
+      5650
+    ],
+    "type": "STEEL_JAVELIN",
+    "strength": 12,
+    "start_graphic": {
+      "id": 208,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 202,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      828,
+      834,
+      5645,
+      5651
+    ],
+    "type": "MITHRIL_JAVELIN",
+    "strength": 18,
+    "start_graphic": {
+      "id": 209,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 203,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      829,
+      835,
+      5646,
+      5652
+    ],
+    "type": "ADAMANT_JAVELIN",
+    "strength": 28,
+    "start_graphic": {
+      "id": 210,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 204,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      830,
+      836,
+      5647,
+      5653
+    ],
+    "type": "RUNE_JAVELIN",
+    "strength": 42,
+    "start_graphic": {
+      "id": 211,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 205,
+      "delay": 40,
+      "speed": 2,
+      "start_height": 45,
+      "end_height": 37,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      800
+    ],
+    "type": "BRONZE_THROWNAXE",
+    "strength": 5,
+    "start_graphic": {
+      "id": 43,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 35,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      801
+    ],
+    "type": "IRON_THROWNAXE",
+    "strength": 7,
+    "start_graphic": {
+      "id": 42,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 36,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      802
+    ],
+    "type": "STEEL_THROWNAXE",
+    "strength": 11,
+    "start_graphic": {
+      "id": 44,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 37,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      803
+    ],
+    "type": "MITHRIL_THROWNAXE",
+    "strength": 16,
+    "start_graphic": {
+      "id": 45,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 38,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [],
+    "type": "ADAMANT_THROWNAXE",
+    "strength": 23,
+    "start_graphic": {
+      "id": 46,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 39,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      805
+    ],
+    "type": "RUNE_THROWNAXE",
+    "strength": 26,
+    "start_graphic": {
+      "id": 48,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 41,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  },
+  {
+    "ids": [
+      6522
+    ],
+    "type": "TOKTZ_XIL_UL",
+    "strength": 50,
+    "start_graphic": {
+      "id": 0,
+      "height": 6553600,
+      "delay": 0
+    },
+    "projectile": {
+      "id": 442,
+      "delay": 44,
+      "speed": 3,
+      "start_height": 43,
+      "end_height": 31,
+      "curve": 0
+    },
+    "bows": []
+  }
+]

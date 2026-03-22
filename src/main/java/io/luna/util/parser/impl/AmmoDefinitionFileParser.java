@@ -7,12 +7,15 @@ import io.luna.game.model.LocalProjectile;
 import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.block.Graphic;
+import io.luna.game.model.mob.combat.AmmoType;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import static org.apache.logging.log4j.util.Unbox.box;
@@ -23,6 +26,11 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * @author lare96
  */
 public final class AmmoDefinitionFileParser extends JsonFileParser<AmmoDefinition> {
+
+    /**
+     * The list holding pending definitions.
+     */
+    private final List<AmmoDefinition> pending = new ArrayList<>();
 
     /**
      * The logger.
@@ -38,7 +46,8 @@ public final class AmmoDefinitionFileParser extends JsonFileParser<AmmoDefinitio
 
     @Override
     public AmmoDefinition convert(JsonObject token) {
-        int id = token.get("id").getAsInt();
+        ImmutableSet<Integer> ids = ImmutableSet.copyOf(GsonUtils.getAsType(token.get("ids"), Integer[].class));
+        AmmoType type = AmmoType.valueOf(token.get("type").getAsString());
         int strength = token.get("strength").getAsInt();
         Graphic startGraphic = token.has("start_graphic") ?
                 readGraphic(token.get("start_graphic").getAsJsonObject()) : null;
@@ -46,12 +55,15 @@ public final class AmmoDefinitionFileParser extends JsonFileParser<AmmoDefinitio
                 readGraphic(token.get("end_graphic").getAsJsonObject()) : null;
         BiFunction<Mob, Mob, LocalProjectile> projectile = readProjectile(token.get("projectile").getAsJsonObject());
         ImmutableSet<Integer> bows = ImmutableSet.copyOf(GsonUtils.getAsType(token.get("bows"), Integer[].class));
-        return new AmmoDefinition(id, strength, startGraphic, endGraphic, projectile, bows);
+        for(int id : ids) {
+            pending.add(new AmmoDefinition(id, type, strength, startGraphic, endGraphic, projectile, bows));
+        }
+        return AmmoDefinition.NULL;
     }
 
     @Override
     public void onCompleted(ImmutableList<AmmoDefinition> tokenObjects) {
-        AmmoDefinition.ALL.storeAndLock(tokenObjects);
-        logger.debug("Loaded {} ammo definitions!", box(tokenObjects.size()));
+        AmmoDefinition.ALL.storeAndLock(pending);
+        logger.debug("Loaded {} ammo definitions!", box(pending.size()));
     }
 }
