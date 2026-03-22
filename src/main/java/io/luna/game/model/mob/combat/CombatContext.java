@@ -16,6 +16,11 @@ import io.luna.game.model.mob.interact.InteractionPolicy;
 public abstract class CombatContext {
 
     /**
+     * The amount of time a mob will remain in combat after attacking or being attacked.
+     */
+    public static final int COMBAT_TIMER_DURATION = 10;
+
+    /**
      * The mob that owns this combat context.
      */
     private final Mob mob;
@@ -123,16 +128,14 @@ public abstract class CombatContext {
      *
      * @param enemy The mob to attack.
      */
-    public void attack(Mob enemy) {
+    public final void attack(Mob enemy) {
         if (mob instanceof Player) {
             Player player = (Player) mob;
-            if (!player.getControllers().checkCanFight(enemy)) {
+            if (!player.getControllers().checkCombat(enemy)) {
                 return;
             }
         }
-
         target = enemy;
-        mob.interact(target);
         mob.getActions().submitIfAbsent(new CombatAction(mob));
     }
 
@@ -141,7 +144,7 @@ public abstract class CombatContext {
      *
      * @return The updated attack delay.
      */
-    public int decrementAttackDelay() {
+    public final int decrementAttackDelay() {
         if (attackDelay > 0) {
             attackDelay--;
         }
@@ -155,7 +158,7 @@ public abstract class CombatContext {
      *
      * @return {@code true} if an attack may be performed, otherwise {@code false}.
      */
-    public boolean isAttackReady() {
+    public final boolean isAttackReady() {
         return getDelay().isReady();
     }
 
@@ -165,7 +168,7 @@ public abstract class CombatContext {
      * The new delay is derived from {@link #computeAttackSpeed()}, and the active {@link CombatDelayAction} is
      * marked as not ready until the delay expires.
      */
-    public void resetAttackDelay() {
+    public final void resetAttackDelay() {
         attackDelay = computeAttackSpeed();
         getDelay().setReady(false);
     }
@@ -187,7 +190,7 @@ public abstract class CombatContext {
     /**
      * Clears the current attack delay immediately.
      */
-    public void clearAttackDelay() {
+    public final void clearAttackDelay() {
         attackDelay = 0;
     }
 
@@ -197,14 +200,14 @@ public abstract class CombatContext {
      * This should be called whenever the owning mob performs or receives a combat interaction that should refresh
      * combat status.
      */
-    public void resetCombatTimer() {
+    public final void resetCombatTimer() {
         combatTimer.reset().start();
     }
 
     /**
      * Stops the combat timer.
      */
-    public void stopCombatTimer() {
+    public final void stopCombatTimer() {
         combatTimer.stop();
     }
 
@@ -217,21 +220,21 @@ public abstract class CombatContext {
      * @return {@code true} if the mob is still considered in combat, otherwise
      * {@code false}.
      */
-    public boolean inCombat() {
-        return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= 15;
+    public final boolean inCombat() {
+        return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= COMBAT_TIMER_DURATION;
     }
 
     /**
      * @return The current attack delay.
      */
-    public int getAttackDelay() {
+    public final int getAttackDelay() {
         return attackDelay;
     }
 
     /**
      * @return The combat damage stack.
      */
-    public CombatDamageStack getDamageStack() {
+    public final CombatDamageStack getDamageStack() {
         return damageStack;
     }
 
@@ -240,28 +243,28 @@ public abstract class CombatContext {
      *
      * @param target The new target, or {@code null} if no target should be tracked.
      */
-    void setTarget(Mob target) {
+    final void setTarget(Mob target) {
         this.target = target;
     }
 
     /**
      * @return The current target, or {@code null} if no target is active.
      */
-    public Mob getTarget() {
+    public final Mob getTarget() {
         return target;
     }
 
     /**
      * @return The poison severity.
      */
-    public int getPoisonSeverity() {
+    public final int getPoisonSeverity() {
         return poisonSeverity;
     }
 
     /**
      * @return The poison severity before decrementing.
      */
-    int decrementPoisonSeverity() {
+    final int decrementPoisonSeverity() {
         return poisonSeverity--;
     }
 
@@ -270,7 +273,7 @@ public abstract class CombatContext {
      *
      * @param poisonSeverity The new poison severity.
      */
-    public void setPoisonSeverity(int poisonSeverity) {
+    public final void setPoisonSeverity(int poisonSeverity) {
         setPoisonSeverity(poisonSeverity, true);
     }
 
@@ -284,7 +287,7 @@ public abstract class CombatContext {
      * @param timer {@code true} to start poison processing when poison is applied, otherwise {@code false}.
      * @return {@code true} if the poison severity was updated, otherwise {@code false}.
      */
-    public boolean setPoisonSeverity(int newPoisonSeverity, boolean timer) {
+    public final boolean setPoisonSeverity(int newPoisonSeverity, boolean timer) {
         if (newPoisonSeverity > 0) {
 
             // Check if we're already poisoned.
@@ -309,7 +312,7 @@ public abstract class CombatContext {
      *
      * @return {@code true} if poison severity is above zero, otherwise {@code false}.
      */
-    public boolean isPoisoned() {
+    public final boolean isPoisoned() {
         return poisonSeverity > 0;
     }
 
@@ -320,7 +323,7 @@ public abstract class CombatContext {
      *
      * @return {@code true} if the mob is immobilized, otherwise {@code false}.
      */
-    public boolean isImmobilized() {
+    public final boolean isImmobilized() {
         return mob.getActions().contains(ImmobilizationAction.class);
     }
 }
