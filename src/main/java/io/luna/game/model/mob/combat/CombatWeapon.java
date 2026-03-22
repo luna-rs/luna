@@ -122,6 +122,13 @@ public final class CombatWeapon {
     }
 
     /**
+     * @return The current weapon identifier.
+     */
+    public int getId() {
+        return def.getId();
+    }
+
+    /**
      * Returns the range of the currently equipped weapon and combat style in use.
      *
      * @return The current attack range.

@@ -90,7 +90,7 @@ public final class CombatFormula {
      */
     public static int computePhysicalMaxHit(Player player, PhysicalType type) {
         double effectiveStrength = computePhysicalEffectiveStrength(player, type);
-        double strengthBonus = getPhysicalStrengthBonus(player);
+        double strengthBonus = getPhysicalStrengthBonus(player, type);
         // TODO Apply special attack modifiers.
         return (int) Math.floor(0.5d + effectiveStrength * (strengthBonus + 64d) / 640d);
     }
@@ -170,11 +170,17 @@ public final class CombatFormula {
      * The exact bonus read depends on the active weapon style's configured offensive bonus type.
      *
      * @param player The attacking player.
+     * @param type The combat damage type being used.
      * @return The physical strength bonus.
      */
-    public static int getPhysicalStrengthBonus(Player player) {
-        EquipmentBonus bonus = player.getCombat().getWeapon().getStyleDef().getBonus();
-        return player.getEquipment().getBonus(bonus);
+    public static int getPhysicalStrengthBonus(Player player, PhysicalType type) {
+        PlayerCombatContext combat = player.getCombat();
+        if (type == PhysicalType.MELEE) {
+            return player.getEquipment().getBonus(EquipmentBonus.STRENGTH);
+        } else if(combat.getAmmo() != null) {
+            return combat.getAmmo().getStrength();
+        }
+        throw new IllegalStateException("unreachable");
     }
 
     /**

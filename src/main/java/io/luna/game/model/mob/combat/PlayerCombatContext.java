@@ -3,6 +3,7 @@ package io.luna.game.model.mob.combat;
 import api.combat.magic.TeleBlockAction;
 import engine.combat.prayer.CombatPrayerSet;
 import engine.controllers.MultiCombatAreaListener;
+import io.luna.game.model.def.AmmoDefinition;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
@@ -49,6 +50,11 @@ public final class PlayerCombatContext extends CombatContext {
      * The remaining Tele Block duration in ticks.
      */
     private int teleBlock;
+
+    /**
+     * The ammo this player is currently using.
+     */
+    private AmmoDefinition ammo;
 
     /**
      * Creates a new {@link PlayerCombatContext}.
@@ -149,11 +155,12 @@ public final class PlayerCombatContext extends CombatContext {
      * @return {@code true} if combat is allowed; {@code false} otherwise.
      */
     public boolean checkMultiCombat(Mob other) {
-        if(!player.getControllers().contains(MultiCombatAreaListener.INSTANCE)) {
-            if (player.getCombat().inCombat() && !Objects.equals(player.getCombat().getTarget(), other)) {
+        Mob target = player.getCombat().getTarget();
+        if (target != null && !player.getControllers().contains(MultiCombatAreaListener.INSTANCE)) {
+            if (player.getCombat().inCombat() && !Objects.equals(target, other)) {
                 player.sendMessage("You are already in combat.");
                 return false;
-            } else if (other.getCombat().inCombat() && !Objects.equals(other.getCombat().getTarget(), player)) {
+            } else if (other.getCombat().inCombat() && !Objects.equals(target, player)) {
                 player.sendMessage("That player is already in combat.");
                 return false;
             }
@@ -262,5 +269,29 @@ public final class PlayerCombatContext extends CombatContext {
      */
     public int decrementTeleBlock() {
         return teleBlock--;
+    }
+
+    /**
+     * @return The ammo this player is currently using.
+     */
+    public AmmoDefinition getAmmo() {
+        return ammo;
+    }
+
+    // ammo of null indicates incorrect bow/ammo pair used or no ammo equipped
+    public void setAmmo() {
+        int id = ammo != null ? ammo.getId() : -1;
+/*
+        int slot = player.getWeapon() == WeaponInterface.SHORTBOW || player.getWeapon() == WeaponInterface.LONGBOW || player.getWeapon() == WeaponInterface.CROSSBOW
+            ? Equipment.ARROWS_SLOT : Equipment.WEAPON_SLOT;
+        if (Combat.isCrystalBow(player))
+            return Optional.of(CombatRangedAmmo.CRYSTAL_ARROW);
+        if (player.getEquipment().get(slot) == null)
+            return Optional.empty();
+        return Arrays.stream(CombatRangedAmmo.values()).filter(
+            c -> player.getEquipment().get(slot).getDefinition().getName().toLowerCase().contains(c.toString())).findFirst();
+    }
+ */
+        // Check if current arrows can be fired with this bow
     }
 }
