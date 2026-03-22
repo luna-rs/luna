@@ -7,6 +7,7 @@ import io.luna.game.model.Locatable;
 import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.path.BotPathfinder;
 import io.luna.game.model.path.GamePathfinder;
 import io.luna.game.model.path.PlayerPathfinder;
@@ -112,6 +113,27 @@ public class WalkingNavigator {
         return true;
     }
 
+    public CompletableFuture<Void> walkUntilReached(Entity target, InteractionPolicy policy, boolean async) {
+        // Compute the full path.
+        CompletableFuture<Deque<Position>> pathResult = findPath(mob.getPosition(),
+                computeOffsetPosition(target, Optional.empty()), mob.getInteractionPf(), async);
+        return pathResult.thenAcceptAsync(fullPath -> {
+            Deque<Position> slicedPath = new ArrayDeque<>(fullPath.size());
+            Position lastStep = mob.getPosition();
+            // Walk through the computed path.
+            for (Position next : fullPath) {
+                if (collisionManager.reached(lastStep, target, policy)) {
+                    // Last step has satisfied the interaction policy, slice the path here.
+                    break;
+                }
+                slicedPath.add(next); // Add step to sliced path.
+                lastStep = next;
+            }
+            // Add sliced path to walking queue.
+            mob.getWalking().addPath(slicedPath);
+        });
+    }
+
     /**
      * Walks to a tile adjacent to {@code target} suitable for interaction. This method chooses an adjacent
      * destination tile based on:
@@ -131,47 +153,7 @@ public class WalkingNavigator {
      * queue if no path is possible).
      */
     public CompletableFuture<Void> walkTo(Entity target, Optional<Direction> offsetDir, boolean async) {
-        int sizeX = mob.sizeX();
-        int sizeY = mob.sizeY();
-
-        int targetSizeX = target.sizeX();
-        int targetSizeY = target.sizeY();
-
-        Position position = mob.getPosition();
-        int height = position.getZ();
-        Position targetPosition = target.getPosition();
-
-        Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
-        int dx = direction.getTranslateX();
-        int dy = direction.getTranslateY();
-
-        // TODO NPC size should always be 1 for interactions? More testing needed.
-
-        // Pick the "near edge" of the target rectangle based on approach direction.
-        int targetX = dx <= 0 ? targetPosition.getX() : targetPosition.getX() + targetSizeX - 1;
-        int targetY = dy <= 0 ? targetPosition.getY() : targetPosition.getY() + targetSizeY - 1;
-
-        // Offset by this mob's size so we end up adjacent (not overlapping).
-        int offsetX;
-        if (dx < 0) {
-            offsetX = -sizeX;
-        } else if (dx > 0) {
-            offsetX = 1;
-        } else {
-            offsetX = 0;
-        }
-
-        int offsetY;
-        if (dy < 0) {
-            offsetY = -sizeY;
-        } else if (dy > 0) {
-            offsetY = 1;
-        } else {
-            offsetY = 0;
-        }
-
-        Position destination = new Position(targetX + offsetX, targetY + offsetY, height);
-        return walk(destination, mob.getInteractionPf(), async);
+        return walk(computeOffsetPosition(target, offsetDir), mob.getInteractionPf(), async);
     }
 
     /**
@@ -237,7 +219,6 @@ public class WalkingNavigator {
         CompletableFuture<Deque<Position>> result = async
                 ? CompletableFuture.supplyAsync(() -> pathfinder.find(start, target), pool)
                 : CompletableFuture.completedFuture(pathfinder.find(start, target));
-
         return handleExceptions(target, result, new ArrayDeque<>(0));
     }
 
@@ -282,5 +263,61 @@ public class WalkingNavigator {
             }
             return value;
         });
+    }
+
+    /**
+     * Computes an adjacent offset position around {@code target} based on an approach direction.
+     * <p>
+     * This is used to find the tile this mob should occupy when moving next to a target without overlapping its bounds.
+     * Both this mob's size and the target's size are taken into account, making it suitable for large NPCs and
+     * other multi-tile entities.
+     * <p>
+     * If {@code offsetDir} is present, that direction is used directly. Otherwise, the direction is derived from this
+     * mob's current position relative to the target.
+     * <p>
+     * The returned position is placed on the same height level as this mob.
+     *
+     * @param target The target entity to compute an adjacent position around.
+     * @param offsetDir The optional direction to approach from.
+     * @return The computed adjacent offset position.
+     */
+    private Position computeOffsetPosition(Entity target, Optional<Direction> offsetDir) {
+        int sizeX = mob.sizeX();
+        int sizeY = mob.sizeY();
+
+        int targetSizeX = target.sizeX();
+        int targetSizeY = target.sizeY();
+
+        Position position = mob.getPosition();
+        int height = position.getZ();
+        Position targetPosition = target.getPosition();
+
+        Direction direction = offsetDir.orElse(Direction.between(position, targetPosition));
+        int dx = direction.getTranslateX();
+        int dy = direction.getTranslateY();
+
+        // Pick the "near edge" of the target rectangle based on approach direction.
+        int targetX = dx <= 0 ? targetPosition.getX() : targetPosition.getX() + targetSizeX - 1;
+        int targetY = dy <= 0 ? targetPosition.getY() : targetPosition.getY() + targetSizeY - 1;
+
+        // Offset by this mob's size so we end up adjacent (not overlapping).
+        int offsetX;
+        if (dx < 0) {
+            offsetX = -sizeX;
+        } else if (dx > 0) {
+            offsetX = 1;
+        } else {
+            offsetX = 0;
+        }
+
+        int offsetY;
+        if (dy < 0) {
+            offsetY = -sizeY;
+        } else if (dy > 0) {
+            offsetY = 1;
+        } else {
+            offsetY = 0;
+        }
+        return new Position(targetX + offsetX, targetY + offsetY, height);
     }
 }

@@ -12,6 +12,7 @@ on(PlayerFourthClickEvent::class)
     .filter { plr.contextMenu.contains(OPTION_TRADE) }
     .then {
         when {
+            targetPlr.combat.inCombat() -> plr.sendMessage("That player is busy.")
             plr.overlays.hasWindow() -> plr.sendMessage(Messages.BUSY)
             targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.INTERACT_BUSY)
             else -> {

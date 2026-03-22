@@ -29,6 +29,7 @@ import io.luna.game.model.mob.block.PlayerAppearance;
 import io.luna.game.model.mob.block.PlayerModelAnimation;
 import io.luna.game.model.mob.block.UpdateFlagSet.UpdateFlag;
 import io.luna.game.model.mob.bot.Bot;
+import io.luna.game.model.mob.combat.CombatContext;
 import io.luna.game.model.mob.combat.PlayerCombatContext;
 import io.luna.game.model.mob.controller.ControllerManager;
 import io.luna.game.model.mob.dialogue.DialogueQueue;
@@ -320,6 +321,7 @@ public class Player extends Mob {
 
     @Override
     protected void onActive() {
+        controllers.checkPosition();
         pendingPlacement = true;
         flags.flag(UpdateFlag.APPEARANCE);
         queue(new AssignmentMessageWriter(true));
@@ -653,7 +655,7 @@ public class Player extends Mob {
             if (!controllers.checkLogout()) {
                 return;
             } else if (combat.inCombat()) {
-                sendMessage("You must wait 15 seconds after combat before logging out.");
+                sendMessage("You must wait until " + CombatContext.COMBAT_TIMER_DURATION + " seconds after combat before logging out.");
                 return;
             }
         }

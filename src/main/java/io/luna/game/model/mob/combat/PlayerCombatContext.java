@@ -2,6 +2,7 @@ package io.luna.game.model.mob.combat;
 
 import api.combat.magic.TeleBlockAction;
 import engine.combat.prayer.CombatPrayerSet;
+import engine.controllers.MultiCombatAreaListener;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
@@ -12,6 +13,8 @@ import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.mob.varp.PersistentVarp;
+
+import java.util.Objects;
 
 /**
  * A {@link CombatContext} implementation for {@link Player}s.
@@ -109,7 +112,7 @@ public final class PlayerCombatContext extends CombatContext {
     @Override
     public boolean onCombatHook(boolean reached) {
         Mob target = getTarget();
-        if(target == null || (target.getPosition().equals(player.getPosition()) && reached)) {
+        if (target == null || (target.getPosition().equals(player.getPosition()) && reached)) {
             return false;
         }
         return true;
@@ -128,6 +131,53 @@ public final class PlayerCombatContext extends CombatContext {
         if (getTeleBlock() > 0) {
             player.getActions().submitIfAbsent(new TeleBlockAction(player));
         }
+    }
+
+    /**
+     * Validates whether the player can initiate combat with the specified {@link Mob} under single-combat rules.
+     * <p>
+     * If the player isn't already in a multi-combat area, this method enforces standard 317-style single-combat
+     * restrictions:
+     * <ul>
+     *     <li>If the player is already fighting a different target, they cannot attack another.</li>
+     *     <li>If the target is already fighting someone else, the attack is prevented.</li>
+     * </ul>
+     * <p>
+     * If either condition fails, a message is sent to the player explaining why the attack cannot proceed.
+     *
+     * @param other The {@link Mob} the player is attempting to attack.
+     * @return {@code true} if combat is allowed; {@code false} otherwise.
+     */
+    public boolean checkMultiCombat(Mob other) {
+        if(!player.getControllers().contains(MultiCombatAreaListener.INSTANCE)) {
+            if (player.getCombat().inCombat() && !Objects.equals(player.getCombat().getTarget(), other)) {
+                player.sendMessage("You are already in combat.");
+                return false;
+            } else if (other.getCombat().inCombat() && !Objects.equals(other.getCombat().getTarget(), player)) {
+                player.sendMessage("That player is already in combat.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Ensures the target {@link Mob} is a valid non-player combat target.
+     * <p>
+     * This method prevents attacking {@link Player} instances in areas where player-vs-player combat is disallowed.
+     * It is typically used in NPC-only combat zones or safe regions.
+     * <p>
+     * If the target is a player, the attack is blocked and the attacker receives a message explaining the restriction.
+     *
+     * @param other The {@link Mob} the player is attempting to attack.
+     * @return {@code true} if the target is a valid NPC combat target; {@code false} otherwise.
+     */
+    public boolean checkCombatMob(Mob other) {
+        if (other instanceof Player) {
+            player.sendMessage("You cannot attack players here.");
+            return false;
+        }
+        return true;
     }
 
     /**

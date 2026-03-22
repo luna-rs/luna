@@ -1,222 +1,162 @@
 package io.luna.game.model.mob.controller;
 
-import com.google.common.collect.Iterators;
+import engine.controllers.Controllers;
 import game.skill.magic.teleportSpells.TeleportAction;
 import io.luna.game.event.impl.ControllableEvent;
-import io.luna.game.model.Position;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A model that manages listeners for {@link PlayerController} types.
+ * Manages the active controller state for a {@link Player}.
+ * <p>
+ * Each player has a single primary {@link PlayerController} that governs high-level interaction rules such as
+ * movement, combat, logout, teleporting, and event handling. In addition to the primary controller, this manager also
+ * tracks {@link PlayerAreaListener} instances that respond to the player's presence within specific areas.
  *
  * @author lare96
  */
-public final class ControllerManager implements Iterable<PlayerController> {
+public final class ControllerManager {
 
     /**
-     * The player.
+     * The player that owns this controller manager.
      */
     private final Player player;
 
     /**
-     * A map {@link PlayerController} types currently active for the player.
+     * The registered area listeners for this player.
      */
-    private final Map<ControllerKey<?>, PlayerController> registered = new LinkedHashMap<>();
+    private final Set<PlayerAreaListener> areaListeners = new HashSet<>();
 
     /**
-     * Creates a new {@link ControllerManager}.
+     * The primary controller currently governing this player.
+     */
+    private PlayerController primary;
+
+    /**
+     * Creates a new {@link ControllerManager} for {@code player}.
+     * <p>
+     * A default {@link PlayerController} is created immediately so the player always has a valid primary controller.
      *
-     * @param player The player.
+     * @param player the player that owns this manager
      */
     public ControllerManager(Player player) {
         this.player = player;
+        primary = new PlayerController(player);
     }
 
     /**
-     * Processes controllers for this player.
+     * Processes the primary controller and all active area listeners.
      */
     public void process() {
-        for (PlayerController controller : registered.values()) {
+        primary.process();
+        for (PlayerAreaListener controller : areaListeners) {
             controller.process(player);
         }
     }
 
     /**
-     * Registers a new {@link PlayerController} so that its listeners will be tracked.
+     * Registers a new primary controller for this player.
+     * <p>
+     * If a primary controller is already active, it is first unregistered before the new controller is assigned
+     * and registered.
      *
-     * @param key The key of the controller to register.
+     * @param controller The controller to register as primary.
      */
-    public void register(ControllerKey<?> key) {
-        if (key.getController() instanceof PlayerLocationController) {
-            throw new IllegalStateException("PlayerLocationController types are automatically tracked and cannot be registered.");
+    public void register(PlayerController controller) {
+        if (primary != null) {
+            primary.unregister();
         }
-        PlayerController existingController = registered.computeIfAbsent(key, ControllerKey::getController);
-        if (existingController != null) {
-            existingController.onRegister(player);
-        } else {
-            throw new IllegalStateException(key.getName() + " is already registered.");
-        }
+        primary = controller;
+        primary.register();
     }
 
     /**
-     * Unregisters a {@link PlayerController} so that its listeners are no longer tracked.
-     *
-     * @param key The key of the controller to unregister.
+     * Unregisters the current primary controller and restores the default {@link PlayerController}.
      */
-    public void unregister(ControllerKey<?> key) {
-        if (key.getController() instanceof PlayerLocationController) {
-            throw new IllegalStateException("PlayerLocationController types are automatically tracked and cannot be unregistered.");
-        }
-        PlayerController removed = registered.remove(key);
-        if (removed == null) {
-            throw new IllegalStateException(key.getName() + " was never registered.");
-        }
-        removed.onUnregister(player);
+    public void unregister() {
+        primary.unregister();
+        primary = new PlayerController(player);
+        primary.register();
     }
 
     /**
-     * Unregisters all non-{@link PlayerLocationController} types.
+     * Checks the player's current position against all tracked area listeners.
+     * <p>
+     * Listeners that the player has entered will receive an enter callback, and listeners that the player has left
+     * will receive an exit callback. After listener checks are completed, the primary controller movement hook is
+     * invoked.
      */
-    public void unregisterAll() {
-        Iterator<PlayerController> it = registered.values().iterator();
-        while (it.hasNext()) {
-            PlayerController controller = it.next();
-            if (controller instanceof PlayerLocationController) {
-                continue;
-            }
-            controller.onUnregister(player);
-            it.remove();
-        }
-    }
-
-    /**
-     * Determines what {@link PlayerLocationController} types need to be registered or unregistered, and if the player
-     * can move based on the registered listeners.
-     *
-     * @param newPos The new position the player will be at.
-     * @return {@code true} if the player can move, {@code false} otherwise.
-     */
-    public boolean checkMovement(Position newPos) {
-        for (ControllerKey<? extends PlayerLocationController> key : ControllerKey.getLocationKeys()) {
-            PlayerLocationController controller = key.getController();
-            boolean inside = controller.inside(newPos);
-            boolean alreadyRegistered = contains(key);
-            if (!alreadyRegistered && inside) {
-                if (controller.canEnter(player, newPos)) {
-                    registered.put(key, controller);
-                } else {
-                    return false;
-                }
-            } else if (alreadyRegistered && !inside) {
-                if (controller.canExit(player, newPos)) {
-                    registered.remove(key);
-                } else {
-
-                    return false;
-                }
+    public void checkPosition() {
+        for (PlayerAreaListener listener : Controllers.INSTANCE.getGLOBAL_LOCATABLE_CONTROLLERS()) {
+            boolean inside = listener.inside(player.getPosition());
+            boolean registered = areaListeners.contains(listener);
+            if (!registered && inside) {
+                listener.enter(player);
+                areaListeners.add(listener);
+            } else if (registered && !inside) {
+                listener.exit(player);
+                areaListeners.remove(listener);
             }
         }
-        for (PlayerController controller : registered.values()) {
-            if (!controller.canMove(player, newPos)) {
-                return false;
-            }
-        }
-        return true;
+        primary.move();
     }
 
-
     /**
-     * Determines if a {@link ControllableEvent} should be terminated or not. This can be used to do things like
-     * prevent certain commands from being used, or to prevent certain items from being equipped.
+     * Checks whether the active primary controller allows {@code event}.
      *
-     * @param event The event to evaluate.
-     * @return {@code true} if the event can be posted, {@code false} if it should be terminated.
+     * @param event The event being checked.
+     * @return {@code true} if the event is permitted, otherwise {@code false}.
      */
     public boolean checkEvent(ControllableEvent event) {
-        for (PlayerController controller : registered.values()) {
-            if (!controller.onEvent(player, event)) {
-                return false;
-            }
-        }
-        return true;
+        return primary.event(event);
     }
 
     /**
-     * Determines if the player is able to log out or not.
+     * Checks whether the player is allowed to log out.
      *
-     * @return {@code true} if the player is able to log out.
+     * @return {@code true} if logout is allowed, otherwise {@code false}.
      */
     public boolean checkLogout() {
-        for (PlayerController controller : registered.values()) {
-            if (!controller.canLogout(player)) {
-                return false;
-            }
-        }
-        return true;
+        return primary.logout();
     }
 
     /**
-     * Determines if the player is able to teleport or not.
+     * Checks whether the player is allowed to perform a teleport action.
      *
-     * @param action The teleport action.
-     * @return {@code true} if the player is able to teleport.
+     * @param action The teleport action being attempted.
+     * @return {@code true} if teleporting is allowed, otherwise {@code false}.
      */
     public boolean checkTeleport(TeleportAction action) {
-        for (PlayerController controller : registered.values()) {
-            if (!controller.canTeleport(player, action)) {
-                return false;
-            }
-        }
-        return true;
+        return primary.teleport(action);
     }
 
     /**
-     * Determines if the player is able to enter combat with {@code other}.
+     * Checks whether the player is allowed to fight {@code other}.
      *
-     * @param other The player attempting to attack/be attacked by the player.
-     * @return {@code true} if the player is able to fight with {@code other}.
+     * @param other The other mob involved in the combat interaction.
+     * @return {@code true} if combat is allowed, otherwise {@code false}.
      */
-    public boolean checkCanFight(Mob other) {
-        for (PlayerController controller : registered.values()) {
-            if (!controller.canFight(player, other)) {
-                return false;
-            }
-        }
-        return true;
+    public boolean checkCombat(Mob other) {
+        return primary.combat(other);
     }
 
     /**
-     * Determines if {@code key} is registered.
+     * Checks whether {@code controller} is currently tracked in this manager's area listener set.
      *
-     * @param key The key to check for.
-     * @return {@code true} if {@code key} is registered, {@code false} otherwise.
+     * @param controller The controller to check.
+     * @return {@code true} if the listener is present, otherwise {@code false}.
      */
-    public boolean contains(ControllerKey<?> key) {
-        return registered.containsKey(key);
+    public boolean contains(PlayerAreaListener controller) {
+        return areaListeners.contains(controller);
     }
 
     /**
-     * @return A set of {@link ControllerKey}s registered to the player.
+     * @return The primary controller.
      */
-    public Set<ControllerKey<?>> keys() {
-        return registered.keySet();
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * <strong>Warning: The returned iterator is unmodifiable!</strong>
-     */
-    @NotNull
-    @Override
-    public Iterator<PlayerController> iterator() {
-        return Iterators.unmodifiableIterator(registered.values().iterator());
+    public PlayerController getPrimary() {
+        return primary;
     }
 }
