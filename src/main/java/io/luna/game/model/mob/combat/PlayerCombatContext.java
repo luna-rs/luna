@@ -123,7 +123,11 @@ public final class PlayerCombatContext extends CombatContext {
         }
         return true;
     }
-
+// todo onAttackLaunched
+    // todo onAttackReceived abstract funcs and events.
+    // todo crystal bow onAttackLaunched(Weapon = cbow) { ... degrade }
+    // todo degrade items system in general for barrows as well
+    // todo make it as a system? but it starts within combat. use dynamicitem
     /**
      * Restores persistent combat status actions after the player logs in.
      * <p>
@@ -279,8 +283,18 @@ public final class PlayerCombatContext extends CombatContext {
     }
 
     // ammo of null indicates incorrect bow/ammo pair used or no ammo equipped
-    public void setAmmo() {
-        int id = ammo != null ? ammo.getId() : -1;
+    // needs to listen for both weapon and ammo slot changes as some ranged ammo is both the weapon and ammo
+    public void setAmmo(int index) {
+        if(index == Equipment.WEAPON) {
+            int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+            // Our weapon has changed. Check if we're using a ranged weapon that requires no ammo, or that itself is the
+            // ammo (crystal bow, darts, knives, etc.)
+            // Weapon ammo always takes priority over ammo that requires a bow (obviously)
+        } else if(index == Equipment.AMMUNITION) {
+            int ammoId = player.getEquipment().computeIdForIndex(Equipment.AMMUNITION);
+            // Our ammo has changed, check if its valid ammo. If we currently have ammo in the weapon slot that doesn't
+            // require explicit ammo, this is ignored as our weapon always takes priority.
+        }
 /*
         int slot = player.getWeapon() == WeaponInterface.SHORTBOW || player.getWeapon() == WeaponInterface.LONGBOW || player.getWeapon() == WeaponInterface.CROSSBOW
             ? Equipment.ARROWS_SLOT : Equipment.WEAPON_SLOT;
