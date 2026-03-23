@@ -1,11 +1,5 @@
 [
   {
-    "ids": [
-      882,
-      883,
-      5616,
-      5622
-    ],
     "type": "BRONZE_ARROW",
     "strength": 7,
     "start_graphic": {
@@ -21,7 +15,7 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       841,
       839,
       843,
@@ -34,15 +28,15 @@
       855,
       861,
       859
+    ],
+    "ammo": [
+      882,
+      883,
+      5616,
+      5622
     ]
   },
   {
-    "ids": [
-      884,
-      885,
-      5617,
-      5623
-    ],
     "type": "IRON_ARROW",
     "strength": 10,
     "start_graphic": {
@@ -58,7 +52,7 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       841,
       839,
       843,
@@ -71,15 +65,15 @@
       855,
       861,
       859
+    ],
+    "ammo": [
+      884,
+      885,
+      5617,
+      5623
     ]
   },
   {
-    "ids": [
-      886,
-      887,
-      5618,
-      5624
-    ],
     "type": "STEEL_ARROW",
     "strength": 16,
     "start_graphic": {
@@ -95,7 +89,7 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       843,
       845,
       849,
@@ -106,17 +100,15 @@
       855,
       861,
       859
+    ],
+    "ammo": [
+      886,
+      887,
+      5618,
+      5624
     ]
   },
   {
-    "ids": [
-      888,
-      7552,
-      7553,
-      889,
-      5619,
-      5625
-    ],
     "type": "MITHRIL_ARROW",
     "strength": 22,
     "start_graphic": {
@@ -132,7 +124,7 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       849,
       847,
       853,
@@ -141,15 +133,15 @@
       855,
       861,
       859
+    ],
+    "ammo": [
+      888,
+      889,
+      5619,
+      5625
     ]
   },
   {
-    "ids": [
-      890,
-      891,
-      5620,
-      5626
-    ],
     "type": "ADAMANT_ARROW",
     "strength": 31,
     "start_graphic": {
@@ -165,22 +157,22 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       853,
       851,
       857,
       855,
       861,
       859
+    ],
+    "ammo": [
+      890,
+      891,
+      5620,
+      5626
     ]
   },
   {
-    "ids": [
-      892,
-      893,
-      5621,
-      5627
-    ],
     "type": "RUNE_ARROW",
     "strength": 49,
     "start_graphic": {
@@ -196,15 +188,20 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       857,
       855,
       861,
       859
+    ],
+    "ammo": [
+      892,
+      893,
+      5621,
+      5627
     ]
   },
   {
-    "ids": [],
     "type": "CRYSTAL_ARROW",
     "strength": 58,
     "start_graphic": {
@@ -220,7 +217,7 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": [
+    "weapons": [
       4212,
       4214,
       4215,
@@ -232,15 +229,10 @@
       4221,
       4222,
       4223
-    ]
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      877,
-      878,
-      6061,
-      6062
-    ],
     "type": "BOLTS",
     "strength": 10,
     "start_graphic": {
@@ -256,12 +248,18 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      877,
+      878,
+      6061,
+      6062
+    ]
   },
   {
-    "ids": [
-      881
-    ],
     "type": "BARBED_BOLTS",
     "strength": 12,
     "start_graphic": {
@@ -277,12 +275,15 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      881
+    ]
   },
   {
-    "ids": [
-      879
-    ],
     "type": "OPAL_BOLTS",
     "strength": 14,
     "start_graphic": {
@@ -298,12 +299,15 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      879
+    ]
   },
   {
-    "ids": [
-      880
-    ],
     "type": "PEARL_BOLTS",
     "strength": 48,
     "start_graphic": {
@@ -319,12 +323,15 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      837,
+      767
+    ],
+    "ammo": [
+      880
+    ]
   },
   {
-    "ids": [
-      4740
-    ],
     "type": "BOLT_RACK",
     "strength": 55,
     "start_graphic": {
@@ -340,15 +347,18 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      4734,
+      4934,
+      4935,
+      4936,
+      4937
+    ],
+    "ammo": [
+      4740
+    ]
   },
   {
-    "ids": [
-      864,
-      870,
-      5654,
-      5661
-    ],
     "type": "BRONZE_KNIFE",
     "strength": 3,
     "start_graphic": {
@@ -364,15 +374,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      864,
+      870,
+      5654,
+      5661
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      863,
-      871,
-      5655,
-      5662
-    ],
     "type": "IRON_KNIFE",
     "strength": 4,
     "start_graphic": {
@@ -388,15 +398,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      863,
+      871,
+      5655,
+      5662
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      865,
-      872,
-      5656,
-      5663
-    ],
     "type": "STEEL_KNIFE",
     "strength": 7,
     "start_graphic": {
@@ -412,15 +422,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      865,
+      872,
+      5656,
+      5663
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      869,
-      874,
-      5658,
-      5665
-    ],
     "type": "BLACK_KNIFE",
     "strength": 8,
     "start_graphic": {
@@ -436,15 +446,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      869,
+      874,
+      5658,
+      5665
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      866,
-      873,
-      5657,
-      5664
-    ],
     "type": "MITHRIL_KNIFE",
     "strength": 10,
     "start_graphic": {
@@ -460,15 +470,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      866,
+      873,
+      5657,
+      5664
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      867,
-      875,
-      5659,
-      5666
-    ],
     "type": "ADAMANT_KNIFE",
     "strength": 14,
     "start_graphic": {
@@ -484,15 +494,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      867,
+      875,
+      5659,
+      5666
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      868,
-      876,
-      5660,
-      5667
-    ],
     "type": "RUNE_KNIFE",
     "strength": 24,
     "start_graphic": {
@@ -508,15 +518,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      868,
+      876,
+      5660,
+      5667
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      806,
-      812,
-      5628,
-      5635
-    ],
     "type": "BRONZE_DART",
     "strength": 1,
     "start_graphic": {
@@ -532,15 +542,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      806,
+      812,
+      5628,
+      5635
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      807,
-      813,
-      5629,
-      5636
-    ],
     "type": "IRON_DART",
     "strength": 3,
     "start_graphic": {
@@ -556,15 +566,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      807,
+      813,
+      5629,
+      5636
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      808,
-      814,
-      5630,
-      5637
-    ],
     "type": "STEEL_DART",
     "strength": 4,
     "start_graphic": {
@@ -580,15 +590,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      808,
+      814,
+      5630,
+      5637
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      3093,
-      3094,
-      5631,
-      5638
-    ],
     "type": "BLACK_DART",
     "strength": 6,
     "start_graphic": {
@@ -604,15 +614,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      3093,
+      3094,
+      5631,
+      5638
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      809,
-      815,
-      5632,
-      5639
-    ],
     "type": "MITHRIL_DART",
     "strength": 7,
     "start_graphic": {
@@ -628,15 +638,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      809,
+      815,
+      5632,
+      5639
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      810,
-      816,
-      5633,
-      5640
-    ],
     "type": "ADAMANT_DART",
     "strength": 10,
     "start_graphic": {
@@ -652,15 +662,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      810,
+      816,
+      5633,
+      5640
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      811,
-      817,
-      5634,
-      5641
-    ],
     "type": "RUNE_DART",
     "strength": 14,
     "start_graphic": {
@@ -676,15 +686,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      811,
+      817,
+      5634,
+      5641
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      825,
-      831,
-      5642,
-      5648
-    ],
     "type": "BRONZE_JAVELIN",
     "strength": 6,
     "start_graphic": {
@@ -700,15 +710,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      825,
+      831,
+      5642,
+      5648
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      826,
-      832,
-      5643,
-      5649
-    ],
     "type": "IRON_JAVELIN",
     "strength": 10,
     "start_graphic": {
@@ -724,15 +734,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      826,
+      832,
+      5643,
+      5649
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      827,
-      833,
-      5644,
-      5650
-    ],
     "type": "STEEL_JAVELIN",
     "strength": 12,
     "start_graphic": {
@@ -748,15 +758,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      827,
+      833,
+      5644,
+      5650
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      828,
-      834,
-      5645,
-      5651
-    ],
     "type": "MITHRIL_JAVELIN",
     "strength": 18,
     "start_graphic": {
@@ -772,15 +782,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      828,
+      834,
+      5645,
+      5651
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      829,
-      835,
-      5646,
-      5652
-    ],
     "type": "ADAMANT_JAVELIN",
     "strength": 28,
     "start_graphic": {
@@ -796,15 +806,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      829,
+      835,
+      5646,
+      5652
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      830,
-      836,
-      5647,
-      5653
-    ],
     "type": "RUNE_JAVELIN",
     "strength": 42,
     "start_graphic": {
@@ -820,12 +830,15 @@
       "end_height": 37,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      830,
+      836,
+      5647,
+      5653
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      800
-    ],
     "type": "BRONZE_THROWNAXE",
     "strength": 5,
     "start_graphic": {
@@ -841,12 +854,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      800
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      801
-    ],
     "type": "IRON_THROWNAXE",
     "strength": 7,
     "start_graphic": {
@@ -862,12 +875,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      801
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      802
-    ],
     "type": "STEEL_THROWNAXE",
     "strength": 11,
     "start_graphic": {
@@ -883,12 +896,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      802
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      803
-    ],
     "type": "MITHRIL_THROWNAXE",
     "strength": 16,
     "start_graphic": {
@@ -904,10 +917,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      803
+    ],
+    "ammo": []
   },
   {
-    "ids": [],
     "type": "ADAMANT_THROWNAXE",
     "strength": 23,
     "start_graphic": {
@@ -923,12 +938,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      804
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      805
-    ],
     "type": "RUNE_THROWNAXE",
     "strength": 26,
     "start_graphic": {
@@ -944,12 +959,12 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      805
+    ],
+    "ammo": []
   },
   {
-    "ids": [
-      6522
-    ],
     "type": "TOKTZ_XIL_UL",
     "strength": 50,
     "start_graphic": {
@@ -965,6 +980,9 @@
       "end_height": 31,
       "curve": 0
     },
-    "bows": []
+    "weapons": [
+      6522
+    ],
+    "ammo": []
   }
 ]
