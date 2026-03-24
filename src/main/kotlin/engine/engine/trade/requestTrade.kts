@@ -12,10 +12,11 @@ on(PlayerFourthClickEvent::class)
     .filter { plr.contextMenu.contains(OPTION_TRADE) }
     .then {
         when {
-            targetPlr.combat.inCombat() -> plr.sendMessage("That player is busy.")
+            targetPlr.combat.inCombat() -> plr.sendMessage("display_name is busy.")
             plr.overlays.hasWindow() -> plr.sendMessage(Messages.BUSY)
             targetPlr.overlays.hasWindow() -> plr.sendMessage(Messages.INTERACT_BUSY)
             else -> {
+                plr.sendMessage("Sending trade offer...")
                 if (plr.index == targetPlr.tradingWith) {
                     // They've both requested each other, open offer screen.
                     plr.walking.clear()
@@ -31,7 +32,6 @@ on(PlayerFourthClickEvent::class)
                     targetPlr.tradingWith = -1
                 } else {
                     // Send trade request, wait for response.
-                    plr.sendMessage("Sending trade request...")
                     plr.interact(targetPlr)
                     targetPlr.sendMessage("${plr.username}:tradereq:")
                     plr.tradingWith = targetPlr.index

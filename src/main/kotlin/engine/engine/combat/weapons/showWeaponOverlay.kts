@@ -2,11 +2,15 @@ package engine.combat.weapons
 
 import api.combat.weapons.SpecialAttackHandler
 import api.predef.*
+import engine.controllers.Controllers.inWilderness
+import game.skill.magic.Staff
 import io.luna.game.event.impl.EquipmentChangeEvent
 import io.luna.game.event.impl.LoginEvent
+import io.luna.game.model.def.CombatSpellDefinition
 import io.luna.game.model.def.ItemDefinition
 import io.luna.game.model.item.Equipment
 import io.luna.game.model.mob.Player
+import io.luna.game.model.mob.Spellbook
 import io.luna.game.model.mob.block.PlayerModelAnimation
 import io.luna.game.model.mob.combat.Weapon
 import io.luna.game.model.mob.overlay.GameTabSet.TabIndex
@@ -62,12 +66,23 @@ fun display(plr: Player, id: Int?) {
 on(EquipmentChangeEvent::class) {
     if (index == Equipment.WEAPON) {
         val weapon = plr.combat.weapon
-        weapon.changeWeapon(weapon.styleDef.stance)
+        weapon.refreshWeapon(weapon.styleDef.stance)
         display(plr, newItem?.id)
+
+        if (plr.inWilderness() || (newItem != null && weapon.type == Weapon.STAFF && // If we're equipping a staff.
+                    plr.combat.autocastSpell != CombatSpellDefinition.NONE && // And autocasting.
+                    plr.spellbook == Spellbook.ANCIENT && // And using the ancient spellbook.
+                    newItem.id !in Staff.AUTOCAST_ANCIENTS)) { // And we cannot cast ancient spells with this staff.
+            // Or we're in the wilderness, clear autocasted spell.
+            plr.combat.autocastSpell = CombatSpellDefinition.NONE
+        }
     }
+    plr.combat.refreshAmmo(index)
 }
 
 on(LoginEvent::class) {
     display(plr, plr.equipment.weapon?.id)
+    plr.combat.refreshAmmo(Equipment.WEAPON)
     plr.sendVarp(Varp(301, 0)) // Deselect special attack bar.
+    plr.combat.refreshAutocast()
 }

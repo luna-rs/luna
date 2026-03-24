@@ -12,6 +12,7 @@ import io.luna.game.model.mob.PlayerPrivacy;
 import io.luna.game.model.mob.PlayerRights;
 import io.luna.game.model.mob.Skill;
 import io.luna.game.model.mob.Spellbook;
+import io.luna.game.model.mob.combat.CombatSpell;
 import io.luna.game.model.mob.combat.CombatStance;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -59,6 +60,7 @@ public class PlayerData {
     public int specialAttackEnergy;
     public int poisonSeverity;
     public int teleBlock;
+    public CombatSpell autocast;
 
     /**
      * The username of the player this data belongs to.
@@ -101,10 +103,11 @@ public class PlayerData {
         player.setCreatedAt(createdAt);
         player.setPrivacyOptions(privacyOptions);
         player.loadPotionsFromJson(potions);
-        player.getCombat().getWeapon().changeWeapon(lastCombatStance);
+        player.getCombat().getWeapon().refreshWeapon(lastCombatStance);
         player.getCombat().getSpecialBar().setEnergy(specialAttackEnergy);
         player.getCombat().setPoisonSeverity(poisonSeverity, false);
         player.getCombat().setTeleBlock(teleBlock, false);
+        player.getCombat().setAutocastSpell(autocast, false);
     }
 
     /**
@@ -154,6 +157,7 @@ public class PlayerData {
         specialAttackEnergy = player.getCombat().getSpecialBar().getEnergy();
         poisonSeverity = player.getCombat().getPoisonSeverity();
         teleBlock = player.getCombat().getTeleBlock();
+        autocast = player.getCombat().getAutocastSpell().getSpell();
         return this;
     }
 

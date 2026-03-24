@@ -23,7 +23,8 @@ object Magic {
 
     /**
      * Checks if [plr] meets the requirements defined by [level] and [requirements]. If they do, a list of runes and
-     * items required for the spell to be cast will be returned. If they don't, [null] will be returned.
+     * items required for the spell to be cast will be returned. If they don't, `null` will be returned. An empty list
+     * signifies no items are required to be removed for the spell to be cast.
      */
     fun checkRequirements(plr: Player, level: Int, requirements: List<SpellRequirement>): List<Item>? {
         if (plr.magic.level < level) {

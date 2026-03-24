@@ -3,9 +3,13 @@ package io.luna.game.model.mob.combat;
 import api.combat.magic.TeleBlockAction;
 import engine.combat.prayer.CombatPrayerSet;
 import engine.controllers.MultiCombatAreaListener;
+import game.skill.magic.Magic;
 import io.luna.game.model.def.AmmoDefinition;
+import io.luna.game.model.def.CombatSpellDefinition;
+import io.luna.game.model.item.DynamicItem;
 import io.luna.game.model.item.Equipment;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
+import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
@@ -14,8 +18,13 @@ import io.luna.game.model.mob.combat.CombatFormula.PhysicalType;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 import io.luna.game.model.mob.interact.InteractionType;
 import io.luna.game.model.mob.varp.PersistentVarp;
+import io.luna.game.model.mob.varp.Varp;
 
+import java.util.List;
 import java.util.Objects;
+
+import static io.luna.game.model.def.AmmoDefinition.UNEQUIPPED;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link CombatContext} implementation for {@link Player}s.
@@ -54,7 +63,10 @@ public final class PlayerCombatContext extends CombatContext {
     /**
      * The ammo this player is currently using.
      */
-    private AmmoDefinition ammo;
+    private AmmoDefinition ammo = UNEQUIPPED;
+
+    private CombatSpellDefinition selectedSpell = CombatSpellDefinition.NONE;
+    private CombatSpellDefinition autocastSpell = CombatSpellDefinition.NONE;
 
     /**
      * Creates a new {@link PlayerCombatContext}.
@@ -123,11 +135,99 @@ public final class PlayerCombatContext extends CombatContext {
         }
         return true;
     }
-// todo onAttackLaunched
-    // todo onAttackReceived abstract funcs and events.
-    // todo crystal bow onAttackLaunched(Weapon = cbow) { ... degrade }
-    // todo degrade items system in general for barrows as well
-    // todo make it as a system? but it starts within combat. use dynamicitem
+
+    public boolean removeRunes(CombatSpellDefinition spell) {
+        // todo when checking if autocast magic should be used, check if current autocast spell is non null AND if the proper
+        //  staff for it is equipped. otherwise, go to ranged, then melee
+        if (spell == null || spell == CombatSpellDefinition.NONE) {
+            throw new IllegalStateException("Combat spell is null or NONE during magic combat state.");
+        }
+        List<Item> required = Magic.INSTANCE.checkRequirements(player, spell.getLevel(), spell.getRequired());
+        if (required == null) {
+            if (spell == autocastSpell) {
+                // If the failed spell is our autocasted spell, clear it.
+                setAutocastSpell(CombatSpellDefinition.NONE);
+            }
+            // We failed the casting requirements.
+            return false;
+        }
+        // We passed, remove items.
+        return player.getInventory().removeAll(required);
+    }
+
+    public boolean removeAmmo() {
+        Item weaponItem = player.getEquipment().get(Equipment.WEAPON);
+        if (weaponItem == null) {
+            // With ranged there should always be a weapon equipped.
+            throw new IllegalStateException("No weapon is currently equipped while in ranging combat state.");
+        }
+        int weaponId = weaponItem.getId();
+        if (ammo.isNeedsWeapon()) {
+            if (!ammo.getWeapons().contains(weaponId)) {
+                // Incompatible ranged weapon with our ammo.
+                player.sendMessage("you cannot use that bow with these arrows, whatever msg");
+                return false;
+            }
+            Item ammoItem = player.getEquipment().get(Equipment.AMMUNITION);
+            if (ammoItem == null) {
+                // todo diff messages for bow, crossbow, etc.
+                player.sendMessage("You do not have enough arrows in your quiver.");
+                return false;
+            }
+            // Decrement the ammo from the ammunition slot.
+            player.getEquipment().set(Equipment.AMMUNITION, decrementAmmo(ammoItem));
+        } else if (ammo.isAmmoless()) {
+            if (weaponItem.getItemDef().isStackable()) {
+                // Decrement the ammo from the weapon slot.
+                player.getEquipment().set(Equipment.WEAPON, decrementAmmo(weaponItem));
+            } else if (weaponItem instanceof DynamicItem) {
+                // todo add Degradables.contains(itemId) to the else-if statement above when ready, so new items
+                //  can become dynamic
+                // todo handle degradable ranged items, reduce one charge, turn to dust if done
+            } else {
+                // Not stackable, not degradable, this item doesn't use ammo.
+                return true;
+            }
+        } else {
+            // Ammo should never be in UNEQUIPPED or in an undefined state while in a ranging combat state.
+            throw new IllegalStateException("No valid ranged ammo/weapon is equipped while in ranging combat state.");
+        }
+        return true;
+    }
+
+    private Item decrementAmmo(Item oldItem) {
+        oldItem = oldItem.addAmount(-1);
+        if (oldItem.getAmount() == 0) {
+            // We've reached the last of the item.
+            oldItem = null;
+        }
+        return oldItem;
+    }
+
+    /**
+     * Refreshes the cached {@link AmmoDefinition} after a weapon or ammunition-slot equipment change.
+     * <p>
+     * Only changes to {@link Equipment#WEAPON} and {@link Equipment#AMMUNITION} are handled. Ammoless ranged weapons
+     * take priority over the ammunition slot. Otherwise, the cached state falls back to the currently equipped ammo
+     * item, or {@link AmmoDefinition#UNEQUIPPED} if no registered ammo is equipped.
+     *
+     * @param index The equipment slot that changed.
+     */
+    public void refreshAmmo(int index) {
+        if (index == Equipment.WEAPON || index == Equipment.AMMUNITION) {
+            int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
+            int ammoId = player.getEquipment().computeIdForIndex(Equipment.AMMUNITION);
+            AmmoDefinition ammoDef = AmmoDefinition.NO_AMMO_WEAPONS.getOrDefault(weaponId, UNEQUIPPED);
+            if (ammoDef != UNEQUIPPED) {
+                // New weapon is ammoless, takes priority.
+                ammo = ammoDef;
+                return;
+            }
+            // New weapon is not ammoless, fallback to ammunition slot.
+            ammo = AmmoDefinition.AMMO_REQUIRING_WEAPONS.getOrDefault(ammoId, UNEQUIPPED);
+        }
+    }
+
     /**
      * Restores persistent combat status actions after the player logs in.
      * <p>
@@ -282,30 +382,44 @@ public final class PlayerCombatContext extends CombatContext {
         return ammo;
     }
 
-    // ammo of null indicates incorrect bow/ammo pair used or no ammo equipped
-    // needs to listen for both weapon and ammo slot changes as some ranged ammo is both the weapon and ammo
-    public void setAmmo(int index) {
-        if(index == Equipment.WEAPON) {
-            int weaponId = player.getEquipment().computeIdForIndex(Equipment.WEAPON);
-            // Our weapon has changed. Check if we're using a ranged weapon that requires no ammo, or that itself is the
-            // ammo (crystal bow, darts, knives, etc.)
-            // Weapon ammo always takes priority over ammo that requires a bow (obviously)
-        } else if(index == Equipment.AMMUNITION) {
-            int ammoId = player.getEquipment().computeIdForIndex(Equipment.AMMUNITION);
-            // Our ammo has changed, check if its valid ammo. If we currently have ammo in the weapon slot that doesn't
-            // require explicit ammo, this is ignored as our weapon always takes priority.
-        }
-/*
-        int slot = player.getWeapon() == WeaponInterface.SHORTBOW || player.getWeapon() == WeaponInterface.LONGBOW || player.getWeapon() == WeaponInterface.CROSSBOW
-            ? Equipment.ARROWS_SLOT : Equipment.WEAPON_SLOT;
-        if (Combat.isCrystalBow(player))
-            return Optional.of(CombatRangedAmmo.CRYSTAL_ARROW);
-        if (player.getEquipment().get(slot) == null)
-            return Optional.empty();
-        return Arrays.stream(CombatRangedAmmo.values()).filter(
-            c -> player.getEquipment().get(slot).getDefinition().getName().toLowerCase().contains(c.toString())).findFirst();
+    public CombatSpellDefinition getSelectedSpell() {
+        return selectedSpell;
     }
- */
-        // Check if current arrows can be fired with this bow
+
+    public void setSelectedSpell(CombatSpell spell) {
+        setSelectedSpell(CombatSpellDefinition.SPELLS.getOrDefault(spell, CombatSpellDefinition.NONE));
+    }
+
+    public void setSelectedSpell(CombatSpellDefinition spell) {
+        selectedSpell = requireNonNull(spell);
+    }
+
+    public void refreshAutocast() {
+        if (autocastSpell == CombatSpellDefinition.NONE) {
+            player.sendVarp(new Varp(108, 0));
+        } else {
+            player.sendVarp(new Varp(108, 1));
+        }
+    }
+
+    public CombatSpellDefinition getAutocastSpell() {
+        return autocastSpell;
+    }
+
+    public void setAutocastSpell(CombatSpell spell, boolean update) {
+        setAutocastSpell(CombatSpellDefinition.SPELLS.getOrDefault(spell, CombatSpellDefinition.NONE), update);
+    }
+
+    public void setAutocastSpell(CombatSpell spell) {
+        setAutocastSpell(spell, true);
+    }
+
+    public void setAutocastSpell(CombatSpellDefinition spell, boolean update) {
+        autocastSpell = requireNonNull(spell);
+        refreshAutocast();
+    }
+
+    public void setAutocastSpell(CombatSpellDefinition spell) {
+        setAutocastSpell(spell, true);
     }
 }

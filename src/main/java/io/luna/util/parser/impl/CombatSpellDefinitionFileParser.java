@@ -79,7 +79,7 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
 
     @Override
     public void onCompleted(ImmutableList<CombatSpellDefinition> tokenObjects) {
-        CombatSpellDefinition.ALL.storeAndLock(tokenObjects);
+        CombatSpellDefinition.loadAll(tokenObjects);
         logger.debug("Loaded {} spell definitions!", box(tokenObjects.size()));
     }
 

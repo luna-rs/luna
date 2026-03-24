@@ -221,7 +221,6 @@ public final class Equipment extends ItemContainer {
                 updateBonus(oldItem, newItem);
                 writeBonuses();
                 flagAppearance(index);
-                player.getCombat().setAmmo(index);
                 sendEvent(index, oldItem, newItem);
             }
         }
@@ -237,7 +236,6 @@ public final class Equipment extends ItemContainer {
             if (isIdUnequal(oldItem, newItem)) {
                 updateBonus(oldItem, newItem);
                 flagAppearance(index);
-                player.getCombat().setAmmo(index);
                 sendEvent(index, oldItem, newItem);
             }
         }

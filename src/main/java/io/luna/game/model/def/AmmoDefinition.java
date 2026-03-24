@@ -36,6 +36,12 @@ public final class AmmoDefinition {
     public static volatile ImmutableMap<Integer, AmmoDefinition> NO_AMMO_WEAPONS = ImmutableMap.of();
 
     /**
+     * A dummy {@link AmmoDefinition} used to represent a non-existent ranged weapon.
+     */
+    public static final AmmoDefinition UNEQUIPPED =
+            new AmmoDefinition(null, -1, null, null, null, ImmutableSet.of(), ImmutableSet.of());
+
+    /**
      * Loads all ammo definitions and rebuilds the static lookup tables used by ranged combat.
      * <p>
      * Definitions are indexed in three ways:
@@ -132,6 +138,24 @@ public final class AmmoDefinition {
         this.endGraphic = endGraphic;
         this.projectile = projectile;
         this.weapons = weapons;
+    }
+
+    /**
+     * Determines whether this ammo definition represents a weapon that does not require separate ammunition.
+     *
+     * @return {@code true} if this definition has compatible weapons but no ammo ids, otherwise {@code false}.
+     */
+    public boolean isAmmoless() {
+        return !weapons.isEmpty() && ammo.isEmpty();
+    }
+
+    /**
+     * Determines whether this ammo definition requires both a compatible weapon and separate ammunition.
+     *
+     * @return {@code true} if this definition has both ammo ids and compatible weapon ids, otherwise {@code false}.
+     */
+    public boolean isNeedsWeapon() {
+        return !ammo.isEmpty() && !weapons.isEmpty();
     }
 
     /**
