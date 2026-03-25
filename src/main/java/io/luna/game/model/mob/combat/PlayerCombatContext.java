@@ -264,7 +264,7 @@ public final class PlayerCombatContext extends CombatContext {
             if (player.getCombat().inCombat() && !Objects.equals(target, other)) {
                 player.sendMessage("You are already in combat.");
                 return false;
-            } else if (other.getCombat().inCombat() && !Objects.equals(target, player)) {
+            } else if (other.getCombat().inCombat() && !Objects.equals(target, player) && !Objects.equals(other, target)) {
                 player.sendMessage("That player is already in combat.");
                 return false;
             }
