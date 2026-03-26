@@ -585,8 +585,8 @@ public final class CollisionMatrix {
         int startY = start.getLocalY(start);
 
         Position end = target.getPosition();
-        int endX = end.getLocalX(end);
-        int endY = end.getLocalY(end);
+        int endX = end.getLocalX(start);
+        int endY = end.getLocalY(start);
 
         int radiusX = (endX + sizeX) - 1;
         int radiusY = (endY + sizeY) - 1;
