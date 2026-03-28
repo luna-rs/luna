@@ -21,7 +21,9 @@ import io.luna.net.msg.GameMessageRepository;
 import io.luna.util.ExecutorUtils;
 import io.luna.util.parser.impl.AmmoDefinitionFileParser;
 import io.luna.util.parser.impl.CombatSpellDefinitionFileParser;
+import io.luna.util.parser.impl.DegradableItemDefinitionFileParser;
 import io.luna.util.parser.impl.EquipmentDefinitionFileParser;
+import io.luna.util.parser.impl.EquipmentPoisonDefinitionFileParser;
 import io.luna.util.parser.impl.MessageRepositoryFileParser;
 import io.luna.util.parser.impl.NpcCombatDefinitionFileParser;
 import io.luna.util.parser.impl.WeaponDefinitionFileParser;
@@ -191,7 +193,9 @@ public final class LunaServer {
         taskList.add(new WeaponTypeDefinitionFileParser());
         taskList.add(new NpcCombatDefinitionFileParser());
         taskList.add(new CombatSpellDefinitionFileParser());
+        taskList.add(new EquipmentPoisonDefinitionFileParser());
         taskList.add(new AmmoDefinitionFileParser());
+        taskList.add(new DegradableItemDefinitionFileParser());
         taskList.add(() -> context.getWorld().getBots().loadNames());
 
         ExecutorService pool = ExecutorUtils.threadPool("BackgroundLoaderThread");

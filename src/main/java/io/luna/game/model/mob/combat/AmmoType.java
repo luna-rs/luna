@@ -1,18 +1,22 @@
 package io.luna.game.model.mob.combat;
 
+import io.luna.game.model.def.AmmoDefinition;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Enumerates the logical ranged ammunition categories supported by combat.
  * <p>
- * These values are used as high-level ammo group identifiers rather than as direct item ids. A single
- * {@link AmmoType} may correspond to one or more concrete ammo item variants in the cache/definitions layer
- * (for example poisoned or upgraded variants), while still sharing the same combat behavior.
+ * These values are used as high-level ammo group identifiers rather than as direct item ids. A single {@link AmmoType}
+ * may correspond to one or more concrete ammo item variants in the cache/definitions layer (for example poisoned or
+ * upgraded variants), while still sharing the same combat behavior.
  * <p>
  * This enum is useful for:
  * <ul>
- *     <li>grouping equivalent ammo items under one combat type,</li>
- *     <li>matching ammo against compatible weapons,</li>
- *     <li>driving projectile/graphic selection, and</li>
- *     <li>applying ranged strength and special-case combat rules.</li>
+ *     <li>Grouping equivalent ammo items under one combat type</li>
+ *     <li>Matching ammo against compatible weapons</li>
+ *     <li>Driving projectile/graphic selection</li>
+ *     <li>Applying ranged strength and special-case combat rules</li>
  * </ul>
  *
  * @author lare96
@@ -212,5 +216,20 @@ public enum AmmoType {
     /**
      * Toktz-xil-ul obsidian rings.
      */
-    TOKTZ_XIL_UL
+    TOKTZ_XIL_UL;
+
+    /**
+     * The cached definition representing this constant.
+     */
+    private AmmoDefinition def;
+
+    /**
+     * @return The cached definition representing this constant.
+     */
+    public AmmoDefinition getDef() {
+        if (def == null) {
+            def = requireNonNull(AmmoDefinition.ALL.get(this), this + " has no valid AmmoDefinition.");
+        }
+        return def;
+    }
 }

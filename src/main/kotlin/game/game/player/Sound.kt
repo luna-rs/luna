@@ -3,107 +3,159 @@ package game.player
 /**
  * A collection of sound constants.
  *
+ * Best guesses filled from sounds.pack. A few entries use the closest
+ * available pack sound where there is no obvious distinct cast/impact pair.
+ *
  * @author lare96
  */
 enum class Sound(val id: Int) {
-    REDEMPTION(-1),
-    SMITE(-1),
-    WIND_STRIKE_CAST(-1),
-    WIND_STRIKE_IMPACT(-1),
-    CONFUSE_CAST(-1),
-    CONFUSE_IMPACT(-1),
+    REDEMPTION(1705),
+    SMITE(1704),
+
+    WIND_STRIKE_CAST(992),
+    WIND_STRIKE_IMPACT(995),
+
+    CONFUSE_CAST(996),
+    CONFUSE_IMPACT(997),
+
     WATER_STRIKE_CAST(1023),
     WATER_STRIKE_IMPACT(1022),
+
     EARTH_STRIKE_CAST(1002),
     EARTH_STRIKE_IMPACT(1004),
-    WEAKEN_CAST(-1),
-    WEAKEN_IMPACT(-1),
-    FIRE_STRIKE_CAST(1017),
+
+    WEAKEN_CAST(225),          // weaken_all
+    WEAKEN_IMPACT(225),        // closest fallback
+
+    FIRE_STRIKE_CAST(1014),
     FIRE_STRIKE_IMPACT(1018),
-    WIND_BOLT_CAST(-1),
-    WIND_BOLT_IMPACT(-1),
-    CURSE_CAST(-1),
-    CURSE_IMPACT(-1),
-    BIND_CAST(-1),
-    BIND_IMPACT(-1),
-    WATER_BOLT_CAST(-1),
-    WATER_BOLT_IMPACT(-1),
-    EARTH_BOLT_CAST(1003),
+
+    WIND_BOLT_CAST(1030),
+    WIND_BOLT_IMPACT(1032),
+
+    CURSE_CAST(1001),
+    CURSE_IMPACT(1000),
+
+    BIND_CAST(159),            // bind_all
+    BIND_IMPACT(159),          // closest fallback
+
+    WATER_BOLT_CAST(1024),
+    WATER_BOLT_IMPACT(1025),
+
+    EARTH_BOLT_CAST(1007),
     EARTH_BOLT_IMPACT(1006),
+
     FIRE_BOLT_CAST(1015),
     FIRE_BOLT_IMPACT(1016),
-    CRUMBLE_UNDEAD_CAST(-1),
-    CRUMBLE_UNDEAD_IMPACT(-1),
-    WIND_BLAST_CAST(-1),
-    WIND_BLAST_IMPACT(-1),
-    WATER_BLAST_CAST(-1),
-    WATER_BLAST_IMPACT(-1),
-    IBAN_BLAST_CAST(-1),
-    IBAN_BLAST_IMPACT(-1),
-    SNARE_CAST(-1),
-    SNARE_IMPACT(-1),
-    MAGIC_DART_CAST(-1),
-    MAGIC_DART_IMPACT(-1),
-    EARTH_BLAST_CAST(1007),
+
+    CRUMBLE_UNDEAD_CAST(998),
+    CRUMBLE_UNDEAD_IMPACT(999),
+
+    WIND_BLAST_CAST(1034),
+    WIND_BLAST_IMPACT(1033),
+
+    WATER_BLAST_CAST(1026),
+    WATER_BLAST_IMPACT(1027),
+
+    IBAN_BLAST_CAST(256),      // iban lightning
+    IBAN_BLAST_IMPACT(256),    // closest fallback
+
+    SNARE_CAST(190),           // snare_all
+    SNARE_IMPACT(190),         // closest fallback
+
+    MAGIC_DART_CAST(979),      // magic_dart_fire
+    MAGIC_DART_IMPACT(979),    // closest fallback
+
+    EARTH_BLAST_CAST(1003),
     EARTH_BLAST_IMPACT(1005),
-    FIRE_BLAST_CAST(-1),
-    FIRE_BLAST_IMPACT(-1),
-    SARADOMIN_STRIKE_CAST(-1),
-    SARADOMIN_STRIKE_IMPACT(-1),
-    CLAWS_OF_GUTHIX_CAST(-1),
-    CLAWS_OF_GUTHIX_IMPACT(-1),
-    FLAMES_OF_ZAMORAK_CAST(-1),
-    FLAMES_OF_ZAMORAK_IMPACT(-1),
-    WIND_WAVE_CAST(-1),
-    WIND_WAVE_IMPACT(-1),
-    WATER_WAVE_CAST(-1),
-    WATER_WAVE_IMPACT(-1),
-    VULNERABILITY_CAST(-1),
-    VULNERABILITY_IMPACT(-1),
-    EARTH_WAVE_CAST(-1),
-    EARTH_WAVE_IMPACT(-1),
-    ENFEEBLE_CAST(-1),
-    ENFEEBLE_IMPACT(-1),
-    FIRE_WAVE_CAST(-1),
-    FIRE_WAVE_IMPACT(-1),
+
+    FIRE_BLAST_CAST(1020),
+    FIRE_BLAST_IMPACT(1019),
+
+    SARADOMIN_STRIKE_CAST(297),
+    SARADOMIN_STRIKE_IMPACT(297), // closest fallback
+
+    CLAWS_OF_GUTHIX_CAST(291),
+    CLAWS_OF_GUTHIX_IMPACT(291),  // closest fallback
+
+    FLAMES_OF_ZAMORAK_CAST(290),
+    FLAMES_OF_ZAMORAK_IMPACT(290), // closest fallback
+
+    WIND_WAVE_CAST(1031),
+    WIND_WAVE_IMPACT(1035),
+
+    WATER_WAVE_CAST(1028),
+    WATER_WAVE_IMPACT(1029),
+
+    VULNERABILITY_CAST(158),   // vulnerability_all
+    VULNERABILITY_IMPACT(158), // closest fallback
+
+    EARTH_WAVE_CAST(1009),
+    EARTH_WAVE_IMPACT(1008),
+
+    ENFEEBLE_CAST(1010),
+    ENFEEBLE_IMPACT(1011),
+
+    FIRE_WAVE_CAST(1017),
+    FIRE_WAVE_IMPACT(1021),
+
     ENTANGLE_CAST(1012),
     ENTANGLE_IMPACT(1013),
-    STUN_CAST(-1),
-    STUN_IMPACT(-1),
-    TELEBLOCK_CAST(-1),
-    TELEBLOCK_IMPACT(-1),
-    SMOKE_RUSH_CAST(-1),
-    SMOKE_RUSH_IMPACT(-1),
-    SHADOW_RUSH_CAST(-1),
-    SHADOW_RUSH_IMPACT(-1),
-    BLOOD_RUSH_CAST(-1),
-    BLOOD_RUSH_IMPACT(-1),
-    ICE_RUSH_CAST(-1),
-    ICE_RUSH_IMPACT(-1),
-    SMOKE_BURST_CAST(-1),
-    SMOKE_BURST_IMPACT(-1),
-    SHADOW_BURST_CAST(-1),
-    SHADOW_BURST_IMPACT(-1),
-    BLOOD_BURST_CAST(-1),
-    BLOOD_BURST_IMPACT(-1),
-    ICE_BURST_CAST(-1),
-    ICE_BURST_IMPACT(-1),
-    SMOKE_BLITZ_CAST(-1),
-    SMOKE_BLITZ_IMPACT(-1),
-    SHADOW_BLITZ_CAST(-1),
-    SHADOW_BLITZ_IMPACT(-1),
-    BLOOD_BLITZ_CAST(-1),
-    BLOOD_BLITZ_IMPACT(-1),
-    ICE_BLITZ_CAST(-1),
-    ICE_BLITZ_IMPACT(-1),
-    SMOKE_BARRAGE_CAST(-1),
-    SMOKE_BARRAGE_IMPACT(-1),
-    SHADOW_BARRAGE_CAST(-1),
-    SHADOW_BARRAGE_IMPACT(-1),
-    BLOOD_BARRAGE_CAST(-1),
-    BLOOD_BARRAGE_IMPACT(-1),
-    ICE_BARRAGE_CAST(-1),
-    ICE_BARRAGE_IMPACT(-1),
+
+    STUN_CAST(171),            // stun_all
+    STUN_IMPACT(171),          // closest fallback
+
+    TELEBLOCK_CAST(1185),
+    TELEBLOCK_IMPACT(1183),
+
+    SMOKE_RUSH_CAST(1120),     // smoke_cast
+    SMOKE_RUSH_IMPACT(1122),
+
+    SHADOW_RUSH_CAST(1115),    // shadow_cast
+    SHADOW_RUSH_IMPACT(1114),
+
+    BLOOD_RUSH_CAST(1049),
+    BLOOD_RUSH_IMPACT(984),
+
+    ICE_RUSH_CAST(1111),       // ice_cast
+    ICE_RUSH_IMPACT(1112),
+
+    SMOKE_BURST_CAST(1120),    // smoke_cast
+    SMOKE_BURST_IMPACT(1124),
+
+    SHADOW_BURST_CAST(1115),   // shadow_cast
+    SHADOW_BURST_IMPACT(1117),
+
+    BLOOD_BURST_CAST(986),     // blood_cast
+    BLOOD_BURST_IMPACT(1098),
+
+    ICE_BURST_CAST(1111),      // ice_cast
+    ICE_BURST_IMPACT(1126),
+
+    SMOKE_BLITZ_CAST(1120),    // smoke_cast
+    SMOKE_BLITZ_IMPACT(1123),
+
+    SHADOW_BLITZ_CAST(1115),   // shadow_cast
+    SHADOW_BLITZ_IMPACT(1116),
+
+    BLOOD_BLITZ_CAST(986),     // blood_cast
+    BLOOD_BLITZ_IMPACT(985),
+
+    ICE_BLITZ_CAST(1111),      // ice_cast
+    ICE_BLITZ_IMPACT(1110),
+
+    SMOKE_BARRAGE_CAST(1120),  // smoke_cast
+    SMOKE_BARRAGE_IMPACT(1121),
+
+    SHADOW_BARRAGE_CAST(1115), // shadow_cast
+    SHADOW_BARRAGE_IMPACT(1118),
+
+    BLOOD_BARRAGE_CAST(986),   // blood_cast
+    BLOOD_BARRAGE_IMPACT(1113),
+
+    ICE_BARRAGE_CAST(1111),    // ice_cast
+    ICE_BARRAGE_IMPACT(1125),
+
     TELEGRAB(200),
     TELEPORT_REGULAR(202),
     ENCHANT_LVL_6(203),
@@ -117,8 +169,8 @@ enum class Sound(val id: Int) {
     CHARGE_WATER_ORB(215),
     CHARGE_FIRE_ORB(216),
     SUPERHEAT(217),
-    MAGIC_SPLASH(218),
-    TELEOTHER(219),
+    MAGIC_SPLASH(940),
+    TELEOTHER(1184),
     LOW_ALCHEMY(224),
     BONES_TO_ITEMS(227),
     HIGH_ALCHEMY(223),
@@ -128,6 +180,7 @@ enum class Sound(val id: Int) {
     SMELTING(352),
     PICKUP_ITEM(356),
     COOK_FOOD(357),
+    ARROW_LAUNCH(368),
     BURN_LOG(374),
     LIGHT_FIRE(375),
     DROP_ITEM(376),
@@ -169,7 +222,7 @@ enum class Sound(val id: Int) {
     TAKE_DAMAGE_3(823),
     TAKE_DAMAGE_4(824),
     TELEPORT_ANCIENT(1048),
-    PICK_LOCK(1272),
+    PICK_LOCK(1272),           // still only sound_1272 in pack
     STRING_BOW(1311),
     RETRIBUTION(1703),
     REDEMPTION_HEAL(1751),

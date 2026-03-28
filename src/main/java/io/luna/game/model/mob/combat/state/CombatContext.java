@@ -1,19 +1,29 @@
-package io.luna.game.model.mob.combat;
+package io.luna.game.model.mob.combat.state;
 
 import api.combat.magic.ImmobilizationAction;
 import com.google.common.base.Stopwatch;
+import engine.controllers.MultiCombatAreaListener;
 import game.item.consumable.potion.PotionEffect;
+import io.luna.game.action.ActionState;
+import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Animation;
-import io.luna.game.model.mob.interact.InteractionPolicy;
+import io.luna.game.model.mob.combat.CombatAction;
+import io.luna.game.model.mob.combat.CombatDelayAction;
+import io.luna.game.model.mob.combat.PoisonAction;
+import io.luna.game.model.mob.combat.attack.CombatAttack;
+import io.luna.game.model.mob.combat.damage.CombatDamageStack;
+import io.luna.game.model.mob.combat.damage.CombatDamageType;
+
+import java.util.Objects;
 
 /**
  * Encapsulates combat state and shared combat behavior for a single {@link Mob}.
  *
  * @author lare96
  */
-public abstract class CombatContext {
+public abstract class CombatContext<T extends Mob> {
 
     /**
      * The amount of time a mob will remain in combat after attacking or being attacked.
@@ -23,7 +33,7 @@ public abstract class CombatContext {
     /**
      * The mob that owns this combat context.
      */
-    private final Mob mob;
+    protected final T mob;
 
     /**
      * Tracks pending and active combat damage for the owning mob.
@@ -38,12 +48,15 @@ public abstract class CombatContext {
     /**
      * The mob currently being attacked, or {@code null} if no combat target is set.
      */
-    private Mob target;
+    protected Mob target;
+
+    protected Mob autoRetaliateTarget;
+    protected Mob lastCombatWith;
 
     /**
      * The number of ticks remaining before another attack may be performed.
      */
-    private int attackDelay;
+    private CombatDelayAction attackDelay;
 
     /**
      * The current poison severity.
@@ -57,9 +70,10 @@ public abstract class CombatContext {
      *
      * @param mob The mob that owns this combat context.
      */
-    public CombatContext(Mob mob) {
+    public CombatContext(T mob) {
         this.mob = mob;
         damageStack = new CombatDamageStack(mob);
+        attackDelay = new CombatDelayAction(mob);
     }
 
     /**
@@ -68,29 +82,12 @@ public abstract class CombatContext {
      * @param type The damage type being evaluated.
      * @return The maximum hit that can be dealt.
      */
-    public abstract int computeMaxHit(CombatDamageType type);
+    public abstract int getMaxHit(CombatDamageType type);
 
-    /**
-     * Computes the interaction policy used to determine whether the owning mob has reached its current target for'
-     * combat purposes.
-     *
-     * @return The combat interaction policy.
-     */
-    public abstract InteractionPolicy computeInteractionPolicy();
+    // todo combat attack
+    public abstract CombatAttack<?> getNextAttack(Mob victim);
 
-    /**
-     * Computes the attack speed of the owning mob in ticks.
-     *
-     * @return The number of ticks between attacks.
-     */
-    public abstract int computeAttackSpeed();
-
-    /**
-     * Gets the animation played when the owning mob attacks.
-     *
-     * @return The attack animation.
-     */
-    public abstract Animation getAttackAnimation();
+    public abstract EquipmentBonus getAttackStyleBonus();
 
     /**
      * Gets the animation played when the owning mob defends against an incoming hit.
@@ -105,19 +102,6 @@ public abstract class CombatContext {
      * @return {@code true} if auto-retaliate is enabled, otherwise {@code false}.
      */
     public abstract boolean isAutoRetaliate();
-
-    /**
-     * Applies subclass-specific combat logic before attack execution proceeds.
-     * <p>
-     * This hook runs after target reachability has been evaluated, but before attack readiness is checked and
-     * before the attack is launched. Subclasses may use it to block combat, trigger movement corrections, or prioritize
-     * other behavior such as retreating.
-     *
-     * @param reached {@code true} if the current target has been reached according to the active interaction policy,
-     * otherwise {@code false}.
-     * @return {@code true} if combat processing should continue, otherwise {@code false}.
-     */
-    public abstract boolean onCombatHook(boolean reached);
 
     /**
      * Starts attacking the supplied enemy.
@@ -135,42 +119,66 @@ public abstract class CombatContext {
                 return;
             }
         }
+        // todo differentiate
         target = enemy;
         mob.getActions().submitIfAbsent(new CombatAction(mob));
     }
 
     /**
-     * Decrements the remaining attack delay by one tick if it is above zero.
+     * Validates whether the player can initiate combat with the specified {@link Mob} under single-combat rules.
+     * <p>
+     * If the player isn't already in a multi-combat area, this method enforces standard 317-style single-combat
+     * restrictions:
+     * <ul>
+     *     <li>If the player is already fighting a different target, they cannot attack another.</li>
+     *     <li>If the target is already fighting someone else, the attack is prevented.</li>
+     * </ul>
+     * <p>
+     * If either condition fails, a message is sent to the player explaining why the attack cannot proceed.
      *
-     * @return The updated attack delay.
+     * @param victim The {@link Mob} the player is attempting to attack.
+     * @return {@code true} if combat is allowed; {@code false} otherwise.
      */
-    public final int decrementAttackDelay() {
-        if (attackDelay > 0) {
-            attackDelay--;
+    public boolean checkMultiCombat(Mob victim) {
+        // todo when target dies, if its equal to last combat, clear last combat with
+        boolean attackerInMulti = MultiCombatAreaListener.INSTANCE.inside(mob.getPosition());
+        boolean victimInMulti = MultiCombatAreaListener.INSTANCE.inside(victim.getPosition());
+        if (attackerInMulti && victimInMulti) {
+            // Both are in multi-area, proceed as normal.
+            return true;
         }
-        return attackDelay;
+        if (inCombat() && lastCombatWith != null && !Objects.equals(lastCombatWith, victim)) {
+            mob.ifPlayer(player -> player.sendMessage("You are already in combat."));
+            return false;
+        }
+
+        CombatContext<?> victimCombat = victim.getCombat();
+        if (victimCombat.inCombat() && victimCombat.lastCombatWith != null && !Objects.equals(victimCombat.lastCombatWith, mob)) {
+            mob.ifPlayer(player -> player.sendMessage("They are already in combat."));
+            return false;
+        }
+        return true;
     }
 
+
     /**
-     * Determines whether the owning mob is ready to perform its next attack.
+     * Applies subclass-specific combat logic before attack execution proceeds.
      * <p>
-     * Attack readiness is delegated to the active {@link CombatDelayAction}.
+     * This hook runs after target reachability has been evaluated, but before attack readiness is checked and
+     * before the attack is launched. Subclasses may use it to block combat, trigger movement corrections, or prioritize
+     * other behavior such as retreating.
      *
-     * @return {@code true} if an attack may be performed, otherwise {@code false}.
+     * @param reached {@code true} if the current target has been reached according to the active interaction policy,
+     * otherwise {@code false}.
+     * @return {@code true} if combat processing should continue, otherwise {@code false}.
      */
-    public final boolean isAttackReady() {
-        return getDelay().isReady();
+    public boolean onCombatProcess(boolean reached) {
+        return true;
     }
 
-    /**
-     * Resets the attack delay after an attack is launched.
-     * <p>
-     * The new delay is derived from {@link #computeAttackSpeed()}, and the active {@link CombatDelayAction} is
-     * marked as not ready until the delay expires.
-     */
-    public final void resetAttackDelay() {
-        attackDelay = computeAttackSpeed();
-        getDelay().setReady(false);
+    // called when combataction ends
+    public void onCombatFinished() {
+
     }
 
     /**
@@ -178,20 +186,19 @@ public abstract class CombatContext {
      *
      * @return The active combat delay action.
      */
-    private CombatDelayAction getDelay() {
-        CombatDelayAction action = mob.getActions().first(CombatDelayAction.class);
-        if (action == null) {
-            action = new CombatDelayAction(mob);
-            mob.getActions().submitIfAbsent(action);
+    public CombatDelayAction getDelay() {
+        if (attackDelay == null || attackDelay.getState() == ActionState.COMPLETED ||
+                attackDelay.getState() == ActionState.INTERRUPTED) {
+            attackDelay = new CombatDelayAction(mob);
         }
-        return action;
+        if (attackDelay.getState() == ActionState.NEW) {
+            mob.getActions().submitIfAbsent(attackDelay);
+        }
+        return attackDelay;
     }
 
-    /**
-     * Clears the current attack delay immediately.
-     */
-    public final void clearAttackDelay() {
-        attackDelay = 0;
+    public Stopwatch stopCombatTimer() {
+        return combatTimer;
     }
 
     /**
@@ -205,31 +212,17 @@ public abstract class CombatContext {
     }
 
     /**
-     * Stops the combat timer.
-     */
-    public final void stopCombatTimer() {
-        combatTimer.stop();
-    }
-
-    /**
      * Determines whether the owning mob is currently considered in combat.
      * <p>
-     * A mob remains in combat while the combat timer is running and no more than {@code 15} seconds have elapsed
-     * since the timer was last reset.
+     * A mob remains in combat while the combat timer is running and no more than {@link #COMBAT_TIMER_DURATION} seconds
+     * have elapsed since the timer was last reset.
      *
-     * @return {@code true} if the mob is still considered in combat, otherwise
-     * {@code false}.
+     * @return {@code true} if the mob is still considered in combat, otherwise {@code false}.
      */
     public final boolean inCombat() {
         return combatTimer.isRunning() && combatTimer.elapsed().toSeconds() <= COMBAT_TIMER_DURATION;
     }
 
-    /**
-     * @return The current attack delay.
-     */
-    public final int getAttackDelay() {
-        return attackDelay;
-    }
 
     /**
      * @return The combat damage stack.
@@ -243,7 +236,7 @@ public abstract class CombatContext {
      *
      * @param target The new target, or {@code null} if no target should be tracked.
      */
-    final void setTarget(Mob target) {
+    public final void setTarget(Mob target) {
         this.target = target;
     }
 
@@ -264,7 +257,7 @@ public abstract class CombatContext {
     /**
      * @return The poison severity before decrementing.
      */
-    final int decrementPoisonSeverity() {
+    public final int decrementPoisonSeverity() {
         return poisonSeverity--;
     }
 
@@ -325,5 +318,25 @@ public abstract class CombatContext {
      */
     public final boolean isImmobilized() {
         return mob.getActions().contains(ImmobilizationAction.class);
+    }
+
+    public T getMob() {
+        return mob;
+    }
+
+    public Mob getAutoRetaliateTarget() {
+        return autoRetaliateTarget;
+    }
+
+    public void setAutoRetaliateTarget(Mob autoRetaliateTarget) {
+        this.autoRetaliateTarget = autoRetaliateTarget;
+    }
+
+    public Mob getLastCombatWith() {
+        return lastCombatWith;
+    }
+
+    public void setLastCombatWith(Mob lastAttackedBy) {
+        this.lastCombatWith = lastAttackedBy;
     }
 }

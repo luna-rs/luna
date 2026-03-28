@@ -1,6 +1,6 @@
 package io.luna.game.model;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Sets;
 import io.luna.game.model.item.GroundItem;
 import io.luna.game.model.mob.Npc;
@@ -60,10 +60,10 @@ public enum EntityType {
     /**
      * An immutable map of class types to matching entity types.
      */
-    public static final ImmutableMap<Class<?>, EntityType> CLASS_TO_TYPE;
+    public static final ImmutableBiMap<Class<?>, EntityType> CLASS_TO_TYPE;
 
     static {
-        ImmutableMap.Builder<Class<?>, EntityType> builder = ImmutableMap.builder();
+        ImmutableBiMap.Builder<Class<?>, EntityType> builder = ImmutableBiMap.builder();
         for (EntityType type : values()) {
             builder.put(type.classType, type);
         }

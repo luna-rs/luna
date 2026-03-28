@@ -5,7 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.luna.game.model.def.WeaponSpecialBarDefinition;
-import io.luna.game.model.def.WeaponStyleDefinition;
+import io.luna.game.model.def.CombatStyleDefinition;
 import io.luna.game.model.def.WeaponTypeDefinition;
 import io.luna.game.model.item.Equipment.EquipmentBonus;
 import io.luna.game.model.mob.Skill;
@@ -28,8 +28,8 @@ import static org.apache.logging.log4j.util.Unbox.box;
  * A {@link JsonFileParser} that loads {@link WeaponTypeDefinition} instances from the weapon type
  * definition file.
  * <p>
- * Each entry defines a {@link Weapon} type, interface metadata, available {@link WeaponStyleDefinition}
- * entries, and optional {@link WeaponSpecialBarDefinition} data.
+ * Each entry defines a {@link Weapon} type, interface metadata, available {@link CombatStyleDefinition} entries, and
+ * optional {@link WeaponSpecialBarDefinition} data.
  *
  * @author lare96
  */
@@ -53,7 +53,7 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
         int id = token.get("id").getAsInt();
         int line = token.get("line").getAsInt();
         JsonArray jsonStyles = token.get("styles").getAsJsonArray();
-        List<WeaponStyleDefinition> styles = new ArrayList<>(jsonStyles.size());
+        List<CombatStyleDefinition> styles = new ArrayList<>(jsonStyles.size());
         for (JsonElement element : jsonStyles) {
             JsonObject obj = element.getAsJsonObject();
             CombatStyle styleType = CombatStyle.valueOf(obj.get("type").getAsString());
@@ -66,7 +66,7 @@ public final class WeaponTypeDefinitionFileParser extends JsonFileParser<WeaponT
             int range = obj.get("range").getAsInt();
             ImmutableList<Integer> exp = Arrays.stream(GsonUtils.getAsType(obj.get("exp"), String[].class)).
                     map(Skill::getId).collect(ImmutableList.toImmutableList());
-            styles.add(new WeaponStyleDefinition(styleType, speed, animation, config, bonus, button, stance, range, exp));
+            styles.add(new CombatStyleDefinition(styleType, speed, animation, config, bonus, button, stance, range, exp));
         }
         WeaponSpecialBarDefinition specialBar = GsonUtils.getAsType(token.get("special"), WeaponSpecialBarDefinition.class);
         return new WeaponTypeDefinition(weaponType, id, line, styles, specialBar);

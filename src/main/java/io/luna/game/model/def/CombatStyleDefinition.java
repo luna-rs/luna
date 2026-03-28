@@ -12,24 +12,24 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * A sub-definition within a {@link WeaponTypeDefinition} describing a single selectable combat style.
  * <p>
- * Weapon style definitions map a {@link CombatStyle} to the attack speed, animation, interface config, accuracy bonus,
+ * combat style definitions map a {@link CombatStyle} to the attack speed, animation, interface config, accuracy bonus,
  * stance, and experience distribution used when that style is selected.
  *
  * @author lare96
  */
-public final class WeaponStyleDefinition {
+public final class CombatStyleDefinition {
 
     /**
-     * Adds a pending {@link WeaponStyleDefinition} to be published when {@link #lock()} is invoked.
+     * Adds a pending {@link CombatStyleDefinition} to be published when {@link #lock()} is invoked.
      *
      * @param def The definition to add.
      */
-    static void addWeaponStyle(WeaponStyleDefinition def) {
+    static void addWeaponStyle(CombatStyleDefinition def) {
         pending.put(def.type, def);
     }
 
     /**
-     * Publishes all pending weapon style definitions into {@link #ALL}.
+     * Publishes all pending combat style definitions into {@link #ALL}.
      * <p>
      * This method only performs the publication step once, ignoring subsequent calls after the immutable map has
      * been initialized.
@@ -42,14 +42,14 @@ public final class WeaponStyleDefinition {
     }
 
     /**
-     * All published {@link WeaponStyleDefinition} instances, keyed by {@link CombatStyle}.
+     * All published {@link CombatStyleDefinition} instances, keyed by {@link CombatStyle}.
      */
-    public static volatile ImmutableMap<CombatStyle, WeaponStyleDefinition> ALL = ImmutableMap.of();
+    public static volatile ImmutableMap<CombatStyle, CombatStyleDefinition> ALL = ImmutableMap.of();
 
     /**
-     * Pending weapon style definitions awaiting publication into {@link #ALL}.
+     * Pending combat style definitions awaiting publication into {@link #ALL}.
      */
-    private static final Map<CombatStyle, WeaponStyleDefinition> pending = new ConcurrentHashMap<>();
+    private static final Map<CombatStyle, CombatStyleDefinition> pending = new ConcurrentHashMap<>();
 
     /**
      * The combat style this definition belongs to.
@@ -97,7 +97,7 @@ public final class WeaponStyleDefinition {
     private final ImmutableList<Integer> exp;
 
     /**
-     * Creates a new {@link WeaponStyleDefinition}.
+     * Creates a new {@link CombatStyleDefinition}.
      *
      * @param type The combat style this definition belongs to.
      * @param speed The attack speed, in ticks.
@@ -109,7 +109,7 @@ public final class WeaponStyleDefinition {
      * @param range The effective range of this combat style.
      * @param exp The skill ids that receive experience.
      */
-    public WeaponStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, int button,
+    public CombatStyleDefinition(CombatStyle type, int speed, int animation, int config, EquipmentBonus bonus, int button,
                                  CombatStance stance, int range, ImmutableList<Integer> exp) {
         this.type = type;
         this.speed = speed;

@@ -1,5 +1,9 @@
 package io.luna.game.model.mob.combat;
 
+import io.luna.game.model.def.CombatStyleDefinition;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * The selectable combat styles available across all supported weapon interfaces.
  * <p>
@@ -24,11 +28,6 @@ public enum CombatStyle {
      * Staff focus attack style.
      */
     STAFF_FOCUS,
-
-    /**
-     * Staff autocast attack style.
-     */
-    STAFF_AUTOCAST,
 
     /**
      * Warhammer pound attack style.
@@ -433,5 +432,20 @@ public enum CombatStyle {
     /**
      * Javelin longrange attack style.
      */
-    JAVELIN_LONGRANGE
+    JAVELIN_LONGRANGE;
+
+    /**
+     * The cached definition representing this constant.
+     */
+    private CombatStyleDefinition def;
+
+    /**
+     * @return The cached definition representing this constant.
+     */
+    public CombatStyleDefinition getDef() {
+        if (def == null) {
+            def = requireNonNull(CombatStyleDefinition.ALL.get(this), this + " has no valid CombatStyleDefinition.");
+        }
+        return def;
+    }
 }

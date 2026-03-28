@@ -1,10 +1,12 @@
 package engine.widget
 
 import api.predef.*
+import game.item.degradable.DegradableDropWarningDialogue
 import game.player.Sound
 import io.luna.game.event.EventPriority
 import io.luna.game.event.impl.DropItemEvent
 import io.luna.game.model.chunk.ChunkUpdatableView
+import io.luna.game.model.def.DegradableItemDefinition
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.dialogue.DestroyItemDialogue
 import io.luna.util.logging.LoggingSettings.FileOutputType
@@ -20,13 +22,13 @@ val logger = FileOutputType.ITEM_DROP.logger
  */
 val itemDrop = FileOutputType.ITEM_DROP.level
 
-/**
- * Drop the item.
- */
+// Global engine-level event for dropping items.
 on(DropItemEvent::class, EventPriority.HIGH) {
     val item = plr.inventory[index]
     val itemDef = item.itemDef
-    if (itemDef.isTradeable && !itemDef.inventoryActions.contains("Destroy")) {
+    if(DegradableItemDefinition.DROP_RESTRICTED.contains(item.id)) {
+        plr.overlays.open(DegradableDropWarningDialogue(index, item.id))
+    } else if (itemDef.isTradeable && !itemDef.inventoryActions.contains("Destroy")) {
         val drop = GroundItem(ctx, item, plr.position, ChunkUpdatableView.localView(plr))
         if (world.items.register(drop)) {
             plr.inventory[index] = null

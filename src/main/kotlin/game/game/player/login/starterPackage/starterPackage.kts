@@ -17,6 +17,8 @@ val inventoryStarter = listOf(
     item("Fire rune", 250),
     item("Earth rune", 250),
     item("Mind rune", 500),
+    item("Iron 2h sword"),
+    item("Staff of air"),
     item("Shortbow"))
 
 /**
@@ -26,9 +28,9 @@ val equipmentStarter = listOf(
     item("Iron full helm"),
     item("Iron platebody"),
     item("Iron platelegs"),
-    item("Iron scimitar"),
+    item("Iron longsword"),
     item("Iron kiteshield"),
-    item("Amulet of power"),
+    item("Amulet of strength"),
     item("Iron boots"),
     item("Leather vambraces"),
     item("Ring of life"),

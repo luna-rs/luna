@@ -3,6 +3,7 @@ package game.skill.firemaking
 import api.predef.*
 import api.predef.ext.*
 import game.player.Sound
+import io.luna.game.action.impl.LockedAction
 import io.luna.game.model.Direction
 import io.luna.game.model.item.GroundItem
 import io.luna.game.model.mob.Player
@@ -81,15 +82,12 @@ class LightLogAction(plr: Player, val log: Log, val removeLog: Boolean) :
             // Walk in a non-blocked direction prioritizing west.
             for (dir in WALK_DIRECTIONS) {
                 if (mob.navigator.step(dir)) {
-                    mob.lock()
-                    world.schedule(1) {
-                        if(executions == 2) {
+                    mob.actions.submit(object : LockedAction(mob, false, 1) {
+                        override fun run(): Boolean {
                             mob.face(dir.opposite())
-                        } else if(executions >= 3) {
-                            mob.unlock()
-                            it.cancel()
+                            return true
                         }
-                    }
+                    })
                     break
                 }
             }

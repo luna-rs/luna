@@ -22,8 +22,8 @@ public final class MagicOnNpcMessageReader extends GameMessageReader<MagicOnNpcE
     @Override
     public MagicOnNpcEvent decode(Player player, GameMessage msg) {
         World world = player.getWorld();
-        int npcIndex = msg.getPayload().getShort(false, ByteOrder.LITTLE, ValueType.ADD);
         int spellId = msg.getPayload().getShort(false, ValueType.ADD);
+        int npcIndex = msg.getPayload().getShort(false, ByteOrder.LITTLE);
         return new MagicOnNpcEvent(player, spellId, world.getNpcs().get(npcIndex));
     }
 

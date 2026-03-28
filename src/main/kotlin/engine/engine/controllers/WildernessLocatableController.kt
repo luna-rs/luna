@@ -33,7 +33,7 @@ object WildernessLocatableController : PlayerAreaListener() {
         plr.contextMenu.hide(OPTION_ATTACK)
         plr.overlays.closeWalkable()
         plr.wildernessLevel = 0
-        plr.combat.teleBlock = 0
+        plr.combat.magic.teleBlock = 0
         plr.clearText(199)
         plr.controllers.unregister()
     }

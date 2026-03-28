@@ -1,7 +1,9 @@
 package io.luna.game.model.mob.interact;
 
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -22,24 +24,24 @@ public final class InteractionPolicy {
      * <p>
      * Uses {@link InteractionType#SIZE} with a distance of {@code 1}.
      */
-    public static final Function<Player, InteractionPolicy> STANDARD_SIZE =
-            player -> new InteractionPolicy(InteractionType.SIZE, 1);
+    public static final BiFunction<Player, Entity, InteractionPolicy> STANDARD_SIZE =
+            (player, target) -> new InteractionPolicy(InteractionType.SIZE, 1);
 
     /**
      * Size-based interaction policy that requires occupying the same effective position.
      * <p>
      * Uses {@link InteractionType#SIZE} with a distance of {@code 0}.
      */
-    public static final Function<Player, InteractionPolicy> EQUAL_POSITION_SIZE =
-            player -> new InteractionPolicy(InteractionType.SIZE, 0);
+    public static final BiFunction<Player, Entity, InteractionPolicy> EQUAL_POSITION_SIZE =
+            (player, target) -> new InteractionPolicy(InteractionType.SIZE, 0);
 
     /**
      * Standard line-of-sight interaction policy.
      * <p>
      * Uses {@link InteractionType#LINE_OF_SIGHT} with a default distance of {@code 10}.
      */
-    public static final Function<Player, InteractionPolicy> STANDARD_LINE_OF_SIGHT =
-            player -> new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10);
+    public static final BiFunction<Player, Entity, InteractionPolicy> STANDARD_LINE_OF_SIGHT =
+            (player, target) -> new InteractionPolicy(InteractionType.LINE_OF_SIGHT, 10);
 
     /**
      * Unspecified interaction policy.
@@ -47,8 +49,8 @@ public final class InteractionPolicy {
      * Uses {@link InteractionType#UNSPECIFIED} with a distance of {@code -1}, indicating that no explicit distance
      * rule is defined by this policy itself.
      */
-    public static final Function<Player, InteractionPolicy> UNSPECIFIED =
-            player -> new InteractionPolicy(InteractionType.UNSPECIFIED, -1);
+    public static final BiFunction<Player, Entity, InteractionPolicy> UNSPECIFIED =
+            (player, target) -> new InteractionPolicy(InteractionType.UNSPECIFIED, -1);
 
     /**
      * The interaction rule type used by this policy.

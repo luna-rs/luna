@@ -206,15 +206,15 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * Inserts a mob into the list and assigns it a unique index.
      *
      * @param mob The mob to register.
+     * @return {@code true} if the mob was successfully added.
      * @throws IllegalStateException If the list is full.
      * @throws IllegalArgumentException If the mob is already ACTIVE.
-     * @return {@code true} if the mob was successfully added.
      */
     public boolean add(E mob) {
         checkArgument(mob.getState() != EntityState.ACTIVE, "Mob is already ACTIVE.");
 
         Integer index = indexPool.poll();
-        if(index == null) {
+        if (index == null) {
             return false;
         }
         mobs[index] = mob;
@@ -239,19 +239,16 @@ public final class MobList<E extends Mob> implements Iterable<E> {
      * @param mob The mob to remove.
      */
     public void remove(E mob) {
-        checkArgument(mob.getIndex() != -1,
-                "Mob has no assigned index.");
-
         mob.setState(EntityState.INACTIVE);
-
         if (mob.getType() == EntityType.PLAYER) {
             world.removePlayer(mob.asPlr());
         }
-
-        indexPool.add(mob.getIndex());
-        mobs[mob.getIndex()] = null;
-        mob.setIndex(-1);
-        size--;
+        if (mob.getIndex() != -1) {
+            indexPool.add(mob.getIndex());
+            mobs[mob.getIndex()] = null;
+            mob.setIndex(-1);
+            size--;
+        }
     }
 
     /**

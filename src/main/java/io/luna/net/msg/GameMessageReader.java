@@ -137,11 +137,11 @@ public abstract class GameMessageReader<E extends Event> {
      * @param event The interactable event to route.
      */
     private void handleInteractableEvent(Player player, E event) {
-        List<InteractionActionListener> listeners = player.getPlugins().getPipelines().
-                get((Class<E>) event.getClass()).getInteractionListeners(player, event);
 
         Iterator<InteractionAction> actions = player.getActions().getAll(InteractionAction.class).iterator();
         Entity target = ((InteractableEvent) event).target();
+        List<InteractionActionListener> listeners = player.getPlugins().getPipelines().
+                get((Class<E>) event.getClass()).getInteractionListeners(player, target, event);
 
         if (!actions.hasNext()) {
             // We have no interaction action, submit a new one.

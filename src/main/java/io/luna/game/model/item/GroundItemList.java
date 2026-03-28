@@ -77,8 +77,8 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
 
         @Override
         protected void execute() {
-            processItems();
             processPendingItems();
+            processItems();
         }
 
         /**
@@ -168,14 +168,14 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
     /**
      * Active ground items, keyed by exact tile {@link Position}.
      */
-    private final ListMultimap<Position, GroundItem> active = ArrayListMultimap.create(128, 128);
+    private final ListMultimap<Position, GroundItem> active = ArrayListMultimap.create(128, 12);
 
     /**
      * Overflow queue for tiles that have reached {@link #MAX_ITEMS_PER_TILE}.
      * <p>
      * Items in this multimap are <b>not visible</b> until promoted by {@link ExpirationTask#processPendingItems()}.
      */
-    private final ListMultimap<Position, GroundItem> pending = ArrayListMultimap.create(128, 128);
+    private final ListMultimap<Position, GroundItem> pending = ArrayListMultimap.create(128, 12);
 
     /**
      * If the expiration task has been scheduled.
@@ -348,16 +348,17 @@ public final class GroundItemList extends StationaryEntityList<GroundItem> {
         boolean changed = false;
         while (it.hasNext()) {
             GroundItem existing = it.next();
+            System.out.println(existing);
             if (existing.getId() == item.getId()
                     && existing.getView().equals(item.getView())) {
                 existing.hide();
                 existing.setState(EntityState.INACTIVE);
+
                 it.remove();
                 changed = true;
-            }
-
-            if (--loops <= 0) {
-                break;
+                if (--loops <= 0) {
+                    break;
+                }
             }
         }
         return changed;

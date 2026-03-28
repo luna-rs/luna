@@ -49,15 +49,20 @@ public final class CommandEvent extends PlayerEvent implements ControllableEvent
     }
 
     /**
-     * Retrieves the argument at {@code index} as an integer.
+     * Retrieves the argument at the specified index as an {@link Integer}.
+     * <p>
+     * Argument indexing starts at {@code 0}, and the backing argument array contains only command arguments, not
+     * the command name itself.
+     * <p>
+     * If the argument exists but cannot be parsed as an integer, this method returns {@code null}.
      *
-     * @param index The index.
-     * @return The converted integer.
+     * @param index The zero-based argument index.
+     * @return The parsed integer value, or {@code null} if the argument is not a valid integer.
      */
     public Integer asInt(int index) {
         try {
             return Integer.valueOf(args[index]);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             return null;
         }
     }

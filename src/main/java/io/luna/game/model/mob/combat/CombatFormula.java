@@ -7,18 +7,25 @@ import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.Skill;
+import io.luna.game.model.mob.combat.damage.CombatDamageType;
+import io.luna.game.model.mob.combat.state.PlayerCombatContext;
 import io.luna.util.RandomUtils;
 
 /**
- * Static combat formula helpers for hit accuracy and max-hit calculations.
+ * Utility class containing shared combat formula helpers.
+ * <p>
+ * This class centralizes the common roll, stance, prayer, and equipment-bonus calculations used by combat accuracy and
+ * physical max-hit logic.
  *
  * @author lare96
- * @link <a href="https://rune-server.org/threads/archive-combat-formulas.688072/">OSRS Combat Formulas</a>
+ * @see <a href="https://rune-server.org/threads/archive-combat-formulas.688072/">
+ * OSRS combat formulas reference
+ * </a>
  */
 public final class CombatFormula {
 
     /**
-     * The physical combat families supported by the shared physical max-hit formula.
+     * Represents the supported physical combat families that use the shared physical max-hit formula.
      */
     public enum PhysicalType {
 
@@ -34,121 +41,267 @@ public final class CombatFormula {
     }
 
     /**
-     * Rolls a physical or magic hit from {@code 0} to the player's current maximum hit, inclusive.
-     *
-     * @param mob The attacking mob.
-     * @return The rolled physical or magic damage.
-     */
-    public static int rollHit(Mob mob, CombatDamageType type) {
-        return RandomUtils.inclusive(mob.getCombat().computeMaxHit(type));
-    }
-
-    /**
-     * Rolls a magic hit from {@code 0} to the player's current magical maximum hit, inclusive.
-     *
-     * @param player The attacking player.
-     * @return The rolled magical damage.
-     */
-    public static int rollMagicHit(Player player) {
-        return RandomUtils.inclusive(computeMagicalMaxHit(player));
-    }
-
-    /**
-     * Computes the player's current magical maximum hit.
+     * Creates a new {@link CombatFormula}.
      * <p>
-     * This derives max-hit from the selected spell, autocast state, and any spell-specific modifiers.
-     *
-     * @param player The attacking player.
-     * @return The current magical maximum hit.
+     * This constructor is private because this is a static utility class.
      */
-    public static int computeMagicalMaxHit(Player player) {
-        // TODO Verify Asteria 3.0 magic data and import it properly.
-        // TODO Resolve selected/autocast spell from CombatContext.
-        // TODO Use spell-specific max hits and modifiers.
-        return 10;
+    private CombatFormula() {
+
     }
 
     /**
-     * Rolls a physical hit from {@code 0} to the player's current physical maximum hit, inclusive.
-     *
-     * @param player The attacking player.
-     * @param type The physical combat family being used.
-     * @return The rolled physical damage.
-     */
-    public static int rollPhysicalHit(Player player, PhysicalType type) {
-        return RandomUtils.inclusive(computePhysicalMaxHit(player, type));
-    }
-
-    /**
-     * Computes the maximum physical hit for melee or ranged.
-     * <p>
-     * This uses the standard effective-strength and equipment-strength based formula.
-     *
-     * @param player The attacking player.
-     * @param type The physical combat family being used.
-     * @return The maximum physical hit.
-     */
-    public static int computePhysicalMaxHit(Player player, PhysicalType type) {
-        double effectiveStrength = computePhysicalEffectiveStrength(player, type);
-        double strengthBonus = getPhysicalStrengthBonus(player, type);
-        // TODO Apply special attack modifiers.
-        return (int) Math.floor(0.5d + effectiveStrength * (strengthBonus + 64d) / 640d);
-    }
-
-    /**
-     * Rolls whether an attack lands successfully.
-     * <p>
-     * This compares the attacker's attack roll against the defender's defence roll and then converts that comparison
-     * into a final hit chance.
+     * Rolls whether an attack successfully lands using {@link #calculateHitChance(Mob, Mob, CombatDamageType)}.
      *
      * @param attacker The attacking mob.
      * @param victim The defending mob.
-     * @param type The combat damage type being rolled.
-     * @return {@code true} if the attack is accurate.
+     * @param type The combat damage type being checked.
+     * @return {@code true} if the attack lands successfully, otherwise {@code false}.
      */
-    public static boolean rollAccuracy(Mob attacker, Mob victim, CombatDamageType type) {
-        double attackRoll = computeAttackRoll(attacker, type);
-        double defenceRoll = type == CombatDamageType.MAGIC && victim instanceof Player ?
-                computeMagicDefenceRoll(attacker, (Player) victim) :
-                computeDefenceRoll(attacker, victim, type);
-
-        double hitChance;
-        if (attackRoll > defenceRoll) {
-            hitChance = 1d - (defenceRoll + 2d) / (2d * (attackRoll + 1d));
-        } else {
-            hitChance = attackRoll / (2d * (defenceRoll + 1d));
-        }
-        return RandomUtils.nextDouble() <= hitChance;
+    public static boolean isAccurateHit(Mob attacker, Mob victim, CombatDamageType type) {
+        return RandomUtils.nextDouble() <= calculateHitChance(attacker, victim, type);
     }
 
     /**
-     * Computes the effective physical strength level used by the physical max-hit formula.
+     * Calculates the percentage that an attack successfully lands.
      * <p>
-     * This is derived from the relevant visible skill level, the applicable prayer multiplier, and the combat stance
-     * strength bonus.
+     * This method computes the attacker's offensive roll, computes the defender's relevant defensive roll, and converts
+     * the two rolls into a hit chance.
+     *
+     * @param attacker The attacking mob.
+     * @param victim The defending mob.
+     * @param type The combat damage type being checked.
+     * @return The hit chance percentage.
+     */
+    public static double calculateHitChance(Mob attacker, Mob victim, CombatDamageType type) {
+        EquipmentBonus attackStyleBonus = attacker.getCombat().getAttackStyleBonus();
+        double attackRoll = calculateAttackRoll(attacker, attackStyleBonus, type);
+        double defenceRoll = type == CombatDamageType.MAGIC ?
+                calculateMagicDefenceRoll(victim) :
+                calculatePhysicalDefenceRoll(victim, attackStyleBonus);
+        double hitChance;
+        if (attackRoll > defenceRoll) {
+            hitChance = 1.0 - (defenceRoll + 2.0) / (2.0 * (attackRoll + 1.0));
+        } else {
+            hitChance = attackRoll / (2.0 * (defenceRoll + 1.0));
+        }
+        return hitChance;
+    }
+
+    /**
+     * Calculates a player's maximum physical hit.
+     * <p>
+     * This applies the standard physical max-hit calculation using the player's effective strength level and the
+     * relevant physical damage bonus.
+     *
+     * @param player The attacking player.
+     * @param type The physical combat family being used.
+     * @return The maximum physical hit that can be dealt.
+     */
+    public static int calculatePhysicalMaxHit(Player player, PhysicalType type) {
+        double effectiveStrength = calculateEffectivePhysicalStrength(player, type);
+        double strengthBonus = getPhysicalDamageBonus(player, type);
+        int maxHit = (int) Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0);
+        if (maxHit < 1) {
+            maxHit = 1;
+        }
+        return maxHit;
+    }
+
+    /**
+     * Calculates an attacker's offensive roll.
+     * <p>
+     * NPCs use their relevant visible combat level and offensive equipment bonus directly. Players additionally
+     * apply prayer and stance modifiers before the final offensive bonus multiplier is applied.
+     *
+     * @param attacker The attacking mob.
+     * @param attackStyleBonus The offensive bonus associated with the current attack style.
+     * @param type The combat damage type being used.
+     * @return The calculated offensive roll.
+     */
+    private static int calculateAttackRoll(Mob attacker, EquipmentBonus attackStyleBonus, CombatDamageType type) {
+        int skill;
+        if (type == CombatDamageType.MAGIC) {
+            skill = Skill.MAGIC;
+        } else if (type == CombatDamageType.RANGED) {
+            skill = Skill.RANGED;
+        } else {
+            skill = Skill.ATTACK;
+        }
+
+        int level = attacker.getSkills().getSkill(skill).getLevel();
+        if (attacker instanceof Npc) {
+            return (level + 8) * (getOffensiveAccuracyBonus(attacker, attackStyleBonus) + 64);
+        }
+
+        Player player = attacker.asPlr();
+        return (int) (Math.floor(level * getAttackRollPrayerMultiplier(player, type))
+                + getAttackRollStanceBonus(player) + 8)
+                * (getOffensiveAccuracyBonus(player, attackStyleBonus) + 64);
+    }
+
+    /**
+     * Calculates a defender's physical defence roll against a non-magic attack.
+     * <p>
+     * NPCs use their visible Defence level directly. Players additionally apply defence prayer and stance modifiers
+     * before the matching defensive equipment bonus is applied.
+     *
+     * @param victim The defending mob.
+     * @param attackStyleBonus The attacker's offensive style bonus, used to determine the opposing defensive bonus.
+     * @return The calculated physical defence roll.
+     */
+    private static int calculatePhysicalDefenceRoll(Mob victim, EquipmentBonus attackStyleBonus) {
+        int level = victim.getSkills().getSkill(Skill.DEFENCE).getLevel();
+        if (victim instanceof Npc) {
+            return level * (getMatchingPhysicalDefenceBonus(victim, attackStyleBonus) + 64);
+        }
+
+        Player victimPlr = victim.asPlr();
+        return (int) (Math.floor(level * getDefenceRollPrayerMultiplier(victimPlr))
+                + getDefenceRollStanceBonus(victimPlr) + 8)
+                * (getMatchingPhysicalDefenceBonus(victimPlr, attackStyleBonus) + 64);
+    }
+
+    /**
+     * Calculates a defender's magic defence roll.
+     * <p>
+     * Player magic defence is derived from both Defence and Magic, using a weighted split of 30% Defence and
+     * 70% Magic, before applying the magic defence equipment bonus. NPC magic defence is derived from Magic and
+     * magic-defence bonus only.
+     *
+     * @param victim The defending mob.
+     * @return The calculated magic defence roll.
+     */
+    private static int calculateMagicDefenceRoll(Mob victim) {
+        if (victim instanceof Player) {
+            Player player = victim.asPlr();
+            int effectiveDefence = (int) Math.floor(
+                    Math.floor(player.getSkills().getSkill(Skill.DEFENCE).getLevel() *
+                            getDefenceRollPrayerMultiplier(player)) * 0.3
+            );
+            int effectiveMagic = (int) Math.floor(victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7);
+            int magicDefenceBonus = player.getEquipment().getBonus(EquipmentBonus.MAGIC_DEFENCE);
+            return (effectiveDefence + effectiveMagic + 8) * (magicDefenceBonus + 64);
+        }
+
+        Npc npc = victim.asNpc();
+        return (npc.getSkills().getSkill(Skill.MAGIC).getLevel() + 8) *
+                (npc.getCombatDef().getBonus(EquipmentBonus.MAGIC_DEFENCE) + 64);
+    }
+
+    /**
+     * Calculates the effective physical strength level used by the physical max-hit formula.
+     * <p>
+     * This value is derived from the relevant visible skill level, the applicable prayer multiplier, and the
+     * stance-based strength bonus.
      *
      * @param player The attacking player.
      * @param type The physical combat family being used.
      * @return The effective physical strength level.
      */
-    public static double computePhysicalEffectiveStrength(Player player, PhysicalType type) {
+    private static double calculateEffectivePhysicalStrength(Player player, PhysicalType type) {
         int skill = type == PhysicalType.RANGED ? Skill.RANGED : Skill.STRENGTH;
-        double prayerMultiplier = getStrengthPrayerMultiplier(player,
-                type == PhysicalType.RANGED ? CombatDamageType.RANGED : CombatDamageType.MELEE);
+        double prayerMultiplier = getPhysicalStrengthPrayerMultiplier(player, type == PhysicalType.RANGED ?
+                CombatDamageType.RANGED : CombatDamageType.MELEE);
         int stanceBonus = getPhysicalStrengthStanceBonus(player, type);
 
         return Math.floor(player.getSkills().getSkill(skill).getLevel() * prayerMultiplier) + stanceBonus;
     }
 
     /**
-     * Returns the stance bonus applied to effective physical strength.
+     * Gets the offensive accuracy bonus for the current attack.
+     * <p>
+     * The supplied {@code attackStyleBonus} determines which offensive bonus is read from equipment or NPC combat
+     * definition.
+     *
+     * @param attacker The attacking mob.
+     * @param attackStyleBonus The offensive equipment bonus to read.
+     * @return The offensive accuracy bonus.
+     */
+    private static int getOffensiveAccuracyBonus(Mob attacker, EquipmentBonus attackStyleBonus) {
+        return attacker instanceof Player ?
+                attacker.asPlr().getEquipment().getBonus(attackStyleBonus) :
+                attacker.asNpc().getCombatDef().getBonus(attackStyleBonus);
+    }
+
+    /**
+     * Gets the defensive bonus that opposes the attacker's offensive style.
+     *
+     * @param victim The defending mob.
+     * @param attackStyleBonus The attacker's offensive style bonus.
+     * @return The matching defensive bonus.
+     */
+    private static int getMatchingPhysicalDefenceBonus(Mob victim, EquipmentBonus attackStyleBonus) {
+        EquipmentBonus defenceBonus = attackStyleBonus.getOpposite();
+        return victim instanceof Player ?
+                victim.asPlr().getEquipment().getBonus(defenceBonus) :
+                victim.asNpc().getCombatDef().getBonus(defenceBonus);
+    }
+
+    /**
+     * Gets the physical damage bonus used by the physical max-hit formula.
+     * <p>
+     * Melee uses the equipped strength bonus. Ranged uses the strength value of the currently loaded ammunition.
      *
      * @param player The attacking player.
      * @param type The physical combat family being used.
-     * @return The stance strength bonus.
+     * @return The physical damage bonus.
+     * @throws IllegalStateException If ranged damage is requested without ammo loaded.
      */
-    public static int getPhysicalStrengthStanceBonus(Player player, PhysicalType type) {
-        CombatStance stance = player.getCombat().getWeapon().getStyleDef().getStance();
+    private static int getPhysicalDamageBonus(Player player, PhysicalType type) {
+        PlayerCombatContext combat = player.getCombat();
+
+        if (type == PhysicalType.MELEE) {
+            return player.getEquipment().getBonus(EquipmentBonus.STRENGTH);
+        } else if (combat.getRanged().getAmmo() != null) {
+            return combat.getRanged().getAmmo().getStrength();
+        }
+
+        throw new IllegalStateException("Missing ranged ammo for ranged strength bonus.");
+    }
+
+    /**
+     * Gets the stance bonus applied to a player's attack roll.
+     *
+     * @param player The attacking player.
+     * @return The stance-based attack bonus.
+     */
+    private static int getAttackRollStanceBonus(Player player) {
+        CombatStance stance = player.getCombat().getStyleDef().getStance();
+
+        if (stance == CombatStance.ACCURATE) {
+            return 3;
+        } else if (stance == CombatStance.CONTROLLED) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Gets the stance bonus applied to a player's defence roll.
+     *
+     * @param player The defending player.
+     * @return The stance-based defence bonus.
+     */
+    private static int getDefenceRollStanceBonus(Player player) {
+        CombatStance stance = player.getCombat().getStyleDef().getStance();
+
+        if (stance == CombatStance.DEFENSIVE) {
+            return 3;
+        } else if (stance == CombatStance.CONTROLLED) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Gets the stance bonus applied to effective physical strength.
+     *
+     * @param player The attacking player.
+     * @param type The physical combat family being used.
+     * @return The stance-based physical strength bonus.
+     */
+    private static int getPhysicalStrengthStanceBonus(Player player, PhysicalType type) {
+        CombatStance stance = player.getCombat().getStyleDef().getStance();
 
         if (type == PhysicalType.RANGED) {
             return stance == CombatStance.ACCURATE ? 3 : 0;
@@ -165,184 +318,13 @@ public final class CombatFormula {
     }
 
     /**
-     * Returns the equipment strength bonus used by the physical max-hit formula.
-     * <p>
-     * The exact bonus read depends on the active weapon style's configured offensive bonus type.
-     *
-     * @param player The attacking player.
-     * @param type The combat damage type being used.
-     * @return The physical strength bonus.
-     */
-    public static int getPhysicalStrengthBonus(Player player, PhysicalType type) {
-        PlayerCombatContext combat = player.getCombat();
-        if (type == PhysicalType.MELEE) {
-            return player.getEquipment().getBonus(EquipmentBonus.STRENGTH);
-        } else if(combat.getAmmo() != null) {
-            return combat.getAmmo().getStrength();
-        }
-        throw new IllegalStateException("unreachable");
-    }
-
-    /**
-     * Computes the maximum offensive attack roll for the given combat type.
-     * <p>
-     * NPCs currently use their relevant skill level directly. Players additionally apply prayer, stance, and
-     * equipment bonuses.
-     *
-     * @param attacker The attacking mob.
-     * @param type The combat damage type being used.
-     * @return The maximum attack roll.
-     */
-    public static int computeAttackRoll(Mob attacker, CombatDamageType type) {
-        int skill;
-        if (type == CombatDamageType.MAGIC) {
-            skill = Skill.MAGIC;
-        } else if (type == CombatDamageType.RANGED) {
-            skill = Skill.RANGED;
-        } else {
-            skill = Skill.ATTACK;
-        }
-
-        int level = attacker.getSkills().getSkill(skill).getLevel();
-        if (attacker instanceof Npc) {
-            return level;
-        }
-
-        Player player = (Player) attacker;
-        return (int) (Math.floor(level * getAttackPrayerMultiplier(player, type))
-                + getAttackStanceBonus(player) + 8)
-                * (getAttackBonus(player) + 64);
-    }
-
-    /**
-     * Computes the maximum defensive roll against an incoming hit.
-     * <p>
-     * NPCs currently use their Defence level directly. Players additionally apply prayer, stance, and defensive
-     * equipment bonuses.
-     *
-     * @param attacker The attacking mob.
-     * @param victim The defending mob.
-     * @param type The incoming combat damage type.
-     * @return The maximum defence roll.
-     */
-    public static int computeDefenceRoll(Mob attacker, Mob victim, CombatDamageType type) {
-        int level = victim.getSkills().getSkill(Skill.DEFENCE).getLevel();
-        if (victim instanceof Npc) {
-            return level;
-        }
-        Player victimPlr = (Player) victim;
-        int defenceBonus = attacker instanceof Player ? getDefenceBonus((Player) attacker, victimPlr) : 0;
-        return (int) (Math.floor(level * getDefencePrayerMultiplier(victimPlr))
-                + getDefenceStanceBonus(victimPlr, type) + 8)
-                * (defenceBonus + 64);
-    }
-
-    /**
-     * Computes the special player magic-defence roll.
-     * <p>
-     * Player magic defence is derived from both Defence and Magic, using the usual weighted split of 30% Defence and
-     * 70% Magic before the final equipment-style multiplier is applied.
-     *
-     * @param attacker The attacking mob.
-     * @param victim The defending player.
-     * @return The magic defence roll.
-     */
-    public static int computeMagicDefenceRoll(Mob attacker, Player victim) {
-        int defenceLevel = (int) Math.floor(computeDefenceRoll(attacker, victim, CombatDamageType.MAGIC) * 0.3d);
-        int magicLevel = (int) Math.floor(victim.getSkills().getSkill(Skill.MAGIC).getLevel() * 0.7d);
-        return (defenceLevel + magicLevel) * (magicLevel + 64);
-    }
-
-    /**
-     * Returns the offensive equipment accuracy bonus for the attacking player.
-     * <p>
-     * The bonus used is determined by the active weapon style's configured offensive bonus type.
-     *
-     * @param attacker The attacking player.
-     * @return The offensive equipment accuracy bonus.
-     */
-    public static int getAttackBonus(Player attacker) {
-        EquipmentBonus bonus = attacker.getCombat().getWeapon().getStyleDef().getBonus();
-        return attacker.getEquipment().getBonus(bonus);
-    }
-
-    /**
-     * Returns the defensive equipment bonus that opposes the attacker's current offensive bonus.
-     *
-     * @param attacker The attacking player.
-     * @param victim The defending player.
-     * @return The matching defensive bonus.
-     */
-    public static int getDefenceBonus(Player attacker, Player victim) {
-        EquipmentBonus attackBonus = attacker.getCombat().getAttackStyleBonus();
-        return victim.getEquipment().getBonus(attackBonus.getOpposite());
-    }
-
-    /**
-     * Returns the offensive stance bonus used in attack-roll calculations.
-     *
-     * @param player The attacking player.
-     * @return The offensive stance bonus.
-     */
-    public static int getAttackStanceBonus(Player player) {
-        CombatStance stance = player.getCombat().getWeapon().getStyleDef().getStance();
-
-        if (stance == CombatStance.ACCURATE) {
-            return 3;
-        } else if (stance == CombatStance.CONTROLLED) {
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * Returns the defensive stance bonus used in defence-roll calculations.
-     *
-     * @param player The defending player.
-     * @param type The incoming combat damage type.
-     * @return The defensive stance bonus.
-     */
-    public static int getDefenceStanceBonus(Player player, CombatDamageType type) {
-        CombatStance stance = player.getCombat().getWeapon().getStyleDef().getStance();
-
-        if (stance == CombatStance.DEFENSIVE) {
-            return 3;
-        } else if (stance == CombatStance.CONTROLLED) {
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * Returns the prayer multiplier applied to physical max-hit calculations.
+     * Gets the prayer multiplier applied to attack-roll calculations.
      *
      * @param player The player whose active prayers are checked.
-     * @param type The physical combat damage type.
-     * @return The physical strength prayer multiplier.
+     * @param type The combat damage type being used.
+     * @return The attack-roll prayer multiplier.
      */
-    public static double getStrengthPrayerMultiplier(Player player, CombatDamageType type) {
-        CombatPrayerSet prayers = player.getCombat().getPrayers();
-
-        if (type == CombatDamageType.MELEE) {
-            if (prayers.isActive(CombatPrayer.BURST_OF_STRENGTH)) {
-                return 1.05;
-            } else if (prayers.isActive(CombatPrayer.SUPERHUMAN_STRENGTH)) {
-                return 1.10;
-            } else if (prayers.isActive(CombatPrayer.ULTIMATE_STRENGTH)) {
-                return 1.15;
-            }
-        }
-        return 1.0;
-    }
-
-    /**
-     * Returns the prayer multiplier applied to offensive attack rolls.
-     *
-     * @param player The player whose active prayers are checked.
-     * @param type The combat damage type.
-     * @return The offensive prayer multiplier.
-     */
-    public static double getAttackPrayerMultiplier(Player player, CombatDamageType type) {
+    private static double getAttackRollPrayerMultiplier(Player player, CombatDamageType type) {
         CombatPrayerSet prayers = player.getCombat().getPrayers();
 
         if (type == CombatDamageType.MELEE) {
@@ -358,12 +340,12 @@ public final class CombatFormula {
     }
 
     /**
-     * Returns the prayer multiplier applied to defensive rolls.
+     * Gets the prayer multiplier applied to defence-roll calculations.
      *
      * @param player The player whose active prayers are checked.
-     * @return The defensive prayer multiplier.
+     * @return The defence-roll prayer multiplier.
      */
-    public static double getDefencePrayerMultiplier(Player player) {
+    private static double getDefenceRollPrayerMultiplier(Player player) {
         CombatPrayerSet prayers = player.getCombat().getPrayers();
 
         if (prayers.isActive(CombatPrayer.THICK_SKIN)) {
@@ -372,6 +354,28 @@ public final class CombatFormula {
             return 1.10;
         } else if (prayers.isActive(CombatPrayer.STEEL_SKIN)) {
             return 1.15;
+        }
+        return 1.0;
+    }
+
+    /**
+     * Gets the prayer multiplier applied to physical strength calculations.
+     *
+     * @param player The player whose active prayers are checked.
+     * @param type The combat damage type being used for the strength calculation.
+     * @return The physical strength prayer multiplier.
+     */
+    private static double getPhysicalStrengthPrayerMultiplier(Player player, CombatDamageType type) {
+        CombatPrayerSet prayers = player.getCombat().getPrayers();
+
+        if (type == CombatDamageType.MELEE) {
+            if (prayers.isActive(CombatPrayer.BURST_OF_STRENGTH)) {
+                return 1.05;
+            } else if (prayers.isActive(CombatPrayer.SUPERHUMAN_STRENGTH)) {
+                return 1.10;
+            } else if (prayers.isActive(CombatPrayer.ULTIMATE_STRENGTH)) {
+                return 1.15;
+            }
         }
         return 1.0;
     }

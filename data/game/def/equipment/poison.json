@@ -1,0 +1,566 @@
+[
+  {
+    "id": 812,
+    "severity": 10
+  },
+  {
+    "id": 813,
+    "severity": 10
+  },
+  {
+    "id": 814,
+    "severity": 10
+  },
+  {
+    "id": 815,
+    "severity": 10
+  },
+  {
+    "id": 816,
+    "severity": 10
+  },
+  {
+    "id": 817,
+    "severity": 10
+  },
+  {
+    "id": 818,
+    "severity": 10
+  },
+  {
+    "id": 831,
+    "severity": 10
+  },
+  {
+    "id": 832,
+    "severity": 10
+  },
+  {
+    "id": 833,
+    "severity": 10
+  },
+  {
+    "id": 834,
+    "severity": 10
+  },
+  {
+    "id": 835,
+    "severity": 10
+  },
+  {
+    "id": 836,
+    "severity": 10
+  },
+  {
+    "id": 870,
+    "severity": 10
+  },
+  {
+    "id": 871,
+    "severity": 10
+  },
+  {
+    "id": 872,
+    "severity": 10
+  },
+  {
+    "id": 873,
+    "severity": 10
+  },
+  {
+    "id": 874,
+    "severity": 10
+  },
+  {
+    "id": 875,
+    "severity": 10
+  },
+  {
+    "id": 876,
+    "severity": 10
+  },
+  {
+    "id": 878,
+    "severity": 10
+  },
+  {
+    "id": 883,
+    "severity": 10
+  },
+  {
+    "id": 885,
+    "severity": 10
+  },
+  {
+    "id": 887,
+    "severity": 10
+  },
+  {
+    "id": 889,
+    "severity": 10
+  },
+  {
+    "id": 891,
+    "severity": 10
+  },
+  {
+    "id": 893,
+    "severity": 10
+  },
+  {
+    "id": 1219,
+    "severity": 20
+  },
+  {
+    "id": 1221,
+    "severity": 20
+  },
+  {
+    "id": 1223,
+    "severity": 20
+  },
+  {
+    "id": 1225,
+    "severity": 20
+  },
+  {
+    "id": 1227,
+    "severity": 20
+  },
+  {
+    "id": 1229,
+    "severity": 20
+  },
+  {
+    "id": 1231,
+    "severity": 20
+  },
+  {
+    "id": 1233,
+    "severity": 20
+  },
+  {
+    "id": 1235,
+    "severity": 20
+  },
+  {
+    "id": 1251,
+    "severity": 20
+  },
+  {
+    "id": 1253,
+    "severity": 20
+  },
+  {
+    "id": 1255,
+    "severity": 20
+  },
+  {
+    "id": 1257,
+    "severity": 20
+  },
+  {
+    "id": 1259,
+    "severity": 20
+  },
+  {
+    "id": 1261,
+    "severity": 20
+  },
+  {
+    "id": 1263,
+    "severity": 20
+  },
+  {
+    "id": 3094,
+    "severity": 10
+  },
+  {
+    "id": 3170,
+    "severity": 30
+  },
+  {
+    "id": 3171,
+    "severity": 30
+  },
+  {
+    "id": 3172,
+    "severity": 30
+  },
+  {
+    "id": 3173,
+    "severity": 30
+  },
+  {
+    "id": 3174,
+    "severity": 30
+  },
+  {
+    "id": 3175,
+    "severity": 30
+  },
+  {
+    "id": 3176,
+    "severity": 30
+  },
+  {
+    "id": 4582,
+    "severity": 20
+  },
+  {
+    "id": 4584,
+    "severity": 30
+  },
+  {
+    "id": 5616,
+    "severity": 12
+  },
+  {
+    "id": 5617,
+    "severity": 12
+  },
+  {
+    "id": 5618,
+    "severity": 12
+  },
+  {
+    "id": 5619,
+    "severity": 12
+  },
+  {
+    "id": 5620,
+    "severity": 12
+  },
+  {
+    "id": 5621,
+    "severity": 12
+  },
+  {
+    "id": 5622,
+    "severity": 15
+  },
+  {
+    "id": 5623,
+    "severity": 15
+  },
+  {
+    "id": 5624,
+    "severity": 15
+  },
+  {
+    "id": 5625,
+    "severity": 15
+  },
+  {
+    "id": 5626,
+    "severity": 15
+  },
+  {
+    "id": 5627,
+    "severity": 15
+  },
+  {
+    "id": 5628,
+    "severity": 12
+  },
+  {
+    "id": 5629,
+    "severity": 12
+  },
+  {
+    "id": 5630,
+    "severity": 12
+  },
+  {
+    "id": 5631,
+    "severity": 12
+  },
+  {
+    "id": 5632,
+    "severity": 12
+  },
+  {
+    "id": 5633,
+    "severity": 12
+  },
+  {
+    "id": 5634,
+    "severity": 12
+  },
+  {
+    "id": 5635,
+    "severity": 15
+  },
+  {
+    "id": 5636,
+    "severity": 15
+  },
+  {
+    "id": 5637,
+    "severity": 15
+  },
+  {
+    "id": 5638,
+    "severity": 15
+  },
+  {
+    "id": 5639,
+    "severity": 15
+  },
+  {
+    "id": 5640,
+    "severity": 15
+  },
+  {
+    "id": 5641,
+    "severity": 15
+  },
+  {
+    "id": 5642,
+    "severity": 12
+  },
+  {
+    "id": 5643,
+    "severity": 12
+  },
+  {
+    "id": 5644,
+    "severity": 12
+  },
+  {
+    "id": 5645,
+    "severity": 12
+  },
+  {
+    "id": 5646,
+    "severity": 12
+  },
+  {
+    "id": 5647,
+    "severity": 12
+  },
+  {
+    "id": 5648,
+    "severity": 15
+  },
+  {
+    "id": 5649,
+    "severity": 15
+  },
+  {
+    "id": 5650,
+    "severity": 15
+  },
+  {
+    "id": 5651,
+    "severity": 15
+  },
+  {
+    "id": 5652,
+    "severity": 15
+  },
+  {
+    "id": 5653,
+    "severity": 15
+  },
+  {
+    "id": 5654,
+    "severity": 12
+  },
+  {
+    "id": 5655,
+    "severity": 12
+  },
+  {
+    "id": 5656,
+    "severity": 12
+  },
+  {
+    "id": 5657,
+    "severity": 12
+  },
+  {
+    "id": 5658,
+    "severity": 12
+  },
+  {
+    "id": 5659,
+    "severity": 12
+  },
+  {
+    "id": 5660,
+    "severity": 12
+  },
+  {
+    "id": 5661,
+    "severity": 15
+  },
+  {
+    "id": 5662,
+    "severity": 15
+  },
+  {
+    "id": 5663,
+    "severity": 15
+  },
+  {
+    "id": 5664,
+    "severity": 15
+  },
+  {
+    "id": 5665,
+    "severity": 15
+  },
+  {
+    "id": 5666,
+    "severity": 15
+  },
+  {
+    "id": 5667,
+    "severity": 15
+  },
+  {
+    "id": 5668,
+    "severity": 25
+  },
+  {
+    "id": 5670,
+    "severity": 25
+  },
+  {
+    "id": 5672,
+    "severity": 25
+  },
+  {
+    "id": 5674,
+    "severity": 25
+  },
+  {
+    "id": 5676,
+    "severity": 25
+  },
+  {
+    "id": 5678,
+    "severity": 25
+  },
+  {
+    "id": 5680,
+    "severity": 25
+  },
+  {
+    "id": 5682,
+    "severity": 25
+  },
+  {
+    "id": 5684,
+    "severity": 25
+  },
+  {
+    "id": 5686,
+    "severity": 30
+  },
+  {
+    "id": 5688,
+    "severity": 30
+  },
+  {
+    "id": 5690,
+    "severity": 30
+  },
+  {
+    "id": 5692,
+    "severity": 30
+  },
+  {
+    "id": 5694,
+    "severity": 30
+  },
+  {
+    "id": 5696,
+    "severity": 30
+  },
+  {
+    "id": 5698,
+    "severity": 30
+  },
+  {
+    "id": 5700,
+    "severity": 30
+  },
+  {
+    "id": 5702,
+    "severity": 30
+  },
+  {
+    "id": 5704,
+    "severity": 25
+  },
+  {
+    "id": 5706,
+    "severity": 25
+  },
+  {
+    "id": 5708,
+    "severity": 25
+  },
+  {
+    "id": 5710,
+    "severity": 25
+  },
+  {
+    "id": 5712,
+    "severity": 25
+  },
+  {
+    "id": 5714,
+    "severity": 25
+  },
+  {
+    "id": 5716,
+    "severity": 25
+  },
+  {
+    "id": 5718,
+    "severity": 30
+  },
+  {
+    "id": 5720,
+    "severity": 30
+  },
+  {
+    "id": 5722,
+    "severity": 30
+  },
+  {
+    "id": 5724,
+    "severity": 30
+  },
+  {
+    "id": 5726,
+    "severity": 30
+  },
+  {
+    "id": 5728,
+    "severity": 30
+  },
+  {
+    "id": 5730,
+    "severity": 30
+  },
+  {
+    "id": 5734,
+    "severity": 25
+  },
+  {
+    "id": 5736,
+    "severity": 30
+  },
+  {
+    "id": 6061,
+    "severity": 12
+  },
+  {
+    "id": 6062,
+    "severity": 15
+  }
+]

@@ -45,7 +45,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
             loot += thievable.drops.roll(mob, target)
         }
         if (!mob.inventory.hasSpaceForAll(loot)) {
-            mob.sendMessage(Messages.INVENTORY_FULL)
+            mob.sendMessage(Messages.inventoryFull())
             return
         }
 
@@ -67,7 +67,7 @@ class PickpocketAction(plr: Player, val target: Npc, val thievable: ThievableNpc
                     mob.playSound(Sound.PICKPOCKET_FAILED)
                     mob.sendMessage("You have been stunned.");
                     mob.animation(Animation(424))
-                    mob.graphic(Graphic(80, 5, 60))
+                    mob.graphic(Graphic(80, 60, 5))
                     mob.damage(thievable.damage.random())
                     target.animation(Animation(422))
                     target.interact(mob)

@@ -5,6 +5,7 @@ import io.luna.game.action.ActionType;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.block.Hit.HitType;
+import io.luna.game.model.mob.combat.state.CombatContext;
 
 /**
  * An action that applies periodic poison damage to a {@link Mob}.
@@ -20,7 +21,7 @@ public final class PoisonAction extends Action<Mob> {
     /**
      * The combat context for the poisoned mob.
      */
-    private final CombatContext combat;
+    private final CombatContext<?> combat;
 
     /**
      * Creates a new {@link PoisonAction}.
@@ -44,7 +45,7 @@ public final class PoisonAction extends Action<Mob> {
     public boolean run() {
         double severity = combat.decrementPoisonSeverity();
         if (severity > 0) {
-            mob.damage((int) Math.floor((severity + 4d) / 5d), HitType.POISON);
+            mob.damage((int) Math.floor((severity + 4.0) / 5.0), HitType.POISON);
             return false;
         }
         return true;

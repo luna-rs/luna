@@ -3,11 +3,9 @@ package engine.combat.magic
 import api.combat.magic.CombatSpellHandler.immobilize
 import api.combat.magic.CombatSpellHandler.spell
 import api.combat.magic.CombatSpellHandler.weaken
-import api.combat.magic.TeleBlockAction
 import api.predef.*
 import api.predef.ext.*
 import engine.combat.prayer.CombatPrayer
-import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.combat.CombatSpell
 import kotlin.time.Duration.Companion.seconds
@@ -53,18 +51,18 @@ spell(CombatSpell.TELEBLOCK) {
     if (victim is Player) {
         val plr = victim.asPlr()
         var duration = TELE_BLOCK_MINUTES.seconds.inWholeSeconds.toInt()
-        if(plr.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) {
+        if (plr.combat.prayers.isActive(CombatPrayer.PROTECT_FROM_MAGIC)) {
             duration /= 2
         }
         val ticks = duration.seconds.inTicks()
-        if (plr.combat.setTeleBlock(ticks)) {
+        if (plr.combat.magic.setTeleBlock(ticks)) {
             val time = when (val minutes = duration / 60) {
                 0 -> "under a minute"
                 1 -> "1 minute"
                 else -> "$minutes minutes"
             }
             plr.sendMessage("A Tele Block has been cast on you. It will expire in $time.")
-        } else if(attacker is Player) {
+        } else if (attacker is Player) {
             attacker.asPlr().sendMessage("That player is currently immune to this spell.")
         }
     }

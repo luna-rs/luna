@@ -10,15 +10,13 @@ import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.block.Animation;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
-import io.luna.game.model.mob.combat.CombatSpellType;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.function.BiFunction;
 
 /**
  * A {@link Definition} containing the static data for a combat spell.
- * <p>
- * Combat spell definitions describe the immutable properties of a spell.
  *
  * @author lare96
  */
@@ -32,47 +30,53 @@ public final class CombatSpellDefinition implements Definition {
     /**
      * A map containing all loaded {@link CombatSpellDefinition} instances, keyed by {@link CombatSpell}.
      */
-    public static volatile ImmutableMap<CombatSpell, CombatSpellDefinition> SPELLS = ImmutableMap.of();
+    private static volatile ImmutableMap<CombatSpell, CombatSpellDefinition> spells = ImmutableMap.of();
 
     /**
      * A dummy {@link CombatSpellDefinition} representing no selected spell.
      */
-    public static final CombatSpellDefinition NONE = new CombatSpellDefinition(-1, null, null, 0, 0, 0.0, null, null,
-            null, null, null, ImmutableList.of(), null, null);
+    public static final CombatSpellDefinition NONE = new CombatSpellDefinition(-1, -1, null, 0, 0, 0.0, null, null,
+            null, null, null, ImmutableList.of(), null, null, -1);
 
     /**
      * Loads all combat spell definitions and rebuilds the immutable spell lookup table.
      * <p>
      * The supplied definitions are first stored in {@link #ALL}, then indexed by their {@link CombatSpell} key into
-     * {@link #SPELLS} for fast lookup at runtime.
+     * {@link #spells} for fast lookup at runtime.
      *
      * @param definitions The combat spell definitions to load.
-     * @throws IllegalArgumentException If multiple definitions use the same {@link CombatSpell} key.
      */
     public static void loadAll(List<CombatSpellDefinition> definitions) {
         ALL.storeAndLock(definitions);
 
-        ImmutableMap.Builder<CombatSpell, CombatSpellDefinition> spells = ImmutableMap.builder();
+        EnumMap<CombatSpell, CombatSpellDefinition> spells = new EnumMap<>(CombatSpell.class);
         for (CombatSpellDefinition def : definitions) {
             spells.put(def.spell, def);
         }
-        SPELLS = spells.build();
+        CombatSpellDefinition.spells = ImmutableMap.copyOf(spells);
     }
 
     /**
-     * The id for this spell.
+     * @return The spell lookup table.
+     */
+    public static ImmutableMap<CombatSpell, CombatSpellDefinition> getSpells() {
+        return spells;
+    }
+
+    /**
+     * The definition id for this spell.
      */
     private final int id;
+
+    /**
+     * The interface button id used to select this spell.
+     */
+    private final int button;
 
     /**
      * The combat spell constant.
      */
     private final CombatSpell spell;
-
-    /**
-     * The combat spell type classification.
-     */
-    private final CombatSpellType spellType;
 
     /**
      * The Magic level required to cast this spell.
@@ -130,30 +134,39 @@ public final class CombatSpellDefinition implements Definition {
     private final Sound endSound;
 
     /**
+     * The radius used for area-based spell effects.
+     * <p>
+     * A negative value generally indicates that the spell does not have a radius-based secondary effect.
+     */
+    private final int radius;
+
+    /**
      * Creates a new {@link CombatSpellDefinition}.
      *
-     * @param id The button id for this spell.
+     * @param id The definition id for this spell.
+     * @param button The interface button id used to select this spell.
      * @param spell The combat spell constant.
-     * @param spellType The combat spell type classification.
      * @param level The Magic level required to cast this spell.
      * @param maxHit The maximum base hit dealt by this spell.
      * @param exp The Magic experience awarded for casting this spell.
      * @param spellbook The spellbook this spell belongs to.
      * @param castAnimation The animation played when this spell is cast.
      * @param startGraphic The graphic displayed when this spell begins casting.
-     * @param projectile The function used to generate the projectile shown while this spell travels to the target.
+     * @param projectile The function used to generate the projectile shown while this spell travels
+     * to the target.
      * @param endGraphic The graphic displayed when this spell reaches the target.
      * @param required The requirements needed to cast this spell.
      * @param startSound The sound played when this spell begins casting.
      * @param endSound The sound played when this spell reaches the target.
+     * @param radius The radius used for area-based spell effects.
      */
-    public CombatSpellDefinition(int id, CombatSpell spell, CombatSpellType spellType, int level, int maxHit,
+    public CombatSpellDefinition(int id, int button, CombatSpell spell, int level, int maxHit,
                                  double exp, Spellbook spellbook, Animation castAnimation, Graphic startGraphic,
                                  BiFunction<Mob, Mob, LocalProjectile> projectile, Graphic endGraphic,
-                                 ImmutableList<SpellRequirement> required, Sound startSound, Sound endSound) {
+                                 ImmutableList<SpellRequirement> required, Sound startSound, Sound endSound, int radius) {
         this.id = id;
+        this.button = button;
         this.spell = spell;
-        this.spellType = spellType;
         this.level = level;
         this.maxHit = maxHit;
         this.exp = exp;
@@ -165,6 +178,7 @@ public final class CombatSpellDefinition implements Definition {
         this.required = required;
         this.startSound = startSound;
         this.endSound = endSound;
+        this.radius = radius;
     }
 
     @Override
@@ -173,17 +187,17 @@ public final class CombatSpellDefinition implements Definition {
     }
 
     /**
+     * @return The spell button id.
+     */
+    public int getButton() {
+        return button;
+    }
+
+    /**
      * @return The combat spell constant.
      */
     public CombatSpell getSpell() {
         return spell;
-    }
-
-    /**
-     * @return The combat spell type.
-     */
-    public CombatSpellType getSpellType() {
-        return spellType;
     }
 
     /**
@@ -215,7 +229,7 @@ public final class CombatSpellDefinition implements Definition {
     }
 
     /**
-     * @return The cast animation id.
+     * @return The cast animation, or {@code null} if none is defined.
      */
     public Animation getCastAnimation() {
         return castAnimation;
@@ -229,7 +243,8 @@ public final class CombatSpellDefinition implements Definition {
     }
 
     /**
-     * @return The function used to generate the projectile shown while this spell travels to the target.
+     * @return The function used to generate the projectile shown while this spell travels to the target, or
+     * {@code null} if none is defined.
      */
     public BiFunction<Mob, Mob, LocalProjectile> getProjectile() {
         return projectile;
@@ -261,5 +276,12 @@ public final class CombatSpellDefinition implements Definition {
      */
     public Sound getEndSound() {
         return endSound;
+    }
+
+    /**
+     * @return The spell radius.
+     */
+    public int getRadius() {
+        return radius;
     }
 }

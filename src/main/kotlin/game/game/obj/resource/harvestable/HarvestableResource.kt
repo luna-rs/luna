@@ -41,7 +41,7 @@ abstract class HarvestableResource : GameResource() {
      */
     fun harvest(plr: Player, gameObject: GameObject) {
         if (plr.inventory.isFull) {
-            plr.sendMessage(Messages.INVENTORY_FULL)
+            plr.sendMessage(Messages.inventoryFull())
         } else {
             plr.submitAction(HarvestActionItem(plr, gameObject, this))
         }

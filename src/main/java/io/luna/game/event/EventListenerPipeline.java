@@ -1,6 +1,7 @@
 package io.luna.game.event;
 
 import io.github.classgraph.ClassInfo;
+import io.luna.game.model.Entity;
 import io.luna.game.model.mob.Player;
 import io.luna.game.model.mob.interact.InteractionActionListener;
 import io.luna.game.plugin.Script;
@@ -23,7 +24,7 @@ import java.util.List;
  *   <li>all {@link EventPriority#LOW} listeners, in registration order</li>
  * </ol>
  * <p>
- * Pipelines are also used to build deferred interaction actions through {@link #getInteractionListeners(Player, Event)},
+ * Pipelines are also used to build deferred interaction actions through {@link #getInteractionListeners(Player, Entity, Event)},
  * preserving the same execution order used by normal posting.
  *
  * @param <E> The event type handled by this pipeline.
@@ -116,21 +117,22 @@ public final class EventListenerPipeline<E extends Event> {
      * The returned list preserves the same order used by {@link #post(Event)}.
      *
      * @param player The player used to resolve each listener's interaction policy.
+     * @param target The target the player is interacting with.
      * @param msg The event that will be supplied to each deferred listener action.
      * @return A new ordered list of interaction listener actions for the event.
      */
-    public List<InteractionActionListener> getInteractionListeners(Player player, E msg) {
+    public List<InteractionActionListener> getInteractionListeners(Player player, Entity target, E msg) {
         List<InteractionActionListener> pending = new ArrayList<>();
 
         // HIGH listener always runs first.
         if (priorityListener != null) {
-            pending.add(new InteractionActionListener(priorityListener.getPolicy().apply(player),
+            pending.add(new InteractionActionListener(priorityListener.getPolicy().apply(player, target),
                     () -> priorityListener.apply(msg)));
         }
 
         // Then NORMAL listeners.
         for (EventListener<E> listener : listeners) {
-            pending.add(new InteractionActionListener(listener.getPolicy().apply(player),
+            pending.add(new InteractionActionListener(listener.getPolicy().apply(player, target),
                     () -> listener.apply(msg)));
         }
 
@@ -139,7 +141,7 @@ public final class EventListenerPipeline<E extends Event> {
 
         // Then LOW listeners.
         for (EventListener<E> listener : lazyListeners) {
-            pending.add(new InteractionActionListener(listener.getPolicy().apply(player),
+            pending.add(new InteractionActionListener(listener.getPolicy().apply(player, target),
                     () -> listener.apply(msg)));
         }
         return pending;

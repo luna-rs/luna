@@ -1,11 +1,13 @@
-package io.luna.game.model.mob.combat;
+package io.luna.game.model.mob.combat.damage;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import io.luna.game.event.impl.CombatDamageReceivedEvent;
 import io.luna.game.model.mob.Mob;
+import io.luna.game.model.mob.Player;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -50,6 +52,9 @@ public final class CombatDamageStack {
         Mob attacker = damage.getAttacker();
         if (attacker != null && !mob.equals(attacker)) {
             buffer.put(attacker, damage);
+            if(mob instanceof Player) {
+                mob.getPlugins().post(new CombatDamageReceivedEvent((Player) mob, damage));
+            }
         }
     }
 
@@ -62,7 +67,7 @@ public final class CombatDamageStack {
     public int getTotal(Mob mob) {
         int total = 0;
         for (CombatDamage damage : buffer.get(mob)) {
-            total += damage.getAmount().orElse(0);
+            total += damage.getRawAmount();
         }
         return total;
     }
@@ -103,7 +108,7 @@ public final class CombatDamageStack {
             Multiset<Mob> totals = HashMultiset.create();
             for (Map.Entry<Mob, Collection<CombatDamage>> entry : buffer.asMap().entrySet()) {
                 for (CombatDamage damage : entry.getValue()) {
-                    totals.add(entry.getKey(), damage.getAmount().orElse(0));
+                    totals.add(entry.getKey(), damage.getRawAmount());
                 }
             }
             Mob lastMob = null;

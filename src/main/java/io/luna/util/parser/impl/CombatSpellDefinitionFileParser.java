@@ -14,9 +14,9 @@ import io.luna.game.model.item.Item;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Spellbook;
 import io.luna.game.model.mob.block.Animation;
+import io.luna.game.model.mob.block.Animation.AnimationPriority;
 import io.luna.game.model.mob.block.Graphic;
 import io.luna.game.model.mob.combat.CombatSpell;
-import io.luna.game.model.mob.combat.CombatSpellType;
 import io.luna.util.GsonUtils;
 import io.luna.util.parser.JsonFileParser;
 import org.apache.logging.log4j.LogManager;
@@ -49,13 +49,14 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
     @Override
     public CombatSpellDefinition convert(JsonObject token) {
         int id = token.get("id").getAsInt();
+        int button = token.has("button") ? token.get("button").getAsInt() : -1;
         CombatSpell spell = CombatSpell.valueOf(token.get("spell").getAsString());
-        CombatSpellType spellType = CombatSpellType.valueOf(token.get("spell_type").getAsString());
         int level = token.get("level").getAsInt();
         int maxHit = token.has("max_hit") ? token.get("max_hit").getAsInt() : -1;
         double exp = token.get("exp").getAsDouble();
         Spellbook spellbook = Spellbook.valueOf(token.get("spellbook").getAsString());
         int castAnimation = token.get("cast_animation").getAsInt();
+        int radius = token.has("radius") ? token.get("radius").getAsInt() : 0;
 
         Graphic startGraphic = token.has("start_graphic") ?
                 readGraphic(token.get("start_graphic").getAsJsonObject()) : null;
@@ -70,11 +71,9 @@ public final class CombatSpellDefinitionFileParser extends JsonFileParser<Combat
         Sound startSound = Sound.valueOf(token.get("start_sound").getAsString());
         Sound endSound = Sound.valueOf(token.get("end_sound").getAsString());
 
-        return new CombatSpellDefinition(
-                id, spell, spellType, level, maxHit, exp, spellbook,
-                new Animation(castAnimation), startGraphic, projectile, endGraphic, required,
-                startSound, endSound
-        );
+        return new CombatSpellDefinition(id, button, spell,  level, maxHit, exp, spellbook,
+                new Animation(castAnimation, AnimationPriority.HIGH), startGraphic, projectile, endGraphic, required,
+                startSound, endSound, radius);
     }
 
     @Override

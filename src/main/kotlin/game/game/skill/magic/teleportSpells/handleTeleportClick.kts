@@ -8,7 +8,7 @@ import game.skill.magic.teleportSpells.TeleportAction.Companion.teleportDelay
 /* Intercept all button clicks.*/
 for (spell in TeleportSpell.VALUES) {
     button(spell.button) {
-        if (!plr.combat.isTeleBlocked && plr.teleportDelay.ready(2)) { // So player can't button spam.
+        if (!plr.combat.magic.isTeleBlocked && plr.teleportDelay.ready(2)) { // So player can't button spam.
             plr.submitAction(object : TeleportAction(plr,
                                                      spell.level,
                                                      spell.xp,

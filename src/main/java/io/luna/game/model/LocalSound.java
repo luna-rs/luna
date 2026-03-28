@@ -10,33 +10,49 @@ import io.luna.net.msg.out.AddLocalSoundMessageWriter;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * A {@link LocalEntity} implementation representing an area-based sound effect within the game world.
+ * A {@link LocalEntity} implementation that represents a location-based sound effect in the game world.
  * <p>
- * {@code LocalSound} instances are spatially bound sound events that are sent to players within a specific
- * {@link #radius}. Unlike global audio effects, local sounds are tied to a {@link Position} and only delivered to players
- * whose {@link ChunkUpdatableView} includes that position.
+ * A {@code LocalSound} is anchored to a specific {@link Position} and delivered only to players whose
+ * {@link ChunkUpdatableView} can observe that location. This makes it suitable for spatial audio events that should
+ * only be heard near their source rather than broadcast globally.
  * <p>
- * This entity type is typically used for:
- * <ul>
- *     <li>Teleporting and other magic-related sounds</li>
- *     <li>Combat-related sound effects</li>
- *     <li>Area ambience or environmental effects</li>
- * </ul>
+ * Common uses include teleport effects, combat sounds, and environmental ambience.
  *
  * @author lare96
  */
 public final class LocalSound extends LocalEntity {
 
     /**
+     * Creates a {@link LocalSound} centered on the given target using default radius and maximum volume.
+     * <p>
+     * The sound is emitted from the target's current position, uses {@link ChunkUpdatableView#globalView()}, and
+     * defaults to half of {@link Position#VIEWING_DISTANCE} for its audible radius.
+     *
+     * @param target The entity used to supply the context and origin position.
+     * @param sound The sound to play.
+     * @return A new {@link LocalSound} instance.
+     */
+    public static LocalSound of(Entity target, Sound sound) {
+        return new LocalSound(
+                target.getContext(),
+                sound.getId(),
+                target.getPosition(),
+                ChunkUpdatableView.globalView(),
+                Position.VIEWING_DISTANCE / 2,
+                100
+        );
+    }
+
+    /**
      * Creates a {@link LocalSound} with default radius and maximum volume.
      * <p>
-     * The default radius is half of {@link Position#VIEWING_DISTANCE}, ensuring the sound remains localized but
-     * audible to nearby players.
+     * The default radius is half of {@link Position#VIEWING_DISTANCE}, which keeps the sound local to nearby players
+     * while still being broadly audible around its source position.
      *
      * @param context The active {@link LunaContext}.
-     * @param sound The {@link Sound} enum value representing the sound.
+     * @param sound The sound to play.
      * @param position The world position where the sound originates.
-     * @param view The chunk update view used to determine visibility.
+     * @param view The view used to determine which players can receive the update.
      * @return A new {@link LocalSound} instance.
      */
     public static LocalSound of(LunaContext context, Sound sound,
@@ -52,14 +68,14 @@ public final class LocalSound extends LocalEntity {
     }
 
     /**
-     * Creates a {@link LocalSound} with a custom radius and volume.
+     * Creates a {@link LocalSound} with a custom audible radius and volume.
      *
      * @param context The active {@link LunaContext}.
-     * @param sound The {@link Sound} enum value representing the sound.
+     * @param sound The sound to play.
      * @param position The world position where the sound originates.
-     * @param view The chunk update view used to determine visibility.
-     * @param radius The audible radius (must be > 0).
-     * @param volume The playback volume (0–100 inclusive).
+     * @param view The view used to determine which players can receive the update.
+     * @param radius The audible radius in tiles. Must be greater than {@code 0}.
+     * @param volume The playback volume from {@code 0} to {@code 100}, inclusive.
      * @return A new {@link LocalSound} instance.
      */
     public static LocalSound of(LunaContext context, Sound sound,
@@ -69,16 +85,17 @@ public final class LocalSound extends LocalEntity {
     }
 
     /**
-     * Creates a {@link LocalSound} using a raw sound id.
+     * Creates a {@link LocalSound} using a raw sound id instead of a predefined {@link Sound} value.
      * <p>
-     * This method is useful when the sound id does not correspond to a predefined {@link Sound} enum value.
+     * This is useful when a sound is not represented in the {@link Sound} enum or when the caller is working directly
+     * with raw cache-defined sound ids.
      *
      * @param context The active {@link LunaContext}.
      * @param soundId The raw sound identifier.
      * @param position The world position where the sound originates.
-     * @param view The chunk update view used to determine visibility.
-     * @param radius The audible radius (must be > 0).
-     * @param volume The playback volume (0–100 inclusive).
+     * @param view The view used to determine which players can receive the update.
+     * @param radius The audible radius in tiles. Must be greater than {@code 0}.
+     * @param volume The playback volume from {@code 0} to {@code 100}, inclusive.
      * @return A new {@link LocalSound} instance.
      */
     public static LocalSound ofId(LunaContext context, int soundId,
@@ -88,23 +105,23 @@ public final class LocalSound extends LocalEntity {
     }
 
     /**
-     * The audible radius of the sound.
+     * The audible radius of the sound, in tiles.
      */
     private final int radius;
 
     /**
-     * The playback volume of the sound (0–100 inclusive).
+     * The playback volume of the sound, from {@code 0} to {@code 100}.
      */
     private final int volume;
 
     /**
      * Creates a new {@link LocalSound}.
      *
-     * @param context The {@link LunaContext}.
-     * @param id The sound id.
-     * @param position The world position.
-     * @param view The chunk visibility view.
-     * @param radius The audible radius.
+     * @param context The active {@link LunaContext}.
+     * @param id The raw sound id.
+     * @param position The world position where the sound originates.
+     * @param view The view used to determine which players can receive the update.
+     * @param radius The audible radius in tiles.
      * @param volume The playback volume.
      */
     private LocalSound(LunaContext context, int id, Position position,
@@ -134,18 +151,14 @@ public final class LocalSound extends LocalEntity {
     }
 
     /**
-     * Returns the audible radius of this sound.
-     *
-     * @return The radius in tiles.
+     * @return The audible radius in tiles.
      */
     public int getRadius() {
         return radius;
     }
 
     /**
-     * Returns the playback volume of this sound.
-     *
-     * @return The volume (0–100).
+     * @return The playback volume from {@code 0} to {@code 100}.
      */
     public int getVolume() {
         return volume;

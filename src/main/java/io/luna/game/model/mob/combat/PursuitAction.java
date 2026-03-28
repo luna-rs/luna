@@ -8,16 +8,17 @@ import io.luna.game.model.Position;
 import io.luna.game.model.collision.CollisionManager;
 import io.luna.game.model.mob.Mob;
 import io.luna.game.model.mob.Npc;
+import io.luna.game.model.mob.combat.state.CombatContext;
 import io.luna.game.model.mob.interact.InteractionPolicy;
 
 /**
  * An {@link Action} that moves a {@link Mob} toward its current combat target.
  * <p>
- * This action is primarily used for pursuit during combat when the attacker is not yet in a valid interaction
- * position. NPCs compute pursuit one step at a time using local collision checks, while players delegate movement
- * to the normal navigator using the supplied {@link InteractionPolicy}.
+ * This action is used while combat is active but the attacker has not yet reached a valid interaction position.
+ * NPCs resolve pursuit manually one step at a time using collision checks, while players delegate pathing to the
+ * normal navigator with the supplied {@link InteractionPolicy}.
  * <p>
- * This action is weak and may be replaced by stronger actions when needed.
+ * Because this is a weak action, it may be replaced by stronger actions whenever necessary.
  *
  * @author lare96
  */
@@ -26,36 +27,33 @@ public final class PursuitAction extends Action<Mob> {
     /**
      * The combat context for the pursuing mob.
      */
-    private final CombatContext combat;
+    private final CombatContext<?> combat;
 
     /**
-     * The interaction policy used to determine whether the target has been reached.
+     * The interaction policy that determines when the target is considered reached.
      */
     private final InteractionPolicy policy;
 
     /**
      * Creates a new {@link PursuitAction}.
      *
-     * @param mob The mob performing the pursuit.
-     * @param policy The interaction policy that determines valid target reachability.
+     * @param mob The mob performing pursuit.
+     * @param policy The interaction policy used to test valid reachability.
      */
     public PursuitAction(Mob mob, InteractionPolicy policy) {
-        super(mob, ActionType.WEAK, true, 1);
+        super(mob, ActionType.WEAK);
         this.policy = policy;
         combat = mob.getCombat();
     }
 
     /**
-     * Attempts to take the next pursuit step.
-     * <p>
-     * If no valid step can be found, this action is interrupted.
+     * Attempts to queue the next pursuit step for this mob.
      *
      * @return {@code true} if pursuit should stop, otherwise {@code false}.
      */
     private boolean tryStep() {
         Direction nextDirection = computeNextStep();
         if (nextDirection == Direction.NONE) {
-            interrupt();
             return true;
         } else {
             mob.getWalking().addStep(nextDirection);
@@ -67,29 +65,34 @@ public final class PursuitAction extends Action<Mob> {
     public void onSubmit() {
         if (mob instanceof Npc) {
             if (tryStep()) {
-                interrupt();
+                complete();
             }
         } else if (combat.getTarget() != null) {
             mob.getNavigator().walkUntilReached(combat.getTarget(), policy, false);
         }
     }
+
     @Override
     public boolean run() {
-        if (combat.getTarget() != null && mob instanceof Npc) {
-            return tryStep();
+        Mob target = combat.getTarget();
+        if (!combat.inCombat() || target == null || !mob.isViewableFrom(target)) {
+            return true;
         }
-        return true;
+        return !(mob instanceof Npc) || tryStep();
     }
 
     /**
-     * Computes the next direction this mob should move in order to pursue its combat target.
+     * Computes the next single-step movement direction needed to pursue the current combat target.
      * <p>
-     * This method performs simple collision-aware chase logic and returns a single step direction. It first checks
-     * whether the target is still valid and reachable on the same plane, then tries to determine whether the mob is
-     * already in a valid interaction position. If movement is still needed, it applies a basic pursuit pattern with a
-     * special diagonal rule for NPC melee-style contact.
-     * <p>
-     * A return value of {@link Direction#NONE} indicates that no further movement should be taken.
+     * This method performs simple collision-aware chase logic:
+     * <ul>
+     *     <li>Rejects missing or off-plane targets</li>
+     *     <li>Tries to separate overlapping entities</li>
+     *     <li>Handles close diagonal adjacency by attempting a component step</li>
+     *     <li>Stops if the target is already reachable under the current interaction policy</li>
+     *     <li>Tries diagonal movement first, then x-axis, then y-axis</li>
+     * </ul>
+     * A return value of {@link Direction#NONE} means that no further step should be taken.
      *
      * @return The next direction to move in, or {@link Direction#NONE} if no valid step exists.
      */
@@ -97,47 +100,58 @@ public final class PursuitAction extends Action<Mob> {
         CollisionManager collision = mob.getWorld().getCollisionManager();
         Mob target = combat.getTarget();
 
-        // Target is not on same plane, or non-existent.
+        // Target does not exist or is on a different plane.
         if (target == null || mob.getZ() != target.getZ()) {
             return Direction.NONE;
         }
 
-        // We're already occupying the same tile, combat hook will move NPC.
         Position position = mob.getPosition();
         Position targetPosition = target.getPosition();
+
+        // Occupying the same tile is invalid for pursuit, so try to move away.
         if (position.equals(targetPosition)) {
+            mob.getNavigator().stepRandom(false);
             return Direction.NONE;
         }
 
-        // We're already in perfect interaction distance and position.
         Direction nextDirection = Direction.between(position, targetPosition);
-        if (!nextDirection.isDiagonal() && collision.reached(position, target, policy)) {
-            return Direction.NONE;
-        }
 
-        // Special OSRS-like melee rule when diagonal to target: don't step diagonally into contact; prefer x only.
-        int dx = nextDirection.getTranslateX();
-        int dy = nextDirection.getTranslateY();
-        Direction directionX = dx > 0 ? Direction.EAST : dx < 0 ? Direction.WEST : Direction.NONE;
-        Direction directionY = dy > 0 ? Direction.NORTH : dy < 0 ? Direction.SOUTH : Direction.NONE;
-        if (nextDirection.isDiagonal()) {
-            if (collision.traversable(position, EntityType.NPC, directionX, false)) {
-                return directionX;
+        // When diagonally adjacent, attempt to step into one of the cardinal components.
+        if (policy.getDistance() == 1 && position.isWithinDistance(targetPosition, 1) && nextDirection.isDiagonal()) {
+            for (Direction dir : Direction.diagonalComponents(nextDirection)) {
+                if (collision.traversable(position, EntityType.NPC, dir)) {
+                    return dir;
+                }
             }
             return Direction.NONE;
         }
 
-        // Regular dumb travelling pattern.
+        // No movement is needed if the target is already reachable.
+        if (collision.reached(position, target, policy)) {
+            return Direction.NONE;
+        }
+
+        int dx = nextDirection.getTranslateX();
+        int dy = nextDirection.getTranslateY();
+        Direction directionX = dx > 0 ? Direction.EAST : dx < 0 ? Direction.WEST : Direction.NONE;
+        Direction directionY = dy > 0 ? Direction.NORTH : dy < 0 ? Direction.SOUTH : Direction.NONE;
+
+        // Try the direct diagonal or straight-line direction first.
         if (collision.traversable(position, EntityType.NPC, nextDirection)) {
             return nextDirection;
         }
+
+        // Fall back to the x-axis component.
         if (directionX != Direction.NONE && collision.traversable(position, EntityType.NPC, directionX)) {
             return directionX;
         }
-        if (directionY != Direction.NONE && position.computeLongestDistance(targetPosition) > 1 &&
-                collision.traversable(position, EntityType.NPC, directionY)) {
+
+        // Fall back to the y-axis component.
+        if (directionY != Direction.NONE && collision.traversable(position, EntityType.NPC, directionY)) {
             return directionY;
         }
+
+        // No valid movement direction was found.
         return Direction.NONE;
     }
 }

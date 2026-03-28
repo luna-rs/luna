@@ -11,8 +11,6 @@ import io.luna.game.plugin.PluginManager;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * Represents a single skill within a {@link SkillSet}.
  * <p>
@@ -26,8 +24,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  * @author lare96
  */
 public final class Skill {
-
-    // TODO Don't fire skill change events for NPCs.
 
     /**
      * Ordered, immutable list of all skill names. The index into this list is the skill identifier.
@@ -271,9 +267,10 @@ public final class Skill {
      * @throws IllegalArgumentException if {@code amount <= 0}.
      */
     public void addExperience(double amount) {
-        checkArgument(amount > 0, "amount <= 0");
-        double multiplier = set.getMob() instanceof Bot ? 1.0 : Luna.settings().game().experienceMultiplier();
-        setExperience(experience + (amount * multiplier));
+        if(amount > 0) {
+            double multiplier = set.getMob() instanceof Bot ? 1.0 : Luna.settings().game().experienceMultiplier();
+            setExperience(experience + (amount * multiplier));
+        }
     }
 
     /**

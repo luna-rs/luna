@@ -8,6 +8,7 @@ import io.luna.game.model.mob.Npc
 import io.luna.game.model.mob.Player
 import io.luna.game.model.mob.block.Animation
 import io.luna.game.task.Task
+import io.luna.util.RandomUtils
 
 /**
  * Handles the lever option for the "Fighting Women" event.
@@ -41,7 +42,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
     /**
      * The woman ID.
      */
-    val WOMAN_ID = 1258
+    val WOMAN_ID = 15
 
     /**
      * The first position of the woman.
@@ -89,13 +90,7 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
     /**
      * The taunting animations.
      */
-    val TAUNT_ANIMATIONS = listOf(864, 859, 856).map { Animation(it) }
-
-    /**
-     * The attack animations.
-     */
-    val ATTACK_ANIMATIONS = listOf(423, 422).map { Animation(it) }
-
+    private val TAUNT_ANIMATIONS = listOf(864, 859, 856).map { Animation(it) }
 
     override fun execute(plr: Player) {
         val women = listOf(
@@ -104,47 +99,44 @@ object FightingWomenOption : PartyRoomOption(50_000, "Fighting Women") {
         )
         val woman1 = women[0]
         val woman2 = women[1]
+        woman1.combat.lastCombatWith = woman2
+        woman2.combat.lastCombatWith = woman1
         woman1.interact(woman2)
         woman2.interact(woman1)
-        woman1.hitpoints.level = 100
-        woman2.hitpoints.level = 100
-        var otherWoman: Npc
-        var lastWoman = if (rand().nextBoolean()) {
-            otherWoman = woman2
-            woman1
-        } else {
-            otherWoman = woman1
-            woman2
-        }
-        val hitSupplier = { if (rand().nextInt(3) == 0) 0 else rand(1, 15) }
         world.schedule(4) { task ->
             if (task.executionCounter == 0) {
+                women.forEach {
+                    it.attack.level = RandomUtils.inclusive(50, 99)
+                    it.strength.level = RandomUtils.inclusive(50, 99)
+                    it.defence.level = RandomUtils.inclusive(1, 50)
+                    it.hitpoints.level = RandomUtils.inclusive(125, 175)
+                    it.maxHit = RandomUtils.inclusive(10, 20)
+                    it.animation(TAUNT_ANIMATIONS.random())
+                    it.speak(BEFORE_MESSAGES.random())
+                }
+            } else if (task.executionCounter == 1) {
                 women.forEach {
                     it.animation(TAUNT_ANIMATIONS.random())
                     it.speak(BEFORE_MESSAGES.random())
                 }
+            } else if (task.executionCounter == 2) {
+                women.forEach {
+                    it.animation(TAUNT_ANIMATIONS.random())
+                    it.speak(BEFORE_MESSAGES.random())
+                }
+            } else if (task.executionCounter == 3) {
+                woman1.combat.attack(woman2)
+                woman2.combat.attack(woman1)
             } else if (!woman1.isAlive || !woman2.isAlive) {
                 women.filter { it.isAlive }.forEach { world.schedule(WinningWomanTask(it)) }
                 PartyRoom.resetLeverOption()
                 task.cancel()
-            } else {
-                lastWoman.animation(ATTACK_ANIMATIONS.random())
-                otherWoman.animation(Animation(404))
-                otherWoman.damage(hitSupplier())
-                otherWoman.interact(lastWoman)
-                lastWoman.interact(otherWoman)
-                if (rand(3) == 0) {
-                    if (rand().nextBoolean()) {
-                        lastWoman.speak(DURING_MESSAGES.random())
-                    } else {
-                        otherWoman.speak(DURING_MESSAGES.random())
+            } else if (RandomUtils.inclusive(3) == 0) {
+                for (npc in women) {
+                    if (RandomUtils.nextBoolean()) {
+                        npc.speak(DURING_MESSAGES.random())
                     }
                 }
-
-                val newLastWoman = otherWoman
-                val newOtherWoman = lastWoman
-                lastWoman = newLastWoman
-                otherWoman = newOtherWoman
             }
         }
     }

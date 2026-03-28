@@ -1,0 +1,672 @@
+[
+  {
+    "type": "BARROWS",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4708,
+        "next_id": 4856
+      },
+      {
+        "prev_id": 4708,
+        "id": 4856,
+        "next_id": 4857
+      },
+      {
+        "prev_id": 4856,
+        "id": 4857,
+        "next_id": 4858
+      },
+      {
+        "prev_id": 4857,
+        "id": 4858,
+        "next_id": 4859
+      },
+      {
+        "prev_id": 4858,
+        "id": 4859,
+        "next_id": 4860
+      },
+      {
+        "prev_id": -1,
+        "id": 4710,
+        "next_id": 4862
+      },
+      {
+        "prev_id": 4710,
+        "id": 4862,
+        "next_id": 4863
+      },
+      {
+        "prev_id": 4862,
+        "id": 4863,
+        "next_id": 4864
+      },
+      {
+        "prev_id": 4863,
+        "id": 4864,
+        "next_id": 4865
+      },
+      {
+        "prev_id": 4864,
+        "id": 4865,
+        "next_id": 4866
+      },
+      {
+        "prev_id": -1,
+        "id": 4712,
+        "next_id": 4868
+      },
+      {
+        "prev_id": 4712,
+        "id": 4868,
+        "next_id": 4869
+      },
+      {
+        "prev_id": 4868,
+        "id": 4869,
+        "next_id": 4870
+      },
+      {
+        "prev_id": 4869,
+        "id": 4870,
+        "next_id": 4871
+      },
+      {
+        "prev_id": 4870,
+        "id": 4871,
+        "next_id": 4872
+      },
+      {
+        "prev_id": -1,
+        "id": 4714,
+        "next_id": 4874
+      },
+      {
+        "prev_id": 4714,
+        "id": 4874,
+        "next_id": 4875
+      },
+      {
+        "prev_id": 4874,
+        "id": 4875,
+        "next_id": 4876
+      },
+      {
+        "prev_id": 4875,
+        "id": 4876,
+        "next_id": 4877
+      },
+      {
+        "prev_id": 4876,
+        "id": 4877,
+        "next_id": 4878
+      },
+      {
+        "prev_id": -1,
+        "id": 4716,
+        "next_id": 4880
+      },
+      {
+        "prev_id": 4716,
+        "id": 4880,
+        "next_id": 4881
+      },
+      {
+        "prev_id": 4880,
+        "id": 4881,
+        "next_id": 4882
+      },
+      {
+        "prev_id": 4881,
+        "id": 4882,
+        "next_id": 4883
+      },
+      {
+        "prev_id": 4882,
+        "id": 4883,
+        "next_id": 4884
+      },
+      {
+        "prev_id": -1,
+        "id": 4718,
+        "next_id": 4886
+      },
+      {
+        "prev_id": 4718,
+        "id": 4886,
+        "next_id": 4887
+      },
+      {
+        "prev_id": 4886,
+        "id": 4887,
+        "next_id": 4888
+      },
+      {
+        "prev_id": 4887,
+        "id": 4888,
+        "next_id": 4889
+      },
+      {
+        "prev_id": 4888,
+        "id": 4889,
+        "next_id": 4890
+      },
+      {
+        "prev_id": -1,
+        "id": 4720,
+        "next_id": 4892
+      },
+      {
+        "prev_id": 4720,
+        "id": 4892,
+        "next_id": 4893
+      },
+      {
+        "prev_id": 4892,
+        "id": 4893,
+        "next_id": 4894
+      },
+      {
+        "prev_id": 4893,
+        "id": 4894,
+        "next_id": 4895
+      },
+      {
+        "prev_id": 4894,
+        "id": 4895,
+        "next_id": 4896
+      },
+      {
+        "prev_id": -1,
+        "id": 4722,
+        "next_id": 4898
+      },
+      {
+        "prev_id": 4722,
+        "id": 4898,
+        "next_id": 4899
+      },
+      {
+        "prev_id": 4898,
+        "id": 4899,
+        "next_id": 4900
+      },
+      {
+        "prev_id": 4899,
+        "id": 4900,
+        "next_id": 4901
+      },
+      {
+        "prev_id": 4900,
+        "id": 4901,
+        "next_id": 4902
+      },
+      {
+        "prev_id": -1,
+        "id": 4724,
+        "next_id": 4904
+      },
+      {
+        "prev_id": 4724,
+        "id": 4904,
+        "next_id": 4905
+      },
+      {
+        "prev_id": 4904,
+        "id": 4905,
+        "next_id": 4906
+      },
+      {
+        "prev_id": 4905,
+        "id": 4906,
+        "next_id": 4907
+      },
+      {
+        "prev_id": 4906,
+        "id": 4907,
+        "next_id": 4908
+      },
+      {
+        "prev_id": -1,
+        "id": 4726,
+        "next_id": 4910
+      },
+      {
+        "prev_id": 4726,
+        "id": 4910,
+        "next_id": 4911
+      },
+      {
+        "prev_id": 4910,
+        "id": 4911,
+        "next_id": 4912
+      },
+      {
+        "prev_id": 4911,
+        "id": 4912,
+        "next_id": 4913
+      },
+      {
+        "prev_id": 4912,
+        "id": 4913,
+        "next_id": 4914
+      },
+      {
+        "prev_id": -1,
+        "id": 4728,
+        "next_id": 4916
+      },
+      {
+        "prev_id": 4728,
+        "id": 4916,
+        "next_id": 4917
+      },
+      {
+        "prev_id": 4916,
+        "id": 4917,
+        "next_id": 4918
+      },
+      {
+        "prev_id": 4917,
+        "id": 4918,
+        "next_id": 4919
+      },
+      {
+        "prev_id": 4918,
+        "id": 4919,
+        "next_id": 4920
+      },
+      {
+        "prev_id": -1,
+        "id": 4730,
+        "next_id": 4922
+      },
+      {
+        "prev_id": 4730,
+        "id": 4922,
+        "next_id": 4923
+      },
+      {
+        "prev_id": 4922,
+        "id": 4923,
+        "next_id": 4924
+      },
+      {
+        "prev_id": 4923,
+        "id": 4924,
+        "next_id": 4925
+      },
+      {
+        "prev_id": 4924,
+        "id": 4925,
+        "next_id": 4926
+      },
+      {
+        "prev_id": -1,
+        "id": 4732,
+        "next_id": 4928
+      },
+      {
+        "prev_id": 4732,
+        "id": 4928,
+        "next_id": 4929
+      },
+      {
+        "prev_id": 4928,
+        "id": 4929,
+        "next_id": 4930
+      },
+      {
+        "prev_id": 4929,
+        "id": 4930,
+        "next_id": 4931
+      },
+      {
+        "prev_id": 4930,
+        "id": 4931,
+        "next_id": 4932
+      },
+      {
+        "prev_id": -1,
+        "id": 4734,
+        "next_id": 4934
+      },
+      {
+        "prev_id": 4734,
+        "id": 4934,
+        "next_id": 4935
+      },
+      {
+        "prev_id": 4934,
+        "id": 4935,
+        "next_id": 4936
+      },
+      {
+        "prev_id": 4935,
+        "id": 4936,
+        "next_id": 4937
+      },
+      {
+        "prev_id": 4936,
+        "id": 4937,
+        "next_id": 4938
+      },
+      {
+        "prev_id": -1,
+        "id": 4736,
+        "next_id": 4940
+      },
+      {
+        "prev_id": 4736,
+        "id": 4940,
+        "next_id": 4941
+      },
+      {
+        "prev_id": 4940,
+        "id": 4941,
+        "next_id": 4942
+      },
+      {
+        "prev_id": 4941,
+        "id": 4942,
+        "next_id": 4943
+      },
+      {
+        "prev_id": 4942,
+        "id": 4943,
+        "next_id": 4944
+      },
+      {
+        "prev_id": -1,
+        "id": 4738,
+        "next_id": 4946
+      },
+      {
+        "prev_id": 4738,
+        "id": 4946,
+        "next_id": 4947
+      },
+      {
+        "prev_id": 4946,
+        "id": 4947,
+        "next_id": 4948
+      },
+      {
+        "prev_id": 4947,
+        "id": 4948,
+        "next_id": 4949
+      },
+      {
+        "prev_id": 4948,
+        "id": 4949,
+        "next_id": 4950
+      },
+      {
+        "prev_id": -1,
+        "id": 4745,
+        "next_id": 4952
+      },
+      {
+        "prev_id": 4745,
+        "id": 4952,
+        "next_id": 4953
+      },
+      {
+        "prev_id": 4952,
+        "id": 4953,
+        "next_id": 4954
+      },
+      {
+        "prev_id": 4953,
+        "id": 4954,
+        "next_id": 4955
+      },
+      {
+        "prev_id": 4954,
+        "id": 4955,
+        "next_id": 4956
+      },
+      {
+        "prev_id": -1,
+        "id": 4747,
+        "next_id": 4958
+      },
+      {
+        "prev_id": 4747,
+        "id": 4958,
+        "next_id": 4959
+      },
+      {
+        "prev_id": 4958,
+        "id": 4959,
+        "next_id": 4960
+      },
+      {
+        "prev_id": 4959,
+        "id": 4960,
+        "next_id": 4961
+      },
+      {
+        "prev_id": 4960,
+        "id": 4961,
+        "next_id": 4962
+      },
+      {
+        "prev_id": -1,
+        "id": 4749,
+        "next_id": 4964
+      },
+      {
+        "prev_id": 4749,
+        "id": 4964,
+        "next_id": 4965
+      },
+      {
+        "prev_id": 4964,
+        "id": 4965,
+        "next_id": 4966
+      },
+      {
+        "prev_id": 4965,
+        "id": 4966,
+        "next_id": 4967
+      },
+      {
+        "prev_id": 4966,
+        "id": 4967,
+        "next_id": 4968
+      },
+      {
+        "prev_id": -1,
+        "id": 4751,
+        "next_id": 4970
+      },
+      {
+        "prev_id": 4751,
+        "id": 4970,
+        "next_id": 4971
+      },
+      {
+        "prev_id": 4970,
+        "id": 4971,
+        "next_id": 4972
+      },
+      {
+        "prev_id": 4971,
+        "id": 4972,
+        "next_id": 4973
+      },
+      {
+        "prev_id": 4972,
+        "id": 4973,
+        "next_id": 4974
+      },
+      {
+        "prev_id": -1,
+        "id": 4753,
+        "next_id": 4976
+      },
+      {
+        "prev_id": 4753,
+        "id": 4976,
+        "next_id": 4977
+      },
+      {
+        "prev_id": 4976,
+        "id": 4977,
+        "next_id": 4978
+      },
+      {
+        "prev_id": 4977,
+        "id": 4978,
+        "next_id": 4979
+      },
+      {
+        "prev_id": 4978,
+        "id": 4979,
+        "next_id": 4980
+      },
+      {
+        "prev_id": -1,
+        "id": 4755,
+        "next_id": 4982
+      },
+      {
+        "prev_id": 4755,
+        "id": 4982,
+        "next_id": 4983
+      },
+      {
+        "prev_id": 4982,
+        "id": 4983,
+        "next_id": 4984
+      },
+      {
+        "prev_id": 4983,
+        "id": 4984,
+        "next_id": 4985
+      },
+      {
+        "prev_id": 4984,
+        "id": 4985,
+        "next_id": 4986
+      },
+      {
+        "prev_id": -1,
+        "id": 4757,
+        "next_id": 4988
+      },
+      {
+        "prev_id": 4757,
+        "id": 4988,
+        "next_id": 4989
+      },
+      {
+        "prev_id": 4988,
+        "id": 4989,
+        "next_id": 4990
+      },
+      {
+        "prev_id": 4989,
+        "id": 4990,
+        "next_id": 4991
+      },
+      {
+        "prev_id": 4990,
+        "id": 4991,
+        "next_id": 4992
+      },
+      {
+        "prev_id": -1,
+        "id": 4759,
+        "next_id": 4994
+      },
+      {
+        "prev_id": 4759,
+        "id": 4994,
+        "next_id": 4995
+      },
+      {
+        "prev_id": 4994,
+        "id": 4995,
+        "next_id": 4996
+      },
+      {
+        "prev_id": 4995,
+        "id": 4996,
+        "next_id": 4997
+      },
+      {
+        "prev_id": 4996,
+        "id": 4997,
+        "next_id": 4998
+      }
+    ]
+  },
+  {
+    "type": "CRYSTAL_BOW",
+    "items": [
+      {
+        "prev_id": -1,
+        "id": 4212,
+        "next_id": 4213
+      },
+      {
+        "prev_id": 4212,
+        "id": 4213,
+        "next_id": 4214
+      },
+      {
+        "prev_id": 4213,
+        "id": 4214,
+        "next_id": 4215
+      },
+      {
+        "prev_id": 4214,
+        "id": 4215,
+        "next_id": 4216
+      },
+      {
+        "prev_id": 4215,
+        "id": 4216,
+        "next_id": 4217
+      },
+      {
+        "prev_id": 4216,
+        "id": 4217,
+        "next_id": 4218
+      },
+      {
+        "prev_id": 4217,
+        "id": 4218,
+        "next_id": 4219
+      },
+      {
+        "prev_id": 4218,
+        "id": 4219,
+        "next_id": 4220
+      },
+      {
+        "prev_id": 4219,
+        "id": 4220,
+        "next_id": 4221
+      },
+      {
+        "prev_id": 4220,
+        "id": 4221,
+        "next_id": 4222
+      },
+      {
+        "prev_id": 4221,
+        "id": 4222,
+        "next_id": 4223
+      },
+      {
+        "prev_id": 4222,
+        "id": 4223,
+        "next_id": -1
+      }
+    ]
+  }
+]

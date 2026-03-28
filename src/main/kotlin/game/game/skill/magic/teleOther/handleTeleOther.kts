@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
  */
 fun open(source: Player, target: Player, type: TeleOtherType) {
     if (target.overlays.hasWindow()) {
-        source.sendMessage(Messages.INTERACT_BUSY)
+        source.sendMessage(Messages.busy(target))
         return
     }
     if (target.varpManager.getValue(PersistentVarp.ACCEPT_AID) == 0) {

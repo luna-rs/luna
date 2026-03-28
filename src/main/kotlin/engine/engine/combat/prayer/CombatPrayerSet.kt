@@ -105,7 +105,7 @@ class CombatPrayerSet(private val player: Player) {
      */
     fun deactivate(prayer: CombatPrayer, silent: Boolean): Boolean {
         val amount = active.setCount(prayer, 0)
-        if (amount > 0 && player is Player) {
+        if (amount > 0) {
             player.sendVarp(Varp(prayer.varp, 0))
             if (!silent) {
                 player.playSound(Sound.DEACTIVATE_PRAYER)
